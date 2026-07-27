@@ -372,7 +372,7 @@ func validateTestRecorderReplayExecutor(_ executor: String?) throws -> String {
             code: "dry_run_required",
             message: "testrec replay execution requires --dry-run or --executor local-simulated.",
             path: "--dry-run",
-            hint: "Use --dry-run for planning, or --executor local-simulated for the offline executor contract."
+            hint: "Use --dry-run or local-simulated only for offline diagnostics. For a real test verdict, import the compiled contract with triton test import, then validate and run it on an explicit target."
         )
     }
     guard executor == testRecorderLocalSimulatedExecutor else {
@@ -380,7 +380,7 @@ func validateTestRecorderReplayExecutor(_ executor: String?) throws -> String {
             code: "unsupported_replay_executor",
             message: "Unsupported testrec replay executor '\(executor)'.",
             path: "--executor",
-            hint: "Use --executor local-simulated. A real local-device executor still requires live-target-device, device-action-execution, evidence-artifact-capture, and network-policy-application support."
+            hint: "Use --executor local-simulated only for offline diagnostics. For a real test verdict, use triton test import, triton test validate, and triton test run with an explicit target."
         )
     }
     return executor

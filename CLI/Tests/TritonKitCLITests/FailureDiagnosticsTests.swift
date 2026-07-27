@@ -215,6 +215,19 @@ struct FailureDiagnosticsTests {
         #expect(detail.message == "Harmony app install requires --hap or --app.")
     }
 
+    @Test("target platform mismatch hint does not suggest an unavailable CLI flag")
+    func targetPlatformMismatchHintDoesNotSuggestUnavailableCLIFlag() {
+        let detail = hostDeviceSelectionErrorDetail(.platformMismatch(
+            selector: "android-real:abc123",
+            expected: .ios,
+            actual: .android
+        )).detail
+
+        #expect(detail.code == "target_platform_mismatch")
+        #expect(detail.hint == "Pick an alias/id registered for the requested platform.")
+        #expect(detail.hint?.contains("--platform") == false)
+    }
+
     @Test("host-facing schemas cover failHostCommand error codes")
     func hostFacingSchemasCoverFailHostCommandErrorCodes() throws {
         let schemas = Dictionary(uniqueKeysWithValues: commandSchemas().map { ($0.name, $0) })
@@ -308,6 +321,7 @@ struct FailureDiagnosticsTests {
             "host_open_url_failed",
             "app_launch_failed",
             "app_terminate_failed",
+            "app_terminate_pid_resolution_unavailable",
             "harmony_layout_failed",
             "harmony_artifact_recv_failed",
             "harmony_screenshot_failed",

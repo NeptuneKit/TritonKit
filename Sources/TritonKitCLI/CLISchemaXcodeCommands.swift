@@ -65,7 +65,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "triton xcode run --device <ios-real-target> --sdk iphoneos --jsonl",
             ],
             successShape: "discover/use/schemes/status/wait-idle/settings JSON envelopes or JSONL progress plus final TKXcodeActionSummary",
-            failureShape: "{ ok:false, error:{ code: validation_failed|invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|device_not_ready|device_not_trusted|developer_mode_required|ddi_missing|xcode_signing_failed|provisioning_profile_missing|xcode_not_idle|xcode_schemes_timeout|xcodebuild_failed|xcodebuild_interrupted|orphaned_xcodebuild|swift_macro_plugin_malformed_response|app_path_unresolved|bundle_id_unresolved, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+            failureShape: "{ ok:false, error:{ code: validation_failed|invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|device_not_ready|device_not_trusted|developer_mode_required|ddi_missing|xcode_signing_failed|provisioning_profile_missing|xcode_not_idle|xcode_schemes_timeout|xcodebuild_failed|xcodebuild_interrupted|orphaned_xcodebuild|swift_macro_plugin_malformed_response|app_path_unresolved|bundle_id_unresolved|target_not_found|ambiguous_target|target_platform_mismatch, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
             inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
             jsonlEvents: [
                 "xcode.<action>.invocation",
@@ -190,6 +190,9 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "swift_macro_plugin_malformed_response",
                 "app_path_unresolved",
                 "bundle_id_unresolved",
+                "target_not_found",
+                "ambiguous_target",
+                "target_platform_mismatch",
             ],
             subcommands: [
                 TKCommandSubcommandSchema(
@@ -318,7 +321,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                     retryable: true,
                     nextCommands: ["triton xcode status --json", "triton xcode wait-idle --workspace <workspace> --timeout 120 --json", "triton status --json", "triton wait --json", "triton verify text-exists <text> --json"],
                     outputSelectors: ["xcode.progress", "xcode.final"],
-                    failureCodes: ["validation_failed", "invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "device_not_ready", "device_not_trusted", "developer_mode_required", "ddi_missing", "xcode_signing_failed", "provisioning_profile_missing", "xcodebuild_failed", "xcodebuild_interrupted", "orphaned_xcodebuild", "swift_macro_plugin_malformed_response", "app_path_unresolved", "bundle_id_unresolved"]
+                    failureCodes: ["validation_failed", "invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "device_not_ready", "device_not_trusted", "developer_mode_required", "ddi_missing", "xcode_signing_failed", "provisioning_profile_missing", "xcodebuild_failed", "xcodebuild_interrupted", "orphaned_xcodebuild", "swift_macro_plugin_malformed_response", "app_path_unresolved", "bundle_id_unresolved", "target_not_found", "ambiguous_target", "target_platform_mismatch"]
                 ),
             ],
             providedCapabilities: ["xcode-discovery", "xcode-defaults", "xcode-package-build", "xcode-diagnostics", "xcodebuild", "xcode-run"]

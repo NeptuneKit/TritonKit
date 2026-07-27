@@ -84,7 +84,7 @@ struct TKHostAdapterModelsTests {
             jsonOutput: "/tmp/group-pull.json",
             logOutput: "/tmp/group-pull.log"
         ).argv.contains("appGroupDataContainer"))
-        #expect(TKDevicectlCommand.terminateApp(identifier: "00008110", bundleID: "com.example.demo", jsonOutput: "/tmp/terminate.json", logOutput: "/tmp/terminate.log").argv == ["devicectl", "device", "process", "terminate", "--device", "00008110", "com.example.demo", "--json-output", "/tmp/terminate.json", "--log-output", "/tmp/terminate.log"])
+        #expect(TKDevicectlCommand.terminateApp(identifier: "00008110", pid: 4711, jsonOutput: "/tmp/terminate.json", logOutput: "/tmp/terminate.log").argv == ["devicectl", "device", "process", "terminate", "--device", "00008110", "--pid", "4711", "--json-output", "/tmp/terminate.json", "--log-output", "/tmp/terminate.log"])
         #expect(TKDevicectlCommand.uninstallApp(identifier: "00008110", bundleID: "com.example.demo", jsonOutput: "/tmp/uninstall.json", logOutput: "/tmp/uninstall.log").argv == ["devicectl", "device", "uninstall", "app", "--device", "00008110", "com.example.demo", "--json-output", "/tmp/uninstall.json", "--log-output", "/tmp/uninstall.log"])
     }
 

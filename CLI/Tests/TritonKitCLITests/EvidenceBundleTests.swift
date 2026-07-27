@@ -1,6 +1,8 @@
 import Darwin
 import ArgumentParser
+import CoreGraphics
 import Foundation
+import ImageIO
 import Testing
 import TritonKitShared
 @testable import TritonKitCLI
@@ -181,6 +183,59 @@ struct EvidenceBundleTests {
         #expect(screenshot.source == "embedded-runtime")
         #expect(screenshot.fidelity == "app-layer")
         #expect(screenshot.target == expectedTarget)
+    }
+
+    @Test("evidence capture normalizes legacy JPEG runtime screenshots to PNG")
+    func evidenceCaptureNormalizesLegacyJPEGRuntimeScreenshotToPNG() async throws {
+        let expectedTarget = "triton:android-emulator:emulator-5554"
+        let jpeg = try makeEvidenceJPEGFixture()
+        let fakeServer = EvidenceTargetPropagationFakeServer(
+            expectedTarget: expectedTarget,
+            simulatorUDID: nil,
+            runtimeScreenshot: TKScreenshotResponse(
+                format: "jpeg",
+                width: 1,
+                height: 1,
+                scale: 1,
+                dataBase64: "",
+                dataRef: "legacy-jpeg"
+            ),
+            runtimeDataRefs: ["legacy-jpeg": jpeg]
+        )
+        defer { fakeServer.stop() }
+
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("evidence-jpeg-normalization-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let manifest = try await captureEvidenceBundle(
+            output: root.path,
+            includes: ["list", "screenshot"],
+            name: "jpeg-normalization",
+            note: nil,
+            target: expectedTarget,
+            host: fakeServer.host,
+            port: fakeServer.port,
+            refresh: true,
+            simulatorScreenshotProviders: EvidenceSimulatorScreenshotProviders(
+                capture: { _, _ in throw RuntimeError("must not capture host Simulator screenshot") }
+            ),
+            urlSession: fakeServer.session
+        )
+
+        #expect(manifest.ok)
+        let artifact = try #require(manifest.artifacts.first { $0.kind == "screenshot" })
+        let artifactData = try Data(contentsOf: root.appendingPathComponent(artifact.path))
+        #expect(artifact.contentType == "image/png")
+        #expect(artifact.bytes == artifactData.count)
+        #expect(artifactData.starts(with: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))
+        let metadata = try JSONDecoder().decode(
+            EvidenceScreenshotMetadata.self,
+            from: Data(contentsOf: root.appendingPathComponent("screenshot.json"))
+        )
+        #expect(metadata.format == "png")
+        #expect(metadata.bytes == artifactData.count)
+        #expect(metadata.dataRef == nil)
     }
 
     @Test("evidence capture propagates explicit target to cached hierarchy requests")
@@ -1163,6 +1218,40 @@ private extension EvidenceSimulatorScreenshotProviders {
     }
 }
 
+private func makeEvidenceJPEGFixture() throws -> Data {
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    guard let context = CGContext(
+        data: nil,
+        width: 1,
+        height: 1,
+        bitsPerComponent: 8,
+        bytesPerRow: 0,
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else {
+        throw RuntimeError("Unable to construct evidence JPEG test bitmap")
+    }
+    context.setFillColor(CGColor(red: 0.2, green: 0.4, blue: 0.6, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: 1, height: 1))
+    guard let image = context.makeImage() else {
+        throw RuntimeError("Unable to construct evidence JPEG test image")
+    }
+    let data = NSMutableData()
+    guard let destination = CGImageDestinationCreateWithData(
+        data as CFMutableData,
+        "public.jpeg" as CFString,
+        1,
+        nil
+    ) else {
+        throw RuntimeError("Unable to construct evidence JPEG test encoder")
+    }
+    CGImageDestinationAddImage(destination, image, nil)
+    guard CGImageDestinationFinalize(destination) else {
+        throw RuntimeError("Unable to encode evidence JPEG test image")
+    }
+    return data as Data
+}
+
 private final class EvidenceTargetPropagationFakeServer {
     let host = "127.0.0.1"
     let port: Int
@@ -1173,7 +1262,9 @@ private final class EvidenceTargetPropagationFakeServer {
     init(
         expectedTarget: String,
         simulatorUDID: String? = "SIM-2",
-        disconnectRuntimeRequests: Bool = false
+        disconnectRuntimeRequests: Bool = false,
+        runtimeScreenshot: TKScreenshotResponse? = nil,
+        runtimeDataRefs: [String: Data] = [:]
     ) {
         self.port = Int.random(in: 20_000...40_000)
         self.server = EvidenceTargetPropagationURLProtocol.self
@@ -1184,7 +1275,9 @@ private final class EvidenceTargetPropagationFakeServer {
             port: port,
             expectedTarget: expectedTarget,
             simulatorUDID: simulatorUDID,
-            disconnectRuntimeRequests: disconnectRuntimeRequests
+            disconnectRuntimeRequests: disconnectRuntimeRequests,
+            runtimeScreenshot: runtimeScreenshot,
+            runtimeDataRefs: runtimeDataRefs
         )
         URLProtocol.registerClass(server)
     }
@@ -1213,6 +1306,8 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
     private static var configuredExpectedTarget: String?
     private static var configuredSimulatorUDID: String?
     private static var disconnectRuntimeRequests = false
+    private static var configuredRuntimeScreenshot: TKScreenshotResponse?
+    private static var configuredRuntimeDataRefs: [String: Data] = [:]
     private static var recordedTargets: [String?] = []
     private static var recordedTypes: [String] = []
     private static var recordedLatestHierarchyTargets: [String?] = []
@@ -1233,13 +1328,17 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
         port: Int,
         expectedTarget: String,
         simulatorUDID: String?,
-        disconnectRuntimeRequests: Bool
+        disconnectRuntimeRequests: Bool,
+        runtimeScreenshot: TKScreenshotResponse?,
+        runtimeDataRefs: [String: Data]
     ) {
         lock.withEvidenceLock {
             configuredPort = port
             configuredExpectedTarget = expectedTarget
             configuredSimulatorUDID = simulatorUDID
             self.disconnectRuntimeRequests = disconnectRuntimeRequests
+            configuredRuntimeScreenshot = runtimeScreenshot
+            configuredRuntimeDataRefs = runtimeDataRefs
             recordedTargets = []
             recordedTypes = []
             recordedLatestHierarchyTargets = []
@@ -1252,6 +1351,8 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
             configuredExpectedTarget = nil
             configuredSimulatorUDID = nil
             disconnectRuntimeRequests = false
+            configuredRuntimeScreenshot = nil
+            configuredRuntimeDataRefs = [:]
             recordedTargets = []
             recordedTypes = []
             recordedLatestHierarchyTargets = []
@@ -1311,6 +1412,12 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
                 ),
             ]
             return try json(TKTargetsResponse(targets: targets))
+        case ("GET", let path) where path.hasPrefix("/data/"):
+            let dataRef = String(path.dropFirst("/data/".count))
+            guard let data = lock.withEvidenceLock({ configuredRuntimeDataRefs[dataRef] }) else {
+                return (404, "text/plain", Data("missing data ref".utf8))
+            }
+            return (200, "image/jpeg", data)
         case ("GET", "/hierarchy/latest"):
             let target = URLComponents(url: url, resolvingAgainstBaseURL: false)?
                 .queryItems?
@@ -1390,13 +1497,16 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
                 orientation: "portrait"
             ))
         case "screenshot":
-            return try json(TKScreenshotResponse(
+            let screenshot = lock.withEvidenceLock {
+                configuredRuntimeScreenshot
+            } ?? TKScreenshotResponse(
                 format: "png",
                 width: 1,
                 height: 1,
                 scale: 1,
                 dataBase64: Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00]).base64EncodedString()
-            ))
+            )
+            return try json(screenshot)
         default:
             return (400, "text/plain", Data("unsupported request".utf8))
         }

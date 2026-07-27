@@ -52,6 +52,7 @@ func validateTritonTestContract(yaml: String, inputPath: String) throws -> TKTes
     let app = try parseTestApp(root["app"])
     let device = try parseTestDevice(root["device"])
     let settings = try parseTestSettings(root["settings"])
+    let provenance = try parseTestProvenance(root["provenance"])
     let steps = try parseTestSteps(root["steps"], defaultTimeoutMs: settings.timeoutMs)
 
     return TKTestNormalizedPlan(
@@ -59,7 +60,93 @@ func validateTritonTestContract(yaml: String, inputPath: String) throws -> TKTes
         app: app,
         device: device,
         settings: settings,
-        steps: steps
+        steps: steps,
+        provenance: provenance
+    )
+}
+
+private func parseTestProvenance(_ value: Any?) throws -> TKTestPlanProvenance? {
+    guard let value else {
+        return nil
+    }
+    guard let provenance = value as? [String: Any] else {
+        throw testValidationFailure(
+            code: "invalid_optional_type",
+            message: "provenance must be a mapping when provided.",
+            path: "$.provenance"
+        )
+    }
+
+    let importerVersion = try requiredInt(provenance["importerVersion"], path: "$.provenance.importerVersion")
+    guard importerVersion == 1 else {
+        throw testValidationFailure(
+            code: "unsupported_schema_version",
+            message: "Only provenance importerVersion 1 is supported.",
+            path: "$.provenance.importerVersion",
+            allowed: ["1"]
+        )
+    }
+    let sourceKind = try requiredNonEmptyString(provenance["sourceKind"], path: "$.provenance.sourceKind")
+    guard sourceKind == "triton.testrec.compiled-contract" else {
+        throw testValidationFailure(
+            code: "unsupported_provenance",
+            message: "provenance.sourceKind must be triton.testrec.compiled-contract.",
+            path: "$.provenance.sourceKind",
+            allowed: ["triton.testrec.compiled-contract"]
+        )
+    }
+    let sourcePlatform = try requiredNonEmptyString(provenance["sourcePlatform"], path: "$.provenance.sourcePlatform")
+
+    guard let rawContractRef = provenance["contractRef"] as? [String: Any] else {
+        throw testValidationFailure(
+            code: "missing_required_field",
+            message: "provenance.contractRef is required.",
+            path: "$.provenance.contractRef"
+        )
+    }
+    let path = try requiredNonEmptyString(rawContractRef["path"], path: "$.provenance.contractRef.path")
+    guard path == "compiled-contract.json" else {
+        throw testValidationFailure(
+            code: "invalid_provenance",
+            message: "provenance.contractRef.path must be the package-relative compiled-contract.json artifact.",
+            path: "$.provenance.contractRef.path"
+        )
+    }
+    let byteCount = try requiredInt(rawContractRef["byteCount"], path: "$.provenance.contractRef.byteCount")
+    guard byteCount > 0 else {
+        throw testValidationFailure(
+            code: "invalid_provenance",
+            message: "provenance.contractRef.byteCount must be positive.",
+            path: "$.provenance.contractRef.byteCount"
+        )
+    }
+    let digestAlgorithm = try requiredNonEmptyString(rawContractRef["digestAlgorithm"], path: "$.provenance.contractRef.digestAlgorithm")
+    guard digestAlgorithm == "fnv1a64" else {
+        throw testValidationFailure(
+            code: "invalid_provenance",
+            message: "provenance.contractRef.digestAlgorithm must be fnv1a64.",
+            path: "$.provenance.contractRef.digestAlgorithm"
+        )
+    }
+    let digest = try requiredNonEmptyString(rawContractRef["digest"], path: "$.provenance.contractRef.digest")
+    guard digest.range(of: #"^[0-9a-f]{16}$"#, options: .regularExpression) != nil else {
+        throw testValidationFailure(
+            code: "invalid_provenance",
+            message: "provenance.contractRef.digest must be a lowercase 16-character fnv1a64 digest.",
+            path: "$.provenance.contractRef.digest"
+        )
+    }
+
+    return TKTestPlanProvenance(
+        importerVersion: importerVersion,
+        sourceKind: sourceKind,
+        sourcePlatform: sourcePlatform,
+        contractRef: TKTestRecorderReplayContractRef(
+            path: path,
+            byteCount: byteCount,
+            digestAlgorithm: digestAlgorithm,
+            digest: digest
+        )
     )
 }
 

@@ -118,6 +118,14 @@ func testNormalizedPlanOutputContract() -> TKCommandOutputContract {
             ("settings.retry", "TKTestPlanRetry", true, "Retry policy"),
             ("settings.retry.count", "Int", true, "Retry count"),
             ("settings.retry.intervalMs", "Int", true, "Retry interval in milliseconds"),
+            ("provenance", "TKTestPlanProvenance?", false, "Optional package-relative source identity retained by test validate/run"),
+            ("provenance.importerVersion", "Int?", false, "Importer provenance schema version"),
+            ("provenance.sourceKind", "String?", false, "Stable source artifact kind"),
+            ("provenance.sourcePlatform", "String?", false, "Recorded source platform"),
+            ("provenance.contractRef.path", "String?", false, "Package-relative compiled contract path"),
+            ("provenance.contractRef.byteCount", "Int?", false, "Compiled contract byte count"),
+            ("provenance.contractRef.digestAlgorithm", "String?", false, "Stable digest algorithm"),
+            ("provenance.contractRef.digest", "String?", false, "Stable compiled contract digest; not a signature"),
             ("steps", "[TKTestPlanStep]", true, "0-based normalized steps"),
             ("steps[].index", "Int", true, "0-based step index"),
             ("steps[].id", "String", true, "Stable step id, generated as step-000 when omitted"),
@@ -204,6 +212,60 @@ func testReportOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
+
+func testReliabilityOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "test.reliability",
+        format: "json",
+        kind: "test-reliability-report",
+        model: "TKTestReliabilityReport",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the offline report was generated; gate status is reported separately"),
+            ("schemaVersion", "Int", true, "Report schema version; always 1"),
+            ("kind", "String", true, "Stable kind; triton.test.reliability-report"),
+            ("thresholds", "TKTestReliabilityThresholds", true, "Exact thresholds used to calculate the reported gate"),
+            ("evidenceCompleteness", "TKTestReliabilityMetric", true, "Completeness over private sample evidence bundles"),
+            ("failureExplainability", "TKTestReliabilityMetric", true, "Measured only when one or more samples have a non-passed terminal status"),
+            ("outcomeRepeatability", "TKTestReliabilityMetric", true, "Supported-flow semantic repeatability; ignores timestamps, run ids, and screenshot bytes"),
+            ("flows", "[TKTestReliabilityFlow]", true, "Per-report opaque flow aliases, sample counts, and normalized-plan digests only"),
+            ("flows[].flowID", "String", true, "Deterministic per-report opaque alias such as flow_001; never the private input flow id, a path, run id, or selector"),
+            ("flows[].planDigest", "String", true, "FNV-1a digest of normalized-plan.json, not raw plan content"),
+            ("issueCounts", "[String:Int]", true, "Stable evidence, duplicate-identity, failure-taxonomy, target-binding, or semantic-drift issue counts"),
+            ("gate", "TKTestReliabilityGate", true, "Canonical gate status and stable blocker codes"),
+            ("gate.status", "String", true, "passed or blocked"),
+            ("gate.blockerCodes", "[String]", true, "Stable threshold and stop-expansion blocker codes"),
+        ])
+    )
+}
+
+func testReliabilityCollectionPreflightOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "test.reliability-collection-preflight",
+        format: "json",
+        kind: "test-reliability-collection-preflight",
+        model: "TKTestReliabilityCollectionPreflightResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the offline collection contract was validated"),
+            ("schemaVersion", "Int", true, "Preflight response schema version; always 1"),
+            ("kind", "String", true, "Stable kind; triton.test.reliability-collection-preflight"),
+            ("status", "TKTestReliabilityCollectionPreflightStatus", true, "ready_to_collect only; it is not a runtime verdict or reliability-gate pass"),
+            ("writesEvidence", "Bool", true, "Always false; preflight never creates evidence, receipts, or samples"),
+            ("usesRuntime", "Bool", true, "Always false; preflight never starts or queries a server, target, App, Simulator, or runner"),
+            ("eligibleForReliabilityGate", "Bool", true, "Always false; a declared collection cannot enter the gate before real samples exist"),
+            ("targetBindingDigest", "String", true, "FNV-1a identity of the private canonical target tuple; no raw target, UDID, or bundle is returned"),
+            ("supportedFlowCount", "Int", true, "Exactly three supported imported iOS Simulator flows"),
+            ("runsPerSupportedFlow", "Int", true, "Exactly twenty reserved runs per supported flow"),
+            ("negativeControlCount", "Int", true, "Exactly one separately declared future nonpassed control"),
+            ("plannedSampleCount", "Int", true, "Reserved future sample count; 61 for three times twenty plus one control, not completed samples"),
+            ("flows", "[TKTestReliabilityCollectionPreflightFlow]", true, "Anonymous flow aliases with frozen normalized-plan digests only"),
+            ("flows[].flowID", "String", true, "Deterministic opaque alias such as flow_001; never the private flow id, path, selector, or visible text"),
+            ("flows[].plannedRunCount", "Int", true, "Reserved run count for the anonymous flow"),
+            ("flows[].planDigest", "String", true, "FNV-1a digest of the normalized-plan bytes future test run evidence will use"),
+            ("blockerCodes", "[String]", true, "Empty for ready_to_collect; invalid private input returns a JSON error envelope instead"),
+        ])
+    )
+}
+
 func testCreateOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "test.create",
@@ -221,6 +283,41 @@ func testCreateOutputContract() -> TKCommandOutputContract {
             ("stepCount", "Int", true, "Number of generated test steps"),
             ("validation", "TKTestValidationResponse", true, "Validation result for the generated YAML"),
             ("suggestedCommands", "[String]", true, "Follow-up validate/run commands"),
+        ])
+    )
+}
+
+func testImportOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "test.import",
+        format: "json",
+        kind: "test-import-result",
+        model: "TKTestImportResponse|TKTestValidationFailureResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the compiled testrec contract was imported"),
+            ("schemaVersion", "Int?", false, "Import response schema version for ok responses"),
+            ("kind", "String?", false, "Stable response kind; triton.test.import-result when ok"),
+            ("input", "String?", false, "Source .tritontestcase package filename when import succeeds; never an absolute source path"),
+            ("output", "String?", false, "Written .tritontest.yaml filename when import succeeds; never an absolute host path"),
+            ("importedPlan", "TKTestNormalizedPlan?", false, "Validated normalized plan generated from the compiled contract"),
+            ("validation", "TKTestValidationResponse?", false, "In-memory validation result completed before the output write"),
+            ("provenance", "TKTestPlanProvenance?", false, "Package-relative stable identity of compiled-contract.json; not a cryptographic signature"),
+            ("provenance.importerVersion", "Int?", false, "Importer provenance schema version"),
+            ("provenance.sourceKind", "String?", false, "Stable compiled source kind"),
+            ("provenance.sourcePlatform", "String?", false, "Recorded source platform; target device.platform remains explicitly selected"),
+            ("provenance.contractRef", "TKTestRecorderReplayContractRef?", false, "Package-relative FNV-1a reference for compiled-contract.json"),
+            ("provenance.contractRef.path", "String?", false, "Package-relative compiled contract artifact path"),
+            ("provenance.contractRef.byteCount", "Int?", false, "Compiled contract byte count"),
+            ("provenance.contractRef.digestAlgorithm", "String?", false, "Stable digest algorithm; fnv1a64"),
+            ("provenance.contractRef.digest", "String?", false, "Stable compiled contract digest; not a signature"),
+            ("unmapped", "[TKTestImportUnmappedFeature]?", false, "Always empty on success because P0 fails instead of silently dropping semantics"),
+            ("suggestedCommands", "[String]?", false, "Validate then optionally run the generated plan through the existing sole executor"),
+            ("error", "TKTestValidationErrorDetail?", false, "Machine-readable import failure when ok is false"),
+            ("error.type", "String?", false, "Stable failure type; validation_error"),
+            ("error.message", "String?", false, "Human-readable import failure summary without raw sensitive action payloads"),
+            ("error.path", "String?", false, "Source field, source artifact, or import option that was rejected"),
+            ("error.code", "String?", false, "Stable import failure code"),
+            ("error.allowed", "[String]?", false, "Allowed values for constrained import options when applicable"),
         ])
     )
 }
@@ -437,7 +534,12 @@ func testRecorderReplayDryRunOutputContract() -> TKCommandOutputContract {
             ("dryRun", "Bool?", false, "Always true for this P0 replay surface"),
             ("platform", "String?", false, "Target platform requested for replay planning"),
             ("device", "String?", false, "Optional target device selector"),
-            ("status", "String?", false, "ready or blocked"),
+            ("status", "String?", false, "Compatibility planning status: ready or blocked; never a real test verdict"),
+            ("verdictBoundary", "TKTestRecorderReplayVerdictBoundary?", false, "Additive boundary for offline testrec diagnostics; absent in legacy replay-result files"),
+            ("verdictBoundary.classification", "String?", false, "offline-diagnostic for testrec replay and matrix output"),
+            ("verdictBoundary.countsAsRealTestVerdict", "Bool?", false, "Always false: status must not be treated as a real test verdict"),
+            ("verdictBoundary.eligibleForReliabilityGate", "Bool?", false, "Always false: offline diagnostics cannot enter the reliability gate"),
+            ("verdictBoundary.migrationCommands", "[String]?", false, "Placeholder-only import, validate, and run commands for the supported triton test path"),
             ("manifest", "TKTestRecorderManifest?", false, "Decoded manifest.json"),
             ("capabilities", "TKTestRecorderContractCapabilities?", false, "Decoded contract-capabilities.json"),
             ("compileSummary", "TKTestRecorderCompileSummary?", false, "Compile preflight summary reused by replay planning"),
@@ -466,7 +568,12 @@ func testRecorderReplayDryRunOutputContract() -> TKCommandOutputContract {
             ("executorProfiles[].requirements[].required", "Bool?", false, "Whether this profile requires the capability"),
             ("executorProfiles[].requirements[].status", "String?", false, "satisfied, missing, optional, not-required, simulated, not-present, or not-requested"),
             ("executorProfiles[].requirements[].evidence", "[String]?", false, "Evidence tags explaining requirement status"),
-            ("executorProfiles[].nextCommand", "String?", false, "Next command for available executor or schema inspection"),
+            ("executorProfiles[].nextCommand", "String?", false, "Available diagnostic command or the supported triton test import migration template"),
+            ("executorProfiles[].verdictBoundary", "TKTestRecorderReplayVerdictBoundary?", false, "Same offline diagnostic boundary exposed by this executor profile"),
+            ("executorProfiles[].verdictBoundary.classification", "String?", false, "offline-diagnostic for all current testrec executor profiles"),
+            ("executorProfiles[].verdictBoundary.countsAsRealTestVerdict", "Bool?", false, "Always false for current testrec executor profiles"),
+            ("executorProfiles[].verdictBoundary.eligibleForReliabilityGate", "Bool?", false, "Always false for current testrec executor profiles"),
+            ("executorProfiles[].verdictBoundary.migrationCommands", "[String]?", false, "Placeholder-only supported migration sequence"),
             ("plannedSteps", "[TKTestRecorderReplayPlannedStep]?", false, "Replay steps planned from actions.jsonl without execution"),
             ("plannedSteps[].index", "Int?", false, "1-based planned step index"),
             ("plannedSteps[].sourceEventID", "String?", false, "Optional source action event id"),
@@ -497,7 +604,7 @@ func testRecorderReplayRunOutputContract() -> TKCommandOutputContract {
         kind: "testrec-replay-result",
         model: "TKTestRecorderReplayRunResponse|TKTestRecorderValidationFailureResponse",
         fields: schemaContractFields([
-            ("ok", "Bool", true, "Whether the replay executor finished without blockers"),
+            ("ok", "Bool", true, "Whether the offline replay diagnostic finished without blockers; not a real test verdict"),
             ("schemaVersion", "Int?", false, "Replay result response schema version for ok responses"),
             ("kind", "String?", false, "Stable response kind; triton.testrec.replay-result when ok"),
             ("path", "String?", false, "Resolved .tritontestcase directory path"),
@@ -505,7 +612,12 @@ func testRecorderReplayRunOutputContract() -> TKCommandOutputContract {
             ("executor", "String?", false, "Replay executor identifier; local-simulated or local-device"),
             ("platform", "String?", false, "Target platform requested for replay"),
             ("device", "String?", false, "Optional target device selector"),
-            ("status", "String?", false, "passed or blocked"),
+            ("status", "String?", false, "Compatibility diagnostic status: passed or blocked; never a real test verdict"),
+            ("verdictBoundary", "TKTestRecorderReplayVerdictBoundary?", false, "Additive boundary for offline testrec diagnostics; absent in legacy replay-result files"),
+            ("verdictBoundary.classification", "String?", false, "offline-diagnostic for testrec replay output"),
+            ("verdictBoundary.countsAsRealTestVerdict", "Bool?", false, "Always false: status must not be treated as a real test verdict"),
+            ("verdictBoundary.eligibleForReliabilityGate", "Bool?", false, "Always false: offline diagnostics cannot enter the reliability gate"),
+            ("verdictBoundary.migrationCommands", "[String]?", false, "Placeholder-only import, validate, and run commands for the supported triton test path"),
             ("manifest", "TKTestRecorderManifest?", false, "Decoded manifest.json"),
             ("capabilities", "TKTestRecorderContractCapabilities?", false, "Decoded contract-capabilities.json"),
             ("compileSummary", "TKTestRecorderCompileSummary?", false, "Compile preflight summary reused by replay"),

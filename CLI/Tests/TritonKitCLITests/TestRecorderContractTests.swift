@@ -175,6 +175,11 @@ struct TestRecorderContractTests {
             "dryRun",
             "platform",
             "status",
+            "verdictBoundary",
+            "verdictBoundary.classification",
+            "verdictBoundary.countsAsRealTestVerdict",
+            "verdictBoundary.eligibleForReliabilityGate",
+            "verdictBoundary.migrationCommands",
             "contractRef",
             "contractRef.path",
             "contractRef.digestAlgorithm",
@@ -188,6 +193,11 @@ struct TestRecorderContractTests {
             "executorProfiles[].status",
             "executorProfiles[].requirements",
             "executorProfiles[].requirements[].name",
+            "executorProfiles[].verdictBoundary",
+            "executorProfiles[].verdictBoundary.classification",
+            "executorProfiles[].verdictBoundary.countsAsRealTestVerdict",
+            "executorProfiles[].verdictBoundary.eligibleForReliabilityGate",
+            "executorProfiles[].verdictBoundary.migrationCommands",
             "plannedSteps",
             "plannedSteps[].command",
             "plannedSteps[].argv",
@@ -205,6 +215,11 @@ struct TestRecorderContractTests {
             "executor",
             "platform",
             "status",
+            "verdictBoundary",
+            "verdictBoundary.classification",
+            "verdictBoundary.countsAsRealTestVerdict",
+            "verdictBoundary.eligibleForReliabilityGate",
+            "verdictBoundary.migrationCommands",
             "contractRef",
             "contractRef.path",
             "contractRef.digestAlgorithm",
@@ -269,6 +284,11 @@ struct TestRecorderContractTests {
             "executor",
             "evidenceRoot",
             "status",
+            "verdictBoundary",
+            "verdictBoundary.classification",
+            "verdictBoundary.countsAsRealTestVerdict",
+            "verdictBoundary.eligibleForReliabilityGate",
+            "verdictBoundary.migrationCommands",
             "targetCount",
             "readyCount",
             "passedCount",
@@ -282,6 +302,11 @@ struct TestRecorderContractTests {
             "results[].plannedStepCount",
             "results[].evidenceDir",
             "results[].blockers",
+            "results[].verdictBoundary",
+            "results[].verdictBoundary.classification",
+            "results[].verdictBoundary.countsAsRealTestVerdict",
+            "results[].verdictBoundary.eligibleForReliabilityGate",
+            "results[].verdictBoundary.migrationCommands",
             "suggestedCommands",
         ])
 
@@ -290,16 +315,91 @@ struct TestRecorderContractTests {
         #expect(capabilitiesRef.description.contains("inside the .tritontestcase package"))
 
         let dryRunContract = try #require(schema.outputContracts.first { $0.selector == "testrec.replay-dry-run" })
+        let dryRunBoundary = try #require(dryRunContract.fields.first { $0.name == "verdictBoundary.countsAsRealTestVerdict" })
+        #expect(dryRunBoundary.description.contains("Always false"))
         let dryRunRequirementStatus = try #require(dryRunContract.fields.first { $0.name == "executorProfiles[].requirements[].status" })
         for status in ["satisfied", "missing", "optional", "not-required", "simulated", "not-present", "not-requested"] {
             #expect(dryRunRequirementStatus.description.contains(status))
         }
 
         let replayContract = try #require(schema.outputContracts.first { $0.selector == "testrec.replay-result" })
+        let replayBoundary = try #require(replayContract.fields.first { $0.name == "verdictBoundary.eligibleForReliabilityGate" })
+        #expect(replayBoundary.description.contains("Always false"))
         let replayRequirementStatus = try #require(replayContract.fields.first { $0.name == "execution.executorRequirements[].status" })
         for status in ["satisfied", "missing", "optional", "not-required", "simulated", "not-present", "not-requested"] {
             #expect(replayRequirementStatus.description.contains(status))
         }
+    }
+
+    @Test("simulated testrec outputs preserve legacy status but declare no real verdict")
+    func simulatedTestrecOutputsDeclareOfflineDiagnosticBoundary() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        try writeValidManifest(to: caseURL)
+        try writeValidCapabilities(to: caseURL)
+        try writeRawStreams(to: caseURL)
+        _ = try compileTritonTestCase(path: caseURL.path, writeContract: true)
+
+        let dryRun = try replayTritonTestCaseDryRun(path: caseURL.path, platform: "ios", device: "sim-a")
+        let simulated = try replayTritonTestCaseLocalSimulated(path: caseURL.path, platform: "ios", device: "sim-a")
+        let dryMatrix = try matrixTritonTestCase(
+            path: caseURL.path,
+            targets: "ios:sim-a,android:emu-a",
+            executor: nil,
+            targetFingerprints: nil
+        )
+        let simulatedMatrix = try matrixTritonTestCase(
+            path: caseURL.path,
+            targets: "ios:sim-a,android:emu-a",
+            executor: "local-simulated",
+            targetFingerprints: nil
+        )
+        let importTemplate = "triton test import <case.tritontestcase> --output <path.tritontest.yaml> --bundle-id <bundle-id> --device-platform ios-simulator --json"
+        let expectedMigration = [
+            importTemplate,
+            "triton test validate <path.tritontest.yaml> --json",
+            "triton test run <path.tritontest.yaml> --target <target-id> --evidence-dir <dir.tritonevidence> --json",
+        ]
+
+        #expect(simulated.status == "passed")
+        #expect(simulatedMatrix.status == "passed")
+        #expect(simulatedMatrix.passedCount == 2)
+        for boundary in [
+            dryRun.verdictBoundary,
+            simulated.verdictBoundary,
+            dryMatrix.verdictBoundary,
+            simulatedMatrix.verdictBoundary,
+        ] {
+            #expect(boundary?.classification == "offline-diagnostic")
+            #expect(boundary?.countsAsRealTestVerdict == false)
+            #expect(boundary?.eligibleForReliabilityGate == false)
+            #expect(boundary?.migrationCommands == expectedMigration)
+        }
+        #expect(dryMatrix.results.allSatisfy { $0.verdictBoundary?.countsAsRealTestVerdict == false })
+        #expect(simulatedMatrix.results.allSatisfy { $0.verdictBoundary?.eligibleForReliabilityGate == false })
+        #expect(dryRun.executorProfiles.allSatisfy { $0.verdictBoundary?.eligibleForReliabilityGate == false })
+
+        let localDevice = try #require(dryRun.executorProfiles.first { $0.id == "local-device" })
+        #expect(localDevice.verdictBoundary?.classification == "offline-diagnostic")
+        #expect(localDevice.message.contains("does not provide a real device replay executor"))
+        #expect(localDevice.nextCommand == importTemplate)
+
+        let capability = try #require(connectedCapabilities().first { $0.name == "testrec-replay-local-simulated" })
+        #expect(capability.nextAction?.command == "test")
+        #expect(capability.nextAction?.args == [
+            "import", "<case.tritontestcase>", "--output", "<path.tritontest.yaml>",
+            "--bundle-id", "<bundle-id>", "--device-platform", "ios-simulator", "--json",
+        ])
+
+        let encoded = try JSONEncoder().encode(simulated)
+        var legacyObject = try #require(
+            JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+        )
+        legacyObject.removeValue(forKey: "verdictBoundary")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacy = try JSONDecoder().decode(TKTestRecorderReplayRunResponse.self, from: legacyData)
+        #expect(legacy.status == "passed")
+        #expect(legacy.verdictBoundary == nil)
     }
 
     @Test("start event stop creates an inspectable explicit-event case")
@@ -487,6 +587,8 @@ struct TestRecorderContractTests {
         #expect(localDeviceRun.executor == "local-device")
         #expect(localDeviceRun.blockers.map(\.code).contains("target_not_found"))
         #expect(localDeviceRun.steps.allSatisfy { $0.deviceCommandExecuted == false })
+        #expect(localDeviceRun.verdictBoundary?.countsAsRealTestVerdict == false)
+        #expect(localDeviceRun.verdictBoundary?.migrationCommands.first == "triton test import <case.tritontestcase> --output <path.tritontest.yaml> --bundle-id <bundle-id> --device-platform ios-simulator --json")
         #expect(matrix.kind == "triton.testrec.matrix")
         #expect(matrix.status == "ready")
         #expect(matrix.targetCount == 2)
@@ -567,7 +669,7 @@ struct TestRecorderContractTests {
 
         #expect(failure?.detail.code == "unsupported_replay_executor")
         #expect(failure?.detail.path == "--executor")
-        #expect(failure?.detail.hint?.contains("live-target-device") == true)
+        #expect(failure?.detail.hint?.contains("triton test import") == true)
     }
 
     @Test("inspect valid tritontestcase reads manifest and contract capabilities")
@@ -1189,7 +1291,7 @@ struct TestRecorderContractTests {
         let localDevice = response.executorProfiles[1]
         #expect(localDevice.status == "unsupported")
         #expect(localDevice.mode == "device-execution")
-        #expect(localDevice.nextCommand == "triton schema --command testrec --json")
+        #expect(localDevice.nextCommand == "triton test import <case.tritontestcase> --output <path.tritontest.yaml> --bundle-id <bundle-id> --device-platform ios-simulator --json")
         #expect(localDevice.requirements.map(\.name) == [
             "compiled-contract",
             "live-target-device",

@@ -176,6 +176,9 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if ["artifact_write_failed", "file_write_failed", "artifact_output_rejected"].contains(failureCode) {
             categories.append("archive")
         }
+        if ["output_already_exists", "output_write_failed"].contains(failureCode) {
+            categories.append(contentsOf: ["archive", "diagnose"])
+        }
         if ["sim_record_truncated", "sim_record_invalid_artifact"].contains(failureCode) {
             categories.append(contentsOf: ["archive", "diagnose"])
         }
@@ -184,6 +187,9 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         }
         if failureCode == "app_map_error" || failureCode == "unconfirmed_path" || failureCode == "non_replayable_path" {
             categories.append(contentsOf: ["archive", "plan"])
+        }
+        if ["contract_quality_review_required", "redaction_review_required", "source_identity_mismatch", "truncated_source_contract", "unmapped_contract_feature", "compiled_digest_mismatch"].contains(failureCode) {
+            categories.append(contentsOf: ["diagnose", "plan"])
         }
         if failureCode.hasPrefix("ai_") {
             categories.append(contentsOf: ["archive", "diagnose", "plan"])
@@ -290,7 +296,12 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
 
     private static let unsupportedFailureCodesRequiringRecovery: Set<String> = [
         "action_not_supported",
+        "contract_quality_review_required",
+        "redaction_review_required",
+        "unmapped_contract_feature",
+        "unsupported_compiled_contract",
         "unsupported_host_action",
+        "unsupported_import_platform",
         "unsupported_capability",
         "unsupported_runtime_scope",
         "proxy_real_device_not_supported",

@@ -113,6 +113,9 @@ func outputContractKindTaxonomy() -> Set<String> {
         "target-summary",
         "test-normalized-plan",
         "test-create-result",
+        "test-import-result",
+        "test-reliability-report",
+        "test-reliability-collection-preflight",
         "testrec-compile",
         "testrec-event",
         "testrec-inspect",
@@ -315,7 +318,7 @@ func recoveryCommandRootCategoryMap() -> [String: String] {
 
 func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
     switch failureCode {
-    case "ambiguous_target", "android_target_unauthorized", "device_not_ready", "simulator_not_booted", "simulator_not_found", "target_not_found", "target_unavailable":
+    case "ambiguous_target", "android_target_unauthorized", "device_not_ready", "simulator_not_booted", "simulator_not_found", "target_not_found", "target_platform_mismatch", "target_unavailable":
         return ["discover", "prepare-target", "diagnose"]
     case "ios_host_ax_unsupported_platform":
         return ["diagnose", "plan"]
@@ -323,7 +326,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["project", "diagnose"]
     case "assertion_failed", "route_mismatch", "text_not_found", "timeout":
         return ["verify", "observe", "archive"]
-    case "artifact_write_failed", "file_write_failed", "overwrite_refused":
+    case "artifact_write_failed", "file_write_failed", "overwrite_refused", "output_already_exists":
         return ["archive", "diagnose"]
     case "app_pull_destination_missing", "app_pull_directory_not_allowed", "app_pull_artifact_too_large", "app_pull_unsafe_artifact":
         return ["archive", "diagnose"]
@@ -355,7 +358,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "project"]
     case "swift_macro_plugin_malformed_response":
         return ["diagnose", "project", "archive"]
-    case "validation_error", "validation_failed", "unknown_command_schema", "unknown_step", "duplicate_step_id", "session_not_recording":
+    case "validation_error", "validation_failed", "unknown_command_schema", "unknown_step", "duplicate_step_id", "session_not_recording", "contract_quality_review_required", "redaction_review_required", "source_identity_mismatch", "truncated_source_contract", "unmapped_contract_feature", "compiled_digest_mismatch":
         return ["diagnose", "plan", "discover", "observe", "archive"]
     case "web_port_in_use":
         return ["diagnose", "plan"]

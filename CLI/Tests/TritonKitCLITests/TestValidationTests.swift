@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 @testable import TritonKitCLI
+import TritonKitShared
 
 @Suite
 struct TestValidationTests {
@@ -292,19 +293,56 @@ struct TestValidationTests {
         let schema = try #require(commandSchemas().first { $0.name == "test" })
         let validate = try #require(schema.subcommands.first { $0.name == "validate" })
         let run = try #require(schema.subcommands.first { $0.name == "run" })
+        let failureShape = try #require(schema.failureShape)
 
         #expect(schema.requiresServer == false)
         #expect(schema.requiresTarget == false)
-        #expect(schema.runtimeScope == "offline for validate/normalize/report/create; runtime target required for run")
-        #expect(schema.providedCapabilities == ["test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-create-from-session"])
+        #expect(schema.runtimeScope == "offline for import/validate/normalize/report/reliability/reliability-preflight/create; runtime target required for run")
+        #expect(schema.providedCapabilities == ["test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-reliability-gate", "test-reliability-collection-preflight", "test-create-from-session"])
         #expect(schema.failureCodes.contains("unsupported_step"))
+        #expect(failureShape.contains("run"))
+        #expect(failureShape.contains("reliability-preflight"))
+        #expect(failureShape.contains("error:{ code, message"))
         #expect(validate.requiredOptions == ["<path.tritontest.yaml>"])
         #expect(validate.outputSelectors == ["test.validation", "test.normalized-plan"])
         #expect(run.requiredOptions == ["<path.tritontest.yaml>", "--evidence-dir"])
         #expect(run.outputSelectors == ["test.run-result", "test.validation", "test.normalized-plan"])
         #expect(schema.outputContracts.contains { $0.selector == "test.run-result" })
         #expect(schema.outputContracts.contains { $0.selector == "test.report" })
+        #expect(schema.outputContracts.contains { $0.selector == "test.reliability" })
+        #expect(schema.outputContracts.contains { $0.selector == "test.reliability-collection-preflight" })
         #expect(schema.outputContracts.contains { $0.selector == "test.create" })
+    }
+
+    @Test("test import reports omitted required fields as one JSON validation envelope")
+    func testImportMissingFieldsUseJSONValidationEnvelope() throws {
+        let result = try runTriton(["test", "import", "--json"])
+
+        #expect(result.exitCode == 1)
+        #expect(result.stderr.isEmpty)
+        let response = try JSONDecoder().decode(
+            TKTestValidationFailureResponse.self,
+            from: Data(result.stdout.utf8)
+        )
+        #expect(!response.ok)
+        #expect(response.error.type == "validation_error")
+        #expect(response.error.code == "missing_required_field")
+        #expect(response.error.path == "<case.tritontestcase>")
+    }
+
+    @Test("test reliability-preflight reports an omitted collection as one JSON envelope")
+    func testReliabilityPreflightMissingCollectionUsesJSONEnvelope() throws {
+        let result = try runTriton(["test", "reliability-preflight", "--json"])
+
+        #expect(result.exitCode == 1)
+        #expect(result.stderr.isEmpty)
+        let response = try JSONDecoder().decode(
+            TKCLIErrorResponse.self,
+            from: Data(result.stdout.utf8)
+        )
+        #expect(!response.ok)
+        #expect(response.error.code == "missing_required_field")
+        #expect(response.error.message == "--collection is required.")
     }
 
     private func validContractYAML() -> String {

@@ -112,16 +112,16 @@ struct TestRecorderCompile: ParsableCommand {
 struct TestRecorderReplay: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "replay",
-        abstract: "Plan or locally simulate a .tritontestcase replay"
+        abstract: "Plan or run an offline diagnostic for a .tritontestcase replay"
     )
 
     @Argument(help: ".tritontestcase directory path") var input: String
     @Option(help: "Target platform: ios, android, harmony, or web") var platform: String
     @Option(help: "Optional target device selector") var device: String?
-    @Flag(name: .customLong("dry-run"), help: "Only build the replay plan without executing") var dryRun = false
-    @Option(help: "Replay executor. Current non-device executor: local-simulated") var executor: String?
-    @Option(name: .customLong("evidence-dir"), help: "Optional .tritonevidence output directory for local-simulated replay") var evidenceDir: String?
-    @Option(name: .customLong("target-fingerprints-json"), help: "Optional target-side page fingerprint object, array, or {pages:[...]} for local-simulated replay") var targetFingerprintsJSON: String?
+    @Flag(name: .customLong("dry-run"), help: "Only build the offline diagnostic plan without executing") var dryRun = false
+    @Option(help: "Replay diagnostic executor. local-simulated never produces a real test verdict") var executor: String?
+    @Option(name: .customLong("evidence-dir"), help: "Optional diagnostic .tritonevidence output directory for local-simulated replay") var evidenceDir: String?
+    @Option(name: .customLong("target-fingerprints-json"), help: "Optional target-side page fingerprint object, array, or {pages:[...]} for local-simulated diagnostics") var targetFingerprintsJSON: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
@@ -142,14 +142,14 @@ struct TestRecorderReplay: ParsableCommand {
 struct TestRecorderMatrix: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "matrix",
-        abstract: "Build a multi-target .tritontestcase replay matrix"
+        abstract: "Build a multi-target offline diagnostic matrix for a .tritontestcase"
     )
 
     @Argument(help: ".tritontestcase directory path") var input: String
     @Option(help: "Comma-separated targets: ios:sim-a,android:emu-a,harmony:dev-a") var targets: String
-    @Option(help: "Optional executor; current offline value is local-simulated. Omit for dry-run matrix.") var executor: String?
-    @Option(name: .customLong("target-fingerprints-json"), help: "Optional target-side page fingerprint object, array, or {pages:[...]} for local-simulated matrix") var targetFingerprintsJSON: String?
-    @Option(name: .customLong("evidence-root"), help: "Optional root directory for per-target local-simulated evidence bundles") var evidenceRoot: String?
+    @Option(help: "Optional diagnostic executor; local-simulated never produces real test verdicts. Omit for dry-run matrix.") var executor: String?
+    @Option(name: .customLong("target-fingerprints-json"), help: "Optional target-side page fingerprint object, array, or {pages:[...]} for local-simulated diagnostics") var targetFingerprintsJSON: String?
+    @Option(name: .customLong("evidence-root"), help: "Optional root directory for per-target local-simulated diagnostic evidence bundles") var evidenceRoot: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 

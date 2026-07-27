@@ -671,7 +671,58 @@ private func devicectlJSONOutputData(command: TKHostCommand) -> Data? {
     return try? Data(contentsOf: URL(fileURLWithPath: command.arguments[pathIndex]))
 }
 
-func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws -> Never {
+func hostDeviceSelectionErrorDetail(_ error: HostDeviceSelectionError) -> (detail: TKCLIErrorDetail, candidates: [HostDeviceTarget]?) {
+    switch error {
+    case .ambiguousTargets(let targets):
+        return (
+            TKCLIErrorDetail(
+                code: "ambiguous_target",
+                message: "\(error)",
+                hint: "Narrow with --device, --platform, --name, --runtime, --state, or --ready.",
+                nearestCandidates: targets.map(\.target),
+                suggestedCommands: [
+                    "triton device alias set <name> --platform <ios|harmony> --target <id> --json",
+                    "triton <command> --device <alias-or-id> --json",
+                ],
+                candidateCount: targets.count
+            ),
+            targets
+        )
+    case .targetNotFound:
+        return (
+            TKCLIErrorDetail(
+                code: "target_not_found",
+                message: "\(error)",
+                hint: "Run `triton device list --platform ios|android|harmony --json`, then retry with --device <alias-or-id>."
+            ),
+            nil
+        )
+    case .platformMismatch:
+        return (
+            TKCLIErrorDetail(
+                code: "target_platform_mismatch",
+                message: "\(error)",
+                hint: "Pick an alias/id registered for the requested platform."
+            ),
+            nil
+        )
+    case .parameterConflict:
+        return (
+            TKCLIErrorDetail(
+                code: "parameter_conflict",
+                message: "\(error)",
+                hint: "Use --device as the unified selector, or choose one explicit selector path (--simulator or --target), but do not combine them."
+            ),
+            nil
+        )
+    }
+}
+
+func failHostCommand(
+    _ error: Error,
+    outputFormat: ClientOutputFormat,
+    hostDeviceSelectionDetailOverride: ((HostDeviceSelectionError) -> TKCLIErrorDetail)? = nil
+) throws -> Never {
     if let exitCode = error as? ExitCode {
         throw exitCode
     }
@@ -785,37 +836,10 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             message: "\(error)",
             hint: error.hint
         )
-    case HostDeviceSelectionError.ambiguousTargets(let targets):
-        hostDeviceCandidates = targets
-        detail = TKCLIErrorDetail(
-            code: "ambiguous_target",
-            message: "\(error)",
-            hint: "Narrow with --device, --platform, --name, --runtime, --state, or --ready.",
-            nearestCandidates: targets.map(\.target),
-            suggestedCommands: [
-                "triton device alias set <name> --platform <ios|harmony> --target <id> --json",
-                "triton <command> --device <alias-or-id> --json",
-            ],
-            candidateCount: targets.count
-        )
-    case HostDeviceSelectionError.targetNotFound:
-        detail = TKCLIErrorDetail(
-            code: "target_not_found",
-            message: "\(error)",
-            hint: "Run `triton device list --platform ios|android|harmony --json`, then retry with --device <alias-or-id>."
-        )
-    case HostDeviceSelectionError.platformMismatch:
-        detail = TKCLIErrorDetail(
-            code: "target_platform_mismatch",
-            message: "\(error)",
-            hint: "Remove --platform or pick an alias/id for the requested platform."
-        )
-    case HostDeviceSelectionError.parameterConflict:
-        detail = TKCLIErrorDetail(
-            code: "parameter_conflict",
-            message: "\(error)",
-            hint: "Use --device as the unified selector, or choose one explicit selector path (--simulator or --target), but do not combine them."
-        )
+    case let error as HostDeviceSelectionError:
+        let selectionDetail = hostDeviceSelectionErrorDetail(error)
+        hostDeviceCandidates = selectionDetail.candidates
+        detail = hostDeviceSelectionDetailOverride?(error) ?? selectionDetail.detail
     case HostDeviceScreenshotError.unsupportedIOSRealDevice:
         detail = TKCLIErrorDetail(
             code: "unsupported_scope",
@@ -908,6 +932,8 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             message: "\(error)",
             hint: "Pull regular files/directories only; symbolic links and special files are rejected."
         )
+    case let error as HostAppTerminateError:
+        detail = hostAppTerminateErrorDetail(error)
     case let error as HostArtifactOutputError:
         detail = TKCLIErrorDetail(
             code: "artifact_output_rejected",

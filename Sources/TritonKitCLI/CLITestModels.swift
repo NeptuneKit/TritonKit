@@ -73,6 +73,57 @@ struct TKTestCreateResponse: Codable, Equatable {
     }
 }
 
+/// Stable, privacy-safe linkage from a normalized test plan back to the
+/// compiled testrec contract from which it was imported.  The plan deliberately
+/// contains only package-relative artifact identity; the importer never stores
+/// a source package's absolute path or raw action payloads here.
+struct TKTestPlanProvenance: Codable, Equatable {
+    let importerVersion: Int
+    let sourceKind: String
+    let sourcePlatform: String
+    let contractRef: TKTestRecorderReplayContractRef
+}
+
+struct TKTestImportUnmappedFeature: Codable, Equatable {
+    let sourcePath: String
+    let action: String
+    let reason: String
+}
+
+struct TKTestImportResponse: Codable, Equatable {
+    let ok: Bool
+    let schemaVersion: Int
+    let kind: String
+    let input: String
+    let output: String
+    let importedPlan: TKTestNormalizedPlan
+    let validation: TKTestValidationResponse
+    let provenance: TKTestPlanProvenance
+    let unmapped: [TKTestImportUnmappedFeature]
+    let suggestedCommands: [String]
+
+    init(
+        input: String,
+        output: String,
+        importedPlan: TKTestNormalizedPlan,
+        validation: TKTestValidationResponse,
+        provenance: TKTestPlanProvenance,
+        unmapped: [TKTestImportUnmappedFeature] = [],
+        suggestedCommands: [String]
+    ) {
+        self.ok = true
+        self.schemaVersion = 1
+        self.kind = "triton.test.import-result"
+        self.input = input
+        self.output = output
+        self.importedPlan = importedPlan
+        self.validation = validation
+        self.provenance = provenance
+        self.unmapped = unmapped
+        self.suggestedCommands = suggestedCommands
+    }
+}
+
 struct TKTestNormalizedPlan: Codable, Equatable {
     let schemaVersion: Int
     let kind: String
@@ -81,13 +132,15 @@ struct TKTestNormalizedPlan: Codable, Equatable {
     let device: TKTestPlanDevice
     let settings: TKTestPlanSettings
     let steps: [TKTestPlanStep]
+    let provenance: TKTestPlanProvenance?
 
     init(
         name: String,
         app: TKTestPlanApp,
         device: TKTestPlanDevice,
         settings: TKTestPlanSettings,
-        steps: [TKTestPlanStep]
+        steps: [TKTestPlanStep],
+        provenance: TKTestPlanProvenance? = nil
     ) {
         self.schemaVersion = 1
         self.kind = "triton.test.normalized-plan"
@@ -96,6 +149,7 @@ struct TKTestNormalizedPlan: Codable, Equatable {
         self.device = device
         self.settings = settings
         self.steps = steps
+        self.provenance = provenance
     }
 }
 

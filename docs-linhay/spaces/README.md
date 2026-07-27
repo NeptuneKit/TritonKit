@@ -2,9 +2,9 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（125/125 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（136/136 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-07-23
+> 最近审计：2026-07-27
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -43,18 +43,45 @@
 | 已归档 | [20260720-issue-146-sim-record-duration](./20260720-issue-146-sim-record-duration/README.md) | `sim record` 已按 encoded sample 时长校验；一帧 MOV 返回 `sim_record_truncated`，成功契约暴露 requested/actual/container/track duration | 已合入 `main`；推送并关闭 #146 |
 | 已归档 | [20260521-ios-embedded-sdk-expansion](./20260521-ios-embedded-sdk-expansion/README.md) | S0-S4 与 WebView-aware `act tap` 已完成，真实 iOS Simulator 证明 `selector -> DOM dispatch -> expect-text` 返回 `status=passed` | 保留动态 smoke 证据；P1/P2 需求另建有限 space |
 | 已归档 | [20260525-simulator-target-simplification](./20260525-simulator-target-simplification/README.md) | 真实多开 iOS、Harmony alias、指定目标动作和多候选拒绝均通过；同时修复 observation alias 缺省 platform 被误判为 iOS | 不实现 `--bundle` 反向过滤；批量 fan-out 或新 selector 能力另建 space |
-| 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | P0 合同与 local-simulated executor 已形成大体量实现，但真实 executor 与 `workspace run`、`.tritontest`、replay/evidence/Atlas 高度重叠 | 暂停新代码；先裁决 `testrec` 是否保留独立产品面，还是并入现有 workspace/test/replay 契约 |
+| 执行 | [SP-126-testrec-convergence](./SP-126-testrec-convergence/README.md) | 已裁决 Hybrid：保留 `testrec` 的录制/编译/质量兼容价值，真实执行统一进入 `test run`，workspace 后续复用同一合同 | SP-132/133 已完成 importer 与单条真实 proof；SP-134 gate、SP-135 compatibility 与 SP-136 offline collection preflight 已收口，真实采样前不接 workspace 或新平台 |
+| 执行 | [SP-127-issue-168-ios-real-device-terminate-pid](./SP-127-issue-168-ios-real-device-terminate-pid/README.md) | #168 已采用安全 fallback：shared terminate 只接受显式 PID，iOS real bundle-ID terminate 无可证实 PID 时 fail closed；不实现猜测式 PID join | source checkpoint 已纳入本地 integration branch；真实设备 smoke blocker 与 12 个既有 schema failures 单独保留，待 main 收口 |
+| 执行 | [SP-128-issue-167-xcode-device-alias-preflight](./SP-128-issue-167-xcode-device-alias-preflight/README.md) | Xcode real-device run 已确定先做 target selection preflight，再进入昂贵 build；保持既有 build/install/launch 合同 | source checkpoint 已纳入本地 integration branch；真实 Xcode/device 与 live alias store 验证仍按环境边界保留，待 main 收口 |
+| 执行 | [SP-129-serve-loopback-default](./SP-129-serve-loopback-default/README.md) | `triton serve` 无 `--host` 时默认绑定 `127.0.0.1:19421`；显式非 loopback host 保持兼容；Bonjour publish 语义暂不改变 | source checkpoint 已纳入本地 integration branch；联合 docs/CLI 门禁通过，Bonjour 风险不变，待 main 收口 |
+| 执行 | [SP-130-issue-166-runtime-jpeg-normalization](./SP-130-issue-166-runtime-jpeg-normalization/README.md) | #166 已将 legacy embedded JPEG 解码并统一规范化为 PNG，避免 CLI/evidence/replay/test-run 发布伪 PNG 或丢弃有效证据 | fixture、release/schema 与本地总门禁完成；#164 dirty evidence WIP 保持隔离，待后续 integration 收口 |
+| 已归档 | [SP-131-ios-simulator-canonical-proof](./SP-131-ios-simulator-canonical-proof/README.md) | 仓内 Debug fixture 已在 dedicated iOS Simulator 上真实完成 `test validate -> test run -> evidence`：6 steps、2 assertions、0 failures，证据含 runtime target、PNG、AX/hierarchy | local checkpoint 已完成；后续仅回到 SP-126 的 `.tritontestcase -> test import -> test validate`，不扩 Android/Web/Wails/真机；#164 WIP 继续隔离 |
+| 已归档 | [SP-132-testrec-import-seam](./SP-132-testrec-import-seam/README.md) | P0 已建立 `.tritontestcase -> test import -> test validate` 的 offline seam；bundle identity 与 `ios-simulator` target 均显式输入，映射不足一律 fail-closed | P1 才运行 imported plan；不扩 testrec executor、Android/Web/Wails/真机；#164 WIP 继续隔离 |
+| 已归档 | [SP-133-imported-ios-simulator-proof](./SP-133-imported-ios-simulator-proof/README.md) | imported AX plan 已在 dedicated iOS Simulator 经既有 `test run` 产生真实 passed verdict/evidence：6 steps、2 assertions、0 failures，并保留 normalized-plan provenance | 自管 server 已停止、Simulator 已恢复 Shutdown；sensitive evidence 仅作本机可恢复处置、不入 Git，不扩 executor/Android/Web/Wails/真机；#164 WIP 继续隔离 |
+| 执行 | [SP-134-ios-simulator-reliability-gate](./SP-134-ios-simulator-reliability-gate/README.md) | 纯离线 ECR / FER / ORR gate 已收紧为 duplicate、partial、逐 step 覆盖与 target binding 均 fail-closed；不把一条 fixture proof 放大为产品可靠性 | 真实 3 flow × 20 仅在初态 reset、专用 Simulator、self-managed server 与私有 evidence 门禁均满足时另立受控 harness 串行执行 |
+| 已完成（本地） | [SP-135-testrec-compatibility-guidance](./SP-135-testrec-compatibility-guidance/README.md) | testrec dry-run/local-simulated/matrix 保留兼容 status，但新增不可作为真实 verdict 或 reliability sample 的 machine-readable boundary | checkpoint `37d8f9c7`；不恢复 testrec executor，后继 collection preflight 需先有三条冻结 imported flow 与 reset/target contract |
+| 已完成（本地） | [SP-136-ios-simulator-reliability-collection-preflight](./SP-136-ios-simulator-reliability-collection-preflight/README.md) | 已离线冻结 3 flow × 20 的 imported-plan、canonical target、reset/negative-control 与 fresh evidence layout 合同 | 不启动或选择 Simulator/server/target，不生成样本/receipt/可靠性结论；真实 harness 仍须另立 space |
+| 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
 | 已归档 | [20260701-host-framebuffer-stream](./20260701-host-framebuffer-stream/README.md) | SimulatorKit/IOSurface host stream、MJPEG route 和历史高帧率测量已落地 | 作为实验性 Web mock 能力保留，不再承诺 `<15ms/120 FPS` 产品 SLA；正式 Web 恢复时重新立项 |
 | 已归档 | [20260702-cross-platform-framebuffer-stream](./20260702-cross-platform-framebuffer-stream/README.md) | Android/Harmony host pull stream、HTTP route、Web bridge 和截图证据已落地 | 作为 Web mock 原型归档，不再追加性能优化；正式产品化需重新定义边界和证据门禁 |
 | 已归档 | [20260617-issue-61-android-emulator-adapter](./20260617-issue-61-android-emulator-adapter/README.md) | 旧 Web 编译 blocker 已消失，当前 `DeviceCrossPlatformTests` 93 项通过；Android Emulator 主链已有历史真实 smoke | 不再单独执行；后续 Android 回归走现有 emulator takeover 与 strong-control spaces |
 
+## 独立 worktree 与本地集成状态
+
+| Space | Branch | Worktree | 基线 | 当前状态与后续 |
+| --- | --- | --- | --- | --- |
+| `SP-126-testrec-convergence` | `feat/SP-126-testrec-convergence` | `../TritonKit-worktrees/SP-126-testrec-convergence/` | `main@931645ed` | 路线、边界与 Luna 执行交接已收口；先完成可信基线与 iOS canonical runtime 证明，再进入 P0 importer；未合入 |
+| `SP-127-issue-168-ios-real-device-terminate-pid` | `feat/SP-127-issue-168-ios-real-device-terminate-pid` | `../TritonKit-worktrees/SP-127-issue-168-ios-real-device-terminate-pid/` | `5f6c2f6f` | `cef52ea2` 已纳入 `../TritonKit-worktrees/SP-126-trusted-baseline-integration/` 的 `codex/sp126-trusted-baseline-integration`；待 main 收口，保留真机 smoke blocker |
+| `SP-128-issue-167-xcode-device-alias-preflight` | `feat/SP-128-issue-167-xcode-device-alias-preflight` | `../TritonKit-worktrees/SP-128-issue-167-xcode-device-alias-preflight/` | `feat/SP-126-testrec-convergence@5f6c2f6f` | `25f7e048` 已纳入同一 local integration branch；待 main 收口，保留真实 Xcode/device 覆盖缺口 |
+| `SP-129-serve-loopback-default` | `feat/SP-129-serve-loopback-default` | `../TritonKit-worktrees/SP-129-serve-loopback-default/` | `feat/SP-126-testrec-convergence@5f6c2f6f` | `f0f3b0a0` 已纳入同一 local integration branch；待 main 收口，保留 Bonjour 广播语义风险 |
+| `SP-130-issue-166-runtime-jpeg-normalization` | `feat/SP-130-issue-166-runtime-jpeg-normalization` | `../TritonKit-worktrees/SP-130-issue-166-runtime-jpeg-normalization/` | `codex/sp126-trusted-baseline-integration@2fddf6a0` | #166 JPEG -> PNG normalizer 已完成 fixture/release/schema 与本地总门禁；不读取或修改 #164 dirty WIP，待后续 integration 收口 |
+| `SP-131-ios-simulator-canonical-proof` | `feat/SP-131-ios-simulator-canonical-proof` | `../TritonKit-worktrees/SP-131-ios-simulator-canonical-proof/` | `feat/SP-130-issue-166-runtime-jpeg-normalization@a7404033` | local checkpoint 将记录真实 dedicated Simulator 的手写最小 plan proof；server 已停止、Simulator 已恢复 Shutdown；不读取或修改 #164 dirty WIP |
+| `SP-132-testrec-import-seam` | `feat/SP-132-testrec-import-seam` | `../TritonKit-worktrees/SP-132-testrec-import-seam/` | `feat/SP-131-ios-simulator-canonical-proof@6f700b13` | P0 local checkpoint：只读 compiled contract，显式 ios-simulator target，输出可 validate YAML 与 typed provenance；P1 才运行 device，#164 dirty WIP 未读取或修改 |
+| `SP-133-imported-ios-simulator-proof` | `feat/SP-133-imported-ios-simulator-proof` | `../TritonKit-worktrees/SP-133-imported-ios-simulator-proof/` | `feat/SP-132-testrec-import-seam@b065b3f0` | P1 local proof 已通过：新鲜 source/import/validate、专用 Simulator、self-managed 19421 server、Debug fixture、真实 `test run` 与 evidence/provenance 已串行验证；server 已停止、Simulator 已恢复 Shutdown，#164 dirty WIP 未读取或修改 |
+| `SP-134-ios-simulator-reliability-gate` | `feat/SP-134-ios-simulator-reliability-gate` | `../TritonKit-worktrees/SP-134-ios-simulator-reliability-gate/` | `feat/SP-133-imported-ios-simulator-proof@19e2c35f` | 本地 checkpoint 收口纯离线 reliability gate；不启动测试 runtime 或共享设备/server。真实 sampling 需要另行通过 dedicated/reset/privacy gate，#164 dirty WIP 不读取或修改 |
+| `SP-135-testrec-compatibility-guidance` | `feat/SP-135-testrec-compatibility-guidance` | `../TritonKit-worktrees/SP-135-testrec-compatibility-guidance/` | `feat/SP-134-ios-simulator-reliability-gate@21a57399` | checkpoint `37d8f9c7`：只收紧 testrec offline diagnostic / migration contract；不启动 runtime 或设备，不修改 #164 WIP |
+| `SP-136-ios-simulator-reliability-collection-preflight` | `feat/SP-136-ios-simulator-reliability-collection-preflight` | `../TritonKit-worktrees/SP-136-ios-simulator-reliability-collection-preflight/` | `feat/SP-135-testrec-compatibility-guidance@107eac45` | 本地 checkpoint：纯离线 collection contract；只读 private plans，拒绝生成 sample/evidence/reset receipt 或占用 runtime/device/server，#164 WIP 持续隔离 |
+
 ## 维护规则
 
 1. 新建 space 后，同一提交内将其加入本索引的“路线裁决”或“历史归档”。
 2. 状态变化时更新“最近审计”日期、裁决和下一步，不只修改单个 space。
-3. 独立 worktree 必须记录路径、branch/commit 和待集成动作；合入后从“待集成”移除。
+3. 独立 worktree 必须记录路径、branch/commit 和后续动作；仅本地 integration branch 不等于合入 `main`，主分支收口后才可移入历史归档。
 4. “执行”必须有有限停止条件；没有产品取舍结论的方向标记“待定”，不得继续堆实现。
 5. 被后续路线吸收或不再符合产品边界的独立计划标记“废弃”，但不删除历史文档和仍有价值的代码。
 6. space 完成本期 DoD、文档与 memory 写回后标记“已归档”。

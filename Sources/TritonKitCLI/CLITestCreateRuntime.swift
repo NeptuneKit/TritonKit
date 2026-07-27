@@ -20,7 +20,8 @@ func createTritonTestFromSession(
             app: plan.app,
             device: plan.device,
             settings: plan.settings,
-            steps: plan.steps
+            steps: plan.steps,
+            provenance: plan.provenance
         )
     }
 
@@ -47,7 +48,7 @@ func createTritonTestFromSession(
     )
 }
 
-private func renderTritonTestYAML(from plan: TKTestNormalizedPlan) -> String {
+func renderTritonTestYAML(from plan: TKTestNormalizedPlan) -> String {
     var lines: [String] = []
     lines.append("version: 1")
     lines.append("name: \(yamlScalar(plan.name))")
@@ -61,12 +62,27 @@ private func renderTritonTestYAML(from plan: TKTestNormalizedPlan) -> String {
     lines.append("  retry:")
     lines.append("    count: \(plan.settings.retry.count)")
     lines.append("    intervalMs: \(plan.settings.retry.intervalMs)")
+    if let provenance = plan.provenance {
+        appendProvenance(provenance, to: &lines)
+    }
     lines.append("steps:")
     for step in plan.steps {
         appendYAML(for: step, to: &lines)
     }
     lines.append("")
     return lines.joined(separator: "\n")
+}
+
+private func appendProvenance(_ provenance: TKTestPlanProvenance, to lines: inout [String]) {
+    lines.append("provenance:")
+    lines.append("  importerVersion: \(provenance.importerVersion)")
+    lines.append("  sourceKind: \(yamlScalar(provenance.sourceKind))")
+    lines.append("  sourcePlatform: \(yamlScalar(provenance.sourcePlatform))")
+    lines.append("  contractRef:")
+    lines.append("    path: \(yamlScalar(provenance.contractRef.path))")
+    lines.append("    byteCount: \(provenance.contractRef.byteCount)")
+    lines.append("    digestAlgorithm: \(yamlScalar(provenance.contractRef.digestAlgorithm))")
+    lines.append("    digest: \(yamlScalar(provenance.contractRef.digest))")
 }
 
 private func appendYAML(for step: TKTestPlanStep, to lines: inout [String]) {

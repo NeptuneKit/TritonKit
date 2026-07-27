@@ -533,10 +533,20 @@ triton workspace run --target booted --platform ios --scope simulator --resolve-
 triton workspace inspect <run-id> --json
 triton workspace export-flow <run-id> --output flow.tritontest.yaml --json
 triton test validate flow.tritontest.yaml --json
+triton test import recording.tritontestcase --output imported.tritontest.yaml --bundle-id com.example.app --device-platform ios-simulator --json
+triton test validate imported.tritontest.yaml --json
 triton workspace merge-map <run-id> --map-dir .triton/maps/com.example.app.tritonmap --confirm --json
 ```
 
+`triton test import` 只读取已存在的 recorder compiled contract，生成可验证的 test plan；它不会连接设备、重编 raw event stream 或执行动作。source artifacts 必须留在 `.tritontestcase` 内，output 必须在 source package 外且默认 no-clobber。`--bundle-id` 与 `--device-platform ios-simulator` 均为显式 fail-closed 输入：源 case 不含 App identity，且泛化 iOS source 不可被静默标成 Simulator。导入会拒绝 quality/redaction finding、截断、缺 page evidence、敏感或不可保真动作；成功后的 `test validate` 仍是运行前必须的独立步骤，实际执行只由 `test run` 承担。
+
+`triton test reliability-preflight --collection <private.json> --json` 只读取私有 collection 声明和已存在的 imported `.tritontest.yaml`。它要求三条冻结的 iOS Simulator flow、每条 20 个 future slot、一个 plan digest 不复用 supported flow 的独立 negative control、canonical Simulator/App binding digest 和未创建的 private evidence root；不会启动或查询 server、Simulator、App、target 或 runner，也不会写 evidence/reset receipt/sample。`status=ready_to_collect` 仅表示未来 operator-owned collection 的输入合同已冻结，固定 `writesEvidence=false`、`usesRuntime=false`、`eligibleForReliabilityGate=false`，绝不是 runtime verdict、可靠性 gate 通过或完成 3 × 20 采样。输出仅含匿名 flow alias、digest 与计数，不回显路径、UDID、bundle、selector 或 reset identity。
+
+`testrec replay --dry-run`、`testrec replay --executor local-simulated` 与 `testrec matrix` 仍只作为 offline diagnostic。它们旧有的 `ready` / `passed` / `passedCount` 是兼容状态，不能当成真实 test verdict 或 reliability-gate sample；新输出带有 `verdictBoundary`，固定为 `classification=offline-diagnostic`、`countsAsRealTestVerdict=false`、`eligibleForReliabilityGate=false`。需要真实 verdict 时，使用其中只含占位符的 `test import -> test validate -> test run` 迁移命令。历史 replay-result evidence 可以缺少这个 additive 字段；此时只能按 legacy/unknown 处理，绝不是 runtime proof。
+
 An explicit `ios-real:*` selector is sufficient for iOS real-device `app install`, `app info`, and `app launch`; `--platform ios --scope real` remains optional. All three commands run the same live real-device discovery before building the `devicectl` action, preserve the raw CoreDevice identity only inside the host command, and expose the redacted selector in public output. A device that remains offline, locked, untrusted, Developer Mode-disabled, or DDI-missing returns the corresponding actionable readiness code instead of a launch-only `target_not_found`.
+
+`app terminate` has a narrower iOS real-device contract: a bundle-ID request deliberately fails closed with `app_terminate_pid_resolution_unavailable` until a verified bundle-ID-to-PID contract exists. It submits no `devicectl` terminate command. Its returned `app launch` next action is an optional cold-restart alternative, not evidence that termination succeeded.
 
 `sim logs` captures bounded unified logging only. Use `sim app-console` when a relaunched Simulator App's process `stdout` / `stderr` is required. The latter writes a sensitive, duration- and byte-bounded merged PTY artifact; JSON reports `sourcesCaptured=["process-stdout","process-stderr"]`, `streamLayout="merged-pty"`, byte/truncation metadata, and redacted source commands without inlining console content.
 
@@ -715,7 +725,7 @@ triton screenshot --output /tmp/runtime.png --metadata
 triton evidence capture --case video-regression --output /tmp/video-regression.tritonevidence --json
 ```
 
-Embedded runtime screenshot success is a strict PNG contract: the runtime encodes PNG, while CLI/evidence/replay/test writers validate the `.png` extension, `format: "png"`, and PNG magic bytes before atomic write. A legacy or malformed JPEG payload returns `artifact_write_failed` and is not published under a PNG path. This runtime image is App-layer evidence, not a guarantee that system-composited sheets, grabbers, navigation chrome, keyboards, or SpringBoard surfaces match what the user sees.
+Embedded runtime screenshot artifacts use a strict PNG contract: current runtimes return PNG, while CLI/evidence/replay/test writers validate a `.png` output and PNG magic bytes before atomic write. For compatibility, a legacy runtime that truthfully declares and returns a decodable JPEG is normalized to a real PNG before publication; its output metadata and evidence artifact then report PNG. Mismatched or undecodable bytes still return `artifact_write_failed` and no disguised artifact is published. This runtime image is App-layer evidence, not a guarantee that system-composited sheets, grabbers, navigation chrome, keyboards, or SpringBoard surfaces match what the user sees.
 
 The `media` section reports visible AVPlayer-backed surfaces, player status/rate/time metadata when public APIs expose it, AX playback-control candidates, automation confidence, fallback advice, and evidence commands. System `AVPlayerViewController` controls are not guaranteed to expose stable actionable AX nodes in every route; when the snapshot is `surface-only`, add app-owned DEBUG overlay controls with stable accessibility identifiers for play, pause, seek, progress, elapsed time, and duration, then verify those controls with `wait`, `act find`, `act tap`, and `verify`.
 

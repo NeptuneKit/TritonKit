@@ -5,13 +5,16 @@ import TritonKitShared
 struct TestCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "test",
-        abstract: "Validate, normalize, and run deterministic .tritontest.yaml contracts",
+        abstract: "Import, validate, preflight, normalize, run, report, and evaluate deterministic .tritontest.yaml contracts",
         subcommands: [
             TestValidate.self,
             TestNormalize.self,
             TestRun.self,
             TestReport.self,
+            TestReliability.self,
+            TestReliabilityPreflight.self,
             TestCreate.self,
+            TestImport.self,
         ]
     )
 }
@@ -121,6 +124,42 @@ struct TestReport: ParsableCommand {
     }
 }
 
+struct TestReliability: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "reliability",
+        abstract: "Evaluate private iOS Simulator test evidence against the canonical reliability gate"
+    )
+
+    @Option(name: .customLong("samples"), help: "Private reliability sample manifest JSON") var samples: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() throws {
+        try runTestReliabilityCommand(
+            samples: samples,
+            format: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct TestReliabilityPreflight: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "reliability-preflight",
+        abstract: "Validate an offline private reliability collection contract without starting runtime or writing evidence"
+    )
+
+    @Option(name: .customLong("collection"), help: "Private reliability collection JSON") var collection: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() throws {
+        try runTestReliabilityPreflightCommand(
+            collection: collection,
+            format: effectiveFormat(format, json: json)
+        )
+    }
+}
+
 struct TestCreate: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "create",
@@ -138,6 +177,32 @@ struct TestCreate: ParsableCommand {
             fromSession: fromSession,
             output: output,
             name: name,
+            format: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct TestImport: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "import",
+        abstract: "Import an existing compiled .tritontestcase contract into a validated .tritontest.yaml plan"
+    )
+
+    @Argument(help: "Compiled .tritontestcase directory") var input: String?
+    @Option(help: "Output .tritontest.yaml path") var output: String?
+    @Option(name: .customLong("bundle-id"), help: "Required app bundle identifier; testrec v1 does not store it") var bundleID: String?
+    @Option(name: .customLong("device-platform"), help: "Required execution platform for the imported plan; P0 supports ios-simulator") var devicePlatform: String?
+    @Option(name: .customLong("expect-compiled-digest"), help: "Optional expected fnv1a64 digest for compiled-contract.json") var expectedCompiledDigest: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() throws {
+        try runTestImportCommand(
+            input: input,
+            output: output,
+            bundleID: bundleID,
+            devicePlatform: devicePlatform,
+            expectedCompiledDigest: expectedCompiledDigest,
             format: effectiveFormat(format, json: json)
         )
     }
@@ -282,6 +347,150 @@ private func runTestReportCommand(
     }
 }
 
+private func runTestReliabilityCommand(
+    samples: String?,
+    format: ClientOutputFormat
+) throws {
+    do {
+        guard let samples, !samples.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw TestReliabilityCommandFailure(detail: testReliabilityFailure(
+                code: "missing_required_field",
+                message: "--samples is required.",
+                hint: "Provide a private reliability sample manifest with --samples <file.json>."
+            ))
+        }
+        let report = try buildTritonTestReliabilityReport(samplesPath: samples)
+        switch format {
+        case .json:
+            print(try encodeJSON(report))
+        case .text:
+            print("ok: true")
+            print("gate: \(report.gate.status.rawValue)")
+            print("evidenceCompleteness: \(report.evidenceCompleteness.rate)")
+            print("failureExplainability: \(report.failureExplainability.rate)")
+            print("outcomeRepeatability: \(report.outcomeRepeatability.rate)")
+        }
+        if report.gate.status == .blocked {
+            throw ExitCode.failure
+        }
+    } catch let failure as TestReliabilityCommandFailure {
+        let detail = failure.detail
+        switch format {
+        case .json:
+            print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+        case .text:
+            fputs("\(detail.code): \(detail.message)\n", stderr)
+        }
+        throw ExitCode.failure
+    } catch let error as TKTestReliabilityError {
+        let detail = testReliabilityErrorDetail(error)
+        switch format {
+        case .json:
+            print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+        case .text:
+            fputs("\(detail.code): \(detail.message)\n", stderr)
+        }
+        throw ExitCode.failure
+    } catch {
+        if error is ExitCode { throw error }
+        let detail = testReliabilityFailure(
+            code: "test_reliability_failed",
+            message: "Reliability report could not be generated from the private sample manifest.",
+            hint: "Verify the manifest schema and evidence bundle completeness."
+        )
+        switch format {
+        case .json:
+            print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+        case .text:
+            fputs("\(detail.code): \(detail.message)\n", stderr)
+        }
+        throw ExitCode.failure
+    }
+}
+
+private func runTestReliabilityPreflightCommand(
+    collection: String?,
+    format: ClientOutputFormat
+) throws {
+    do {
+        guard let collection, !collection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw TestReliabilityCollectionPreflightCommandFailure(detail: testReliabilityFailure(
+                code: "missing_required_field",
+                message: "--collection is required.",
+                hint: "Provide a private collection declaration with --collection <private.json>."
+            ))
+        }
+        let response = try buildTritonTestReliabilityCollectionPreflight(collectionPath: collection)
+        switch format {
+        case .json:
+            print(try encodeJSON(response))
+        case .text:
+            print("ok: true")
+            print("status: \(response.status.rawValue)")
+            print("supportedFlows: \(response.supportedFlowCount)")
+            print("runsPerSupportedFlow: \(response.runsPerSupportedFlow)")
+            print("plannedSamples: \(response.plannedSampleCount)")
+        }
+    } catch let failure as TestReliabilityCollectionPreflightCommandFailure {
+        try printTestReliabilityCollectionPreflightFailure(failure.detail, format: format)
+    } catch let error as TKTestReliabilityCollectionError {
+        try printTestReliabilityCollectionPreflightFailure(
+            testReliabilityCollectionErrorDetail(error),
+            format: format
+        )
+    } catch {
+        if error is ExitCode { throw error }
+        let detail = testReliabilityFailure(
+            code: "test_reliability_collection_preflight_failed",
+            message: "Reliability collection preflight could not be completed.",
+            hint: "Verify the private collection declaration and imported plan contracts."
+        )
+        try printTestReliabilityCollectionPreflightFailure(detail, format: format)
+    }
+}
+
+private func printTestReliabilityCollectionPreflightFailure(
+    _ detail: TKCLIErrorDetail,
+    format: ClientOutputFormat
+) throws -> Never {
+    switch format {
+    case .json:
+        print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+    case .text:
+        fputs("\(detail.code): \(detail.message)\n", stderr)
+    }
+    throw ExitCode.failure
+}
+
+private func testReliabilityErrorDetail(_ error: TKTestReliabilityError) -> TKCLIErrorDetail {
+    switch error {
+    case .invalidSampleSet:
+        return testReliabilityFailure(
+            code: "invalid_reliability_sample_set",
+            message: "Reliability samples must use the supported private manifest schema.",
+            hint: "Use flow ids, explicit reset evidence ids, target tokens, and existing evidence bundle paths."
+        )
+    case .invalidThresholds:
+        return testReliabilityFailure(
+            code: "invalid_reliability_thresholds",
+            message: "Reliability thresholds must be non-negative rates between zero and one.",
+            hint: "Use the canonical reliability gate thresholds."
+        )
+    }
+}
+
+private func testReliabilityFailure(code: String, message: String, hint: String) -> TKCLIErrorDetail {
+    TKCLIErrorDetail(code: code, message: message, hint: hint)
+}
+
+private struct TestReliabilityCommandFailure: Error {
+    let detail: TKCLIErrorDetail
+}
+
+private struct TestReliabilityCollectionPreflightCommandFailure: Error {
+    let detail: TKCLIErrorDetail
+}
+
 private func runTestCreateCommand(
     fromSession: String,
     output: String,
@@ -317,6 +526,83 @@ private func runTestCreateCommand(
             print(try encodeJSON(TKCLIErrorResponse(error: detail)))
         case .text:
             fputs("test_create_failed: \(detail.message)\n", stderr)
+        }
+        throw ExitCode.failure
+    }
+}
+
+private func runTestImportCommand(
+    input: String?,
+    output: String?,
+    bundleID: String?,
+    devicePlatform: String?,
+    expectedCompiledDigest: String?,
+    format: ClientOutputFormat
+) throws {
+    do {
+        guard let input, !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw testValidationFailure(
+                code: "missing_required_field",
+                message: "<case.tritontestcase> is required.",
+                path: "<case.tritontestcase>"
+            )
+        }
+        guard let output, !output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw testValidationFailure(
+                code: "missing_required_field",
+                message: "--output is required.",
+                path: "--output"
+            )
+        }
+        guard let bundleID, !bundleID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw testValidationFailure(
+                code: "missing_required_field",
+                message: "--bundle-id is required.",
+                path: "--bundle-id"
+            )
+        }
+        guard let devicePlatform, !devicePlatform.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw testValidationFailure(
+                code: "missing_required_field",
+                message: "--device-platform is required.",
+                path: "--device-platform"
+            )
+        }
+        let response = try importTritonTestCase(
+            input: input,
+            output: output,
+            bundleID: bundleID,
+            devicePlatform: devicePlatform,
+            expectedCompiledDigest: expectedCompiledDigest
+        )
+        switch format {
+        case .json:
+            print(try encodeJSON(response))
+        case .text:
+            print("ok: true")
+            print("output: \(response.output)")
+            print("steps: \(response.importedPlan.steps.count)")
+            print("compiledDigest: \(response.provenance.contractRef.digest)")
+        }
+    } catch let failure as TKTestValidationFailure {
+        switch format {
+        case .json:
+            print(try encodeJSON(testValidationFailureResponse(failure)))
+        case .text:
+            print("\(failure.detail.code): \(failure.detail.path): \(failure.detail.message)")
+        }
+        throw ExitCode.failure
+    } catch {
+        let failure = testValidationFailure(
+            code: "test_import_failed",
+            message: "test import failed before a validated plan could be written.",
+            path: "$"
+        )
+        switch format {
+        case .json:
+            print(try encodeJSON(testValidationFailureResponse(failure)))
+        case .text:
+            print("\(failure.detail.code): \(failure.detail.path): \(failure.detail.message)")
         }
         throw ExitCode.failure
     }

@@ -1,4 +1,6 @@
+import CoreGraphics
 import Foundation
+import ImageIO
 import Testing
 import TritonKitShared
 @testable import TritonKitCLI
@@ -37,6 +39,49 @@ struct ObservationOutputTests {
                 outputPath: "/tmp/runtime-shot.jpeg"
             )
         }
+        #expect(try normalizeRuntimeScreenshotToPNG(
+            png,
+            declaredFormat: "png",
+            outputPath: "/tmp/runtime-shot.png"
+        ) == png)
+    }
+
+    @Test("legacy JPEG runtime screenshots normalize to a real PNG artifact")
+    func legacyJPEGRuntimeScreenshotNormalizesToPNG() throws {
+        let jpeg = try makeValidJPEGFixture()
+
+        let normalized = try normalizeRuntimeScreenshotToPNG(
+            jpeg,
+            declaredFormat: "jpeg",
+            outputPath: "/tmp/runtime-shot.png"
+        )
+
+        #expect(normalized.starts(with: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))
+        #expect(try validateRuntimeScreenshotArtifact(
+            normalized,
+            declaredFormat: "png",
+            outputPath: "/tmp/runtime-shot.png"
+        ) == "png")
+        #expect(throws: RuntimeScreenshotArtifactError.self) {
+            try normalizeRuntimeScreenshotToPNG(
+                jpeg,
+                declaredFormat: "jpeg",
+                outputPath: "/tmp/runtime-shot.jpeg"
+            )
+        }
+    }
+
+    @Test("runtime screenshot normalizer rejects malformed JPEG bytes without an artifact")
+    func runtimeScreenshotNormalizerRejectsMalformedJPEG() {
+        let malformedJPEG = Data([0xFF, 0xD8, 0xFF, 0xE0, 0x00])
+
+        #expect(throws: RuntimeScreenshotNormalizationError.self) {
+            try normalizeRuntimeScreenshotToPNG(
+                malformedJPEG,
+                declaredFormat: "jpeg",
+                outputPath: "/tmp/runtime-shot.png"
+            )
+        }
     }
 
     @Test("runtime screenshot mismatch maps to stable artifact failure")
@@ -55,6 +100,23 @@ struct ObservationOutputTests {
         #expect(detail.code == "artifact_write_failed")
         #expect(detail.message.contains("JPEG"))
         #expect(detail.hint?.contains("embedded runtime") == true)
+    }
+
+    @Test("runtime screenshot decode failure maps to stable artifact failure")
+    func runtimeScreenshotDecodeFailureMapsToArtifactFailure() {
+        let detail = cliErrorDetail(
+            for: RuntimeScreenshotNormalizationError(
+                sourceFormat: "jpeg",
+                reason: "the payload could not be decoded"
+            ),
+            endpoint: "/request",
+            host: "127.0.0.1",
+            port: 19421
+        )
+
+        #expect(detail.code == "artifact_write_failed")
+        #expect(detail.message.contains("JPEG"))
+        #expect(detail.hint?.contains("no artifact was published") == true)
     }
 
     @Test("observe output prioritizes runtime tree as primary source")
@@ -427,6 +489,40 @@ struct ObservationOutputTests {
             _ = try resolveNodeAlias("@1", platform: "ios", target: "sim:DEF", workspace: temp.path)
         }
     }
+}
+
+private func makeValidJPEGFixture() throws -> Data {
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    guard let context = CGContext(
+        data: nil,
+        width: 1,
+        height: 1,
+        bitsPerComponent: 8,
+        bytesPerRow: 0,
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else {
+        throw RuntimeError("Unable to construct JPEG test bitmap")
+    }
+    context.setFillColor(CGColor(red: 0.2, green: 0.4, blue: 0.6, alpha: 1))
+    context.fill(CGRect(x: 0, y: 0, width: 1, height: 1))
+    guard let image = context.makeImage() else {
+        throw RuntimeError("Unable to construct JPEG test image")
+    }
+    let data = NSMutableData()
+    guard let destination = CGImageDestinationCreateWithData(
+        data as CFMutableData,
+        "public.jpeg" as CFString,
+        1,
+        nil
+    ) else {
+        throw RuntimeError("Unable to construct JPEG test encoder")
+    }
+    CGImageDestinationAddImage(destination, image, nil)
+    guard CGImageDestinationFinalize(destination) else {
+        throw RuntimeError("Unable to encode JPEG test image")
+    }
+    return data as Data
 }
 
 private func successfulObservationHostProcessResult(_ command: TKHostCommand, stdout: String = "") -> HostProcessResult {

@@ -31,13 +31,15 @@ triton app list --device iphone15 --user-only --json
 triton app info --device iphone15 --bundle-id <bundle-id> --json
 triton app install --device iphone15 --app <path.app> --json
 triton app launch --device iphone15 --bundle-id <bundle-id> --json
-triton app terminate --device iphone15 --bundle-id <bundle-id> --json
+triton app terminate --device booted --bundle-id <bundle-id> --json
 triton app open-url "<url>" --device iphone15 --wait-ready --snapshot --json
 triton app container --device iphone15 --bundle-id <bundle-id> --kind data --json
 triton app prefs get <key> --device iphone15 --bundle-id <bundle-id> --json
 ```
 
 For a physical iOS target, the redacted `ios-real:*` selector is enough for `app install`, `app info`, and `app launch`; all three must enter the same live real-device discovery without requiring explicit `--platform ios --scope real`. Preserve the redacted selector, resolved readiness state, stable error code, and sanitized `sourceCommand`; never publish the raw CoreDevice identifier. A remaining lock/trust/Developer Mode/DDI failure is actionable evidence, while a launch-only `target_not_found` for a selector accepted by install/info is a TritonKit resolution regression.
+
+Do not treat `app terminate` as a physical iOS lifecycle success. An `ios-real:*` bundle-ID request deliberately returns `app_terminate_pid_resolution_unavailable` before submitting `devicectl` until TritonKit has a verified PID contract. If a cold restart is desired, choose the returned `app launch` nextAction explicitly and report it as a separate launch alternative, never as successful termination.
 
 iOS host screenshot is Simulator-only. When `device list` returns a ready physical target, `triton screenshot --platform ios --device <ios-real-selector> --output <path> --json` must return `unsupported_scope` before any `simctl` invocation, and `device doctor --platform ios --scope real --json` must omit `device.screenshot`. Preserve that envelope and its schema `nextAction`; use a connected embedded DEBUG runtime screenshot if available, otherwise label any external manual screenshot as fallback evidence rather than Triton host capture.
 

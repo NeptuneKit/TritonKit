@@ -208,7 +208,7 @@ func validateTargetFailureRecovery(
 
 func requiredRecoveryCategories(forTargetFailureCode failureCode: String) -> Set<String>? {
     switch failureCode {
-    case "ambiguous_target", "device_not_ready", "simulator_not_found", "target_not_found", "target_offline", "target_unavailable":
+    case "ambiguous_target", "device_not_ready", "simulator_not_found", "target_not_found", "target_offline", "target_platform_mismatch", "target_unavailable":
         return ["prepare-target"]
     default:
         return nil

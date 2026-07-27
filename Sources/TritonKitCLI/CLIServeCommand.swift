@@ -12,7 +12,7 @@ struct Serve: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Start server")
 
     @Option(name: .shortAndLong, help: "Port to listen on") var port: Int = 19421
-    @Option(name: .shortAndLong, help: "Host to bind to") var host: String = "0.0.0.0"
+    @Option(name: .shortAndLong, help: "Host to bind to") var host: String = "127.0.0.1"
 
     func run() async throws {
         let store = DataStore()
@@ -571,7 +571,11 @@ struct Serve: AsyncParsableCommand {
                 )
                 guard let screenshot = try? JSONDecoder().decode(TKScreenshotResponse.self, from: payload),
                       let imageData = try? await screenshotImageData(screenshot, client: TritonKitHTTPClient(host: host, port: port)),
-                      (try? validateRuntimeScreenshotArtifact(imageData, declaredFormat: screenshot.format, outputPath: "screenshot.png")) != nil else {
+                      let artifactData = try? normalizeRuntimeScreenshotToPNG(
+                        imageData,
+                        declaredFormat: screenshot.format,
+                        outputPath: "screenshot.png"
+                      ) else {
                     return jsonError(
                         code: "invalid_payload",
                         message: "Invalid screenshot payload",
@@ -581,7 +585,7 @@ struct Serve: AsyncParsableCommand {
                     )
                 }
                 return Response(status: .ok, headers: [.contentType: "image/png"],
-                                body: .init(byteBuffer: ByteBuffer(data: imageData)))
+                                body: .init(byteBuffer: ByteBuffer(data: artifactData)))
             } catch {
                 if let timeout = error as? RuntimeRequestTimeoutError {
                     return jsonError(

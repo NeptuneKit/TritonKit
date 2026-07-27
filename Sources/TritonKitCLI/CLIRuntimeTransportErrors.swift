@@ -171,7 +171,15 @@ func cliErrorDetail(for error: Error, endpoint: String, host: String, port: Int)
             code: "artifact_write_failed",
             message: screenshotError.description,
             endpoint: url,
-            hint: "Update the embedded runtime to a PNG-capable TritonKit build and retry with a .png output path."
+            hint: "Retry with a .png output path. TritonKit normalizes valid embedded runtime JPEG payloads to PNG; invalid or mismatched bytes are rejected without publishing an artifact."
+        )
+    }
+    if let screenshotError = error as? RuntimeScreenshotNormalizationError {
+        return TKCLIErrorDetail(
+            code: "artifact_write_failed",
+            message: screenshotError.description,
+            endpoint: url,
+            hint: "Retry after the embedded runtime returns a decodable JPEG or PNG payload; no artifact was published."
         )
     }
     if let targetError = error as? TKTargetResolutionError {
