@@ -191,6 +191,27 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if ["contract_quality_review_required", "redaction_review_required", "source_identity_mismatch", "truncated_source_contract", "unmapped_contract_feature", "compiled_digest_mismatch"].contains(failureCode) {
             categories.append(contentsOf: ["diagnose", "plan"])
         }
+        // Receipt-backed reliability collection failures deliberately recover
+        // through inspection only. A reservation/slot conflict or a runner
+        // failure must never suggest cleanup, force-overwrite, or another
+        // runtime execution against the same private evidence root.
+        if [
+            "invalid_reliability_collection",
+            "invalid_reliability_receipt",
+            "reliability_sample_confirmation_required",
+            "invalid_reliability_sample_request",
+            "invalid_reliability_reset_receipt",
+            "reliability_reservation_exists",
+            "reliability_slot_already_claimed",
+        ].contains(failureCode) {
+            categories.append("diagnose")
+        }
+        if [
+            "reliability_reservation_write_failed",
+            "test_reliability_sample_failed",
+        ].contains(failureCode) {
+            categories.append(contentsOf: ["diagnose", "archive"])
+        }
         if failureCode.hasPrefix("ai_") {
             categories.append(contentsOf: ["archive", "diagnose", "plan"])
         }
@@ -313,6 +334,13 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
 public struct TKCommandSubcommandSchema: Codable, Equatable {
     public let name: String
     public let summary: String
+    /// Subcommand-specific runtime requirements. Defaults preserve older schema snapshots.
+    public let requiresServer: Bool
+    public let requiresTarget: Bool
+    public let requiresConfirmation: Bool
+    public let sideEffect: String
+    /// Overrides for an option whose semantics differ from the root command.
+    public let optionOverrides: [TKCommandSchemaOption]
     public let requiredOptions: [String]
     public let oneOfRequiredOptions: [[String]]
     public let optionalOptions: [String]
@@ -330,6 +358,11 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case name
         case summary
+        case requiresServer
+        case requiresTarget
+        case requiresConfirmation
+        case sideEffect
+        case optionOverrides
         case requiredOptions
         case oneOfRequiredOptions
         case optionalOptions
@@ -348,6 +381,11 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
     public init(
         name: String,
         summary: String,
+        requiresServer: Bool = false,
+        requiresTarget: Bool = false,
+        requiresConfirmation: Bool = false,
+        sideEffect: String = "none",
+        optionOverrides: [TKCommandSchemaOption] = [],
         requiredOptions: [String] = [],
         oneOfRequiredOptions: [[String]] = [],
         optionalOptions: [String] = [],
@@ -364,6 +402,11 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
     ) {
         self.name = name
         self.summary = summary
+        self.requiresServer = requiresServer
+        self.requiresTarget = requiresTarget
+        self.requiresConfirmation = requiresConfirmation
+        self.sideEffect = sideEffect
+        self.optionOverrides = optionOverrides
         self.requiredOptions = requiredOptions
         self.oneOfRequiredOptions = oneOfRequiredOptions
         self.optionalOptions = optionalOptions
@@ -386,6 +429,11 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
         self.init(
             name: try container.decode(String.self, forKey: .name),
             summary: try container.decode(String.self, forKey: .summary),
+            requiresServer: try container.decodeIfPresent(Bool.self, forKey: .requiresServer) ?? false,
+            requiresTarget: try container.decodeIfPresent(Bool.self, forKey: .requiresTarget) ?? false,
+            requiresConfirmation: try container.decodeIfPresent(Bool.self, forKey: .requiresConfirmation) ?? false,
+            sideEffect: try container.decodeIfPresent(String.self, forKey: .sideEffect) ?? "none",
+            optionOverrides: try container.decodeIfPresent([TKCommandSchemaOption].self, forKey: .optionOverrides) ?? [],
             requiredOptions: try container.decodeIfPresent([String].self, forKey: .requiredOptions) ?? [],
             oneOfRequiredOptions: try container.decodeIfPresent([[String]].self, forKey: .oneOfRequiredOptions) ?? [],
             optionalOptions: try container.decodeIfPresent([String].self, forKey: .optionalOptions) ?? [],

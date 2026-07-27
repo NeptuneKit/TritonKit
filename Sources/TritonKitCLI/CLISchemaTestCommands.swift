@@ -8,7 +8,7 @@ func testCommandSchemas() -> [TKCommandSchema] {
             summary: "Import, validate, normalize, and execute deterministic .tritontest.yaml contracts",
             requiresServer: false,
             requiresTarget: false,
-            runtimeScope: "offline for import/validate/normalize/report/reliability/reliability-preflight/create; runtime target required for run",
+            runtimeScope: "offline for import/validate/normalize/report/reliability/reliability-preflight/reliability-reserve/create; reliability-sample and run require an explicit runtime target; reliability-sample requires an already-running receipt-bound loopback server and never starts it",
             exitCodeOnFailure: 1,
             outputFormats: ["json", "text"],
             options: [
@@ -16,14 +16,16 @@ func testCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "normalize <path.tritontest.yaml>", type: "Subcommand", description: "Validate and emit only the normalized plan"),
                 TKCommandSchemaOption(name: "run <path.tritontest.yaml>", type: "Subcommand", description: "Run deterministic executor primitives after validate/normalize and capture screen workspace readiness observations"),
                 TKCommandSchemaOption(name: "report <dir.tritonevidence>", type: "Subcommand", description: "Project an existing .tritonevidence test run into a JSON report"),
-                TKCommandSchemaOption(name: "reliability --samples <private.json>", type: "Subcommand", description: "Evaluate private iOS Simulator evidence samples against the canonical reliability gate without starting a server or target"),
+                TKCommandSchemaOption(name: "reliability --samples <private.json>|--collection-receipt <private.json>", type: "Subcommand", description: "Evaluate legacy private samples or a receipt-backed private collection without starting a server or target"),
                 TKCommandSchemaOption(name: "reliability-preflight --collection <private.json>", type: "Subcommand", description: "Validate an offline private 3-flow collection contract without starting runtime or writing evidence"),
+                TKCommandSchemaOption(name: "reliability-reserve --collection <private.json>", type: "Subcommand", description: "Exclusively freeze a validated private collection receipt without using runtime"),
+                TKCommandSchemaOption(name: "reliability-sample --collection-receipt <private.json> --flow <alias> --slot <n> --reset-receipt <private.json> --target <canonical> --confirm", type: "Subcommand", description: "Run exactly one receipt-frozen sample after strict local binding checks; never manages server, Simulator, or App lifecycle"),
                 TKCommandSchemaOption(name: "create --from-session <dir.tritonevidence> --output <path.tritontest.yaml>", type: "Subcommand", description: "Project existing evidence into an editable .tritontest.yaml draft"),
                 TKCommandSchemaOption(name: "import <case.tritontestcase> --output <path.tritontest.yaml> --bundle-id <bundle-id> --device-platform ios-simulator", type: "Subcommand", description: "Read an existing compiled testrec contract, fail closed on unmappable semantics, and write a validated iOS Simulator test plan"),
                 TKCommandSchemaOption(name: "--evidence-dir", type: "Path", description: "Required for run; output .tritonevidence directory"),
-                TKCommandSchemaOption(name: "--target", type: "String", defaultValue: TKLocalTargetID, description: "Runtime target id for run"),
-                TKCommandSchemaOption(name: "--host", type: "String", defaultValue: "127.0.0.1", description: "Triton HTTP host for run"),
-                TKCommandSchemaOption(name: "--port", type: "Int", defaultValue: "19421", description: "Triton HTTP port for run"),
+                TKCommandSchemaOption(name: "--target", type: "String", defaultValue: TKLocalTargetID, description: "Runtime target id for run; reliability-sample overrides this default and requires the receipt's exact canonical target"),
+                TKCommandSchemaOption(name: "--host", type: "String", defaultValue: "127.0.0.1", description: "Triton HTTP host for run; reliability-sample only accepts literal 127.0.0.1"),
+                TKCommandSchemaOption(name: "--port", type: "Int", defaultValue: "19421", description: "Triton HTTP port for run; reliability-sample only accepts literal 19421"),
                 TKCommandSchemaOption(name: "--allow-vlm", type: "Bool", defaultValue: "false", description: "Allow experimental VLM-assisted tap(target) steps"),
                 TKCommandSchemaOption(name: "--allow-remote-vlm", type: "Bool", defaultValue: "false", description: "Allow remote VLM provider calls for VLM-assisted steps"),
                 TKCommandSchemaOption(name: "--vlm-base-url", type: "String", description: "OpenAI-compatible VLM base URL for VLM-assisted steps"),
@@ -35,8 +37,13 @@ func testCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--bundle-id", type: "String", description: "Required for import because .tritontestcase v1 stores no app bundle identity"),
                 TKCommandSchemaOption(name: "--device-platform", type: "String", description: "Required for import; P0 only accepts ios-simulator so source ios is not silently relabeled"),
                 TKCommandSchemaOption(name: "--expect-compiled-digest", type: "String", description: "Optional expected fnv1a64 digest for import source compiled-contract.json"),
-                TKCommandSchemaOption(name: "--samples", type: "Path", description: "Required for reliability; private sample manifest JSON and never rendered in the report"),
-                TKCommandSchemaOption(name: "--collection", type: "Path", description: "Required for reliability-preflight; private collection JSON and never rendered in the response"),
+                TKCommandSchemaOption(name: "--samples", type: "Path", description: "Legacy reliability input; mutually exclusive with --collection-receipt and never rendered in the report"),
+                TKCommandSchemaOption(name: "--collection", type: "Path", description: "Required for reliability-preflight/reliability-reserve; private collection JSON is never rendered"),
+                TKCommandSchemaOption(name: "--collection-receipt", type: "Path", description: "Receipt input for reliability or reliability-sample; private path is never rendered"),
+                TKCommandSchemaOption(name: "--flow", type: "String", description: "Required opaque receipt flow alias for reliability-sample"),
+                TKCommandSchemaOption(name: "--slot", type: "PositiveInt", description: "Required positive receipt slot for reliability-sample"),
+                TKCommandSchemaOption(name: "--reset-receipt", type: "Path", description: "Required operator reset receipt bound to one reliability-sample slot"),
+                TKCommandSchemaOption(name: "--confirm", type: "Bool", defaultValue: "false", description: "Required before reliability-sample may claim a slot or invoke the runner"),
                 TKCommandSchemaOption(name: "--emit-normalized-plan", type: "Bool", defaultValue: "false", description: "Emit only normalizedPlan for validate when validation succeeds"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 schemaJSONAliasOption,
@@ -48,7 +55,10 @@ func testCommandSchemas() -> [TKCommandSchema] {
                 TKCommandUsageForm(form: "run <path.tritontest.yaml> --json --evidence-dir <dir>", kind: "Subcommand", description: "Validate, execute deterministic primitives and optional VLM-assisted tap(target), and write .tritonevidence/run/events.jsonl plus observation.captured/vlm.grounding events"),
                 TKCommandUsageForm(form: "report <dir.tritonevidence> --json", kind: "Subcommand", description: "Read manifest.json and run/events.jsonl, then aggregate steps, screenshots, overlays, observations, and failure type"),
                 TKCommandUsageForm(form: "reliability --samples <private.json> --json", kind: "Subcommand", description: "Read private evidence sample references and emit only digest/taxonomy/metric summaries; no server, target, App, or evidence write"),
+                TKCommandUsageForm(form: "reliability --collection-receipt <private-root/collection-receipt.json> --json", kind: "Subcommand", description: "Evaluate all receipt-declared slots and their private binding/reset/manifest sidecars without starting runtime"),
                 TKCommandUsageForm(form: "reliability-preflight --collection <private.json> --json", kind: "Subcommand", description: "Read a private collection declaration and imported plans, reserve no evidence, and emit only safe ready-to-collect metadata"),
+                TKCommandUsageForm(form: "reliability-reserve --collection <private.json> --json", kind: "Subcommand", description: "Validate then atomically create one immutable private receipt root; no runtime access"),
+                TKCommandUsageForm(form: "reliability-sample --collection-receipt <private-root/collection-receipt.json> --flow flow_001 --slot 1 --reset-receipt <private.json> --target triton:ios-simulator:<udid>/app:<bundle> --host 127.0.0.1 --port 19421 --confirm --json", kind: "Subcommand", description: "Claim one new slot and run its receipt-frozen normalized plan; no implicit server, Simulator, reset, App lifecycle, or retries"),
                 TKCommandUsageForm(form: "create --from-session <dir.tritonevidence> --output <path.tritontest.yaml> --json", kind: "Subcommand", description: "Read normalized-plan.json from an evidence bundle, write an editable .tritontest.yaml draft, and validate it offline"),
                 TKCommandUsageForm(form: "import <case.tritontestcase> --output <path.tritontest.yaml> --bundle-id <bundle-id> --device-platform ios-simulator --json", kind: "Subcommand", description: "Read only manifest/capabilities/compiled-contract, map the proven safe action subset, validate in memory, then atomically write a plan"),
             ],
@@ -66,12 +76,15 @@ func testCommandSchemas() -> [TKCommandSchema] {
                 "triton test report ./login.tritonevidence --json",
                 "triton test reliability --samples ./private-ios-simulator-samples.json --json",
                 "triton test reliability-preflight --collection ./private-ios-simulator-collection.json --json",
+                "triton test reliability-reserve --collection ./private-ios-simulator-collection.json --json",
+                "triton test reliability --collection-receipt ./private-root/collection-receipt.json --json",
+                "triton test reliability-sample --collection-receipt ./private-root/collection-receipt.json --flow flow_001 --slot 1 --reset-receipt ./private-reset-receipt.json --target triton:ios-simulator:<udid>/app:<bundle> --host 127.0.0.1 --port 19421 --confirm --json",
                 "triton test create --from-session ./login.tritonevidence --output ./generated-login.tritontest.yaml --json",
                 "triton test import ./login.tritontestcase --output ./imported-login.tritontest.yaml --bundle-id com.example.app --device-platform ios-simulator --json",
             ],
-            successShape: "import emits TKTestImportResponse after reading an existing compiled testrec contract, validating the generated plan in memory, and atomically writing it; validate emits TKTestValidationResponse; normalize emits TKTestNormalizedPlan; run emits TKTestRunExecutionResponse with normalizedPlan, run metadata, event summary, observationCount, and evidenceDir; report emits TKTestReportResponse from existing .tritonevidence; reliability emits TKTestReliabilityReport with privacy-safe metrics and canonical gate blockers; reliability-preflight emits TKTestReliabilityCollectionPreflightResponse after validating only a private collection declaration and imported plans; create emits TKTestCreateResponse after writing and validating an editable .tritontest.yaml draft.",
-            failureShape: "validate/normalize/import and validation failures from run emit { ok:false, error:{ type:\"validation_error\", message, path, code, allowed? } }; host/runtime failures from run and failures from report/reliability/reliability-preflight/create emit { ok:false, error:{ code, message, hint?, endpoint?, nextAction?, nearestCandidates?, suggestedCommands?, candidateCount? } }.",
-            outputSemantics: "Import is offline-only: it reads manifest.json, contract-capabilities.json, and an already-existing compiled-contract.json; it never recompiles raw streams, resolves a target, starts a server/app, executes an action, or creates evidence. P0 import requires an explicit bundle id and ios-simulator device platform; it accepts only ios/ios-simulator source contracts, rejects truncation, unresolved quality findings, source identity drift, unsupported capabilities, overwrite, and every action outside tap(text), assert(text), or screenshot. It adds a synthetic launch bootstrap, preserves package-relative compiled-contract FNV-1a provenance in the normalized plan, validates YAML in memory, then atomically writes it. Run first reuses validate/normalize. Deterministic execution supports launch, takeScreenshot, tap(point/runtime-point), tap(text/source=ax/match=exact), input(text), press(button), swipe(from/to runtime-point), assertVisible(text/source=ax/match=exact), assertNotVisible(text/source=ax/match=exact), and scrollUntilVisible(text/source=ax/match=exact). P14 mock AI evidence supports assertWithAI, assertNoDefectsWithAI, extractTextWithAI, and strict-hash assertScreenshot; AI steps default optional except assertScreenshot and provider is limited to mock. Experimental VLM-assisted tap(target) is available only with --allow-vlm; remote VLM still requires --allow-remote-vlm. The runner writes observation.captured events with screenshot, AX, hierarchy, screenCandidate fingerprints, coordinate-contract.json, and vlm.grounding events when VLM is enabled. Report, reliability, reliability-preflight, and create are offline-only; reliability reads existing .tritonevidence while reliability-preflight reads private plans/collection declarations only. Both emit privacy-safe aggregates and never return input paths, selectors, visible text, target ids, raw UDIDs, bundles, run ids, or screenshot bytes. reliability-preflight never creates evidence, reset receipts, samples, or a gate verdict: ready_to_collect only freezes future operator-owned collection inputs. Unsupported steps remain validation_error and do not trigger device operations. This surface does not implement App Map execution, replay, selector healing, JUnit, autonomous collection loops, or a second executor. stop is validate-recognized but live embedded-runtime execution returns stop_not_supported until host app terminate target selection is wired.",
+            successShape: "import emits TKTestImportResponse after reading an existing compiled testrec contract, validating the generated plan in memory, and atomically writing it; validate emits TKTestValidationResponse; normalize emits TKTestNormalizedPlan; run emits TKTestRunExecutionResponse with normalizedPlan, run metadata, event summary, observationCount, and evidenceDir; report emits TKTestReportResponse from existing .tritonevidence; reliability emits TKTestReliabilityReport with privacy-safe metrics and canonical gate blockers; reliability-preflight emits TKTestReliabilityCollectionPreflightResponse after validating only a private collection declaration and imported plans; reliability-reserve emits TKTestReliabilityReserveResponse after exclusively freezing a private receipt; reliability-sample emits TKTestReliabilitySampleResponse after a receipt-bound runner invocation; create emits TKTestCreateResponse after writing and validating an editable .tritontest.yaml draft.",
+            failureShape: "validate/normalize/import and validation failures from run emit { ok:false, error:{ type:\"validation_error\", message, path, code, allowed? } }; preflight, receipt, reset, target, and runner failures from report/reliability/reliability-preflight/reliability-reserve/reliability-sample/create emit { ok:false, error:{ code, message, hint?, endpoint?, nextAction?, nearestCandidates?, suggestedCommands?, candidateCount? } }. A completed receipt sample whose terminal outcome does not match its frozen expected outcome, or a blocked reliability gate, emits its typed result then exits 1 rather than wrapping that result in a second envelope; an expected nonpassed negative-control result exits 0.",
+            outputSemantics: "Import is offline-only: it reads manifest.json, contract-capabilities.json, and an already-existing compiled-contract.json; it never recompiles raw streams, resolves a target, starts a server/app, executes an action, or creates evidence. P0 import requires an explicit bundle id and ios-simulator device platform; it accepts only ios/ios-simulator source contracts, rejects truncation, unresolved quality findings, source identity drift, unsupported capabilities, overwrite, and every action outside tap(text), assert(text), or screenshot. It adds a synthetic launch bootstrap, preserves package-relative compiled-contract FNV-1a provenance in the normalized plan, validates YAML in memory, then atomically writes it. Run first reuses validate/normalize. Deterministic execution supports launch, takeScreenshot, tap(point/runtime-point), tap(text/source=ax/match=exact), input(text), press(button), swipe(from/to runtime-point), assertVisible(text/source=ax/match=exact), assertNotVisible(text/source=ax/match=exact), and scrollUntilVisible(text/source=ax/match=exact). P14 mock AI evidence supports assertWithAI, assertNoDefectsWithAI, extractTextWithAI, and strict-hash assertScreenshot; AI steps default optional except assertScreenshot and provider is limited to mock. Experimental VLM-assisted tap(target) is available only with --allow-vlm; remote VLM still requires --allow-remote-vlm. The runner writes observation.captured events with screenshot, AX, hierarchy, screenCandidate fingerprints, coordinate-contract.json, and vlm.grounding events when VLM is enabled. Report, legacy reliability, reliability-preflight, and create are offline-only; legacy reliability reads existing .tritonevidence while reliability-preflight reads private plans/collection declarations only. reliability-reserve is offline but exclusively creates a private receipt root after freezing normalized plans and semantic identities. reliability-sample is the only receipt path that can invoke the existing normalized-plan runner, and only after --confirm, exact canonical target, literal 127.0.0.1:19421, reset attestation, and an exclusive fresh slot all pass; it never bootstraps or manages server, Simulator, App, or reset lifecycle. receipt-backed reliability reads the receipt and evidence sidecars offline. Reliability responses never return input paths, selectors, visible text, target ids, raw UDIDs, bundles, run ids, or screenshot bytes. reliability-preflight never creates evidence, reset receipts, samples, or a gate verdict: ready_to_collect only freezes future operator-owned collection inputs. Unsupported steps remain validation_error and do not trigger device operations. This surface does not implement App Map execution, replay, selector healing, JUnit, autonomous collection loops, retries, cleanup, force overwrite, a second executor, Android, Harmony, real-device, or Web control. stop is validate-recognized but live embedded-runtime execution returns stop_not_supported until host app terminate target selection is wired.",
             nextCommands: [
                 "triton schema --command test --json",
             ],
@@ -82,6 +95,8 @@ func testCommandSchemas() -> [TKCommandSchema] {
                 testReportOutputContract(),
                 testReliabilityOutputContract(),
                 testReliabilityCollectionPreflightOutputContract(),
+                testReliabilityReserveOutputContract(),
+                testReliabilitySampleOutputContract(),
                 testCreateOutputContract(),
                 testImportOutputContract(),
             ],
@@ -136,6 +151,14 @@ func testCommandSchemas() -> [TKCommandSchema] {
                 "invalid_reliability_thresholds",
                 "invalid_reliability_collection",
                 "test_reliability_collection_preflight_failed",
+                "reliability_reservation_exists",
+                "reliability_reservation_write_failed",
+                "invalid_reliability_receipt",
+                "reliability_sample_confirmation_required",
+                "invalid_reliability_sample_request",
+                "invalid_reliability_reset_receipt",
+                "reliability_slot_already_claimed",
+                "test_reliability_sample_failed",
                 "test_create_failed",
                 "test_import_failed",
                 "invalid_case_directory",
@@ -227,6 +250,9 @@ func testCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "run",
                     summary: "Validate, normalize, execute deterministic test steps, and write .tritonevidence observations",
+                    requiresServer: true,
+                    requiresTarget: true,
+                    sideEffect: "runtime-execution-evidence-write",
                     requiredOptions: ["<path.tritontest.yaml>", "--evidence-dir"],
                     optionalOptions: ["--target", "--host", "--port", "--allow-vlm", "--allow-remote-vlm", "--vlm-base-url", "--vlm-model", "--vlm-api-key-env", "--format", "--json"],
                     nextCommands: [
@@ -285,8 +311,8 @@ func testCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "reliability",
-                    summary: "Evaluate private evidence samples against the canonical iOS Simulator reliability gate",
-                    requiredOptions: ["--samples"],
+                    summary: "Evaluate legacy private samples or a receipt-backed iOS Simulator collection gate",
+                    oneOfRequiredOptions: [["--samples"], ["--collection-receipt"]],
                     optionalOptions: ["--format", "--json"],
                     nextCommands: [
                         "triton schema --command test --json",
@@ -297,6 +323,7 @@ func testCommandSchemas() -> [TKCommandSchema] {
                         "invalid_reliability_sample_set",
                         "invalid_reliability_thresholds",
                         "test_reliability_failed",
+                        "invalid_reliability_receipt",
                     ]
                 ),
                 TKCommandSubcommandSchema(
@@ -315,8 +342,56 @@ func testCommandSchemas() -> [TKCommandSchema] {
                     ]
                 ),
                 TKCommandSubcommandSchema(
+                    name: "reliability-reserve",
+                    summary: "Freeze one validated private collection into an exclusive receipt without runtime access",
+                    sideEffect: "private-receipt-write",
+                    requiredOptions: ["--collection"],
+                    optionalOptions: ["--format", "--json"],
+                    nextCommands: [
+                        "triton test reliability --collection-receipt <private-root/collection-receipt.json> --json",
+                    ],
+                    outputSelectors: ["test.reliability-reserve"],
+                    failureCodes: [
+                        "missing_required_field",
+                        "invalid_reliability_collection",
+                        "reliability_reservation_exists",
+                        "reliability_reservation_write_failed",
+                    ]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "reliability-sample",
+                    summary: "Claim and execute one receipt-frozen slot; never manages Simulator or server lifecycle",
+                    requiresServer: true,
+                    requiresTarget: true,
+                    requiresConfirmation: true,
+                    sideEffect: "runtime-execution-private-evidence-write",
+                    optionOverrides: [
+                        TKCommandSchemaOption(name: "--target", type: "CanonicalRuntimeTarget", required: true, description: "Required exact receipt target; aliases, local, booted, and fallback selectors are rejected"),
+                        TKCommandSchemaOption(name: "--host", type: "String", defaultValue: "127.0.0.1", description: "Must be literal 127.0.0.1; no remote or hostname override is accepted"),
+                        TKCommandSchemaOption(name: "--port", type: "PositiveInt", defaultValue: "19421", description: "Must be literal 19421"),
+                        TKCommandSchemaOption(name: "--slot", type: "PositiveInt", required: true, description: "Required positive slot declared by the receipt"),
+                        TKCommandSchemaOption(name: "--confirm", type: "Bool", required: true, description: "Required explicit operator confirmation before the slot is claimed"),
+                    ],
+                    requiredOptions: ["--collection-receipt", "--flow", "--slot", "--reset-receipt", "--target", "--confirm"],
+                    optionalOptions: ["--host", "--port", "--format", "--json"],
+                    nextCommands: [
+                        "triton test reliability --collection-receipt <private-root/collection-receipt.json> --json",
+                    ],
+                    outputSelectors: ["test.reliability-sample"],
+                    failureCodes: [
+                        "missing_required_field",
+                        "invalid_reliability_receipt",
+                        "reliability_sample_confirmation_required",
+                        "invalid_reliability_sample_request",
+                        "invalid_reliability_reset_receipt",
+                        "reliability_slot_already_claimed",
+                        "test_reliability_sample_failed",
+                    ]
+                ),
+                TKCommandSubcommandSchema(
                     name: "create",
                     summary: "Create an editable .tritontest.yaml draft from existing evidence",
+                    sideEffect: "private-contract-write",
                     requiredOptions: ["--from-session", "--output"],
                     optionalOptions: ["--name", "--format", "--json"],
                     nextCommands: [
@@ -331,6 +406,7 @@ func testCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "import",
                     summary: "Import an existing compiled testrec contract into a validated iOS Simulator test plan",
+                    sideEffect: "private-contract-write",
                     requiredOptions: ["<case.tritontestcase>", "--output", "--bundle-id", "--device-platform"],
                     optionalOptions: ["--expect-compiled-digest", "--format", "--json"],
                     nextCommands: [
@@ -369,7 +445,7 @@ func testCommandSchemas() -> [TKCommandSchema] {
                     ]
                 ),
             ],
-            providedCapabilities: ["test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-reliability-gate", "test-reliability-collection-preflight", "test-create-from-session"]
+            providedCapabilities: ["test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-reliability-gate", "test-reliability-collection-preflight", "test-reliability-reserve", "test-reliability-sample", "test-create-from-session"]
         ),
     ]
 }

@@ -89,7 +89,7 @@ struct TestCreateFromSessionTests {
         let schema = try #require(commandSchemas().first { $0.name == "test" })
         let create = try #require(schema.subcommands.first { $0.name == "create" })
 
-        #expect(schema.runtimeScope == "offline for import/validate/normalize/report/create; runtime target required for run")
+        #expect(schema.runtimeScope == "offline for import/validate/normalize/report/reliability/reliability-preflight/reliability-reserve/create; reliability-sample and run require an explicit runtime target; reliability-sample requires an already-running receipt-bound loopback server and never starts it")
         #expect(schema.providedCapabilities.contains("test-create-from-session"))
         #expect(schema.outputContracts.contains { $0.selector == "test.create" })
         #expect(create.requiredOptions == ["--from-session", "--output"])

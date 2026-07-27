@@ -193,21 +193,26 @@ func runTritonTest(
     vlmModel: String? = nil,
     vlmModelPath: String? = nil,
     vlmAPIKeyEnv: String? = nil,
-    vlmAllowModelDownload: Bool = false
+    vlmAllowModelDownload: Bool = false,
+    normalizedPlanOverride: TKTestNormalizedPlan? = nil
 ) async throws -> TKTestRunExecutionResponse {
-    let inputURL = URL(fileURLWithPath: input)
-    let yaml: String
-    do {
-        yaml = try String(contentsOf: inputURL, encoding: .utf8)
-    } catch {
-        throw testValidationFailure(
-            code: "missing_required_field",
-            message: "\(error)",
-            path: "$"
-        )
+    let plan: TKTestNormalizedPlan
+    if let normalizedPlanOverride {
+        plan = normalizedPlanOverride
+    } else {
+        let inputURL = URL(fileURLWithPath: input)
+        let yaml: String
+        do {
+            yaml = try String(contentsOf: inputURL, encoding: .utf8)
+        } catch {
+            throw testValidationFailure(
+                code: "missing_required_field",
+                message: "\(error)",
+                path: "$"
+            )
+        }
+        plan = try validateTritonTestContract(yaml: yaml, inputPath: input)
     }
-
-    let plan = try validateTritonTestContract(yaml: yaml, inputPath: input)
     let evidenceURL = URL(fileURLWithPath: evidenceDirectory, isDirectory: true)
     try prepareEvidenceOutputDirectory(evidenceURL)
     try resetTestRunArtifacts(in: evidenceURL)
@@ -441,8 +446,46 @@ func runTritonTest(
     )
 }
 
+/// Executes a receipt-frozen normalized plan without reopening the mutable
+/// source YAML. The ordinary `test run` entry remains the validating YAML
+/// path; reliability collection code owns the exclusive evidence reservation
+/// before calling this narrow bridge.
+func runTritonFrozenTest(
+    normalizedPlan: TKTestNormalizedPlan,
+    evidenceDirectory: String,
+    target: String,
+    host: String,
+    port: Int,
+    executor: TKTestRunPrimitiveExecutor,
+    source: String = "reliability-receipt"
+) async throws -> TKTestRunExecutionResponse {
+    try await runTritonTest(
+        input: source,
+        evidenceDirectory: evidenceDirectory,
+        target: target,
+        host: host,
+        port: port,
+        executor: executor,
+        normalizedPlanOverride: normalizedPlan
+    )
+}
+
 final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
     private var resolved: (summary: TKTargetSummary, client: TritonKitHTTPClient)?
+
+    /// Receipt-backed reliability samples preflight the exact target before
+    /// claiming their one-time slot. Reuse that exact summary/client pairing
+    /// so the ordinary resolver cannot later fall back to a same-UDID target.
+    func pinReliabilityRuntimeTarget(
+        _ summary: TKTargetSummary,
+        host: String,
+        port: Int
+    ) {
+        resolved = (
+            summary: summary,
+            client: TritonKitHTTPClient(host: host, port: port, target: summary.id)
+        )
+    }
 
     func execute(
         step: TKTestPlanStep,

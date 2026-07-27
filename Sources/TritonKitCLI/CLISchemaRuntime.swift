@@ -295,6 +295,11 @@ private func subcommandWithFailureFamilyRecovery(
     return TKCommandSubcommandSchema(
         name: subcommand.name,
         summary: subcommand.summary,
+        requiresServer: subcommand.requiresServer,
+        requiresTarget: subcommand.requiresTarget,
+        requiresConfirmation: subcommand.requiresConfirmation,
+        sideEffect: subcommand.sideEffect,
+        optionOverrides: subcommand.optionOverrides,
         requiredOptions: subcommand.requiredOptions,
         oneOfRequiredOptions: subcommand.oneOfRequiredOptions,
         optionalOptions: subcommand.optionalOptions,

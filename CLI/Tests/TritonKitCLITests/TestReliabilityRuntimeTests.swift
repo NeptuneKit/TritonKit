@@ -850,22 +850,190 @@ struct TestReliabilityRuntimeTests {
             "--samples", "private-samples.json",
             "--json",
         ])
+        let receiptCommand = try TestReliability.parse([
+            "--collection-receipt", "private-root/collection-receipt.json",
+            "--json",
+        ])
+        let reserve = try TestReliabilityReserve.parse([
+            "--collection", "private-collection.json",
+            "--json",
+        ])
+        let sample = try TestReliabilitySample.parse([
+            "--collection-receipt", "private-root/collection-receipt.json",
+            "--flow", "flow_001",
+            "--slot", "1",
+            "--reset-receipt", "private-reset.json",
+            "--target", "triton:ios-simulator:00000000-0000-0000-0000-000000000000/app:com.example.private",
+            "--confirm",
+            "--json",
+        ])
         #expect(command.samples == "private-samples.json")
+        #expect(command.collectionReceipt == nil)
         #expect(command.json)
+        #expect(receiptCommand.samples == nil)
+        #expect(receiptCommand.collectionReceipt == "private-root/collection-receipt.json")
+        #expect(reserve.collection == "private-collection.json")
+        #expect(sample.flow == "flow_001")
+        #expect(sample.slot == "1")
+        #expect(sample.host == "127.0.0.1")
+        #expect(sample.port == "19421")
+        #expect(sample.confirm)
 
         let schema = try #require(commandSchemaMap()["test"])
         let subcommand = try #require(schema.subcommands.first { $0.name == "reliability" })
+        let reserveSchema = try #require(schema.subcommands.first { $0.name == "reliability-reserve" })
+        let sampleSchema = try #require(schema.subcommands.first { $0.name == "reliability-sample" })
         let contract = try #require(schema.outputContracts.first { $0.selector == "test.reliability" })
         let flowID = try #require(contract.fields.first { $0.name == "flows[].flowID" })
         let chineseHelp = try #require(chineseCommandHelps()["test"])
 
-        #expect(subcommand.requiredOptions == ["--samples"])
+        #expect(subcommand.requiredOptions == [])
+        #expect(subcommand.oneOfRequiredOptions == [["--samples"], ["--collection-receipt"]])
         #expect(subcommand.outputSelectors == ["test.reliability"])
+        #expect(reserveSchema.failureCodes.contains("reliability_reservation_exists"))
+        #expect(sampleSchema.failureCodes.contains("reliability_sample_confirmation_required"))
+        #expect(sampleSchema.requiresServer)
+        #expect(sampleSchema.requiresTarget)
+        #expect(sampleSchema.requiresConfirmation)
+        #expect(sampleSchema.sideEffect == "runtime-execution-private-evidence-write")
+        #expect(sampleSchema.optionOverrides.first { $0.name == "--target" }?.type == "CanonicalRuntimeTarget")
+        #expect(sampleSchema.optionOverrides.first { $0.name == "--target" }?.defaultValue == nil)
+        #expect(sampleSchema.optionOverrides.first { $0.name == "--host" }?.defaultValue == "127.0.0.1")
+        #expect(sampleSchema.optionOverrides.first { $0.name == "--port" }?.defaultValue == "19421")
         #expect(!schema.runtimeScope.contains("target required for reliability"))
+        #expect(schema.runtimeScope.contains("already-running receipt-bound loopback server"))
         #expect(contract.fields.contains(where: { $0.name == "gate.blockerCodes" }))
         #expect(flowID.description.contains("opaque"))
         #expect(chineseHelp.options.contains(where: { $0.0 == "reliability --samples <private.json>" }))
+        #expect(chineseHelp.options.contains(where: { $0.0 == "reliability --collection-receipt <private.json>" }))
+        #expect(chineseHelp.options.contains(where: { $0.0.hasPrefix("reliability-sample --collection-receipt") }))
     }
+
+    @Test("receipt-backed reliability failures recover only through non-mutating categories")
+    func receiptBackedReliabilityRecoveryCategoriesAreNonMutating() {
+        #expect(Set(TKCommandRecoveryCommand.recoveryCategories(
+            forFailureCode: "reliability_reservation_exists"
+        )) == Set(["diagnose"]))
+        #expect(Set(TKCommandRecoveryCommand.recoveryCategories(
+            forFailureCode: "reliability_slot_already_claimed"
+        )) == Set(["diagnose"]))
+        #expect(Set(TKCommandRecoveryCommand.recoveryCategories(
+            forFailureCode: "test_reliability_sample_failed"
+        )) == Set(["diagnose", "archive"]))
+    }
+
+    @Test("a blocked reliability gate is a typed result rather than an error envelope")
+    func blockedReliabilityGateUsesTypedResultAndFailureExit() throws {
+        let fixture = try ReliabilityEvidenceFixture()
+        defer { fixture.cleanup() }
+        let evidence = try fixture.writeEvidence(runID: "typed-gate")
+        let samples = try fixture.writeSampleSet([
+            fixture.sample(flowID: "fixture-login-home", evidence: evidence),
+        ])
+
+        let result = try runReliabilityTriton([
+            "test", "reliability",
+            "--samples", samples.path,
+            "--json",
+        ])
+
+        #expect(result.exitCode == 1)
+        #expect(result.stderr.isEmpty)
+        let report = try JSONDecoder().decode(
+            TKTestReliabilityReport.self,
+            from: Data(result.stdout.utf8)
+        )
+        #expect(report.ok)
+        #expect(report.gate.status == .blocked)
+        #expect(!result.stdout.contains("\"error\""))
+    }
+
+    @Test("reliability subprocess fixes triton to the current test-bundle sibling")
+    func reliabilitySubprocessTritonCandidateRejectsBuildDecoys() throws {
+        let currentBundle = URL(fileURLWithPath: "/private/tmp/sp140/current/arm64-apple-macosx/debug/TritonKitCLIPackageTests.xctest")
+        let currentTestExecutable = currentBundle
+            .appendingPathComponent("Contents", isDirectory: true)
+            .appendingPathComponent("MacOS", isDirectory: true)
+            .appendingPathComponent("TritonKitCLIPackageTests", isDirectory: false)
+        let candidate = try #require(reliabilityTritonExecutableCandidate(testBundleURL: currentBundle))
+        let executableCandidate = try #require(reliabilityTritonExecutableCandidate(testBundleURL: currentTestExecutable))
+        let parentDecoy = URL(fileURLWithPath: "/private/tmp/sp140/current/arm64-apple-macosx/triton")
+        let staleScratchDecoy = URL(fileURLWithPath: "/private/tmp/sp140/stale/arm64-apple-macosx/debug/triton")
+
+        #expect(candidate.path == "/private/tmp/sp140/current/arm64-apple-macosx/debug/triton")
+        #expect(executableCandidate == candidate)
+        #expect(candidate != parentDecoy)
+        #expect(candidate != staleScratchDecoy)
+        #expect(reliabilityTritonExecutableCandidate(testBundleURL: URL(fileURLWithPath: "/private/tmp/sp140/current/unknown-test-runner")) == nil)
+    }
+}
+
+private struct ReliabilityCLIRunResult {
+    let exitCode: Int32
+    let stdout: String
+    let stderr: String
+}
+
+private func runReliabilityTriton(_ arguments: [String]) throws -> ReliabilityCLIRunResult {
+    let process = Process()
+    process.executableURL = try reliabilityTritonExecutableURL()
+    process.arguments = arguments
+
+    let stdout = Pipe()
+    let stderr = Pipe()
+    process.standardOutput = stdout
+    process.standardError = stderr
+
+    try process.run()
+    process.waitUntilExit()
+
+    return ReliabilityCLIRunResult(
+        exitCode: process.terminationStatus,
+        stdout: String(decoding: stdout.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self),
+        stderr: String(decoding: stderr.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+    )
+}
+
+private func reliabilityTritonExecutableURL() throws -> URL {
+    guard let testBundleURL = reliabilityTestBundleURL(),
+          let candidate = reliabilityTritonExecutableCandidate(testBundleURL: testBundleURL),
+          FileManager.default.isExecutableFile(atPath: candidate.path) else {
+        throw NSError(
+            domain: "TritonKitCLITests.TestReliabilityRuntimeTests",
+            code: 1,
+            userInfo: [NSLocalizedDescriptionKey: "Missing current SwiftPM triton executable for reliability CLI regression test"]
+        )
+    }
+    return candidate
+}
+
+private func reliabilityTritonExecutableCandidate(testBundleURL: URL) -> URL? {
+    let bundleURL: URL
+    if testBundleURL.pathExtension == "xctest" {
+        bundleURL = testBundleURL
+    } else {
+        let macOSDirectory = testBundleURL.deletingLastPathComponent()
+        let contentsDirectory = macOSDirectory.deletingLastPathComponent()
+        let possibleBundle = contentsDirectory.deletingLastPathComponent()
+        guard macOSDirectory.lastPathComponent == "MacOS",
+              contentsDirectory.lastPathComponent == "Contents",
+              possibleBundle.pathExtension == "xctest" else {
+            return nil
+        }
+        bundleURL = possibleBundle
+    }
+    return bundleURL
+        .deletingLastPathComponent()
+        .appendingPathComponent("triton", isDirectory: false)
+}
+
+private func reliabilityTestBundleURL() -> URL? {
+    let arguments = CommandLine.arguments
+    guard let flagIndex = arguments.firstIndex(of: "--test-bundle-path"),
+          arguments.indices.contains(flagIndex + 1) else {
+        return nil
+    }
+    return URL(fileURLWithPath: arguments[flagIndex + 1])
 }
 
 private struct ReliabilityEvidenceFixture {

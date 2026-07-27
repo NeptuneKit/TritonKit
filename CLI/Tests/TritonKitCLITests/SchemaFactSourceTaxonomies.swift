@@ -116,6 +116,8 @@ func outputContractKindTaxonomy() -> Set<String> {
         "test-import-result",
         "test-reliability-report",
         "test-reliability-collection-preflight",
+        "test-reliability-reserve",
+        "test-reliability-sample",
         "testrec-compile",
         "testrec-event",
         "testrec-inspect",
@@ -370,6 +372,10 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "prepare-target", "plan"]
     case "proxy_endpoint_unreachable", "proxy_cert_install_failed", "proxy_start_failed", "proxy_restore_failed":
         return ["diagnose", "plan", "archive"]
+    case "invalid_reliability_collection", "invalid_reliability_receipt", "reliability_sample_confirmation_required", "invalid_reliability_sample_request", "invalid_reliability_reset_receipt", "reliability_reservation_exists", "reliability_slot_already_claimed":
+        return ["diagnose"]
+    case "reliability_reservation_write_failed", "test_reliability_sample_failed":
+        return ["diagnose", "archive"]
     default:
         if failureCode.hasPrefix("ambiguous_") {
             return ["discover", "observe", "prepare-target", "diagnose"]

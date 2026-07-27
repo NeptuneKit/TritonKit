@@ -261,7 +261,7 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
         "schema": ChineseCommandHelp(name: "schema", overview: "输出机器可读命令 schema 和示例。", usage: "triton schema [--command <command>] [--format <format>] [--json]", options: [
             ("--command <command>", "筛选单个命令，例如 input 或 tap"),
         ] + formatTextJSON),
-        "test": ChineseCommandHelp(name: "test", overview: "可离线导入、校验、执行、报告和评估 .tritontest.yaml 合约；import、reliability 与 reliability-preflight 不会启动 App、设备、runner 或 VLM。", usage: "triton test <import|validate|normalize|run|report|reliability|reliability-preflight|create> <path> [选项]", options: formatTextJSON + [
+        "test": ChineseCommandHelp(name: "test", overview: "可离线导入、校验、执行、报告和评估 .tritontest.yaml 合约；import、reliability、reliability-preflight 与 reliability-reserve 不会启动 App、设备、runner 或 VLM；reliability-sample 只在 receipt、reset、target 与 --confirm 全部匹配后调用既有 runner。", usage: "triton test <import|validate|normalize|run|report|reliability|reliability-preflight|reliability-reserve|reliability-sample|create> <path> [选项]", options: formatTextJSON + [
             ("import <case.tritontestcase>", "只读已编译 contract，显式指定 --bundle-id 与 --device-platform ios-simulator 后生成并校验 YAML；不可保真动作会失败，不会执行设备操作"),
             ("--bundle-id <id>", "import 必填；v1 testcase 不含 App bundle id"),
             ("--device-platform ios-simulator", "import 必填；明确导入计划的执行平台，避免把 source ios 静默标成模拟器"),
@@ -271,7 +271,10 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("run <path>", "校验后通过既有唯一 runner 执行测试，并写 .tritonevidence；不是 import 的副作用"),
             ("report <dir.tritonevidence>", "读取既有测试证据并输出机器可读报告"),
             ("reliability --samples <private.json>", "读取私有 iOS Simulator 样本清单，输出不含路径、selector、target 或 run id 的可靠性门禁指标"),
+            ("reliability --collection-receipt <private.json>", "离线读取 reserve 生成的私有 receipt 与 sidecar，评估固定 61 个槽位；不启动 runtime"),
             ("reliability-preflight --collection <private.json>", "只校验私有 3 flow × 20 采样前置合同；不启动或查询 runtime/设备、不写 evidence/reset receipt，ready_to_collect 不是可靠性通过"),
+            ("reliability-reserve --collection <private.json>", "验证后原子创建不可覆盖的私有 receipt root，冻结 normalized plan、target binding、slot 与 reset 合同；不使用 runtime"),
+            ("reliability-sample --collection-receipt <private.json> --flow flow_001 --slot 1 --reset-receipt <private.json> --target <canonical> --confirm", "仅执行一个 receipt 冻结样本；严格要求 127.0.0.1:19421、精确 target、reset attestation 与新 slot，不管理 server、Simulator 或 App 生命周期"),
             ("create --from-session <dir.tritonevidence>", "从既有 normalized-plan evidence 生成可编辑 YAML"),
             ("--emit-normalized-plan", "validate 成功时只输出 normalized plan"),
         ]),

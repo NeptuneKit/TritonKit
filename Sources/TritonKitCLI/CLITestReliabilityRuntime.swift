@@ -239,9 +239,19 @@ func buildTritonTestReliabilityReport(
     samplesPath: String,
     thresholds: TKTestReliabilityThresholds = TKTestReliabilityThresholds()
 ) throws -> TKTestReliabilityReport {
-    try validateReliabilityThresholds(thresholds)
     let sampleSet = try decodeReliabilitySampleSet(at: samplesPath)
-    var analyses = sampleSet.samples.map(analyzeReliabilitySample)
+    return try buildTritonTestReliabilityReport(samples: sampleSet.samples, thresholds: thresholds)
+}
+
+/// Internal receipt-backed callers derive this list from an immutable receipt
+/// rather than serializing a mutable v1 sample-set file. The public v1
+/// `--samples` command still uses the overload above unchanged.
+func buildTritonTestReliabilityReport(
+    samples: [TKTestReliabilitySample],
+    thresholds: TKTestReliabilityThresholds = TKTestReliabilityThresholds()
+) throws -> TKTestReliabilityReport {
+    try validateReliabilityThresholds(thresholds)
+    var analyses = samples.map(analyzeReliabilitySample)
     analyses = markDuplicateReliabilitySamples(analyses)
     var issueCounts: [String: Int] = [:]
     for analysis in analyses {

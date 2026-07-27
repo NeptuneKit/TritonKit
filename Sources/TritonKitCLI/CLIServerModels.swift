@@ -60,45 +60,99 @@ final class ConnectionState: @unchecked Sendable {
 
     func resolve(_ requested: String?) throws -> TargetConnection {
         let target = requested ?? TKLocalTargetID
-        let matches = lock.withLock { matchingConnectionsLocked(target) }
-        if matches.count == 1, let match = matches.first {
-            return match.connection
+        return try lock.withLock {
+            let candidates: [(connection: TargetConnection, summary: TKTargetSummary)] = connections.values.compactMap { connection in
+                connection.summary().map { (connection, $0) }
+            }
+            let summary = try resolveServerTargetSummary(
+                requested: target,
+                in: candidates.map(\.summary)
+            )
+            guard let connection = candidates.first(where: { $0.summary.id == summary.id })?.connection else {
+                throw TKTargetResolutionError.notFound(target)
+            }
+            return connection
         }
-        if matches.count > 1 {
-            throw TKTargetResolutionError.ambiguous(requested: target, available: matches.map(\.summary.id))
-        }
-        let normalized = TKNormalizeTargetID(target)
-        let available = summaries()
-        if normalized == TKLocalTargetID, available.count > 1 {
-            throw TKTargetResolutionError.ambiguous(requested: target, available: available.map(\.id))
-        }
-        throw TKTargetResolutionError.notFound(target)
     }
 
     private func matchingConnectionsLocked(_ requested: String) -> [(connection: TargetConnection, summary: TKTargetSummary)] {
-        let normalized = TKNormalizeTargetID(requested)
-        if normalized == TKLocalTargetID, connections.count == 1 {
-            return connections.values.compactMap { connection in
-                connection.summary().map { (connection, $0) }
-            }
+        let candidates: [(connection: TargetConnection, summary: TKTargetSummary)] = connections.values.compactMap { connection in
+            connection.summary().map { (connection, $0) }
         }
-        let summaries: [(connection: TargetConnection, summary: TKTargetSummary)] = connections.values.compactMap { connection in
-            guard let summary = connection.summary(),
-                  summary.id == normalized else { return nil }
-            return (connection, summary)
-        }
-        if !summaries.isEmpty {
-            return summaries
-        }
-
-        let simulatorSelector = TKIOSSimulatorUDID(fromTargetID: normalized) ?? requested
-        return connections.values.compactMap { connection in
-            guard let summary = connection.summary(),
-                  summary.simulatorUDID == simulatorSelector else { return nil }
-            return (connection, summary)
-        }
+        let matchedIDs = Set(
+            matchingServerTargetSummaries(
+                requested: requested,
+                in: candidates.map(\.summary)
+            ).map(\.id)
+        )
+        return candidates.filter { matchedIDs.contains($0.summary.id) }
     }
 
+}
+
+/// Server-side selector compatibility keeps bare Simulator UDIDs as a legacy
+/// selector, but never treats a canonical app-scoped target as a UDID alias.
+/// That distinction matters for receipt-backed reliability samples: an exact
+/// app target that disappeared must fail rather than route a primitive to a
+/// different bundle on the same Simulator.
+func matchingServerTargetSummaries(
+    requested: String,
+    in summaries: [TKTargetSummary]
+) -> [TKTargetSummary] {
+    let normalized = TKNormalizeTargetID(requested)
+    if normalized == TKLocalTargetID, summaries.count == 1 {
+        return summaries
+    }
+    let exact = summaries.filter { $0.id == normalized }
+    if !exact.isEmpty {
+        return exact
+    }
+    guard !requiresExactServerTargetID(normalized) else {
+        return []
+    }
+    let simulatorSelector = TKIOSSimulatorUDID(fromTargetID: normalized) ?? requested
+    return summaries.filter { $0.simulatorUDID == simulatorSelector }
+}
+
+func resolveServerTargetSummary(
+    requested: String,
+    in summaries: [TKTargetSummary]
+) throws -> TKTargetSummary {
+    let matches = matchingServerTargetSummaries(requested: requested, in: summaries)
+    if matches.count == 1, let summary = matches.first {
+        return summary
+    }
+    if matches.count > 1 {
+        throw TKTargetResolutionError.ambiguous(requested: requested, available: matches.map(\.id))
+    }
+    let normalized = TKNormalizeTargetID(requested)
+    if normalized == TKLocalTargetID, summaries.count > 1 {
+        throw TKTargetResolutionError.ambiguous(requested: requested, available: summaries.map(\.id))
+    }
+    throw TKTargetResolutionError.notFound(requested)
+}
+
+private func requiresExactServerTargetID(_ target: String) -> Bool {
+    guard target.hasPrefix(TKIOSSimulatorRuntimeTargetPrefix),
+          let separator = target.range(of: "/app:"),
+          separator.lowerBound > target.startIndex,
+          separator.upperBound < target.endIndex else {
+        return false
+    }
+    let udidStart = target.index(
+        target.startIndex,
+        offsetBy: TKIOSSimulatorRuntimeTargetPrefix.count
+    )
+    let udid = String(target[udidStart..<separator.lowerBound])
+    let bundleID = String(target[separator.upperBound...])
+    guard !udid.isEmpty,
+          !bundleID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        return false
+    }
+    return target == TKIOSSimulatorRuntimeTargetID(
+        simulatorUDID: udid,
+        bundleIdentifier: bundleID
+    )
 }
 
 final class TargetConnection: @unchecked Sendable {

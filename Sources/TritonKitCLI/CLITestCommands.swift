@@ -13,6 +13,8 @@ struct TestCommand: AsyncParsableCommand {
             TestReport.self,
             TestReliability.self,
             TestReliabilityPreflight.self,
+            TestReliabilityReserve.self,
+            TestReliabilitySample.self,
             TestCreate.self,
             TestImport.self,
         ]
@@ -130,13 +132,65 @@ struct TestReliability: ParsableCommand {
         abstract: "Evaluate private iOS Simulator test evidence against the canonical reliability gate"
     )
 
-    @Option(name: .customLong("samples"), help: "Private reliability sample manifest JSON") var samples: String?
+    @Option(name: .customLong("samples"), help: "Private legacy reliability sample manifest JSON") var samples: String?
+    @Option(name: .customLong("collection-receipt"), help: "Private receipt created by reliability-reserve") var collectionReceipt: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
     func run() throws {
         try runTestReliabilityCommand(
             samples: samples,
+            collectionReceipt: collectionReceipt,
+            format: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct TestReliabilityReserve: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "reliability-reserve",
+        abstract: "Freeze a private reliability collection into one exclusive receipt without using runtime"
+    )
+
+    @Option(name: .customLong("collection"), help: "Private reliability collection JSON") var collection: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() throws {
+        try runTestReliabilityReserveCommand(
+            collection: collection,
+            format: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct TestReliabilitySample: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "reliability-sample",
+        abstract: "Execute exactly one receipt-frozen reliability sample after explicit confirmation"
+    )
+
+    @Option(name: .customLong("collection-receipt"), help: "Private receipt created by reliability-reserve") var collectionReceipt: String?
+    @Option(help: "Receipt flow alias such as flow_001") var flow: String?
+    @Option(help: "Receipt slot number") var slot: String?
+    @Option(name: .customLong("reset-receipt"), help: "Operator-created private reset receipt for this exact slot") var resetReceipt: String?
+    @Option(help: "Exact canonical iOS Simulator runtime target from the receipt") var target: String?
+    @Option(help: "Triton HTTP host; reliability samples require 127.0.0.1") var host: String = "127.0.0.1"
+    @Option(help: "Triton HTTP port; reliability samples require 19421") var port: String = "19421"
+    @Flag(help: "Permit this exact receipt-bound slot to invoke the runner") var confirm = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runTestReliabilitySampleCommand(
+            collectionReceipt: collectionReceipt,
+            flow: flow,
+            slot: slot,
+            resetReceipt: resetReceipt,
+            target: target,
+            host: host,
+            port: port,
+            confirm: confirm,
             format: effectiveFormat(format, json: json)
         )
     }
@@ -349,17 +403,31 @@ private func runTestReportCommand(
 
 private func runTestReliabilityCommand(
     samples: String?,
+    collectionReceipt: String?,
     format: ClientOutputFormat
 ) throws {
     do {
-        guard let samples, !samples.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        let nonEmptySamples = samples?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let nonEmptyReceipt = collectionReceipt?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard (nonEmptySamples?.isEmpty == false) != (nonEmptyReceipt?.isEmpty == false) else {
             throw TestReliabilityCommandFailure(detail: testReliabilityFailure(
                 code: "missing_required_field",
-                message: "--samples is required.",
-                hint: "Provide a private reliability sample manifest with --samples <file.json>."
+                message: "Provide exactly one of --samples or --collection-receipt.",
+                hint: "Use --samples for the legacy private sample set, or --collection-receipt for the receipt-backed harness."
             ))
         }
-        let report = try buildTritonTestReliabilityReport(samplesPath: samples)
+        let report: TKTestReliabilityReport
+        if let nonEmptyReceipt, !nonEmptyReceipt.isEmpty {
+            report = try buildTritonTestReliabilityReceiptReport(collectionReceiptPath: nonEmptyReceipt)
+        } else if let nonEmptySamples, !nonEmptySamples.isEmpty {
+            report = try buildTritonTestReliabilityReport(samplesPath: nonEmptySamples)
+        } else {
+            throw TestReliabilityCommandFailure(detail: testReliabilityFailure(
+                code: "missing_required_field",
+                message: "Provide exactly one of --samples or --collection-receipt.",
+                hint: "Use a private reliability input."
+            ))
+        }
         switch format {
         case .json:
             print(try encodeJSON(report))
@@ -391,6 +459,8 @@ private func runTestReliabilityCommand(
             fputs("\(detail.code): \(detail.message)\n", stderr)
         }
         throw ExitCode.failure
+    } catch let error as TKTestReliabilityHarnessError {
+        try printTestReliabilityHarnessFailure(testReliabilityHarnessErrorDetail(error), format: format)
     } catch {
         if error is ExitCode { throw error }
         let detail = testReliabilityFailure(
@@ -406,6 +476,141 @@ private func runTestReliabilityCommand(
         }
         throw ExitCode.failure
     }
+}
+
+private func runTestReliabilityReserveCommand(
+    collection: String?,
+    format: ClientOutputFormat
+) throws {
+    do {
+        guard let collection, !collection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw TestReliabilityCommandFailure(detail: testReliabilityFailure(
+                code: "missing_required_field",
+                message: "--collection is required.",
+                hint: "Provide a private collection declaration with --collection <private.json>."
+            ))
+        }
+        let response = try reserveTritonTestReliabilityCollection(collectionPath: collection)
+        switch format {
+        case .json:
+            print(try encodeJSON(response))
+        case .text:
+            print("ok: true")
+            print("receipt: \(response.receiptFile)")
+            print("plannedSamples: \(response.plannedSampleCount)")
+        }
+    } catch let failure as TestReliabilityCommandFailure {
+        try printTestReliabilityHarnessFailure(failure.detail, format: format)
+    } catch let error as TKTestReliabilityHarnessError {
+        try printTestReliabilityHarnessFailure(testReliabilityHarnessErrorDetail(error), format: format)
+    } catch {
+        if error is ExitCode { throw error }
+        try printTestReliabilityHarnessFailure(
+            testReliabilityFailure(
+                code: "reliability_reservation_write_failed",
+                message: "The private reliability reservation could not be completed.",
+                hint: "Inspect the private collection and reserved root without overwriting it."
+            ),
+            format: format
+        )
+    }
+}
+
+private func runTestReliabilitySampleCommand(
+    collectionReceipt: String?,
+    flow: String?,
+    slot: String?,
+    resetReceipt: String?,
+    target: String?,
+    host: String,
+    port: String,
+    confirm: Bool,
+    format: ClientOutputFormat
+) async throws {
+    do {
+        guard let collectionReceipt,
+              !collectionReceipt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let flow,
+              !flow.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let slot,
+              !slot.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let resetReceipt,
+              !resetReceipt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let target,
+              !target.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw TestReliabilityCommandFailure(detail: testReliabilityFailure(
+                code: "missing_required_field",
+                message: "reliability-sample requires receipt, flow, slot, reset receipt, and target.",
+                hint: "Provide the exact private receipt-bound sample arguments."
+            ))
+        }
+        guard let parsedSlot = Int(slot), parsedSlot > 0,
+              let parsedPort = Int(port), parsedPort > 0 else {
+            throw TestReliabilityCommandFailure(detail: testReliabilityFailure(
+                code: "invalid_reliability_sample_request",
+                message: "reliability-sample --slot and --port must be positive integers.",
+                hint: "Use a declared positive receipt slot and port 19421."
+            ))
+        }
+        let executor = TKLiveTestRunPrimitiveExecutor()
+        let response = try await runTritonTestReliabilitySample(
+            request: TKTestReliabilitySampleRequest(
+                collectionReceipt: collectionReceipt,
+                flow: flow,
+                slot: parsedSlot,
+                resetReceipt: resetReceipt,
+                target: target,
+                host: host,
+                port: parsedPort,
+                confirm: confirm
+            ),
+            executor: executor,
+            targetResolver: TKLiveTestReliabilityRuntimeTargetResolver()
+        )
+        try emitTestReliabilitySampleResult(response, format: format)
+    } catch let failure as TestReliabilityCommandFailure {
+        try printTestReliabilityHarnessFailure(failure.detail, format: format)
+    } catch let error as TKTestReliabilityHarnessError {
+        try printTestReliabilityHarnessFailure(testReliabilityHarnessErrorDetail(error), format: format)
+    } catch {
+        if error is ExitCode { throw error }
+        try printTestReliabilityHarnessFailure(
+            testReliabilityHarnessErrorDetail(.runnerFailed),
+            format: format
+        )
+    }
+}
+
+func emitTestReliabilitySampleResult(
+    _ response: TKTestReliabilitySampleResponse,
+    format: ClientOutputFormat,
+    write: (String) -> Void = { print($0) }
+) throws {
+    switch format {
+    case .json:
+        write(try encodeJSON(response))
+    case .text:
+        write("ok: \(response.ok)")
+        write("flow: \(response.flowID)")
+        write("slot: \(response.slot)")
+        write("runStatus: \(response.runStatus.rawValue)")
+    }
+    if !response.ok {
+        throw ExitCode.failure
+    }
+}
+
+private func printTestReliabilityHarnessFailure(
+    _ detail: TKCLIErrorDetail,
+    format: ClientOutputFormat
+) throws -> Never {
+    switch format {
+    case .json:
+        print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+    case .text:
+        fputs("\(detail.code): \(detail.message)\n", stderr)
+    }
+    throw ExitCode.failure
 }
 
 private func runTestReliabilityPreflightCommand(

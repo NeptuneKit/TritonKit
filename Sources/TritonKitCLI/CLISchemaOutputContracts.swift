@@ -266,6 +266,53 @@ func testReliabilityCollectionPreflightOutputContract() -> TKCommandOutputContra
     )
 }
 
+func testReliabilityReserveOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "test.reliability-reserve",
+        format: "json",
+        kind: "test-reliability-reserve",
+        model: "TKTestReliabilityReserveResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether one private receipt was exclusively reserved"),
+            ("schemaVersion", "Int", true, "Response schema version; always 1"),
+            ("kind", "String", true, "Stable kind; triton.test.reliability-reserve"),
+            ("writesEvidence", "Bool", true, "Always true after successful exclusive local receipt creation"),
+            ("usesRuntime", "Bool", true, "Always false; reserve never starts or queries server, target, App, Simulator, or runner"),
+            ("receiptFile", "String", true, "Relative receipt filename only; never an absolute private path"),
+            ("receiptDigest", "String", true, "FNV-1a digest of the frozen private receipt bytes"),
+            ("targetBindingDigest", "String", true, "FNV-1a canonical target binding without raw target data"),
+            ("supportedFlowCount", "Int", true, "Exactly three receipt-frozen supported flows"),
+            ("negativeControlCount", "Int", true, "Exactly one receipt-frozen expected nonpassed control"),
+            ("plannedSampleCount", "Int", true, "Reserved future sample count; 61 is not a reliability verdict"),
+        ])
+    )
+}
+
+func testReliabilitySampleOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "test.reliability-sample",
+        format: "json",
+        kind: "test-reliability-sample",
+        model: "TKTestReliabilitySampleResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the terminal runner status matched the frozen expected outcome"),
+            ("schemaVersion", "Int", true, "Response schema version; always 1"),
+            ("kind", "String", true, "Stable kind; triton.test.reliability-sample"),
+            ("flowID", "String", true, "Opaque receipt flow alias such as flow_001; never a source path or selector"),
+            ("classification", "String", true, "supported or negative-control"),
+            ("slot", "Int", true, "The exclusively claimed receipt slot"),
+            ("targetBindingDigest", "String", true, "Receipt canonical target digest; raw target stays private"),
+            ("planDigest", "String", true, "Frozen normalized-plan digest"),
+            ("executionIdentityDigest", "String", true, "Frozen semantic execution identity digest"),
+            ("resetEvidenceDigest", "String", true, "Digest of the copied private reset receipt"),
+            ("evidenceRelativePath", "String", true, "Receipt-relative private evidence path only"),
+            ("runStatus", "String", true, "Terminal runner status"),
+            ("expectedOutcome", "String", true, "Frozen passed or nonpassed contract"),
+            ("outcomeMatched", "Bool", true, "Whether terminal status matches the frozen classification"),
+        ])
+    )
+}
+
 func testCreateOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "test.create",

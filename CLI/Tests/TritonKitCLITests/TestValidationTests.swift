@@ -293,24 +293,56 @@ struct TestValidationTests {
         let schema = try #require(commandSchemas().first { $0.name == "test" })
         let validate = try #require(schema.subcommands.first { $0.name == "validate" })
         let run = try #require(schema.subcommands.first { $0.name == "run" })
+        let reliability = try #require(schema.subcommands.first { $0.name == "reliability" })
+        let reserve = try #require(schema.subcommands.first { $0.name == "reliability-reserve" })
+        let sample = try #require(schema.subcommands.first { $0.name == "reliability-sample" })
         let failureShape = try #require(schema.failureShape)
 
         #expect(schema.requiresServer == false)
         #expect(schema.requiresTarget == false)
-        #expect(schema.runtimeScope == "offline for import/validate/normalize/report/reliability/reliability-preflight/create; runtime target required for run")
-        #expect(schema.providedCapabilities == ["test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-reliability-gate", "test-reliability-collection-preflight", "test-create-from-session"])
+        #expect(schema.runtimeScope == "offline for import/validate/normalize/report/reliability/reliability-preflight/reliability-reserve/create; reliability-sample and run require an explicit runtime target; reliability-sample requires an already-running receipt-bound loopback server and never starts it")
+        #expect(schema.providedCapabilities == ["test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-reliability-gate", "test-reliability-collection-preflight", "test-reliability-reserve", "test-reliability-sample", "test-create-from-session"])
         #expect(schema.failureCodes.contains("unsupported_step"))
         #expect(failureShape.contains("run"))
         #expect(failureShape.contains("reliability-preflight"))
+        #expect(failureShape.contains("reliability-reserve"))
+        #expect(failureShape.contains("reliability-sample"))
+        #expect(failureShape.contains("typed result then exits 1"))
+        #expect(failureShape.contains("does not match its frozen expected outcome"))
+        #expect(failureShape.contains("expected nonpassed negative-control result exits 0"))
         #expect(failureShape.contains("error:{ code, message"))
         #expect(validate.requiredOptions == ["<path.tritontest.yaml>"])
         #expect(validate.outputSelectors == ["test.validation", "test.normalized-plan"])
         #expect(run.requiredOptions == ["<path.tritontest.yaml>", "--evidence-dir"])
         #expect(run.outputSelectors == ["test.run-result", "test.validation", "test.normalized-plan"])
+        #expect(run.requiresServer)
+        #expect(run.requiresTarget)
+        #expect(run.requiresConfirmation == false)
+        #expect(run.sideEffect == "runtime-execution-evidence-write")
+        #expect(reliability.requiredOptions == [])
+        #expect(reliability.oneOfRequiredOptions == [["--samples"], ["--collection-receipt"]])
+        #expect(reserve.requiredOptions == ["--collection"])
+        #expect(reserve.outputSelectors == ["test.reliability-reserve"])
+        #expect(reserve.requiresServer == false)
+        #expect(reserve.requiresTarget == false)
+        #expect(reserve.requiresConfirmation == false)
+        #expect(reserve.sideEffect == "private-receipt-write")
+        #expect(sample.requiredOptions == ["--collection-receipt", "--flow", "--slot", "--reset-receipt", "--target", "--confirm"])
+        #expect(sample.outputSelectors == ["test.reliability-sample"])
+        #expect(sample.requiresServer)
+        #expect(sample.requiresTarget)
+        #expect(sample.requiresConfirmation)
+        #expect(sample.sideEffect == "runtime-execution-private-evidence-write")
+        #expect(sample.optionOverrides.first { $0.name == "--target" }?.required == true)
+        #expect(sample.optionOverrides.first { $0.name == "--target" }?.defaultValue == nil)
+        #expect(sample.optionOverrides.first { $0.name == "--host" }?.defaultValue == "127.0.0.1")
+        #expect(sample.optionOverrides.first { $0.name == "--port" }?.defaultValue == "19421")
         #expect(schema.outputContracts.contains { $0.selector == "test.run-result" })
         #expect(schema.outputContracts.contains { $0.selector == "test.report" })
         #expect(schema.outputContracts.contains { $0.selector == "test.reliability" })
         #expect(schema.outputContracts.contains { $0.selector == "test.reliability-collection-preflight" })
+        #expect(schema.outputContracts.contains { $0.selector == "test.reliability-reserve" })
+        #expect(schema.outputContracts.contains { $0.selector == "test.reliability-sample" })
         #expect(schema.outputContracts.contains { $0.selector == "test.create" })
     }
 
@@ -343,6 +375,52 @@ struct TestValidationTests {
         #expect(!response.ok)
         #expect(response.error.code == "missing_required_field")
         #expect(response.error.message == "--collection is required.")
+    }
+
+    @Test("reliability-sample numeric validation stays in the JSON error envelope before receipt or runtime access")
+    func testReliabilitySampleInvalidNumbersUseJSONEnvelope() throws {
+        let result = try runTriton([
+            "test", "reliability-sample",
+            "--collection-receipt", "private-receipt.json",
+            "--flow", "flow_001",
+            "--slot", "not-a-slot",
+            "--reset-receipt", "private-reset.json",
+            "--target", "triton:ios-simulator:00000000-0000-0000-0000-000000000000/app:com.example.private",
+            "--port", "not-a-port",
+            "--confirm",
+            "--json",
+        ])
+
+        #expect(result.exitCode == 1)
+        #expect(result.stderr.isEmpty)
+        let response = try JSONDecoder().decode(
+            TKCLIErrorResponse.self,
+            from: Data(result.stdout.utf8)
+        )
+        #expect(!response.ok)
+        #expect(response.error.code == "invalid_reliability_sample_request")
+    }
+
+    @Test("reliability-sample missing configuration emits one JSON error envelope before runtime access")
+    func testReliabilitySampleMissingTargetUsesJSONEnvelope() throws {
+        let result = try runTriton([
+            "test", "reliability-sample",
+            "--collection-receipt", "private-receipt.json",
+            "--flow", "flow_001",
+            "--slot", "1",
+            "--reset-receipt", "private-reset.json",
+            "--confirm",
+            "--json",
+        ])
+
+        #expect(result.exitCode == 1)
+        #expect(result.stderr.isEmpty)
+        let response = try JSONDecoder().decode(
+            TKCLIErrorResponse.self,
+            from: Data(result.stdout.utf8)
+        )
+        #expect(!response.ok)
+        #expect(response.error.code == "missing_required_field")
     }
 
     private func validContractYAML() -> String {
