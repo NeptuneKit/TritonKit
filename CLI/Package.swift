@@ -31,7 +31,10 @@ let package = Package(
         ),
         .testTarget(
             name: "TritonKitCLITests",
-            dependencies: ["TritonKitCLI"]
+            dependencies: [
+                "TritonKitCLI",
+                .product(name: "HummingbirdTesting", package: "hummingbird"),
+            ]
         ),
     ]
 )

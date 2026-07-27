@@ -4,11 +4,15 @@ import { after, test } from "node:test";
 import { createServer } from "vite";
 
 const viteServer = await createServer({
+  configFile: false,
   appType: "custom",
   server: {
     hmr: false,
     middlewareMode: true,
     ws: false,
+  },
+  optimizeDeps: {
+    noDiscovery: true,
   },
 });
 
@@ -137,4 +141,20 @@ test("opens new layouts with stream and run atlas workbench visible", () => {
   } finally {
     globalThis.localStorage = originalLocalStorage;
   }
+});
+
+test("keeps browser device surfaces free of Web write dispatch", () => {
+  const streamCard = readFileSync(new URL("../src/components/StreamCard.tsx", import.meta.url), "utf8");
+  const inspectorCard = readFileSync(new URL("../src/components/InspectorCard.tsx", import.meta.url), "utf8");
+  const bridge = readFileSync(new URL("./ios-bridge/index.mjs", import.meta.url), "utf8");
+
+  assert.doesNotMatch(streamCard, /\/web\/host-input/);
+  assert.doesNotMatch(streamCard, /sendGestureInput/);
+  assert.doesNotMatch(inspectorCard, /\/web\/node-property/);
+  assert.doesNotMatch(inspectorCard, /applyNodePatchDraft/);
+  assert.doesNotMatch(bridge, /dispatchHostInput/);
+  assert.doesNotMatch(bridge, /handleHostInputRoute/);
+  assert.doesNotMatch(bridge, /handleNodePropertyRoute/);
+  assert.match(bridge, /web_host_input_readonly/);
+  assert.match(bridge, /web_node_property_readonly/);
 });

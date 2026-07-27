@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（140/140 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（141/141 个当前 branch 可见 space 已登记；SP-141 checkpoint 待顺序集成，历史目录物理迁移 0/125）
 >
 > 最近审计：2026-07-28
 
@@ -58,6 +58,7 @@
 | 已完成（本地） | [SP-138-issue-170-xcode-real-device-destination](./SP-138-issue-170-xcode-real-device-destination/README.md) | #170 已收紧 Xcode `--device` 的 settings/build/test/run preflight、exact raw execution destination 与 public-output redaction | checkpoint `5d7ffff0` 已进入本地 main；真实 Xcode、Simulator、真机与服务 smoke 仍未运行 |
 | 已完成（本地） | [SP-139-issue-169-xcode-focused-testing](./SP-139-issue-169-xcode-focused-testing/README.md) | #169 已为 `triton xcode test` 增加 repeatable `--only-testing`，每项保持独立 xcodebuild argv，JSON/JSONL 可审计 sourceCommand | checkpoint `0cb7e958` 已进入本地 main；不实现 `--skip-testing`，未启动真实 Xcode、Simulator、真机或服务 |
 | 已完成（本地） | [SP-140-ios-simulator-reliability-live-harness](./SP-140-ios-simulator-reliability-live-harness/README.md) | receipt-backed reserve/sample 将 3×20+1 的 future collection 固化为 immutable contract、strict exact target 与 no-clobber slot；业务 mismatch 保持 typed result + exit 语义 | 本地 harness/契约验证完成；不得自动真实采样，后续必须先获得 dedicated Simulator、server ownership、reset recipe、negative control 与私有 evidence 授权 |
+| 已完成（本地） | [SP-142-web-readonly-contract](./SP-142-web-readonly-contract/README.md) | Web Device Hub 统一只读：browser `/web/input`、`/web/node-property`、`/web/host-input` 不再执行或转发，React/HTML 保留 DTO、截图、层级与本地 patch 草案复制 | local checkpoint 只做离线契约验证；先集成 SP-141 再集成 SP-142 后重跑 docs gate，读路径的 serve 生命周期风险另立裁决 |
 | 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
@@ -84,6 +85,7 @@
 | `SP-138-issue-170-xcode-real-device-destination` | `feat/SP-138-issue-170-xcode-real-device-destination` | `../TritonKit-worktrees/SP-138-issue-170-xcode-real-device-destination/` | `main@f68587be` | `5d7ffff0` 已进入本地 main；真实 Xcode/Simulator/设备/服务 smoke 未运行 |
 | `SP-139-issue-169-xcode-focused-testing` | `feat/SP-139-issue-169-xcode-focused-testing` | `../TritonKit-worktrees/SP-139-issue-169-xcode-focused-testing/` | `main@5d7ffff0` | `0cb7e958` 已进入本地 main；repeatable focused XCTest selection 不启动真实 Xcode/Simulator/设备/服务 |
 | `SP-140-ios-simulator-reliability-live-harness` | `feat/SP-140-ios-simulator-reliability-live-harness` | `../TritonKit-worktrees/SP-140-ios-simulator-reliability-live-harness/` | `main@0cb7e958` | receipt-backed harness 已 rebase 到当前 local main；focused contract 已验证，真实 3×20+1 仍明确等待授权，不触碰 #164 WIP |
+| `SP-142-web-readonly-contract` | `feat/SP-142-web-readonly-contract` | `../TritonKit-worktrees/SP-142-web-readonly-contract/` | `main@d016979d` | 统一 405 readonly envelope、React/legacy HTML/Vite bridge 已去 write dispatch；Swift 49、Node focused 18、Node full 75、Web/release build 均通过；SP-141 local checkpoint 先于本 branch 集成，否则 docs registry 连号 gate 会故意失败 |
 
 ## 维护规则
 
