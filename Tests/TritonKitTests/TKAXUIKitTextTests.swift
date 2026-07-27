@@ -31,6 +31,15 @@ struct TKAXUIKitTextTests {
         }
     }
 
+    final class AccessibleTapGestureSurface: UIView {
+        var activationCount = 0
+
+        override func accessibilityActivate() -> Bool {
+            activationCount += 1
+            return true
+        }
+    }
+
     final class TableDataSource: NSObject, UITableViewDataSource {
         func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
             2
@@ -87,9 +96,11 @@ struct TKAXUIKitTextTests {
 
     final class CollectionDelegate: NSObject, UICollectionViewDelegate {
         var selectedIndexPath: IndexPath?
+        var didSelectCount = 0
 
         func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
             selectedIndexPath = indexPath
+            didSelectCount += 1
         }
     }
 
@@ -380,8 +391,8 @@ struct TKAXUIKitTextTests {
         #expect(delegate.didSelectCount == 1)
     }
 
-    @Test("smart tap selects collection view cell ancestor for matched label nodes")
-    func smartTapSelectsCollectionViewCellAncestorForLabel() async throws {
+    @Test("smart tap rejects collection view cell ancestor without selecting it")
+    func smartTapRejectsCollectionViewCellAncestorForLabel() async throws {
         let window = makeVisibleTestWindow()
         defer {
             window.isHidden = true
@@ -410,18 +421,64 @@ struct TKAXUIKitTextTests {
             activationStrategy: .smart
         )
         let result = try await performInputRequest(request)
+        await Task.yield()
 
-        #expect(result.ok)
-        #expect(delegate.selectedIndexPath == indexPath)
+        #expect(!result.ok)
+        #expect(result.error?.code == "unsupported_capability")
+        #expect(delegate.selectedIndexPath == nil)
+        #expect(delegate.didSelectCount == 0)
         #expect(result.matchedOID == labelOID)
         #expect(result.activationOID == cellOID)
         #expect(result.targetOID == cellOID)
         #expect(result.activationClassName == NSStringFromClass(CollectionCell.self))
-        #expect(result.strategy == "ancestor-collection-cell-selection")
+        #expect(result.strategy == "ancestor-collection-cell-unsupported")
     }
 
-    @Test("coordinate tap selects collection view cell containing point")
-    func coordinateTapSelectsCollectionViewCellContainingPoint() async throws {
+    @Test("ancestor tap rejects collection view cell ancestor without selecting it")
+    func ancestorTapRejectsCollectionViewCellAncestorForLabel() async throws {
+        let window = makeVisibleTestWindow()
+        defer {
+            window.isHidden = true
+        }
+
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 60)
+        let collectionView = UICollectionView(frame: CGRect(x: 0, y: 80, width: 390, height: 240), collectionViewLayout: layout)
+        let dataSource = CollectionDataSource()
+        let delegate = CollectionDelegate()
+        collectionView.register(CollectionCell.self, forCellWithReuseIdentifier: "cell")
+        collectionView.dataSource = dataSource
+        collectionView.delegate = delegate
+        window.addSubview(collectionView)
+        collectionView.reloadData()
+        collectionView.layoutIfNeeded()
+
+        let indexPath = IndexPath(item: 0, section: 0)
+        let cell = try #require(collectionView.cellForItem(at: indexPath) as? CollectionCell)
+        let labelOID = TKObjectRegistry.shared.register(cell.label)
+        let cellOID = TKObjectRegistry.shared.register(cell)
+        let request = TKInputRequest.tap(
+            targetOID: labelOID,
+            matchedOID: labelOID,
+            matchedClassName: NSStringFromClass(UILabel.self),
+            activationStrategy: .ancestor
+        )
+        let result = try await performInputRequest(request)
+        await Task.yield()
+
+        #expect(!result.ok)
+        #expect(result.error?.code == "unsupported_capability")
+        #expect(delegate.selectedIndexPath == nil)
+        #expect(delegate.didSelectCount == 0)
+        #expect(result.matchedOID == labelOID)
+        #expect(result.activationOID == cellOID)
+        #expect(result.targetOID == cellOID)
+        #expect(result.activationClassName == NSStringFromClass(CollectionCell.self))
+        #expect(result.strategy == "ancestor-collection-cell-unsupported")
+    }
+
+    @Test("coordinate tap rejects collection view cell without selecting it")
+    func coordinateTapRejectsCollectionViewCellContainingPoint() async throws {
         let window = makeVisibleTestWindow()
         defer {
             window.isHidden = true
@@ -449,11 +506,102 @@ struct TKAXUIKitTextTests {
         let result = try await performInputRequest(request)
         await Task.yield()
 
-        #expect(result.ok)
-        #expect(delegate.selectedIndexPath == indexPath)
+        #expect(!result.ok)
+        #expect(result.error?.code == "unsupported_capability")
+        #expect(delegate.selectedIndexPath == nil)
+        #expect(delegate.didSelectCount == 0)
         #expect(result.activationOID == TKObjectRegistry.shared.register(cell))
         #expect(result.activationClassName == NSStringFromClass(CollectionCell.self))
-        #expect(result.strategy == "ancestor-collection-cell-selection")
+        #expect(result.strategy == "ancestor-collection-cell-unsupported")
+    }
+
+    @Test("smart tap keeps a nearer UIControl action inside a collection cell")
+    func smartTapKeepsNearerControlActionInsideCollectionCell() async throws {
+        let window = makeVisibleTestWindow()
+        defer {
+            window.isHidden = true
+        }
+
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 60)
+        let collectionView = UICollectionView(frame: CGRect(x: 0, y: 80, width: 390, height: 240), collectionViewLayout: layout)
+        let dataSource = CollectionDataSource()
+        let delegate = CollectionDelegate()
+        collectionView.register(CollectionCell.self, forCellWithReuseIdentifier: "cell")
+        collectionView.dataSource = dataSource
+        collectionView.delegate = delegate
+        window.addSubview(collectionView)
+        collectionView.reloadData()
+        collectionView.layoutIfNeeded()
+
+        let indexPath = IndexPath(item: 0, section: 0)
+        let cell = try #require(collectionView.cellForItem(at: indexPath) as? CollectionCell)
+        let control = UIControl(frame: CGRect(x: 180, y: 12, width: 96, height: 28))
+        let label = UILabel(frame: CGRect(x: 0, y: 0, width: 96, height: 28))
+        let recorder = TapRecorder()
+        label.text = "Safe control"
+        control.addSubview(label)
+        control.addTarget(recorder, action: #selector(TapRecorder.didTap(_:)), for: .touchUpInside)
+        cell.contentView.addSubview(control)
+
+        let labelOID = TKObjectRegistry.shared.register(label)
+        let result = try await performInputRequest(.tap(
+            targetOID: labelOID,
+            matchedOID: labelOID,
+            matchedClassName: NSStringFromClass(UILabel.self),
+            activationStrategy: .smart
+        ))
+        await Task.yield()
+
+        #expect(result.ok)
+        #expect(result.strategy == "ancestor-control-action")
+        #expect(recorder.tapCount == 1)
+        #expect(delegate.selectedIndexPath == nil)
+        #expect(delegate.didSelectCount == 0)
+    }
+
+    @Test("smart tap keeps accessibility activation for a nearer gesture inside a collection cell")
+    func smartTapKeepsAccessibleGestureInsideCollectionCell() async throws {
+        let window = makeVisibleTestWindow()
+        defer {
+            window.isHidden = true
+        }
+
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 60)
+        let collectionView = UICollectionView(frame: CGRect(x: 0, y: 80, width: 390, height: 240), collectionViewLayout: layout)
+        let dataSource = CollectionDataSource()
+        let delegate = CollectionDelegate()
+        collectionView.register(CollectionCell.self, forCellWithReuseIdentifier: "cell")
+        collectionView.dataSource = dataSource
+        collectionView.delegate = delegate
+        window.addSubview(collectionView)
+        collectionView.reloadData()
+        collectionView.layoutIfNeeded()
+
+        let indexPath = IndexPath(item: 0, section: 0)
+        let cell = try #require(collectionView.cellForItem(at: indexPath) as? CollectionCell)
+        let gestureSurface = AccessibleTapGestureSurface(frame: CGRect(x: 180, y: 12, width: 96, height: 28))
+        let label = UILabel(frame: CGRect(x: 0, y: 0, width: 96, height: 28))
+        label.text = "Safe gesture"
+        gestureSurface.addSubview(label)
+        gestureSurface.addGestureRecognizer(UITapGestureRecognizer())
+        cell.contentView.addSubview(gestureSurface)
+
+        let labelOID = TKObjectRegistry.shared.register(label)
+        let result = try await performInputRequest(.tap(
+            targetOID: labelOID,
+            matchedOID: labelOID,
+            matchedClassName: NSStringFromClass(UILabel.self),
+            activationStrategy: .smart
+        ))
+        await Task.yield()
+
+        #expect(result.ok)
+        #expect(result.strategy == "tap-gesture-accessibility-activate")
+        #expect(gestureSurface.activationCount == 1)
+        #expect(delegate.selectedIndexPath == nil)
+        #expect(delegate.didSelectCount == 0)
     }
 
     @Test("smart tap reports gesture parent unsupported without private introspection")

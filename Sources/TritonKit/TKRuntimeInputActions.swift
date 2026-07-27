@@ -203,9 +203,21 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
         }
 
         if let collectionCell = nearestSuperview(of: view, matching: UICollectionViewCell.self)
-            ?? collectionCellContaining(request: request),
-           let result = performCollectionCellTap(collectionCell, request: request, action: action, matchedView: view) {
-            return result
+            ?? collectionCellContaining(request: request) {
+            if let result = performTapGestureAccessibilityActivation(
+                from: view,
+                request: request,
+                action: action,
+                matchedView: view
+            ) {
+                return result
+            }
+            return unsupportedCollectionCellTap(
+                collectionCell,
+                request: request,
+                action: action,
+                matchedView: view
+            )
         }
 
         if let result = performTapGestureActivation(from: view, request: request, action: action, matchedView: view) {
@@ -666,9 +678,21 @@ func performAncestorTapActivation(from view: UIView, request: TKInputRequest, ac
     }
 
     if let collectionCell = nearestSuperview(of: view, matching: UICollectionViewCell.self)
-        ?? collectionCellContaining(request: request),
-       let result = performCollectionCellTap(collectionCell, request: request, action: action, matchedView: view) {
-        return result
+        ?? collectionCellContaining(request: request) {
+        if let result = performTapGestureAccessibilityActivation(
+            from: view,
+            request: request,
+            action: action,
+            matchedView: view
+        ) {
+            return result
+        }
+        return unsupportedCollectionCellTap(
+            collectionCell,
+            request: request,
+            action: action,
+            matchedView: view
+        )
     }
 
     if let gestureView = nearestTapGestureView(from: view) {
@@ -719,6 +743,34 @@ func performTapGestureActivation(
         view: candidate.view,
         message: "UITapGestureRecognizer target actions are not exposed through public UIKit runtime APIs",
         strategy: strategy
+    )
+}
+
+@MainActor
+func performTapGestureAccessibilityActivation(
+    from view: UIView,
+    request: TKInputRequest,
+    action: String,
+    matchedView: UIView?
+) -> TKInputResult? {
+    guard let candidate = nearestTapGestureCandidate(from: view),
+          candidate.view.accessibilityActivate() else {
+        return nil
+    }
+
+    let matched = tapMatchedContext(request, fallback: matchedView ?? view)
+    let activationOID = oid(for: candidate.view)
+    let activationClassName = NSStringFromClass(type(of: candidate.view))
+    return TKInputResult.success(
+        action: action,
+        message: "Activated tap gesture view via accessibilityActivate",
+        targetOID: activationOID,
+        targetClassName: activationClassName,
+        matchedOID: matched.oid,
+        matchedClassName: matched.className,
+        activationOID: activationOID,
+        activationClassName: activationClassName,
+        strategy: "tap-gesture-accessibility-activate"
     )
 }
 
@@ -898,71 +950,33 @@ func performTableCellTap(
 }
 
 @MainActor
-func performCollectionCellTap(
+func unsupportedCollectionCellTap(
     _ cell: UICollectionViewCell,
     request: TKInputRequest,
     action: String,
     matchedView: UIView
-) -> TKInputResult? {
-    guard let collectionView = nearestSuperview(of: cell, matching: UICollectionView.self),
-          let indexPath = collectionView.indexPath(for: cell) else {
-        return nil
-    }
-
+) -> TKInputResult {
     let matched = tapMatchedContext(request, fallback: matchedView)
     let activationOID = oid(for: cell)
     let activationClassName = NSStringFromClass(type(of: cell))
-    guard collectionView.allowsSelection, cell.isUserInteractionEnabled else {
-        return TKInputResult.failure(
-            action: action,
-            message: "UICollectionViewCell ancestor is not selectable",
-            targetOID: activationOID,
-            targetClassName: activationClassName,
-            matchedOID: matched.oid,
-            matchedClassName: matched.className,
-            activationOID: activationOID,
-            activationClassName: activationClassName,
-            strategy: "ancestor-collection-cell-selection-blocked"
-        )
-    }
-    if collectionView.delegate?.responds(to: #selector(UICollectionViewDelegate.collectionView(_:shouldSelectItemAt:))) == true,
-       collectionView.delegate?.collectionView?(collectionView, shouldSelectItemAt: indexPath) == false {
-        if let result = unsupportedPrimaryMenuItemActivation(
-            matchedView: matchedView,
-            request: request,
-            action: action
-        ) {
-            return result
-        }
-        return TKInputResult.failure(
-            action: action,
-            message: "UICollectionViewCell ancestor selection was denied by delegate",
-            targetOID: activationOID,
-            targetClassName: activationClassName,
-            matchedOID: matched.oid,
-            matchedClassName: matched.className,
-            activationOID: activationOID,
-            activationClassName: activationClassName,
-            strategy: "ancestor-collection-cell-selection-denied"
-        )
-    }
-
-    DispatchQueue.main.async { [weak collectionView] in
-        guard let collectionView else { return }
-        collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
-        collectionView.delegate?.collectionView?(collectionView, didSelectItemAt: indexPath)
-    }
-
-    return TKInputResult.success(
+    let message = "UICollectionViewCell selection is not a safe public embedded-runtime activation"
+    return TKInputResult.unsupported(
         action: action,
-        message: "Submitted UICollectionViewCell ancestor selection",
-        targetOID: activationOID,
-        targetClassName: activationClassName,
+        message: message,
         matchedOID: matched.oid,
         matchedClassName: matched.className,
         activationOID: activationOID,
         activationClassName: activationClassName,
-        strategy: "ancestor-collection-cell-selection"
+        strategy: "ancestor-collection-cell-unsupported",
+        error: TKCLIErrorDetail(
+            code: "unsupported_capability",
+            message: message,
+            hint: "Use a public UIControl or accessibility-activatable gesture inside the collection cell, or an app-owned semantic DEBUG action.",
+            suggestedCommands: [
+                "triton schema --command act --json",
+                "triton verify text-exists <expected> --target <target> --json",
+            ]
+        )
     )
 }
 

@@ -239,8 +239,8 @@ struct WebViewRouteTests {
         #expect(tap.optionalOptions.contains("--webview-id"))
     }
 
-    @Test("tap schema documents selectable cell ancestor activation")
-    func tapSchemaDocumentsSelectableCellAncestorActivation() throws {
+    @Test("tap schema rejects unsafe collection cell selection while keeping table selection")
+    func tapSchemaRejectsUnsafeCollectionCellSelectionWhileKeepingTableSelection() throws {
         let act = try #require(commandSchemas().first { $0.name == "act" })
         let tap = try #require(actionCommandSchemas().first { $0.name == "tap" })
         let actStrategy = try #require(act.options.first { $0.name == "--strategy" })
@@ -248,9 +248,13 @@ struct WebViewRouteTests {
 
         #expect(actStrategy.description.contains("UICollectionViewCell"))
         #expect(tapStrategy.description.contains("UICollectionViewCell"))
-        #expect(tap.outputSemantics?.contains("ancestor-collection-cell-selection") == true)
+        #expect(actStrategy.description.contains("unsupported_capability"))
+        #expect(tapStrategy.description.contains("unsupported_capability"))
+        #expect(tap.outputSemantics?.contains("ancestor-collection-cell-unsupported") == true)
+        #expect(tap.outputSemantics?.contains("ancestor-collection-cell-selection") == false)
         #expect(tap.outputSemantics?.contains("ancestor-table-cell-selection") == true)
         #expect(tap.outputSemantics?.contains("invokes didSelectRowAt before returning") == true)
+        #expect(tap.failureCodes.contains("unsupported_capability"))
         #expect(tap.outputSemantics?.contains("alert-action-accessibility-activate") == true)
         #expect(tap.outputSemantics?.contains("alert-action-unsupported") == true)
         #expect(tap.outputSemantics?.contains("button-primary-menu-action") == true)

@@ -5,7 +5,7 @@ import Testing
 import TritonKitShared
 @testable import TritonKitCLI
 
-@Suite
+@Suite(.serialized)
 struct InputOutputTests {
     @Test("root command exposes P23 act workflow group before raw engine fallbacks")
     func rootCommandExposesP23ActWorkflowGroup() throws {
@@ -67,27 +67,30 @@ struct InputOutputTests {
         #expect(output.contains("strategy: ancestor-control-action"))
     }
 
-    @Test("failed input result emits one JSON object and preserves runtime error")
-    func failedInputResultEmitsOneJSONAndPreservesRuntimeError() throws {
+    @Test("CLI JSON unsupported input result emits one envelope and exits nonzero")
+    func cliJSONUnsupportedInputResultEmitsOneEnvelopeAndExitsNonzero() throws {
         let result = TKInputResult.unsupported(
             action: "tap",
-            message: "Visible primary-menu items require host HID activation",
-            strategy: "button-primary-menu-item-unsupported",
+            message: "UICollectionViewCell selection has no safe public embedded-runtime activation",
+            strategy: "ancestor-collection-cell-unsupported",
             error: TKCLIErrorDetail(
                 code: "unsupported_capability",
-                message: "Visible primary-menu items require host HID activation"
+                message: "UICollectionViewCell selection has no safe public embedded-runtime activation"
             )
         )
 
-        #expect(throws: ExitCode.self) {
-            try requireInputResultSuccess(result)
+        let captured = captureStandardOutputAllowingFailure {
+            try printInputResultAndRequireSuccess(result, format: .json)
         }
-        let output = try encodeCompactJSON(result)
+        #expect(captured.error is ExitCode)
+
+        let output = captured.output
         let lines = output.split(whereSeparator: { $0.isNewline })
         #expect(lines.count == 1)
         let decoded = try JSONDecoder().decode(TKInputResult.self, from: Data(lines[0].utf8))
+        #expect(!decoded.ok)
         #expect(decoded.error?.code == "unsupported_capability")
-        #expect(decoded.strategy == "button-primary-menu-item-unsupported")
+        #expect(decoded.strategy == "ancestor-collection-cell-unsupported")
     }
 
     private func captureStandardOutput(_ body: () throws -> Void) throws -> String {
@@ -112,5 +115,26 @@ struct InputOutputTests {
 
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         return String(decoding: data, as: UTF8.self)
+    }
+
+    private func captureStandardOutputAllowingFailure(_ body: () throws -> Void) -> (output: String, error: Error?) {
+        let pipe = Pipe()
+        let originalStdout = dup(STDOUT_FILENO)
+        var caughtError: Error?
+
+        fflush(stdout)
+        dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
+        do {
+            try body()
+        } catch {
+            caughtError = error
+        }
+        fflush(stdout)
+        dup2(originalStdout, STDOUT_FILENO)
+        close(originalStdout)
+        pipe.fileHandleForWriting.closeFile()
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        return (String(decoding: data, as: UTF8.self), caughtError)
     }
 }

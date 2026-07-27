@@ -29,8 +29,10 @@ extension SchemaFactSourceTests {
             "query", "source", "strategy", "request", "matchIndex", "matchCount", "candidates",
         ])
         expectContract(act, selector: "input.result", fields: [
-            "ok", "action", "message", "targetOID", "targetClassName",
+            "ok", "action", "message", "targetOID", "targetClassName", "strategy", "error", "error.code", "error.message",
         ])
+        let input = try #require(act.subcommands.first { $0.name == "input" })
+        #expect(input.failureCodes.contains("unsupported_capability"))
         expectContract(act, selector: "input.summary", fields: [
             "ok", "actionCount", "failedCount",
         ])
