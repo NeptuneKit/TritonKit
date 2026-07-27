@@ -16,6 +16,8 @@ SP-133 只证明一条 imported iOS Simulator flow 能复用既有 `test run`，
 
 本 space 的第一个代码切片是纯离线的 `triton test reliability` 报告：读取已有私有 `.tritonevidence` 与显式 sample manifest，输出不含路径、selector、可见文本或截图的数据化可靠性结论。它不启动 server、App、Simulator 或 test executor。
 
+后继 SP-136 已以 `triton test reliability-preflight --collection <private.json> --json` 冻结 future collection 的 imported-plan / canonical target / 20-slot / reset-recipe 合同；其 `ready_to_collect` 固定不是 sample、receipt、runtime verdict 或本 space gate 的通过。它不解除本 README 的 dedicated Simulator、self-managed server、fresh private evidence 与串行真实采样门槛。
+
 ## 范围与硬边界
 
 - 只复用既有 `test import -> test validate -> test run -> .tritonevidence`；不新增 `testrec` executor、workspace executor、Web/Wails 写入口、HTTP route、Android/Harmony/真机能力。

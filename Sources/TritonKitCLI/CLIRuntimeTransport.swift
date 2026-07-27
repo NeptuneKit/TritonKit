@@ -94,6 +94,8 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "test-run-vlm-assisted", supported: true),
         TKRuntimeCapability(name: "test-run-ai-mock", supported: true),
         TKRuntimeCapability(name: "test-report", supported: true),
+        TKRuntimeCapability(name: "test-reliability-gate", supported: true),
+        TKRuntimeCapability(name: "test-reliability-collection-preflight", supported: true),
         TKRuntimeCapability(name: "test-create-from-session", supported: true),
         TKRuntimeCapability(name: "testrec-session-start", supported: true),
         TKRuntimeCapability(name: "testrec-event-ingest", supported: true),
@@ -352,7 +354,7 @@ func runtimeCapabilityGroup(for name: String) -> String {
     switch name {
     case "version", "cli-update", "plan", "record", "replay-dry-run", "web-device-hub", "schema", "status", "doctor", "capabilities":
         return "bootstrap"
-    case "test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-create-from-session", "testrec-session-start", "testrec-event-ingest", "testrec-session-stop", "testrec-inspect", "testrec-compile", "testrec-proposals-inspect", "testrec-page-match", "testrec-replay-dry-run", "testrec-replay-local-simulated", "testrec-matrix":
+    case "test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-reliability-gate", "test-reliability-collection-preflight", "test-create-from-session", "testrec-session-start", "testrec-event-ingest", "testrec-session-stop", "testrec-inspect", "testrec-compile", "testrec-proposals-inspect", "testrec-page-match", "testrec-replay-dry-run", "testrec-replay-local-simulated", "testrec-matrix":
         return "test"
     case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready":
         return "target"
@@ -389,7 +391,7 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["observe", "evidence"]
     case "cli-update":
         return ["runtime"]
-    case "test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-create-from-session", "testrec-session-start", "testrec-event-ingest", "testrec-session-stop", "testrec-inspect", "testrec-compile", "testrec-proposals-inspect", "testrec-page-match", "testrec-replay-dry-run", "testrec-replay-local-simulated", "testrec-matrix":
+    case "test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-reliability-gate", "test-reliability-collection-preflight", "test-create-from-session", "testrec-session-start", "testrec-event-ingest", "testrec-session-stop", "testrec-inspect", "testrec-compile", "testrec-proposals-inspect", "testrec-page-match", "testrec-replay-dry-run", "testrec-replay-local-simulated", "testrec-matrix":
         return ["test"]
     case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready":
         return ["app", "runtime", "observe", "action", "assert", "evidence", "smoke"]
@@ -458,6 +460,10 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "test", args: ["run", "<path.tritontest.yaml>", "--json", "--evidence-dir", "<dir.tritonevidence>"])
     case "test-report":
         return TKCLINextAction(command: "test", args: ["report", "<dir.tritonevidence>", "--json"])
+    case "test-reliability-gate":
+        return TKCLINextAction(command: "test", args: ["reliability", "--samples", "<private.json>", "--json"])
+    case "test-reliability-collection-preflight":
+        return TKCLINextAction(command: "test", args: ["reliability-preflight", "--collection", "<private.json>", "--json"])
     case "test-create-from-session":
         return TKCLINextAction(command: "test", args: ["create", "--from-session", "<dir.tritonevidence>", "--output", "<path.tritontest.yaml>", "--json"])
     case "testrec-session-start":
@@ -908,6 +914,8 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["stdout-json", "command-schema", "test.normalized-plan", "evidence-bundle"]
     case "test-report":
         return ["stdout-json", "command-schema", "evidence-bundle"]
+    case "test-reliability-gate", "test-reliability-collection-preflight":
+        return ["stdout-json", "command-schema"]
     case "test-create-from-session":
         return ["stdout-json", "command-schema", "evidence-bundle", "test.normalized-plan", "tritontest-yaml"]
     case "testrec-session-start":

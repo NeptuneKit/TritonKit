@@ -237,6 +237,35 @@ func testReliabilityOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
+
+func testReliabilityCollectionPreflightOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "test.reliability-collection-preflight",
+        format: "json",
+        kind: "test-reliability-collection-preflight",
+        model: "TKTestReliabilityCollectionPreflightResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the offline collection contract was validated"),
+            ("schemaVersion", "Int", true, "Preflight response schema version; always 1"),
+            ("kind", "String", true, "Stable kind; triton.test.reliability-collection-preflight"),
+            ("status", "TKTestReliabilityCollectionPreflightStatus", true, "ready_to_collect only; it is not a runtime verdict or reliability-gate pass"),
+            ("writesEvidence", "Bool", true, "Always false; preflight never creates evidence, receipts, or samples"),
+            ("usesRuntime", "Bool", true, "Always false; preflight never starts or queries a server, target, App, Simulator, or runner"),
+            ("eligibleForReliabilityGate", "Bool", true, "Always false; a declared collection cannot enter the gate before real samples exist"),
+            ("targetBindingDigest", "String", true, "FNV-1a identity of the private canonical target tuple; no raw target, UDID, or bundle is returned"),
+            ("supportedFlowCount", "Int", true, "Exactly three supported imported iOS Simulator flows"),
+            ("runsPerSupportedFlow", "Int", true, "Exactly twenty reserved runs per supported flow"),
+            ("negativeControlCount", "Int", true, "Exactly one separately declared future nonpassed control"),
+            ("plannedSampleCount", "Int", true, "Reserved future sample count; 61 for three times twenty plus one control, not completed samples"),
+            ("flows", "[TKTestReliabilityCollectionPreflightFlow]", true, "Anonymous flow aliases with frozen normalized-plan digests only"),
+            ("flows[].flowID", "String", true, "Deterministic opaque alias such as flow_001; never the private flow id, path, selector, or visible text"),
+            ("flows[].plannedRunCount", "Int", true, "Reserved run count for the anonymous flow"),
+            ("flows[].planDigest", "String", true, "FNV-1a digest of the normalized-plan bytes future test run evidence will use"),
+            ("blockerCodes", "[String]", true, "Empty for ready_to_collect; invalid private input returns a JSON error envelope instead"),
+        ])
+    )
+}
+
 func testCreateOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "test.create",

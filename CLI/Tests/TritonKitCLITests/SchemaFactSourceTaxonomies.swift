@@ -114,6 +114,8 @@ func outputContractKindTaxonomy() -> Set<String> {
         "test-normalized-plan",
         "test-create-result",
         "test-import-result",
+        "test-reliability-report",
+        "test-reliability-collection-preflight",
         "testrec-compile",
         "testrec-event",
         "testrec-inspect",

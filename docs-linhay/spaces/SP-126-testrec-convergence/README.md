@@ -57,7 +57,7 @@ SP-135 已通过本地 checkpoint `37d8f9c7` 把这条兼容边界写进 replay/
 
 ## 完成定义
 
-本 space 的第一个有限里程碑已完成：SP-132 P0 importer 的 focused tests 已通过，SP-131 提供手写 canonical iOS Simulator 真实动作证据闭环，SP-133 又以 imported plan（不是 hand-written fixture）复现了同一纵切并直接读取 provenance。SP-134 已把 ECR / FER / ORR 的离线 gate 收紧为 evidence/target/step 覆盖 fail-closed。该结果仍只证明一条 iOS fixture flow，且尚无真实 3 flow × 20 样本；不证明可靠性矩阵、workspace 编排、Android/真机 parity 或对外项目采用。后续任一扩张必须另建有限 space、先写 BDD 与环境/隐私门禁，不能回填 `testrec` 的第二执行器；未有可审计门槛数据前，不启动 workspace 接入。
+本 space 的第一个有限里程碑已完成：SP-132 P0 importer 的 focused tests 已通过，SP-131 提供手写 canonical iOS Simulator 真实动作证据闭环，SP-133 又以 imported plan（不是 hand-written fixture）复现了同一纵切并直接读取 provenance。SP-134 已把 ECR / FER / ORR 的离线 gate 收紧为 evidence/target/step 覆盖 fail-closed，SP-135 将 simulated compatibility 约束为 non-verdict，SP-136 已冻结真实 collection 的 target/reset/slot 前置合同。该结果仍只证明一条 iOS fixture flow，且尚无真实 3 flow × 20 样本；不证明可靠性矩阵、workspace 编排、Android/真机 parity 或对外项目采用。后续任一扩张必须另建有限 space、先写 BDD 与环境/隐私门禁，不能回填 `testrec` 的第二执行器；未有可审计门槛数据前，不启动 workspace 接入。
 
 详细方案见 [Hybrid Convergence Plan v01](./plans/20260724-hybrid-convergence-plan-v01.md)。
 

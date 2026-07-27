@@ -5,13 +5,14 @@ import TritonKitShared
 struct TestCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "test",
-        abstract: "Import, validate, normalize, and run deterministic .tritontest.yaml contracts",
+        abstract: "Import, validate, preflight, normalize, run, report, and evaluate deterministic .tritontest.yaml contracts",
         subcommands: [
             TestValidate.self,
             TestNormalize.self,
             TestRun.self,
             TestReport.self,
             TestReliability.self,
+            TestReliabilityPreflight.self,
             TestCreate.self,
             TestImport.self,
         ]
@@ -136,6 +137,24 @@ struct TestReliability: ParsableCommand {
     func run() throws {
         try runTestReliabilityCommand(
             samples: samples,
+            format: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct TestReliabilityPreflight: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "reliability-preflight",
+        abstract: "Validate an offline private reliability collection contract without starting runtime or writing evidence"
+    )
+
+    @Option(name: .customLong("collection"), help: "Private reliability collection JSON") var collection: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() throws {
+        try runTestReliabilityPreflightCommand(
+            collection: collection,
             format: effectiveFormat(format, json: json)
         )
     }
@@ -389,6 +408,60 @@ private func runTestReliabilityCommand(
     }
 }
 
+private func runTestReliabilityPreflightCommand(
+    collection: String?,
+    format: ClientOutputFormat
+) throws {
+    do {
+        guard let collection, !collection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw TestReliabilityCollectionPreflightCommandFailure(detail: testReliabilityFailure(
+                code: "missing_required_field",
+                message: "--collection is required.",
+                hint: "Provide a private collection declaration with --collection <private.json>."
+            ))
+        }
+        let response = try buildTritonTestReliabilityCollectionPreflight(collectionPath: collection)
+        switch format {
+        case .json:
+            print(try encodeJSON(response))
+        case .text:
+            print("ok: true")
+            print("status: \(response.status.rawValue)")
+            print("supportedFlows: \(response.supportedFlowCount)")
+            print("runsPerSupportedFlow: \(response.runsPerSupportedFlow)")
+            print("plannedSamples: \(response.plannedSampleCount)")
+        }
+    } catch let failure as TestReliabilityCollectionPreflightCommandFailure {
+        try printTestReliabilityCollectionPreflightFailure(failure.detail, format: format)
+    } catch let error as TKTestReliabilityCollectionError {
+        try printTestReliabilityCollectionPreflightFailure(
+            testReliabilityCollectionErrorDetail(error),
+            format: format
+        )
+    } catch {
+        if error is ExitCode { throw error }
+        let detail = testReliabilityFailure(
+            code: "test_reliability_collection_preflight_failed",
+            message: "Reliability collection preflight could not be completed.",
+            hint: "Verify the private collection declaration and imported plan contracts."
+        )
+        try printTestReliabilityCollectionPreflightFailure(detail, format: format)
+    }
+}
+
+private func printTestReliabilityCollectionPreflightFailure(
+    _ detail: TKCLIErrorDetail,
+    format: ClientOutputFormat
+) throws -> Never {
+    switch format {
+    case .json:
+        print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+    case .text:
+        fputs("\(detail.code): \(detail.message)\n", stderr)
+    }
+    throw ExitCode.failure
+}
+
 private func testReliabilityErrorDetail(_ error: TKTestReliabilityError) -> TKCLIErrorDetail {
     switch error {
     case .invalidSampleSet:
@@ -411,6 +484,10 @@ private func testReliabilityFailure(code: String, message: String, hint: String)
 }
 
 private struct TestReliabilityCommandFailure: Error {
+    let detail: TKCLIErrorDetail
+}
+
+private struct TestReliabilityCollectionPreflightCommandFailure: Error {
     let detail: TKCLIErrorDetail
 }
 
