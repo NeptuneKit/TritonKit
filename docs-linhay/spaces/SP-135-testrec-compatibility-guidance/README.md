@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 状态：验证完成，待本地 checkpoint。
+- 状态：已完成（本地 checkpoint `37d8f9c7`，待受控集成）。
 - 负责人：Codex。
 - Branch：`feat/SP-135-testrec-compatibility-guidance`。
 - Worktree：`../TritonKit-worktrees/SP-135-testrec-compatibility-guidance/`。
