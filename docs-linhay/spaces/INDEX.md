@@ -157,3 +157,4 @@
 | `SP-130-issue-166-runtime-jpeg-normalization` | [`SP-130-issue-166-runtime-jpeg-normalization`](./SP-130-issue-166-runtime-jpeg-normalization/README.md) | 已登记 | 规范目录；JPEG->PNG fixture/release/schema 验证完成，待集成；#164 WIP 继续隔离 |
 | `SP-131-ios-simulator-canonical-proof` | [`SP-131-ios-simulator-canonical-proof`](./SP-131-ios-simulator-canonical-proof/README.md) | 已登记 | 规范目录；真实 dedicated Simulator proof 已通过并形成 local checkpoint，不扩 testrec/Android/Web |
 | `SP-132-testrec-import-seam` | [`SP-132-testrec-import-seam`](./SP-132-testrec-import-seam/README.md) | 已登记 | 规范目录；P0 离线 importer 已完成本地 checkpoint：显式 bundle/ios-simulator target、严格 fail-closed、typed provenance，不扩 executor/Android/Web |
+| `SP-133-imported-ios-simulator-proof` | [`SP-133-imported-ios-simulator-proof`](./SP-133-imported-ios-simulator-proof/README.md) | 已登记 | 规范目录；offline source/import/validate 已通过，P1 真实 Simulator proof 等待独占 server 与确认 target |
