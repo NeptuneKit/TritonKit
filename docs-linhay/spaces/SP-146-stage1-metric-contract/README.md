@@ -61,3 +61,4 @@
 1. [Live Authorization Packet v01](./plans/20260728-live-authorization-packet-v01.md) 已把真实 3 × 20 + 1 所需的 dedicated Simulator、server ownership、reset recipe、safe negative control 与 private evidence lifecycle 收敛为用户可逐项批准的离线交接包；该文档本身不构成运行时授权。
 2. 仅在用户按该 packet 提供精确范围并明确批准后，才建立新的 live-sampling space，先做一次受控 preflight，再串行执行 3 × 20 + 1；没有授权前，不推进 testrec/workspace/Android/Web 或 live sampling。
 3. [Checkpoint Integration Arbitration v01](./plans/20260728-checkpoint-integration-arbitration-v01.md) 已冻结 SP-141 编号碰撞、SP-142 strict-readonly 与 SP-143～148 的本地 checkpoint 集成顺序；在另行授权本地集成前，不 merge、rebase、重编号、删除或伪造 space。
+4. [Trusted Baseline Runtime Proof Packet v01](./plans/20260728-trusted-baseline-runtime-proof-packet-v01.md) 把 Luna handoff 的落地 1–5 拆成可单独批准的最小环境级证明：#166 JPEG、#168 fail-closed terminate、#167 Xcode alias preflight、strict-readonly Web/loopback 集成与 Stage 1 的 3 × 20 + 1。
