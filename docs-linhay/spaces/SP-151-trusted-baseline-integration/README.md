@@ -50,6 +50,7 @@
 ## 集成结果
 
 - 本地 merge commits：`a8d3af00`（SP-142）、`cfff575a`（SP-143～146/150）、`ce7856c0`（SP-147～148）、`c40c82b9`（SP-149）。所有冲突均在本 worktree 解决，`main` 与 #164 WIP 未改。
+- 收口清理：确认 SP-142～SP-150 的 source commits 均为本 branch 可达祖先、各 source worktree clean 后，已用非强制方式回收这些 source branch/worktree；SP-151 是唯一保留的 integration candidate，`main` 和 #164 WIP 均未改。
 - Swift focused：`WebCommandTests|SingleDeviceWebPageTests|ServeCommandTests|ObservationOutputTests|TestRunExecutionTests` 共 81 项通过；reliability/schema/diagnostics 相关 187 项通过。两组都复用本 worktree 独占 scratch，且未监听端口。
 - Web：readonly/loopback static tests 21 项通过，`npm run build` 通过；Vite 仅报告既有的大 bundle 体积提示。为测试安装的 lockfile 依赖仅在忽略的 `Web/node_modules` 中，`npm audit` 报告 2 个既有依赖漏洞，未自动升级依赖。
 - Release：`swift build -c release --product triton` 通过；release `triton schema --command test --json` 证明 `--expect-receipt-sha256` 与 `--target <canonical>` 同时存在，旧的拆散 target placeholder 不存在。
