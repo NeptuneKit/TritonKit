@@ -83,7 +83,9 @@ struct TestReliabilityRuntimeTests {
             planName: "legacy-negative-plan",
             status: .failed,
             failureType: "assert_visible_failed",
-            failureArtifactRefs: ["debug/step-001-ax.json"]
+            failureArtifactRefs: ["debug/step-001-ax.json"],
+            normalizedPlanStepKind: "assertion",
+            normalizedPlanStepType: "assertVisible"
         )
         samples.append(fixture.sample(
             flowID: "legacy-negative-control",
@@ -177,7 +179,9 @@ struct TestReliabilityRuntimeTests {
             runID: "failure-artifact-step-mismatch",
             status: .failed,
             failureType: "assert_visible_failed",
-            failureArtifactRefs: ["runtime-target.json"]
+            failureArtifactRefs: ["runtime-target.json"],
+            normalizedPlanStepKind: "assertion",
+            normalizedPlanStepType: "assertVisible"
         )
 
         let report = try buildTritonTestReliabilityReport(
@@ -206,7 +210,9 @@ struct TestReliabilityRuntimeTests {
             runID: "failure-known",
             status: .failed,
             failureType: "assert_visible_failed",
-            failureArtifactRefs: ["debug/step-001-ax.json"]
+            failureArtifactRefs: ["debug/step-001-ax.json"],
+            normalizedPlanStepKind: "assertion",
+            normalizedPlanStepType: "assertVisible"
         )
         let unknownFailure = try fixture.writeEvidence(
             runID: "failure-unknown",
@@ -256,7 +262,9 @@ struct TestReliabilityRuntimeTests {
             runID: "negative-1",
             status: .failed,
             failureType: "assert_visible_failed",
-            failureArtifactRefs: ["debug/step-001-ax.json"]
+            failureArtifactRefs: ["debug/step-001-ax.json"],
+            normalizedPlanStepKind: "assertion",
+            normalizedPlanStepType: "assertVisible"
         )
         let sampleSet = try fixture.writeSampleSet([
             fixture.sample(flowID: "fixture-login-home", evidence: flowA),
@@ -296,7 +304,9 @@ struct TestReliabilityRuntimeTests {
             runID: "repeat-negative",
             status: .failed,
             failureType: "assert_visible_failed",
-            failureArtifactRefs: ["debug/step-001-ax.json"]
+            failureArtifactRefs: ["debug/step-001-ax.json"],
+            normalizedPlanStepKind: "assertion",
+            normalizedPlanStepType: "assertVisible"
         )
         var samples: [TKTestReliabilitySample] = []
         for (flowID, bundle) in evidence {
@@ -346,7 +356,9 @@ struct TestReliabilityRuntimeTests {
             status: .failed,
             failureType: "assert_visible_failed",
             failureArtifactRefs: ["debug/step-001-ax.json"],
-            partial: true
+            partial: true,
+            normalizedPlanStepKind: "assertion",
+            normalizedPlanStepType: "assertVisible"
         )
         samples.append(fixture.sample(
             flowID: "fixture-negative-control",
@@ -726,6 +738,146 @@ struct TestReliabilityRuntimeTests {
         #expect(report.issueCounts["missing_terminal_failure_record"] == 1)
     }
 
+    @Test("only contract-paired terminal failures are explainable")
+    func onlyContractPairedTerminalFailuresAreExplainable() throws {
+        let fixture = try ReliabilityEvidenceFixture()
+        defer { fixture.cleanup() }
+        let mismatchedAssertion = try fixture.writeEvidence(
+            runID: "tap-assertion-mismatch",
+            status: .failed,
+            failureType: "assert_visible_failed",
+            failureArtifactRefs: ["debug/step-001-ax.json"],
+            normalizedPlanStepKind: "action",
+            normalizedPlanStepType: "tap",
+            eventStepType: "assertVisible"
+        )
+        let matchingAssertion = try fixture.writeEvidence(
+            runID: "assertion-match",
+            status: .failed,
+            failureType: "assert_visible_failed",
+            failureArtifactRefs: ["debug/step-001-ax.json"],
+            normalizedPlanStepKind: "assertion",
+            normalizedPlanStepType: "assertVisible"
+        )
+        let mismatchedTap = try fixture.writeEvidence(
+            runID: "assertion-tap-mismatch",
+            status: .failed,
+            failureType: "tap_failed",
+            failureArtifactRefs: ["debug/step-001-ax.json"],
+            normalizedPlanStepKind: "assertion",
+            normalizedPlanStepType: "assertVisible"
+        )
+        let launchFailureOnTap = try fixture.writeEvidence(
+            runID: "tap-launch-failure",
+            status: .failed,
+            failureType: "launch_failed",
+            failureArtifactRefs: ["debug/step-001-ax.json"]
+        )
+        let genericRunnerFailure = try fixture.writeEvidence(
+            runID: "tap-generic-runner-failure",
+            status: .failed,
+            failureType: "primitive_failed",
+            failureArtifactRefs: ["debug/step-001-ax.json"]
+        )
+        let genericAssertionFailure = try fixture.writeEvidence(
+            runID: "assertion-generic-runner-failure",
+            status: .failed,
+            failureType: "primitive_failed",
+            failureArtifactRefs: ["debug/step-001-ax.json"],
+            normalizedPlanStepKind: "assertion",
+            normalizedPlanStepType: "assertVisible"
+        )
+        let unknownVLMFailure = try fixture.writeEvidence(
+            runID: "tap-unknown-vlm-failure",
+            status: .failed,
+            failureType: "vlm_grounding_not_found",
+            failureArtifactRefs: ["debug/step-001-ax.json"]
+        )
+        let mismatchedAIAssertion = try fixture.writeEvidence(
+            runID: "extract-text-ai-assertion-mismatch",
+            status: .failed,
+            failureType: "ai_assertion_failed",
+            failureArtifactRefs: ["debug/step-001-ax.json"],
+            normalizedPlanStepKind: "observation",
+            normalizedPlanStepType: "extractTextWithAI"
+        )
+        let sampleSet = try fixture.writeSampleSet([
+            fixture.sample(flowID: "fixture-mismatch", evidence: mismatchedAssertion),
+            fixture.sample(flowID: "fixture-assertion", evidence: matchingAssertion),
+            fixture.sample(flowID: "fixture-tap-mismatch", evidence: mismatchedTap),
+            fixture.sample(flowID: "fixture-launch", evidence: launchFailureOnTap),
+            fixture.sample(flowID: "fixture-generic", evidence: genericRunnerFailure),
+            fixture.sample(flowID: "fixture-generic-assertion", evidence: genericAssertionFailure),
+            fixture.sample(flowID: "fixture-vlm", evidence: unknownVLMFailure),
+            fixture.sample(flowID: "fixture-ai", evidence: mismatchedAIAssertion),
+        ])
+
+        let report = try buildTritonTestReliabilityReport(
+            samplesPath: sampleSet.path,
+            thresholds: TKTestReliabilityThresholds(
+                minimumSupportedFlows: 0,
+                minimumRunsPerFlow: 0,
+                minimumFailureSamples: 0
+            )
+        )
+
+        #expect(report.evidenceCompleteness.numerator == 2)
+        #expect(report.evidenceCompleteness.denominator == 8)
+        #expect(report.failureExplainability.numerator == 2)
+        #expect(report.failureExplainability.denominator == 8)
+        #expect(report.issueCounts["terminal_failure_type_step_mismatch"] == 3)
+        #expect(report.issueCounts["missing_failure_recovery"] == 3)
+    }
+
+    @Test("launch failure remains explainable for every canonical terminal step")
+    func launchFailureRemainsExplainableForEveryCanonicalTerminalStep() throws {
+        let fixture = try ReliabilityEvidenceFixture()
+        defer { fixture.cleanup() }
+        let terminalSteps = [
+            (kind: "action", type: "launch"),
+            (kind: "action", type: "stop"),
+            (kind: "observation", type: "takeScreenshot"),
+            (kind: "action", type: "tap"),
+            (kind: "action", type: "input"),
+            (kind: "action", type: "press"),
+            (kind: "action", type: "swipe"),
+            (kind: "assertion", type: "assertVisible"),
+            (kind: "assertion", type: "assertNotVisible"),
+            (kind: "action", type: "scrollUntilVisible"),
+            (kind: "assertion", type: "assertWithAI"),
+            (kind: "assertion", type: "assertNoDefectsWithAI"),
+            (kind: "observation", type: "extractTextWithAI"),
+            (kind: "assertion", type: "assertScreenshot"),
+        ]
+        let samples = try terminalSteps.enumerated().map { index, step in
+            let evidence = try fixture.writeEvidence(
+                runID: "launch-failure-\(index)",
+                status: .failed,
+                failureType: "launch_failed",
+                failureArtifactRefs: ["debug/step-001-ax.json"],
+                normalizedPlanStepKind: step.kind,
+                normalizedPlanStepType: step.type
+            )
+            return fixture.sample(flowID: "fixture-launch-\(index)", evidence: evidence)
+        }
+
+        let report = try buildTritonTestReliabilityReport(
+            samples: samples,
+            thresholds: TKTestReliabilityThresholds(
+                minimumSupportedFlows: 0,
+                minimumRunsPerFlow: 0,
+                minimumFailureSamples: 0
+            )
+        )
+
+        #expect(report.evidenceCompleteness.numerator == terminalSteps.count)
+        #expect(report.evidenceCompleteness.denominator == terminalSteps.count)
+        #expect(report.failureExplainability.numerator == terminalSteps.count)
+        #expect(report.failureExplainability.denominator == terminalSteps.count)
+        #expect(report.issueCounts["terminal_failure_type_step_mismatch"] == nil)
+        #expect(report.issueCounts["missing_failure_recovery"] == nil)
+    }
+
     @Test("reliability rejects a normalized plan with an unknown type or incompatible kind")
     func reliabilityRejectsSemanticPlanTampering() throws {
         let fixture = try ReliabilityEvidenceFixture()
@@ -792,7 +944,9 @@ struct TestReliabilityRuntimeTests {
             status: .failed,
             firstStepStatus: .failed,
             failureType: "assert_visible_failed",
-            failureArtifactRefs: ["debug/step-001-ax.json"]
+            failureArtifactRefs: ["debug/step-001-ax.json"],
+            normalizedPlanStepKind: "assertion",
+            normalizedPlanStepType: "assertVisible"
         )
         let sampleSet = try fixture.writeSampleSet([
             fixture.sample(
@@ -849,7 +1003,9 @@ struct TestReliabilityRuntimeTests {
             status: .failed,
             failureType: "assert_visible_failed",
             failureArtifactRefs: ["debug/step-001-ax.json"],
-            includeObservationArtifactsInManifest: false
+            includeObservationArtifactsInManifest: false,
+            normalizedPlanStepKind: "assertion",
+            normalizedPlanStepType: "assertVisible"
         )
         let sampleSet = try fixture.writeSampleSet([
             fixture.sample(

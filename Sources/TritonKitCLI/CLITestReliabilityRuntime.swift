@@ -611,6 +611,17 @@ private func analyzeReliabilitySample(_ sample: TKTestReliabilitySample) -> TKTe
         let failure = terminalFailure?.failure
         failureType = failure?.type
         let hasRecovery = failureType.flatMap(reliabilityRecoveryID(for:)) != nil
+        let authoritativeTerminalStepType = terminalFailure.flatMap { terminalFailure in
+            normalizedPlan?.steps.first(where: { $0.index == terminalFailure.stepIndex })?.type
+        }
+        let recoveryMatchesTerminalStep = terminalFailure.flatMap { terminalFailure in
+            terminalFailure.failure.type.map {
+                reliabilityFailureRecoveryMatchesTerminalStep(
+                    failureType: $0,
+                    terminalStepType: authoritativeTerminalStepType
+                )
+            }
+        } ?? false
         let hasArtifactRefs = !(failure?.artifactRefs ?? []).isEmpty
         let artifactRefsExist = hasArtifactRefs && (failure?.artifactRefs.allSatisfy {
             containedEvidenceEventReferenceURL(root: root, relativePath: $0) != nil
@@ -629,6 +640,8 @@ private func analyzeReliabilitySample(_ sample: TKTestReliabilitySample) -> TKTe
             } == true
         if !hasRecovery {
             issues.append("missing_failure_recovery")
+        } else if normalizedPlan != nil && !recoveryMatchesTerminalStep {
+            issues.append("terminal_failure_type_step_mismatch")
         }
         if !artifactRefsExist {
             issues.append("missing_failure_artifact_ref")
@@ -640,7 +653,7 @@ private func analyzeReliabilitySample(_ sample: TKTestReliabilitySample) -> TKTe
         if failure == nil {
             issues.append("missing_terminal_failure_record")
         }
-        failureExplainable = hasRecovery && artifactRefsBelongToTerminalStep
+        failureExplainable = hasRecovery && recoveryMatchesTerminalStep && artifactRefsBelongToTerminalStep
     }
 
     return reliabilityAnalysis(
@@ -782,6 +795,7 @@ private func reliabilityIssueInvalidatesEvidenceCompleteness(_ issue: String) ->
         "duplicate_reset_evidence_id",
         "duplicate_run_id",
         "missing_failure_recovery",
+        "terminal_failure_type_step_mismatch",
         "missing_failure_artifact_ref",
         "undeclared_failure_artifact_ref",
         "terminal_failure_artifact_step_mismatch",
@@ -1062,6 +1076,8 @@ func reliabilityTerminalFailure(
           commands.count == 1,
           let start = starts.first,
           let command = commands.first,
+          let startedStepType = start.element.stepType,
+          !startedStepType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
           start.offset < command.offset,
           command.offset < terminalFinish.offset else {
         return nil
@@ -1341,10 +1357,48 @@ private func reliabilityRecoveryID(for failureType: String) -> String? {
         return "inspect_scroll_observation"
     case "vlm_step_not_allowed":
         return "inspect_vlm_policy"
-    case "primitive_failed", "stop_not_supported":
+    case "stop_not_supported":
         return "inspect_runner_failure"
     default:
         return nil
+    }
+}
+
+private func reliabilityFailureRecoveryMatchesTerminalStep(
+    failureType: String,
+    terminalStepType: String?
+) -> Bool {
+    guard let terminalStepType,
+          reliabilityExpectedPlanStepKind(for: terminalStepType) != nil else {
+        return false
+    }
+    switch failureType {
+    case "tap_failed", "text_not_found", "vlm_step_not_allowed":
+        return terminalStepType == "tap"
+    case "input_failed":
+        return terminalStepType == "input"
+    case "press_failed":
+        return terminalStepType == "press"
+    case "swipe_failed":
+        return terminalStepType == "swipe"
+    case "assert_visible_failed":
+        return terminalStepType == "assertVisible"
+    case "assert_not_visible_failed":
+        return terminalStepType == "assertNotVisible"
+    case "ai_assertion_failed":
+        return terminalStepType == "assertWithAI" || terminalStepType == "assertNoDefectsWithAI"
+    case "assert_screenshot_failed", "assert_screenshot_baseline_missing":
+        return terminalStepType == "assertScreenshot"
+    case "scroll_until_visible_failed":
+        return terminalStepType == "scrollUntilVisible"
+    case "stop_not_supported":
+        return terminalStepType == "stop"
+    case "launch_failed":
+        // Runtime resolution is lazy and shared by every supported executor.
+        return true
+    default:
+        // Unknown and generic runner taxonomy has no contract-backed recovery.
+        return false
     }
 }
 

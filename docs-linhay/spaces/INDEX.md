@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-07-28
-> 覆盖范围：144 个当前 worktree 可见 space；SP-141 / SP-142 仍是待集成本地 checkpoint，SP-143～SP-146 的连续编号门禁待统一集成后复跑
+> 覆盖范围：145 个当前 worktree 可见 space；SP-141 / SP-142 与 SP-147～SP-149 仍在并行独立 worktree，SP-143～SP-146、SP-150 的连续编号门禁待授权集成后复跑
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 144 条可见记录 | SP-143～SP-146 已登记；SP-141 / SP-142 的独立 checkpoint 尚未合入本 worktree，故全局连续性待集成验证 |
-| README 链接核对 | 144 条可见记录 | 每条可见记录链接到现有 space README |
+| 编号登记 | 145 条可见记录 | SP-143～SP-146、SP-150 已登记；SP-141 / SP-142 与 SP-147～SP-149 的独立 checkpoint 尚未合入本 worktree，故全局连续性待集成验证 |
+| README 链接核对 | 145 条可见记录 | 每条可见记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～140 已是规范目录 |
 
 ## Space 登记表
@@ -169,3 +169,4 @@
 | `SP-144-reliability-receipt-anchor` | [`SP-144-reliability-receipt-anchor`](./SP-144-reliability-receipt-anchor/README.md) | 已完成（本地） | 规范目录；operator/CI 在 receipt root 外保存 SHA-256，sample/report 据此拒绝 root 内完整 receipt 替换；不涉及签名、runtime identity 或真实采样 |
 | `SP-145-private-identity-chain-v2` | [`SP-145-private-identity-chain-v2`](./SP-145-private-identity-chain-v2/README.md) | 已完成（本地） | 规范目录；以 SP-144 root 外 receipt SHA-256 为锚，验证每 slot 的私有 evidence identity chain 与安全 aggregate；不宣称真实 reset/App/runtime proof |
 | `SP-146-stage1-metric-contract` | [`SP-146-stage1-metric-contract`](./SP-146-stage1-metric-contract/README.md) | 已完成（本地） | 规范目录；receipt-backed report 已增量区分 60 supported 的 Stage 1A 与 61 receipt/control 的 Stage 1B；纯离线，不启动 runtime/设备/server |
+| `SP-150-reliability-failure-recovery-semantics` | [`SP-150-reliability-failure-recovery-semantics`](./SP-150-reliability-failure-recovery-semantics/README.md) | 已完成（本地） | 规范目录；以 validated normalized plan 绑定 terminal failure/recovery，跨类型、generic/unknown failure 均 fail closed；纯离线，不启动 runtime/设备/server |
