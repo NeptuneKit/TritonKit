@@ -58,5 +58,5 @@
 
 ## 后续队列
 
-1. 在 SP-146 local contract checkpoint 完成后，才向用户申请 dedicated Simulator、server ownership、reset recipe、safe negative control 与 private evidence lifecycle 的真实 3 × 20 + 1 授权。
-2. 没有上述授权前，不推进 testrec/workspace/Android/Web 或 live sampling；只做非运行时的可靠性/事实债收口。
+1. [Live Authorization Packet v01](./plans/20260728-live-authorization-packet-v01.md) 已把真实 3 × 20 + 1 所需的 dedicated Simulator、server ownership、reset recipe、safe negative control 与 private evidence lifecycle 收敛为用户可逐项批准的离线交接包；该文档本身不构成运行时授权。
+2. 仅在用户按该 packet 提供精确范围并明确批准后，才建立新的 live-sampling space，先做一次受控 preflight，再串行执行 3 × 20 + 1；没有授权前，不推进 testrec/workspace/Android/Web 或 live sampling。
