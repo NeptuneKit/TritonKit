@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（143 条当前 worktree 可见记录；SP-141 / SP-142 待集成后与 SP-143～SP-145 统一做连续编号验证；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（144 条当前 worktree 可见记录；SP-141 / SP-142 待集成后与 SP-143～SP-146 统一做连续编号验证；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-07-28
 
@@ -61,6 +61,7 @@
 | 已完成（本地） | [SP-143-reliability-gate-integrity](./SP-143-reliability-gate-integrity/README.md) | Stage 1 reliability gate 只接受 receipt-backed authority；legacy sample 保留诊断但不能 passed，observation/failure artifact 均需 kind 与 step 时序归因 | 纯离线 TDD、focused contracts 与 release build 完成；不触碰 #164；SP-141 → SP-142 → SP-143 集成后统一复跑 docs gate |
 | 已完成（本地） | [SP-144-reliability-receipt-anchor](./SP-144-reliability-receipt-anchor/README.md) | 为 receipt-backed sample/report 增加 operator-owned SHA-256 expected anchor，阻断 root 内完整 receipt 的自洽替换 | 纯离线 BDD/TDD 与 release build 已完成；不宣称签名、远端不可抵赖、hostile filesystem、真实 reset/runtime identity 或 live sampling |
 | 已完成（本地） | [SP-145-private-identity-chain-v2](./SP-145-private-identity-chain-v2/README.md) | 基于 SP-144 root 外 anchor，记录并核验每 slot 的私有 evidence identity chain，并输出安全 aggregate | 仅离线 consistency/漂移检测；不写采样器，不主张真实 reset/App/runtime proof，也不触碰设备/服务 |
+| 已完成（本地） | [SP-146-stage1-metric-contract](./SP-146-stage1-metric-contract/README.md) | 已将 Stage 1A 的 60 supported ECR/ORR 与 Stage 1B 的 61 receipt/control integrity、FER 以 additive public contract 区分 | 纯离线合同/合成 evidence、release schema 与 focused tests 已完成；真实采样仍需 dedicated environment 授权 |
 | 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
@@ -90,6 +91,7 @@
 | `SP-143-reliability-gate-integrity` | `feat/SP-143-reliability-gate-integrity` | `../TritonKit-worktrees/SP-143-reliability-gate-integrity/` | `main@d016979d` | 本地 checkpoint：收紧 Stage 1 gate authority、typed negative、collection lease 与 observation/failure artifact attribution；不合并 SP-141/SP-142、不触发设备/服务、#164 WIP 持续隔离 |
 | `SP-144-reliability-receipt-anchor` | `feat/SP-144-reliability-receipt-anchor` | `../TritonKit-worktrees/SP-144-reliability-receipt-anchor/` | `feat/SP-143-reliability-gate-integrity@33ad1f9d` | 本地完成：以 root 外 operator/CI 保存的 SHA-256 校验 receipt bytes；不启动 runtime、设备或 server，不触碰 #164 WIP |
 | `SP-145-private-identity-chain-v2` | `feat/SP-145-private-identity-chain-v2` | `../TritonKit-worktrees/SP-145-private-identity-chain-v2/` | `feat/SP-144-reliability-receipt-anchor@ab6cbf1e` | 本地完成：private identity-chain v2、safe report aggregate 与 fail-closed drift/missing terminal；不启动 runtime、设备或 server，不触碰 #164 WIP |
+| `SP-146-stage1-metric-contract` | `feat/SP-146-stage1-metric-contract` | `../TritonKit-worktrees/SP-146-stage1-metric-contract/` | `feat/SP-145-private-identity-chain-v2@50c89bea` | 本地完成：receipt-backed Stage 1A 60 supported / Stage 1B 61 receipt-control cohort、global duplicate/core-manifest fail-closed 及 privacy-safe schema；不启动 runtime、设备或 server，不触碰 #164 WIP |
 
 ## 维护规则
 

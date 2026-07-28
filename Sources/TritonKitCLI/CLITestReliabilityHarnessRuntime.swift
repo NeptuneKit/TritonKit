@@ -621,7 +621,7 @@ func runTritonTestReliabilitySample(
             bindingBytes: bindingData.count,
             resetBytes: resetData.count,
             identityChainBytes: identityChainBytes,
-            target: loaded.receipt.target.id
+            runtimeTarget: resolvedTarget
         )
     } catch {
         throw TKTestReliabilityHarnessError.identityChainWriteFailed
@@ -641,6 +641,7 @@ func buildTritonTestReliabilityReceiptReport(
     var samples: [TKTestReliabilitySample] = []
     var extraIssues: [String: Int] = [:]
     var identityChainStates: [TKTestReliabilityIdentityChainState] = []
+    var receiptValidationPassed: [Bool] = []
 
     for flow in loaded.receipt.flows {
         for slot in flow.slots {
@@ -657,6 +658,7 @@ func buildTritonTestReliabilityReceiptReport(
                 slot: slot
             )
             identityChainStates.append(validation.identityChainState)
+            receiptValidationPassed.append(validation.issues.isEmpty)
             for issue in validation.issues {
                 extraIssues[issue, default: 0] += 1
             }
@@ -671,7 +673,31 @@ func buildTritonTestReliabilityReceiptReport(
         }
     }
 
+    let evidenceAnalyses = analyzeTritonTestReliabilitySamples(samples)
+    let validReceiptControlAnalyses = zip(evidenceAnalyses, receiptValidationPassed).filter {
+        $0.0.complete && $0.1
+    }
+    let validReceiptControlSlotCount = validReceiptControlAnalyses.count
+    let validNegativeControlCount = validReceiptControlAnalyses.filter {
+        $0.0.sample.classification == .negativeControl
+    }.count
     let base = try buildTritonTestReliabilityReceiptReport(samples: samples, thresholds: thresholds)
+    let stage1A = buildTritonTestReliabilityStage1A(
+        receipt: loaded.receipt,
+        analyses: evidenceAnalyses,
+        thresholds: thresholds
+    )
+    let stage1B = buildTritonTestReliabilityStage1B(
+        receipt: loaded.receipt,
+        validReceiptControlSlotCount: validReceiptControlSlotCount,
+        validNegativeControlCount: validNegativeControlCount,
+        failureExplainability: base.failureExplainability,
+        thresholds: thresholds
+    )
+    let stage1Gate = buildTritonTestReliabilityStage1Gate(
+        stage1A: stage1A,
+        stage1B: stage1B
+    )
     var issueCounts = base.issueCounts
     for (issue, count) in extraIssues {
         issueCounts[issue, default: 0] += count
@@ -680,7 +706,7 @@ func buildTritonTestReliabilityReceiptReport(
         identityChainStates,
         receiptAnchorVerified: true
     )
-    var blockers = base.gate.blockerCodes
+    var blockers = base.gate.blockerCodes + stage1Gate.blockerCodes
     if extraIssues.keys.contains(where: { !$0.hasPrefix("identity_chain_") }) {
         blockers.append("receipt_binding_invalid")
     }
@@ -694,6 +720,11 @@ func buildTritonTestReliabilityReceiptReport(
         status: blockers.isEmpty ? .passed : .blocked,
         blockerCodes: Array(Set(blockers)).sorted()
     )
+    let stage1 = TKTestReliabilityStage1Summary(
+        stage1A: stage1A,
+        stage1B: stage1B,
+        gate: gate
+    )
     return TKTestReliabilityReport(
         gateAuthority: base.gateAuthority,
         thresholds: base.thresholds,
@@ -702,6 +733,7 @@ func buildTritonTestReliabilityReceiptReport(
         outcomeRepeatability: base.outcomeRepeatability,
         flows: base.flows,
         identityChain: identityChain,
+        stage1: stage1,
         issueCounts: issueCounts,
         gate: gate
     )
@@ -1145,7 +1177,7 @@ private func appendReliabilityHarnessArtifacts(
     bindingBytes: Int,
     resetBytes: Int,
     identityChainBytes: Int,
-    target: String
+    runtimeTarget: TKTargetSummary
 ) throws {
     let manifestURL = evidenceURL.appendingPathComponent("manifest.json")
     let manifestData = try Data(contentsOf: manifestURL)
@@ -1158,7 +1190,7 @@ private func appendReliabilityHarnessArtifacts(
             bytes: bindingBytes,
             scope: "private",
             source: "reliability-harness",
-            target: target
+            target: runtimeTarget.id
         ),
         TKEvidenceArtifact(
             kind: "test.reliability.reset-receipt",
@@ -1167,7 +1199,7 @@ private func appendReliabilityHarnessArtifacts(
             bytes: resetBytes,
             scope: "private",
             source: "reliability-harness",
-            target: target
+            target: runtimeTarget.id
         ),
         TKEvidenceArtifact(
             kind: "test.reliability.identity-chain-v2",
@@ -1176,9 +1208,10 @@ private func appendReliabilityHarnessArtifacts(
             bytes: identityChainBytes,
             scope: "private",
             source: "reliability-harness",
-            target: target
+            target: runtimeTarget.id
         ),
     ]
+    let artifacts = manifest.artifacts + additions
     let updated = TKEvidenceManifest(
         ok: manifest.ok,
         partial: manifest.partial,
@@ -1188,7 +1221,7 @@ private func appendReliabilityHarnessArtifacts(
         note: manifest.note,
         createdAt: manifest.createdAt,
         output: manifest.output,
-        artifacts: manifest.artifacts + additions,
+        artifacts: artifacts,
         primaryArtifact: manifest.primaryArtifact,
         primaryArtifacts: manifest.primaryArtifacts,
         skipped: manifest.skipped,

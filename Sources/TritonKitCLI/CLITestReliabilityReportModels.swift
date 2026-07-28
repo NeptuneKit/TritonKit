@@ -35,6 +35,37 @@ struct TKTestReliabilityIdentityChainSummary: Codable, Equatable {
     )
 }
 
+/// Receipt-backed Stage 1 has two deliberately separate populations: the
+/// 60 supported slots and the 61 receipt/control slots. This summary is
+/// absent for legacy sample manifests so they cannot look canonical.
+struct TKTestReliabilityStage1Summary: Codable, Equatable {
+    let stage1A: TKTestReliabilityStage1ASummary
+    let stage1B: TKTestReliabilityStage1BSummary
+    let gate: TKTestReliabilityGate
+}
+
+/// Stage 1A measures only supported flows. Its evidence completeness and
+/// repeatability never include the expected negative control.
+struct TKTestReliabilityStage1ASummary: Codable, Equatable {
+    let expectedSupportedFlowCount: Int
+    let expectedRunsPerSupportedFlow: Int
+    let expectedSupportedSlotCount: Int
+    let completeSupportedSlotCount: Int
+    let evidenceCompleteness: TKTestReliabilityMetric
+    let outcomeRepeatability: TKTestReliabilityMetric
+    let gate: TKTestReliabilityGate
+}
+
+/// Stage 1B covers every receipt-declared slot, including the expected
+/// negative control. It reports only safe counts and never slot identities.
+struct TKTestReliabilityStage1BSummary: Codable, Equatable {
+    let expectedReceiptControlSlotCount: Int
+    let expectedNegativeControlCount: Int
+    let receiptControlIntegrity: TKTestReliabilityMetric
+    let failureExplainability: TKTestReliabilityMetric
+    let gate: TKTestReliabilityGate
+}
+
 struct TKTestReliabilityReport: Codable, Equatable {
     let ok: Bool
     let schemaVersion: Int
@@ -47,6 +78,7 @@ struct TKTestReliabilityReport: Codable, Equatable {
     let outcomeRepeatability: TKTestReliabilityMetric
     let flows: [TKTestReliabilityFlow]
     let identityChain: TKTestReliabilityIdentityChainSummary
+    let stage1: TKTestReliabilityStage1Summary?
     let issueCounts: [String: Int]
     let gate: TKTestReliabilityGate
 
@@ -58,6 +90,7 @@ struct TKTestReliabilityReport: Codable, Equatable {
         outcomeRepeatability: TKTestReliabilityMetric,
         flows: [TKTestReliabilityFlow],
         identityChain: TKTestReliabilityIdentityChainSummary = .notApplicable,
+        stage1: TKTestReliabilityStage1Summary? = nil,
         issueCounts: [String: Int],
         gate: TKTestReliabilityGate
     ) {
@@ -72,6 +105,7 @@ struct TKTestReliabilityReport: Codable, Equatable {
         self.outcomeRepeatability = outcomeRepeatability
         self.flows = flows
         self.identityChain = identityChain
+        self.stage1 = stage1
         self.issueCounts = issueCounts
         self.gate = gate
     }

@@ -38,6 +38,7 @@ struct TestReliabilityRuntimeTests {
         #expect(report.outcomeRepeatability.rate == 1)
         #expect(report.failureExplainability.state == .notEvaluable)
         #expect(report.identityChain == .notApplicable)
+        #expect(report.stage1 == nil)
         #expect(report.flows.count == 1)
         #expect(report.flows[0].flowID.hasPrefix("flow_"))
         #expect(!report.flows[0].flowID.contains("fixture-login-home"))
@@ -45,6 +46,10 @@ struct TestReliabilityRuntimeTests {
         #expect(report.flows[0].planDigest.count == 16)
 
         let encoded = try encodeJSON(report)
+        let encodedObject = try #require(
+            JSONSerialization.jsonObject(with: Data(encoded.utf8)) as? [String: Any]
+        )
+        #expect(encodedObject["stage1"] == nil)
         #expect(!encoded.contains(fixture.root.path))
         #expect(!encoded.contains("com.private.fixture"))
         #expect(!encoded.contains("Sensitive Fixture Login"))
@@ -93,6 +98,7 @@ struct TestReliabilityRuntimeTests {
         #expect(report.outcomeRepeatability.rate == 1)
         #expect(report.gateAuthority == .legacyDiagnostic)
         #expect(!report.eligibleForStage1Gate)
+        #expect(report.stage1 == nil)
         #expect(report.gate.status == .blocked)
         #expect(report.gate.blockerCodes.contains("receipt_required"))
     }
@@ -1030,6 +1036,7 @@ struct TestReliabilityRuntimeTests {
         let sampleContract = try #require(schema.outputContracts.first { $0.selector == "test.reliability-sample" })
         let flowID = try #require(contract.fields.first { $0.name == "flows[].flowID" })
         let identityChain = try #require(contract.fields.first { $0.name == "identityChain" })
+        let stage1 = try #require(contract.fields.first { $0.name == "stage1" })
         let actualFailureType = try #require(sampleContract.fields.first { $0.name == "actualFailureType" })
         let chineseHelp = try #require(chineseCommandHelps()["test"])
 
@@ -1055,6 +1062,14 @@ struct TestReliabilityRuntimeTests {
         #expect(contract.fields.contains(where: { $0.name == "eligibleForStage1Gate" }))
         #expect(contract.fields.contains(where: { $0.name == "identityChain.state" }))
         #expect(contract.fields.contains(where: { $0.name == "identityChain.receiptAnchorVerified" }))
+        #expect(contract.fields.contains(where: { $0.name == "stage1.stage1A.expectedSupportedSlotCount" }))
+        #expect(contract.fields.contains(where: { $0.name == "stage1.stage1A.completeSupportedSlotCount" }))
+        #expect(contract.fields.contains(where: { $0.name == "stage1.stage1A.evidenceCompleteness" }))
+        #expect(contract.fields.contains(where: { $0.name == "stage1.stage1A.outcomeRepeatability" }))
+        #expect(contract.fields.contains(where: { $0.name == "stage1.stage1B.expectedReceiptControlSlotCount" }))
+        #expect(contract.fields.contains(where: { $0.name == "stage1.stage1B.receiptControlIntegrity" }))
+        #expect(contract.fields.contains(where: { $0.name == "stage1.stage1B.failureExplainability" }))
+        #expect(contract.fields.contains(where: { $0.name == "stage1.gate.blockerCodes" }))
         #expect(sampleContract.fields.contains(where: {
             $0.name == "expectedFailureType" && !$0.required
         }))
@@ -1062,6 +1077,8 @@ struct TestReliabilityRuntimeTests {
         #expect(actualFailureType.description.contains("unexpected negative-control pass"))
         #expect(flowID.description.contains("opaque"))
         #expect(identityChain.description.lowercased().contains("private"))
+        #expect(stage1.description.contains("60"))
+        #expect(stage1.description.contains("61"))
         #expect(chineseHelp.options.contains(where: { $0.0 == "reliability --samples <private.json>" }))
         #expect(chineseHelp.options.contains(where: { $0.0 == "reliability --collection-receipt <private.json>" }))
         #expect(chineseHelp.options.contains(where: { $0.0.hasPrefix("reliability-sample --collection-receipt") }))

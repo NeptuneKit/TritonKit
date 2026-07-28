@@ -102,7 +102,7 @@ enum TKTestReliabilityError: Error, Equatable, LocalizedError {
     }
 }
 
-private struct TKTestReliabilitySampleAnalysis {
+struct TKTestReliabilitySampleAnalysis {
     let sample: TKTestReliabilitySample
     let complete: Bool
     let evidenceIdentity: String?
@@ -224,14 +224,34 @@ func buildTritonTestReliabilityReceiptReport(
     )
 }
 
+/// Produces the one global evidence analysis used by receipt-backed summaries.
+/// Consumers that derive a cohort metric must retain these duplicate markings;
+/// re-analysing each flow independently would hide cross-flow identity drift.
+func analyzeTritonTestReliabilitySamples(
+    _ samples: [TKTestReliabilitySample]
+) -> [TKTestReliabilitySampleAnalysis] {
+    markDuplicateReliabilitySamples(samples.map(analyzeReliabilitySample))
+}
+
+/// Reuses the canonical repeatability rule after a caller has already applied
+/// global evidence and duplicate analysis to its supported cohort.
+func buildTritonTestReliabilityOutcomeRepeatability(
+    supportedAnalyses: [TKTestReliabilitySampleAnalysis]
+) -> TKTestReliabilityMetric {
+    var ignoredIssueCounts: [String: Int] = [:]
+    return buildOutcomeRepeatability(
+        supportedAnalyses: supportedAnalyses,
+        issueCounts: &ignoredIssueCounts
+    )
+}
+
 private func buildTritonTestReliabilityReport(
     samples: [TKTestReliabilitySample],
     thresholds: TKTestReliabilityThresholds,
     gateAuthority: TKTestReliabilityGateAuthority
 ) throws -> TKTestReliabilityReport {
     try validateReliabilityThresholds(thresholds)
-    var analyses = samples.map(analyzeReliabilitySample)
-    analyses = markDuplicateReliabilitySamples(analyses)
+    let analyses = analyzeTritonTestReliabilitySamples(samples)
     var issueCounts: [String: Int] = [:]
     for analysis in analyses {
         for issue in analysis.issues {
