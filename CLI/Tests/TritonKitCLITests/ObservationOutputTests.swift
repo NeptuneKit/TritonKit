@@ -119,6 +119,41 @@ struct ObservationOutputTests {
         #expect(detail.hint?.contains("no artifact was published") == true)
     }
 
+    @Test("serve screenshot preserves screenshot normalization failure diagnostics")
+    func serveScreenshotPreservesNormalizationFailureDiagnostics() {
+        let artifactDetail = serveScreenshotPayloadErrorDetail(
+            for: RuntimeScreenshotArtifactError(
+                declaredFormat: "jpeg",
+                detectedFormat: "png",
+                outputExtension: "png"
+            ),
+            endpoint: "/screenshot",
+            host: "127.0.0.1",
+            port: 19421
+        )
+        let decodeDetail = serveScreenshotPayloadErrorDetail(
+            for: RuntimeScreenshotNormalizationError(
+                sourceFormat: "jpeg",
+                reason: "the payload could not be decoded"
+            ),
+            endpoint: "/screenshot",
+            host: "127.0.0.1",
+            port: 19421
+        )
+        let invalidPayloadDetail = serveScreenshotPayloadErrorDetail(
+            for: RuntimeError("Invalid screenshot image data"),
+            endpoint: "/screenshot",
+            host: "127.0.0.1",
+            port: 19421
+        )
+
+        #expect(artifactDetail.code == "artifact_write_failed")
+        #expect(decodeDetail.code == "artifact_write_failed")
+        #expect(artifactDetail.endpoint == "http://127.0.0.1:19421/screenshot")
+        #expect(decodeDetail.hint?.contains("no artifact was published") == true)
+        #expect(invalidPayloadDetail.code == "invalid_payload")
+    }
+
     @Test("observe output prioritizes runtime tree as primary source")
     func observeOutputPrioritizesRuntimeTree() {
         let output = ObserveOutput(

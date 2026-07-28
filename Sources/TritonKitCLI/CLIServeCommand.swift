@@ -569,23 +569,27 @@ struct Serve: AsyncParsableCommand {
                     encoder: encoder,
                     target: queryTarget(from: request)
                 )
-                guard let screenshot = try? JSONDecoder().decode(TKScreenshotResponse.self, from: payload),
-                      let imageData = try? await screenshotImageData(screenshot, client: TritonKitHTTPClient(host: host, port: port)),
-                      let artifactData = try? normalizeRuntimeScreenshotToPNG(
+                do {
+                    let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: payload)
+                    let imageData = try await screenshotImageData(screenshot, client: TritonKitHTTPClient(host: host, port: port))
+                    let artifactData = try normalizeRuntimeScreenshotToPNG(
                         imageData,
                         declaredFormat: screenshot.format,
                         outputPath: "screenshot.png"
-                      ) else {
+                    )
+                    return Response(status: .ok, headers: [.contentType: "image/png"],
+                                    body: .init(byteBuffer: ByteBuffer(data: artifactData)))
+                } catch {
                     return jsonError(
-                        code: "invalid_payload",
-                        message: "Invalid screenshot payload",
-                        endpoint: "/screenshot",
-                        hint: "Retry after the connected runtime responds to screenshot",
+                        detail: serveScreenshotPayloadErrorDetail(
+                            for: error,
+                            endpoint: "/screenshot",
+                            host: host,
+                            port: port
+                        ),
                         status: .internalServerError
                     )
                 }
-                return Response(status: .ok, headers: [.contentType: "image/png"],
-                                body: .init(byteBuffer: ByteBuffer(data: artifactData)))
             } catch {
                 if let timeout = error as? RuntimeRequestTimeoutError {
                     return jsonError(
@@ -1243,6 +1247,23 @@ private func testRecorderHTTPStatus(for failure: TKTestRecorderValidationFailure
     default:
         .conflict
     }
+}
+
+func serveScreenshotPayloadErrorDetail(
+    for error: Error,
+    endpoint: String,
+    host: String,
+    port: Int
+) -> TKCLIErrorDetail {
+    if error is RuntimeScreenshotArtifactError || error is RuntimeScreenshotNormalizationError {
+        return cliErrorDetail(for: error, endpoint: endpoint, host: host, port: port)
+    }
+    return TKCLIErrorDetail(
+        code: "invalid_payload",
+        message: "Invalid screenshot payload",
+        endpoint: endpoint,
+        hint: "Retry after the connected runtime responds to screenshot"
+    )
 }
 
 private func findAdbExecutable() -> String {
