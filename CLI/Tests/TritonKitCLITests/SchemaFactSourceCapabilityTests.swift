@@ -3,6 +3,23 @@ import TritonKitShared
 @testable import TritonKitCLI
 
 extension SchemaFactSourceTests {
+    @Test("device wait-ready capability actions use the parser-supported selector option")
+    func deviceWaitReadyCapabilityActionsUseTheParserSupportedSelectorOption() throws {
+        let capabilities = connectedCapabilityMap()
+        let expectedArguments = [
+            "device-wait-ready": ["wait-ready", "--device", "<selector>", "--json"],
+            "ios-device-wait-ready": ["wait-ready", "--device", "<selector>", "--platform", "ios", "--json"],
+            "android-device-wait-ready": ["wait-ready", "--device", "<selector>", "--platform", "android", "--json"],
+            "harmony-device-wait-ready": ["wait-ready", "--device", "<selector>", "--platform", "harmony", "--json"],
+        ]
+
+        for (name, arguments) in expectedArguments {
+            let capability = try #require(capabilities[name])
+            #expect(capability.nextAction?.command == "device")
+            #expect(capability.nextAction?.args == arguments)
+        }
+    }
+
     @Test("iOS screenshot capabilities expose Simulator-only host scope")
     func iosScreenshotCapabilitiesExposeSimulatorOnlyHostScope() throws {
         let capabilities = connectedCapabilityMap()

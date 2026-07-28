@@ -521,7 +521,7 @@ func runtimeCapabilityNextAction(
     case "device-use", "device-current":
         return TKCLINextAction(command: "device", args: ["use", "<selector>", "--json"])
     case "device-wait-ready":
-        return TKCLINextAction(command: "device", args: ["wait-ready", "<selector>", "--json"])
+        return TKCLINextAction(command: "device", args: ["wait-ready", "--device", "<selector>", "--json"])
     case "device-screenshot", "host-device-screenshot", "ios-screenshot", "harmony-screenshot":
         return TKCLINextAction(command: "device", args: ["screenshot", "--device", "<selector>", "--output", "<path>", "--json"])
     case "ios-device", "ios-device-list":
@@ -529,7 +529,7 @@ func runtimeCapabilityNextAction(
     case "ios-device-use":
         return TKCLINextAction(command: "device", args: ["use", "<selector>", "--platform", "ios", "--json"])
     case "ios-device-wait-ready":
-        return TKCLINextAction(command: "device", args: ["wait-ready", "<selector>", "--platform", "ios", "--json"])
+        return TKCLINextAction(command: "device", args: ["wait-ready", "--device", "<selector>", "--platform", "ios", "--json"])
     case "ios-device-screenshot", "ios-simulator-screenshot":
         return TKCLINextAction(command: "device", args: ["screenshot", "--platform", "ios", "--device", "<selector>", "--output", "<path>", "--json"])
     case "ios-real-device-screenshot":
@@ -549,7 +549,7 @@ func runtimeCapabilityNextAction(
     case "android-device-stop":
         return TKCLINextAction(command: "device", args: ["stop", "--platform", "android", "--device", "<selector>", "--confirm", "--json"])
     case "android-device-wait-ready":
-        return TKCLINextAction(command: "device", args: ["wait-ready", "<selector>", "--platform", "android", "--json"])
+        return TKCLINextAction(command: "device", args: ["wait-ready", "--device", "<selector>", "--platform", "android", "--json"])
     case "android-device-screenshot":
         return TKCLINextAction(command: "device", args: ["screenshot", "--platform", "android", "--device", "<selector>", "--output", "<path>", "--json"])
     case "android-bridge":
@@ -581,7 +581,7 @@ func runtimeCapabilityNextAction(
     case "harmony-device-start":
         return TKCLINextAction(command: "device", args: ["start", "--platform", "harmony", "--hvd", "<name>", "--path", "<deployed-path>", "--plan-only", "--json"])
     case "harmony-device-wait-ready":
-        return TKCLINextAction(command: "device", args: ["wait-ready", "<selector>", "--platform", "harmony", "--json"])
+        return TKCLINextAction(command: "device", args: ["wait-ready", "--device", "<selector>", "--platform", "harmony", "--json"])
     case "harmony-device-screenshot":
         return TKCLINextAction(command: "device", args: ["screenshot", "--platform", "harmony", "--device", "<selector>", "--output", "<path>", "--json"])
     case "harmony-device-stop":
