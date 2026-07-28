@@ -88,50 +88,6 @@ struct TKTestReliabilityFlow: Codable, Equatable {
     let planDigest: String
 }
 
-enum TKTestReliabilityGateStatus: String, Codable, Equatable {
-    case passed
-    case blocked
-}
-
-struct TKTestReliabilityGate: Codable, Equatable {
-    let status: TKTestReliabilityGateStatus
-    let blockerCodes: [String]
-}
-
-struct TKTestReliabilityReport: Codable, Equatable {
-    let ok: Bool
-    let schemaVersion: Int
-    let kind: String
-    let thresholds: TKTestReliabilityThresholds
-    let evidenceCompleteness: TKTestReliabilityMetric
-    let failureExplainability: TKTestReliabilityMetric
-    let outcomeRepeatability: TKTestReliabilityMetric
-    let flows: [TKTestReliabilityFlow]
-    let issueCounts: [String: Int]
-    let gate: TKTestReliabilityGate
-
-    init(
-        thresholds: TKTestReliabilityThresholds,
-        evidenceCompleteness: TKTestReliabilityMetric,
-        failureExplainability: TKTestReliabilityMetric,
-        outcomeRepeatability: TKTestReliabilityMetric,
-        flows: [TKTestReliabilityFlow],
-        issueCounts: [String: Int],
-        gate: TKTestReliabilityGate
-    ) {
-        self.ok = true
-        self.schemaVersion = 1
-        self.kind = "triton.test.reliability-report"
-        self.thresholds = thresholds
-        self.evidenceCompleteness = evidenceCompleteness
-        self.failureExplainability = failureExplainability
-        self.outcomeRepeatability = outcomeRepeatability
-        self.flows = flows
-        self.issueCounts = issueCounts
-        self.gate = gate
-    }
-}
-
 enum TKTestReliabilityError: Error, Equatable, LocalizedError {
     case invalidSampleSet
     case invalidThresholds
@@ -146,7 +102,7 @@ enum TKTestReliabilityError: Error, Equatable, LocalizedError {
     }
 }
 
-private struct TKTestReliabilitySampleAnalysis {
+struct TKTestReliabilitySampleAnalysis {
     let sample: TKTestReliabilitySample
     let complete: Bool
     let evidenceIdentity: String?
@@ -250,9 +206,52 @@ func buildTritonTestReliabilityReport(
     samples: [TKTestReliabilitySample],
     thresholds: TKTestReliabilityThresholds = TKTestReliabilityThresholds()
 ) throws -> TKTestReliabilityReport {
+    try buildTritonTestReliabilityReport(
+        samples: samples,
+        thresholds: thresholds,
+        gateAuthority: .legacyDiagnostic
+    )
+}
+
+func buildTritonTestReliabilityReceiptReport(
+    samples: [TKTestReliabilitySample],
+    thresholds: TKTestReliabilityThresholds = TKTestReliabilityThresholds()
+) throws -> TKTestReliabilityReport {
+    try buildTritonTestReliabilityReport(
+        samples: samples,
+        thresholds: thresholds,
+        gateAuthority: .receiptBacked
+    )
+}
+
+/// Produces the one global evidence analysis used by receipt-backed summaries.
+/// Consumers that derive a cohort metric must retain these duplicate markings;
+/// re-analysing each flow independently would hide cross-flow identity drift.
+func analyzeTritonTestReliabilitySamples(
+    _ samples: [TKTestReliabilitySample]
+) -> [TKTestReliabilitySampleAnalysis] {
+    markDuplicateReliabilitySamples(samples.map(analyzeReliabilitySample))
+}
+
+/// Reuses the canonical repeatability rule after a caller has already applied
+/// global evidence and duplicate analysis to its supported cohort.
+func buildTritonTestReliabilityOutcomeRepeatability(
+    supportedAnalyses: [TKTestReliabilitySampleAnalysis]
+) -> TKTestReliabilityMetric {
+    var ignoredIssueCounts: [String: Int] = [:]
+    return buildOutcomeRepeatability(
+        supportedAnalyses: supportedAnalyses,
+        issueCounts: &ignoredIssueCounts
+    )
+}
+
+private func buildTritonTestReliabilityReport(
+    samples: [TKTestReliabilitySample],
+    thresholds: TKTestReliabilityThresholds,
+    gateAuthority: TKTestReliabilityGateAuthority
+) throws -> TKTestReliabilityReport {
     try validateReliabilityThresholds(thresholds)
-    var analyses = samples.map(analyzeReliabilitySample)
-    analyses = markDuplicateReliabilitySamples(analyses)
+    let analyses = analyzeTritonTestReliabilitySamples(samples)
     var issueCounts: [String: Int] = [:]
     for analysis in analyses {
         for issue in analysis.issues {
@@ -280,14 +279,21 @@ func buildTritonTestReliabilityReport(
         issueCounts: &issueCounts
     )
     let flows = buildReliabilityFlows(from: analyses)
-    let gate = buildReliabilityGate(
+    var gate = buildReliabilityGate(
         thresholds: thresholds,
         evidenceCompleteness: evidenceCompleteness,
         failureExplainability: failureExplainability,
         outcomeRepeatability: repeatability,
         supportedAnalyses: supportedAnalyses
     )
+    if gateAuthority == .legacyDiagnostic {
+        gate = TKTestReliabilityGate(
+            status: .blocked,
+            blockerCodes: Array(Set(gate.blockerCodes + ["receipt_required"])).sorted()
+        )
+    }
     return TKTestReliabilityReport(
+        gateAuthority: gateAuthority,
         thresholds: thresholds,
         evidenceCompleteness: evidenceCompleteness,
         failureExplainability: failureExplainability,
@@ -601,9 +607,21 @@ private func analyzeReliabilitySample(_ sample: TKTestReliabilitySample) -> TKTe
     }
 
     if terminalStatus == .failed || terminalStatus == .blocked {
-        let failure = reliabilityTerminalFailure(from: parsedEvents, status: terminalStatus)
+        let terminalFailure = reliabilityTerminalFailure(from: parsedEvents, status: terminalStatus)
+        let failure = terminalFailure?.failure
         failureType = failure?.type
         let hasRecovery = failureType.flatMap(reliabilityRecoveryID(for:)) != nil
+        let authoritativeTerminalStepType = terminalFailure.flatMap { terminalFailure in
+            normalizedPlan?.steps.first(where: { $0.index == terminalFailure.stepIndex })?.type
+        }
+        let recoveryMatchesTerminalStep = terminalFailure.flatMap { terminalFailure in
+            terminalFailure.failure.type.map {
+                reliabilityFailureRecoveryMatchesTerminalStep(
+                    failureType: $0,
+                    terminalStepType: authoritativeTerminalStepType
+                )
+            }
+        } ?? false
         let hasArtifactRefs = !(failure?.artifactRefs ?? []).isEmpty
         let artifactRefsExist = hasArtifactRefs && (failure?.artifactRefs.allSatisfy {
             containedEvidenceEventReferenceURL(root: root, relativePath: $0) != nil
@@ -611,18 +629,31 @@ private func analyzeReliabilitySample(_ sample: TKTestReliabilitySample) -> TKTe
         let artifactRefsAreDeclared = artifactRefsExist && (failure?.artifactRefs.allSatisfy {
             manifestArtifactInventory.containsReference(root: root, relativePath: $0)
         } ?? false)
+        let artifactRefsBelongToTerminalStep = artifactRefsAreDeclared
+            && terminalFailure.map {
+                reliabilityTerminalFailureArtifactsBelongToTerminalStep(
+                    $0,
+                    events: parsedEvents,
+                    root: root,
+                    manifestArtifacts: manifestArtifactInventory
+                )
+            } == true
         if !hasRecovery {
             issues.append("missing_failure_recovery")
+        } else if normalizedPlan != nil && !recoveryMatchesTerminalStep {
+            issues.append("terminal_failure_type_step_mismatch")
         }
         if !artifactRefsExist {
             issues.append("missing_failure_artifact_ref")
         } else if !artifactRefsAreDeclared {
             issues.append("undeclared_failure_artifact_ref")
+        } else if !artifactRefsBelongToTerminalStep {
+            issues.append("terminal_failure_artifact_step_mismatch")
         }
         if failure == nil {
             issues.append("missing_terminal_failure_record")
         }
-        failureExplainable = hasRecovery && artifactRefsAreDeclared
+        failureExplainable = hasRecovery && recoveryMatchesTerminalStep && artifactRefsBelongToTerminalStep
     }
 
     return reliabilityAnalysis(
@@ -746,6 +777,8 @@ private func reliabilityIssueInvalidatesEvidenceCompleteness(_ issue: String) ->
         "undeclared_event_artifact",
         "missing_observation_artifact",
         "undeclared_observation_artifact",
+        "observation_artifact_kind_mismatch",
+        "observation_artifact_step_mismatch",
         "run_id_mismatch",
         "run_status_mismatch",
         "run_event_count_mismatch",
@@ -762,8 +795,10 @@ private func reliabilityIssueInvalidatesEvidenceCompleteness(_ issue: String) ->
         "duplicate_reset_evidence_id",
         "duplicate_run_id",
         "missing_failure_recovery",
+        "terminal_failure_type_step_mismatch",
         "missing_failure_artifact_ref",
         "undeclared_failure_artifact_ref",
+        "terminal_failure_artifact_step_mismatch",
         "missing_terminal_failure_record",
     ].contains(issue)
 }
@@ -798,6 +833,115 @@ private func validateReliabilityEventSequence(_ events: [TKTestRunEvent]) -> (te
     return (status, issues)
 }
 
+private struct TKTestReliabilityEventArtifactCreation {
+    let stepIndex: Int
+    let offset: Int
+}
+
+private struct TKTestReliabilityEventArtifactTimeline {
+    let commandOffsetsByStep: [Int: [Int]]
+    let creationsByKindAndPath: [String: [TKTestReliabilityEventArtifactCreation]]
+}
+
+private func reliabilityArtifactReferenceKey(
+    kind: String,
+    root: URL,
+    reference: String
+) -> String? {
+    guard let url = containedEvidenceEventReferenceURL(root: root, relativePath: reference) else {
+        return nil
+    }
+    return "\(kind)\u{0}\(url.path)"
+}
+
+private func reliabilityEventArtifactTimeline(
+    _ events: [TKTestRunEvent],
+    root: URL,
+    manifestArtifacts: TKTestReliabilityManifestArtifactInventory
+) -> TKTestReliabilityEventArtifactTimeline {
+    var commandOffsetsByStep: [Int: [Int]] = [:]
+    var creationsByKindAndPath: [String: [TKTestReliabilityEventArtifactCreation]] = [:]
+    for (offset, event) in events.enumerated() {
+        if event.type == .commandExecuted, let stepIndex = event.stepIndex {
+            commandOffsetsByStep[stepIndex, default: []].append(offset)
+        }
+        guard event.type == .artifactCreated,
+              let stepIndex = event.stepIndex,
+              let kind = event.artifactKind,
+              let reference = event.ref,
+              manifestArtifacts.containsArtifact(kind: kind, root: root, relativePath: reference),
+              let key = reliabilityArtifactReferenceKey(kind: kind, root: root, reference: reference) else {
+            continue
+        }
+        creationsByKindAndPath[key, default: []].append(
+            TKTestReliabilityEventArtifactCreation(stepIndex: stepIndex, offset: offset)
+        )
+    }
+    return TKTestReliabilityEventArtifactTimeline(
+        commandOffsetsByStep: commandOffsetsByStep,
+        creationsByKindAndPath: creationsByKindAndPath
+    )
+}
+
+private func reliabilityObservationReferencesHaveDeclaredKinds(
+    _ event: TKTestRunEvent,
+    root: URL,
+    manifestArtifacts: TKTestReliabilityManifestArtifactInventory
+) -> Bool {
+    guard let artifacts = event.artifacts else {
+        return false
+    }
+    return reliabilityObservationArtifactReferences(artifacts).allSatisfy { expected in
+        guard let reference = expected.reference,
+              !reference.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return false
+        }
+        return manifestArtifacts.containsArtifact(
+            kind: expected.kind,
+            root: root,
+            relativePath: reference
+        )
+    }
+}
+
+private func reliabilityObservationHasStepBoundArtifact(
+    _ event: TKTestRunEvent,
+    eventOffset: Int,
+    root: URL,
+    manifestArtifacts: TKTestReliabilityManifestArtifactInventory,
+    timeline: TKTestReliabilityEventArtifactTimeline
+) -> Bool {
+    guard let stepIndex = event.stepIndex,
+          reliabilityObservationReferencesHaveDeclaredKinds(
+              event,
+              root: root,
+              manifestArtifacts: manifestArtifacts
+          ) else {
+        return false
+    }
+    let commandOffsets = timeline.commandOffsetsByStep[stepIndex] ?? []
+    guard !commandOffsets.isEmpty,
+          let artifacts = event.artifacts else {
+        return false
+    }
+    return reliabilityObservationArtifactReferences(artifacts).allSatisfy { expected in
+        guard let reference = expected.reference,
+              let key = reliabilityArtifactReferenceKey(
+                  kind: expected.kind,
+                  root: root,
+                  reference: reference
+              ),
+              let creations = timeline.creationsByKindAndPath[key] else {
+            return false
+        }
+        return creations.contains { creation in
+            creation.stepIndex == stepIndex
+                && creation.offset < eventOffset
+                && commandOffsets.contains(where: { $0 < creation.offset })
+        }
+    }
+}
+
 private func reliabilityEventArtifactIssues(
     _ events: [TKTestRunEvent],
     root: URL,
@@ -807,7 +951,14 @@ private func reliabilityEventArtifactIssues(
     var undeclaredEventArtifact = false
     var missingObservationArtifact = false
     var undeclaredObservationArtifact = false
-    for event in events {
+    var observationArtifactKindMismatch = false
+    var observationArtifactStepMismatch = false
+    let timeline = reliabilityEventArtifactTimeline(
+        events,
+        root: root,
+        manifestArtifacts: manifestArtifacts
+    )
+    for (offset, event) in events.enumerated() {
         if event.type == .artifactCreated,
            let kind = event.artifactKind,
            let ref = event.ref {
@@ -817,19 +968,43 @@ private func reliabilityEventArtifactIssues(
                 undeclaredEventArtifact = true
             }
         }
-        if event.type == .observationCaptured,
-           let artifacts = event.artifacts {
-            let refs = [artifacts.screenshot, artifacts.ax, artifacts.hierarchy].compactMap { $0 }
-            if refs.isEmpty
-                || refs.contains(where: { containedEvidenceEventReferenceURL(root: root, relativePath: $0) == nil }) {
+        if event.type == .observationCaptured {
+            guard let artifacts = event.artifacts else {
                 missingObservationArtifact = true
-            } else if refs.contains(where: {
-                !manifestArtifacts.containsReference(root: root, relativePath: $0)
-            }) {
-                undeclaredObservationArtifact = true
+                continue
             }
-        } else if event.type == .observationCaptured {
-            missingObservationArtifact = true
+            let expectedArtifacts = reliabilityObservationArtifactReferences(artifacts)
+            if expectedArtifacts.contains(where: { $0.reference?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false }) {
+                missingObservationArtifact = true
+                continue
+            }
+            for expected in expectedArtifacts {
+                guard let reference = expected.reference else { continue }
+                if containedEvidenceEventReferenceURL(root: root, relativePath: reference) == nil {
+                    missingObservationArtifact = true
+                } else if !manifestArtifacts.containsReference(root: root, relativePath: reference) {
+                    undeclaredObservationArtifact = true
+                } else if !manifestArtifacts.containsArtifact(
+                    kind: expected.kind,
+                    root: root,
+                    relativePath: reference
+                ) {
+                    observationArtifactKindMismatch = true
+                }
+            }
+            if reliabilityObservationReferencesHaveDeclaredKinds(
+                event,
+                root: root,
+                manifestArtifacts: manifestArtifacts
+            ) && !reliabilityObservationHasStepBoundArtifact(
+                event,
+                eventOffset: offset,
+                root: root,
+                manifestArtifacts: manifestArtifacts,
+                timeline: timeline
+            ) {
+                observationArtifactStepMismatch = true
+            }
         }
     }
     var issues: [String] = []
@@ -845,28 +1020,36 @@ private func reliabilityEventArtifactIssues(
     if undeclaredObservationArtifact {
         issues.append("undeclared_observation_artifact")
     }
+    if observationArtifactKindMismatch {
+        issues.append("observation_artifact_kind_mismatch")
+    }
+    if observationArtifactStepMismatch {
+        issues.append("observation_artifact_step_mismatch")
+    }
     return issues
 }
 
-private func reliabilityObservationHasDeclaredArtifact(
-    _ event: TKTestRunEvent,
-    root: URL,
-    manifestArtifacts: TKTestReliabilityManifestArtifactInventory
-) -> Bool {
-    guard let artifacts = event.artifacts else {
-        return false
-    }
-    let refs = [artifacts.screenshot, artifacts.ax, artifacts.hierarchy].compactMap { $0 }
-    return !refs.isEmpty && refs.allSatisfy {
-        $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
-            && manifestArtifacts.containsReference(root: root, relativePath: $0)
-    }
+private func reliabilityObservationArtifactReferences(
+    _ artifacts: TKTestRunObservationArtifacts
+) -> [(kind: String, reference: String?)] {
+    [
+        (kind: "screenshot", reference: artifacts.screenshot),
+        (kind: "accessibility", reference: artifacts.ax),
+        (kind: "hierarchy", reference: artifacts.hierarchy),
+    ]
 }
 
-private func reliabilityTerminalFailure(
+struct TKTestReliabilityTerminalFailure {
+    let failure: TKTestRunFailure
+    let stepIndex: Int
+    let commandOffset: Int
+    let failureOffset: Int
+}
+
+func reliabilityTerminalFailure(
     from events: [TKTestRunEvent],
     status: TKTestRunStatus?
-) -> TKTestRunFailure? {
+) -> TKTestReliabilityTerminalFailure? {
     guard status == .failed || status == .blocked else {
         return nil
     }
@@ -893,6 +1076,8 @@ private func reliabilityTerminalFailure(
           commands.count == 1,
           let start = starts.first,
           let command = commands.first,
+          let startedStepType = start.element.stepType,
+          !startedStepType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
           start.offset < command.offset,
           command.offset < terminalFinish.offset else {
         return nil
@@ -907,7 +1092,43 @@ private func reliabilityTerminalFailure(
     guard failures.count == 1 else {
         return nil
     }
-    return failures[0].element.failure
+    guard let failure = failures[0].element.failure else {
+        return nil
+    }
+    return TKTestReliabilityTerminalFailure(
+        failure: failure,
+        stepIndex: stepIndex,
+        commandOffset: command.offset,
+        failureOffset: failures[0].offset
+    )
+}
+
+private func reliabilityTerminalFailureArtifactsBelongToTerminalStep(
+    _ terminalFailure: TKTestReliabilityTerminalFailure,
+    events: [TKTestRunEvent],
+    root: URL,
+    manifestArtifacts: TKTestReliabilityManifestArtifactInventory
+) -> Bool {
+    let createdArtifactPaths = Set(events.enumerated().compactMap { entry -> String? in
+        guard entry.offset > terminalFailure.commandOffset,
+              entry.offset < terminalFailure.failureOffset,
+              entry.element.type == .artifactCreated,
+              entry.element.stepIndex == terminalFailure.stepIndex,
+              let kind = entry.element.artifactKind,
+              let reference = entry.element.ref,
+              manifestArtifacts.containsArtifact(kind: kind, root: root, relativePath: reference),
+              let url = containedEvidenceEventReferenceURL(root: root, relativePath: reference) else {
+            return nil
+        }
+        return url.path
+    })
+    return !terminalFailure.failure.artifactRefs.isEmpty
+        && terminalFailure.failure.artifactRefs.allSatisfy { reference in
+            guard let url = containedEvidenceEventReferenceURL(root: root, relativePath: reference) else {
+                return false
+            }
+            return createdArtifactPaths.contains(url.path)
+        }
 }
 
 private func reliabilityPlanEventCoverageIssues(
@@ -951,6 +1172,11 @@ private func reliabilityPlanEventCoverageIssues(
     ]
     var coverageMismatch = false
     var missingObservation = false
+    let timeline = reliabilityEventArtifactTimeline(
+        events,
+        root: root,
+        manifestArtifacts: manifestArtifacts
+    )
 
     for step in expectedSteps {
         let started = indexedEvents.filter {
@@ -996,10 +1222,12 @@ private func reliabilityPlanEventCoverageIssues(
             let observations = indexedEvents.filter {
                     $0.element.type == .observationCaptured
                     && $0.element.stepIndex == step.index
-                    && reliabilityObservationHasDeclaredArtifact(
+                    && reliabilityObservationHasStepBoundArtifact(
                         $0.element,
+                        eventOffset: $0.offset,
                         root: root,
-                        manifestArtifacts: manifestArtifacts
+                        manifestArtifacts: manifestArtifacts,
+                        timeline: timeline
                     )
                     && command.offset < $0.offset
                     && $0.offset < finish.offset
@@ -1129,10 +1357,48 @@ private func reliabilityRecoveryID(for failureType: String) -> String? {
         return "inspect_scroll_observation"
     case "vlm_step_not_allowed":
         return "inspect_vlm_policy"
-    case "primitive_failed", "stop_not_supported":
+    case "stop_not_supported":
         return "inspect_runner_failure"
     default:
         return nil
+    }
+}
+
+private func reliabilityFailureRecoveryMatchesTerminalStep(
+    failureType: String,
+    terminalStepType: String?
+) -> Bool {
+    guard let terminalStepType,
+          reliabilityExpectedPlanStepKind(for: terminalStepType) != nil else {
+        return false
+    }
+    switch failureType {
+    case "tap_failed", "text_not_found", "vlm_step_not_allowed":
+        return terminalStepType == "tap"
+    case "input_failed":
+        return terminalStepType == "input"
+    case "press_failed":
+        return terminalStepType == "press"
+    case "swipe_failed":
+        return terminalStepType == "swipe"
+    case "assert_visible_failed":
+        return terminalStepType == "assertVisible"
+    case "assert_not_visible_failed":
+        return terminalStepType == "assertNotVisible"
+    case "ai_assertion_failed":
+        return terminalStepType == "assertWithAI" || terminalStepType == "assertNoDefectsWithAI"
+    case "assert_screenshot_failed", "assert_screenshot_baseline_missing":
+        return terminalStepType == "assertScreenshot"
+    case "scroll_until_visible_failed":
+        return terminalStepType == "scrollUntilVisible"
+    case "stop_not_supported":
+        return terminalStepType == "stop"
+    case "launch_failed":
+        // Runtime resolution is lazy and shared by every supported executor.
+        return true
+    default:
+        // Unknown and generic runner taxonomy has no contract-backed recovery.
+        return false
     }
 }
 

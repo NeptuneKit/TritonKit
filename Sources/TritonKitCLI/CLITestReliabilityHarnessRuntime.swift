@@ -1,3 +1,4 @@
+import CryptoKit
 import Darwin
 import Foundation
 import TritonKitShared
@@ -18,6 +19,7 @@ struct TKTestReliabilityFrozenFlow: Codable, Equatable {
     let flowID: String
     let classification: TKTestReliabilityFrozenClassification
     let expectedOutcome: String
+    let expectedFailureType: String?
     let normalizedPlan: TKTestNormalizedPlan
     let planDigest: String
     let executionIdentityDigest: String
@@ -90,6 +92,7 @@ struct TKTestReliabilitySampleBinding: Codable, Equatable {
     let flowID: String
     let classification: TKTestReliabilityFrozenClassification
     let expectedOutcome: String
+    let expectedFailureType: String?
     let slot: Int
     let target: TKTestReliabilityCollectionTarget
     let planDigest: String
@@ -110,6 +113,7 @@ struct TKTestReliabilitySampleBinding: Codable, Equatable {
         self.flowID = flow.flowID
         self.classification = flow.classification
         self.expectedOutcome = flow.expectedOutcome
+        self.expectedFailureType = flow.expectedFailureType
         self.slot = slot.slot
         self.target = target
         self.planDigest = flow.planDigest
@@ -127,13 +131,21 @@ struct TKTestReliabilityReserveResponse: Codable, Equatable {
     let writesEvidence: Bool
     let usesRuntime: Bool
     let receiptFile: String
+    /// Legacy FNV linkage retained for existing reset/binding consumers. It is
+    /// not the external integrity anchor.
     let receiptDigest: String
+    let receiptSha256: String
     let targetBindingDigest: String
     let supportedFlowCount: Int
     let negativeControlCount: Int
     let plannedSampleCount: Int
 
-    init(receiptDigest: String, targetBindingDigest: String, flows: [TKTestReliabilityFrozenFlow]) {
+    init(
+        receiptDigest: String,
+        receiptSha256: String,
+        targetBindingDigest: String,
+        flows: [TKTestReliabilityFrozenFlow]
+    ) {
         self.ok = true
         self.schemaVersion = 1
         self.kind = "triton.test.reliability-reserve"
@@ -141,6 +153,7 @@ struct TKTestReliabilityReserveResponse: Codable, Equatable {
         self.usesRuntime = false
         self.receiptFile = "collection-receipt.json"
         self.receiptDigest = receiptDigest
+        self.receiptSha256 = receiptSha256
         self.targetBindingDigest = targetBindingDigest
         self.supportedFlowCount = flows.filter { $0.classification == .supported }.count
         self.negativeControlCount = flows.filter { $0.classification == .negativeControl }.count
@@ -150,6 +163,7 @@ struct TKTestReliabilityReserveResponse: Codable, Equatable {
 
 struct TKTestReliabilitySampleRequest: Equatable {
     let collectionReceipt: String
+    let expectedReceiptSha256: String?
     let flow: String
     let slot: Int
     let resetReceipt: String
@@ -157,6 +171,28 @@ struct TKTestReliabilitySampleRequest: Equatable {
     let host: String
     let port: Int
     let confirm: Bool
+
+    init(
+        collectionReceipt: String,
+        expectedReceiptSha256: String? = nil,
+        flow: String,
+        slot: Int,
+        resetReceipt: String,
+        target: String,
+        host: String,
+        port: Int,
+        confirm: Bool
+    ) {
+        self.collectionReceipt = collectionReceipt
+        self.expectedReceiptSha256 = expectedReceiptSha256
+        self.flow = flow
+        self.slot = slot
+        self.resetReceipt = resetReceipt
+        self.target = target
+        self.host = host
+        self.port = port
+        self.confirm = confirm
+    }
 }
 
 /// The harness resolves the live target once, before claiming a slot. The
@@ -218,6 +254,8 @@ struct TKTestReliabilitySampleResponse: Codable, Equatable {
     let evidenceRelativePath: String
     let runStatus: TKTestRunStatus
     let expectedOutcome: String
+    let expectedFailureType: String?
+    let actualFailureType: String?
     let outcomeMatched: Bool
 
     init(
@@ -225,10 +263,14 @@ struct TKTestReliabilitySampleResponse: Codable, Equatable {
         slot: TKTestReliabilityFrozenSlot,
         targetBindingDigest: String,
         resetEvidenceDigest: String,
-        runStatus: TKTestRunStatus
+        runStatus: TKTestRunStatus,
+        actualFailureType: String?
     ) {
-        let expectedPassed = flow.expectedOutcome == "passed"
-        let outcomeMatched = expectedPassed ? runStatus == .passed : runStatus != .passed
+        let outcomeMatched = reliabilityHarnessOutcomeMatches(
+            flow: flow,
+            terminalStatus: runStatus,
+            actualFailureType: actualFailureType
+        )
         self.ok = outcomeMatched
         self.schemaVersion = 1
         self.kind = "triton.test.reliability-sample"
@@ -242,6 +284,8 @@ struct TKTestReliabilitySampleResponse: Codable, Equatable {
         self.evidenceRelativePath = slot.evidenceRelativePath
         self.runStatus = runStatus
         self.expectedOutcome = flow.expectedOutcome
+        self.expectedFailureType = flow.expectedFailureType
+        self.actualFailureType = actualFailureType
         self.outcomeMatched = outcomeMatched
     }
 }
@@ -251,11 +295,16 @@ enum TKTestReliabilityHarnessError: Error, Equatable {
     case reservationAlreadyExists
     case reservationWriteFailed
     case invalidReceipt
+    case missingReceiptAnchor
+    case invalidReceiptAnchor
+    case receiptAnchorMismatch
     case confirmationRequired
     case invalidSampleRequest
     case invalidResetReceipt
+    case collectionBusy
     case slotAlreadyClaimed
     case runnerFailed
+    case identityChainWriteFailed
 }
 
 func testReliabilityHarnessErrorDetail(_ error: TKTestReliabilityHarnessError) -> TKCLIErrorDetail {
@@ -284,6 +333,24 @@ func testReliabilityHarnessErrorDetail(_ error: TKTestReliabilityHarnessError) -
             message: "The reliability collection receipt is invalid, incomplete, or drifted.",
             hint: "Use the exact receipt created by reliability-reserve and do not edit it."
         )
+    case .missingReceiptAnchor:
+        return TKCLIErrorDetail(
+            code: "missing_required_field",
+            message: "A receipt SHA-256 anchor is required for receipt-backed reliability.",
+            hint: "Provide --expect-receipt-sha256 with the lowercase digest retained outside the private receipt root."
+        )
+    case .invalidReceiptAnchor:
+        return TKCLIErrorDetail(
+            code: "invalid_reliability_receipt_anchor",
+            message: "The receipt SHA-256 anchor must be exactly 64 lowercase hexadecimal characters.",
+            hint: "Diagnose the operator-retained receipt anchor before retrying; do not edit the private receipt."
+        )
+    case .receiptAnchorMismatch:
+        return TKCLIErrorDetail(
+            code: "reliability_receipt_anchor_mismatch",
+            message: "The private receipt does not match the operator-retained SHA-256 anchor.",
+            hint: "Diagnose the receipt and independently retained anchor; do not overwrite, replace, or rerun the private collection."
+        )
     case .confirmationRequired:
         return TKCLIErrorDetail(
             code: "reliability_sample_confirmation_required",
@@ -302,6 +369,12 @@ func testReliabilityHarnessErrorDetail(_ error: TKTestReliabilityHarnessError) -
             message: "The reset receipt does not attest to this exact frozen sample binding.",
             hint: "Create a verified reset receipt for the same receipt, flow, slot, target binding, initial state, and reset recipe."
         )
+    case .collectionBusy:
+        return TKCLIErrorDetail(
+            code: "reliability_collection_busy",
+            message: "Another reliability sample holds the collection-wide execution lease.",
+            hint: "Do not remove the active lease or reuse a slot. Wait for the owner to finish; after an interrupted run, inspect the private receipt root before any operator-directed recovery."
+        )
     case .slotAlreadyClaimed:
         return TKCLIErrorDetail(
             code: "reliability_slot_already_claimed",
@@ -313,6 +386,12 @@ func testReliabilityHarnessErrorDetail(_ error: TKTestReliabilityHarnessError) -
             code: "test_reliability_sample_failed",
             message: "The frozen reliability sample could not complete its runner bridge.",
             hint: "Preserve the claimed private evidence slot and inspect its receipt sidecars before any further action."
+        )
+    case .identityChainWriteFailed:
+        return TKCLIErrorDetail(
+            code: "reliability_identity_chain_write_failed",
+            message: "The completed reliability sample could not seal its private identity chain.",
+            hint: "Preserve the claimed slot and inspect its private evidence; do not backfill, overwrite, or rerun it automatically."
         )
     }
 }
@@ -348,6 +427,7 @@ func reserveTritonTestReliabilityCollection(
                 flowID: String(format: "flow_%03d", index + 1),
                 classification: .supported,
                 expectedOutcome: "passed",
+                expectedFailureType: nil,
                 planPath: flow.plan,
                 expectedPlanDigest: flow.expectedPlanDigest,
                 initialStateID: flow.initialStateID,
@@ -364,6 +444,7 @@ func reserveTritonTestReliabilityCollection(
             flowID: "negative_001",
             classification: .negativeControl,
             expectedOutcome: negative.expectedOutcome,
+            expectedFailureType: negative.expectedFailureType,
             planPath: negative.plan,
             expectedPlanDigest: negative.expectedPlanDigest,
             initialStateID: negative.initialStateID,
@@ -396,6 +477,7 @@ func reserveTritonTestReliabilityCollection(
         }
         return TKTestReliabilityReserveResponse(
             receiptDigest: fnv1a64Hex(receiptData),
+            receiptSha256: reliabilityReceiptSHA256(receiptData),
             targetBindingDigest: receipt.target.bindingDigest,
             flows: flows
         )
@@ -426,7 +508,10 @@ func runTritonTestReliabilitySample(
     guard request.confirm else {
         throw TKTestReliabilityHarnessError.confirmationRequired
     }
-    let loaded = try loadReliabilityCollectionReceipt(at: request.collectionReceipt)
+    let loaded = try loadReliabilityCollectionReceipt(
+        at: request.collectionReceipt,
+        expectedReceiptSha256: request.expectedReceiptSha256
+    )
     guard request.host == "127.0.0.1",
           request.port == 19421,
           request.target == loaded.receipt.target.id,
@@ -441,6 +526,8 @@ func runTritonTestReliabilitySample(
         flow: flow,
         slot: slot
     )
+    let collectionLease = try claimReliabilityHarnessCollectionLease(root: loaded.root)
+    defer { collectionLease.release() }
     let resolvedTarget: TKTargetSummary
     do {
         resolvedTarget = try await targetResolver.resolve(
@@ -477,17 +564,27 @@ func runTritonTestReliabilitySample(
     )
     let bindingData = try prettyEncodedData(binding)
     let resetData = reset.data
+    // Persist the target that passed the receipt-bound preflight before the
+    // runner starts. A live runtime resolver may later overwrite this with an
+    // equivalent observation, but a terminal failure before that step must
+    // still leave an exact, private target component for the identity chain.
+    let runtimeTargetData = try prettyEncodedData(resolvedTarget)
     let reliabilityDirectory = evidenceURL.appendingPathComponent("reliability", isDirectory: true)
     do {
         try FileManager.default.createDirectory(at: reliabilityDirectory, withIntermediateDirectories: false)
         try writeReliabilityHarnessExclusive(bindingData, to: reliabilityDirectory.appendingPathComponent("binding.json"))
         try writeReliabilityHarnessExclusive(resetData, to: reliabilityDirectory.appendingPathComponent("reset-receipt.json"))
+        try writeReliabilityHarnessExclusive(
+            runtimeTargetData,
+            to: evidenceURL.appendingPathComponent("runtime-target.json")
+        )
     } catch {
         throw TKTestReliabilityHarnessError.slotAlreadyClaimed
     }
 
+    let execution: TKTestRunExecutionResponse
     do {
-        let execution = try await runTritonFrozenTest(
+        execution = try await runTritonFrozenTest(
             normalizedPlan: flow.normalizedPlan,
             evidenceDirectory: evidenceURL.path,
             target: request.target,
@@ -495,31 +592,56 @@ func runTritonTestReliabilitySample(
             port: request.port,
             executor: executor
         )
+    } catch {
+        throw TKTestReliabilityHarnessError.runnerFailed
+    }
+    let response = TKTestReliabilitySampleResponse(
+        flow: flow,
+        slot: slot,
+        targetBindingDigest: loaded.receipt.target.bindingDigest,
+        resetEvidenceDigest: fnv1a64Hex(resetData),
+        runStatus: execution.summary.status ?? (execution.ok ? .passed : .failed),
+        actualFailureType: execution.failure?.type
+    )
+    do {
+        let identityChainBytes = try writeTritonTestReliabilityIdentityChainV2(
+            evidenceURL: evidenceURL,
+            descriptor: makeTritonTestReliabilityIdentityChainDescriptor(
+                receiptSha256: reliabilityReceiptSHA256(loaded.data),
+                legacyReceiptDigest: loaded.digest,
+                targetBindingDigest: loaded.receipt.target.bindingDigest,
+                flow: flow,
+                slot: slot,
+                terminalStatus: response.runStatus,
+                outcomeMatched: response.outcomeMatched
+            )
+        )
         try appendReliabilityHarnessArtifacts(
             evidenceURL: evidenceURL,
             bindingBytes: bindingData.count,
             resetBytes: resetData.count,
-            target: loaded.receipt.target.id
-        )
-        return TKTestReliabilitySampleResponse(
-            flow: flow,
-            slot: slot,
-            targetBindingDigest: loaded.receipt.target.bindingDigest,
-            resetEvidenceDigest: fnv1a64Hex(resetData),
-            runStatus: execution.summary.status ?? (execution.ok ? .passed : .failed)
+            identityChainBytes: identityChainBytes,
+            runtimeTarget: resolvedTarget
         )
     } catch {
-        throw TKTestReliabilityHarnessError.runnerFailed
+        throw TKTestReliabilityHarnessError.identityChainWriteFailed
     }
+    return response
 }
 
 func buildTritonTestReliabilityReceiptReport(
     collectionReceiptPath: String,
+    expectedReceiptSha256: String?,
     thresholds: TKTestReliabilityThresholds = TKTestReliabilityThresholds()
 ) throws -> TKTestReliabilityReport {
-    let loaded = try loadReliabilityCollectionReceipt(at: collectionReceiptPath)
+    let loaded = try loadReliabilityCollectionReceipt(
+        at: collectionReceiptPath,
+        expectedReceiptSha256: expectedReceiptSha256
+    )
     var samples: [TKTestReliabilitySample] = []
     var extraIssues: [String: Int] = [:]
+    var identityChainStates: [TKTestReliabilityIdentityChainState] = []
+    var receiptValidationPassed: [Bool] = []
 
     for flow in loaded.receipt.flows {
         for slot in flow.slots {
@@ -530,10 +652,13 @@ func buildTritonTestReliabilityReceiptReport(
             let validation = validateReliabilityReceiptEvidence(
                 evidenceURL: evidenceURL,
                 receiptDigest: loaded.digest,
+                receiptSha256: reliabilityReceiptSHA256(loaded.data),
                 receipt: loaded.receipt,
                 flow: flow,
                 slot: slot
             )
+            identityChainStates.append(validation.identityChainState)
+            receiptValidationPassed.append(validation.issues.isEmpty)
             for issue in validation.issues {
                 extraIssues[issue, default: 0] += 1
             }
@@ -548,25 +673,67 @@ func buildTritonTestReliabilityReceiptReport(
         }
     }
 
-    let base = try buildTritonTestReliabilityReport(samples: samples, thresholds: thresholds)
+    let evidenceAnalyses = analyzeTritonTestReliabilitySamples(samples)
+    let validReceiptControlAnalyses = zip(evidenceAnalyses, receiptValidationPassed).filter {
+        $0.0.complete && $0.1
+    }
+    let validReceiptControlSlotCount = validReceiptControlAnalyses.count
+    let validNegativeControlCount = validReceiptControlAnalyses.filter {
+        $0.0.sample.classification == .negativeControl
+    }.count
+    let base = try buildTritonTestReliabilityReceiptReport(samples: samples, thresholds: thresholds)
+    let stage1A = buildTritonTestReliabilityStage1A(
+        receipt: loaded.receipt,
+        analyses: evidenceAnalyses,
+        thresholds: thresholds
+    )
+    let stage1B = buildTritonTestReliabilityStage1B(
+        receipt: loaded.receipt,
+        validReceiptControlSlotCount: validReceiptControlSlotCount,
+        validNegativeControlCount: validNegativeControlCount,
+        failureExplainability: base.failureExplainability,
+        thresholds: thresholds
+    )
+    let stage1Gate = buildTritonTestReliabilityStage1Gate(
+        stage1A: stage1A,
+        stage1B: stage1B
+    )
     var issueCounts = base.issueCounts
     for (issue, count) in extraIssues {
         issueCounts[issue, default: 0] += count
     }
-    var blockers = base.gate.blockerCodes
-    if !extraIssues.isEmpty {
+    let identityChain = summarizeTritonTestReliabilityIdentityChains(
+        identityChainStates,
+        receiptAnchorVerified: true
+    )
+    var blockers = base.gate.blockerCodes + stage1Gate.blockerCodes
+    if extraIssues.keys.contains(where: { !$0.hasPrefix("identity_chain_") }) {
         blockers.append("receipt_binding_invalid")
+    }
+    if identityChain.missingSlotCount > 0 {
+        blockers.append("identity_chain_incomplete")
+    }
+    if identityChain.invalidSlotCount > 0 {
+        blockers.append("identity_chain_invalid")
     }
     let gate = TKTestReliabilityGate(
         status: blockers.isEmpty ? .passed : .blocked,
         blockerCodes: Array(Set(blockers)).sorted()
     )
+    let stage1 = TKTestReliabilityStage1Summary(
+        stage1A: stage1A,
+        stage1B: stage1B,
+        gate: gate
+    )
     return TKTestReliabilityReport(
+        gateAuthority: base.gateAuthority,
         thresholds: base.thresholds,
         evidenceCompleteness: base.evidenceCompleteness,
         failureExplainability: base.failureExplainability,
         outcomeRepeatability: base.outcomeRepeatability,
         flows: base.flows,
+        identityChain: identityChain,
+        stage1: stage1,
         issueCounts: issueCounts,
         gate: gate
     )
@@ -586,6 +753,7 @@ private struct ReliabilityHarnessResetReceipt {
 
 private struct ReliabilityHarnessEvidenceValidation {
     let resetEvidenceID: String?
+    let identityChainState: TKTestReliabilityIdentityChainState
     let issues: [String]
 }
 
@@ -657,6 +825,7 @@ private func freezeReliabilityFlow(
     flowID: String,
     classification: TKTestReliabilityFrozenClassification,
     expectedOutcome: String,
+    expectedFailureType: String?,
     planPath: String,
     expectedPlanDigest: String,
     initialStateID: String,
@@ -668,8 +837,12 @@ private func freezeReliabilityFlow(
           reliabilityHarnessIdentifier(initialStateID),
           reliabilityHarnessIdentifier(resetRecipeID),
           reliabilityHarnessDigest(expectedPlanDigest),
-          ((classification == .supported && expectedOutcome == "passed") ||
-            (classification == .negativeControl && expectedOutcome == "nonpassed")),
+          ((classification == .supported
+                && expectedOutcome == "passed"
+                && expectedFailureType == nil)
+            || (classification == .negativeControl
+                && expectedOutcome == "nonpassed"
+                && expectedFailureType != nil)),
           !slots.isEmpty else {
         throw TKTestReliabilityHarnessError.invalidCollectionReceiptInput
     }
@@ -677,6 +850,15 @@ private func freezeReliabilityFlow(
     let normalizedPlan = try validateTritonTestContract(yaml: yaml, inputPath: planPath)
     guard reliabilityHarnessTargetMatchesPlan(target, plan: normalizedPlan) else {
         throw TKTestReliabilityHarnessError.invalidCollectionReceiptInput
+    }
+    if classification == .negativeControl {
+        guard let expectedFailureType,
+              isTritonTestReliabilityDeterministicNegativeControl(
+                  plan: normalizedPlan,
+                  expectedFailureType: expectedFailureType
+              ) else {
+            throw TKTestReliabilityHarnessError.invalidCollectionReceiptInput
+        }
     }
     let normalizedData = try prettyEncodedData(normalizedPlan)
     let planDigest = fnv1a64Hex(normalizedData)
@@ -705,6 +887,7 @@ private func freezeReliabilityFlow(
         flowID: flowID,
         classification: classification,
         expectedOutcome: expectedOutcome,
+        expectedFailureType: expectedFailureType,
         normalizedPlan: normalizedPlan,
         planDigest: planDigest,
         executionIdentityDigest: executionIdentityDigest,
@@ -726,18 +909,43 @@ private func validateReliabilityFrozenFlowIdentities(
           Set(flows.map(\.executionIdentityDigest)).count == flows.count,
           flows.filter({ $0.classification == .supported }).allSatisfy({ $0.expectedOutcome == "passed" }),
           flows.filter({ $0.classification == .negativeControl }).allSatisfy({ $0.expectedOutcome == "nonpassed" }),
+          flows.filter({ $0.classification == .supported }).allSatisfy({ $0.expectedFailureType == nil }),
+          flows.filter({ $0.classification == .negativeControl }).allSatisfy({ flow in
+              guard let expectedFailureType = flow.expectedFailureType else { return false }
+              return isTritonTestReliabilityDeterministicNegativeControl(
+                  plan: flow.normalizedPlan,
+                  expectedFailureType: expectedFailureType
+              )
+          }),
           flows.filter({ $0.classification == .supported }).allSatisfy({ $0.slots.map(\.slot) == Array(1...20) }),
           flows.filter({ $0.classification == .negativeControl }).allSatisfy({ $0.slots.map(\.slot) == [1] }) else {
         throw TKTestReliabilityHarnessError.invalidCollectionReceiptInput
     }
 }
 
+func requireReliabilityReceiptSha256Anchor(_ value: String?) throws -> String {
+    guard let value else {
+        throw TKTestReliabilityHarnessError.missingReceiptAnchor
+    }
+    guard value.range(of: #"^[0-9a-f]{64}$"#, options: .regularExpression) != nil else {
+        throw TKTestReliabilityHarnessError.invalidReceiptAnchor
+    }
+    return value
+}
+
 private func loadReliabilityCollectionReceipt(
-    at path: String
+    at path: String,
+    expectedReceiptSha256: String?
 ) throws -> ReliabilityHarnessLoadedReceipt {
+    let expectedReceiptSha256 = try requireReliabilityReceiptSha256Anchor(expectedReceiptSha256)
     guard !path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-          let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
-          let receipt = try? JSONDecoder().decode(TKTestReliabilityCollectionReceipt.self, from: data),
+          let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else {
+        throw TKTestReliabilityHarnessError.invalidReceipt
+    }
+    guard reliabilityReceiptSHA256(data) == expectedReceiptSha256 else {
+        throw TKTestReliabilityHarnessError.receiptAnchorMismatch
+    }
+    guard let receipt = try? JSONDecoder().decode(TKTestReliabilityCollectionReceipt.self, from: data),
           receipt.schemaVersion == 1,
           receipt.kind == "triton.test.reliability-collection-receipt",
           reliabilityHarnessDigest(receipt.collectionDigest),
@@ -809,6 +1017,7 @@ private func loadAndValidateReliabilityResetReceipt(
 private func validateReliabilityReceiptEvidence(
     evidenceURL: URL,
     receiptDigest: String,
+    receiptSha256: String,
     receipt: TKTestReliabilityCollectionReceipt,
     flow: TKTestReliabilityFrozenFlow,
     slot: TKTestReliabilityFrozenSlot
@@ -863,7 +1072,8 @@ private func validateReliabilityReceiptEvidence(
     } else {
         issues.append("receipt_runtime_target_drift")
     }
-    if let manifest = try? readEvidenceManifest(from: evidenceURL.path) {
+    let manifest = try? readEvidenceManifest(from: evidenceURL.path)
+    if let manifest {
         let bindings = manifest.artifacts.filter { $0.kind == "test.reliability.binding" }
         let resetReceipts = manifest.artifacts.filter { $0.kind == "test.reliability.reset-receipt" }
         if bindings.isEmpty || resetReceipts.isEmpty {
@@ -886,17 +1096,88 @@ private func validateReliabilityReceiptEvidence(
     } else {
         issues.append("receipt_manifest_missing")
     }
+    let terminalFailure = reliabilityHarnessTerminalFailure(in: evidenceURL)
+    let identityChain = validateTritonTestReliabilityIdentityChainV2(
+        evidenceURL: evidenceURL,
+        descriptor: terminalFailure.status.map { terminalStatus in
+            makeTritonTestReliabilityIdentityChainDescriptor(
+                receiptSha256: receiptSha256,
+                legacyReceiptDigest: receiptDigest,
+                targetBindingDigest: receipt.target.bindingDigest,
+                flow: flow,
+                slot: slot,
+                terminalStatus: terminalStatus,
+                outcomeMatched: reliabilityHarnessOutcomeMatches(
+                    flow: flow,
+                    terminalStatus: terminalStatus,
+                    actualFailureType: terminalFailure.failure?.type
+                )
+            )
+        },
+        manifest: manifest
+    )
+    issues.append(contentsOf: identityChain.issues)
+    if flow.classification == .negativeControl {
+        if terminalFailure.status != .failed ||
+            terminalFailure.failure?.type != flow.expectedFailureType {
+            issues.append("negative_control_failure_type_mismatch")
+        }
+    }
     return ReliabilityHarnessEvidenceValidation(
         resetEvidenceID: reset?.resetEvidenceID,
+        identityChainState: identityChain.state,
         issues: issues
     )
+}
+
+private func reliabilityHarnessOutcomeMatches(
+    flow: TKTestReliabilityFrozenFlow,
+    terminalStatus: TKTestRunStatus?,
+    actualFailureType: String?
+) -> Bool {
+    if flow.expectedOutcome == "passed" {
+        return terminalStatus == .passed && actualFailureType == nil
+    }
+    return terminalStatus == .failed && actualFailureType == flow.expectedFailureType
+}
+
+private func reliabilityHarnessTerminalFailure(
+    in evidenceURL: URL
+) -> (status: TKTestRunStatus?, failure: TKTestRunFailure?) {
+    guard let manifest = try? readEvidenceManifest(from: evidenceURL.path),
+          let eventsPath = manifest.run?.eventsPath,
+          let eventsURL = try? reliabilityHarnessContainedEvidenceURL(
+              root: evidenceURL,
+              relativePath: eventsPath
+          ),
+          reliabilityHarnessRegularFile(at: eventsURL),
+          let data = try? Data(contentsOf: eventsURL),
+          let parsed = try? TKTestRunEventLogParser().parse(data) else {
+        return (nil, nil)
+    }
+    let status = parsed.summary.status
+    return (
+        status,
+        reliabilityTerminalFailure(from: parsed.events, status: status)?.failure
+    )
+}
+
+private func reliabilityHarnessRegularFile(at url: URL) -> Bool {
+    var isDirectory = ObjCBool(false)
+    guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
+          !isDirectory.boolValue,
+          (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) == nil else {
+        return false
+    }
+    return true
 }
 
 private func appendReliabilityHarnessArtifacts(
     evidenceURL: URL,
     bindingBytes: Int,
     resetBytes: Int,
-    target: String
+    identityChainBytes: Int,
+    runtimeTarget: TKTargetSummary
 ) throws {
     let manifestURL = evidenceURL.appendingPathComponent("manifest.json")
     let manifestData = try Data(contentsOf: manifestURL)
@@ -909,7 +1190,7 @@ private func appendReliabilityHarnessArtifacts(
             bytes: bindingBytes,
             scope: "private",
             source: "reliability-harness",
-            target: target
+            target: runtimeTarget.id
         ),
         TKEvidenceArtifact(
             kind: "test.reliability.reset-receipt",
@@ -918,9 +1199,19 @@ private func appendReliabilityHarnessArtifacts(
             bytes: resetBytes,
             scope: "private",
             source: "reliability-harness",
-            target: target
+            target: runtimeTarget.id
+        ),
+        TKEvidenceArtifact(
+            kind: "test.reliability.identity-chain-v2",
+            path: "reliability/identity-chain-v2.json",
+            contentType: "application/json",
+            bytes: identityChainBytes,
+            scope: "private",
+            source: "reliability-harness",
+            target: runtimeTarget.id
         ),
     ]
+    let artifacts = manifest.artifacts + additions
     let updated = TKEvidenceManifest(
         ok: manifest.ok,
         partial: manifest.partial,
@@ -930,7 +1221,7 @@ private func appendReliabilityHarnessArtifacts(
         note: manifest.note,
         createdAt: manifest.createdAt,
         output: manifest.output,
-        artifacts: manifest.artifacts + additions,
+        artifacts: artifacts,
         primaryArtifact: manifest.primaryArtifact,
         primaryArtifacts: manifest.primaryArtifacts,
         skipped: manifest.skipped,
@@ -969,6 +1260,39 @@ private func reliabilityHarnessContainedEvidenceURL(root: URL, relativePath: Str
         throw TKTestReliabilityHarnessError.invalidReceipt
     }
     return candidate
+}
+
+/// A receipt root permits one active sample at a time, regardless of flow or
+/// slot. The lease is deliberately fail-closed: normal returns remove only the
+/// empty directory this invocation created, while a crash leaves it behind for
+/// explicit operator inspection rather than silently allowing concurrent
+/// collection against the same Simulator.
+private struct TKTestReliabilityCollectionLease {
+    let url: URL
+
+    func release() {
+        _ = url.path.withCString { path in
+            rmdir(path)
+        }
+    }
+}
+
+private func claimReliabilityHarnessCollectionLease(
+    root: URL
+) throws -> TKTestReliabilityCollectionLease {
+    let leaseURL = root
+        .appendingPathComponent(".reliability-active-sample", isDirectory: true)
+        .standardizedFileURL
+    guard leaseURL.path.hasPrefix(root.path + "/") else {
+        throw TKTestReliabilityHarnessError.invalidReceipt
+    }
+    let created = leaseURL.path.withCString { path in
+        mkdir(path, S_IRWXU)
+    }
+    guard created == 0 else {
+        throw TKTestReliabilityHarnessError.collectionBusy
+    }
+    return TKTestReliabilityCollectionLease(url: leaseURL)
 }
 
 /// Only the final slot directory is the ownership lease. `mkdir` makes that
@@ -1088,6 +1412,10 @@ private func reliabilityHarnessIdentifier(_ value: String) -> Bool {
 
 private func reliabilityHarnessDigest(_ value: String) -> Bool {
     value.range(of: #"^[0-9a-f]{16}$"#, options: .regularExpression) != nil
+}
+
+private func reliabilityReceiptSHA256(_ data: Data) -> String {
+    SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
 }
 
 private func writeReliabilityHarnessExclusive(_ data: Data, to url: URL) throws {
