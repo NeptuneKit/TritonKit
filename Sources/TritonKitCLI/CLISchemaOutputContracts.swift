@@ -1070,7 +1070,7 @@ func webLaunchPlanOutputContract() -> TKCommandOutputContract {
             ("discovery.transportPriority", "[String]", true, "Real-device transport priority, default usb > bonjour > manual"),
             ("discovery.registry", "String", true, "Target registry ownership; serve-owned by default"),
             ("discovery.targetRegistryEndpoint", "String", true, "Readonly HTTP registry endpoint consumed by Web"),
-            ("discovery.managedServeHost", "String", true, "Host bind address used when Web bridge auto-starts triton serve; 0.0.0.0 keeps real-device Debug runtimes reachable"),
+            ("discovery.managedServeHost", "String", true, "Loopback host bind address used when the readonly Web bridge auto-starts triton serve; it never opens a LAN-facing runtime server"),
             ("installCommand", "WebLaunchCommand?", false, "Optional npm install command"),
             ("command", "WebLaunchCommand", true, "npm run dev command in dev mode, or triton web packaged server command in packaged mode"),
             ("environment", "[String:String]", true, "Environment overrides passed to child processes"),

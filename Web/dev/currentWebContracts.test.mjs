@@ -158,3 +158,10 @@ test("keeps browser device surfaces free of Web write dispatch", () => {
   assert.match(bridge, /web_host_input_readonly/);
   assert.match(bridge, /web_node_property_readonly/);
 });
+
+test("keeps the Web-managed Triton server loopback-only", () => {
+  const tritonServe = readFileSync(new URL("./ios-bridge/tritonServe.mjs", import.meta.url), "utf8");
+
+  assert.match(tritonServe, /defaultManagedTritonServeHost = "127\.0\.0\.1"/);
+  assert.doesNotMatch(tritonServe, /process\.env\.TRITONKIT_WEB_MANAGED_SERVE_HOST/);
+});

@@ -13,8 +13,8 @@ import {
   pngBytes,
 } from "./ios-bridge/testSupport.mjs";
 
-test("managed Triton serve binds all interfaces for real-device Debug runtime access", () => {
-  assert.equal(getManagedTritonServeBindHost(), "0.0.0.0");
+test("managed Triton serve stays loopback-only for the readonly Web bridge", () => {
+  assert.equal(getManagedTritonServeBindHost(), "127.0.0.1");
 });
 
 test("rejects iOS real-device Web input without invoking an App runtime", async () => {

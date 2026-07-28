@@ -58,8 +58,8 @@ struct WebCommandTests {
         #expect(plan.discovery.transportPriority == ["usb", "bonjour", "manual"])
         #expect(plan.discovery.registry == "serve-owned")
         #expect(plan.discovery.targetRegistryEndpoint == "http://127.0.0.1:19421/web/target-registry")
-        #expect(plan.discovery.managedServeHost == "0.0.0.0")
-        #expect(plan.environment["TRITONKIT_WEB_MANAGED_SERVE_HOST"] == "0.0.0.0")
+        #expect(plan.discovery.managedServeHost == "127.0.0.1")
+        #expect(plan.environment["TRITONKIT_WEB_MANAGED_SERVE_HOST"] == "127.0.0.1")
     }
 
     @Test("web command escape hatches narrow automatic discovery")

@@ -294,7 +294,7 @@ func makeWebAutoDiscoveryPlan(options: WebAutoDiscoveryOptions) -> WebAutoDiscov
         transportPriority: priority,
         registry: "serve-owned",
         targetRegistryEndpoint: "http://127.0.0.1:19421/web/target-registry",
-        managedServeHost: "0.0.0.0"
+        managedServeHost: "127.0.0.1"
     )
 }
 

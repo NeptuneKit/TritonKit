@@ -51,7 +51,7 @@ export function webHostRuntimeError(platform, options, error, action) {
       code: runtimeMirror ? "app_runtime_unavailable" : `web_host_${action}_failed`,
       message: error instanceof Error ? error.message : String(error),
       hint: runtimeMirror
-        ? "Start `triton serve --host 0.0.0.0 --port 19421`, set the Debug App TRITON_HOST to this Mac's LAN IP, then retry the App runtime mirror."
+        ? "Triton Web does not auto-start a LAN-facing runtime server; use an explicit approved CLI/HTTP device workflow."
         : "Verify the selected host target is ready and the platform screenshot/input command is supported.",
     },
   };
