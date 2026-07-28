@@ -80,6 +80,34 @@ struct TKTestRunExecutionContext {
     }
 }
 
+struct TKTestRunPublishedScreenshotMetadata: Codable, Equatable {
+    let format: String
+    let width: Double
+    let height: Double
+    let scale: Double
+    let dataRef: String?
+    let imagePath: String
+    let bytes: Int
+    let sourceFormat: String
+}
+
+func testRunPublishedScreenshotMetadata(
+    runtimeScreenshot: TKScreenshotResponse,
+    artifactData: Data,
+    imagePath: String
+) -> TKTestRunPublishedScreenshotMetadata {
+    TKTestRunPublishedScreenshotMetadata(
+        format: "png",
+        width: runtimeScreenshot.width,
+        height: runtimeScreenshot.height,
+        scale: runtimeScreenshot.scale,
+        dataRef: nil,
+        imagePath: imagePath,
+        bytes: artifactData.count,
+        sourceFormat: runtimeScreenshot.format.lowercased()
+    )
+}
+
 struct TKTestRunVLMGroundingOutcome: Equatable {
     let response: TKVLMGroundResponse
 }
@@ -1376,7 +1404,11 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
                 outputPath: screenshotPath
             )
             let metadataPath = "debug/\(step.id)-failure-screenshot.json"
-            let metadataData = try prettyEncodedData(screenshot)
+            let metadataData = try prettyEncodedData(testRunPublishedScreenshotMetadata(
+                runtimeScreenshot: screenshot,
+                artifactData: artifactData,
+                imagePath: screenshotPath
+            ))
             try writeTestRunArtifact(artifactData, relativePath: screenshotPath, evidenceDirectory: context.evidenceDirectory)
             try writeTestRunArtifact(
                 metadataData,
@@ -1415,7 +1447,11 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
         let hierarchyData = try await runtime.client.latestHierarchyData()
         let geometryData = try await runtime.client.request(type: "geometry")
         let geometry = try JSONDecoder().decode(TKGeometryResponse.self, from: geometryData)
-        let metadataData = try prettyEncodedData(screenshot)
+        let metadataData = try prettyEncodedData(testRunPublishedScreenshotMetadata(
+            runtimeScreenshot: screenshot,
+            artifactData: artifactData,
+            imagePath: screenshotPath
+        ))
 
         try writeTestRunArtifact(artifactData, relativePath: screenshotPath, evidenceDirectory: context.evidenceDirectory)
         try writeTestRunArtifact(
