@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（149 条当前 worktree 可见记录；SP-149 待集成后统一做连续编号验证；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（151/151 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-07-28
 
@@ -64,10 +64,11 @@
 | 已完成（本地） | [SP-144-reliability-receipt-anchor](./SP-144-reliability-receipt-anchor/README.md) | 为 receipt-backed sample/report 增加 operator-owned SHA-256 expected anchor，阻断 root 内完整 receipt 的自洽替换 | 纯离线 BDD/TDD 与 release build 已完成；不宣称签名、远端不可抵赖、hostile filesystem、真实 reset/runtime identity 或 live sampling |
 | 已完成（本地） | [SP-145-private-identity-chain-v2](./SP-145-private-identity-chain-v2/README.md) | 基于 SP-144 root 外 anchor，记录并核验每 slot 的私有 evidence identity chain，并输出安全 aggregate | 仅离线 consistency/漂移检测；不写采样器，不主张真实 reset/App/runtime proof，也不触碰设备/服务 |
 | 已完成（本地） | [SP-146-stage1-metric-contract](./SP-146-stage1-metric-contract/README.md) | 已将 Stage 1A 的 60 supported ECR/ORR 与 Stage 1B 的 61 receipt/control integrity、FER 以 additive public contract 区分 | 纯离线合同/合成 evidence、release schema 与 focused tests 已完成；真实采样仍需 dedicated environment 授权 |
+| 已完成（本地） | [SP-147-schema-fact-source-mainline](./SP-147-schema-fact-source-mainline/README.md) | `device` / `sim app-console` machine-readable schema 已按 parser 与 host DTO 修复 direct child、argument、output/recovery contract | 已合入 SP-151；不扩 runtime/device/server |
+| 已完成（本地） | [SP-148-schema-placeholder-tokens](./SP-148-schema-placeholder-tokens/README.md) | `reliability-sample` schema 同时保留 receipt anchor 和完整 `<canonical>` argv token | 已合入 SP-151；不改 runner、server、设备或真实采样 |
+| 已完成（本地） | [SP-149-issue-166-evidence-metadata-contract](./SP-149-issue-166-evidence-metadata-contract/README.md) | #166 follow-up：`/screenshot` normalizer failure 保留 `artifact_write_failed`，test-run metadata 只描述已发布 PNG、没有旧 runtime payload/ref | 已合入 SP-151；不启动服务/设备、不改 #164 |
 | 已完成（本地） | [SP-150-reliability-failure-recovery-semantics](./SP-150-reliability-failure-recovery-semantics/README.md) | Stage 1 gate 已以 validated plan 绑定 terminal failure/recovery，阻断跨步骤与 generic/unknown 伪解释 | 纯离线 TDD、81 项关联回归和 release build 已通过；不改 runner taxonomy、anchor/identity、service/device 或 #164 |
-| 已完成（本地） | [SP-147-schema-fact-source-mainline](./SP-147-schema-fact-source-mainline/README.md) | `device` / `sim app-console` machine-readable schema 已按当前 parser 与 host DTO 修复 direct child、argument、output/recovery contract | 待主控整合；不扩 runtime/device/server，SP-142～146 缺失仍由其真实 space 补齐 |
-| 已完成（本地） | [SP-148-schema-placeholder-tokens](./SP-148-schema-placeholder-tokens/README.md) | `reliability-sample` 的 schema usage/example 以完整 `<canonical>` argv token 表示精确 target，agent 可替换且不破坏 canonical runtime target 语义 | 基于 SP-147 独立 checkpoint；不改 runner、server、设备或真实采样；未来与 SP-143～146 reliability 链整合时需做同文件面审查 |
-| 已完成（本地） | [SP-149-issue-166-evidence-metadata-contract](./SP-149-issue-166-evidence-metadata-contract/README.md) | #166 follow-up：`/screenshot` normalizer failure 保留 `artifact_write_failed`，test-run metadata 只描述已发布 PNG、没有旧 runtime payload/ref | 纯离线 TDD 与 release build 已通过，不启动服务/设备、不改 #164；仅本地 checkpoint，待授权集成 |
+| 已完成（本地） | [SP-151-trusted-baseline-integration](./SP-151-trusted-baseline-integration/README.md) | SP-142～150 已汇集到唯一隔离 integration branch；离线契约、release build 与 docs gate 均已通过 | 未改 `main`、未触碰 #164、未启动 server/Simulator/Xcode/设备或真实 test run；真实 sampling 与主线合并仍需独立授权 |
 | 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
@@ -103,6 +104,7 @@
 | `SP-147-schema-fact-source-mainline` | `feat/SP-147-schema-fact-source-mainline` | `../TritonKit-worktrees/SP-147-schema-fact-source-mainline/` | `main@d2578089` | CLI schema fact-source repair 已在隔离 scratch 验证；待主控集成，未触碰 runtime/device/server，也未创建 SP-142～146 占位目录 |
 | `SP-148-schema-placeholder-tokens` | `feat/SP-148-schema-placeholder-tokens` | `../TritonKit-worktrees/SP-148-schema-placeholder-tokens/` | `SP-147@98110f60` | 完整 argv placeholder schema 修复已在隔离 scratch 验证；不改变 reliability runner，SP-143～146 同文件面在未来整合前需审查 |
 | `SP-149-issue-166-evidence-metadata-contract` | `feat/SP-149-issue-166-evidence-metadata-contract` | `../TritonKit-worktrees/SP-149-issue-166-evidence-metadata-contract/` | `main@d2578089` | #166 metadata/error follow-up；纯函数与 fake-fixture 验证，未启动服务/设备，不修改 #164 WIP |
+| `SP-151-trusted-baseline-integration` | `feat/SP-151-trusted-baseline-integration` | `../TritonKit-worktrees/SP-151-trusted-baseline-integration/` | `main@d2578089` | 已合并 SP-142、SP-143～146、SP-147～150；Swift 81+187、Web 21/build、release schema 与 docs gate 均通过，不改 main、不触碰 #164 或真实环境 |
 
 ## 维护规则
 

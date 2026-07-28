@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-07-28
-> 覆盖范围：150/150 个已存在 space
+> 覆盖范围：151/151 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,9 +17,9 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 150/150 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 150/150 | 每条记录链接到现有 space README |
-| 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～150 已是规范目录 |
+| 编号登记 | 151/151 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 151/151 | 每条记录链接到现有 space README |
+| 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～151 已是规范目录 |
 
 ## Space 登记表
 
@@ -171,7 +171,8 @@
 | `SP-144-reliability-receipt-anchor` | [`SP-144-reliability-receipt-anchor`](./SP-144-reliability-receipt-anchor/README.md) | 已完成（本地） | 规范目录；operator/CI 在 receipt root 外保存 SHA-256，sample/report 据此拒绝 root 内完整 receipt 替换；不涉及签名、runtime identity 或真实采样 |
 | `SP-145-private-identity-chain-v2` | [`SP-145-private-identity-chain-v2`](./SP-145-private-identity-chain-v2/README.md) | 已完成（本地） | 规范目录；以 SP-144 root 外 receipt SHA-256 为锚，验证每 slot 的私有 evidence identity chain 与安全 aggregate；不宣称真实 reset/App/runtime proof |
 | `SP-146-stage1-metric-contract` | [`SP-146-stage1-metric-contract`](./SP-146-stage1-metric-contract/README.md) | 已完成（本地） | 规范目录；receipt-backed report 已增量区分 60 supported 的 Stage 1A 与 61 receipt/control 的 Stage 1B；纯离线，不启动 runtime/设备/server |
+| `SP-147-schema-fact-source-mainline` | [`SP-147-schema-fact-source-mainline`](./SP-147-schema-fact-source-mainline/README.md) | 已完成（本地） | 规范目录；CLI schema fact-source 已与实际 parser、host DTO 和 recovery output 对齐，未启动 runtime/device/server |
+| `SP-148-schema-placeholder-tokens` | [`SP-148-schema-placeholder-tokens`](./SP-148-schema-placeholder-tokens/README.md) | 已完成（本地） | 规范目录；reliability-sample schema 保留 receipt anchor，且以完整 `<canonical>` argv token 表示精确 target |
+| `SP-149-issue-166-evidence-metadata-contract` | [`SP-149-issue-166-evidence-metadata-contract`](./SP-149-issue-166-evidence-metadata-contract/README.md) | 已完成（本地） | 规范目录；#166 follow-up 收紧 `/screenshot` normalizer error 与 test-run published PNG metadata，不触碰 #164 或运行时 |
 | `SP-150-reliability-failure-recovery-semantics` | [`SP-150-reliability-failure-recovery-semantics`](./SP-150-reliability-failure-recovery-semantics/README.md) | 已完成（本地） | 规范目录；以 validated normalized plan 绑定 terminal failure/recovery，跨类型、generic/unknown failure 均 fail closed；纯离线，不启动 runtime/设备/server |
-| `SP-147-schema-fact-source-mainline` | [`SP-147-schema-fact-source-mainline`](./SP-147-schema-fact-source-mainline/README.md) | 已完成（本地） | 规范目录；基于 `main@d2578089` 重做 CLI schema fact-source 修复，未启动 runtime/device/server；SP-142～146 待其真实 space 进入主线 |
-| `SP-148-schema-placeholder-tokens` | [`SP-148-schema-placeholder-tokens`](./SP-148-schema-placeholder-tokens/README.md) | 已完成（本地） | 规范目录；修复 reliability-sample schema 模板的 canonical target placeholder token，不改变 runner 或设备行为；SP-142～146 仍待其真实 space 进入主线 |
-| `SP-149-issue-166-evidence-metadata-contract` | [`SP-149-issue-166-evidence-metadata-contract`](./SP-149-issue-166-evidence-metadata-contract/README.md) | 已完成（本地） | 规范目录；#166 follow-up 收紧 `/screenshot` normalizer error 与 test-run published PNG metadata，不触碰 #164 或运行时；待授权集成 |
+| `SP-151-trusted-baseline-integration` | [`SP-151-trusted-baseline-integration`](./SP-151-trusted-baseline-integration/README.md) | 已完成（本地） | 规范目录；已在隔离 worktree 汇集 SP-142～150 并完成离线验证与 docs 收口；不改 main、不触碰 #164 或真实运行环境 |
