@@ -92,7 +92,48 @@ struct TestReliabilityCollectionRuntimeTests {
             initialStateID: "private-negative-state",
             resetRecipeID: "private-negative-reset-recipe",
             slot: 1,
-            expectedOutcome: "nonpassed"
+            expectedOutcome: "nonpassed",
+            expectedFailureType: "assert_visible_failed"
+        )
+        let invalidFailureTypeControl = TKTestReliabilityCollectionNegativeControl(
+            flowID: valid.negativeControls[0].flowID,
+            plan: valid.negativeControls[0].plan,
+            expectedPlanDigest: valid.negativeControls[0].expectedPlanDigest,
+            initialStateID: valid.negativeControls[0].initialStateID,
+            resetRecipeID: valid.negativeControls[0].resetRecipeID,
+            slot: 1,
+            expectedOutcome: "nonpassed",
+            expectedFailureType: "launch_failed"
+        )
+        let writePlan = try fixture.plan(
+            name: "private-negative-write",
+            imported: true,
+            includeWritePrimitive: true
+        )
+        let writePrimitiveControl = TKTestReliabilityCollectionNegativeControl(
+            flowID: valid.negativeControls[0].flowID,
+            plan: writePlan.url.path,
+            expectedPlanDigest: writePlan.digest,
+            initialStateID: valid.negativeControls[0].initialStateID,
+            resetRecipeID: valid.negativeControls[0].resetRecipeID,
+            slot: 1,
+            expectedOutcome: "nonpassed",
+            expectedFailureType: "assert_visible_failed"
+        )
+        let optionalLaunchPlan = try fixture.plan(
+            name: "private-negative-optional-launch",
+            imported: true,
+            optionalLaunch: true
+        )
+        let optionalLaunchControl = TKTestReliabilityCollectionNegativeControl(
+            flowID: valid.negativeControls[0].flowID,
+            plan: optionalLaunchPlan.url.path,
+            expectedPlanDigest: optionalLaunchPlan.digest,
+            initialStateID: valid.negativeControls[0].initialStateID,
+            resetRecipeID: valid.negativeControls[0].resetRecipeID,
+            slot: 1,
+            expectedOutcome: "nonpassed",
+            expectedFailureType: "assert_visible_failed"
         )
 
         let variants = [
@@ -106,6 +147,9 @@ struct TestReliabilityCollectionRuntimeTests {
             fixture.collection(from: valid, flows: [valid.flows[0], valid.flows[1], digestDrift]),
             fixture.collection(from: valid, negativeControls: []),
             fixture.collection(from: valid, negativeControls: [reusedSupportedPlanControl]),
+            fixture.collection(from: valid, negativeControls: [invalidFailureTypeControl]),
+            fixture.collection(from: valid, negativeControls: [writePrimitiveControl]),
+            fixture.collection(from: valid, negativeControls: [optionalLaunchControl]),
         ]
 
         for (index, variant) in variants.enumerated() {
@@ -271,7 +315,8 @@ private final class ReliabilityCollectionFixture {
             initialStateID: "private-negative-state",
             resetRecipeID: "private-negative-reset-recipe",
             slot: 1,
-            expectedOutcome: "nonpassed"
+            expectedOutcome: "nonpassed",
+            expectedFailureType: "assert_visible_failed"
         )
         return TKTestReliabilityCollection(
             schemaVersion: 1,
@@ -305,7 +350,12 @@ private final class ReliabilityCollectionFixture {
         return url
     }
 
-    func plan(name: String, imported: Bool) throws -> (url: URL, digest: String) {
+    func plan(
+        name: String,
+        imported: Bool,
+        includeWritePrimitive: Bool = false,
+        optionalLaunch: Bool = false
+    ) throws -> (url: URL, digest: String) {
         let url = root.appendingPathComponent("\(name).tritontest.yaml")
         let provenance = imported ? """
         provenance:
@@ -318,6 +368,16 @@ private final class ReliabilityCollectionFixture {
             digestAlgorithm: fnv1a64
             digest: 0123456789abcdef
         """ : ""
+        let writePrimitive = includeWritePrimitive ? """
+          - input:
+              text: Private write primitive
+        """ : ""
+        let launchStep = optionalLaunch ? """
+          - optional: true
+            launch: {}
+        """ : """
+          - launch: {}
+        """
         let yaml = """
         version: 1
         name: \(name)
@@ -333,7 +393,8 @@ private final class ReliabilityCollectionFixture {
             intervalMs: 250
         \(provenance)
         steps:
-          - launch: {}
+        \(launchStep)
+        \(writePrimitive)
           - assertVisible:
               text: Private Visible Label
         """

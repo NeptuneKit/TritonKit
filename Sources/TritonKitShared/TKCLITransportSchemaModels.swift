@@ -202,6 +202,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
             "invalid_reliability_sample_request",
             "invalid_reliability_reset_receipt",
             "reliability_reservation_exists",
+            "reliability_collection_busy",
             "reliability_slot_already_claimed",
         ].contains(failureCode) {
             categories.append("diagnose")

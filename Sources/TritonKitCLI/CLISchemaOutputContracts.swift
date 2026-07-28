@@ -223,6 +223,8 @@ func testReliabilityOutputContract() -> TKCommandOutputContract {
             ("ok", "Bool", true, "Whether the offline report was generated; gate status is reported separately"),
             ("schemaVersion", "Int", true, "Report schema version; always 1"),
             ("kind", "String", true, "Stable kind; triton.test.reliability-report"),
+            ("gateAuthority", "String", true, "legacy-diagnostic or receipt-backed; only receipt-backed reports may become a Stage 1 gate verdict"),
+            ("eligibleForStage1Gate", "Bool", true, "True only for a receipt-backed report; a legacy --samples report is diagnostic and remains blocked"),
             ("thresholds", "TKTestReliabilityThresholds", true, "Exact thresholds used to calculate the reported gate"),
             ("evidenceCompleteness", "TKTestReliabilityMetric", true, "Completeness over private sample evidence bundles"),
             ("failureExplainability", "TKTestReliabilityMetric", true, "Measured only when one or more samples have a non-passed terminal status"),
@@ -295,7 +297,7 @@ func testReliabilitySampleOutputContract() -> TKCommandOutputContract {
         kind: "test-reliability-sample",
         model: "TKTestReliabilitySampleResponse",
         fields: schemaContractFields([
-            ("ok", "Bool", true, "Whether the terminal runner status matched the frozen expected outcome"),
+            ("ok", "Bool", true, "Whether the terminal runner status and frozen failure taxonomy matched the receipt contract"),
             ("schemaVersion", "Int", true, "Response schema version; always 1"),
             ("kind", "String", true, "Stable kind; triton.test.reliability-sample"),
             ("flowID", "String", true, "Opaque receipt flow alias such as flow_001; never a source path or selector"),
@@ -308,7 +310,9 @@ func testReliabilitySampleOutputContract() -> TKCommandOutputContract {
             ("evidenceRelativePath", "String", true, "Receipt-relative private evidence path only"),
             ("runStatus", "String", true, "Terminal runner status"),
             ("expectedOutcome", "String", true, "Frozen passed or nonpassed contract"),
-            ("outcomeMatched", "Bool", true, "Whether terminal status matches the frozen classification"),
+            ("expectedFailureType", "String?", false, "Frozen deterministic assertion failure type for a negative control; omitted for supported flows"),
+            ("actualFailureType", "String?", false, "Runner terminal failure type; omitted when no terminal failure type is recorded, including an unexpected negative-control pass"),
+            ("outcomeMatched", "Bool", true, "Whether terminal status and failure taxonomy match the frozen classification"),
         ])
     )
 }

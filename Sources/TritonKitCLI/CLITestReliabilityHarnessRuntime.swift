@@ -18,6 +18,7 @@ struct TKTestReliabilityFrozenFlow: Codable, Equatable {
     let flowID: String
     let classification: TKTestReliabilityFrozenClassification
     let expectedOutcome: String
+    let expectedFailureType: String?
     let normalizedPlan: TKTestNormalizedPlan
     let planDigest: String
     let executionIdentityDigest: String
@@ -90,6 +91,7 @@ struct TKTestReliabilitySampleBinding: Codable, Equatable {
     let flowID: String
     let classification: TKTestReliabilityFrozenClassification
     let expectedOutcome: String
+    let expectedFailureType: String?
     let slot: Int
     let target: TKTestReliabilityCollectionTarget
     let planDigest: String
@@ -110,6 +112,7 @@ struct TKTestReliabilitySampleBinding: Codable, Equatable {
         self.flowID = flow.flowID
         self.classification = flow.classification
         self.expectedOutcome = flow.expectedOutcome
+        self.expectedFailureType = flow.expectedFailureType
         self.slot = slot.slot
         self.target = target
         self.planDigest = flow.planDigest
@@ -218,6 +221,8 @@ struct TKTestReliabilitySampleResponse: Codable, Equatable {
     let evidenceRelativePath: String
     let runStatus: TKTestRunStatus
     let expectedOutcome: String
+    let expectedFailureType: String?
+    let actualFailureType: String?
     let outcomeMatched: Bool
 
     init(
@@ -225,10 +230,17 @@ struct TKTestReliabilitySampleResponse: Codable, Equatable {
         slot: TKTestReliabilityFrozenSlot,
         targetBindingDigest: String,
         resetEvidenceDigest: String,
-        runStatus: TKTestRunStatus
+        runStatus: TKTestRunStatus,
+        actualFailureType: String?
     ) {
         let expectedPassed = flow.expectedOutcome == "passed"
-        let outcomeMatched = expectedPassed ? runStatus == .passed : runStatus != .passed
+        let outcomeMatched: Bool
+        if expectedPassed {
+            outcomeMatched = runStatus == .passed && actualFailureType == nil
+        } else {
+            outcomeMatched = runStatus == .failed
+                && actualFailureType == flow.expectedFailureType
+        }
         self.ok = outcomeMatched
         self.schemaVersion = 1
         self.kind = "triton.test.reliability-sample"
@@ -242,6 +254,8 @@ struct TKTestReliabilitySampleResponse: Codable, Equatable {
         self.evidenceRelativePath = slot.evidenceRelativePath
         self.runStatus = runStatus
         self.expectedOutcome = flow.expectedOutcome
+        self.expectedFailureType = flow.expectedFailureType
+        self.actualFailureType = actualFailureType
         self.outcomeMatched = outcomeMatched
     }
 }
@@ -254,6 +268,7 @@ enum TKTestReliabilityHarnessError: Error, Equatable {
     case confirmationRequired
     case invalidSampleRequest
     case invalidResetReceipt
+    case collectionBusy
     case slotAlreadyClaimed
     case runnerFailed
 }
@@ -302,6 +317,12 @@ func testReliabilityHarnessErrorDetail(_ error: TKTestReliabilityHarnessError) -
             message: "The reset receipt does not attest to this exact frozen sample binding.",
             hint: "Create a verified reset receipt for the same receipt, flow, slot, target binding, initial state, and reset recipe."
         )
+    case .collectionBusy:
+        return TKCLIErrorDetail(
+            code: "reliability_collection_busy",
+            message: "Another reliability sample holds the collection-wide execution lease.",
+            hint: "Do not remove the active lease or reuse a slot. Wait for the owner to finish; after an interrupted run, inspect the private receipt root before any operator-directed recovery."
+        )
     case .slotAlreadyClaimed:
         return TKCLIErrorDetail(
             code: "reliability_slot_already_claimed",
@@ -348,6 +369,7 @@ func reserveTritonTestReliabilityCollection(
                 flowID: String(format: "flow_%03d", index + 1),
                 classification: .supported,
                 expectedOutcome: "passed",
+                expectedFailureType: nil,
                 planPath: flow.plan,
                 expectedPlanDigest: flow.expectedPlanDigest,
                 initialStateID: flow.initialStateID,
@@ -364,6 +386,7 @@ func reserveTritonTestReliabilityCollection(
             flowID: "negative_001",
             classification: .negativeControl,
             expectedOutcome: negative.expectedOutcome,
+            expectedFailureType: negative.expectedFailureType,
             planPath: negative.plan,
             expectedPlanDigest: negative.expectedPlanDigest,
             initialStateID: negative.initialStateID,
@@ -441,6 +464,8 @@ func runTritonTestReliabilitySample(
         flow: flow,
         slot: slot
     )
+    let collectionLease = try claimReliabilityHarnessCollectionLease(root: loaded.root)
+    defer { collectionLease.release() }
     let resolvedTarget: TKTargetSummary
     do {
         resolvedTarget = try await targetResolver.resolve(
@@ -506,7 +531,8 @@ func runTritonTestReliabilitySample(
             slot: slot,
             targetBindingDigest: loaded.receipt.target.bindingDigest,
             resetEvidenceDigest: fnv1a64Hex(resetData),
-            runStatus: execution.summary.status ?? (execution.ok ? .passed : .failed)
+            runStatus: execution.summary.status ?? (execution.ok ? .passed : .failed),
+            actualFailureType: execution.failure?.type
         )
     } catch {
         throw TKTestReliabilityHarnessError.runnerFailed
@@ -548,7 +574,7 @@ func buildTritonTestReliabilityReceiptReport(
         }
     }
 
-    let base = try buildTritonTestReliabilityReport(samples: samples, thresholds: thresholds)
+    let base = try buildTritonTestReliabilityReceiptReport(samples: samples, thresholds: thresholds)
     var issueCounts = base.issueCounts
     for (issue, count) in extraIssues {
         issueCounts[issue, default: 0] += count
@@ -562,6 +588,7 @@ func buildTritonTestReliabilityReceiptReport(
         blockerCodes: Array(Set(blockers)).sorted()
     )
     return TKTestReliabilityReport(
+        gateAuthority: base.gateAuthority,
         thresholds: base.thresholds,
         evidenceCompleteness: base.evidenceCompleteness,
         failureExplainability: base.failureExplainability,
@@ -657,6 +684,7 @@ private func freezeReliabilityFlow(
     flowID: String,
     classification: TKTestReliabilityFrozenClassification,
     expectedOutcome: String,
+    expectedFailureType: String?,
     planPath: String,
     expectedPlanDigest: String,
     initialStateID: String,
@@ -668,8 +696,12 @@ private func freezeReliabilityFlow(
           reliabilityHarnessIdentifier(initialStateID),
           reliabilityHarnessIdentifier(resetRecipeID),
           reliabilityHarnessDigest(expectedPlanDigest),
-          ((classification == .supported && expectedOutcome == "passed") ||
-            (classification == .negativeControl && expectedOutcome == "nonpassed")),
+          ((classification == .supported
+                && expectedOutcome == "passed"
+                && expectedFailureType == nil)
+            || (classification == .negativeControl
+                && expectedOutcome == "nonpassed"
+                && expectedFailureType != nil)),
           !slots.isEmpty else {
         throw TKTestReliabilityHarnessError.invalidCollectionReceiptInput
     }
@@ -677,6 +709,15 @@ private func freezeReliabilityFlow(
     let normalizedPlan = try validateTritonTestContract(yaml: yaml, inputPath: planPath)
     guard reliabilityHarnessTargetMatchesPlan(target, plan: normalizedPlan) else {
         throw TKTestReliabilityHarnessError.invalidCollectionReceiptInput
+    }
+    if classification == .negativeControl {
+        guard let expectedFailureType,
+              isTritonTestReliabilityDeterministicNegativeControl(
+                  plan: normalizedPlan,
+                  expectedFailureType: expectedFailureType
+              ) else {
+            throw TKTestReliabilityHarnessError.invalidCollectionReceiptInput
+        }
     }
     let normalizedData = try prettyEncodedData(normalizedPlan)
     let planDigest = fnv1a64Hex(normalizedData)
@@ -705,6 +746,7 @@ private func freezeReliabilityFlow(
         flowID: flowID,
         classification: classification,
         expectedOutcome: expectedOutcome,
+        expectedFailureType: expectedFailureType,
         normalizedPlan: normalizedPlan,
         planDigest: planDigest,
         executionIdentityDigest: executionIdentityDigest,
@@ -726,6 +768,14 @@ private func validateReliabilityFrozenFlowIdentities(
           Set(flows.map(\.executionIdentityDigest)).count == flows.count,
           flows.filter({ $0.classification == .supported }).allSatisfy({ $0.expectedOutcome == "passed" }),
           flows.filter({ $0.classification == .negativeControl }).allSatisfy({ $0.expectedOutcome == "nonpassed" }),
+          flows.filter({ $0.classification == .supported }).allSatisfy({ $0.expectedFailureType == nil }),
+          flows.filter({ $0.classification == .negativeControl }).allSatisfy({ flow in
+              guard let expectedFailureType = flow.expectedFailureType else { return false }
+              return isTritonTestReliabilityDeterministicNegativeControl(
+                  plan: flow.normalizedPlan,
+                  expectedFailureType: expectedFailureType
+              )
+          }),
           flows.filter({ $0.classification == .supported }).allSatisfy({ $0.slots.map(\.slot) == Array(1...20) }),
           flows.filter({ $0.classification == .negativeControl }).allSatisfy({ $0.slots.map(\.slot) == [1] }) else {
         throw TKTestReliabilityHarnessError.invalidCollectionReceiptInput
@@ -886,10 +936,48 @@ private func validateReliabilityReceiptEvidence(
     } else {
         issues.append("receipt_manifest_missing")
     }
+    if flow.classification == .negativeControl {
+        let terminalFailure = reliabilityHarnessTerminalFailure(in: evidenceURL)
+        if terminalFailure.status != .failed ||
+            terminalFailure.failure?.type != flow.expectedFailureType {
+            issues.append("negative_control_failure_type_mismatch")
+        }
+    }
     return ReliabilityHarnessEvidenceValidation(
         resetEvidenceID: reset?.resetEvidenceID,
         issues: issues
     )
+}
+
+private func reliabilityHarnessTerminalFailure(
+    in evidenceURL: URL
+) -> (status: TKTestRunStatus?, failure: TKTestRunFailure?) {
+    guard let manifest = try? readEvidenceManifest(from: evidenceURL.path),
+          let eventsPath = manifest.run?.eventsPath,
+          let eventsURL = try? reliabilityHarnessContainedEvidenceURL(
+              root: evidenceURL,
+              relativePath: eventsPath
+          ),
+          reliabilityHarnessRegularFile(at: eventsURL),
+          let data = try? Data(contentsOf: eventsURL),
+          let parsed = try? TKTestRunEventLogParser().parse(data) else {
+        return (nil, nil)
+    }
+    let status = parsed.summary.status
+    return (
+        status,
+        reliabilityTerminalFailure(from: parsed.events, status: status)?.failure
+    )
+}
+
+private func reliabilityHarnessRegularFile(at url: URL) -> Bool {
+    var isDirectory = ObjCBool(false)
+    guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
+          !isDirectory.boolValue,
+          (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) == nil else {
+        return false
+    }
+    return true
 }
 
 private func appendReliabilityHarnessArtifacts(
@@ -969,6 +1057,39 @@ private func reliabilityHarnessContainedEvidenceURL(root: URL, relativePath: Str
         throw TKTestReliabilityHarnessError.invalidReceipt
     }
     return candidate
+}
+
+/// A receipt root permits one active sample at a time, regardless of flow or
+/// slot. The lease is deliberately fail-closed: normal returns remove only the
+/// empty directory this invocation created, while a crash leaves it behind for
+/// explicit operator inspection rather than silently allowing concurrent
+/// collection against the same Simulator.
+private struct TKTestReliabilityCollectionLease {
+    let url: URL
+
+    func release() {
+        _ = url.path.withCString { path in
+            rmdir(path)
+        }
+    }
+}
+
+private func claimReliabilityHarnessCollectionLease(
+    root: URL
+) throws -> TKTestReliabilityCollectionLease {
+    let leaseURL = root
+        .appendingPathComponent(".reliability-active-sample", isDirectory: true)
+        .standardizedFileURL
+    guard leaseURL.path.hasPrefix(root.path + "/") else {
+        throw TKTestReliabilityHarnessError.invalidReceipt
+    }
+    let created = leaseURL.path.withCString { path in
+        mkdir(path, S_IRWXU)
+    }
+    guard created == 0 else {
+        throw TKTestReliabilityHarnessError.collectionBusy
+    }
+    return TKTestReliabilityCollectionLease(url: leaseURL)
 }
 
 /// Only the final slot directory is the ownership lease. `mkdir` makes that

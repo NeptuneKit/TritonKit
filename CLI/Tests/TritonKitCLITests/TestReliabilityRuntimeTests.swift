@@ -52,6 +52,145 @@ struct TestReliabilityRuntimeTests {
         #expect(!encoded.contains("fixture-login-home"))
     }
 
+    @Test("legacy samples remain diagnostic and cannot pass the Stage 1 gate")
+    func legacySamplesRemainDiagnosticAndCannotPassStage1Gate() throws {
+        let fixture = try ReliabilityEvidenceFixture()
+        defer { fixture.cleanup() }
+
+        let flows = [
+            ("legacy-flow-a", "legacy-plan-a"),
+            ("legacy-flow-b", "legacy-plan-b"),
+            ("legacy-flow-c", "legacy-plan-c"),
+        ]
+        var samples: [TKTestReliabilitySample] = []
+        for (flowID, planName) in flows {
+            for index in 0..<20 {
+                let evidence = try fixture.writeEvidence(
+                    runID: "\(flowID)-\(index)",
+                    planName: planName
+                )
+                samples.append(fixture.sample(flowID: flowID, evidence: evidence))
+            }
+        }
+        let negative = try fixture.writeEvidence(
+            runID: "legacy-negative",
+            planName: "legacy-negative-plan",
+            status: .failed,
+            failureType: "assert_visible_failed",
+            failureArtifactRefs: ["debug/step-001-ax.json"]
+        )
+        samples.append(fixture.sample(
+            flowID: "legacy-negative-control",
+            evidence: negative,
+            classification: .negativeControl
+        ))
+
+        let report = try buildTritonTestReliabilityReport(samples: samples)
+
+        #expect(report.evidenceCompleteness.rate == 1)
+        #expect(report.failureExplainability.rate == 1)
+        #expect(report.outcomeRepeatability.rate == 1)
+        #expect(report.gateAuthority == .legacyDiagnostic)
+        #expect(!report.eligibleForStage1Gate)
+        #expect(report.gate.status == .blocked)
+        #expect(report.gate.blockerCodes.contains("receipt_required"))
+    }
+
+    @Test("reliability rejects an observation that points screenshot at a declared artifact of the wrong kind")
+    func reliabilityRejectsObservationArtifactKindMismatch() throws {
+        let fixture = try ReliabilityEvidenceFixture()
+        defer { fixture.cleanup() }
+        let evidence = try fixture.writeEvidence(
+            runID: "observation-kind-mismatch",
+            observationScreenshotRef: "normalized-plan.json"
+        )
+
+        let report = try buildTritonTestReliabilityReport(
+            samples: [fixture.sample(flowID: "fixture-login-home", evidence: evidence)],
+            thresholds: TKTestReliabilityThresholds(
+                minimumSupportedFlows: 1,
+                minimumRunsPerFlow: 1,
+                minimumFailureSamples: 0
+            )
+        )
+
+        #expect(report.evidenceCompleteness.numerator == 0)
+        #expect(report.issueCounts["observation_artifact_kind_mismatch"] == 1)
+    }
+
+    @Test("reliability rejects an observation that borrows artifacts created for an earlier step")
+    func reliabilityRejectsObservationArtifactFromEarlierStep() throws {
+        let fixture = try ReliabilityEvidenceFixture()
+        defer { fixture.cleanup() }
+        let evidence = try fixture.writeEvidence(
+            runID: "observation-artifact-step-mismatch",
+            observationArtifactCreationStepIndex: 0
+        )
+
+        let report = try buildTritonTestReliabilityReport(
+            samples: [fixture.sample(flowID: "fixture-login-home", evidence: evidence)],
+            thresholds: TKTestReliabilityThresholds(
+                minimumSupportedFlows: 1,
+                minimumRunsPerFlow: 1,
+                minimumFailureSamples: 0
+            )
+        )
+
+        #expect(report.evidenceCompleteness.numerator == 0)
+        #expect(report.issueCounts["observation_artifact_step_mismatch"] == 1)
+    }
+
+    @Test("reliability rejects an observation whose artifact predates that step command")
+    func reliabilityRejectsObservationArtifactBeforeStepCommand() throws {
+        let fixture = try ReliabilityEvidenceFixture()
+        defer { fixture.cleanup() }
+        let evidence = try fixture.writeEvidence(
+            runID: "observation-artifact-before-command",
+            observationArtifactsBeforeCommand: true
+        )
+
+        let report = try buildTritonTestReliabilityReport(
+            samples: [fixture.sample(flowID: "fixture-login-home", evidence: evidence)],
+            thresholds: TKTestReliabilityThresholds(
+                minimumSupportedFlows: 1,
+                minimumRunsPerFlow: 1,
+                minimumFailureSamples: 0
+            )
+        )
+
+        #expect(report.evidenceCompleteness.numerator == 0)
+        #expect(report.issueCounts["observation_artifact_step_mismatch"] == 1)
+    }
+
+    @Test("reliability rejects a terminal failure that borrows an artifact from an earlier step")
+    func reliabilityRejectsTerminalFailureArtifactFromEarlierStep() throws {
+        let fixture = try ReliabilityEvidenceFixture()
+        defer { fixture.cleanup() }
+        let evidence = try fixture.writeEvidence(
+            runID: "failure-artifact-step-mismatch",
+            status: .failed,
+            failureType: "assert_visible_failed",
+            failureArtifactRefs: ["runtime-target.json"]
+        )
+
+        let report = try buildTritonTestReliabilityReport(
+            samples: [fixture.sample(
+                flowID: "fixture-negative-control",
+                evidence: evidence,
+                classification: .negativeControl
+            )],
+            thresholds: TKTestReliabilityThresholds(
+                minimumSupportedFlows: 0,
+                minimumRunsPerFlow: 0,
+                minimumFailureSamples: 1
+            )
+        )
+
+        #expect(report.evidenceCompleteness.numerator == 0)
+        #expect(report.failureExplainability.numerator == 0)
+        #expect(report.issueCounts["terminal_failure_artifact_step_mismatch"] == 1)
+    }
+
     @Test("report marks missing evidence and unexplained failures as incomplete")
     func reportMarksMissingEvidenceAndUnexplainedFailuresAsIncomplete() throws {
         let fixture = try ReliabilityEvidenceFixture()
@@ -127,7 +266,10 @@ struct TestReliabilityRuntimeTests {
                 minimumFailureSamples: 1
             )
         )
-        #expect(relaxed.gate.status == .passed)
+        #expect(relaxed.gateAuthority == .legacyDiagnostic)
+        #expect(!relaxed.eligibleForStage1Gate)
+        #expect(relaxed.gate.status == .blocked)
+        #expect(relaxed.gate.blockerCodes.contains("receipt_required"))
 
         let canonical = try buildTritonTestReliabilityReport(samplesPath: sampleSet.path)
         #expect(canonical.gate.status == .blocked)
@@ -884,7 +1026,9 @@ struct TestReliabilityRuntimeTests {
         let reserveSchema = try #require(schema.subcommands.first { $0.name == "reliability-reserve" })
         let sampleSchema = try #require(schema.subcommands.first { $0.name == "reliability-sample" })
         let contract = try #require(schema.outputContracts.first { $0.selector == "test.reliability" })
+        let sampleContract = try #require(schema.outputContracts.first { $0.selector == "test.reliability-sample" })
         let flowID = try #require(contract.fields.first { $0.name == "flows[].flowID" })
+        let actualFailureType = try #require(sampleContract.fields.first { $0.name == "actualFailureType" })
         let chineseHelp = try #require(chineseCommandHelps()["test"])
 
         #expect(subcommand.requiredOptions == [])
@@ -892,6 +1036,7 @@ struct TestReliabilityRuntimeTests {
         #expect(subcommand.outputSelectors == ["test.reliability"])
         #expect(reserveSchema.failureCodes.contains("reliability_reservation_exists"))
         #expect(sampleSchema.failureCodes.contains("reliability_sample_confirmation_required"))
+        #expect(sampleSchema.failureCodes.contains("reliability_collection_busy"))
         #expect(sampleSchema.requiresServer)
         #expect(sampleSchema.requiresTarget)
         #expect(sampleSchema.requiresConfirmation)
@@ -903,6 +1048,13 @@ struct TestReliabilityRuntimeTests {
         #expect(!schema.runtimeScope.contains("target required for reliability"))
         #expect(schema.runtimeScope.contains("already-running receipt-bound loopback server"))
         #expect(contract.fields.contains(where: { $0.name == "gate.blockerCodes" }))
+        #expect(contract.fields.contains(where: { $0.name == "gateAuthority" }))
+        #expect(contract.fields.contains(where: { $0.name == "eligibleForStage1Gate" }))
+        #expect(sampleContract.fields.contains(where: {
+            $0.name == "expectedFailureType" && !$0.required
+        }))
+        #expect(!actualFailureType.required)
+        #expect(actualFailureType.description.contains("unexpected negative-control pass"))
         #expect(flowID.description.contains("opaque"))
         #expect(chineseHelp.options.contains(where: { $0.0 == "reliability --samples <private.json>" }))
         #expect(chineseHelp.options.contains(where: { $0.0 == "reliability --collection-receipt <private.json>" }))
@@ -916,6 +1068,9 @@ struct TestReliabilityRuntimeTests {
         )) == Set(["diagnose"]))
         #expect(Set(TKCommandRecoveryCommand.recoveryCategories(
             forFailureCode: "reliability_slot_already_claimed"
+        )) == Set(["diagnose"]))
+        #expect(Set(TKCommandRecoveryCommand.recoveryCategories(
+            forFailureCode: "reliability_collection_busy"
         )) == Set(["diagnose"]))
         #expect(Set(TKCommandRecoveryCommand.recoveryCategories(
             forFailureCode: "test_reliability_sample_failed"
@@ -1103,11 +1258,16 @@ private struct ReliabilityEvidenceFixture {
         includeEventCount: Bool = true,
         includeObservationCount: Bool = true,
         emptyObservationArtifacts: Bool = false,
+        observationScreenshotRef: String? = nil,
+        observationAXRef: String? = nil,
+        observationHierarchyRef: String? = nil,
         includeObservationArtifactsInManifest: Bool = true,
         useRunRelativeEventRefs: Bool = false,
         normalizedPlanStepKind: String = "action",
         normalizedPlanStepType: String = "tap",
         eventStepType: String? = nil,
+        observationArtifactCreationStepIndex: Int = 1,
+        observationArtifactsBeforeCommand: Bool = false,
         failureStepIndex: Int? = nil,
         extraEventsBeforeFinish: [TKTestRunEvent] = []
     ) throws -> URL {
@@ -1145,9 +1305,9 @@ private struct ReliabilityEvidenceFixture {
         let observationArtifacts = emptyObservationArtifacts
             ? TKTestRunObservationArtifacts()
             : TKTestRunObservationArtifacts(
-                screenshot: eventReference("debug/step-001-before.png"),
-                ax: eventReference("debug/step-001-ax.json"),
-                hierarchy: eventReference("debug/step-001-hierarchy.json")
+                screenshot: eventReference(observationScreenshotRef ?? "debug/step-001-before.png"),
+                ax: eventReference(observationAXRef ?? "debug/step-001-ax.json"),
+                hierarchy: eventReference(observationHierarchyRef ?? "debug/step-001-hierarchy.json")
             )
         let candidate = TKTestRunScreenCandidate(
             screenshotSha256: "1111",
@@ -1178,10 +1338,34 @@ private struct ReliabilityEvidenceFixture {
             if recordedFailureStepIndex == 0, let failure {
                 events.append(.failureRecorded(runID: runID, stepIndex: 0, failure: failure, timestamp: timestamp))
             }
+            let observationArtifactEvents = [
+                TKTestRunEvent.artifactCreated(runID: runID, stepIndex: observationArtifactCreationStepIndex, kind: "screenshot", ref: eventReference("debug/step-001-before.png"), timestamp: timestamp),
+                TKTestRunEvent.artifactCreated(runID: runID, stepIndex: observationArtifactCreationStepIndex, kind: "accessibility", ref: eventReference("debug/step-001-ax.json"), timestamp: timestamp),
+                TKTestRunEvent.artifactCreated(runID: runID, stepIndex: observationArtifactCreationStepIndex, kind: "hierarchy", ref: eventReference("debug/step-001-hierarchy.json"), timestamp: timestamp),
+            ]
+            events.append(.stepStarted(
+                runID: runID,
+                stepIndex: 1,
+                stepID: "step-001",
+                stepType: effectiveEventStepType,
+                timestamp: timestamp
+            ))
+            if observationArtifactsBeforeCommand {
+                events.append(contentsOf: observationArtifactEvents)
+            }
+            events.append(.commandExecuted(
+                runID: runID,
+                stepIndex: 1,
+                command: ["triton", effectiveEventStepType],
+                status: status,
+                exitCode: status == .passed ? 0 : 1,
+                durationMs: 1,
+                timestamp: timestamp
+            ))
+            if !observationArtifactsBeforeCommand {
+                events.append(contentsOf: observationArtifactEvents)
+            }
             events.append(contentsOf: [
-                .stepStarted(runID: runID, stepIndex: 1, stepID: "step-001", stepType: effectiveEventStepType, timestamp: timestamp),
-                .commandExecuted(runID: runID, stepIndex: 1, command: ["triton", effectiveEventStepType], status: status, exitCode: status == .passed ? 0 : 1, durationMs: 1, timestamp: timestamp),
-                .artifactCreated(runID: runID, stepIndex: 1, kind: "screenshot", ref: eventReference("debug/step-001-before.png"), timestamp: timestamp),
                 .observationCaptured(runID: runID, stepIndex: 1, phase: "before", artifacts: observationArtifacts, screenCandidate: candidate, timestamp: timestamp),
             ])
             if status == .passed {
@@ -1221,8 +1405,8 @@ private struct ReliabilityEvidenceFixture {
                 target: runtimeTargetArtifactTargetID ?? runtimeTargetID
             ),
             TKEvidenceArtifact(kind: "screenshot", path: "debug/step-001-before.png"),
-            TKEvidenceArtifact(kind: "runtime.ax", path: "debug/step-001-ax.json"),
-            TKEvidenceArtifact(kind: "runtime.hierarchy", path: "debug/step-001-hierarchy.json"),
+            TKEvidenceArtifact(kind: "accessibility", path: "debug/step-001-ax.json"),
+            TKEvidenceArtifact(kind: "hierarchy", path: "debug/step-001-hierarchy.json"),
         ]
         if !includeRuntimeTarget {
             artifacts.removeAll { $0.kind == "runtime.target" }

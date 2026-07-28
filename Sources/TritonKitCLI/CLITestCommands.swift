@@ -433,6 +433,7 @@ private func runTestReliabilityCommand(
             print(try encodeJSON(report))
         case .text:
             print("ok: true")
+            print("gateAuthority: \(report.gateAuthority.rawValue)")
             print("gate: \(report.gate.status.rawValue)")
             print("evidenceCompleteness: \(report.evidenceCompleteness.rate)")
             print("failureExplainability: \(report.failureExplainability.rate)")

@@ -134,6 +134,22 @@ struct TestReliabilityHarnessTests {
         #expect(!FileManager.default.fileExists(atPath: fixture.evidenceRoot.path))
     }
 
+    @Test("receipt-backed reports explicitly remain Stage 1 eligible even before all slots are present")
+    func receiptBackedReportDeclaresStage1Authority() throws {
+        let fixture = try ReliabilityHarnessFixture()
+        defer { fixture.cleanup() }
+        let collection = try fixture.writeCollection(fixture.validCollection())
+        _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
+
+        let report = try buildTritonTestReliabilityReceiptReport(
+            collectionReceiptPath: fixture.evidenceRoot.appendingPathComponent("collection-receipt.json").path
+        )
+
+        #expect(report.gateAuthority == .receiptBacked)
+        #expect(report.eligibleForStage1Gate)
+        #expect(report.gate.status == .blocked)
+    }
+
     @Test("a self-consistent receipt outcome mutation fails before reset lookup, slot claim, or runner")
     func sampleRejectsTamperedFrozenOutcomeBeforeRunner() async throws {
         let fixture = try ReliabilityHarnessFixture()
@@ -216,6 +232,161 @@ struct TestReliabilityHarnessTests {
         #expect(!FileManager.default.fileExists(
             atPath: fixture.evidenceRoot.appendingPathComponent("flow_001").path
         ))
+    }
+
+    @Test("a collection-wide lease rejects another slot before its target preflight or runner")
+    func collectionLeaseRejectsConcurrentSampleBeforeTargetPreflight() async throws {
+        let fixture = try ReliabilityHarnessFixture()
+        defer { fixture.cleanup() }
+        let collection = try fixture.writeCollection(fixture.validCollection())
+        _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
+        let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let firstReset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "flow_001", slot: 1)
+        let secondReset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "flow_002", slot: 1)
+        let blockingResolver = BlockingHarnessTargetResolver(summary: fixture.runtimeTargetSummary(
+            id: fixture.targetID,
+            bundleIdentifier: fixture.bundleID
+        ))
+
+        let firstTask = Task {
+            try await runTritonTestReliabilitySample(
+                request: TKTestReliabilitySampleRequest(
+                    collectionReceipt: receipt.path,
+                    flow: "flow_001",
+                    slot: 1,
+                    resetReceipt: firstReset.path,
+                    target: fixture.targetID,
+                    host: "127.0.0.1",
+                    port: 19421,
+                    confirm: true
+                ),
+                executor: HarnessFakeExecutor(),
+                targetResolver: blockingResolver
+            )
+        }
+        await blockingResolver.waitUntilEntered()
+
+        let secondResolver = fixture.targetResolver()
+        do {
+            _ = try await runTritonTestReliabilitySample(
+                request: TKTestReliabilitySampleRequest(
+                    collectionReceipt: receipt.path,
+                    flow: "flow_002",
+                    slot: 1,
+                    resetReceipt: secondReset.path,
+                    target: fixture.targetID,
+                    host: "127.0.0.1",
+                    port: 19421,
+                    confirm: true
+                ),
+                executor: HarnessFakeExecutor(),
+                targetResolver: secondResolver
+            )
+            Issue.record("A second slot must not enter target preflight while the collection lease is held")
+        } catch let error as TKTestReliabilityHarnessError {
+            #expect(error == .collectionBusy)
+        }
+        #expect(secondResolver.calls == 0)
+
+        await blockingResolver.release()
+        _ = try await firstTask.value
+    }
+
+    @Test("a stale collection lease remains fail-closed before target preflight")
+    func staleCollectionLeaseRemainsFailClosed() async throws {
+        let fixture = try ReliabilityHarnessFixture()
+        defer { fixture.cleanup() }
+        let collection = try fixture.writeCollection(fixture.validCollection())
+        _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
+        let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let reset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "flow_001", slot: 1)
+        let staleLease = fixture.evidenceRoot.appendingPathComponent(".reliability-active-sample", isDirectory: true)
+        try FileManager.default.createDirectory(at: staleLease, withIntermediateDirectories: false)
+        let resolver = fixture.targetResolver()
+
+        do {
+            _ = try await runTritonTestReliabilitySample(
+                request: TKTestReliabilitySampleRequest(
+                    collectionReceipt: receipt.path,
+                    flow: "flow_001",
+                    slot: 1,
+                    resetReceipt: reset.path,
+                    target: fixture.targetID,
+                    host: "127.0.0.1",
+                    port: 19421,
+                    confirm: true
+                ),
+                executor: HarnessFakeExecutor(),
+                targetResolver: resolver
+            )
+            Issue.record("A stale collection lease must require operator inspection, not automatic reuse")
+        } catch let error as TKTestReliabilityHarnessError {
+            #expect(error == .collectionBusy)
+        }
+
+        #expect(resolver.calls == 0)
+        #expect(FileManager.default.fileExists(atPath: staleLease.path))
+    }
+
+    @Test("negative control requires its frozen deterministic assertion failure taxonomy")
+    func negativeControlRequiresFrozenFailureType() async throws {
+        let fixture = try ReliabilityHarnessFixture()
+        defer { fixture.cleanup() }
+        let collection = try fixture.writeCollection(fixture.validCollection())
+        _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
+        let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let reset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "negative_001", slot: 1)
+
+        let response = try await runTritonTestReliabilitySample(
+            request: TKTestReliabilitySampleRequest(
+                collectionReceipt: receipt.path,
+                flow: "negative_001",
+                slot: 1,
+                resetReceipt: reset.path,
+                target: fixture.targetID,
+                host: "127.0.0.1",
+                port: 19421,
+                confirm: true
+            ),
+            executor: HarnessTypedFailingExecutor(failureType: "launch_failed"),
+            targetResolver: fixture.targetResolver()
+        )
+
+        #expect(!response.ok)
+        #expect(response.runStatus == .failed)
+        #expect(response.expectedFailureType == "assert_visible_failed")
+        #expect(response.actualFailureType == "launch_failed")
+    }
+
+    @Test("receipt gate blocks a negative control whose recorded failure type differs from the frozen assertion")
+    func receiptGateRejectsNegativeFailureTypeMismatch() async throws {
+        let fixture = try ReliabilityHarnessFixture()
+        defer { fixture.cleanup() }
+        let collection = try fixture.writeCollection(fixture.validCollection())
+        _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
+        let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let reset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "negative_001", slot: 1)
+
+        let sample = try await runTritonTestReliabilitySample(
+            request: TKTestReliabilitySampleRequest(
+                collectionReceipt: receipt.path,
+                flow: "negative_001",
+                slot: 1,
+                resetReceipt: reset.path,
+                target: fixture.targetID,
+                host: "127.0.0.1",
+                port: 19421,
+                confirm: true
+            ),
+            executor: HarnessTypedFailingExecutor(failureType: "launch_failed"),
+            targetResolver: fixture.targetResolver()
+        )
+        #expect(!sample.ok)
+
+        let report = try buildTritonTestReliabilityReceiptReport(collectionReceiptPath: receipt.path)
+        #expect(report.gate.status == .blocked)
+        #expect(report.gate.blockerCodes.contains("receipt_binding_invalid"))
+        #expect((report.issueCounts["negative_control_failure_type_mismatch"] ?? 0) == 1)
     }
 
     @Test("confirmed sample executes only the receipt-frozen normalized plan and seals one slot")
@@ -573,7 +744,8 @@ struct TestReliabilityHarnessTests {
             slot: negativeSlot,
             targetBindingDigest: receipt.target.bindingDigest,
             resetEvidenceDigest: "0123456789abcdef",
-            runStatus: .failed
+            runStatus: .failed,
+            actualFailureType: "assert_visible_failed"
         )
         var expectedNegativeOutput: [String] = []
         try await runTestReliabilitySampleCommand(
@@ -605,14 +777,16 @@ struct TestReliabilityHarnessTests {
                 slot: supportedSlot,
                 targetBindingDigest: receipt.target.bindingDigest,
                 resetEvidenceDigest: "0123456789abcdef",
-                runStatus: .failed
+                runStatus: .failed,
+                actualFailureType: "assert_visible_failed"
             ),
             TKTestReliabilitySampleResponse(
                 flow: negative,
                 slot: negativeSlot,
                 targetBindingDigest: receipt.target.bindingDigest,
                 resetEvidenceDigest: "0123456789abcdef",
-                runStatus: .passed
+                runStatus: .passed,
+                actualFailureType: nil
             ),
         ]
         for response in unexpectedResponses {
@@ -710,6 +884,68 @@ private final class HarnessFailingExecutor: TKTestRunPrimitiveExecutor {
             )
         }
         return .passed(command: ["fake", step.type])
+    }
+}
+
+private final class HarnessTypedFailingExecutor: TKTestRunPrimitiveExecutor {
+    private let failureType: String
+
+    init(failureType: String) {
+        self.failureType = failureType
+    }
+
+    func execute(
+        step: TKTestPlanStep,
+        plan: TKTestNormalizedPlan,
+        context: TKTestRunExecutionContext
+    ) async throws -> TKTestRunPrimitiveOutcome {
+        .failed(
+            command: ["fake", step.type],
+            failure: TKTestRunFailure(
+                type: failureType,
+                message: "Intentional typed reliability failure"
+            )
+        )
+    }
+}
+
+private actor BlockingHarnessTargetResolver: TKTestReliabilityRuntimeTargetResolver {
+    private let summary: TKTargetSummary
+    private var entered = false
+    private var enteredWaiters: [CheckedContinuation<Void, Never>] = []
+    private var releaseContinuation: CheckedContinuation<Void, Never>?
+
+    init(summary: TKTargetSummary) {
+        self.summary = summary
+    }
+
+    func resolve(
+        receiptTarget: TKTestReliabilityCollectionTarget,
+        host: String,
+        port: Int
+    ) async throws -> TKTargetSummary {
+        entered = true
+        let waiters = enteredWaiters
+        enteredWaiters.removeAll()
+        for waiter in waiters {
+            waiter.resume()
+        }
+        await withCheckedContinuation { continuation in
+            releaseContinuation = continuation
+        }
+        return summary
+    }
+
+    func waitUntilEntered() async {
+        guard !entered else { return }
+        await withCheckedContinuation { continuation in
+            enteredWaiters.append(continuation)
+        }
+    }
+
+    func release() {
+        releaseContinuation?.resume()
+        releaseContinuation = nil
     }
 }
 
@@ -856,7 +1092,8 @@ private final class ReliabilityHarnessFixture {
                     initialStateID: "initial-negative",
                     resetRecipeID: "reset-negative",
                     slot: 1,
-                    expectedOutcome: "nonpassed"
+                    expectedOutcome: "nonpassed",
+                    expectedFailureType: "assert_visible_failed"
                 ),
             ]
         )

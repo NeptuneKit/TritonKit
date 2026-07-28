@@ -197,7 +197,8 @@ private final class ReliabilityHarnessFixture {
             initialStateID: "private-initial-state-negative",
             resetRecipeID: "private-reset-recipe-negative",
             slot: 1,
-            expectedOutcome: "nonpassed"
+            expectedOutcome: "nonpassed",
+            expectedFailureType: "assert_visible_failed"
         )
         let collection = TKTestReliabilityCollection(
             schemaVersion: 1,
