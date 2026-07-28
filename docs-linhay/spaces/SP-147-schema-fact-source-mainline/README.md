@@ -33,7 +33,7 @@
 - 红灯：`swift test --package-path CLI --scratch-path CLI/.build/sp147-schema-fact-source-mainline --filter 'SchemaFactSourceTests.deviceSchemaMirrorsDirectParserGroupsAndFacts|SchemaFactSourceTests.simAppConsoleRecoveryMirrorsActionableNextCommands'` 在实现前以 2 个测试、8 个断言失败退出。
 - 绿灯：同一 focused 命令在实现后通过；`FailureDiagnosticsTests` 通过。
 - 机器可读验收：隔离产物的 `triton schema --command device --json` 和 `triton schema --command 'device bridge' --json` 均经 `jq -e` 校验 root option、direct child、output selector 与 command scope。
-- 扩展命令 `--filter 'SchemaFactSourceTests|FailureDiagnosticsTests'` 共执行 135 项，只有 1 个既有无关失败：`SchemaFactSourcePlanTests.schemaAndPlanPlaceholdersStayWholeArgvTokens`。它来自基线 `CLISchemaTestCommands.swift` 的 `triton:ios-simulator:<udid>/app:<bundle>` 内嵌 placeholder，未在本轮触及。
+- 扩展命令 `--filter 'SchemaFactSourceTests|FailureDiagnosticsTests'` 共执行 135 项，只有 1 个既有无关失败：`SchemaFactSourcePlanTests.schemaAndPlanPlaceholdersAreCompleteArgvTokens`。它来自基线 `CLISchemaTestCommands.swift` 的 `triton:ios-simulator:<udid>/app:<bundle>` 内嵌 placeholder，未在本轮触及。
 
 ## 已知边界与后续
 

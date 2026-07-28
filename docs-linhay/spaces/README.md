@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（142/142 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（143/143 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-07-28
 
@@ -60,6 +60,7 @@
 | 已完成（本地） | [SP-140-ios-simulator-reliability-live-harness](./SP-140-ios-simulator-reliability-live-harness/README.md) | receipt-backed reserve/sample 将 3×20+1 的 future collection 固化为 immutable contract、strict exact target 与 no-clobber slot；业务 mismatch 保持 typed result + exit 语义 | 本地 harness/契约验证完成；不得自动真实采样，后续必须先获得 dedicated Simulator、server ownership、reset recipe、negative control 与私有 evidence 授权 |
 | 已发布（v0.2.16） | [SP-141-packaged-web-simulator-input](./SP-141-packaged-web-simulator-input/README.md) | packaged `/web/host-input` 已按 iOS real runtime mirror、三平台 host target 与 unsupported 三路分流，不再错拒 Simulator | Homebrew 0.2.16 安装版真实 Simulator HTTP/页面点击通过，console 0 error/warning |
 | 已完成（本地） | [SP-147-schema-fact-source-mainline](./SP-147-schema-fact-source-mainline/README.md) | `device` / `sim app-console` machine-readable schema 已按当前 parser 与 host DTO 修复 direct child、argument、output/recovery contract | 待主控整合；不扩 runtime/device/server，SP-142～146 缺失仍由其真实 space 补齐 |
+| 已完成（本地） | [SP-148-schema-placeholder-tokens](./SP-148-schema-placeholder-tokens/README.md) | `reliability-sample` 的 schema usage/example 以完整 `<canonical>` argv token 表示精确 target，agent 可替换且不破坏 canonical runtime target 语义 | 基于 SP-147 独立 checkpoint；不改 runner、server、设备或真实采样；未来与 SP-143～146 reliability 链整合时需做同文件面审查 |
 | 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
@@ -87,6 +88,7 @@
 | `SP-139-issue-169-xcode-focused-testing` | `feat/SP-139-issue-169-xcode-focused-testing` | `../TritonKit-worktrees/SP-139-issue-169-xcode-focused-testing/` | `main@5d7ffff0` | `0cb7e958` 已进入本地 main；repeatable focused XCTest selection 不启动真实 Xcode/Simulator/设备/服务 |
 | `SP-140-ios-simulator-reliability-live-harness` | `feat/SP-140-ios-simulator-reliability-live-harness` | `../TritonKit-worktrees/SP-140-ios-simulator-reliability-live-harness/` | `main@0cb7e958` | receipt-backed harness 已 rebase 到当前 local main；focused contract 已验证，真实 3×20+1 仍明确等待授权，不触碰 #164 WIP |
 | `SP-147-schema-fact-source-mainline` | `feat/SP-147-schema-fact-source-mainline` | `../TritonKit-worktrees/SP-147-schema-fact-source-mainline/` | `main@d2578089` | CLI schema fact-source repair 已在隔离 scratch 验证；待主控集成，未触碰 runtime/device/server，也未创建 SP-142～146 占位目录 |
+| `SP-148-schema-placeholder-tokens` | `feat/SP-148-schema-placeholder-tokens` | `../TritonKit-worktrees/SP-148-schema-placeholder-tokens/` | `SP-147@98110f60` | 完整 argv placeholder schema 修复已在隔离 scratch 验证；不改变 reliability runner，SP-143～146 同文件面在未来整合前需审查 |
 
 ## 维护规则
 
