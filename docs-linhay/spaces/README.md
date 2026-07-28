@@ -68,7 +68,7 @@
 | 已完成（本地） | [SP-148-schema-placeholder-tokens](./SP-148-schema-placeholder-tokens/README.md) | `reliability-sample` schema 同时保留 receipt anchor 和完整 `<canonical>` argv token | 已合入 SP-151；不改 runner、server、设备或真实采样 |
 | 已完成（本地） | [SP-149-issue-166-evidence-metadata-contract](./SP-149-issue-166-evidence-metadata-contract/README.md) | #166 follow-up：`/screenshot` normalizer failure 保留 `artifact_write_failed`，test-run metadata 只描述已发布 PNG、没有旧 runtime payload/ref | 已合入 SP-151；不启动服务/设备、不改 #164 |
 | 已完成（本地） | [SP-150-reliability-failure-recovery-semantics](./SP-150-reliability-failure-recovery-semantics/README.md) | Stage 1 gate 已以 validated plan 绑定 terminal failure/recovery，阻断跨步骤与 generic/unknown 伪解释 | 纯离线 TDD、81 项关联回归和 release build 已通过；不改 runner taxonomy、anchor/identity、service/device 或 #164 |
-| 已完成（本地） | [SP-151-trusted-baseline-integration](./SP-151-trusted-baseline-integration/README.md) | SP-142～150 已汇集到唯一隔离 integration branch；离线契约、release build 与 docs gate 均已通过 | 未改 `main`、未触碰 #164、未启动 server/Simulator/Xcode/设备或真实 test run；真实 sampling 与主线合并仍需独立授权 |
+| 已完成（待本地合并授权） | [SP-151-trusted-baseline-integration](./SP-151-trusted-baseline-integration/README.md) | SP-142～150 已汇集到唯一隔离 integration branch；离线契约、release build 与 docs gate 均已通过，`main@d2578089` fast-forward 预检无冲突 | 未改 `main`、未触碰 #164、未启动 server/Simulator/Xcode/设备或真实 test run；真实 sampling 与本地 main 合并仍需独立授权 |
 | 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
@@ -104,7 +104,7 @@
 | `SP-147-schema-fact-source-mainline` | `feat/SP-147-schema-fact-source-mainline`（已清理） | 已清理（历史由 SP-151 merge commit 可达） | `main@d2578089` | 已由 SP-151 集成；CLI schema fact-source repair 保留为离线验证合同 |
 | `SP-148-schema-placeholder-tokens` | `feat/SP-148-schema-placeholder-tokens`（已清理） | 已清理（历史由 SP-151 merge commit 可达） | `SP-147@98110f60` | 已由 SP-151 集成；完整 `<canonical>` argv placeholder 合同保留 |
 | `SP-149-issue-166-evidence-metadata-contract` | `feat/SP-149-issue-166-evidence-metadata-contract`（已清理） | 已清理（历史由 SP-151 merge commit 可达） | `main@d2578089` | 已由 SP-151 集成；#166 metadata/error 纯函数合同保留，不触碰 #164 WIP |
-| `SP-151-trusted-baseline-integration` | `feat/SP-151-trusted-baseline-integration` | `../TritonKit-worktrees/SP-151-trusted-baseline-integration/` | `main@d2578089` | 已合并 SP-142、SP-143～146、SP-147～150；源 branch/worktree 已回收，Swift 81+187、Web 21/build、release schema 与 docs gate 均通过，不改 main、不触碰 #164 或真实环境 |
+| `SP-151-trusted-baseline-integration` | `feat/SP-151-trusted-baseline-integration` | `../TritonKit-worktrees/SP-151-trusted-baseline-integration/` | `main@d2578089` | 已合并 SP-142、SP-143～146、SP-147～150；fast-forward 预检无冲突但待用户授权写入 main。源 branch/worktree 已回收，Swift 81+187、Web 21/build、release schema 与 docs gate 均通过，不触碰 #164 或真实环境 |
 
 ## 维护规则
 

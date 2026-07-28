@@ -51,6 +51,8 @@
 
 - 本地 merge commits：`a8d3af00`（SP-142）、`cfff575a`（SP-143～146/150）、`ce7856c0`（SP-147～148）、`c40c82b9`（SP-149）。所有冲突均在本 worktree 解决，`main` 与 #164 WIP 未改。
 - 收口清理：确认 SP-142～SP-150 的 source commits 均为本 branch 可达祖先、各 source worktree clean 后，已用非强制方式回收这些 source branch/worktree；SP-151 是唯一保留的 integration candidate，`main` 和 #164 WIP 均未改。
+- 预合并审计：在精确基线 `main@d2578089`，SP-151 的 merge-base 也是该提交，三树冲突预检无冲突，故技术上可 fast-forward；但本轮未写入 `main`，仍等待用户的明确本地合并授权。`main` 当前仅比 `origin/main` 领先 2 个本地提交，未 push。
+- 历史 ref 审计：6 条无 worktree 分支都不是 `main` 或 SP-151 的可达祖先，因此本轮不强制删除。前 5 条分别有已在 `main` 的语义等价替代（`e95c9f95`、`e0c4cc4e`、`99daebea`、`0ceb825c`、`e4c5e5ef`）；旧 SP-141 schema 由 SP-151 内的 `98110f60` 重写替代、尚未单独进入 `main`，应随 SP-151 的保留/整合决策一起处理。
 - Swift focused：`WebCommandTests|SingleDeviceWebPageTests|ServeCommandTests|ObservationOutputTests|TestRunExecutionTests` 共 81 项通过；reliability/schema/diagnostics 相关 187 项通过。两组都复用本 worktree 独占 scratch，且未监听端口。
 - Web：readonly/loopback static tests 21 项通过，`npm run build` 通过；Vite 仅报告既有的大 bundle 体积提示。为测试安装的 lockfile 依赖仅在忽略的 `Web/node_modules` 中，`npm audit` 报告 2 个既有依赖漏洞，未自动升级依赖。
 - Release：`swift build -c release --product triton` 通过；release `triton schema --command test --json` 证明 `--expect-receipt-sha256` 与 `--target <canonical>` 同时存在，旧的拆散 target placeholder 不存在。
@@ -58,5 +60,5 @@
 
 ## 后续边界
 
-- 本地 integration checkpoint 不是 `main` 合并、推送、PR 或发布；这些动作仍需新的明确授权。
+- 本地 integration checkpoint 不是 `main` 合并、推送、PR 或发布；本地 fast-forward 已完成冲突预检，但仍需新的明确授权，且授权后必须在 `main` 串行重跑匹配门禁再收口 SP-151。
 - 真实 3×20+1 sampling 仍必须取得独立的 dedicated Simulator、server ownership、reset、negative control 与私有 evidence 生命周期授权；本 space 没有启动或探测真实环境。
