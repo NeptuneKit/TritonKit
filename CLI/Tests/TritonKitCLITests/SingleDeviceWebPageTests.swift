@@ -286,6 +286,44 @@ struct SingleDeviceWebPageTests {
         })
     }
 
+    @Test("packaged web host input routes simulator targets to the host adapter")
+    func packagedWebHostInputRoutesSimulatorTargetsToHostAdapter() {
+        #expect(webHostInputBridgeRoute(
+            platform: "ios",
+            target: "SIM-1",
+            scope: "simulator",
+            kind: "simulator",
+            source: "host"
+        ) == .host(id: "host:ios:SIM-1"))
+
+        #expect(webHostInputBridgeRoute(
+            platform: "android",
+            target: "emulator-5554",
+            scope: "emulator",
+            kind: "emulator",
+            source: "host"
+        ) == .host(id: "host:android:emulator-5554"))
+    }
+
+    @Test("packaged web host input keeps iOS real devices on runtime mirrors")
+    func packagedWebHostInputKeepsIOSRealDevicesOnRuntimeMirrors() {
+        #expect(webHostInputBridgeRoute(
+            platform: "ios",
+            target: "ios-real:abc",
+            scope: nil,
+            kind: nil,
+            source: nil
+        ) == .runtimeMirror)
+
+        #expect(webHostInputBridgeRoute(
+            platform: "macos",
+            target: "local",
+            scope: nil,
+            kind: nil,
+            source: nil
+        ) == .unsupported)
+    }
+
     @Test("web target registry marks real-device runtime ambiguous across multiple ready hosts")
     func webTargetRegistryMarksRealDeviceRuntimeAmbiguousAcrossMultipleReadyHosts() throws {
         let runtime = TKTargetSummary(

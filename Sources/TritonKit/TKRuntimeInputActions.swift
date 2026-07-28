@@ -978,11 +978,11 @@ func unsupportedCollectionCellTap(
     return TKInputResult.unsupported(
         action: action,
         message: message,
+        strategy: "ancestor-collection-cell-unsupported",
         matchedOID: matched.oid,
         matchedClassName: matched.className,
         activationOID: activationOID,
         activationClassName: activationClassName,
-        strategy: "ancestor-collection-cell-unsupported",
         error: TKCLIErrorDetail(
             code: "unsupported_capability",
             message: message,

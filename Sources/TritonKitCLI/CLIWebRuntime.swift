@@ -980,6 +980,41 @@ private func makeWebHostHierarchyBridgeResponse(tritonBin: String, platform: Str
     return try JSONDecoder().decode(TKHostHierarchyResponse.self, from: data)
 }
 
+enum WebHostInputBridgeRoute: Equatable {
+    case runtimeMirror
+    case host(id: String)
+    case unsupported
+}
+
+func webHostInputBridgeRoute(
+    platform: String,
+    target: String,
+    scope: String?,
+    kind: String?,
+    source: String?
+) -> WebHostInputBridgeRoute {
+    guard let hostPlatform = HostDevicePlatform(rawValue: platform), !target.isEmpty else {
+        return .unsupported
+    }
+    if isWebIOSRuntimeMirror(
+        platform: hostPlatform,
+        scope: scope,
+        kind: kind,
+        source: source,
+        target: target
+    ) {
+        return .runtimeMirror
+    }
+    guard source == "host"
+            || scope == HostDeviceScope.simulator.rawValue
+            || scope == HostDeviceScope.emulator.rawValue
+            || kind == "simulator"
+            || kind == "emulator" else {
+        return .unsupported
+    }
+    return .host(id: "host:\(platform):\(target)")
+}
+
 private func makeWebHostInputBridgeResponse(
     platform: String,
     target: String,
@@ -988,12 +1023,22 @@ private func makeWebHostInputBridgeResponse(
     source: String? = nil,
     input: TKInputRequest
 ) async throws -> TKInputResult {
-    guard let hostPlatform = HostDevicePlatform(rawValue: platform),
-          isWebIOSRuntimeMirror(platform: hostPlatform, scope: scope, kind: kind, source: source) else {
+    switch webHostInputBridgeRoute(
+        platform: platform,
+        target: target,
+        scope: scope,
+        kind: kind,
+        source: source
+    ) {
+    case .host(let id):
+        return try runWebHostDeviceInput(id: id, input: input)
+    case .unsupported:
         return .unsupported(
             action: input.type.rawValue,
-            message: "Web host input is only enabled for iOS real-device App runtime mirror targets in this bridge."
+            message: "Web host input requires an iOS App runtime mirror or a supported iOS, Android, or Harmony host target."
         )
+    case .runtimeMirror:
+        break
     }
     var client = TritonKitHTTPClient(host: "127.0.0.1", port: 19421)
     let runtimeTargets: TKTargetsResponse = try await client.getJSON("/targets")
@@ -1022,9 +1067,15 @@ private func isWebIOSRuntimeMirror(
     platform: HostDevicePlatform,
     scope: String?,
     kind: String?,
-    source: String?
+    source: String?,
+    target: String? = nil
 ) -> Bool {
-    platform == .ios && (source == "runtime" || scope == HostDeviceScope.real.rawValue || kind == "real-device")
+    platform == .ios && (
+        source == "runtime"
+            || scope == HostDeviceScope.real.rawValue
+            || kind == "real-device"
+            || target?.hasPrefix("ios-real:") == true
+    )
 }
 
 private func makeWebHostLogsBridgeResponse(tritonBin: String, platform: String, target: String) throws -> WebHostLogsBridgeResponse {
