@@ -539,6 +539,11 @@ func schemaKnownFlags(_ schema: TKCommandSchema) -> Set<String> {
                 flags.formUnion(flagNames(from: option))
             }
         }
+        for options in subcommand.oneOfRequiredOptionSets {
+            for option in options {
+                flags.formUnion(flagNames(from: option))
+            }
+        }
     }
     return flags
 }

@@ -1,5 +1,6 @@
 import ArgumentParser
 import Dispatch
+import CryptoKit
 import Foundation
 import Testing
 @testable import TritonKitCLI
@@ -62,7 +63,9 @@ struct TestReliabilityHarnessTests {
         #expect(snapshot.harnessErrors == [.reservationAlreadyExists])
         #expect(snapshot.unexpectedErrorCount == 0)
         let receipt = try Data(contentsOf: fixture.evidenceRoot.appendingPathComponent("collection-receipt.json"))
+        let receiptSHA256 = SHA256.hash(data: receipt).map { String(format: "%02x", $0) }.joined()
         #expect(fnv1a64Hex(receipt) == snapshot.successes[0].receiptDigest)
+        #expect(receiptSHA256 == snapshot.successes[0].receiptSha256)
     }
 
     @Test("reserve rejects plans whose semantic execution identity only differs in metadata")
@@ -140,14 +143,126 @@ struct TestReliabilityHarnessTests {
         defer { fixture.cleanup() }
         let collection = try fixture.writeCollection(fixture.validCollection())
         _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
+        let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
 
         let report = try buildTritonTestReliabilityReceiptReport(
-            collectionReceiptPath: fixture.evidenceRoot.appendingPathComponent("collection-receipt.json").path
+            collectionReceiptPath: receipt.path,
+            expectedReceiptSha256: try fixture.receiptSHA256(receipt)
         )
 
         #expect(report.gateAuthority == .receiptBacked)
         #expect(report.eligibleForStage1Gate)
         #expect(report.gate.status == .blocked)
+    }
+
+    @Test("missing, malformed, and mismatched receipt anchors fail before reset, lease, resolver, slot, or runner")
+    func receiptAnchorValidationPrecedesEverySampleSideEffect() async throws {
+        let fixture = try ReliabilityHarnessFixture()
+        defer { fixture.cleanup() }
+        let collection = try fixture.writeCollection(fixture.validCollection())
+        _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
+        let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let actualAnchor = try fixture.receiptSHA256(receipt)
+        let mismatchedAnchor = (actualAnchor.first == "0" ? "1" : "0") + String(actualAnchor.dropFirst())
+        let cases: [(anchor: String?, expected: TKTestReliabilityHarnessError)] = [
+            (nil, .missingReceiptAnchor),
+            (String(repeating: "A", count: 64), .invalidReceiptAnchor),
+            (mismatchedAnchor, .receiptAnchorMismatch),
+        ]
+
+        for (index, testCase) in cases.enumerated() {
+            let executor = HarnessFakeExecutor()
+            let resolver = fixture.targetResolver()
+            do {
+                _ = try await runTritonTestReliabilitySample(
+                    request: TKTestReliabilitySampleRequest(
+                        collectionReceipt: receipt.path,
+                        expectedReceiptSha256: testCase.anchor,
+                        flow: "flow_001",
+                        slot: 1,
+                        resetReceipt: fixture.root.appendingPathComponent("unread-reset-\(index).json").path,
+                        target: fixture.targetID,
+                        host: "127.0.0.1",
+                        port: 19421,
+                        confirm: true
+                    ),
+                    executor: executor,
+                    targetResolver: resolver
+                )
+                Issue.record("An invalid receipt anchor must fail before downstream sample work")
+            } catch let error as TKTestReliabilityHarnessError {
+                #expect(error == testCase.expected)
+            }
+            #expect(resolver.calls == 0)
+            #expect(executor.operations.isEmpty)
+            #expect(executor.plans.isEmpty)
+            #expect(!FileManager.default.fileExists(
+                atPath: fixture.evidenceRoot.appendingPathComponent(".reliability-active-sample").path
+            ))
+            #expect(!FileManager.default.fileExists(
+                atPath: fixture.evidenceRoot.appendingPathComponent("flow_001").path
+            ))
+        }
+    }
+
+    @Test("a complete replacement receipt is rejected before sample or report sidecar access")
+    func replacementReceiptFailsAgainstOperatorAnchorBeforeDownstreamReads() async throws {
+        let fixture = try ReliabilityHarnessFixture()
+        defer { fixture.cleanup() }
+        let replacementFixture = try ReliabilityHarnessFixture()
+        defer { replacementFixture.cleanup() }
+
+        let collection = try fixture.writeCollection(fixture.validCollection())
+        _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
+        let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let originalAnchor = try fixture.receiptSHA256(receipt)
+
+        let replacementCollection = try replacementFixture.writeCollection(replacementFixture.validCollection())
+        _ = try reserveTritonTestReliabilityCollection(collectionPath: replacementCollection.path)
+        let replacementReceipt = replacementFixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        try Data(contentsOf: replacementReceipt).write(to: receipt, options: .atomic)
+
+        let executor = HarnessFakeExecutor()
+        let resolver = fixture.targetResolver()
+        do {
+            _ = try await runTritonTestReliabilitySample(
+                request: TKTestReliabilitySampleRequest(
+                    collectionReceipt: receipt.path,
+                    expectedReceiptSha256: originalAnchor,
+                    flow: "flow_001",
+                    slot: 1,
+                    resetReceipt: fixture.root.appendingPathComponent("unread-reset.json").path,
+                    target: fixture.targetID,
+                    host: "127.0.0.1",
+                    port: 19421,
+                    confirm: true
+                ),
+                executor: executor,
+                targetResolver: resolver
+            )
+            Issue.record("A replacement receipt must not reach reset, target, slot, or runner work")
+        } catch let error as TKTestReliabilityHarnessError {
+            #expect(error == .receiptAnchorMismatch)
+        }
+        #expect(resolver.calls == 0)
+        #expect(executor.operations.isEmpty)
+        #expect(executor.plans.isEmpty)
+        #expect(!FileManager.default.fileExists(
+            atPath: fixture.evidenceRoot.appendingPathComponent("flow_001").path
+        ))
+
+        do {
+            _ = try buildTritonTestReliabilityReceiptReport(
+                collectionReceiptPath: receipt.path,
+                expectedReceiptSha256: originalAnchor
+            )
+            Issue.record("A replacement receipt must fail before report evidence enumeration")
+        } catch let error as TKTestReliabilityHarnessError {
+            #expect(error == .receiptAnchorMismatch)
+        }
+        #expect(!FileManager.default.fileExists(
+            atPath: fixture.evidenceRoot.appendingPathComponent("flow_001").path
+        ))
     }
 
     @Test("a self-consistent receipt outcome mutation fails before reset lookup, slot claim, or runner")
@@ -170,6 +285,7 @@ struct TestReliabilityHarnessTests {
             _ = try await runTritonTestReliabilitySample(
                 request: TKTestReliabilitySampleRequest(
                     collectionReceipt: receipt.path,
+                    expectedReceiptSha256: try fixture.receiptSHA256(receipt),
                     flow: "flow_001",
                     slot: 1,
                     resetReceipt: reset.path,
@@ -199,6 +315,7 @@ struct TestReliabilityHarnessTests {
         let collection = try fixture.writeCollection(fixture.validCollection())
         _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
         let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let receiptAnchor = try fixture.receiptSHA256(receipt)
         let reset = try fixture.writeResetReceipt(
             receiptURL: receipt,
             flowID: "flow_001",
@@ -208,6 +325,7 @@ struct TestReliabilityHarnessTests {
 
         let request = TKTestReliabilitySampleRequest(
             collectionReceipt: receipt.path,
+            expectedReceiptSha256: receiptAnchor,
             flow: "flow_001",
             slot: 1,
             resetReceipt: reset.path,
@@ -241,6 +359,7 @@ struct TestReliabilityHarnessTests {
         let collection = try fixture.writeCollection(fixture.validCollection())
         _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
         let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let receiptAnchor = try fixture.receiptSHA256(receipt)
         let firstReset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "flow_001", slot: 1)
         let secondReset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "flow_002", slot: 1)
         let blockingResolver = BlockingHarnessTargetResolver(summary: fixture.runtimeTargetSummary(
@@ -252,6 +371,7 @@ struct TestReliabilityHarnessTests {
             try await runTritonTestReliabilitySample(
                 request: TKTestReliabilitySampleRequest(
                     collectionReceipt: receipt.path,
+                    expectedReceiptSha256: receiptAnchor,
                     flow: "flow_001",
                     slot: 1,
                     resetReceipt: firstReset.path,
@@ -271,6 +391,7 @@ struct TestReliabilityHarnessTests {
             _ = try await runTritonTestReliabilitySample(
                 request: TKTestReliabilitySampleRequest(
                     collectionReceipt: receipt.path,
+                    expectedReceiptSha256: receiptAnchor,
                     flow: "flow_002",
                     slot: 1,
                     resetReceipt: secondReset.path,
@@ -299,6 +420,7 @@ struct TestReliabilityHarnessTests {
         let collection = try fixture.writeCollection(fixture.validCollection())
         _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
         let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let receiptAnchor = try fixture.receiptSHA256(receipt)
         let reset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "flow_001", slot: 1)
         let staleLease = fixture.evidenceRoot.appendingPathComponent(".reliability-active-sample", isDirectory: true)
         try FileManager.default.createDirectory(at: staleLease, withIntermediateDirectories: false)
@@ -308,6 +430,7 @@ struct TestReliabilityHarnessTests {
             _ = try await runTritonTestReliabilitySample(
                 request: TKTestReliabilitySampleRequest(
                     collectionReceipt: receipt.path,
+                    expectedReceiptSha256: receiptAnchor,
                     flow: "flow_001",
                     slot: 1,
                     resetReceipt: reset.path,
@@ -335,11 +458,13 @@ struct TestReliabilityHarnessTests {
         let collection = try fixture.writeCollection(fixture.validCollection())
         _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
         let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let receiptAnchor = try fixture.receiptSHA256(receipt)
         let reset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "negative_001", slot: 1)
 
         let response = try await runTritonTestReliabilitySample(
             request: TKTestReliabilitySampleRequest(
                 collectionReceipt: receipt.path,
+                expectedReceiptSha256: receiptAnchor,
                 flow: "negative_001",
                 slot: 1,
                 resetReceipt: reset.path,
@@ -365,11 +490,13 @@ struct TestReliabilityHarnessTests {
         let collection = try fixture.writeCollection(fixture.validCollection())
         _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
         let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let receiptAnchor = try fixture.receiptSHA256(receipt)
         let reset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "negative_001", slot: 1)
 
         let sample = try await runTritonTestReliabilitySample(
             request: TKTestReliabilitySampleRequest(
                 collectionReceipt: receipt.path,
+                expectedReceiptSha256: receiptAnchor,
                 flow: "negative_001",
                 slot: 1,
                 resetReceipt: reset.path,
@@ -383,7 +510,10 @@ struct TestReliabilityHarnessTests {
         )
         #expect(!sample.ok)
 
-        let report = try buildTritonTestReliabilityReceiptReport(collectionReceiptPath: receipt.path)
+        let report = try buildTritonTestReliabilityReceiptReport(
+            collectionReceiptPath: receipt.path,
+            expectedReceiptSha256: receiptAnchor
+        )
         #expect(report.gate.status == .blocked)
         #expect(report.gate.blockerCodes.contains("receipt_binding_invalid"))
         #expect((report.issueCounts["negative_control_failure_type_mismatch"] ?? 0) == 1)
@@ -398,6 +528,7 @@ struct TestReliabilityHarnessTests {
         let collection = try fixture.writeCollection(declaration)
         _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
         let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let receiptAnchor = try fixture.receiptSHA256(receipt)
         try fixture.rewritePlan(
             at: mutableSource,
             name: "mutated-after-reserve",
@@ -407,6 +538,7 @@ struct TestReliabilityHarnessTests {
         let executor = HarnessFakeExecutor()
         let request = TKTestReliabilitySampleRequest(
             collectionReceipt: receipt.path,
+            expectedReceiptSha256: receiptAnchor,
             flow: "flow_001",
             slot: 1,
             resetReceipt: reset.path,
@@ -462,6 +594,7 @@ struct TestReliabilityHarnessTests {
         let collection = try fixture.writeCollection(fixture.validCollection())
         _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
         let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let receiptAnchor = try fixture.receiptSHA256(receipt)
         let validReset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "flow_001", slot: 1)
         let invalidReset = try fixture.writeResetReceipt(
             receiptURL: receipt,
@@ -473,6 +606,7 @@ struct TestReliabilityHarnessTests {
 
         let invalidHost = TKTestReliabilitySampleRequest(
             collectionReceipt: receipt.path,
+            expectedReceiptSha256: receiptAnchor,
             flow: "flow_001",
             slot: 1,
             resetReceipt: validReset.path,
@@ -494,6 +628,7 @@ struct TestReliabilityHarnessTests {
 
         let invalidResetRequest = TKTestReliabilitySampleRequest(
             collectionReceipt: receipt.path,
+            expectedReceiptSha256: receiptAnchor,
             flow: "flow_001",
             slot: 1,
             resetReceipt: invalidReset.path,
@@ -515,6 +650,7 @@ struct TestReliabilityHarnessTests {
 
         let fallbackRequest = TKTestReliabilitySampleRequest(
             collectionReceipt: receipt.path,
+            expectedReceiptSha256: receiptAnchor,
             flow: "flow_001",
             slot: 1,
             resetReceipt: validReset.path,
@@ -587,6 +723,7 @@ struct TestReliabilityHarnessTests {
             let collection = try fixture.writeCollection(fixture.validCollection())
             _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
             let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+            let receiptAnchor = try fixture.receiptSHA256(receipt)
             let reset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "flow_001", slot: 1)
             let evidence = fixture.evidenceRoot
                 .appendingPathComponent("flow_001", isDirectory: true)
@@ -619,6 +756,7 @@ struct TestReliabilityHarnessTests {
                 _ = try await runTritonTestReliabilitySample(
                     request: TKTestReliabilitySampleRequest(
                         collectionReceipt: receipt.path,
+                        expectedReceiptSha256: receiptAnchor,
                         flow: "flow_001",
                         slot: 1,
                         resetReceipt: reset.path,
@@ -651,12 +789,14 @@ struct TestReliabilityHarnessTests {
         let collection = try fixture.writeCollection(fixture.validCollection())
         _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
         let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let receiptAnchor = try fixture.receiptSHA256(receipt)
         let executor = HarnessFakeExecutor()
 
         let positiveReset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "flow_001", slot: 1)
         _ = try await runTritonTestReliabilitySample(
             request: TKTestReliabilitySampleRequest(
                 collectionReceipt: receipt.path,
+                expectedReceiptSha256: receiptAnchor,
                 flow: "flow_001",
                 slot: 1,
                 resetReceipt: positiveReset.path,
@@ -684,6 +824,7 @@ struct TestReliabilityHarnessTests {
         let failedSupported = try await runTritonTestReliabilitySample(
             request: TKTestReliabilitySampleRequest(
                 collectionReceipt: receipt.path,
+                expectedReceiptSha256: receiptAnchor,
                 flow: "flow_002",
                 slot: 1,
                 resetReceipt: failingReset.path,
@@ -702,6 +843,7 @@ struct TestReliabilityHarnessTests {
         _ = try await runTritonTestReliabilitySample(
             request: TKTestReliabilitySampleRequest(
                 collectionReceipt: receipt.path,
+                expectedReceiptSha256: receiptAnchor,
                 flow: "negative_001",
                 slot: 1,
                 resetReceipt: negativeReset.path,
@@ -714,7 +856,10 @@ struct TestReliabilityHarnessTests {
             targetResolver: fixture.targetResolver()
         )
 
-        let report = try buildTritonTestReliabilityReceiptReport(collectionReceiptPath: receipt.path)
+        let report = try buildTritonTestReliabilityReceiptReport(
+            collectionReceiptPath: receipt.path,
+            expectedReceiptSha256: receiptAnchor
+        )
         #expect(report.gate.status == .blocked)
         #expect(report.gate.blockerCodes.contains("receipt_binding_invalid"))
         #expect((report.issueCounts["receipt_binding_sidecar_invalid"] ?? 0) >= 1)
@@ -750,6 +895,7 @@ struct TestReliabilityHarnessTests {
         var expectedNegativeOutput: [String] = []
         try await runTestReliabilitySampleCommand(
             collectionReceipt: "private-receipt.json",
+            expectedReceiptSha256: String(repeating: "a", count: 64),
             flow: expectedNegative.flowID,
             slot: String(expectedNegative.slot),
             resetReceipt: "private-reset.json",
@@ -795,6 +941,7 @@ struct TestReliabilityHarnessTests {
             do {
                 try await runTestReliabilitySampleCommand(
                     collectionReceipt: "private-receipt.json",
+                    expectedReceiptSha256: String(repeating: "a", count: 64),
                     flow: response.flowID,
                     slot: String(response.slot),
                     resetReceipt: "private-reset.json",
@@ -1213,6 +1360,12 @@ private final class ReliabilityHarnessFixture {
         let url = root.appendingPathComponent("reset-\(UUID().uuidString).json")
         try prettyEncodedData(reset).write(to: url, options: .atomic)
         return url
+    }
+
+    func receiptSHA256(_ receiptURL: URL) throws -> String {
+        SHA256.hash(data: try Data(contentsOf: receiptURL))
+            .map { String(format: "%02x", $0) }
+            .joined()
     }
 
     func rewritePlan(at url: URL, name: String, visibleText: String) throws {

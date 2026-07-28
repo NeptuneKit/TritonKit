@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import Testing
 @testable import TritonKitCLI
@@ -303,6 +304,8 @@ struct TestValidationTests {
         #expect(schema.runtimeScope == "offline for import/validate/normalize/report/reliability/reliability-preflight/reliability-reserve/create; reliability-sample and run require an explicit runtime target; reliability-sample requires an already-running receipt-bound loopback server and never starts it")
         #expect(schema.providedCapabilities == ["test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-reliability-gate", "test-reliability-collection-preflight", "test-reliability-reserve", "test-reliability-sample", "test-create-from-session"])
         #expect(schema.failureCodes.contains("unsupported_step"))
+        #expect(schema.failureCodes.contains("invalid_reliability_receipt_anchor"))
+        #expect(schema.failureCodes.contains("reliability_receipt_anchor_mismatch"))
         #expect(failureShape.contains("run"))
         #expect(failureShape.contains("reliability-preflight"))
         #expect(failureShape.contains("reliability-reserve"))
@@ -322,22 +325,29 @@ struct TestValidationTests {
         #expect(run.sideEffect == "runtime-execution-evidence-write")
         #expect(reliability.requiredOptions == [])
         #expect(reliability.oneOfRequiredOptions == [["--samples"], ["--collection-receipt"]])
+        #expect(reliability.oneOfRequiredOptionSets == [["--samples"], ["--collection-receipt", "--expect-receipt-sha256"]])
+        #expect(reliability.failureCodes.contains("invalid_reliability_receipt_anchor"))
+        #expect(reliability.failureCodes.contains("reliability_receipt_anchor_mismatch"))
+        #expect(reliability.recoveryCommands.allSatisfy { $0.category == "diagnose" })
         #expect(reserve.requiredOptions == ["--collection"])
         #expect(reserve.outputSelectors == ["test.reliability-reserve"])
         #expect(reserve.requiresServer == false)
         #expect(reserve.requiresTarget == false)
         #expect(reserve.requiresConfirmation == false)
         #expect(reserve.sideEffect == "private-receipt-write")
-        #expect(sample.requiredOptions == ["--collection-receipt", "--flow", "--slot", "--reset-receipt", "--target", "--confirm"])
+        #expect(sample.requiredOptions == ["--collection-receipt", "--expect-receipt-sha256", "--flow", "--slot", "--reset-receipt", "--target", "--confirm"])
         #expect(sample.outputSelectors == ["test.reliability-sample"])
         #expect(sample.requiresServer)
         #expect(sample.requiresTarget)
         #expect(sample.requiresConfirmation)
         #expect(sample.sideEffect == "runtime-execution-private-evidence-write")
         #expect(sample.optionOverrides.first { $0.name == "--target" }?.required == true)
+        #expect(sample.optionOverrides.first { $0.name == "--expect-receipt-sha256" }?.type == "SHA256")
+        #expect(sample.optionOverrides.first { $0.name == "--expect-receipt-sha256" }?.required == true)
         #expect(sample.optionOverrides.first { $0.name == "--target" }?.defaultValue == nil)
         #expect(sample.optionOverrides.first { $0.name == "--host" }?.defaultValue == "127.0.0.1")
         #expect(sample.optionOverrides.first { $0.name == "--port" }?.defaultValue == "19421")
+        #expect(sample.recoveryCommands.allSatisfy { $0.category == "diagnose" })
         #expect(schema.outputContracts.contains { $0.selector == "test.run-result" })
         #expect(schema.outputContracts.contains { $0.selector == "test.report" })
         #expect(schema.outputContracts.contains { $0.selector == "test.reliability" })
@@ -383,6 +393,7 @@ struct TestValidationTests {
         let result = try runTriton([
             "test", "reliability-sample",
             "--collection-receipt", "private-receipt.json",
+            "--expect-receipt-sha256", String(repeating: "a", count: 64),
             "--flow", "flow_001",
             "--slot", "not-a-slot",
             "--reset-receipt", "private-reset.json",
@@ -422,6 +433,90 @@ struct TestValidationTests {
         )
         #expect(!response.ok)
         #expect(response.error.code == "missing_required_field")
+    }
+
+    @Test("receipt anchor parser failures are one sanitized JSON envelope with diagnose-only schema recovery")
+    func receiptAnchorParserFailuresStaySanitizedAndOffline() throws {
+        let target = "triton:ios-simulator:00000000-0000-0000-0000-000000000000/app:com.example.private"
+        let uppercaseAnchor = String(repeating: "A", count: 64)
+        let validAnchor = String(repeating: "a", count: 64)
+        let cases: [(arguments: [String], code: String, forbidden: [String])] = [
+            (
+                ["test", "reliability", "--collection-receipt", "private-receipt.json", "--json"],
+                "missing_required_field",
+                ["private-receipt.json"]
+            ),
+            (
+                ["test", "reliability", "--collection-receipt", "private-receipt.json", "--expect-receipt-sha256", uppercaseAnchor, "--json"],
+                "invalid_reliability_receipt_anchor",
+                ["private-receipt.json", uppercaseAnchor]
+            ),
+            (
+                ["test", "reliability", "--samples", "private-samples.json", "--expect-receipt-sha256", validAnchor, "--json"],
+                "invalid_reliability_receipt_anchor",
+                ["private-samples.json", validAnchor]
+            ),
+            (
+                ["test", "reliability-sample", "--collection-receipt", "private-receipt.json", "--flow", "flow_001", "--slot", "1", "--reset-receipt", "private-reset.json", "--target", target, "--confirm", "--json"],
+                "missing_required_field",
+                ["private-receipt.json", "private-reset.json", target]
+            ),
+            (
+                ["test", "reliability-sample", "--collection-receipt", "private-receipt.json", "--expect-receipt-sha256", uppercaseAnchor, "--flow", "flow_001", "--slot", "1", "--reset-receipt", "private-reset.json", "--target", target, "--confirm", "--json"],
+                "invalid_reliability_receipt_anchor",
+                ["private-receipt.json", "private-reset.json", target, uppercaseAnchor]
+            ),
+        ]
+
+        for testCase in cases {
+            let result = try runTriton(testCase.arguments)
+            #expect(result.exitCode == 1)
+            #expect(result.stderr.isEmpty)
+            let response = try JSONDecoder().decode(
+                TKCLIErrorResponse.self,
+                from: Data(result.stdout.utf8)
+            )
+            #expect(!response.ok)
+            #expect(response.error.code == testCase.code)
+            #expect(response.error.nextAction == nil)
+            for forbidden in testCase.forbidden {
+                #expect(!result.stdout.contains(forbidden))
+            }
+        }
+    }
+
+    @Test("receipt anchor mismatch uses one sanitized JSON envelope for both report and sample")
+    func receiptAnchorMismatchUsesSanitizedJSONEnvelope() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-receipt-anchor-mismatch-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let receipt = directory.appendingPathComponent("collection-receipt.json")
+        try Data("{\"replacement\":true}\n".utf8).write(to: receipt, options: .atomic)
+        let actual = SHA256.hash(data: try Data(contentsOf: receipt))
+            .map { String(format: "%02x", $0) }
+            .joined()
+        let mismatchedAnchor = (actual.first == "0" ? "1" : "0") + String(actual.dropFirst())
+        let target = "triton:ios-simulator:00000000-0000-0000-0000-000000000000/app:com.example.private"
+        let cases = [
+            ["test", "reliability", "--collection-receipt", receipt.path, "--expect-receipt-sha256", mismatchedAnchor, "--json"],
+            ["test", "reliability-sample", "--collection-receipt", receipt.path, "--expect-receipt-sha256", mismatchedAnchor, "--flow", "flow_001", "--slot", "1", "--reset-receipt", directory.appendingPathComponent("reset.json").path, "--target", target, "--confirm", "--json"],
+        ]
+
+        for arguments in cases {
+            let result = try runTriton(arguments)
+            #expect(result.exitCode == 1)
+            #expect(result.stderr.isEmpty)
+            let response = try JSONDecoder().decode(
+                TKCLIErrorResponse.self,
+                from: Data(result.stdout.utf8)
+            )
+            #expect(response.error.code == "reliability_receipt_anchor_mismatch")
+            #expect(response.error.nextAction == nil)
+            #expect(!result.stdout.contains(receipt.path))
+            #expect(!result.stdout.contains(mismatchedAnchor))
+            #expect(!result.stdout.contains(target))
+        }
     }
 
     private func validContractYAML() -> String {

@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-07-28
-> 覆盖范围：141 个当前 worktree 可见 space；SP-141 / SP-142 仍是待集成本地 checkpoint，SP-143 的连续编号门禁待三者统一集成后复跑
+> 覆盖范围：142 个当前 worktree 可见 space；SP-141 / SP-142 仍是待集成本地 checkpoint，SP-143 / SP-144 的连续编号门禁待统一集成后复跑
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 141 条可见记录 | SP-143 已登记；SP-141 / SP-142 的独立 checkpoint 尚未合入本 worktree，故全局连续性待集成验证 |
-| README 链接核对 | 141 条可见记录 | 每条可见记录链接到现有 space README |
+| 编号登记 | 142 条可见记录 | SP-143 / SP-144 已登记；SP-141 / SP-142 的独立 checkpoint 尚未合入本 worktree，故全局连续性待集成验证 |
+| README 链接核对 | 142 条可见记录 | 每条可见记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～140 已是规范目录 |
 
 ## Space 登记表
@@ -166,3 +166,4 @@
 | `SP-139-issue-169-xcode-focused-testing` | [`SP-139-issue-169-xcode-focused-testing`](./SP-139-issue-169-xcode-focused-testing/README.md) | 已完成（本地） | 规范目录；#169 checkpoint `0cb7e958` 已进入本地 main，focused XCTest selection 不启动真实 Xcode/device |
 | `SP-140-ios-simulator-reliability-live-harness` | [`SP-140-ios-simulator-reliability-live-harness`](./SP-140-ios-simulator-reliability-live-harness/README.md) | 已完成（本地） | 规范目录；receipt-backed reserve/sample、strict canonical target 与 local focused verification 已完成；真实 3×20+1 仍需 dedicated target/server/reset/evidence 授权 |
 | `SP-143-reliability-gate-integrity` | [`SP-143-reliability-gate-integrity`](./SP-143-reliability-gate-integrity/README.md) | 已完成（本地） | 规范目录；收紧 legacy diagnostic / receipt authority、typed negative、collection lease 与 evidence artifact 归因；不启动 runtime 或触碰 #164；待 SP-141 / SP-142 集成后统一跑连续编号门禁 |
+| `SP-144-reliability-receipt-anchor` | [`SP-144-reliability-receipt-anchor`](./SP-144-reliability-receipt-anchor/README.md) | 已完成（本地） | 规范目录；operator/CI 在 receipt root 外保存 SHA-256，sample/report 据此拒绝 root 内完整 receipt 替换；不涉及签名、runtime identity 或真实采样 |

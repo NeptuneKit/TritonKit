@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import Testing
 @testable import TritonKitCLI
@@ -5,6 +6,21 @@ import TritonKitShared
 
 @Suite("SP-140 receipt-backed reliability harness")
 struct TestReliabilityHarnessRuntimeTests {
+    @Test("reserve publishes the lowercase SHA-256 of the exact raw receipt bytes")
+    func reservePublishesRawReceiptSHA256() throws {
+        let fixture = try ReliabilityHarnessFixture()
+        defer { fixture.cleanup() }
+
+        let collectionURL = try fixture.writeCollection()
+        let reservation = try reserveTritonTestReliabilityCollection(collectionPath: collectionURL.path)
+        let receiptURL = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let rawReceipt = try Data(contentsOf: receiptURL)
+        let expected = SHA256.hash(data: rawReceipt).map { String(format: "%02x", $0) }.joined()
+
+        #expect(reservation.receiptSha256 == expected)
+        #expect(expected.range(of: #"^[0-9a-f]{64}$"#, options: .regularExpression) != nil)
+    }
+
     @Test("reserve atomically freezes normalized plans instead of retaining mutable YAML references")
     func reserveFreezesNormalizedPlans() throws {
         let fixture = try ReliabilityHarnessFixture()

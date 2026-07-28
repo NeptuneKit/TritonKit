@@ -548,7 +548,8 @@ extension SchemaFactSourceTests {
             for subcommand in schema.subcommands {
                 let references = subcommand.requiredOptions +
                     subcommand.optionalOptions +
-                    subcommand.oneOfRequiredOptions.flatMap { $0 }
+                    subcommand.oneOfRequiredOptions.flatMap { $0 } +
+                    subcommand.oneOfRequiredOptionSets.flatMap { $0 }
 
                 for reference in references where !knownParameters.contains(reference) {
                     missingReferences.append("\(schema.name) \(subcommand.name):\(reference)")

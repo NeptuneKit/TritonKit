@@ -1,3 +1,4 @@
+import CryptoKit
 import Darwin
 import Foundation
 import TritonKitShared
@@ -130,13 +131,21 @@ struct TKTestReliabilityReserveResponse: Codable, Equatable {
     let writesEvidence: Bool
     let usesRuntime: Bool
     let receiptFile: String
+    /// Legacy FNV linkage retained for existing reset/binding consumers. It is
+    /// not the external integrity anchor.
     let receiptDigest: String
+    let receiptSha256: String
     let targetBindingDigest: String
     let supportedFlowCount: Int
     let negativeControlCount: Int
     let plannedSampleCount: Int
 
-    init(receiptDigest: String, targetBindingDigest: String, flows: [TKTestReliabilityFrozenFlow]) {
+    init(
+        receiptDigest: String,
+        receiptSha256: String,
+        targetBindingDigest: String,
+        flows: [TKTestReliabilityFrozenFlow]
+    ) {
         self.ok = true
         self.schemaVersion = 1
         self.kind = "triton.test.reliability-reserve"
@@ -144,6 +153,7 @@ struct TKTestReliabilityReserveResponse: Codable, Equatable {
         self.usesRuntime = false
         self.receiptFile = "collection-receipt.json"
         self.receiptDigest = receiptDigest
+        self.receiptSha256 = receiptSha256
         self.targetBindingDigest = targetBindingDigest
         self.supportedFlowCount = flows.filter { $0.classification == .supported }.count
         self.negativeControlCount = flows.filter { $0.classification == .negativeControl }.count
@@ -153,6 +163,7 @@ struct TKTestReliabilityReserveResponse: Codable, Equatable {
 
 struct TKTestReliabilitySampleRequest: Equatable {
     let collectionReceipt: String
+    let expectedReceiptSha256: String?
     let flow: String
     let slot: Int
     let resetReceipt: String
@@ -160,6 +171,28 @@ struct TKTestReliabilitySampleRequest: Equatable {
     let host: String
     let port: Int
     let confirm: Bool
+
+    init(
+        collectionReceipt: String,
+        expectedReceiptSha256: String? = nil,
+        flow: String,
+        slot: Int,
+        resetReceipt: String,
+        target: String,
+        host: String,
+        port: Int,
+        confirm: Bool
+    ) {
+        self.collectionReceipt = collectionReceipt
+        self.expectedReceiptSha256 = expectedReceiptSha256
+        self.flow = flow
+        self.slot = slot
+        self.resetReceipt = resetReceipt
+        self.target = target
+        self.host = host
+        self.port = port
+        self.confirm = confirm
+    }
 }
 
 /// The harness resolves the live target once, before claiming a slot. The
@@ -265,6 +298,9 @@ enum TKTestReliabilityHarnessError: Error, Equatable {
     case reservationAlreadyExists
     case reservationWriteFailed
     case invalidReceipt
+    case missingReceiptAnchor
+    case invalidReceiptAnchor
+    case receiptAnchorMismatch
     case confirmationRequired
     case invalidSampleRequest
     case invalidResetReceipt
@@ -298,6 +334,24 @@ func testReliabilityHarnessErrorDetail(_ error: TKTestReliabilityHarnessError) -
             code: "invalid_reliability_receipt",
             message: "The reliability collection receipt is invalid, incomplete, or drifted.",
             hint: "Use the exact receipt created by reliability-reserve and do not edit it."
+        )
+    case .missingReceiptAnchor:
+        return TKCLIErrorDetail(
+            code: "missing_required_field",
+            message: "A receipt SHA-256 anchor is required for receipt-backed reliability.",
+            hint: "Provide --expect-receipt-sha256 with the lowercase digest retained outside the private receipt root."
+        )
+    case .invalidReceiptAnchor:
+        return TKCLIErrorDetail(
+            code: "invalid_reliability_receipt_anchor",
+            message: "The receipt SHA-256 anchor must be exactly 64 lowercase hexadecimal characters.",
+            hint: "Diagnose the operator-retained receipt anchor before retrying; do not edit the private receipt."
+        )
+    case .receiptAnchorMismatch:
+        return TKCLIErrorDetail(
+            code: "reliability_receipt_anchor_mismatch",
+            message: "The private receipt does not match the operator-retained SHA-256 anchor.",
+            hint: "Diagnose the receipt and independently retained anchor; do not overwrite, replace, or rerun the private collection."
         )
     case .confirmationRequired:
         return TKCLIErrorDetail(
@@ -419,6 +473,7 @@ func reserveTritonTestReliabilityCollection(
         }
         return TKTestReliabilityReserveResponse(
             receiptDigest: fnv1a64Hex(receiptData),
+            receiptSha256: reliabilityReceiptSHA256(receiptData),
             targetBindingDigest: receipt.target.bindingDigest,
             flows: flows
         )
@@ -449,7 +504,10 @@ func runTritonTestReliabilitySample(
     guard request.confirm else {
         throw TKTestReliabilityHarnessError.confirmationRequired
     }
-    let loaded = try loadReliabilityCollectionReceipt(at: request.collectionReceipt)
+    let loaded = try loadReliabilityCollectionReceipt(
+        at: request.collectionReceipt,
+        expectedReceiptSha256: request.expectedReceiptSha256
+    )
     guard request.host == "127.0.0.1",
           request.port == 19421,
           request.target == loaded.receipt.target.id,
@@ -541,9 +599,13 @@ func runTritonTestReliabilitySample(
 
 func buildTritonTestReliabilityReceiptReport(
     collectionReceiptPath: String,
+    expectedReceiptSha256: String?,
     thresholds: TKTestReliabilityThresholds = TKTestReliabilityThresholds()
 ) throws -> TKTestReliabilityReport {
-    let loaded = try loadReliabilityCollectionReceipt(at: collectionReceiptPath)
+    let loaded = try loadReliabilityCollectionReceipt(
+        at: collectionReceiptPath,
+        expectedReceiptSha256: expectedReceiptSha256
+    )
     var samples: [TKTestReliabilitySample] = []
     var extraIssues: [String: Int] = [:]
 
@@ -782,12 +844,29 @@ private func validateReliabilityFrozenFlowIdentities(
     }
 }
 
+func requireReliabilityReceiptSha256Anchor(_ value: String?) throws -> String {
+    guard let value else {
+        throw TKTestReliabilityHarnessError.missingReceiptAnchor
+    }
+    guard value.range(of: #"^[0-9a-f]{64}$"#, options: .regularExpression) != nil else {
+        throw TKTestReliabilityHarnessError.invalidReceiptAnchor
+    }
+    return value
+}
+
 private func loadReliabilityCollectionReceipt(
-    at path: String
+    at path: String,
+    expectedReceiptSha256: String?
 ) throws -> ReliabilityHarnessLoadedReceipt {
+    let expectedReceiptSha256 = try requireReliabilityReceiptSha256Anchor(expectedReceiptSha256)
     guard !path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-          let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
-          let receipt = try? JSONDecoder().decode(TKTestReliabilityCollectionReceipt.self, from: data),
+          let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else {
+        throw TKTestReliabilityHarnessError.invalidReceipt
+    }
+    guard reliabilityReceiptSHA256(data) == expectedReceiptSha256 else {
+        throw TKTestReliabilityHarnessError.receiptAnchorMismatch
+    }
+    guard let receipt = try? JSONDecoder().decode(TKTestReliabilityCollectionReceipt.self, from: data),
           receipt.schemaVersion == 1,
           receipt.kind == "triton.test.reliability-collection-receipt",
           reliabilityHarnessDigest(receipt.collectionDigest),
@@ -1209,6 +1288,10 @@ private func reliabilityHarnessIdentifier(_ value: String) -> Bool {
 
 private func reliabilityHarnessDigest(_ value: String) -> Bool {
     value.range(of: #"^[0-9a-f]{16}$"#, options: .regularExpression) != nil
+}
+
+private func reliabilityReceiptSHA256(_ data: Data) -> String {
+    SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
 }
 
 private func writeReliabilityHarnessExclusive(_ data: Data, to url: URL) throws {
