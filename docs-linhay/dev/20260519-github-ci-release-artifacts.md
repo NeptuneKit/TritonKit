@@ -85,6 +85,8 @@ tag 前必须先在 `main` 完成版本契约、本地门禁和远端 validate�
 
 发布面继续保持 macOS arm64/x86_64 `triton` CLI、bundled Web、checksum manifest、四个 public skills、Homebrew formula，以及同 tag 的 SwiftPM/CocoaPods/Web 版本入口。CocoaPods 仅执行 podspec lint，不自动推送 trunk。本次必须用安装后的 Homebrew `triton 0.2.16` 在仓库外复验 packaged Web，并对真实 iOS Simulator 执行 `/web/host-input` tap；仅验证 HTTP 200 不足以证明输入桥修复。
 
+2026-07-28 的 `v0.2.16` 已按上述完整口径发布：Release workflow `30326964768` 的 contracts、双架构构建、arm64 首发、x86_64 backfill 与两次 tap 更新全部成功。四个公开资产重新下载后通过 checksum 与 gzip 校验；CLI 分别为 arm64/x86_64 Mach-O 且均报告 `0.2.16`，public skill bundle 的 `BUILD_INFO.json` 为 `v0.2.16` / commit `f986ba97`。Homebrew 从 `0.2.15` 升级到 `0.2.16` 并通过 formula test；安装版对真实 iOS Simulator 的 `/web/host-input` tap 返回 host-HID adapter 成功结果，原 `34127` 页面更新后同样显示 LIVE、tap 坐标且 console 0 error/warning。CocoaPods 仅完成 podspec lint，未推送 trunk。
+
 ## Homebrew
 
 新增 Homebrew 二进制安装链路：

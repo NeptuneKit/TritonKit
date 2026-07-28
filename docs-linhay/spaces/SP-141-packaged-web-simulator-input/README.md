@@ -1,6 +1,6 @@
 # SP-141 Packaged Web Simulator Input
 
-状态：待发布（v0.2.16）
+状态：已发布（v0.2.16）
 
 ## 背景
 
@@ -80,6 +80,7 @@ Vite dev bridge 已能把 simulator/emulator 输入转发到 `triton serve /web/
 - 真实 packaged HTTP smoke：本地修复版运行于隔离端口 `34129`，对当前就绪 iOS Simulator POST tap 返回 `ok=true`、`action=tap`，message 为 `iOS Simulator tap was submitted through Triton host-HID adapter.`。
 - Playwright 页面 smoke：`Triton Inspector` 正常加载，target 为 `Overloaded Douyin Playback iPhone 17`；点击真实画面后 UI 显示 `tap 603,1311`，console 0 error / 0 warning。
 - 原地址接管：确认旧监听进程为 Homebrew `triton 0.2.15` 后，仅终止该 `34127` listener，并以本地修复版 debug binary 在同一 `http://127.0.0.1:34127/` 重新启动；未停止或重启 `19421`、Simulator 与现有 App。对原地址重复 HTTP tap 与 Playwright 点击，均得到相同成功结果。
+- 发布后安装版：`v0.2.16` Release workflow `30326964768` 全绿，Homebrew 升级与 formula test 通过；安装版隔离端口对当前 Simulator 的真实 tap 返回 `ok=true`。原会话随后仅将 `34127` listener 替换为 `/opt/homebrew/bin/triton 0.2.16`，页面保持 LIVE，点击显示 `tap 603,1311`，HTTP 200、console 0 error / 0 warning，未触碰 `19421`、Simulator 或 App。
 - CLI 全量测试曾以隔离 scratch 启动，但仓库既有测试硬编码查找 `CLI/.build`，同时已有 schema/device-proxy/Harmony unrelated failures；运行约 3 分钟后无新增输出，已停止，未把它计为本次通过证据。
 
 ## 证据
@@ -88,5 +89,5 @@ Vite dev bridge 已能把 simulator/emulator 输入转发到 `triton serve /web/
 
 ## 后续边界
 
-- 当前安装的 Homebrew `triton 0.2.15` 不含此源码修复；本会话已由本地 debug binary 受控接管 `34127`，源码修复与版本入口已进入 `v0.2.16` 发布准备。
+- Homebrew `triton 0.2.16` 已包含此源码修复，当前 `34127` 由安装版继续运行。
 - 审计同时发现 keyboard relay、LIVE 门禁与 `readonly/canInput` 语义存在历史漂移，但不属于本次 simulator packaged bridge 缺口，未顺手扩面。
