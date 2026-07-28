@@ -65,6 +65,7 @@ triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json 
 
 Current boundaries:
 
+- Xcode DerivedData defaults to the fixed repo-local `.triton/DerivedData` incremental cache across `xcode settings/build/test/run` and `build ios`. Do not auto-derive project/workspace hash subdirectories or defer this default until a conflict is detected. Use an explicit `--derived-data-path` only when the caller needs isolation or cache recovery, and preserve the default cache unless cleanup is explicitly requested.
 - `xcode discover` defaults to a depth of 8 so nested real-project containers are discoverable while build/dependency noise stays excluded. Keep `--max-depth` explicit when a repository needs a different bound.
 - `xcode schemes` defaults to a 300-second timeout and supports `--disable-automatic-package-resolution` for deterministic discovery. On `xcode_schemes_timeout`, preserve the selected workspace/project/package in `nextAction` and retry with a bounded longer timeout before raw `xcodebuild` fallback.
 - `xcode run` covers build, simulator install, and simulator launch; it does not prove business readiness.

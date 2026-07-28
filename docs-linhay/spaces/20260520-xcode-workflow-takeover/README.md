@@ -162,6 +162,15 @@
 - And 包含空格、空 value 或 `$(inherited)` 的 value 保持原样
 - And 缺少 `=`、空 key 或非法 key 在启动 host command 前返回 `validation_failed`
 
+### 场景十二：固定复用 repo-local DerivedData
+
+- Given agent 未显式传入 `--derived-data-path`
+- When 执行 `triton xcode settings/build/test/run` 或 `triton build ios`
+- Then Triton 固定向 `xcodebuild` 传入 `-derivedDataPath .triton/DerivedData`
+- And 后续构建复用同一 repo-local 增量缓存，不按 project/workspace 自动生成 `<project>-<hash>` 子目录
+- And 路径切换只由显式 `--derived-data-path` 驱动，不以“检测到构建冲突”为默认前置条件
+- And Triton 默认不清理 `.triton/DerivedData`
+
 ## 分期
 
 ### 当前实现状态（2026-05-24）
@@ -199,6 +208,7 @@ P0 最小 `triton xcode` 入口已落地：
 10. Xcode destination 的显式选择优先级固定为 `--destination` > real-device selector > `--simulator` > workspace default destination；UUID / `sim:<uuid>` 使用 `id=`，设备名称使用 `name=`。显式 simulator 必须同时驱动 invocation summary 与 source command，不能被旧 workspace destination 覆盖。
 11. discovery 返回的 standalone `Package.swift` 已能通过 `xcode use/schemes/settings/build/test/run --package <Package.swift|dir>` 直接消费。package container 通过受审计 working directory 驱动 `xcodebuild`，不伪造 `-packagePath`；`schema --command xcode.build --json` 可直接发现收窄后的 build contract。
 12. `xcode settings/build/test/run` 支持可重复的 `--build-setting KEY=VALUE`。key 按 `[A-Za-z_][A-Za-z0-9_]*` 校验，value 不做 shell 解析，每个 setting 保持一个 argv 边界并写入 `sourceCommand`；该一次性参数不进入 workspace defaults，也不得承载 secret。
+13. Xcode DerivedData 默认固定为 repo-local `.triton/DerivedData`，由 `xcode settings/build/test/run` 与 `build ios` 共同复用并保留增量缓存；Triton 不自动按 project/workspace 派生子目录，也不等待冲突后才启用该目录。需要隔离或恢复时由调用方显式传入 `--derived-data-path`。
 
 ### P0：Xcode workflow 最小闭环
 
