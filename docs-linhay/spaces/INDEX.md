@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-07-28
-> 覆盖范围：147 个当前 worktree 可见 space；SP-147～SP-149 待后续集成，连续编号门禁将在 SP-151 收口时重跑
+> 覆盖范围：149 个当前 worktree 可见 space；SP-149 待后续集成，连续编号门禁将在 SP-151 收口时重跑
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,9 +17,9 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 147 条可见记录 | SP-141～SP-146、SP-150 已登记；SP-147～SP-149 的独立 checkpoint 待合入，故全局连续性待集成验证 |
-| README 链接核对 | 147 条可见记录 | 每条可见记录链接到现有 space README |
-| 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～146、SP-150 已是规范目录 |
+| 编号登记 | 149 条可见记录 | SP-141～SP-148、SP-150 已登记；SP-149 的独立 checkpoint 待合入，故全局连续性待集成验证 |
+| README 链接核对 | 149 条可见记录 | 每条可见记录链接到现有 space README |
+| 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～148、SP-150 已是规范目录 |
 
 ## Space 登记表
 
@@ -172,3 +172,5 @@
 | `SP-145-private-identity-chain-v2` | [`SP-145-private-identity-chain-v2`](./SP-145-private-identity-chain-v2/README.md) | 已完成（本地） | 规范目录；以 SP-144 root 外 receipt SHA-256 为锚，验证每 slot 的私有 evidence identity chain 与安全 aggregate；不宣称真实 reset/App/runtime proof |
 | `SP-146-stage1-metric-contract` | [`SP-146-stage1-metric-contract`](./SP-146-stage1-metric-contract/README.md) | 已完成（本地） | 规范目录；receipt-backed report 已增量区分 60 supported 的 Stage 1A 与 61 receipt/control 的 Stage 1B；纯离线，不启动 runtime/设备/server |
 | `SP-150-reliability-failure-recovery-semantics` | [`SP-150-reliability-failure-recovery-semantics`](./SP-150-reliability-failure-recovery-semantics/README.md) | 已完成（本地） | 规范目录；以 validated normalized plan 绑定 terminal failure/recovery，跨类型、generic/unknown failure 均 fail closed；纯离线，不启动 runtime/设备/server |
+| `SP-147-schema-fact-source-mainline` | [`SP-147-schema-fact-source-mainline`](./SP-147-schema-fact-source-mainline/README.md) | 已完成（本地） | 规范目录；基于 `main@d2578089` 重做 CLI schema fact-source 修复，未启动 runtime/device/server；SP-142～146 待其真实 space 进入主线 |
+| `SP-148-schema-placeholder-tokens` | [`SP-148-schema-placeholder-tokens`](./SP-148-schema-placeholder-tokens/README.md) | 已完成（本地） | 规范目录；修复 reliability-sample schema 模板的 canonical target placeholder token，不改变 runner 或设备行为；SP-142～146 仍待其真实 space 进入主线 |

@@ -105,6 +105,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--confirm", type: "Bool", defaultValue: "false", description: "Required for Harmony device stop and break-glass proxy runner execution"),
                 TKCommandSchemaOption(name: "--output", type: "Path", description: "Screenshot output path for device screenshot"),
                 TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "30", description: "Bounded wait or host command timeout in seconds"),
+                TKCommandSchemaOption(name: "--interval", type: "Double", defaultValue: "1", description: "Polling interval in seconds for device wait-ready"),
                 TKCommandSchemaOption(name: "--local-port", type: "Int", description: "Local TCP port used by bridge or runtime-url commands"),
                 TKCommandSchemaOption(name: "--remote-port", type: "Int", description: "Remote TCP port used by bridge or runtime-url commands"),
                 TKCommandSchemaOption(name: "--no-forward", type: "Bool", defaultValue: "false", description: "Skip HDC fport setup and only print the local URL"),
@@ -113,6 +114,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 TKCommandSchemaOption(name: "--jsonl", type: "Bool", defaultValue: "false", description: "Emit JSON Lines ready/request/final events for long-running proxy serve"),
                 jsonAlias,
+            ],
+            argumentForms: [
+                TKCommandArgumentForm(name: "<selector>", type: "String", required: false, description: "Host target selector accepted by device use or resolve"),
             ],
             examples: [
                 "triton device doctor --platform ios --json",
@@ -200,6 +204,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 hostDeviceProxyOutputContract(),
                 hostDeviceProxyServeOutputContract(),
                 hostArtifactOutputContract(),
+                hostArtifactOutputContract(selector: "host.device-screenshot"),
+                hostDeviceDoctorOutputContract(),
+                hostHarmonyRuntimeURLOutputContract(),
                 runtimeManifestOutputContract(),
             ],
             failureCodes: [
@@ -269,6 +276,20 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             subcommands: [
                 TKCommandSubcommandSchema(
+                    name: "alias",
+                    summary: "Manage stable host target aliases"
+                ),
+                TKCommandSubcommandSchema(
+                    name: "bridge",
+                    summary: "Inspect Android Emulator strong-control bridge contracts",
+                    outputSelectors: ["host.device-bridge"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "proxy",
+                    summary: "Inspect host-side simulator and emulator proxy takeover contracts",
+                    outputSelectors: ["host.device-proxy", "host.device-proxy-serve"]
+                ),
+                TKCommandSubcommandSchema(
                     name: "doctor",
                     summary: "Probe platform host tool availability",
                     optionalOptions: ["--platform", "--scope", "--hdc", "--adb", "--format", "--json"],
@@ -302,7 +323,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "wait-ready",
                     summary: "Wait for a host target to become ready",
-                    optionalOptions: ["<selector>", "--device", "--target", "--platform", "--scope", "--name", "--runtime", "--state", "--ready", "--timeout", "--interval", "--hdc", "--adb", "--format", "--json"],
+                    optionalOptions: ["--device", "--target", "--platform", "--scope", "--name", "--runtime", "--state", "--ready", "--timeout", "--interval", "--hdc", "--adb", "--format", "--json"],
                     outputSelectors: ["host.device-ready"]
                 ),
                 TKCommandSubcommandSchema(
@@ -318,6 +339,14 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     summary: "Prepare and print a Harmony embedded runtime base URL",
                     optionalOptions: ["--platform", "--device", "--target", "--scope", "--name", "--runtime", "--state", "--ready", "--local-port", "--remote-port", "--no-forward", "--probe-manifest", "--timeout", "--hdc", "--format", "--json"],
                     outputSelectors: ["host.harmony-runtime-url"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "start",
+                    summary: "Start an Android or Harmony emulator with a machine-readable launch ledger"
+                ),
+                TKCommandSubcommandSchema(
+                    name: "stop",
+                    summary: "Stop a selected Android or Harmony emulator"
                 ),
             ],
             providedCapabilities: ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "ios-device", "ios-simulator-screenshot", "ios-host-ax", "ios-host-hid", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "harmony-device", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
@@ -652,12 +681,10 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     summary: "Relaunch an iOS Simulator App and capture bounded merged process stdout/stderr",
                     requiredOptions: ["--bundle-id", "--output"],
                     optionalOptions: ["--simulator", "--duration", "--max-bytes", "--env", "--arg", "--format", "--json"],
-                    nextCommands: ["triton sim logs --simulator <udid|booted> --output <path.ndjson> --duration <seconds> --json"],
-                    recoveryCommands: [
-                        TKCommandRecoveryCommand(
-                            command: "triton sim app-console --simulator <udid|booted> --bundle-id <bundle-id> --output <new-path.log> --json",
-                            category: "archive"
-                        ),
+                    nextCommands: [
+                        "triton sim logs --simulator <udid|booted> --output <path.ndjson> --duration <seconds> --json",
+                        "triton sim app-console --simulator <udid|booted> --bundle-id <bundle-id> --output <new-path.log> --json",
+                        "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
                     ],
                     outputSelectors: ["host.simulator-app-process-console"],
                     failureCodes: ["sim_app_console_failed", "invalid_duration", "invalid_max_bytes", "host_command_timeout", "artifact_output_rejected", "validation_failed"]
