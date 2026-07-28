@@ -37,6 +37,7 @@ struct TestReliabilityRuntimeTests {
         #expect(report.evidenceCompleteness.rate == 1)
         #expect(report.outcomeRepeatability.rate == 1)
         #expect(report.failureExplainability.state == .notEvaluable)
+        #expect(report.identityChain == .notApplicable)
         #expect(report.flows.count == 1)
         #expect(report.flows[0].flowID.hasPrefix("flow_"))
         #expect(!report.flows[0].flowID.contains("fixture-login-home"))
@@ -1028,6 +1029,7 @@ struct TestReliabilityRuntimeTests {
         let contract = try #require(schema.outputContracts.first { $0.selector == "test.reliability" })
         let sampleContract = try #require(schema.outputContracts.first { $0.selector == "test.reliability-sample" })
         let flowID = try #require(contract.fields.first { $0.name == "flows[].flowID" })
+        let identityChain = try #require(contract.fields.first { $0.name == "identityChain" })
         let actualFailureType = try #require(sampleContract.fields.first { $0.name == "actualFailureType" })
         let chineseHelp = try #require(chineseCommandHelps()["test"])
 
@@ -1037,6 +1039,7 @@ struct TestReliabilityRuntimeTests {
         #expect(reserveSchema.failureCodes.contains("reliability_reservation_exists"))
         #expect(sampleSchema.failureCodes.contains("reliability_sample_confirmation_required"))
         #expect(sampleSchema.failureCodes.contains("reliability_collection_busy"))
+        #expect(sampleSchema.failureCodes.contains("reliability_identity_chain_write_failed"))
         #expect(sampleSchema.requiresServer)
         #expect(sampleSchema.requiresTarget)
         #expect(sampleSchema.requiresConfirmation)
@@ -1050,12 +1053,15 @@ struct TestReliabilityRuntimeTests {
         #expect(contract.fields.contains(where: { $0.name == "gate.blockerCodes" }))
         #expect(contract.fields.contains(where: { $0.name == "gateAuthority" }))
         #expect(contract.fields.contains(where: { $0.name == "eligibleForStage1Gate" }))
+        #expect(contract.fields.contains(where: { $0.name == "identityChain.state" }))
+        #expect(contract.fields.contains(where: { $0.name == "identityChain.receiptAnchorVerified" }))
         #expect(sampleContract.fields.contains(where: {
             $0.name == "expectedFailureType" && !$0.required
         }))
         #expect(!actualFailureType.required)
         #expect(actualFailureType.description.contains("unexpected negative-control pass"))
         #expect(flowID.description.contains("opaque"))
+        #expect(identityChain.description.lowercased().contains("private"))
         #expect(chineseHelp.options.contains(where: { $0.0 == "reliability --samples <private.json>" }))
         #expect(chineseHelp.options.contains(where: { $0.0 == "reliability --collection-receipt <private.json>" }))
         #expect(chineseHelp.options.contains(where: { $0.0.hasPrefix("reliability-sample --collection-receipt") }))
@@ -1074,6 +1080,9 @@ struct TestReliabilityRuntimeTests {
         )) == Set(["diagnose"]))
         #expect(Set(TKCommandRecoveryCommand.recoveryCategories(
             forFailureCode: "test_reliability_sample_failed"
+        )) == Set(["diagnose", "archive"]))
+        #expect(Set(TKCommandRecoveryCommand.recoveryCategories(
+            forFailureCode: "reliability_identity_chain_write_failed"
         )) == Set(["diagnose", "archive"]))
     }
 

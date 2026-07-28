@@ -212,6 +212,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if [
             "reliability_reservation_write_failed",
             "test_reliability_sample_failed",
+            "reliability_identity_chain_write_failed",
         ].contains(failureCode) {
             categories.append(contentsOf: ["diagnose", "archive"])
         }

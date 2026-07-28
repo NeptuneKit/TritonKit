@@ -266,14 +266,11 @@ struct TKTestReliabilitySampleResponse: Codable, Equatable {
         runStatus: TKTestRunStatus,
         actualFailureType: String?
     ) {
-        let expectedPassed = flow.expectedOutcome == "passed"
-        let outcomeMatched: Bool
-        if expectedPassed {
-            outcomeMatched = runStatus == .passed && actualFailureType == nil
-        } else {
-            outcomeMatched = runStatus == .failed
-                && actualFailureType == flow.expectedFailureType
-        }
+        let outcomeMatched = reliabilityHarnessOutcomeMatches(
+            flow: flow,
+            terminalStatus: runStatus,
+            actualFailureType: actualFailureType
+        )
         self.ok = outcomeMatched
         self.schemaVersion = 1
         self.kind = "triton.test.reliability-sample"
@@ -307,6 +304,7 @@ enum TKTestReliabilityHarnessError: Error, Equatable {
     case collectionBusy
     case slotAlreadyClaimed
     case runnerFailed
+    case identityChainWriteFailed
 }
 
 func testReliabilityHarnessErrorDetail(_ error: TKTestReliabilityHarnessError) -> TKCLIErrorDetail {
@@ -388,6 +386,12 @@ func testReliabilityHarnessErrorDetail(_ error: TKTestReliabilityHarnessError) -
             code: "test_reliability_sample_failed",
             message: "The frozen reliability sample could not complete its runner bridge.",
             hint: "Preserve the claimed private evidence slot and inspect its receipt sidecars before any further action."
+        )
+    case .identityChainWriteFailed:
+        return TKCLIErrorDetail(
+            code: "reliability_identity_chain_write_failed",
+            message: "The completed reliability sample could not seal its private identity chain.",
+            hint: "Preserve the claimed slot and inspect its private evidence; do not backfill, overwrite, or rerun it automatically."
         )
     }
 }
@@ -560,17 +564,27 @@ func runTritonTestReliabilitySample(
     )
     let bindingData = try prettyEncodedData(binding)
     let resetData = reset.data
+    // Persist the target that passed the receipt-bound preflight before the
+    // runner starts. A live runtime resolver may later overwrite this with an
+    // equivalent observation, but a terminal failure before that step must
+    // still leave an exact, private target component for the identity chain.
+    let runtimeTargetData = try prettyEncodedData(resolvedTarget)
     let reliabilityDirectory = evidenceURL.appendingPathComponent("reliability", isDirectory: true)
     do {
         try FileManager.default.createDirectory(at: reliabilityDirectory, withIntermediateDirectories: false)
         try writeReliabilityHarnessExclusive(bindingData, to: reliabilityDirectory.appendingPathComponent("binding.json"))
         try writeReliabilityHarnessExclusive(resetData, to: reliabilityDirectory.appendingPathComponent("reset-receipt.json"))
+        try writeReliabilityHarnessExclusive(
+            runtimeTargetData,
+            to: evidenceURL.appendingPathComponent("runtime-target.json")
+        )
     } catch {
         throw TKTestReliabilityHarnessError.slotAlreadyClaimed
     }
 
+    let execution: TKTestRunExecutionResponse
     do {
-        let execution = try await runTritonFrozenTest(
+        execution = try await runTritonFrozenTest(
             normalizedPlan: flow.normalizedPlan,
             evidenceDirectory: evidenceURL.path,
             target: request.target,
@@ -578,23 +592,41 @@ func runTritonTestReliabilitySample(
             port: request.port,
             executor: executor
         )
+    } catch {
+        throw TKTestReliabilityHarnessError.runnerFailed
+    }
+    let response = TKTestReliabilitySampleResponse(
+        flow: flow,
+        slot: slot,
+        targetBindingDigest: loaded.receipt.target.bindingDigest,
+        resetEvidenceDigest: fnv1a64Hex(resetData),
+        runStatus: execution.summary.status ?? (execution.ok ? .passed : .failed),
+        actualFailureType: execution.failure?.type
+    )
+    do {
+        let identityChainBytes = try writeTritonTestReliabilityIdentityChainV2(
+            evidenceURL: evidenceURL,
+            descriptor: makeTritonTestReliabilityIdentityChainDescriptor(
+                receiptSha256: reliabilityReceiptSHA256(loaded.data),
+                legacyReceiptDigest: loaded.digest,
+                targetBindingDigest: loaded.receipt.target.bindingDigest,
+                flow: flow,
+                slot: slot,
+                terminalStatus: response.runStatus,
+                outcomeMatched: response.outcomeMatched
+            )
+        )
         try appendReliabilityHarnessArtifacts(
             evidenceURL: evidenceURL,
             bindingBytes: bindingData.count,
             resetBytes: resetData.count,
+            identityChainBytes: identityChainBytes,
             target: loaded.receipt.target.id
         )
-        return TKTestReliabilitySampleResponse(
-            flow: flow,
-            slot: slot,
-            targetBindingDigest: loaded.receipt.target.bindingDigest,
-            resetEvidenceDigest: fnv1a64Hex(resetData),
-            runStatus: execution.summary.status ?? (execution.ok ? .passed : .failed),
-            actualFailureType: execution.failure?.type
-        )
     } catch {
-        throw TKTestReliabilityHarnessError.runnerFailed
+        throw TKTestReliabilityHarnessError.identityChainWriteFailed
     }
+    return response
 }
 
 func buildTritonTestReliabilityReceiptReport(
@@ -608,6 +640,7 @@ func buildTritonTestReliabilityReceiptReport(
     )
     var samples: [TKTestReliabilitySample] = []
     var extraIssues: [String: Int] = [:]
+    var identityChainStates: [TKTestReliabilityIdentityChainState] = []
 
     for flow in loaded.receipt.flows {
         for slot in flow.slots {
@@ -618,10 +651,12 @@ func buildTritonTestReliabilityReceiptReport(
             let validation = validateReliabilityReceiptEvidence(
                 evidenceURL: evidenceURL,
                 receiptDigest: loaded.digest,
+                receiptSha256: reliabilityReceiptSHA256(loaded.data),
                 receipt: loaded.receipt,
                 flow: flow,
                 slot: slot
             )
+            identityChainStates.append(validation.identityChainState)
             for issue in validation.issues {
                 extraIssues[issue, default: 0] += 1
             }
@@ -641,9 +676,19 @@ func buildTritonTestReliabilityReceiptReport(
     for (issue, count) in extraIssues {
         issueCounts[issue, default: 0] += count
     }
+    let identityChain = summarizeTritonTestReliabilityIdentityChains(
+        identityChainStates,
+        receiptAnchorVerified: true
+    )
     var blockers = base.gate.blockerCodes
-    if !extraIssues.isEmpty {
+    if extraIssues.keys.contains(where: { !$0.hasPrefix("identity_chain_") }) {
         blockers.append("receipt_binding_invalid")
+    }
+    if identityChain.missingSlotCount > 0 {
+        blockers.append("identity_chain_incomplete")
+    }
+    if identityChain.invalidSlotCount > 0 {
+        blockers.append("identity_chain_invalid")
     }
     let gate = TKTestReliabilityGate(
         status: blockers.isEmpty ? .passed : .blocked,
@@ -656,6 +701,7 @@ func buildTritonTestReliabilityReceiptReport(
         failureExplainability: base.failureExplainability,
         outcomeRepeatability: base.outcomeRepeatability,
         flows: base.flows,
+        identityChain: identityChain,
         issueCounts: issueCounts,
         gate: gate
     )
@@ -675,6 +721,7 @@ private struct ReliabilityHarnessResetReceipt {
 
 private struct ReliabilityHarnessEvidenceValidation {
     let resetEvidenceID: String?
+    let identityChainState: TKTestReliabilityIdentityChainState
     let issues: [String]
 }
 
@@ -938,6 +985,7 @@ private func loadAndValidateReliabilityResetReceipt(
 private func validateReliabilityReceiptEvidence(
     evidenceURL: URL,
     receiptDigest: String,
+    receiptSha256: String,
     receipt: TKTestReliabilityCollectionReceipt,
     flow: TKTestReliabilityFrozenFlow,
     slot: TKTestReliabilityFrozenSlot
@@ -992,7 +1040,8 @@ private func validateReliabilityReceiptEvidence(
     } else {
         issues.append("receipt_runtime_target_drift")
     }
-    if let manifest = try? readEvidenceManifest(from: evidenceURL.path) {
+    let manifest = try? readEvidenceManifest(from: evidenceURL.path)
+    if let manifest {
         let bindings = manifest.artifacts.filter { $0.kind == "test.reliability.binding" }
         let resetReceipts = manifest.artifacts.filter { $0.kind == "test.reliability.reset-receipt" }
         if bindings.isEmpty || resetReceipts.isEmpty {
@@ -1015,8 +1064,28 @@ private func validateReliabilityReceiptEvidence(
     } else {
         issues.append("receipt_manifest_missing")
     }
+    let terminalFailure = reliabilityHarnessTerminalFailure(in: evidenceURL)
+    let identityChain = validateTritonTestReliabilityIdentityChainV2(
+        evidenceURL: evidenceURL,
+        descriptor: terminalFailure.status.map { terminalStatus in
+            makeTritonTestReliabilityIdentityChainDescriptor(
+                receiptSha256: receiptSha256,
+                legacyReceiptDigest: receiptDigest,
+                targetBindingDigest: receipt.target.bindingDigest,
+                flow: flow,
+                slot: slot,
+                terminalStatus: terminalStatus,
+                outcomeMatched: reliabilityHarnessOutcomeMatches(
+                    flow: flow,
+                    terminalStatus: terminalStatus,
+                    actualFailureType: terminalFailure.failure?.type
+                )
+            )
+        },
+        manifest: manifest
+    )
+    issues.append(contentsOf: identityChain.issues)
     if flow.classification == .negativeControl {
-        let terminalFailure = reliabilityHarnessTerminalFailure(in: evidenceURL)
         if terminalFailure.status != .failed ||
             terminalFailure.failure?.type != flow.expectedFailureType {
             issues.append("negative_control_failure_type_mismatch")
@@ -1024,8 +1093,20 @@ private func validateReliabilityReceiptEvidence(
     }
     return ReliabilityHarnessEvidenceValidation(
         resetEvidenceID: reset?.resetEvidenceID,
+        identityChainState: identityChain.state,
         issues: issues
     )
+}
+
+private func reliabilityHarnessOutcomeMatches(
+    flow: TKTestReliabilityFrozenFlow,
+    terminalStatus: TKTestRunStatus?,
+    actualFailureType: String?
+) -> Bool {
+    if flow.expectedOutcome == "passed" {
+        return terminalStatus == .passed && actualFailureType == nil
+    }
+    return terminalStatus == .failed && actualFailureType == flow.expectedFailureType
 }
 
 private func reliabilityHarnessTerminalFailure(
@@ -1063,6 +1144,7 @@ private func appendReliabilityHarnessArtifacts(
     evidenceURL: URL,
     bindingBytes: Int,
     resetBytes: Int,
+    identityChainBytes: Int,
     target: String
 ) throws {
     let manifestURL = evidenceURL.appendingPathComponent("manifest.json")
@@ -1083,6 +1165,15 @@ private func appendReliabilityHarnessArtifacts(
             path: "reliability/reset-receipt.json",
             contentType: "application/json",
             bytes: resetBytes,
+            scope: "private",
+            source: "reliability-harness",
+            target: target
+        ),
+        TKEvidenceArtifact(
+            kind: "test.reliability.identity-chain-v2",
+            path: "reliability/identity-chain-v2.json",
+            contentType: "application/json",
+            bytes: identityChainBytes,
             scope: "private",
             source: "reliability-harness",
             target: target

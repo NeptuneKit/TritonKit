@@ -374,7 +374,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "plan", "archive"]
     case "invalid_reliability_collection", "invalid_reliability_receipt", "reliability_sample_confirmation_required", "invalid_reliability_sample_request", "invalid_reliability_reset_receipt", "reliability_reservation_exists", "reliability_collection_busy", "reliability_slot_already_claimed":
         return ["diagnose"]
-    case "reliability_reservation_write_failed", "test_reliability_sample_failed":
+    case "reliability_reservation_write_failed", "test_reliability_sample_failed", "reliability_identity_chain_write_failed":
         return ["diagnose", "archive"]
     default:
         if failureCode.hasPrefix("ambiguous_") {

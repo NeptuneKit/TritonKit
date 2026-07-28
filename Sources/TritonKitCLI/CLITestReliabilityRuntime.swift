@@ -88,60 +88,6 @@ struct TKTestReliabilityFlow: Codable, Equatable {
     let planDigest: String
 }
 
-enum TKTestReliabilityGateStatus: String, Codable, Equatable {
-    case passed
-    case blocked
-}
-
-enum TKTestReliabilityGateAuthority: String, Codable, Equatable {
-    case legacyDiagnostic = "legacy-diagnostic"
-    case receiptBacked = "receipt-backed"
-}
-
-struct TKTestReliabilityGate: Codable, Equatable {
-    let status: TKTestReliabilityGateStatus
-    let blockerCodes: [String]
-}
-
-struct TKTestReliabilityReport: Codable, Equatable {
-    let ok: Bool
-    let schemaVersion: Int
-    let kind: String
-    let gateAuthority: TKTestReliabilityGateAuthority
-    let eligibleForStage1Gate: Bool
-    let thresholds: TKTestReliabilityThresholds
-    let evidenceCompleteness: TKTestReliabilityMetric
-    let failureExplainability: TKTestReliabilityMetric
-    let outcomeRepeatability: TKTestReliabilityMetric
-    let flows: [TKTestReliabilityFlow]
-    let issueCounts: [String: Int]
-    let gate: TKTestReliabilityGate
-
-    init(
-        gateAuthority: TKTestReliabilityGateAuthority,
-        thresholds: TKTestReliabilityThresholds,
-        evidenceCompleteness: TKTestReliabilityMetric,
-        failureExplainability: TKTestReliabilityMetric,
-        outcomeRepeatability: TKTestReliabilityMetric,
-        flows: [TKTestReliabilityFlow],
-        issueCounts: [String: Int],
-        gate: TKTestReliabilityGate
-    ) {
-        self.ok = true
-        self.schemaVersion = 1
-        self.kind = "triton.test.reliability-report"
-        self.gateAuthority = gateAuthority
-        self.eligibleForStage1Gate = gateAuthority == .receiptBacked
-        self.thresholds = thresholds
-        self.evidenceCompleteness = evidenceCompleteness
-        self.failureExplainability = failureExplainability
-        self.outcomeRepeatability = outcomeRepeatability
-        self.flows = flows
-        self.issueCounts = issueCounts
-        self.gate = gate
-    }
-}
-
 enum TKTestReliabilityError: Error, Equatable, LocalizedError {
     case invalidSampleSet
     case invalidThresholds

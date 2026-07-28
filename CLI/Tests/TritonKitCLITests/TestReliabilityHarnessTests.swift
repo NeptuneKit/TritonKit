@@ -561,6 +561,7 @@ struct TestReliabilityHarnessTests {
             TKEvidenceManifest.self,
             from: Data(contentsOf: evidence.appendingPathComponent("manifest.json"))
         )
+        let identityChainURL = evidence.appendingPathComponent("reliability/identity-chain-v2.json")
 
         #expect(response.ok)
         #expect(response.outcomeMatched)
@@ -571,8 +572,19 @@ struct TestReliabilityHarnessTests {
         #expect(executor.plans[0].steps[1].selector?.text == "Alpha screen")
         #expect(FileManager.default.fileExists(atPath: evidence.appendingPathComponent("reliability/binding.json").path))
         #expect(FileManager.default.fileExists(atPath: evidence.appendingPathComponent("reliability/reset-receipt.json").path))
+        #expect(FileManager.default.fileExists(atPath: identityChainURL.path))
         #expect(manifest.artifacts.contains { $0.kind == "test.reliability.binding" && $0.path == "reliability/binding.json" })
         #expect(manifest.artifacts.contains { $0.kind == "test.reliability.reset-receipt" && $0.path == "reliability/reset-receipt.json" })
+        #expect(manifest.artifacts.filter { $0.kind == "test.reliability.identity-chain-v2" && $0.path == "reliability/identity-chain-v2.json" && $0.scope == "private" }.count == 1)
+        let identityChain = try JSONDecoder().decode(
+            TKTestReliabilityIdentityChainV2.self,
+            from: Data(contentsOf: identityChainURL)
+        )
+        #expect(identityChain.body.receiptSha256 == receiptAnchor)
+        #expect(identityChain.body.flowID == "flow_001")
+        #expect(identityChain.body.slot == 1)
+        #expect(identityChain.body.terminalStatus == .passed)
+        #expect(identityChain.body.outcomeMatched)
 
         do {
             _ = try await runTritonTestReliabilitySample(
@@ -585,6 +597,109 @@ struct TestReliabilityHarnessTests {
             #expect(error == .slotAlreadyClaimed)
         }
         #expect(executor.plans.count == 1)
+    }
+
+    @Test("receipt reports account for private identity-chain gaps and artifact drift without revealing identity")
+    func receiptReportBlocksMissingAndDriftedIdentityChains() async throws {
+        let fixture = try ReliabilityHarnessFixture()
+        defer { fixture.cleanup() }
+        let collection = try fixture.writeCollection(fixture.validCollection())
+        _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
+        let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let receiptAnchor = try fixture.receiptSHA256(receipt)
+        let reset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "flow_001", slot: 1)
+
+        _ = try await runTritonTestReliabilitySample(
+            request: TKTestReliabilitySampleRequest(
+                collectionReceipt: receipt.path,
+                expectedReceiptSha256: receiptAnchor,
+                flow: "flow_001",
+                slot: 1,
+                resetReceipt: reset.path,
+                target: fixture.targetID,
+                host: "127.0.0.1",
+                port: 19421,
+                confirm: true
+            ),
+            executor: HarnessFakeExecutor(),
+            targetResolver: fixture.targetResolver()
+        )
+
+        let incomplete = try buildTritonTestReliabilityReceiptReport(
+            collectionReceiptPath: receipt.path,
+            expectedReceiptSha256: receiptAnchor
+        )
+        #expect(incomplete.identityChain.state == .missing)
+        #expect(incomplete.identityChain.expectedSlotCount == 61)
+        #expect(incomplete.identityChain.validSlotCount == 1)
+        #expect(incomplete.identityChain.missingSlotCount == 60)
+        #expect(incomplete.identityChain.invalidSlotCount == 0)
+        #expect(incomplete.identityChain.receiptAnchorVerified)
+        #expect((incomplete.issueCounts["identity_chain_missing"] ?? 0) == 60)
+        #expect(incomplete.gate.blockerCodes.contains("identity_chain_incomplete"))
+        let encodedIncomplete = try encodeJSON(incomplete)
+        #expect(!encodedIncomplete.contains(receiptAnchor))
+        #expect(!encodedIncomplete.contains(fixture.evidenceRoot.path))
+        #expect(!encodedIncomplete.contains(fixture.targetID))
+        #expect(!encodedIncomplete.contains(fixture.bundleID))
+        #expect(!encodedIncomplete.contains("initial-alpha"))
+
+        let binding = fixture.evidenceRoot
+            .appendingPathComponent("flow_001/sample-001.tritonevidence/reliability/binding.json")
+        try Data("{\"tampered\":true}".utf8).write(to: binding, options: .atomic)
+
+        let drifted = try buildTritonTestReliabilityReceiptReport(
+            collectionReceiptPath: receipt.path,
+            expectedReceiptSha256: receiptAnchor
+        )
+        #expect(drifted.identityChain.state == .invalid)
+        #expect(drifted.identityChain.validSlotCount == 0)
+        #expect(drifted.identityChain.missingSlotCount == 60)
+        #expect(drifted.identityChain.invalidSlotCount == 1)
+        #expect((drifted.issueCounts["identity_chain_artifact_drift"] ?? 0) == 1)
+        #expect(drifted.gate.blockerCodes.contains("identity_chain_invalid"))
+    }
+
+    @Test("a sample preserves its claimed slot when private identity-chain sealing cannot complete")
+    func sampleFailsClosedWhenIdentityChainCannotSeal() async throws {
+        let fixture = try ReliabilityHarnessFixture()
+        defer { fixture.cleanup() }
+        let collection = try fixture.writeCollection(fixture.validCollection())
+        _ = try reserveTritonTestReliabilityCollection(collectionPath: collection.path)
+        let receipt = fixture.evidenceRoot.appendingPathComponent("collection-receipt.json")
+        let receiptAnchor = try fixture.receiptSHA256(receipt)
+        let reset = try fixture.writeResetReceipt(receiptURL: receipt, flowID: "flow_001", slot: 1)
+        let evidence = fixture.evidenceRoot
+            .appendingPathComponent("flow_001/sample-001.tritonevidence", isDirectory: true)
+
+        do {
+            _ = try await runTritonTestReliabilitySample(
+                request: TKTestReliabilitySampleRequest(
+                    collectionReceipt: receipt.path,
+                    expectedReceiptSha256: receiptAnchor,
+                    flow: "flow_001",
+                    slot: 1,
+                    resetReceipt: reset.path,
+                    target: fixture.targetID,
+                    host: "127.0.0.1",
+                    port: 19421,
+                    confirm: true
+                ),
+                executor: HarnessIdentityChainFailingExecutor(),
+                targetResolver: fixture.targetResolver()
+            )
+            Issue.record("A completed runner with a missing chain component must not report a sealed sample")
+        } catch let error as TKTestReliabilityHarnessError {
+            #expect(error == .identityChainWriteFailed)
+        }
+
+        let detail = testReliabilityHarnessErrorDetail(.identityChainWriteFailed)
+        #expect(detail.code == "reliability_identity_chain_write_failed")
+        #expect(!detail.message.contains(fixture.evidenceRoot.path))
+        #expect(FileManager.default.fileExists(atPath: evidence.path))
+        #expect(!FileManager.default.fileExists(
+            atPath: evidence.appendingPathComponent("reliability/identity-chain-v2.json").path
+        ))
     }
 
     @Test("target endpoint and reset receipt mismatches fail before claiming a slot")
@@ -1030,6 +1145,18 @@ private final class HarnessFailingExecutor: TKTestRunPrimitiveExecutor {
                 )
             )
         }
+        return .passed(command: ["fake", step.type])
+    }
+}
+
+private final class HarnessIdentityChainFailingExecutor: TKTestRunPrimitiveExecutor {
+    func execute(
+        step: TKTestPlanStep,
+        plan: TKTestNormalizedPlan,
+        context: TKTestRunExecutionContext
+    ) async throws -> TKTestRunPrimitiveOutcome {
+        let normalizedPlanURL = context.evidenceDirectory.appendingPathComponent("normalized-plan.json")
+        try FileManager.default.removeItem(at: normalizedPlanURL)
         return .passed(command: ["fake", step.type])
     }
 }
