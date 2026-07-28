@@ -1,4 +1,7 @@
 import Foundation
+import Hummingbird
+import HummingbirdTesting
+import NIOCore
 import Testing
 import TritonKitShared
 @testable import TritonKitCLI
@@ -55,8 +58,8 @@ struct WebCommandTests {
         #expect(plan.discovery.transportPriority == ["usb", "bonjour", "manual"])
         #expect(plan.discovery.registry == "serve-owned")
         #expect(plan.discovery.targetRegistryEndpoint == "http://127.0.0.1:19421/web/target-registry")
-        #expect(plan.discovery.managedServeHost == "0.0.0.0")
-        #expect(plan.environment["TRITONKIT_WEB_MANAGED_SERVE_HOST"] == "0.0.0.0")
+        #expect(plan.discovery.managedServeHost == "127.0.0.1")
+        #expect(plan.environment["TRITONKIT_WEB_MANAGED_SERVE_HOST"] == "127.0.0.1")
     }
 
     @Test("web command escape hatches narrow automatic discovery")
@@ -444,6 +447,64 @@ struct WebCommandTests {
         #expect(error.error.message.contains("only exposed for iOS Simulator") == true)
     }
 
+    @Test("Web write routes expose one stable readonly envelope")
+    func webWriteRoutesExposeStableReadonlyEnvelope() {
+        let input = webReadonlyWriteResponse(endpoint: "/web/input")
+        let hostInput = webReadonlyWriteResponse(endpoint: "/web/host-input")
+        let nodeProperty = webReadonlyWriteResponse(endpoint: "/web/node-property")
+
+        #expect(input.error.code == "web_input_readonly")
+        #expect(input.error.endpoint == "/web/input")
+        #expect(input.error.hint?.contains("triton act") == true)
+        #expect(hostInput.error.code == "web_host_input_readonly")
+        #expect(hostInput.error.endpoint == "/web/host-input")
+        #expect(hostInput.error.hint?.contains("triton act") == true)
+        #expect(nodeProperty.error.code == "web_node_property_readonly")
+        #expect(nodeProperty.error.endpoint == "/web/node-property")
+        #expect(nodeProperty.error.hint?.contains("triton debug patch-node") == true)
+    }
+
+    @Test("Web write routes reject malformed bodies in-memory without opening a listener")
+    func webWriteRoutesRejectMalformedBodiesInMemory() async throws {
+        let router = Router(context: BasicRequestContext.self)
+        registerWebReadonlyPostRoute(on: router, endpoint: "/web/input")
+        registerWebReadonlyPostRoute(on: router, endpoint: "/web/host-input")
+        registerWebReadonlyPostRoute(on: router, endpoint: "/web/node-property")
+        registerWebReadonlyGetRoute(on: router, endpoint: "/web/host-input")
+        registerWebReadonlyGetRoute(on: router, endpoint: "/web/node-property")
+        let app = Application(router: router)
+        let malformedJSON = ByteBuffer(string: "{ invalid-json")
+
+        try await app.test(.router) { client in
+            for (endpoint, expectedCode) in [
+                ("/web/input", "web_input_readonly"),
+                ("/web/host-input", "web_host_input_readonly"),
+                ("/web/node-property", "web_node_property_readonly"),
+            ] {
+                let response = try await client.execute(
+                    uri: endpoint,
+                    method: .post,
+                    headers: [.contentType: "application/json"],
+                    body: malformedJSON
+                )
+                #expect(response.status == .methodNotAllowed)
+                let error = try decodeReadonlyWebWriteError(response.body).error
+                #expect(error.endpoint == endpoint)
+                #expect(error.code == expectedCode)
+            }
+            for (endpoint, expectedCode) in [
+                ("/web/host-input", "web_host_input_readonly"),
+                ("/web/node-property", "web_node_property_readonly"),
+            ] {
+                let response = try await client.execute(uri: endpoint, method: .get)
+                #expect(response.status == .methodNotAllowed)
+                let error = try decodeReadonlyWebWriteError(response.body).error
+                #expect(error.endpoint == endpoint)
+                #expect(error.code == expectedCode)
+            }
+        }
+    }
+
     @Test("schema exposes web command contract")
     func schemaExposesWebCommandContract() {
         let schema = commandSchemas().first { $0.name == "web" }
@@ -471,6 +532,11 @@ struct WebCommandTests {
 
         #expect(commandNames.contains("web"))
     }
+}
+
+private func decodeReadonlyWebWriteError(_ body: ByteBuffer) throws -> TKCLIErrorResponse {
+    let bytes = body.getBytes(at: body.readerIndex, length: body.readableBytes) ?? []
+    return try JSONDecoder().decode(TKCLIErrorResponse.self, from: Data(bytes))
 }
 
 private func temporaryRepoWithWeb(nodeModules: Bool) throws -> URL {

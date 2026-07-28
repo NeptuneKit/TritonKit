@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 
 export const defaultHostInputBaseURL = "http://127.0.0.1:19421";
-export const defaultManagedTritonServeHost = process.env.TRITONKIT_WEB_MANAGED_SERVE_HOST || "0.0.0.0";
+export const defaultManagedTritonServeHost = "127.0.0.1";
 export const defaultRuntimeDataBaseURL = "http://127.0.0.1:19421";
 
 let managedTritonServeProcess;
@@ -54,4 +54,3 @@ async function canReachTritonServe(baseURL) {
     return false;
   }
 }
-

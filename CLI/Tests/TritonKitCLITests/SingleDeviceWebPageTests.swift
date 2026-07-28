@@ -20,7 +20,13 @@ struct SingleDeviceWebPageTests {
         #expect(html.contains("fetchJSON('/web/targets')"))
         #expect(html.contains("fetchJSON(`/web/geometry?target=${encodeURIComponent(target.id)}`"))
         #expect(html.contains("fetchBlob(`/web/screenshot?target=${encodeURIComponent(target.id)}"))
-        #expect(html.contains("fetchJSON(`/web/input?target=${encodeURIComponent(target.id)}`"))
+        #expect(!html.contains("fetchJSON(`/web/input?target=${encodeURIComponent(target.id)}`"))
+        #expect(!html.contains("function sendInput("))
+        #expect(!html.contains("action-control"))
+        #expect(html.contains("Web mirror is readonly"))
+        #expect(html.contains("readonly-badge"))
+        #expect(!html.contains("preview and operate it here"))
+        #expect(html.contains("triton act"))
         #expect(html.contains("targetPlatform"))
         #expect(html.contains("window.__TRITON_INITIAL_TARGET__"))
         #expect(html.contains("refreshInFlight"))
@@ -284,44 +290,6 @@ struct SingleDeviceWebPageTests {
         #expect(capabilities.contains { capability in
             capability.action == "multiTouchPath" && capability.source == "host" && !capability.supported && capability.reason == "unsupported_capability"
         })
-    }
-
-    @Test("packaged web host input routes simulator targets to the host adapter")
-    func packagedWebHostInputRoutesSimulatorTargetsToHostAdapter() {
-        #expect(webHostInputBridgeRoute(
-            platform: "ios",
-            target: "SIM-1",
-            scope: "simulator",
-            kind: "simulator",
-            source: "host"
-        ) == .host(id: "host:ios:SIM-1"))
-
-        #expect(webHostInputBridgeRoute(
-            platform: "android",
-            target: "emulator-5554",
-            scope: "emulator",
-            kind: "emulator",
-            source: "host"
-        ) == .host(id: "host:android:emulator-5554"))
-    }
-
-    @Test("packaged web host input keeps iOS real devices on runtime mirrors")
-    func packagedWebHostInputKeepsIOSRealDevicesOnRuntimeMirrors() {
-        #expect(webHostInputBridgeRoute(
-            platform: "ios",
-            target: "ios-real:abc",
-            scope: nil,
-            kind: nil,
-            source: nil
-        ) == .runtimeMirror)
-
-        #expect(webHostInputBridgeRoute(
-            platform: "macos",
-            target: "local",
-            scope: nil,
-            kind: nil,
-            source: nil
-        ) == .unsupported)
     }
 
     @Test("web target registry marks real-device runtime ambiguous across multiple ready hosts")

@@ -13,11 +13,11 @@ import {
   pngBytes,
 } from "./ios-bridge/testSupport.mjs";
 
-test("managed Triton serve binds all interfaces for real-device Debug runtime access", () => {
-  assert.equal(getManagedTritonServeBindHost(), "0.0.0.0");
+test("managed Triton serve stays loopback-only for the readonly Web bridge", () => {
+  assert.equal(getManagedTritonServeBindHost(), "127.0.0.1");
 });
 
-test("dispatches iOS real-device Web input through App runtime", async () => {
+test("rejects iOS real-device Web input without invoking an App runtime", async () => {
   const tritonPath = await createFakeTritonScriptFromSource(`#!/usr/bin/env node
 const args = process.argv.slice(2);
 if (args.join(" ") === "list --json") {
@@ -58,16 +58,20 @@ process.stdin.on("end", () => {
     body: JSON.stringify({ type: "tap", x: 20, y: 40 }),
   });
 
-  assert.equal(response.statusCode, 200);
+  assert.equal(response.statusCode, 405);
   assert.match(response.headers["content-type"], /application\/json/);
   assert.deepEqual(JSON.parse(response.body), {
-    ok: true,
-    action: "tap",
-    message: "Tapped through runtime",
+    ok: false,
+    error: {
+      code: "web_host_input_readonly",
+      message: "Triton Web is a readonly device hub and does not execute browser write actions.",
+      endpoint: "/web/host-input",
+      hint: "Use `triton act … --json` or another explicit CLI control command for the selected target.",
+    },
   });
 });
 
-test("proxies iOS Simulator Web input through triton serve host target route", async () => {
+test("rejects iOS Simulator Web input without forwarding it to triton serve", async () => {
   const received = [];
   const server = await createFakeHostInputServer(received, {
     ok: true,
@@ -83,23 +87,20 @@ test("proxies iOS Simulator Web input through triton serve host target route", a
     const response = await invokeMiddleware(middleware, {
       method: "POST",
       url: "/web/host-input?platform=ios&target=AAAA-BBBB&scope=simulator&kind=simulator&source=host",
-      body: JSON.stringify({ type: "tap", x: 180, y: 410, width: 390, height: 844 }),
+      body: "{ malformed-json",
     });
 
-    assert.equal(response.statusCode, 200);
+    assert.equal(response.statusCode, 405);
     assert.deepEqual(JSON.parse(response.body), {
-      ok: true,
-      action: "tap",
-      message: "iOS Simulator tap was submitted through Triton host-HID adapter.",
-    });
-    assert.deepEqual(received, [
-      {
-        method: "POST",
-        pathname: "/web/input",
-        target: "host:ios:AAAA-BBBB",
-        body: { type: "tap", x: 180, y: 410, width: 390, height: 844 },
+      ok: false,
+      error: {
+        code: "web_host_input_readonly",
+        message: "Triton Web is a readonly device hub and does not execute browser write actions.",
+        endpoint: "/web/host-input",
+        hint: "Use `triton act … --json` or another explicit CLI control command for the selected target.",
       },
-    ]);
+    });
+    assert.deepEqual(received, []);
   } finally {
     await server.close();
   }
@@ -148,7 +149,7 @@ test("target registry route reuses managed Triton serve after readiness probe", 
   }
 });
 
-test("dispatches iOS Simulator runtime long press through matched App runtime", async () => {
+test("rejects iOS Simulator runtime long press without resolving an App runtime", async () => {
   const tritonPath = await createFakeTritonScriptFromSource(`#!/usr/bin/env node
 const args = process.argv.slice(2);
 if (args.join(" ") === "list --json") {
@@ -196,11 +197,15 @@ process.stdin.on("end", () => {
     body: JSON.stringify({ type: "longPress", x: 20, y: 40, width: 390, height: 844, duration: 0.52 }),
   });
 
-  assert.equal(response.statusCode, 200);
+  assert.equal(response.statusCode, 405);
   assert.deepEqual(JSON.parse(response.body), {
-    ok: true,
-    action: "longPress",
-    message: "Long press through runtime",
+    ok: false,
+    error: {
+      code: "web_host_input_readonly",
+      message: "Triton Web is a readonly device hub and does not execute browser write actions.",
+      endpoint: "/web/host-input",
+      hint: "Use `triton act … --json` or another explicit CLI control command for the selected target.",
+    },
   });
 });
 

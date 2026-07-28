@@ -118,6 +118,21 @@ func singleDeviceWebPageHTML(initialTarget: String? = nil) -> String {
       justify-content: flex-end;
     }
 
+    .readonly-badge {
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(47, 100, 233, 0.28);
+      border-radius: 999px;
+      padding: 0 10px;
+      color: #2448b8;
+      background: rgba(47, 100, 233, 0.1);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
     .icon-button {
       width: 44px;
       height: 44px;
@@ -307,7 +322,7 @@ func singleDeviceWebPageHTML(initialTarget: String? = nil) -> String {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      cursor: crosshair;
+      cursor: default;
       user-select: none;
       -webkit-user-drag: none;
     }
@@ -494,25 +509,14 @@ func singleDeviceWebPageHTML(initialTarget: String? = nil) -> String {
     </div>
 
     <div class="toolbar-actions">
-      <button class="icon-button" id="swipeDownButton" type="button" title="Swipe Down" aria-label="Swipe Down">
-        <svg class="icon" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="18" rx="3"/><path d="M5 8h3M16 16h3"/></svg>
-      </button>
-      <button class="icon-button" id="swipeUpButton" type="button" title="Swipe Up" aria-label="Swipe Up">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M8 8l4-4 4 4"/><rect x="8" y="16" width="8" height="5" rx="2"/></svg>
-      </button>
-      <button class="icon-button active" id="tapModeButton" type="button" title="Tap Mode" aria-label="Tap Mode">
-        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
-      </button>
+      <span class="readonly-badge" title="Web mirror is readonly">Readonly</span>
       <button class="icon-button" id="targetButton" type="button" title="Targets" aria-label="Targets">
         <svg class="icon" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 9h8M8 13h5"/></svg>
-      </button>
-      <button class="icon-button action-control" id="homeButton" type="button" title="Home" aria-label="Home">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
       </button>
       <button class="icon-button" id="refreshButton" type="button" title="Refresh" aria-label="Refresh">
         <svg class="icon" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.6"/><path d="M20 4v7h-7"/></svg>
       </button>
-      <button class="icon-button action-control" id="copyButton" type="button" title="Copy Target" aria-label="Copy Target">
+      <button class="icon-button" id="copyButton" type="button" title="Copy Target" aria-label="Copy Target">
         <svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><rect x="4" y="4" width="11" height="11" rx="2"/></svg>
       </button>
     </div>
@@ -534,7 +538,7 @@ func singleDeviceWebPageHTML(initialTarget: String? = nil) -> String {
             <span id="previewMeta" class="hud-pill">no screenshot</span>
           </div>
           <img id="previewImage" class="preview-image" alt="Device screenshot">
-          <div id="emptyPreview" class="screen-empty">Connect one TritonKit runtime target to preview and operate it here.</div>
+          <div id="emptyPreview" class="screen-empty">Connect one TritonKit runtime target to preview it here. Web mirror is readonly.</div>
         </div>
       </div>
     </section>
@@ -559,10 +563,6 @@ func singleDeviceWebPageHTML(initialTarget: String? = nil) -> String {
     <span id="deviceName">-</span>
     <span id="osName">-</span>
     <span id="hierarchyState">-</span>
-    <textarea id="textValue" spellcheck="false"></textarea>
-    <button class="action-control" id="typeButton" type="button">Type</button>
-    <button class="action-control" id="pasteButton" type="button">Paste</button>
-    <button class="action-control" id="clearButton" type="button">Clear Focused Input</button>
   </section>
 
   <script>
@@ -603,13 +603,6 @@ func singleDeviceWebPageHTML(initialTarget: String? = nil) -> String {
       statusText: document.getElementById('statusText'),
       lastUpdated: document.getElementById('lastUpdated'),
       actionLog: document.getElementById('actionLog'),
-      textValue: document.getElementById('textValue'),
-      swipeUpButton: document.getElementById('swipeUpButton'),
-      swipeDownButton: document.getElementById('swipeDownButton'),
-      typeButton: document.getElementById('typeButton'),
-      pasteButton: document.getElementById('pasteButton'),
-      clearButton: document.getElementById('clearButton'),
-      homeButton: document.getElementById('homeButton'),
       copyButton: document.getElementById('copyButton')
     };
 
@@ -655,10 +648,7 @@ func singleDeviceWebPageHTML(initialTarget: String? = nil) -> String {
     }
 
     function setControlsEnabled(enabled) {
-      document.querySelectorAll('.action-control').forEach((control) => {
-        control.disabled = !enabled;
-      });
-      els.previewImage.style.pointerEvents = enabled ? 'auto' : 'none';
+      els.copyButton.disabled = !enabled;
     }
 
     function targetKey(target) {
@@ -692,24 +682,7 @@ func singleDeviceWebPageHTML(initialTarget: String? = nil) -> String {
     }
 
     function operationScopeText(target) {
-      if (target?.source === 'host') {
-        const hostPlatform = String(target?.platform || '').toLowerCase();
-        if (hostPlatform === 'android') {
-          return 'Ready for Android emulator preview and host-side input actions.';
-        }
-        if (hostPlatform === 'harmony') {
-          return 'Ready for Harmony emulator preview and host-side input actions.';
-        }
-        return 'Ready for iOS simulator framebuffer preview. App-level input uses the embedded runtime when available.';
-      }
-      const platform = String(target?.platform || '').toLowerCase();
-      if (platform === 'android') {
-        return 'Ready for Android emulator preview through the connected runtime target.';
-      }
-      if (platform === 'harmony') {
-        return 'Ready for Harmony emulator preview through the connected runtime target.';
-      }
-      return 'Ready for iOS simulator preview and embedded runtime input actions.';
+      return `Ready for ${platformLabel(target)} preview. Web mirror is readonly; use triton act or another explicit CLI control command for actions.`;
     }
 
     function isActiveTarget(target) {
@@ -782,8 +755,8 @@ func singleDeviceWebPageHTML(initialTarget: String? = nil) -> String {
 
       if (!target) {
         const text = state.preferredTargetSelector
-          ? `Waiting for target ${state.preferredTargetSelector}...`
-          : 'Connect one TritonKit runtime target to preview and operate it here.';
+          ? `Waiting for target ${state.preferredTargetSelector}... Web mirror is readonly.`
+          : 'Connect one TritonKit runtime target to preview it here. Web mirror is readonly.';
         els.toolbarTitle.textContent = 'No target';
         els.toolbarMeta.textContent = text;
         els.targetId.textContent = '-';
@@ -898,44 +871,6 @@ func singleDeviceWebPageHTML(initialTarget: String? = nil) -> String {
       refreshStatus().catch((error) => writeLog(`${label} failed`, error.data || error.message));
     }
 
-    function pointFromPreview(event) {
-      const rect = els.previewImage.getBoundingClientRect();
-      const bounds = state.geometry?.bounds;
-      const width = bounds?.width || els.previewImage.naturalWidth || rect.width;
-      const height = bounds?.height || els.previewImage.naturalHeight || rect.height;
-      const x = (event.clientX - rect.left) / Math.max(rect.width, 1) * width;
-      const y = (event.clientY - rect.top) / Math.max(rect.height, 1) * height;
-      return { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, width, height };
-    }
-
-    function swipeRequest(direction) {
-      const bounds = state.geometry?.bounds || {
-        width: els.previewImage.naturalWidth || 390,
-        height: els.previewImage.naturalHeight || 844
-      };
-      const centerX = Math.round(bounds.width / 2);
-      const topY = Math.round(bounds.height * 0.24);
-      const bottomY = Math.round(bounds.height * 0.76);
-      return direction === 'up'
-        ? { type: 'swipe', startX: centerX, startY: bottomY, endX: centerX, endY: topY, width: bounds.width, height: bounds.height, duration: 0.25 }
-        : { type: 'swipe', startX: centerX, startY: topY, endX: centerX, endY: bottomY, width: bounds.width, height: bounds.height, duration: 0.25 };
-    }
-
-    async function sendInput(input) {
-      const target = state.target;
-      if (!target) {
-        writeLog('blocked', 'Select a connected target before operating.');
-        return;
-      }
-
-      const result = await fetchJSON(`/web/input?target=${encodeURIComponent(target.id)}`, {
-        method: 'POST',
-        body: JSON.stringify(input)
-      });
-      writeLog(input.type, result);
-      window.setTimeout(() => runRefresh('refresh'), 180);
-    }
-
     function writeLog(label, value) {
       const body = typeof value === 'string' ? value : JSON.stringify(value);
       els.actionLog.hidden = false;
@@ -951,33 +886,6 @@ func singleDeviceWebPageHTML(initialTarget: String? = nil) -> String {
       renderTargets(state.targets);
     });
 
-    els.previewImage.addEventListener('click', (event) => {
-      const point = pointFromPreview(event);
-      sendInput({ type: 'tap', x: point.x, y: point.y, width: point.width, height: point.height })
-        .catch((error) => writeLog('tap failed', error.data || error.message));
-    });
-
-    els.swipeUpButton.addEventListener('click', () => {
-      sendInput(swipeRequest('up')).catch((error) => writeLog('swipe failed', error.data || error.message));
-    });
-
-    els.swipeDownButton.addEventListener('click', () => {
-      sendInput(swipeRequest('down')).catch((error) => writeLog('swipe failed', error.data || error.message));
-    });
-
-    els.typeButton.addEventListener('click', () => {
-      sendInput({ type: 'type', text: els.textValue.value }).catch((error) => writeLog('type failed', error.data || error.message));
-    });
-
-    els.pasteButton.addEventListener('click', () => {
-      sendInput({ type: 'paste', text: els.textValue.value }).catch((error) => writeLog('paste failed', error.data || error.message));
-    });
-
-    els.clearButton.addEventListener('click', () => {
-      sendInput({ type: 'clear' }).catch((error) => writeLog('clear failed', error.data || error.message));
-    });
-
-    els.homeButton.addEventListener('click', () => writeLog('home', 'Host-side Home is not exposed in this embedded runtime surface yet.'));
     els.copyButton.addEventListener('click', () => {
       const text = state.target?.id || '';
       if (!text || !navigator.clipboard) {

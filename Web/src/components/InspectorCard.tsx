@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Button, Card, Checkbox, Flex, Input, InputNumber, message, Modal, Select, Space, Spin, Switch, Tabs, Tag, Tree, Typography } from "antd";
-import { Copy, Maximize2, RefreshCw, Search, Send, SlidersHorizontal } from "lucide-react";
+import { Copy, Maximize2, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
 import { useAppContext } from "../AppContext";
 import { deriveAxTree, deriveViewTree, findSelectedNode, type HierarchyTreeNode } from "../inspect/hierarchyDerive";
 import { buildNodePropertyDraft, buildNodePropertyPatchPayload, hasNodePropertyChanges, type NodePropertyDraft } from "../inspect/nodePropertyDraft";
@@ -42,7 +42,6 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
   const [selectedNodeDetails, setSelectedNodeDetails] = useState<HierarchyLayerNode | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [nodePatchDraft, setNodePatchDraft] = useState<NodePropertyDraft | null>(null);
-  const [applyingNodePatch, setApplyingNodePatch] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [liveViewTreeData, setLiveViewTreeData] = useState<HierarchyTreeNode[]>([]);
@@ -266,7 +265,6 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
     });
   }, [currentTarget?.key, nodePatchDraft, selectedNodeDetails]);
   const nodePatchHasChanges = hasNodePropertyChanges(nodePatchPayload?.changes);
-  const canApplyNodePatch = Boolean(currentTarget && currentTarget.platform === "ios" && nodePatchPayload && nodePatchHasChanges);
 
   const updateNodePatchDraft = useCallback(<K extends keyof NodePropertyDraft>(
     section: K,
@@ -291,36 +289,6 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
       message.warning("当前浏览器不支持剪切板写入");
     }
   }, [nodePatchPayload]);
-
-  const applyNodePatchDraft = useCallback(async () => {
-    if (!currentTarget || !nodePatchPayload || !nodePatchHasChanges) return;
-    const params = new URLSearchParams({
-      platform: currentTarget.platform,
-      target: currentTarget.target,
-    });
-    if (currentTarget.scope) params.set("scope", currentTarget.scope);
-    if (currentTarget.kind) params.set("kind", currentTarget.kind);
-    if (currentTarget.hierarchySource) params.set("source", currentTarget.hierarchySource);
-
-    setApplyingNodePatch(true);
-    try {
-      const response = await fetch(`/web/node-property?${params.toString()}`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(nodePatchPayload),
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok || result?.ok === false) {
-        throw new Error(result?.error?.message || result?.message || `节点属性写入失败 (${response.status})`);
-      }
-      message.success("节点属性已应用到设备");
-      await refreshInspectSession(currentTarget.key, "nodePropertyPatched");
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : String(error));
-    } finally {
-      setApplyingNodePatch(false);
-    }
-  }, [currentTarget, nodePatchHasChanges, nodePatchPayload, refreshInspectSession]);
 
   return (
     <Card
@@ -438,7 +406,7 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
         footer={
           <Flex justify="space-between" align="center" gap={8}>
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              {nodePatchHasChanges ? "有未应用改动" : "无改动"}
+              {nodePatchHasChanges ? "只读草稿：请使用 CLI 显式应用" : "无改动"}
             </Typography.Text>
             <Space size={8}>
               <Button icon={<Copy size={13} />} onClick={copySelectedNodeDetails} disabled={!selectedNodeDetails}>
@@ -446,9 +414,6 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
               </Button>
               <Button type="primary" icon={<Copy size={13} />} onClick={copyNodePatchDraft} disabled={!nodePatchPayload}>
                 复制 patch
-              </Button>
-              <Button icon={<Send size={13} />} onClick={applyNodePatchDraft} loading={applyingNodePatch} disabled={!canApplyNodePatch}>
-                应用到设备
               </Button>
             </Space>
           </Flex>

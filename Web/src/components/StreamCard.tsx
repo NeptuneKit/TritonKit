@@ -7,18 +7,7 @@ import { fetchHostTargets } from "../data/iosSimulatorClient";
 import { deriveOverlayNodes } from "../inspect/hierarchyDerive";
 import { hitTestHierarchyNode } from "../inspect/hitTest";
 import { loadStreamTargetFps, saveStreamTargetFps } from "../streamPreferences";
-import type { DeviceTarget, WebInputCapability } from "../types";
-import {
-  createGestureSession,
-  finishGestureSession,
-  longPressFromSession,
-  LONG_PRESS_THRESHOLD_MS,
-  mapPointerToDevicePoint,
-  webHostInputQueryForGesture,
-  type DevicePoint,
-  type StreamGestureInput,
-  type StreamGestureSession,
-} from "../streamGestureModel";
+import type { DeviceTarget } from "../types";
 
 // ── 类型 ───────────────────────────────────────────────────────
 interface SimTarget {
@@ -32,7 +21,6 @@ interface SimTarget {
   kind?: string;
   source?: string;
   targetKey?: string;
-  inputCapabilities?: WebInputCapability[];
 }
 
 export function StreamCard({ nodeId }: { nodeId: string }) {
@@ -43,14 +31,10 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
   const [fps,    setFps]              = useState(0);
   const [targetFps, setTargetFps]     = useState(loadStreamTargetFps);
   const [refreshing, setRefreshing]   = useState(false);
-  const [gestureStatus, setGestureStatus] = useState<string | null>(null);
 
   const frameCount    = useRef(0);
   const lastFpsTs     = useRef(Date.now());
   const hasConnectedRef = useRef(false);
-  const gestureSessionRef = useRef<StreamGestureSession | null>(null);
-  const gesturePointRef = useRef<DevicePoint | null>(null);
-  const longPressTimerRef = useRef<number | null>(null);
 
   const imgRef = useRef<HTMLImageElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -100,7 +84,6 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
             kind: target.kind,
             source: target.screenshotSource ?? "host",
             targetKey: inspectTargets[index]?.key,
-            inputCapabilities: target.inputCapabilities,
           }));
         setTargets(readyTargets);
         if (readyTargets.length > 0) {
@@ -265,119 +248,6 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
     }
   }, [connected, overlayMode, selectedTarget, inspectSession?.scene, inspectSession?.stale, refreshInspectSession]);
 
-  const clearLongPressTimer = useCallback(() => {
-    if (longPressTimerRef.current != null) {
-      window.clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-  }, []);
-
-  useEffect(() => clearLongPressTimer, [clearLongPressTimer]);
-
-  const pointFromPointerEvent = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    if (!viewportRef.current || !imgLayout) return null;
-    return mapPointerToDevicePoint(
-      { clientX: event.clientX, clientY: event.clientY },
-      viewportRef.current.getBoundingClientRect(),
-      imgLayout,
-    );
-  }, [imgLayout]);
-
-  const sendGestureInput = useCallback(async (gesture: StreamGestureInput) => {
-    if (!selectedUdid || !selectedTarget) return;
-    const query = webHostInputQueryForGesture({
-      platform: selectedTarget.platform,
-      target: selectedUdid,
-      gestureType: gesture.type,
-    });
-    if (!query) {
-      setGestureStatus(`${gesture.type} 当前平台暂不支持`);
-      return;
-    }
-    setGestureStatus(`${gesture.type} 发送中...`);
-    try {
-      const res = await fetch(`/web/host-input?${query}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(gesture),
-      });
-      const body = await res.json().catch(() => null);
-      if (!res.ok || body?.ok === false) {
-        throw new Error(body?.error?.message || body?.message || `HTTP ${res.status}`);
-      }
-      setGestureStatus(formatGestureStatus(gesture));
-      if (selectedTarget.targetKey) {
-        await refreshInspectSession(selectedTarget.targetKey, "gestureCompleted");
-      }
-    } catch (error) {
-      setGestureStatus(`输入失败：${(error as Error).message}`);
-    }
-  }, [refreshInspectSession, selectedTarget, selectedUdid]);
-
-  const handleViewportPointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    if (!connected || !selectedUdid || overlayMode !== "none") return;
-    const point = pointFromPointerEvent(event);
-    if (!point) {
-      setGestureStatus("未命中设备画面");
-      return;
-    }
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    const session = createGestureSession({
-      pointerId: event.pointerId,
-      point,
-      startedAt: performance.now(),
-    });
-    gestureSessionRef.current = session;
-    gesturePointRef.current = point;
-    clearLongPressTimer();
-    longPressTimerRef.current = window.setTimeout(() => {
-      const current = gestureSessionRef.current;
-      if (!current || current.pointerId !== event.pointerId) return;
-      const gesture = longPressFromSession(current, {
-        now: performance.now(),
-        currentPoint: gesturePointRef.current,
-      });
-      if (gesture) {
-        void sendGestureInput(gesture);
-      }
-    }, LONG_PRESS_THRESHOLD_MS);
-  }, [clearLongPressTimer, connected, overlayMode, pointFromPointerEvent, selectedUdid, sendGestureInput]);
-
-  const handleViewportPointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    const session = gestureSessionRef.current;
-    if (!session || session.pointerId !== event.pointerId) return;
-    gesturePointRef.current = pointFromPointerEvent(event);
-  }, [pointFromPointerEvent]);
-
-  const handleViewportPointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    const session = gestureSessionRef.current;
-    if (!session || session.pointerId !== event.pointerId) return;
-    event.preventDefault();
-    clearLongPressTimer();
-    const point = pointFromPointerEvent(event);
-    const gesture = finishGestureSession(session, {
-      point,
-      endedAt: performance.now(),
-    });
-    gestureSessionRef.current = null;
-    gesturePointRef.current = null;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-    if (gesture) {
-      void sendGestureInput(gesture);
-    }
-  }, [clearLongPressTimer, pointFromPointerEvent, sendGestureInput]);
-
-  const handleViewportPointerCancel = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    const session = gestureSessionRef.current;
-    if (!session || session.pointerId !== event.pointerId) return;
-    clearLongPressTimer();
-    gestureSessionRef.current = null;
-    gesturePointRef.current = null;
-  }, [clearLongPressTimer]);
-
   // ─── 计算需要渲染的节点 (按面积从大到小排序，确保小元素层叠在顶部易于交互) ─────────────────────
   const flatNodes = inspectSession?.scene?.nodes ?? [];
 
@@ -431,14 +301,9 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
           >
             {connected ? "● LIVE" : "○ 离线"}
           </Tag>
-          {gestureStatus && (
-            <Tag
-              color="blue"
-              style={{ fontSize: 9, lineHeight: "14px", borderRadius: 20, margin: 0, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}
-            >
-              {gestureStatus}
-            </Tag>
-          )}
+          <Tag color="blue" style={{ fontSize: 9, lineHeight: "14px", borderRadius: 20, margin: 0 }}>
+            只读镜像
+          </Tag>
         </div>
       </div>
 
@@ -481,10 +346,6 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
         className="stream-viewport"
         ref={viewportRef}
         style={{ position: "relative" }}
-        onPointerDown={handleViewportPointerDown}
-        onPointerMove={handleViewportPointerMove}
-        onPointerUp={handleViewportPointerUp}
-        onPointerCancel={handleViewportPointerCancel}
       >
         {connected && selectedUdid ? (
           <>
@@ -593,19 +454,4 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
 
     </div>
   );
-}
-
-function hierarchyFetchOptions(target: SimTarget) {
-  return {
-    scope: target.scope,
-    kind: target.kind,
-    source: target.source ?? (target.scope === "real" || target.kind === "real-device" ? "runtime" : "host"),
-  };
-}
-
-function formatGestureStatus(gesture: StreamGestureInput) {
-  if (gesture.type === "swipe") {
-    return `swipe ${gesture.startX},${gesture.startY} → ${gesture.endX},${gesture.endY}`;
-  }
-  return `${gesture.type} ${gesture.x},${gesture.y}`;
 }

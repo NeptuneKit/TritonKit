@@ -5,6 +5,23 @@ import { join } from "node:path";
 import test from "node:test";
 import { tmpdir } from "node:os";
 import { createIosSimulatorBridgeMiddleware } from "./ios-bridge/index.mjs";
+import { webHostRuntimeError } from "./ios-bridge/runtimeMirror.mjs";
+
+test("real-device mirror failure does not propose a LAN-facing managed server", () => {
+  const response = webHostRuntimeError(
+    "ios",
+    { scope: "real", kind: "real-device", target: "ios-real:device-1" },
+    new Error("No connected runtime"),
+    "screenshot"
+  );
+
+  assert.equal(response.error.code, "app_runtime_unavailable");
+  assert.equal(
+    response.error.hint,
+    "Triton Web does not auto-start a LAN-facing runtime server; use an explicit approved CLI/HTTP device workflow."
+  );
+  assert.doesNotMatch(response.error.hint, /0\.0\.0\.0|TRITON_HOST|LAN IP/);
+});
 
 test("resolves single iOS simulator runtime target for runtime hierarchy mirror when simulator UDID is unavailable", async () => {
   const tritonPath = await createFakeTritonScript(`#!/usr/bin/env node

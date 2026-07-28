@@ -10,8 +10,8 @@ import {
 } from "./hostTargets.mjs";
 import { captureHostLogs } from "./hostLogs.mjs";
 import { captureHostHierarchy } from "./hierarchy.mjs";
-import { resolveIOSRuntimeMirrorTarget, webHostRuntimeError } from "./runtimeMirror.mjs";
-import { readRequestBody, sendJSON } from "./http.mjs";
+import { webHostRuntimeError } from "./runtimeMirror.mjs";
+import { sendJSON } from "./http.mjs";
 import {
   defaultHostInputBaseURL,
   defaultRuntimeDataBaseURL,
@@ -19,7 +19,6 @@ import {
   getManagedTritonServeBindHost,
 } from "./tritonServe.mjs";
 import { captureHostScreenshot } from "./hostScreenshot.mjs";
-import { dispatchHostInput } from "./hostInput.mjs";
 import { handleStreamRoute } from "./streamRoutes.mjs";
 
 export {
@@ -91,13 +90,13 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         return;
       }
 
-      if (url.pathname === "/web/host-input" && req.method === "POST") {
-        await handleHostInputRoute(url, req, res, tritonPath, hostInputBaseURL, options);
+      if (url.pathname === "/web/host-input") {
+        sendReadonlyWebWriteResponse(res, "/web/host-input");
         return;
       }
 
       if (url.pathname === "/web/node-property") {
-        await handleNodePropertyRoute(url, req, res, tritonPath, hostInputBaseURL, options);
+        sendReadonlyWebWriteResponse(res, "/web/node-property");
         return;
       }
 
@@ -207,92 +206,22 @@ async function handleHostScreenshotRoute(url, res, tritonPath) {
   }
 }
 
-async function handleHostInputRoute(url, req, res, tritonPath, hostInputBaseURL, options) {
-  const platform = url.searchParams.get("platform") || "ios";
-  const target = url.searchParams.get("target") || "local";
-  const scope = url.searchParams.get("scope") || "";
-  const kind = url.searchParams.get("kind") || "";
-  const source = url.searchParams.get("source") || "";
-  const body = await readRequestBody(req);
-  const input = JSON.parse(body || "{}");
-  try {
-    const result = await dispatchHostInput(tritonPath, platform, target, input, {
-      scope,
-      kind,
-      source,
-      target,
-      hostInputBaseURL,
-      manageHostInputServer: !options.hostInputBaseURL,
-    });
-    sendJSON(res, 200, result);
-  } catch (error) {
-    sendJSON(res, 409, webHostRuntimeError(platform, { scope, kind, source, target }, error, "input"));
-  }
-}
-
-async function handleNodePropertyRoute(url, req, res, tritonPath, hostInputBaseURL, options) {
-  const platform = url.searchParams.get("platform") || "ios";
-  const target = url.searchParams.get("target") || "local";
-  const scope = url.searchParams.get("scope") || "";
-  const kind = url.searchParams.get("kind") || "";
-  const source = url.searchParams.get("source") || "";
-
-  if (req.method !== "POST") {
-    sendJSON(res, 405, {
-      ok: false,
-      error: {
-        code: "web_node_property_method_not_allowed",
-        message: "Node property patch only supports POST.",
-      },
-    });
-    return;
-  }
-  if (platform !== "ios") {
-    sendJSON(res, 501, {
-      ok: false,
-      error: {
-        code: "web_node_property_platform_not_supported",
-        message: `Runtime node property patch is not available for platform: ${platform}`,
-      },
-    });
-    return;
-  }
-
-  const body = await readRequestBody(req);
-  try {
-    const runtimeTarget = await resolveIOSRuntimeMirrorTarget(tritonPath, target, {
-      scope,
-      kind,
-      source,
-      target,
-    });
-    if (!options.hostInputBaseURL) {
-      await ensureTritonServe(tritonPath, hostInputBaseURL);
-    }
-    const upstreamURL = new URL("/web/node-property", hostInputBaseURL);
-    upstreamURL.searchParams.set("target", runtimeTarget);
-    const upstream = await fetch(upstreamURL, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: body || "{}",
-    });
-    const payloadText = await upstream.text();
-    let payload;
-    try {
-      payload = JSON.parse(payloadText || "{}");
-    } catch {
-      payload = {
-        ok: false,
-        error: {
-          code: "web_node_property_invalid_upstream_response",
-          message: payloadText || `triton serve /web/node-property returned ${upstream.status}`,
-        },
-      };
-    }
-    sendJSON(res, upstream.status, payload);
-  } catch (error) {
-    sendJSON(res, 409, webHostRuntimeError(platform, { scope, kind, source, target }, error, "node_property"));
-  }
+function sendReadonlyWebWriteResponse(res, endpoint) {
+  const code = endpoint === "/web/host-input"
+    ? "web_host_input_readonly"
+    : "web_node_property_readonly";
+  const hint = endpoint === "/web/host-input"
+    ? "Use `triton act … --json` or another explicit CLI control command for the selected target."
+    : "Use `triton debug patch-node … --json` for an explicit, auditable node patch.";
+  sendJSON(res, 405, {
+    ok: false,
+    error: {
+      code,
+      message: "Triton Web is a readonly device hub and does not execute browser write actions.",
+      endpoint,
+      hint,
+    },
+  });
 }
 
 async function handleHostAxRoute(url, res, tritonPath) {
