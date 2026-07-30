@@ -3288,6 +3288,64 @@ struct DeviceCrossPlatformTests {
         #expect(target.target.contains("00008110") == false)
     }
 
+    @Test("CoreDevice available paired fact is eligible for ready selection and app install planning")
+    func coreDeviceAvailablePairedFactIsSharedBySelectionAndInstall() throws {
+        let data = Data(#"""
+        {
+          "info": { "jsonVersion": 3, "outcome": "success" },
+          "result": {
+            "devices": [{
+              "identifier": "COREDEVICE-AVAILABLE-PAIRED",
+              "deviceProperties": {
+                "name": "Fixture iPhone",
+                "osVersionNumber": "26.5.2",
+                "developerModeStatus": "enabled",
+                "ddiServicesAvailable": false,
+                "developerDiskImageMounted": false,
+                "lockState": "unlocked"
+              },
+              "connectionProperties": {
+                "transportType": "wired",
+                "pairingState": "paired",
+                "tunnelState": "disconnected",
+                "trusted": true
+              },
+              "visibilityClass": "default"
+            }]
+          }
+        }
+        """#.utf8)
+        let parsed = try #require(TKDevicectlDeviceListParser.parse(data).first)
+        let listed = hostDeviceTarget(from: parsed)
+
+        let selected = try resolveHostDeviceSelection(
+            request: HostDeviceSelectionRequest(device: listed.id, platform: .ios, scope: .real, ready: true),
+            candidates: [.ios: [listed]],
+            aliases: .empty
+        )
+        let plan = try planHostAppInstall(
+            selection: selected,
+            app: "/tmp/Fixture.app",
+            apk: nil,
+            hap: nil,
+            adb: "adb",
+            hdc: "hdc",
+            devicectlArtifacts: ("/tmp/install.json", "/tmp/install.log")
+        )
+
+        #expect(listed.state == "connected")
+        #expect(listed.ready)
+        #expect(listed.blockedReasons == [])
+        #expect(selected.target == listed)
+        #expect(plan.command.argv.contains("COREDEVICE-AVAILABLE-PAIRED"))
+        #expect(plan.target.hasPrefix("ios-real:"))
+        #expect(!plan.target.contains("COREDEVICE-AVAILABLE-PAIRED"))
+        let publicTarget = String(decoding: try JSONEncoder().encode(listed), as: UTF8.self)
+        let sourceCommand = ([plan.command.executable] + plan.command.argv).joined(separator: " ")
+        #expect(!publicTarget.contains("COREDEVICE-AVAILABLE-PAIRED"))
+        #expect(redactHostActionSourceCommand(sourceCommand, selection: selected).contains("COREDEVICE-AVAILABLE-PAIRED") == false)
+    }
+
     @Test("host device selector resolves iOS real devices by stable id")
     func hostDeviceSelectorResolvesIOSRealDevicesByStableID() throws {
         let ready = HostDeviceTarget(

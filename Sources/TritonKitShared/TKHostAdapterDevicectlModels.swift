@@ -301,11 +301,20 @@ public enum TKDevicectlDeviceListParser {
         let developerMode = normalized(string(deviceProperties["developerModeStatus"] ?? deviceProperties["developerMode"]))
         let lockState = normalized(string(deviceProperties["lockState"] ?? deviceProperties["activationState"]))
         let ddiState = normalized(string(deviceProperties["ddiStatus"] ?? deviceProperties["developerDiskImageStatus"]))
+        let trusted = bool(connectionProperties["trusted"])
+        let pairingEligible = ["paired", "trusted"].contains(pairingState) || trusted == true
+        let visibilityUnavailable = visibility == "offline" || visibility == "unavailable"
+        let lazyServiceActivationEligible = pairingEligible && !visibilityUnavailable
 
-        if visibility == "offline" || visibility == "unavailable" || tunnelState == "disconnected" || tunnelState == "offline" || tunnelState == "unavailable" {
+        // CoreDevice can report an available, paired device before it lazily
+        // establishes its tunnel. `disconnected` describes that service tunnel,
+        // not necessarily the physical device, so only explicit unavailable
+        // visibility/tunnel states, or a disconnected unpaired target, are
+        // terminal discovery blockers.
+        if visibilityUnavailable || tunnelState == "offline" || tunnelState == "unavailable" || (tunnelState == "disconnected" && !lazyServiceActivationEligible) {
             reasons.append("offline")
         }
-        if pairingState == "untrusted" || pairingState == "nottrusted" || pairingState == "not-trusted" || pairingState == "not trusted" || pairingState == "unpaired" || bool(connectionProperties["trusted"]) == false {
+        if pairingState == "untrusted" || pairingState == "nottrusted" || pairingState == "not-trusted" || pairingState == "not trusted" || pairingState == "unpaired" || trusted == false {
             reasons.append("not-trusted")
         }
         if (developerMode.isEmpty == false && !["enabled", "on", "true", "available"].contains(developerMode)) || bool(deviceProperties["developerModeEnabled"]) == false {
@@ -314,7 +323,17 @@ public enum TKDevicectlDeviceListParser {
         if lockState == "locked" || lockState == "passcodelocked" || lockState == "passcode-locked" || bool(deviceProperties["isLocked"]) == true {
             reasons.append("locked")
         }
-        if bool(deviceProperties["ddiServicesAvailable"]) == false || bool(deviceProperties["developerDiskImageMounted"]) == false || ddiState == "missing" || ddiState == "unavailable" || ddiState == "notavailable" || deviceProperties["developerDiskImageError"] != nil {
+        // A false service/mount snapshot is also expected before devicectl lazily
+        // activates development services. Keep fail-closed behavior for an
+        // explicit missing/unavailable DDI status or a concrete DDI error.
+        let ddiSnapshotUnavailable = bool(deviceProperties["ddiServicesAvailable"]) == false
+            || bool(deviceProperties["developerDiskImageMounted"]) == false
+        if ddiState == "missing"
+            || ddiState == "unavailable"
+            || ddiState == "notavailable"
+            || deviceProperties["developerDiskImageError"] != nil
+            || (ddiSnapshotUnavailable && !lazyServiceActivationEligible)
+        {
             reasons.append("ddi-missing")
         }
         return Array(NSOrderedSet(array: reasons)) as? [String] ?? reasons
