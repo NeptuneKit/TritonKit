@@ -45,6 +45,24 @@ struct WebIOSSimulatorScreenLayout: Codable, Equatable {
     let height: Int
 }
 
+struct WebIOSBaguetteTouchEvent: Codable, Equatable {
+    let type: String
+    let x: Int
+    let y: Int
+    let width: Int
+    let height: Int
+}
+
+struct WebIOSBaguetteSwipeLifecycle: Equatable {
+    let command: TKHostCommand
+    let events: [WebIOSBaguetteTouchEvent]
+    let duration: Double
+    let cadence: Double
+    let terminalLinger: Double
+}
+
+typealias WebIOSBaguetteLifecycleRunner = (WebIOSBaguetteSwipeLifecycle) throws -> HostProcessResult
+
 final class WebHostDeviceTargetCache: @unchecked Sendable {
     private let ttl: TimeInterval
     private let lock = NSLock()
@@ -788,7 +806,7 @@ func webIOSBaguetteCommand(action: TKInputRequest, udid: String, screen: WebIOSS
             "--height", "\(height)"
         ])
     case .swipe:
-        return try webIOSBaguetteSwipeCommand(input: input, udid: udid, executable: executable, action: "swipe")
+        throw RuntimeError("iOS Simulator swipe requires the persistent Baguette input lifecycle session.")
     case .longPress:
         let x = try requireCoordinate(input.x, name: "x", action: "longPress")
         let y = try requireCoordinate(input.y, name: "y", action: "longPress")
@@ -830,6 +848,179 @@ private func webIOSBaguetteSwipeCommand(input: TKInputRequest, udid: String, exe
     return TKHostCommand(executable: executable, arguments: arguments)
 }
 
+func webIOSBaguetteSwipeLifecycle(
+    input: TKInputRequest,
+    udid: String,
+    screen: WebIOSSimulatorScreenLayout,
+    executable: String = "baguette",
+    moveCount: Int = 10
+) throws -> WebIOSBaguetteSwipeLifecycle {
+    let normalized = normalizeWebIOSSimulatorInput(input, screen: screen)
+    let startX = try requireCoordinate(normalized.startX, name: "startX", action: "swipe")
+    let startY = try requireCoordinate(normalized.startY, name: "startY", action: "swipe")
+    let endX = try requireCoordinate(normalized.endX, name: "endX", action: "swipe")
+    let endY = try requireCoordinate(normalized.endY, name: "endY", action: "swipe")
+    let width = try requireCoordinate(normalized.width, name: "width", action: "swipe")
+    let height = try requireCoordinate(normalized.height, name: "height", action: "swipe")
+    let duration = (normalized.duration ?? 0.25) > 0 ? (normalized.duration ?? 0.25) : 0.25
+    let steps = max(1, moveCount)
+    let cadence = duration / Double(steps + 1)
+    let terminalLinger = max(0.1, cadence)
+
+    var events = [
+        WebIOSBaguetteTouchEvent(type: "touch1-down", x: startX, y: startY, width: width, height: height)
+    ]
+    for index in 1...steps {
+        let progress = Double(index) / Double(steps)
+        events.append(WebIOSBaguetteTouchEvent(
+            type: "touch1-move",
+            x: Int((Double(startX) + Double(endX - startX) * progress).rounded()),
+            y: Int((Double(startY) + Double(endY - startY) * progress).rounded()),
+            width: width,
+            height: height
+        ))
+    }
+    events.append(WebIOSBaguetteTouchEvent(type: "touch1-up", x: endX, y: endY, width: width, height: height))
+
+    return WebIOSBaguetteSwipeLifecycle(
+        command: TKHostCommand(
+            executable: executable,
+            arguments: ["input", "--udid", udid],
+            defaultTimeoutSeconds: max(30, duration + terminalLinger + 5)
+        ),
+        events: events,
+        duration: duration,
+        cadence: cadence,
+        terminalLinger: terminalLinger
+    )
+}
+
+private struct WebIOSBaguetteInputAck: Decodable {
+    let ok: Bool
+    let error: String?
+}
+
+@discardableResult
+func runWebIOSBaguetteLifecycle(
+    _ lifecycle: WebIOSBaguetteSwipeLifecycle,
+    runner: WebIOSBaguetteLifecycleRunner = runWebIOSBaguetteLifecycleProcess
+) throws -> HostProcessResult {
+    let result = try runner(lifecycle)
+    let ackLines = result.stdout.split(whereSeparator: \.isNewline).map(String.init)
+    guard ackLines.count == lifecycle.events.count else {
+        throw RuntimeError("Baguette input acknowledged \(ackLines.count) of \(lifecycle.events.count) swipe lifecycle events; terminal touch-up was not confirmed.")
+    }
+    for (index, line) in ackLines.enumerated() {
+        let ack = try JSONDecoder().decode(WebIOSBaguetteInputAck.self, from: Data(line.utf8))
+        guard ack.ok else {
+            throw RuntimeError("Baguette rejected swipe lifecycle event \(index + 1)/\(lifecycle.events.count): \(ack.error ?? "unknown error")")
+        }
+    }
+    return result
+}
+
+private func runWebIOSBaguetteLifecycleProcess(_ lifecycle: WebIOSBaguetteSwipeLifecycle) throws -> HostProcessResult {
+    let command = lifecycle.command
+    let process = Process()
+    configureHostProcessExecutable(process, command: command)
+    let stdin = Pipe()
+    let stdout = Pipe()
+    let stderr = Pipe()
+    process.standardInput = stdin
+    process.standardOutput = stdout
+    process.standardError = stderr
+
+    do {
+        try process.run()
+    } catch {
+        throw HostCommandRunError.launchFailed(error.localizedDescription)
+    }
+
+    let timeoutWorkItem = DispatchWorkItem {
+        if process.isRunning {
+            process.terminate()
+        }
+    }
+    DispatchQueue.global(qos: .utility).asyncAfter(
+        deadline: .now() + command.defaultTimeoutSeconds,
+        execute: timeoutWorkItem
+    )
+
+    let writer = stdin.fileHandleForWriting
+    let reader = stdout.fileHandleForReading
+    var acknowledged = Data()
+    var ackBuffer = Data()
+    defer {
+        timeoutWorkItem.cancel()
+        try? writer.close()
+        if process.isRunning {
+            process.terminate()
+        }
+    }
+
+    do {
+        for (index, event) in lifecycle.events.enumerated() {
+            let payload = try JSONEncoder().encode(event)
+            try writer.write(contentsOf: payload)
+            try writer.write(contentsOf: Data([0x0A]))
+            let ackLine = try readWebIOSBaguetteAckLine(from: reader, buffer: &ackBuffer)
+            acknowledged.append(ackLine)
+            acknowledged.append(0x0A)
+
+            if index < lifecycle.events.count - 1 {
+                Thread.sleep(forTimeInterval: lifecycle.cadence)
+            } else {
+                // Baguette's ack confirms enqueue, not UIKit delivery. Keep the
+                // shared input process alive briefly so terminal up can flush.
+                Thread.sleep(forTimeInterval: lifecycle.terminalLinger)
+            }
+        }
+        try writer.close()
+    } catch {
+        try? writer.close()
+        if process.isRunning {
+            process.terminate()
+        }
+        throw error
+    }
+
+    process.waitUntilExit()
+    timeoutWorkItem.cancel()
+    let stderrData = (try? stderr.fileHandleForReading.readToEnd()) ?? Data()
+    let result = HostProcessResult(
+        stdoutData: acknowledged,
+        stderrData: stderrData,
+        exitCode: process.terminationStatus,
+        sourceCommand: hostSourceCommand(command),
+        stdoutTruncated: false,
+        stderrTruncated: false,
+        stdoutLogPath: nil,
+        stderrLogPath: nil,
+        stdoutBytes: acknowledged.count,
+        stderrBytes: stderrData.count
+    )
+    guard result.exitCode == 0 else {
+        throw HostCommandRunError.nonZeroExit(command: command, result: result)
+    }
+    return result
+}
+
+private func readWebIOSBaguetteAckLine(from handle: FileHandle, buffer: inout Data, maximumBytes: Int = 16_384) throws -> Data {
+    while buffer.count < maximumBytes {
+        if let newline = buffer.firstIndex(of: 0x0A) {
+            let line = Data(buffer[..<newline])
+            buffer.removeSubrange(...newline)
+            return line
+        }
+        let chunk = handle.availableData
+        guard !chunk.isEmpty else {
+            throw RuntimeError("Baguette input session ended before acknowledging terminal touch-up.")
+        }
+        buffer.append(chunk)
+    }
+    throw RuntimeError("Baguette input acknowledgement exceeded \(maximumBytes) bytes.")
+}
+
 private func clampedRounded(_ value: Double, min: Int, max: Int) -> Double {
     Double(Swift.max(min, Swift.min(max, Int(value.rounded()))))
 }
@@ -858,11 +1049,21 @@ private func runWebIOSSimulatorInput(selected: HostDeviceTarget, input: TKInputR
         let layoutResult = try runHostCommand(layoutCommand)
         let layout = try JSONDecoder().decode(WebIOSBaguetteLayoutPayload.self, from: Data(layoutResult.stdout.utf8))
         let screen = WebIOSSimulatorScreenLayout(width: layout.screen.width, height: layout.screen.height)
-        let inputCommand = try webIOSBaguetteCommand(action: input, udid: selected.rawTarget, screen: screen, executable: baguette)
-        _ = try runHostCommand(inputCommand)
+        if input.type == .swipe {
+            let lifecycle = try webIOSBaguetteSwipeLifecycle(
+                input: input,
+                udid: selected.rawTarget,
+                screen: screen,
+                executable: baguette
+            )
+            _ = try runWebIOSBaguetteLifecycle(lifecycle)
+        } else {
+            let inputCommand = try webIOSBaguetteCommand(action: input, udid: selected.rawTarget, screen: screen, executable: baguette)
+            _ = try runHostCommand(inputCommand)
+        }
         return .success(
             action: input.type.rawValue,
-            message: "iOS Simulator \(input.type.rawValue) was submitted through Triton host-HID adapter."
+            message: "iOS Simulator \(input.type.rawValue) was submitted through Triton host-HID adapter; verify settled business state with AX, wait, or screenshot."
         )
     case .pinch, .button, .typeText, .paste, .clear, .deleteBackward:
         return .unsupported(
