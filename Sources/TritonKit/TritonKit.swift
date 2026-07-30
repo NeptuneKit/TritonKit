@@ -269,7 +269,9 @@ public class TritonKit {
     private var session: URLSession?
     private var host: String = ""
     private var port: UInt16 = 0
-    private var reconnectTimer: Timer?
+    private let connectionLifecycle = RuntimeConnectionLifecycle()
+    private let reconnectLock = NSLock()
+    private var reconnectWorkItem: DispatchWorkItem?
     private var pingTimer: Timer?
     private var defaultRequestHandler: TritonKitRequestHandler?
     private var isStarted = false
@@ -349,6 +351,7 @@ public class TritonKit {
 
     public func stop() {
         isStarted = false
+        connectionLifecycle.stop()
         closeConnection()
     }
 
@@ -508,6 +511,7 @@ public class TritonKit {
         self.host = host
         self.port = port
         self.isStarted = true
+        let generation = connectionLifecycle.beginConnection()
         if configuration.endpoint.host != host || configuration.endpoint.port != port {
             configuration = Configuration(endpoint: Endpoint(host: host, port: port, dataURL: dataURL))
         }
@@ -519,7 +523,7 @@ public class TritonKit {
 
         guard endpointReadinessProbe(host, port, endpointReadinessTimeout) else {
             state = .disconnected
-            scheduleReconnect()
+            scheduleReconnect(for: generation)
             return
         }
 
@@ -527,10 +531,15 @@ public class TritonKit {
         let req = URLRequest(url: url, timeoutInterval: 10)
 
         session = URLSession(configuration: .default)
-        task = session?.webSocketTask(with: req)
-        task?.resume()
-        startPing()
-        receive()
+        guard let transport = session?.webSocketTask(with: req) else {
+            state = .disconnected
+            scheduleReconnect(for: generation)
+            return
+        }
+        task = transport
+        transport.resume()
+        startPing(on: transport, generation: generation)
+        receive(on: transport, generation: generation)
     }
 
     public func disconnect() {
@@ -548,30 +557,46 @@ public class TritonKit {
 
     public func send(_ message: TKMessage) {
         guard Self.isRuntimeEnabled else { return }
-        guard let data = try? JSONEncoder().encode(message) else { return }
+        guard let transport = task else { return }
+        let generation = connectionLifecycle.currentGeneration
+        send(message, on: transport, generation: generation)
+    }
+
+    private func send(
+        _ message: TKMessage,
+        on transport: URLSessionWebSocketTask,
+        generation: RuntimeConnectionLifecycle.Generation
+    ) {
+        guard task === transport,
+              connectionLifecycle.acceptsCallback(for: generation),
+              let data = try? JSONEncoder().encode(message) else { return }
         if runtimeVerboseLogging {
             NSLog("[TritonKit] -> \(message.type.rawValue) [id:\(message.id)]")
         }
-        task?.send(.data(data)) { [weak self] error in
-            guard let self, let error else { return }
-            self.notifyError(error)
+        transport.send(.data(data)) { [weak self, weak transport] error in
+            guard let self, let transport, let error else { return }
+            self.handleTransportFailure(error, from: transport, generation: generation)
         }
     }
 
     /// Send raw JSON string
     public func send(json: String) {
         guard Self.isRuntimeEnabled else { return }
-        task?.send(.string(json)) { [weak self] error in
-            guard let self, let error else { return }
-            self.notifyError(error)
+        guard let transport = task else { return }
+        let generation = connectionLifecycle.currentGeneration
+        transport.send(.string(json)) { [weak self, weak transport] error in
+            guard let self, let transport, let error else { return }
+            self.handleTransportFailure(error, from: transport, generation: generation)
         }
     }
 
     // MARK: - Receive Loop
 
-    private func receive() {
-        task?.receive { [weak self] result in
-            guard let self else { return }
+    private func receive(on transport: URLSessionWebSocketTask, generation: RuntimeConnectionLifecycle.Generation) {
+        transport.receive { [weak self, weak transport] result in
+            guard let self, let transport,
+                  self.task === transport,
+                  self.connectionLifecycle.acceptsCallback(for: generation) else { return }
             switch result {
             case .success(let message):
                 if self.runtimeVerboseLogging {
@@ -580,18 +605,20 @@ public class TritonKit {
                 if self.state != .connected {
                     self.state = .connected
                 }
-                self.handle(message)
+                self.handle(message, on: transport, generation: generation)
             case .failure(let error):
-                self.state = .disconnected
-                self.notifyError(error)
-                self.scheduleReconnect()
+                self.handleTransportFailure(error, from: transport, generation: generation)
                 return
             }
-            self.receive()
+            self.receive(on: transport, generation: generation)
         }
     }
 
-    private func handle(_ wsMessage: URLSessionWebSocketTask.Message) {
+    private func handle(
+        _ wsMessage: URLSessionWebSocketTask.Message,
+        on transport: URLSessionWebSocketTask,
+        generation: RuntimeConnectionLifecycle.Generation
+    ) {
         let data: Data
         switch wsMessage {
         case .data(let d): data = d
@@ -606,7 +633,7 @@ public class TritonKit {
                     NSLog("[TritonKit] <- \(msg.type.rawValue) [id:\(msg.id)]")
                 }
                 if let response = await delegate?.tritonKit(self, didReceiveMessage: msg) {
-                    send(response)
+                    send(response, on: transport, generation: generation)
                 } else if self.runtimeVerboseLogging {
                     NSLog("[TritonKit] no response for \(msg.type.rawValue) [id:\(msg.id)]")
                 }
@@ -616,7 +643,7 @@ public class TritonKit {
                 }
                 send(TKMessage(id: 0, type: .ping, payload: try? JSONEncoder().encode(
                     TKErrorPayload(message: "Parse error: \(error.localizedDescription)")
-                )))
+                )), on: transport, generation: generation)
             }
         }
     }
@@ -631,37 +658,68 @@ public class TritonKit {
     }
     #endif
 
-    private func scheduleReconnect() {
-        guard Self.isRuntimeEnabled, isStarted, configuration.autoReconnect else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+    private func scheduleReconnect(for generation: RuntimeConnectionLifecycle.Generation) {
+        guard Self.isRuntimeEnabled, isStarted, configuration.autoReconnect,
+              connectionLifecycle.scheduleReconnect(for: generation) else { return }
+        let workItem = DispatchWorkItem { [weak self] in
             guard let self,
+                  self.connectionLifecycle.consumeReconnect(for: generation),
                   self.isStarted,
                   self.configuration.autoReconnect,
                   self.state == .disconnected,
                   !self.host.isEmpty
             else { return }
+            self.reconnectLock.withLock { self.reconnectWorkItem = nil }
             self.connect(host: self.host, port: self.port, autoReconnect: self.configuration.autoReconnect)
         }
+        reconnectLock.withLock {
+            reconnectWorkItem?.cancel()
+            reconnectWorkItem = workItem
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: workItem)
     }
 
-    private func startPing() {
+    private func startPing(on transport: URLSessionWebSocketTask, generation: RuntimeConnectionLifecycle.Generation) {
         guard Self.isRuntimeEnabled else { return }
         stopTimers()
-        task?.sendPing { [weak self] error in
-            guard let self, let error else { return }
-            self.notifyError(error)
+        transport.sendPing { [weak self, weak transport] error in
+            guard let self, let transport, let error else { return }
+            self.handleTransportFailure(error, from: transport, generation: generation)
         }
         pingTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in
-            self?.task?.sendPing { error in
-                guard let self, let error else { return }
-                self.notifyError(error)
+            guard let self,
+                  self.task === transport,
+                  self.connectionLifecycle.acceptsCallback(for: generation) else { return }
+            transport.sendPing { [weak self, weak transport] error in
+                guard let self, let transport, let error else { return }
+                self.handleTransportFailure(error, from: transport, generation: generation)
             }
         }
     }
 
+    private func handleTransportFailure(
+        _ error: Error,
+        from transport: URLSessionWebSocketTask,
+        generation: RuntimeConnectionLifecycle.Generation
+    ) {
+        guard task === transport, connectionLifecycle.acceptsCallback(for: generation) else { return }
+        task = nil
+        transport.cancel(with: .goingAway, reason: nil)
+        session?.invalidateAndCancel()
+        session = nil
+        pingTimer?.invalidate()
+        pingTimer = nil
+        state = .disconnected
+        notifyError(error)
+        scheduleReconnect(for: generation)
+    }
+
     private func stopTimers() {
         pingTimer?.invalidate(); pingTimer = nil
-        reconnectTimer?.invalidate(); reconnectTimer = nil
+        reconnectLock.withLock {
+            reconnectWorkItem?.cancel()
+            reconnectWorkItem = nil
+        }
     }
 
     private func notifyStateObservers(_ state: ConnectionState) {

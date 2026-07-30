@@ -29,8 +29,18 @@ final class ConnectionState: @unchecked Sendable {
     }
 
     var outbound: WebSocketOutboundWriter? { lock.withLock { matchingConnectionsLocked(TKLocalTargetID).first?.connection.outbound } }
-    var isConnected: Bool { lock.withLock { !connections.isEmpty } }
-    var targetCount: Int { lock.withLock { connections.count } }
+    var isConnected: Bool { lock.withLock { connections.values.contains { $0.state.registrationDecision.accepted } } }
+    var targetCount: Int { lock.withLock { connections.values.filter { $0.state.registrationDecision.accepted }.count } }
+
+    func registrationResponse() -> RuntimeRegistrationResponse {
+        lock.withLock {
+            RuntimeRegistrationResponse(
+                registrations: connections.values
+                    .map { $0.state.registrationDecision }
+                    .sorted { ($0.sdkVersion ?? "") < ($1.sdkVersion ?? "") }
+            )
+        }
+    }
 
     func summaries() -> [TKTargetSummary] {
         lock.withLock {
@@ -42,7 +52,7 @@ final class ConnectionState: @unchecked Sendable {
 
     func cacheStatus() -> (activeHierarchyAvailable: Bool, latestHierarchyAvailable: Bool, hierarchyCacheState: String) {
         lock.withLock {
-            let connected = !connections.isEmpty
+            let connected = connections.values.contains { $0.state.registrationDecision.accepted }
             let statuses = connections.values.map { $0.state.cacheStatus(connected: connected) }
             let active = statuses.contains { $0.activeHierarchyAvailable }
             let latest = connections.values.contains { $0.state.latestHierarchy != nil }
@@ -185,12 +195,113 @@ struct TargetMetadata: Sendable {
     var simulatorUDID: String?
 }
 
+struct RuntimeRegistrationDecision: Codable, Equatable, Sendable {
+    let accepted: Bool
+    let state: String
+    let code: String
+    let reason: String
+    let sdkVersion: String?
+    let versionSource: String
+}
+
+struct RuntimeRegistrationResponse: Codable, Equatable, Sendable {
+    let ok: Bool
+    let code: String
+    let reason: String
+    let registrations: [RuntimeRegistrationDecision]
+
+    init(registrations: [RuntimeRegistrationDecision]) {
+        self.registrations = registrations
+        if registrations.isEmpty {
+            self.ok = false
+            self.code = "runtime_registration_unobserved"
+            self.reason = "No runtime registration is observable; the server cannot determine whether an app process launched."
+        } else if let rejected = registrations.first(where: { !$0.accepted }) {
+            self.ok = false
+            self.code = rejected.code
+            self.reason = rejected.reason
+        } else {
+            self.ok = true
+            self.code = "runtime_registration_available"
+            self.reason = "At least one compatible embedded runtime registration is available."
+        }
+    }
+}
+
+func legacyWebSocketRegistrationDecision() -> RuntimeRegistrationDecision {
+    RuntimeRegistrationDecision(
+        accepted: true,
+        state: "accepted",
+        code: "legacy_websocket_accepted",
+        reason: "Legacy embedded runtimes are accepted without a separate registration frame while runtimeManifest compatibility is probed.",
+        sdkVersion: nil,
+        versionSource: "websocket-legacy-compatible"
+    )
+}
+
+func runtimeRegistrationDecision(manifestPayload: Data) -> RuntimeRegistrationDecision {
+    guard let manifest = try? JSONDecoder().decode(TKRuntimeManifestResponse.self, from: manifestPayload) else {
+        return RuntimeRegistrationDecision(
+            accepted: false,
+            state: "rejected",
+            code: "runtime_manifest_invalid",
+            reason: "Registration payload does not decode as TKRuntimeManifestResponse.",
+            sdkVersion: nil,
+            versionSource: "runtime-manifest-invalid"
+        )
+    }
+    guard manifest.platform == "ios", manifest.runtime == "embedded" else {
+        return RuntimeRegistrationDecision(
+            accepted: false,
+            state: "rejected",
+            code: "runtime_scope_unsupported",
+            reason: "Only the iOS embedded runtime scope is accepted on this WebSocket endpoint.",
+            sdkVersion: manifest.sdkVersion,
+            versionSource: "runtime-manifest"
+        )
+    }
+    guard manifest.transport == "embedded-websocket" else {
+        return RuntimeRegistrationDecision(
+            accepted: false,
+            state: "rejected",
+            code: "runtime_transport_unsupported",
+            reason: "Runtime manifest transport must be embedded-websocket.",
+            sdkVersion: manifest.sdkVersion,
+            versionSource: "runtime-manifest"
+        )
+    }
+    guard manifest.ok, manifest.enabled else {
+        return RuntimeRegistrationDecision(
+            accepted: false,
+            state: "rejected",
+            code: "runtime_disabled",
+            reason: "Runtime manifest reports that the embedded runtime is disabled.",
+            sdkVersion: manifest.sdkVersion,
+            versionSource: "runtime-manifest"
+        )
+    }
+    let unverifiedRelease = manifest.sdkVersion.contains("dev")
+    return RuntimeRegistrationDecision(
+        accepted: true,
+        state: "accepted",
+        code: "legacy_runtime_manifest_accepted",
+        reason: "Legacy runtimes are accepted without a separate registration frame because the runtime manifest matches the compatible embedded WebSocket contract.",
+        sdkVersion: manifest.sdkVersion,
+        versionSource: unverifiedRelease ? "runtime-manifest-unverified-release" : "runtime-manifest"
+    )
+}
+
 final class TargetState: @unchecked Sendable {
     private let lock = NSLock()
     private var _latestHierarchy: Data?
     private var metadata: TargetMetadata?
     private var activeHierarchyAvailable = false
     private var responses: [Int: Data] = [:]
+    private var _registrationDecision = legacyWebSocketRegistrationDecision()
+
+    var registrationDecision: RuntimeRegistrationDecision {
+        lock.withLock { _registrationDecision }
+    }
 
     var latestHierarchy: Data? {
         lock.withLock { _latestHierarchy }
@@ -201,6 +312,7 @@ final class TargetState: @unchecked Sendable {
             metadata = nil
             activeHierarchyAvailable = false
             responses.removeAll()
+            _registrationDecision = legacyWebSocketRegistrationDecision()
         }
     }
 
@@ -230,8 +342,15 @@ final class TargetState: @unchecked Sendable {
         }
     }
 
+    func setRuntimeRegistrationManifest(_ data: Data) {
+        let decision = runtimeRegistrationDecision(manifestPayload: data)
+        lock.withLock {
+            _registrationDecision = decision
+        }
+    }
+
     func summary(connected: Bool, connectionID: Int) -> TKTargetSummary? {
-        guard connected else { return nil }
+        guard connected, registrationDecision.accepted else { return nil }
         return lock.withLock {
             TKTargetSummary(
                 id: targetID(connectionID: connectionID),

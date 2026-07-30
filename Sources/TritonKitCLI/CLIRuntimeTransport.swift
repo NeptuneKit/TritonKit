@@ -1212,11 +1212,11 @@ private func doctorChecks(capabilities: TKCapabilitiesResponse, host: String, po
             .filter { $0.reason?.contains("embedded TritonKit runtime") == true }
             .map(\.name)
         checks.append(TKDoctorCheck(
-            id: "connect-target",
+            id: "runtime-connection",
             status: "fail",
-            code: "target_unavailable",
-            message: "Triton server is reachable but no embedded runtime target is connected",
-            hint: "Launch an app that embeds TritonKit, or run an Xcode/app workflow that starts it.",
+            code: "runtime_registration_unobserved",
+            message: "Triton server is reachable but no runtime registration is observable; server state alone cannot determine whether the app process launched",
+            hint: "Inspect target list, then verify the App DEBUG bootstrap, runtime enablement, and configured host/port before relaunching if needed.",
             nextAction: TKCLINextAction(command: "target", args: ["list", "--json"]),
             relatedCapabilities: connectTargetRelatedCapabilities,
             workflowCategories: workflowCategoriesForCapabilities(connectTargetRelatedCapabilities, in: capabilities.capabilities)

@@ -105,6 +105,10 @@ struct Serve: AsyncParsableCommand {
             return jsonResponse(TKTargetsResponse(targets: state.summaries()))
         }
 
+        router.get("/runtime/registrations") { _, _ -> Response in
+            jsonResponse(state.registrationResponse())
+        }
+
         router.get("/web/targets") { _, _ -> Response in
             let runtimeTargets = state.summaries()
             webHostTargetCache.refreshIfNeeded()
@@ -1109,6 +1113,9 @@ struct Serve: AsyncParsableCommand {
             let appInfoID = counter.next()
             log("[tritonkit] -> appInfo [id:\(appInfoID)]")
             try await outbound.send(TKMessage(id: appInfoID, type: .appInfo), encoder: encoder)
+            let runtimeManifestID = counter.next()
+            log("[tritonkit] -> runtimeManifest [id:\(runtimeManifestID)]")
+            try await outbound.send(TKMessage(id: runtimeManifestID, type: .runtimeManifest), encoder: encoder)
 
             // Then request hierarchy
             let id = counter.next()
