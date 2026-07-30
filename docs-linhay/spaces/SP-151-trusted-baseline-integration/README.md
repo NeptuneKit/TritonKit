@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 状态：已完成（仅本地 integration checkpoint，未进入 `main`）。
+- 状态：已完成（总集成候选，远端写入已获授权，待 PR/CI）。
 - Branch：`feat/SP-151-trusted-baseline-integration`。
 - Worktree：`../TritonKit-worktrees/SP-151-trusted-baseline-integration/`。
 - 基线：`main@d2578089`。
@@ -15,8 +15,13 @@
 - `SP-143`～`SP-146`、`SP-150`：receipt-backed Stage 1 reliability 的完整性、anchor、identity chain、指标与 terminal failure/recovery 语义。
 - `SP-147`～`SP-148`：schema fact-source 修复与完整 `<canonical>` argv placeholder。
 - `SP-149`：runtime screenshot normalizer 错误与 test-run published PNG metadata 合同。
+- `SP-152`：embedded runtime connection generation、重注册兼容判定与 no-target doctor 诊断。
+- `SP-153`：`xcode run` 显式 Simulator destination 的 build/settings/install/launch 单目标绑定。
+- `SP-154`：iOS Simulator swipe 的 persistent Baguette input、逐事件 ack 与 terminal linger。
+- `SP-155`：CoreDevice `available (paired)` readiness 的 lazy activation 归一与 fail-closed blocker。
+- `SP-156`：`xcode build` 默认 compact、显式 full 的 agent-friendly progress 合同。
 
-不包括：修改 `main`、push/PR/merge remote、tag/release、删除现有 branch/worktree、#164 WIP、testrec/Android/Web 控制面扩张、服务/Simulator/Xcode/设备或真实 `triton test run`。
+不包括：tag/release、#164 WIP、testrec/Android/Web 控制面扩张、共享服务、Simulator/Xcode/设备或真实 `triton test run`。用户已明确授权本候选 push、PR、CI 通过后 merge 及关闭对应 issue。
 
 ## BDD 验收
 
@@ -24,7 +29,7 @@
 2. Given receipt-backed reliability 候选，When report/sample 被评估，Then legacy evidence 不能通过 Stage 1，receipt anchor、identity chain、Stage 1A/1B 与 terminal failure type 都 fail closed。
 3. Given schema 的 `reliability-sample` 模板，When 生成机器可读 schema，Then receipt anchor 必填且 canonical target 是一个完整 argv token：`--target <canonical>`。
 4. Given screenshot 来源包含 JPEG、无效 payload 或正常 PNG，When serve/test-run 发布截图，Then正常 PNG metadata 与 stable error envelope 均不丢失、不伪称成功。
-5. Given 候选完成合并，When 跑离线 focused test、release CLI build、docs gate，Then 不启动 Triton server、Vite dev server、Simulator、Xcode、设备或 real test run，且 registry 连续登记 SP-001 至 SP-151。
+5. Given 候选完成合并，When 跑离线 focused test、release CLI build、docs gate，Then 不启动 Triton server、Vite dev server、Simulator、Xcode、设备或 real test run，且 registry 连续登记 SP-001 至 SP-156。
 
 ## 集成顺序
 
@@ -49,6 +54,9 @@
 
 ## 集成结果
 
+- Issue 扩展 merge commits：`7ba0955d`（SP-152）、`0424e9f9`（SP-153）、`ce09e30a`（SP-154）、`5d133413`（SP-155）、`fe2fd45c`（SP-156）。新增 #176 在最终开放清单复查时出现，因此按“全部 issue”边界纳入同批处理。
+- 联合 CLI focused 使用 `--no-parallel` 串行运行 207/207 通过；并行首轮仅因其它 suite 的测试框架日志写入 #176 全局 stdout/stderr 捕获管道而出现 4 个测试基础设施失败，#176 单独 8/8 与同集合串行重跑均通过。
+- `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local` 通过：根包 238/238、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、docs 156/156 与 diff check 全绿；真实 Xcode/Simulator 步骤按共享环境边界显式跳过。
 - 本地 merge commits：`a8d3af00`（SP-142）、`cfff575a`（SP-143～146/150）、`ce7856c0`（SP-147～148）、`c40c82b9`（SP-149）。所有冲突均在本 worktree 解决，`main` 与 #164 WIP 未改。
 - 收口清理：确认 SP-142～SP-150 的 source commits 均为本 branch 可达祖先、各 source worktree clean 后，已用非强制方式回收这些 source branch/worktree；SP-151 是唯一保留的 integration candidate，`main` 和 #164 WIP 均未改。
 - 预合并审计：在精确基线 `main@d2578089`，SP-151 的 merge-base 也是该提交，三树冲突预检无冲突，故技术上可 fast-forward；但本轮未写入 `main`，仍等待用户的明确本地合并授权。`main` 当前仅比 `origin/main` 领先 2 个本地提交，未 push。
@@ -60,5 +68,5 @@
 
 ## 后续边界
 
-- 本地 integration checkpoint 不是 `main` 合并、推送、PR 或发布；本地 fast-forward 已完成冲突预检，但仍需新的明确授权，且授权后必须在 `main` 串行重跑匹配门禁再收口 SP-151。
+- 当前 integration checkpoint 尚未进入 `origin/main`；下一步按已获授权串行 push、创建 PR、等待 CI、merge，并在最终 docs-only 归档提交后再次确认开放 issue 为零。
 - 真实 3×20+1 sampling 仍必须取得独立的 dedicated Simulator、server ownership、reset、negative control 与私有 evidence 生命周期授权；本 space 没有启动或探测真实环境。

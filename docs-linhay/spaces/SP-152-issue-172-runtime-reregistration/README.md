@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 阶段：已完成（本地，待主线集成）
+- 阶段：已完成（总集成候选，待 PR/CI）
 - Issue：#172
 - Branch：`feat/SP-152-issue-172-runtime-reregistration`
 - Worktree：`../TritonKit-worktrees/SP-152-issue-172-runtime-reregistration/`

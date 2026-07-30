@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 状态：已完成（本地）
+- 状态：已完成（总集成候选，待 PR/CI）
 - GitHub issue：[#174](https://github.com/NeptuneKit/TritonKit/issues/174)
 - Branch：`feat/SP-154-issue-174-simulator-swipe-lifecycle`
 - Worktree：`../TritonKit-worktrees/SP-154-issue-174-simulator-swipe-lifecycle/`

@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 阶段：已完成（本地）
+- 阶段：已完成（总集成候选，待 PR/CI）
 - GitHub issue：[#176](https://github.com/NeptuneKit/TritonKit/issues/176)
 - Branch：`feat/SP-156-issue-176-xcode-compact-progress`
 - Worktree：`../TritonKit-worktrees/SP-156-issue-176-xcode-compact-progress/`
