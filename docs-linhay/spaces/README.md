@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（155/155 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（156/156 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-07-30
 
@@ -21,6 +21,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 已完成（本地） | [SP-156-issue-176-xcode-compact-progress](./SP-156-issue-176-xcode-compact-progress/README.md) | #176 已为 `xcode build` 增加默认 compact progress，保留 lifecycle/heartbeat/bounded diagnostics/artifact/final，显式 full 恢复旧 stream | focused 49/49、CLI build 与 schema 已通过；已进入总集成分支，待统一门禁 |
 | 已完成（本地） | [SP-152-issue-172-runtime-reregistration](./SP-152-issue-172-runtime-reregistration/README.md) | #172 embedded runtime 新进程重注册与断连重连已完成；旧 task/timer 不得污染新连接，legacy SDK 兼容/拒绝原因保持机器可读 | root 全量与 CLI focused tests 通过；待 SP-142 至 SP-151 并行 space 集成后恢复连续编号门禁，未占用 server/Simulator |
 | 已完成（本地） | [SP-153-issue-173-xcode-run-target-binding](./SP-153-issue-173-xcode-run-target-binding/README.md) | #173 已将 `xcode run` 显式 Simulator destination 固化为 build/settings/install/launch/app-scoped readiness 共用的 immutable target | fake runner 与 Xcode focused 41/41 已通过；等待主控集成，不运行真实 Xcode/Simulator |
 | 已完成（本地） | [SP-154-issue-174-simulator-swipe-lifecycle](./SP-154-issue-174-simulator-swipe-lifecycle/README.md) | #174 已用单一 persistent Baguette session、逐事件 ack 与 terminal linger 修复 iOS Simulator swipe 生命周期；host success 仍只代表提交 | 合入后在独占 Simulator/server 下以 Triton-first 事实与 AX/wait/screenshot 做 vertical pager 后验 smoke |
@@ -84,6 +85,7 @@
 
 | Space | Branch | Worktree | 基线 | 当前状态与后续 |
 | --- | --- | --- | --- | --- |
+| `SP-156-issue-176-xcode-compact-progress` | `feat/SP-156-issue-176-xcode-compact-progress` | `../TritonKit-worktrees/SP-156-issue-176-xcode-compact-progress/` | `feat/SP-153-issue-173-xcode-run-target-binding@57ff4092` | #176 已进入总集成分支；focused 49/49，通过，不改 shared model 或真实 Xcode 状态 |
 | `SP-152-issue-172-runtime-reregistration` | `feat/SP-152-issue-172-runtime-reregistration` | `../TritonKit-worktrees/SP-152-issue-172-runtime-reregistration/` | `main@d2578089` | 本地完成；root 全量与 CLI focused tests 通过，连续编号 docs 门禁待并行 space 集成；未启动共享 server/Simulator |
 | `SP-153-issue-173-xcode-run-target-binding` | `feat/SP-153-issue-173-xcode-run-target-binding` | `../TritonKit-worktrees/SP-153-issue-173-xcode-run-target-binding/` | `main@d2578089` | #173 本地实现与 focused 验证完成；等待主控集成，不触碰真实 Xcode/Simulator |
 | `SP-154-issue-174-simulator-swipe-lifecycle` | `feat/SP-154-issue-174-simulator-swipe-lifecycle` | `../TritonKit-worktrees/SP-154-issue-174-simulator-swipe-lifecycle/` | `main@d2578089` | 已完成（本地）；focused lifecycle 与跨平台契约回归通过，真实 vertical pager smoke 留待独占 Simulator/server 条件 |

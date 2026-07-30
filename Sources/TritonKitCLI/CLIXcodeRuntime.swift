@@ -505,6 +505,7 @@ func runXcodeBuild(
     timeout: Double? = nil,
     allowNonZeroExit: Bool = true,
     allowProvisioningUpdates: Bool = false,
+    progress: XcodeProgressMode = .full,
     statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) }
 ) throws -> TKXcodeActionSummary {
     let executionInvocation = try preparedXcodeInvocationForExecution(invocation)
@@ -521,7 +522,13 @@ func runXcodeBuild(
         allowProvisioningUpdates: allowProvisioningUpdates,
         redactDestination: executionInvocation.redactsXcodebuildDestination
     ).withTimeout(timeout)
-    let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.build", jsonl: jsonl, allowNonZeroExit: allowNonZeroExit)
+    let (result, durationMs) = try runXcodeHostCommand(
+        command,
+        event: "xcode.build",
+        jsonl: jsonl,
+        allowNonZeroExit: allowNonZeroExit,
+        progress: progress
+    )
     let diagnostics = xcodeBuildOutputDiagnostics(result, redacting: command)
     let ok = result.exitCode == 0
     let workspaceFilter = xcodeWorkspaceFilter(for: executionInvocation)
@@ -1120,249 +1127,6 @@ private func xcodeBuildWasInterrupted(_ result: HostProcessResult) -> Bool {
     return hasInterruptedMarker || (result.exitCode == 15 && !hasFailureMarker)
 }
 
-func runXcodeHostCommand(_ command: TKHostCommand, event: String, jsonl: Bool, allowNonZeroExit: Bool = false) throws -> (HostProcessResult, Int) {
-    let startedAt = Date()
-    let artifactPaths = try createXcodeArtifactPaths(event: event)
-    if jsonl {
-        writeJSONLLine(try encodeCompactJSON(TKXcodeProgressEvent(
-            event: "\(event).invocation",
-            message: "started",
-            sourceCommand: hostSourceCommand(command),
-            elapsedMs: 0,
-            stdoutLogPath: artifactPaths.stdout.path,
-            stderrLogPath: artifactPaths.stderr.path,
-            stdoutBytes: 0,
-            stderrBytes: 0
-        )))
-    }
-    let result = try runStreamingHostCommand(
-        command,
-        event: event,
-        jsonl: jsonl,
-        startedAt: startedAt,
-        artifactPaths: artifactPaths,
-        allowNonZeroExit: allowNonZeroExit
-    )
-    let durationMs = Int(Date().timeIntervalSince(startedAt) * 1000)
-    if jsonl {
-        writeJSONLLine(try encodeCompactJSON(TKXcodeProgressEvent(
-            event: "\(event).summary",
-            message: "finished",
-            sourceCommand: result.sourceCommand,
-            elapsedMs: durationMs,
-            stdoutLogPath: result.stdoutLogPath,
-            stderrLogPath: result.stderrLogPath,
-            stdoutBytes: result.stdoutBytes,
-            stderrBytes: result.stderrBytes
-        )))
-    }
-    return (result, durationMs)
-}
-
-func writeJSONLLine(_ line: String) {
-    FileHandle.standardOutput.write(Data((line + "\n").utf8))
-}
-
-struct XcodeArtifactPaths {
-    let directory: URL
-    let stdout: URL
-    let stderr: URL
-}
-
-final class HostStreamAccumulator {
-    private let maximumBytes: Int
-    private let lock = NSLock()
-    private var storage = Data()
-    private var didTruncate = false
-    private var total = 0
-
-    init(maximumBytes: Int = 1_048_576) {
-        self.maximumBytes = maximumBytes
-    }
-
-    func append(_ data: Data) {
-        lock.lock()
-        total += data.count
-        if storage.count < maximumBytes {
-            let remaining = maximumBytes - storage.count
-            storage.append(data.prefix(remaining))
-        }
-        if total > maximumBytes {
-            didTruncate = true
-        }
-        lock.unlock()
-    }
-
-    func snapshot() -> (data: Data, truncated: Bool, bytes: Int) {
-        lock.lock()
-        let value = (storage, didTruncate, total)
-        lock.unlock()
-        return value
-    }
-}
-
-func createXcodeArtifactPaths(event: String) throws -> XcodeArtifactPaths {
-    let safeEvent = event.unicodeScalars.map { scalar in
-        CharacterSet.alphanumerics.contains(scalar) ? String(scalar) : "-"
-    }.joined()
-    let directoryName = "\(Int(Date().timeIntervalSince1970 * 1000))-\(String(safeEvent))-\(UUID().uuidString)"
-    let directory = URL(fileURLWithPath: NSTemporaryDirectory())
-        .appendingPathComponent("triton-xcode-artifacts", isDirectory: true)
-        .appendingPathComponent(directoryName, isDirectory: true)
-    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-    return XcodeArtifactPaths(
-        directory: directory,
-        stdout: directory.appendingPathComponent("stdout.log"),
-        stderr: directory.appendingPathComponent("stderr.log")
-    )
-}
-
-func runStreamingHostCommand(
-    _ command: TKHostCommand,
-    event: String,
-    jsonl: Bool,
-    startedAt: Date,
-    artifactPaths: XcodeArtifactPaths,
-    allowNonZeroExit: Bool = false
-) throws -> HostProcessResult {
-    let timeoutSeconds = command.defaultTimeoutSeconds
-    let process = Process()
-    configureHostProcessExecutable(process, command: command)
-
-    FileManager.default.createFile(atPath: artifactPaths.stdout.path, contents: nil)
-    FileManager.default.createFile(atPath: artifactPaths.stderr.path, contents: nil)
-    let stdoutLog = try FileHandle(forWritingTo: artifactPaths.stdout)
-    let stderrLog = try FileHandle(forWritingTo: artifactPaths.stderr)
-    defer {
-        try? stdoutLog.close()
-        try? stderrLog.close()
-    }
-
-    let stdout = Pipe()
-    let stderr = Pipe()
-    let stdoutAccumulator = HostStreamAccumulator()
-    let stderrAccumulator = HostStreamAccumulator()
-    let printLock = NSLock()
-    process.standardOutput = stdout
-    process.standardError = stderr
-
-    func emitProgress(_ progress: TKXcodeProgressEvent) {
-        guard let line = try? encodeCompactJSON(progress) else { return }
-        printLock.lock()
-        if jsonl {
-            writeJSONLLine(line)
-        } else {
-            FileHandle.standardError.write(Data((line + "\n").utf8))
-        }
-        printLock.unlock()
-    }
-
-    func handleChunk(_ data: Data, stream: String, log: FileHandle, accumulator: HostStreamAccumulator) {
-        guard !data.isEmpty else { return }
-        log.write(data)
-        accumulator.append(data)
-        let snapshot = accumulator.snapshot()
-        emitProgress(TKXcodeProgressEvent(
-            event: "\(event).\(stream)",
-            message: streamingSample(stream: stream, data: data, redacting: command),
-            sourceCommand: hostSourceCommand(command),
-            elapsedMs: Int(Date().timeIntervalSince(startedAt) * 1000),
-            stdoutLogPath: artifactPaths.stdout.path,
-            stderrLogPath: artifactPaths.stderr.path,
-            stdoutBytes: stream == "stdout" ? snapshot.bytes : stdoutAccumulator.snapshot().bytes,
-            stderrBytes: stream == "stderr" ? snapshot.bytes : stderrAccumulator.snapshot().bytes
-        ))
-    }
-
-    stdout.fileHandleForReading.readabilityHandler = { handle in
-        handleChunk(handle.availableData, stream: "stdout", log: stdoutLog, accumulator: stdoutAccumulator)
-    }
-    stderr.fileHandleForReading.readabilityHandler = { handle in
-        handleChunk(handle.availableData, stream: "stderr", log: stderrLog, accumulator: stderrAccumulator)
-    }
-
-    do {
-        try process.run()
-    } catch {
-        throw HostCommandRunError.launchFailed(error.localizedDescription)
-    }
-
-    let semaphore = DispatchSemaphore(value: 0)
-    DispatchQueue.global(qos: .utility).async {
-        process.waitUntilExit()
-        semaphore.signal()
-    }
-
-    let deadline = Date().addingTimeInterval(timeoutSeconds)
-    var nextHeartbeat = Date().addingTimeInterval(10)
-    while true {
-        let now = Date()
-        if now >= deadline {
-            process.terminate()
-            _ = semaphore.wait(timeout: .now() + 2)
-            stdout.fileHandleForReading.readabilityHandler = nil
-            stderr.fileHandleForReading.readabilityHandler = nil
-            emitProgress(TKXcodeProgressEvent(
-                event: "\(event).summary",
-                message: "timeout after \(timeoutSeconds)s",
-                sourceCommand: hostSourceCommand(command),
-                elapsedMs: Int(Date().timeIntervalSince(startedAt) * 1000),
-                stdoutLogPath: artifactPaths.stdout.path,
-                stderrLogPath: artifactPaths.stderr.path,
-                stdoutBytes: stdoutAccumulator.snapshot().bytes,
-                stderrBytes: stderrAccumulator.snapshot().bytes
-            ))
-            throw HostCommandRunError.timeout(
-                command: command,
-                timeoutSeconds: timeoutSeconds,
-                stdoutLogPath: artifactPaths.stdout.path,
-                stderrLogPath: artifactPaths.stderr.path
-            )
-        }
-        let waitSeconds = min(1.0, max(0.1, min(deadline.timeIntervalSince(now), nextHeartbeat.timeIntervalSince(now))))
-        if semaphore.wait(timeout: .now() + waitSeconds) == .success {
-            break
-        }
-        if Date() >= nextHeartbeat {
-            emitProgress(TKXcodeProgressEvent(
-                event: "\(event).heartbeat",
-                message: "running",
-                sourceCommand: hostSourceCommand(command),
-                elapsedMs: Int(Date().timeIntervalSince(startedAt) * 1000),
-                stdoutLogPath: artifactPaths.stdout.path,
-                stderrLogPath: artifactPaths.stderr.path,
-                stdoutBytes: stdoutAccumulator.snapshot().bytes,
-                stderrBytes: stderrAccumulator.snapshot().bytes
-            ))
-            nextHeartbeat = Date().addingTimeInterval(10)
-        }
-    }
-
-    stdout.fileHandleForReading.readabilityHandler = nil
-    stderr.fileHandleForReading.readabilityHandler = nil
-    handleChunk(stdout.fileHandleForReading.availableData, stream: "stdout", log: stdoutLog, accumulator: stdoutAccumulator)
-    handleChunk(stderr.fileHandleForReading.availableData, stream: "stderr", log: stderrLog, accumulator: stderrAccumulator)
-
-    let stdoutSnapshot = stdoutAccumulator.snapshot()
-    let stderrSnapshot = stderrAccumulator.snapshot()
-    let result = HostProcessResult(
-        stdoutData: stdoutSnapshot.data,
-        stderrData: stderrSnapshot.data,
-        exitCode: process.terminationStatus,
-        sourceCommand: hostSourceCommand(command),
-        stdoutTruncated: stdoutSnapshot.truncated,
-        stderrTruncated: stderrSnapshot.truncated,
-        stdoutLogPath: artifactPaths.stdout.path,
-        stderrLogPath: artifactPaths.stderr.path,
-        stdoutBytes: stdoutSnapshot.bytes,
-        stderrBytes: stderrSnapshot.bytes
-    )
-    if result.exitCode != 0, !allowNonZeroExit {
-        throw HostCommandRunError.nonZeroExit(command: command, result: result)
-    }
-    return result
-}
-
 struct XcodeTestResultBundleDetails {
     let summary: TKXcresultSummaryMetrics?
     let topFailures: [TKXcresultFailureRecord]?
@@ -1417,19 +1181,6 @@ func xcodeTestResultBundleDetails(
             note: "Result bundle was not parsed for inline failures: \(publicErrorDescription)"
         )
     }
-}
-
-func streamingSample(
-    stream: String,
-    data: Data,
-    maximumBytes: Int = 2_000,
-    redacting command: TKHostCommand? = nil
-) -> String {
-    let prefix = data.prefix(maximumBytes)
-    let text = String(data: prefix, encoding: .utf8) ?? "<\(data.count) bytes>"
-    let suffix = data.count > maximumBytes ? " ...<truncated>" : ""
-    let sample = "\(stream): \(text)\(suffix)"
-    return command.map { redactedXcodePublicText(sample, command: $0) } ?? sample
 }
 
 func resolveBuiltAppProduct(
