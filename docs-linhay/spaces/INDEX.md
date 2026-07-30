@@ -1,8 +1,8 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-07-28
-> 覆盖范围：151/151 个已存在 space
+> 最近同步：2026-07-30
+> 覆盖范围：152/152 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,9 +17,9 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 151/151 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 151/151 | 每条记录链接到现有 space README |
-| 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～151 已是规范目录 |
+| 编号登记 | 152/152 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 152/152 | 每条记录链接到现有 space README |
+| 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～152 已是规范目录 |
 
 ## Space 登记表
 
@@ -176,3 +176,4 @@
 | `SP-149-issue-166-evidence-metadata-contract` | [`SP-149-issue-166-evidence-metadata-contract`](./SP-149-issue-166-evidence-metadata-contract/README.md) | 已完成（已吸收） | 规范目录；已由 SP-151 集成，source branch/worktree 已清理；#166 normalizer error 与 published PNG metadata contract 保留 |
 | `SP-150-reliability-failure-recovery-semantics` | [`SP-150-reliability-failure-recovery-semantics`](./SP-150-reliability-failure-recovery-semantics/README.md) | 已完成（已吸收） | 规范目录；已由 SP-151 集成，source branch/worktree 已清理；validated plan terminal failure/recovery fail-closed contract 保留 |
 | `SP-151-trusted-baseline-integration` | [`SP-151-trusted-baseline-integration`](./SP-151-trusted-baseline-integration/README.md) | 待本地合并授权 | 规范目录；已在隔离 worktree 汇集 SP-142～150 并完成离线验证与 docs 收口；`main@d2578089` fast-forward 预检无冲突，source branch/worktree 已回收，不改 main、不触碰 #164 或真实运行环境 |
+| `SP-152-issue-172-runtime-reregistration` | [`SP-152-issue-172-runtime-reregistration`](./SP-152-issue-172-runtime-reregistration/README.md) | 已完成（本地） | 规范目录；embedded WebSocket connection generation、legacy SDK compatibility 与 no-target doctor diagnostics 已完成单元验证，待并行 space 集成后通过连续编号门禁 |
