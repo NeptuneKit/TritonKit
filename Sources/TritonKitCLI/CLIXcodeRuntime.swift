@@ -78,7 +78,8 @@ func resolveXcodeInvocation(
     simulator: String? = nil,
     device: String? = nil,
     derivedDataPath: String? = nil,
-    buildSettings: [String] = []
+    buildSettings: [String] = [],
+    requireConcreteSimulatorTarget: Bool = false
 ) throws -> ResolvedXcodeInvocation {
     let hasDevice = hasXcodeSelector(device)
     if hasDevice, hasXcodeSelector(destination) {
@@ -107,7 +108,17 @@ func resolveXcodeInvocation(
         throw XcodeWorkflowError.missingScheme
     }
     let resolvedConfiguration = configuration ?? xcode?.configuration ?? "Debug"
-    let resolvedSimulator = hasDevice ? nil : simulator ?? defaults?.defaultSimulatorUDID
+    let explicitDestination = destination?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let explicitDestinationSimulatorTarget = xcodeSimulatorTargetID(from: explicitDestination)
+    if requireConcreteSimulatorTarget,
+       !hasDevice,
+       explicitDestination?.isEmpty == false,
+       explicitDestinationSimulatorTarget == nil {
+        throw XcodeWorkflowError.simulatorDestinationTargetUnresolved
+    }
+    let resolvedSimulator = hasDevice
+        ? nil
+        : explicitDestinationSimulatorTarget ?? simulator ?? defaults?.defaultSimulatorUDID
     let resolvedDestination = resolvedXcodeDestination(
         destination: destination,
         defaultDestination: xcode?.destination,
@@ -238,6 +249,52 @@ func xcodeSimulatorDestination(selector: String) -> String {
     return "platform=iOS Simulator,name=\(normalized)"
 }
 
+func xcodeSimulatorTargetID(from destination: String?) -> String? {
+    guard let destination else { return nil }
+    let components = destination
+        .split(separator: ",", omittingEmptySubsequences: false)
+        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+    var platforms: [String] = []
+    var identifiers: [String] = []
+
+    for component in components {
+        guard let separator = component.firstIndex(of: "=") else { continue }
+        var key = component[..<separator].trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if key.hasPrefix("generic/") {
+            key.removeFirst("generic/".count)
+        }
+        let value = component[component.index(after: separator)...]
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        switch key {
+        case "platform":
+            platforms.append(value)
+        case "id":
+            identifiers.append(value)
+        default:
+            continue
+        }
+    }
+
+    guard platforms.count == 1,
+          platforms[0].caseInsensitiveCompare("iOS Simulator") == .orderedSame,
+          identifiers.count == 1,
+          !identifiers[0].isEmpty else {
+        return nil
+    }
+    return identifiers[0]
+}
+
+func resolvedXcodeRunSimulatorTarget(_ invocation: ResolvedXcodeInvocation) throws -> String {
+    if let destinationTarget = xcodeSimulatorTargetID(from: invocation.destination) {
+        return destinationTarget
+    }
+    guard let simulator = invocation.simulatorUDID,
+          !simulator.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        throw XcodeWorkflowError.simulatorRequired
+    }
+    return simulator
+}
+
 private func hasXcodeSelector(_ value: String?) -> Bool {
     guard let value else { return false }
     return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -351,6 +408,7 @@ enum XcodeWorkflowError: Error, CustomStringConvertible {
     case appPathUnresolved
     case bundleIDUnresolved(String)
     case simulatorRequired
+    case simulatorDestinationTargetUnresolved
     case conflictingTargetSelectors
 
     var description: String {
@@ -367,6 +425,8 @@ enum XcodeWorkflowError: Error, CustomStringConvertible {
             "Bundle identifier could not be resolved from \(appPath)."
         case .simulatorRequired:
             "Xcode run requires --simulator or `triton sim use <udid>` defaults."
+        case .simulatorDestinationTargetUnresolved:
+            "Xcode run could not extract one immutable Simulator target from the explicit destination."
         case .conflictingTargetSelectors:
             "Pass either --simulator or --device, not both."
         }
@@ -609,7 +669,16 @@ func runXcodeBuildInstallLaunch(
     launchEnvironment: [String: String] = [:],
     launchArguments: [String] = [],
     jsonl: Bool,
-    timeout: Double? = nil
+    timeout: Double? = nil,
+    simulatorBuild: (ResolvedXcodeInvocation, Bool, Double?) throws -> TKXcodeActionSummary = { invocation, jsonl, timeout in
+        try runXcodeBuild(invocation: invocation, jsonl: jsonl, timeout: timeout, allowNonZeroExit: true)
+    },
+    simulatorProduct: (ResolvedXcodeInvocation, Double?, Bool, String) throws -> TKXcodeBuiltAppProduct = { invocation, timeout, jsonl, event in
+        try resolveBuiltAppProduct(invocation: invocation, timeout: timeout, jsonl: jsonl, event: event)
+    },
+    simulatorHostCommand: (TKHostCommand, String, Bool) throws -> (HostProcessResult, Int) = { command, event, jsonl in
+        try runXcodeHostCommand(command, event: event, jsonl: jsonl)
+    }
 ) throws -> TKXcodeActionSummary {
     if invocation.hasRealDeviceSelection {
         return try runXcodeRealDeviceBuildInstallLaunch(
@@ -621,10 +690,8 @@ func runXcodeBuildInstallLaunch(
         )
     }
 
-    guard let simulator = invocation.simulatorUDID, !simulator.isEmpty else {
-        throw XcodeWorkflowError.simulatorRequired
-    }
-    let buildSummary = try runXcodeBuild(invocation: invocation, jsonl: jsonl, timeout: timeout, allowNonZeroExit: true)
+    let simulator = try resolvedXcodeRunSimulatorTarget(invocation)
+    let buildSummary = try simulatorBuild(invocation, jsonl, timeout)
     guard buildSummary.ok else {
         return TKXcodeActionSummary(
             ok: false,
@@ -656,12 +723,7 @@ func runXcodeBuildInstallLaunch(
             note: "Run build phase failed. Inspect xcodeDiagnostics first, then stdout/stderr artifacts if needed."
         )
     }
-    let product = try resolveBuiltAppProduct(
-        invocation: invocation,
-        timeout: timeout,
-        jsonl: jsonl,
-        event: "xcode.run.settings"
-    )
+    let product = try simulatorProduct(invocation, timeout, jsonl, "xcode.run.settings")
     let bundleID: String
     if let productBundleID = product.bundleID {
         bundleID = productBundleID
@@ -670,14 +732,15 @@ func runXcodeBuildInstallLaunch(
     }
 
     let installCommand = TKSimctlCommand.installApp(udid: simulator, appPath: product.appPath)
-    _ = try runXcodeHostCommand(installCommand, event: "xcode.run.install", jsonl: jsonl)
+    _ = try simulatorHostCommand(installCommand, "xcode.run.install", jsonl)
     let launchCommand = TKSimctlCommand.launchApp(
         udid: simulator,
         bundleID: bundleID,
         environment: launchEnvironment,
         arguments: launchArguments
     )
-    let (launchResult, launchDurationMs) = try runXcodeHostCommand(launchCommand, event: "xcode.run.launch", jsonl: jsonl)
+    let (launchResult, launchDurationMs) = try simulatorHostCommand(launchCommand, "xcode.run.launch", jsonl)
+    let runtimeTarget = "\(TKIOSSimulatorRuntimeTargetPrefix)\(simulator)/app:\(bundleID)"
 
     return TKXcodeActionSummary(
         ok: true,
@@ -704,7 +767,14 @@ func runXcodeBuildInstallLaunch(
         stderrLogPath: launchResult.stderrLogPath,
         stdoutBytes: launchResult.stdoutBytes,
         stderrBytes: launchResult.stderrBytes,
-        note: "App launch was submitted to Simulator. Verify business readiness with `triton status`, `triton wait`, `triton verify`, screenshot, or evidence."
+        nextActions: [
+            TKCLINextAction(
+                command: "wait",
+                args: ["--idle", "--target", runtimeTarget, "--json"],
+                category: "verify"
+            ),
+        ],
+        note: "App launch was submitted to Simulator \(simulator). Verify business readiness against the same target with `triton wait --idle --target \(runtimeTarget) --json`, then use verify, screenshot, or evidence."
     )
 }
 
