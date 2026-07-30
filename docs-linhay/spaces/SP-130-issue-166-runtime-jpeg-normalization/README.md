@@ -1,6 +1,6 @@
 # SP-130 Issue #166 Runtime JPEG Normalization
 
-> 状态：实现与验证完成，待集成
+> 状态：已发布（v0.2.16）；GitHub #166 已关闭，SP-149 follow-up 已由 PR #177 合并
 >
 > Branch：`feat/SP-130-issue-166-runtime-jpeg-normalization`
 >

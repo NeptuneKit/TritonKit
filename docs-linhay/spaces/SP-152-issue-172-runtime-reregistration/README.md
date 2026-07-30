@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 阶段：已完成（总集成候选，待 PR/CI）
+- 阶段：已合并 `main`（PR #177）；GitHub #172 已关闭
 - Issue：#172
 - Branch：`feat/SP-152-issue-172-runtime-reregistration`
 - Worktree：`../TritonKit-worktrees/SP-152-issue-172-runtime-reregistration/`

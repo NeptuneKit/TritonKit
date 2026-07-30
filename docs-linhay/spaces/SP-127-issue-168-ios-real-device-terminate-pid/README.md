@@ -2,9 +2,9 @@
 
 ## 状态与范围
 
-- 状态：本地集成已验证；等待主分支收口（真实设备 smoke 仍 blocked）。
+- 状态：已发布（v0.2.16）；GitHub #168 已关闭（真实设备 smoke 未执行）。
 - Issue：[#168](https://github.com/NeptuneKit/TritonKit/issues/168)。
-- Owner：`linhay`；当前 issue 为 open，无 assignee。
+- Owner：`linhay`；issue 已按 completed 关闭。
 - 基线：`feat/SP-126-testrec-convergence@5f6c2f6f`。
 - Branch：`feat/SP-127-issue-168-ios-real-device-terminate-pid`。
 - Worktree：`../TritonKit-worktrees/SP-127-issue-168-ios-real-device-terminate-pid/`。

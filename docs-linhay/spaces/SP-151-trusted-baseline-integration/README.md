@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 状态：已完成（总集成候选，远端写入已获授权，待 PR/CI）。
+- 状态：已归档；PR [#177](https://github.com/NeptuneKit/TritonKit/pull/177) 已合并为 `66f975d9`，CI `30515397742` 全绿。
 - Branch：`feat/SP-151-trusted-baseline-integration`。
 - Worktree：`../TritonKit-worktrees/SP-151-trusted-baseline-integration/`。
 - 基线：`main@d2578089`。
@@ -54,6 +54,8 @@
 
 ## 集成结果
 
+- 远端完成：integration branch 已推送，PR #177 在 CI `30515397742` 的 scope、Swift、contracts、podspec 与 aggregate job 全绿后合并；#172～176 自动关闭，#166～171 补充限制说明后按 completed 关闭。
+- 本地清理：SP-151～156 的 source branch/worktree 已确认 clean 且为 `main` 可达祖先，随后用非强制方式回收；#164 worktree 保持原样。
 - Issue 扩展 merge commits：`7ba0955d`（SP-152）、`0424e9f9`（SP-153）、`ce09e30a`（SP-154）、`5d133413`（SP-155）、`fe2fd45c`（SP-156）。新增 #176 在最终开放清单复查时出现，因此按“全部 issue”边界纳入同批处理。
 - 联合 CLI focused 使用 `--no-parallel` 串行运行 207/207 通过；并行首轮仅因其它 suite 的测试框架日志写入 #176 全局 stdout/stderr 捕获管道而出现 4 个测试基础设施失败，#176 单独 8/8 与同集合串行重跑均通过。
 - `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local` 通过：根包 238/238、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、docs 156/156 与 diff check 全绿；真实 Xcode/Simulator 步骤按共享环境边界显式跳过。
@@ -68,5 +70,5 @@
 
 ## 后续边界
 
-- 当前 integration checkpoint 尚未进入 `origin/main`；下一步按已获授权串行 push、创建 PR、等待 CI、merge，并在最终 docs-only 归档提交后再次确认开放 issue 为零。
+- 代码与 issue 已收口；最终 docs-only 归档提交推送并通过 CI 后，再以 GitHub 开放清单为空作为“全部 issue”完成事实。
 - 真实 3×20+1 sampling 仍必须取得独立的 dedicated Simulator、server ownership、reset、negative control 与私有 evidence 生命周期授权；本 space 没有启动或探测真实环境。

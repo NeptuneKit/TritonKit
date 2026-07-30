@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 状态：本地集成已验证；等待主分支收口
+- 状态：已发布（v0.2.16）；GitHub #167 已关闭
 - Issue：GitHub #167
 - 基线：`feat/SP-126-testrec-convergence@5f6c2f6f`
 - Branch：`feat/SP-128-issue-167-xcode-device-alias-preflight`

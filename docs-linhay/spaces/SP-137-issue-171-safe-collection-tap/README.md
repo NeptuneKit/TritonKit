@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 状态：已完成（本地 checkpoint，待受控集成）。
+- 状态：已发布（v0.2.16）；GitHub #171 已关闭。
 - 负责人：Codex。
 - Branch：`feat/SP-137-issue-171-safe-collection-tap`。
 - Worktree：`../TritonKit-worktrees/SP-137-issue-171-safe-collection-tap/`。

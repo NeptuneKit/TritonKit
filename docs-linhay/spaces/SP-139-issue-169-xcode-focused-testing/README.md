@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 状态：执行中，已完成 TDD 最小实现、focused/shared/schema/docs 验证；等待主控 diff 复核后才可创建本地 checkpoint
+- 状态：已发布（v0.2.16）；GitHub #169 已关闭，真实 XCTest/xcodebuild 未执行
 - Issue：GitHub #169
 - Branch：`feat/SP-139-issue-169-xcode-focused-testing`
 - Worktree：`../TritonKit-worktrees/SP-139-issue-169-xcode-focused-testing/`

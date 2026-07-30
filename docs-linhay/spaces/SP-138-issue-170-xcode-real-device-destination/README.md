@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 状态：已 rebase `main@f68587be` 并通过 focused 验证、独立审计与 docs/whitespace 门禁；主控已完成 post-diff 复核并批准创建本地 checkpoint
+- 状态：已发布（v0.2.16）；GitHub #170 已关闭，真实 Xcode/真机 smoke 未执行
 - Issue：GitHub #170
 - Branch：`feat/SP-138-issue-170-xcode-real-device-destination`
 - Worktree：`../TritonKit-worktrees/SP-138-issue-170-xcode-real-device-destination/`

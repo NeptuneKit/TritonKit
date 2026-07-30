@@ -5,7 +5,7 @@
 - GitHub issue：#175
 - Branch：`feat/SP-155-issue-175-ios-readiness-coredevice`
 - Worktree：`../TritonKit-worktrees/SP-155-issue-175-ios-readiness-coredevice/`
-- 阶段：已完成（总集成候选，待 PR/CI）
+- 阶段：已合并 `main`（PR #177）；GitHub #175 已关闭
 - 基线：`d2578089`
 
 ## 问题与根因假设

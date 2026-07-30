@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 阶段：已完成（总集成候选，待 PR/CI）
+- 阶段：已合并 `main`（PR #177）；GitHub #173 已关闭
 - GitHub issue：[#173](https://github.com/NeptuneKit/TritonKit/issues/173)
 - Branch：`feat/SP-153-issue-173-xcode-run-target-binding`
 - Worktree：`../TritonKit-worktrees/SP-153-issue-173-xcode-run-target-binding/`
