@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（153/153 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（154/154 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-07-30
 
@@ -23,6 +23,7 @@
 | --- | --- | --- | --- |
 | 已完成（本地） | [SP-152-issue-172-runtime-reregistration](./SP-152-issue-172-runtime-reregistration/README.md) | #172 embedded runtime 新进程重注册与断连重连已完成；旧 task/timer 不得污染新连接，legacy SDK 兼容/拒绝原因保持机器可读 | root 全量与 CLI focused tests 通过；待 SP-142 至 SP-151 并行 space 集成后恢复连续编号门禁，未占用 server/Simulator |
 | 已完成（本地） | [SP-153-issue-173-xcode-run-target-binding](./SP-153-issue-173-xcode-run-target-binding/README.md) | #173 已将 `xcode run` 显式 Simulator destination 固化为 build/settings/install/launch/app-scoped readiness 共用的 immutable target | fake runner 与 Xcode focused 41/41 已通过；等待主控集成，不运行真实 Xcode/Simulator |
+| 已完成（本地） | [SP-154-issue-174-simulator-swipe-lifecycle](./SP-154-issue-174-simulator-swipe-lifecycle/README.md) | #174 已用单一 persistent Baguette session、逐事件 ack 与 terminal linger 修复 iOS Simulator swipe 生命周期；host success 仍只代表提交 | 合入后在独占 Simulator/server 下以 Triton-first 事实与 AX/wait/screenshot 做 vertical pager 后验 smoke |
 | 已归档 | [20260722-issue-165-xcode-schemes-discovery-timeout](./20260722-issue-165-xcode-schemes-discovery-timeout/README.md) | Xcode discover 默认递归事实已与 schemes container 对齐；schemes 支持 timeout override、禁用自动 package resolution 与机器恢复动作 | `b3cdd40c` 已推送，CI `29973762696` 通过，GitHub #165 已关闭并随 `v0.2.15` 发布 |
 | 已归档 | [20260722-issue-164-evidence-simulator-screenshot-fidelity](./20260722-issue-164-evidence-simulator-screenshot-fidelity/README.md) | iOS Simulator evidence 已区分 host-composited 与 runtime App-layer screenshot，默认视觉验收使用 host framebuffer | `e489dcfd` 已推送，CI `29973762696` 通过，GitHub #164 已关闭并随 `v0.2.15` 发布 |
 | 已归档 | [20260722-issue-159-alert-modal-boundary](./20260722-issue-159-alert-modal-boundary/README.md) | UIKit tap 已尊重 presented alert modal boundary，禁止激活背后 collection/table cell | `01d88c4b` 已合并，CI `29910680723` 通过，GitHub #159 已关闭并随 `v0.2.15` 发布 |
@@ -84,6 +85,7 @@
 | --- | --- | --- | --- | --- |
 | `SP-152-issue-172-runtime-reregistration` | `feat/SP-152-issue-172-runtime-reregistration` | `../TritonKit-worktrees/SP-152-issue-172-runtime-reregistration/` | `main@d2578089` | 本地完成；root 全量与 CLI focused tests 通过，连续编号 docs 门禁待并行 space 集成；未启动共享 server/Simulator |
 | `SP-153-issue-173-xcode-run-target-binding` | `feat/SP-153-issue-173-xcode-run-target-binding` | `../TritonKit-worktrees/SP-153-issue-173-xcode-run-target-binding/` | `main@d2578089` | #173 本地实现与 focused 验证完成；等待主控集成，不触碰真实 Xcode/Simulator |
+| `SP-154-issue-174-simulator-swipe-lifecycle` | `feat/SP-154-issue-174-simulator-swipe-lifecycle` | `../TritonKit-worktrees/SP-154-issue-174-simulator-swipe-lifecycle/` | `main@d2578089` | 已完成（本地）；focused lifecycle 与跨平台契约回归通过，真实 vertical pager smoke 留待独占 Simulator/server 条件 |
 | `SP-126-testrec-convergence` | `feat/SP-126-testrec-convergence` | `../TritonKit-worktrees/SP-126-testrec-convergence/` | `main@931645ed` | 路线、边界与 Luna 执行交接已收口；可信基线、importer、proof/gate/compatibility/preflight 已经由 `d0f09d3c` 进入本地 main |
 | `SP-127-issue-168-ios-real-device-terminate-pid` | `feat/SP-127-issue-168-ios-real-device-terminate-pid` | `../TritonKit-worktrees/SP-127-issue-168-ios-real-device-terminate-pid/` | `5f6c2f6f` | `cef52ea2` 已经由 `d0f09d3c` 进入本地 main；保留真机 smoke blocker |
 | `SP-128-issue-167-xcode-device-alias-preflight` | `feat/SP-128-issue-167-xcode-device-alias-preflight` | `../TritonKit-worktrees/SP-128-issue-167-xcode-device-alias-preflight/` | `feat/SP-126-testrec-convergence@5f6c2f6f` | `25f7e048` 已经由 `d0f09d3c` 进入本地 main；保留真实 Xcode/device 覆盖缺口 |
