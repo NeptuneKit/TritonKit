@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（142/142 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（143/143 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-07-30
 
@@ -21,6 +21,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 已完成（本地） | [SP-156-issue-176-xcode-compact-progress](./SP-156-issue-176-xcode-compact-progress/README.md) | #176 已为 `xcode build` 增加默认 compact progress，保留 lifecycle/heartbeat/bounded diagnostics/artifact/final，显式 full 恢复旧 stream | focused 49/49、CLI build 与 schema 已通过；等待主控集成并重跑连续 space docs gate |
 | 已完成（本地） | [SP-153-issue-173-xcode-run-target-binding](./SP-153-issue-173-xcode-run-target-binding/README.md) | #173 已将 `xcode run` 显式 Simulator destination 固化为 build/settings/install/launch/app-scoped readiness 共用的 immutable target | fake runner 与 Xcode focused 41/41 已通过；等待主控集成，不运行真实 Xcode/Simulator |
 | 已归档 | [20260722-issue-165-xcode-schemes-discovery-timeout](./20260722-issue-165-xcode-schemes-discovery-timeout/README.md) | Xcode discover 默认递归事实已与 schemes container 对齐；schemes 支持 timeout override、禁用自动 package resolution 与机器恢复动作 | `b3cdd40c` 已推送，CI `29973762696` 通过，GitHub #165 已关闭并随 `v0.2.15` 发布 |
 | 已归档 | [20260722-issue-164-evidence-simulator-screenshot-fidelity](./20260722-issue-164-evidence-simulator-screenshot-fidelity/README.md) | iOS Simulator evidence 已区分 host-composited 与 runtime App-layer screenshot，默认视觉验收使用 host framebuffer | `e489dcfd` 已推送，CI `29973762696` 通过，GitHub #164 已关闭并随 `v0.2.15` 发布 |
@@ -71,6 +72,7 @@
 
 | Space | Branch | Worktree | 基线 | 当前状态与后续 |
 | --- | --- | --- | --- | --- |
+| `SP-156-issue-176-xcode-compact-progress` | `feat/SP-156-issue-176-xcode-compact-progress` | `../TritonKit-worktrees/SP-156-issue-176-xcode-compact-progress/` | `feat/SP-153-issue-173-xcode-run-target-binding@57ff4092` | #176 本地实现与 focused 验证完成；等待主控集成，不改 shared model 或真实 Xcode 状态 |
 | `SP-153-issue-173-xcode-run-target-binding` | `feat/SP-153-issue-173-xcode-run-target-binding` | `../TritonKit-worktrees/SP-153-issue-173-xcode-run-target-binding/` | `main@d2578089` | #173 本地实现与 focused 验证完成；等待主控集成，不触碰真实 Xcode/Simulator |
 | `SP-126-testrec-convergence` | `feat/SP-126-testrec-convergence` | `../TritonKit-worktrees/SP-126-testrec-convergence/` | `main@931645ed` | 路线、边界与 Luna 执行交接已收口；可信基线、importer、proof/gate/compatibility/preflight 已经由 `d0f09d3c` 进入本地 main |
 | `SP-127-issue-168-ios-real-device-terminate-pid` | `feat/SP-127-issue-168-ios-real-device-terminate-pid` | `../TritonKit-worktrees/SP-127-issue-168-ios-real-device-terminate-pid/` | `5f6c2f6f` | `cef52ea2` 已经由 `d0f09d3c` 进入本地 main；保留真机 smoke blocker |

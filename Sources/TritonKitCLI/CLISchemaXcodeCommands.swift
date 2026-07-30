@@ -41,6 +41,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--env", type: "KEY=VALUE", description: "Repeatable iOS app launch environment for xcode run; values are passed as SIMCTL_CHILD_* on Simulator or devicectl --environment-variables JSON on real devices and redacted in sourceCommand"),
                 TKCommandSchemaOption(name: "--arg", type: "String", description: "Repeatable iOS Simulator app launch argument for xcode run"),
                 TKCommandSchemaOption(name: "--allow-provisioning-updates", type: "Bool", defaultValue: "false", description: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices"),
+                TKCommandSchemaOption(name: "--progress", type: "compact|full", defaultValue: "compact", description: "Xcode build progress verbosity; compact emits invocation, heartbeat, up to 20 warnings and 20 errors, artifact paths, and final summary while full restores stdout/stderr chunk events. Progress uses stdout with --jsonl and stderr with --json or --format json"),
                 TKCommandSchemaOption(name: "--result-bundle", type: "Path", description: "Result bundle path for test"),
                 TKCommandSchemaOption(name: "--timeout", type: "Double", description: "Command timeout in seconds for large workspaces"),
                 TKCommandSchemaOption(name: "--timeout-seconds", type: "Double", defaultValue: "300", description: "Host xcodebuild timeout for xcode schemes"),
@@ -58,6 +59,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "triton xcode wait-idle --workspace App.xcworkspace --timeout 120 --json",
                 "triton xcode settings --json",
                 "triton xcode build --jsonl",
+                "triton xcode build --progress full --jsonl",
                 "triton xcode build --build-setting CLANG_ENABLE_EXPLICIT_MODULES=NO --jsonl",
                 "triton xcode build --device <ios-real-target> --sdk iphoneos --allow-provisioning-updates --jsonl",
                 "triton xcode test --result-bundle /tmp/App.xcresult --jsonl",
@@ -71,6 +73,8 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
             inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
             jsonlEvents: [
                 "xcode.<action>.invocation",
+                "xcode.build.warning",
+                "xcode.build.error",
                 "xcode.<action>.stdout",
                 "xcode.<action>.stderr",
                 "xcode.<action>.heartbeat",
@@ -113,7 +117,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                     fields: schemaFields([
                         ("ok", "Bool", true, "Whether the progress event is valid"),
                         ("event", "String", true, "Progress event kind"),
-                        ("message", "String", true, "Human-readable progress message"),
+                        ("message", "String", true, "Human-readable progress message; compact build diagnostics are redacted, length-bounded, and count-bounded"),
                         ("sourceCommand", "String?", false, "Underlying host command; execution-only physical target IDs are redacted"),
                         ("elapsedMs", "Int?", false, "Elapsed milliseconds"),
                         ("stdoutLogPath", "String?", false, "Stdout artifact path"),
@@ -268,11 +272,13 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "build",
                     summary: "Run xcodebuild build and emit bounded JSONL progress",
-                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--build-setting", "--env", "--arg", "--timeout", "--jsonl"],
+                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--build-setting", "--env", "--arg", "--timeout", "--progress", "--jsonl"],
                     defaultProviders: ["triton xcode use", "triton sim use"],
                     inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
                     jsonlEvents: [
                         "xcode.build.invocation",
+                        "xcode.build.warning",
+                        "xcode.build.error",
                         "xcode.build.stdout",
                         "xcode.build.stderr",
                         "xcode.build.heartbeat",

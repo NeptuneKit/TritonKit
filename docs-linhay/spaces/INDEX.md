@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-07-30
-> 覆盖范围：142/142 个已存在 space
+> 覆盖范围：143/143 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 142/142 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 142/142 | 每条记录链接到现有 space README |
+| 编号登记 | 143/143 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 143/143 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～140 已是规范目录 |
 
 ## Space 登记表
@@ -167,3 +167,4 @@
 | `SP-140-ios-simulator-reliability-live-harness` | [`SP-140-ios-simulator-reliability-live-harness`](./SP-140-ios-simulator-reliability-live-harness/README.md) | 已完成（本地） | 规范目录；receipt-backed reserve/sample、strict canonical target 与 local focused verification 已完成；真实 3×20+1 仍需 dedicated target/server/reset/evidence 授权 |
 | `SP-141-packaged-web-simulator-input` | [`SP-141-packaged-web-simulator-input`](./SP-141-packaged-web-simulator-input/README.md) | 已发布（v0.2.16） | 规范目录；packaged bridge 已对齐 simulator/emulator host input 与 iOS real runtime mirror 分流，Homebrew 安装版与真实 Simulator browser smoke 通过 |
 | `SP-153-issue-173-xcode-run-target-binding` | [`SP-153-issue-173-xcode-run-target-binding`](./SP-153-issue-173-xcode-run-target-binding/README.md) | 已完成（本地） | 规范目录；#173 已收紧 `xcode run` 显式 Simulator destination 的 build/settings/install/launch/app-scoped readiness 单目标绑定 |
+| `SP-156-issue-176-xcode-compact-progress` | [`SP-156-issue-176-xcode-compact-progress`](./SP-156-issue-176-xcode-compact-progress/README.md) | 已完成（本地） | 规范目录；#176 已为 `xcode build` 增加默认 compact、显式 full 的 agent-friendly progress 合同 |

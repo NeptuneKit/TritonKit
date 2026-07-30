@@ -193,7 +193,9 @@ triton debug detach --json
 1. progress event：JSONL，每行一个 typed domain event。
 2. final summary：命令结束时输出稳定 JSON envelope。
 
-raw stdout/stderr 不作为 agent 默认解析契约，只进入 `transcript` event 或 artifact。
+raw stdout/stderr 不作为 agent 默认解析契约。`xcode build` 默认 `--progress compact`，只把 invocation、heartbeat、每类最多 20 条已脱敏且单条有界的 warning/error、artifact path/bytes 与 final summary 送入 agent 通道；原始 stdout/stderr 完整写 log artifact。显式 `--progress full` 才恢复每个 stdout/stderr chunk event，`settings/test/run` 暂时保持既有 full stream。
+
+JSONL 模式把 progress 与最终 summary 依序写 stdout；JSON 模式把 progress JSONL 写 stderr，stdout 只保留一个最终 JSON envelope。
 
 ### Progress Event
 
