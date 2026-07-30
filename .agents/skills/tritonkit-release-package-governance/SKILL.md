@@ -35,10 +35,14 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
    - `npm --prefix Web run build`
    - `pod lib lint TritonKit.podspec --allow-warnings --skip-tests`
    - `docs-linhay/scripts/verify-skill-package.sh`; public skill Markdown commands must pass `verify-public-skill-commands.py`, and `public-skill-command-schema.json` must remain aligned with CLI `commandSchemas()`.
+   Run multiple gates fail-fast (`set -e` or one command per checked invocation). Do not treat the final command's zero exit as proof that earlier gates passed. For CocoaPods, require both a zero exit and the explicit `TritonKit passed validation.` result; compiler errors printed before a later successful command remain release blockers.
 6. Run release preflight with Xcode simulator checks disabled only when the local environment does not need that coverage: `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local`.
 7. Update `docs-linhay/dev/` and `docs-linhay/memory/YYYY-MM-DD.md` for release contract changes.
 8. Commit and push `main`, then publish through `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/release.sh v<version> --yes`.
 9. After release, verify GitHub Release assets, GitHub Actions success including x86_64 backfill, Homebrew upgrade, `triton version --json`, packaged `triton web --print-command --json`, and a real `triton web` HTTP smoke.
+   - If the release changes Web input routing, the smoke must POST the same complete gesture DTO used by the Web client. Coordinate taps include `x`, `y`, `width`, and `height`; an intentionally incomplete probe may return a contract error but is not success evidence.
+   - Run the installed packaged binary from outside the repository on an isolated port first. When handing the canonical Web port back to another task, resolve and replace only that listener; preserve the shared `triton serve`, Simulator/Emulator, and App processes unless their owner explicitly authorizes a restart.
+   - Require both machine-readable input success and a browser-level result: LIVE target, visible gesture status, and zero console errors. A homepage HTTP 200 alone does not prove the input bridge works.
 
 ## Recovery Rules
 

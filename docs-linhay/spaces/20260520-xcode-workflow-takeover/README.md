@@ -162,6 +162,15 @@
 - And 包含空格、空 value 或 `$(inherited)` 的 value 保持原样
 - And 缺少 `=`、空 key 或非法 key 在启动 host command 前返回 `validation_failed`
 
+### 场景十二：固定复用 repo-local DerivedData
+
+- Given agent 未显式传入 `--derived-data-path`
+- When 执行 `triton xcode settings/build/test/run` 或 `triton build ios`
+- Then Triton 固定向 `xcodebuild` 传入 `-derivedDataPath .triton/DerivedData`
+- And 后续构建复用同一 repo-local 增量缓存，不按 project/workspace 自动生成 `<project>-<hash>` 子目录
+- And 路径切换只由显式 `--derived-data-path` 驱动，不以“检测到构建冲突”为默认前置条件
+- And Triton 默认不清理 `.triton/DerivedData`
+
 ## 分期
 
 ### 当前实现状态（2026-05-24）
@@ -186,8 +195,8 @@ P0 最小 `triton xcode` 入口已落地：
 
 1. XcodeBuildMCP 继续作为能力参考，不再作为默认 agent 执行入口；agent 面优先使用 `triton xcode`。
 2. `xcode run` 只覆盖 build、simulator install、simulator launch，不声明业务 ready；后续必须接 `triton status/wait/find/assert/screenshot/evidence`。
-3. `xcode settings/build/test/run --jsonl` 已输出 invocation、stdout/stderr sample、heartbeat、summary，以及 stdout/stderr log path 和 byte count；真实项目卡住时先看这些 artifact，不再盲等。
-   - `--json` 模式保持 stdout 只输出最终 JSON envelope，同时将 progress JSONL 写到 stderr，避免外部 agent wrapper 因长时间无输出误杀进程。
+3. `xcode build` 默认 `--progress compact`：输出 invocation、heartbeat、每类最多 20 条 redacted/length-bounded warning/error、summary，以及 stdout/stderr log path 和 byte count；大量普通编译输出不复制到 agent 通道，但原始内容完整写 log。显式 `--progress full` 恢复旧 stdout/stderr chunk stream；`settings/test/run` 暂时保持 full。
+   - `--jsonl` 把 progress 与最终 summary 写到 stdout；`--json` / `--format json` 保持 stdout 只输出最终 JSON envelope，同时将同一 progress JSONL 写到 stderr，避免外部 agent wrapper 因长时间无输出误杀进程。
 4. `xcode build` 的成功 summary 是纯 build 结束边界；它不再在 summary 后隐式执行 `xcodebuild -showBuildSettings -json`。需要 `.app` 路径时使用 `xcode settings` 或 `xcode run`，其中 `xcode run --jsonl` 会把 settings 解析暴露为 `xcode.run.settings.*` 进度事件。
 5. `xcode status/wait-idle` 是只读 best-effort host 诊断：先用 `pgrep` 缩小 Xcode build/test 相关 PID，再用 `ps -p` 采样，避免全量进程输出卡住；无法可靠推断的 workspace/scheme/destination 字段保持为空或低置信度。
    - `swift-build --package-path ...` 这类 SwiftPM provider 构建不计入 Xcode workflow active；只有 `xcodebuild`、`SwiftBuildService`、`XCBBuildService` 和 `xctest` 参与阻塞判断。
@@ -199,6 +208,7 @@ P0 最小 `triton xcode` 入口已落地：
 10. Xcode destination 的显式选择优先级固定为 `--destination` > real-device selector > `--simulator` > workspace default destination；UUID / `sim:<uuid>` 使用 `id=`，设备名称使用 `name=`。显式 simulator 必须同时驱动 invocation summary 与 source command，不能被旧 workspace destination 覆盖。
 11. discovery 返回的 standalone `Package.swift` 已能通过 `xcode use/schemes/settings/build/test/run --package <Package.swift|dir>` 直接消费。package container 通过受审计 working directory 驱动 `xcodebuild`，不伪造 `-packagePath`；`schema --command xcode.build --json` 可直接发现收窄后的 build contract。
 12. `xcode settings/build/test/run` 支持可重复的 `--build-setting KEY=VALUE`。key 按 `[A-Za-z_][A-Za-z0-9_]*` 校验，value 不做 shell 解析，每个 setting 保持一个 argv 边界并写入 `sourceCommand`；该一次性参数不进入 workspace defaults，也不得承载 secret。
+13. Xcode DerivedData 默认固定为 repo-local `.triton/DerivedData`，由 `xcode settings/build/test/run` 与 `build ios` 共同复用并保留增量缓存；Triton 不自动按 project/workspace 派生子目录，也不等待冲突后才启用该目录。需要隔离或恢复时由调用方显式传入 `--derived-data-path`。
 
 ### P0：Xcode workflow 最小闭环
 

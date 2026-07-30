@@ -295,6 +295,7 @@ struct XcodeBuild: AsyncParsableCommand {
     @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices") var allowProvisioningUpdates = false
+    @Option(help: "Progress verbosity: compact keeps lifecycle, heartbeat, bounded diagnostics, artifacts, and final summary; full streams stdout/stderr chunks") var progress: XcodeProgressMode = .compact
     @Flag(help: "Emit JSON Lines progress") var jsonl = false
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -319,7 +320,8 @@ struct XcodeBuild: AsyncParsableCommand {
                 invocation: resolved,
                 jsonl: jsonl,
                 timeout: timeout,
-                allowProvisioningUpdates: allowProvisioningUpdates
+                allowProvisioningUpdates: allowProvisioningUpdates,
+                progress: progress
             )
             try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
             if !summary.ok {
@@ -456,6 +458,21 @@ func failXcodeCommand(
     device: String?,
     outputFormat: ClientOutputFormat
 ) throws -> Never {
+    if case XcodeWorkflowError.simulatorDestinationTargetUnresolved = error {
+        try failXcodeRealDevicePreflight(
+            TKCLIErrorDetail(
+                code: "xcode_run_target_unresolved",
+                message: "Xcode run requires one immutable Simulator target before build.",
+                hint: "Pass `--simulator <udid>` or `--destination 'platform=iOS Simulator,id=<udid>'`. Generic, name-only, non-Simulator, or multi-id destinations cannot drive install and launch safely.",
+                nextAction: TKCLINextAction(
+                    command: "xcode",
+                    args: ["run", "--simulator", "<udid>", "--jsonl"],
+                    category: "prepare-target"
+                )
+            ),
+            outputFormat: outputFormat
+        )
+    }
     let selector = device?.trimmingCharacters(in: .whitespacesAndNewlines)
     let hasSelector = selector?.isEmpty == false
     if let hostError = error as? HostCommandRunError,
@@ -542,7 +559,8 @@ struct XcodeRun: AsyncParsableCommand {
                 simulator: simulator,
                 device: device,
                 derivedDataPath: derivedDataPath,
-                buildSettings: buildSettings
+                buildSettings: buildSettings,
+                requireConcreteSimulatorTarget: true
             )
             let summary = try runXcodeBuildInstallLaunch(
                 invocation: resolved,

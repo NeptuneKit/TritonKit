@@ -39,6 +39,10 @@ struct TKTestReliabilityCollectionNegativeControl: Codable, Equatable {
     let resetRecipeID: String
     let slot: Int
     let expectedOutcome: String
+    /// A negative control is valid only when it reaches this frozen,
+    /// deterministic read-only assertion failure. Generic runner, launch, or
+    /// transport failures are never an acceptable control outcome.
+    let expectedFailureType: String
 }
 
 enum TKTestReliabilityCollectionPreflightStatus: String, Codable, Equatable {
@@ -154,6 +158,11 @@ private struct TKTestReliabilityValidatedCollectionFlow {
     let planDigest: String
 }
 
+private struct TKTestReliabilityValidatedCollectionPlan {
+    let planDigest: String
+    let normalizedPlan: TKTestNormalizedPlan
+}
+
 private func decodeTritonTestReliabilityCollection(
     at path: String
 ) throws -> TKTestReliabilityCollection {
@@ -236,14 +245,18 @@ private func validateReliabilityCollectionNegativeControls(
         throw TKTestReliabilityCollectionError.invalidCollection
     }
 
-    let planDigest = try validateReliabilityCollectionPlan(
+    let validatedPlan = try validateReliabilityCollectionPlan(
         path: control.plan,
         expectedDigest: control.expectedPlanDigest,
         target: target
     )
-    guard !supportedPlanDigests.contains(planDigest),
+    guard !supportedPlanDigests.contains(validatedPlan.planDigest),
           isReliabilityCollectionIdentifier(control.initialStateID),
           isReliabilityCollectionIdentifier(control.resetRecipeID),
+          isTritonTestReliabilityDeterministicNegativeControl(
+              plan: validatedPlan.normalizedPlan,
+              expectedFailureType: control.expectedFailureType
+          ),
           reliabilityCollectionEvidenceReservation(
               root: evidenceRoot,
               flowID: control.flowID,
@@ -271,7 +284,7 @@ private func validateReliabilityCollectionFlow(
         }
     }
 
-    let planDigest = try validateReliabilityCollectionPlan(
+    let validatedPlan = try validateReliabilityCollectionPlan(
         path: flow.plan,
         expectedDigest: flow.expectedPlanDigest,
         target: target
@@ -283,14 +296,14 @@ private func validateReliabilityCollectionFlow(
           Set(reservations).count == reservations.count else {
         throw TKTestReliabilityCollectionError.invalidCollection
     }
-    return TKTestReliabilityValidatedCollectionFlow(planDigest: planDigest)
+    return TKTestReliabilityValidatedCollectionFlow(planDigest: validatedPlan.planDigest)
 }
 
 private func validateReliabilityCollectionPlan(
     path: String,
     expectedDigest: String,
     target: TKTestReliabilityCollectionTarget
-) throws -> String {
+) throws -> TKTestReliabilityValidatedCollectionPlan {
     guard !path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
           isFNV1a64Digest(expectedDigest),
           let yaml = try? String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8),
@@ -309,7 +322,36 @@ private func validateReliabilityCollectionPlan(
     guard digest == expectedDigest else {
         throw TKTestReliabilityCollectionError.invalidCollection
     }
-    return digest
+    return TKTestReliabilityValidatedCollectionPlan(
+        planDigest: digest,
+        normalizedPlan: plan
+    )
+}
+
+/// Stage-1 negative controls may exercise only the fixed, read-only assertion
+/// taxonomy. The collection is intentionally stricter than the general test
+/// runner: a launch failure, a write primitive, an AI assertion, or a visual
+/// comparison is not a deterministic control for reliability collection.
+func isTritonTestReliabilityDeterministicNegativeControl(
+    plan: TKTestNormalizedPlan,
+    expectedFailureType: String
+) -> Bool {
+    guard let terminal = plan.steps.last,
+          !terminal.optional,
+          plan.steps.first?.type == "launch",
+          plan.steps.dropLast().allSatisfy({
+              !$0.optional && ["launch", "takeScreenshot"].contains($0.type)
+          }) else {
+        return false
+    }
+
+    switch (terminal.type, expectedFailureType) {
+    case ("assertVisible", "assert_visible_failed"),
+         ("assertNotVisible", "assert_not_visible_failed"):
+        return true
+    default:
+        return false
+    }
 }
 
 private func reliabilityCollectionEvidenceReservation(

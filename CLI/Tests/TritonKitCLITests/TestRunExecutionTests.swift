@@ -5,6 +5,40 @@ import TritonKitShared
 
 @Suite("P0D test runner execution")
 struct TestRunExecutionTests {
+    @Test("test-run screenshot metadata describes only the published normalized PNG")
+    func publishedScreenshotMetadataDescribesNormalizedPNGOnly() throws {
+        let runtimeScreenshot = TKScreenshotResponse(
+            format: "jpeg",
+            width: 40,
+            height: 20,
+            scale: 2,
+            dataBase64: Data("legacy-jpeg-bytes".utf8).base64EncodedString(),
+            dataRef: "legacy-runtime-jpeg"
+        )
+        let artifactData = Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00])
+
+        let metadata = testRunPublishedScreenshotMetadata(
+            runtimeScreenshot: runtimeScreenshot,
+            artifactData: artifactData,
+            imagePath: "debug/step-001-after.png"
+        )
+        let object = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(metadata)) as? [String: Any])
+        let encodedFormat = object["format"] as? String
+        let encodedDataRef = object["dataRef"]
+        let encodedDataBase64 = object["dataBase64"]
+        let encodedImagePath = object["imagePath"] as? String
+
+        #expect(metadata.format == "png")
+        #expect(metadata.sourceFormat == "jpeg")
+        #expect(metadata.dataRef == nil)
+        #expect(metadata.imagePath == "debug/step-001-after.png")
+        #expect(metadata.bytes == artifactData.count)
+        #expect(encodedFormat == "png")
+        #expect(encodedDataRef == nil)
+        #expect(encodedDataBase64 == nil)
+        #expect(encodedImagePath == "debug/step-001-after.png")
+    }
+
     @Test("run writes normalized plan, run events, and manifest for a passing minimal plan")
     func passingMinimalPlanWritesEvidence() async throws {
         let temp = try TestRunTempFiles()

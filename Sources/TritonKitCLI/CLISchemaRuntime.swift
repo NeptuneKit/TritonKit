@@ -302,6 +302,7 @@ private func subcommandWithFailureFamilyRecovery(
         optionOverrides: subcommand.optionOverrides,
         requiredOptions: subcommand.requiredOptions,
         oneOfRequiredOptions: subcommand.oneOfRequiredOptions,
+        oneOfRequiredOptionSets: subcommand.oneOfRequiredOptionSets,
         optionalOptions: subcommand.optionalOptions,
         defaultProviders: subcommand.defaultProviders,
         inheritsDefaultsFrom: subcommand.inheritsDefaultsFrom,

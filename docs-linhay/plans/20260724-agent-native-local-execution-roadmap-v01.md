@@ -130,7 +130,7 @@ Stop：#164 的意图无法确认、或 evidence schema 与待修复的公开问
 2. `test run` 的 target、before/after observation、实际 action、verify、provenance 和 `.tritonevidence` 形成一致的 schema/fixture tests。
 3. 阻断/unsupported/partial 结果均验证无误导性 passed verdict；每个失败都能由单一 envelope 进入 recovery/inspection。
 
-Go：预先冻结初态的 60 次运行（3 flow × 20）中，ECR ≥ 95%、FER ≥ 90%、ORR ≥ 90%；任何不一致必须分类为产品缺陷、环境漂移或 fixture 缺陷，不能静默重试掩盖。
+Go：receipt-backed report 的 `stage1.stage1A` 在预先冻结初态的 60 个 supported slot（3 flow × 20）中达到 ECR ≥ 95%、ORR ≥ 90% 且每条 flow 仍完整 20 次；`stage1.stage1B` 在全部 61 个 receipt/control slot 上达到 integrity=61/61，FER ≥ 90% 的分母包含 expected negative control 与任何 supported nonpass。原有顶层 ECR/FER/ORR 保持兼容，`stage1.gate` 与顶层 gate 一致；任何不一致必须分类为产品缺陷、环境漂移或 fixture 缺陷，不能静默重试掩盖。
 
 Stop/回退：若 ORR < 70%，或多数失败无法定位到 target/action/assert/evidence 任一层，则暂停 trajectory compiler 和新平台扩张，先收敛 runtime/evidence contract。
 

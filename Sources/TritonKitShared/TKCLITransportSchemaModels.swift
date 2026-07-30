@@ -198,10 +198,13 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if [
             "invalid_reliability_collection",
             "invalid_reliability_receipt",
+            "invalid_reliability_receipt_anchor",
+            "reliability_receipt_anchor_mismatch",
             "reliability_sample_confirmation_required",
             "invalid_reliability_sample_request",
             "invalid_reliability_reset_receipt",
             "reliability_reservation_exists",
+            "reliability_collection_busy",
             "reliability_slot_already_claimed",
         ].contains(failureCode) {
             categories.append("diagnose")
@@ -209,6 +212,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if [
             "reliability_reservation_write_failed",
             "test_reliability_sample_failed",
+            "reliability_identity_chain_write_failed",
         ].contains(failureCode) {
             categories.append(contentsOf: ["diagnose", "archive"])
         }
@@ -343,6 +347,9 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
     public let optionOverrides: [TKCommandSchemaOption]
     public let requiredOptions: [String]
     public let oneOfRequiredOptions: [[String]]
+    /// Complete alternative option sets. Exactly one set applies and every option in it is required.
+    /// This is additive so legacy oneOfRequiredOptions consumers retain their existing semantics.
+    public let oneOfRequiredOptionSets: [[String]]
     public let optionalOptions: [String]
     public let defaultProviders: [String]
     public let inheritsDefaultsFrom: [String]
@@ -365,6 +372,7 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
         case optionOverrides
         case requiredOptions
         case oneOfRequiredOptions
+        case oneOfRequiredOptionSets
         case optionalOptions
         case defaultProviders
         case inheritsDefaultsFrom
@@ -388,6 +396,7 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
         optionOverrides: [TKCommandSchemaOption] = [],
         requiredOptions: [String] = [],
         oneOfRequiredOptions: [[String]] = [],
+        oneOfRequiredOptionSets: [[String]] = [],
         optionalOptions: [String] = [],
         defaultProviders: [String] = [],
         inheritsDefaultsFrom: [String] = [],
@@ -409,6 +418,7 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
         self.optionOverrides = optionOverrides
         self.requiredOptions = requiredOptions
         self.oneOfRequiredOptions = oneOfRequiredOptions
+        self.oneOfRequiredOptionSets = oneOfRequiredOptionSets
         self.optionalOptions = optionalOptions
         self.defaultProviders = defaultProviders
         self.inheritsDefaultsFrom = inheritsDefaultsFrom
@@ -436,6 +446,7 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
             optionOverrides: try container.decodeIfPresent([TKCommandSchemaOption].self, forKey: .optionOverrides) ?? [],
             requiredOptions: try container.decodeIfPresent([String].self, forKey: .requiredOptions) ?? [],
             oneOfRequiredOptions: try container.decodeIfPresent([[String]].self, forKey: .oneOfRequiredOptions) ?? [],
+            oneOfRequiredOptionSets: try container.decodeIfPresent([[String]].self, forKey: .oneOfRequiredOptionSets) ?? [],
             optionalOptions: try container.decodeIfPresent([String].self, forKey: .optionalOptions) ?? [],
             defaultProviders: try container.decodeIfPresent([String].self, forKey: .defaultProviders) ?? [],
             inheritsDefaultsFrom: try container.decodeIfPresent([String].self, forKey: .inheritsDefaultsFrom) ?? [],

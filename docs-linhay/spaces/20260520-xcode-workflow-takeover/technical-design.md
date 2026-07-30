@@ -193,7 +193,9 @@ triton debug detach --json
 1. progress event：JSONL，每行一个 typed domain event。
 2. final summary：命令结束时输出稳定 JSON envelope。
 
-raw stdout/stderr 不作为 agent 默认解析契约，只进入 `transcript` event 或 artifact。
+raw stdout/stderr 不作为 agent 默认解析契约。`xcode build` 默认 `--progress compact`，只把 invocation、heartbeat、每类最多 20 条已脱敏且单条有界的 warning/error、artifact path/bytes 与 final summary 送入 agent 通道；原始 stdout/stderr 完整写 log artifact。显式 `--progress full` 才恢复每个 stdout/stderr chunk event，`settings/test/run` 暂时保持既有 full stream。
+
+JSONL 模式把 progress 与最终 summary 依序写 stdout；JSON 模式把 progress JSONL 写 stderr，stdout 只保留一个最终 JSON envelope。
 
 ### Progress Event
 
@@ -282,7 +284,7 @@ process.exit
 .triton/
   host-defaults.json
   DerivedData/
-    <project>-<hash>/
+    ... # Xcode 管理的增量缓存内容
   artifacts/
     xcode/
       <timestamp>-build.log
@@ -295,12 +297,12 @@ process.exit
 
 规则：
 
-1. 默认 DerivedData 必须 workspace-scoped，避免污染全局 DerivedData，也避免不同仓库互相覆盖。
-2. 用户显式指定 `--derived-data-path`、`--result-bundle`、`--output` 时以显式路径为准。
+1. 默认 DerivedData 固定为当前 repo 的 `.triton/DerivedData`，`xcode settings/build/test/run` 与 `build ios` 复用同一增量缓存；不按 project/workspace 自动派生 `<project>-<hash>` 子目录，也不以检测到冲突作为启用条件。
+2. 用户显式指定 `--derived-data-path`、`--result-bundle`、`--output` 时以显式路径为准；需要并行隔离或恢复损坏缓存时，由调用方选择独立的 `--derived-data-path`。
 3. `.app` path 优先从 `xcodebuild -showBuildSettings` 的 `BUILT_PRODUCTS_DIR + FULL_PRODUCT_NAME` 解析，不手猜 `Build/Products`。
 4. `settings/build/test/run` 的一次性 build setting 统一建模为有序 `[String]`，CLI 在 host command 前验证 `KEY=VALUE` 与 key grammar，共享 command builder 只把每个已验证值追加为一个 argv 元素。禁止拼接 shell command；`sourceCommand` 通过统一 shell escaping 仅用于审计展示。
 5. bundle id 通过 Info.plist 读取，失败时返回 `bundle_id_unresolved`。
-6. build/test/log/coverage artifact 后续必须能进入 `.tritonevidence`。
+6. Triton 默认保留 `.triton/DerivedData`，不自动清理增量缓存；build/test/log/coverage artifact 后续必须能进入 `.tritonevidence`。
 
 ## Parser Strategy
 

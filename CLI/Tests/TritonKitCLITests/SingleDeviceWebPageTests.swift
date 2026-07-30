@@ -20,7 +20,13 @@ struct SingleDeviceWebPageTests {
         #expect(html.contains("fetchJSON('/web/targets')"))
         #expect(html.contains("fetchJSON(`/web/geometry?target=${encodeURIComponent(target.id)}`"))
         #expect(html.contains("fetchBlob(`/web/screenshot?target=${encodeURIComponent(target.id)}"))
-        #expect(html.contains("fetchJSON(`/web/input?target=${encodeURIComponent(target.id)}`"))
+        #expect(!html.contains("fetchJSON(`/web/input?target=${encodeURIComponent(target.id)}`"))
+        #expect(!html.contains("function sendInput("))
+        #expect(!html.contains("action-control"))
+        #expect(html.contains("Web mirror is readonly"))
+        #expect(html.contains("readonly-badge"))
+        #expect(!html.contains("preview and operate it here"))
+        #expect(html.contains("triton act"))
         #expect(html.contains("targetPlatform"))
         #expect(html.contains("window.__TRITON_INITIAL_TARGET__"))
         #expect(html.contains("refreshInFlight"))
@@ -286,44 +292,6 @@ struct SingleDeviceWebPageTests {
         })
     }
 
-    @Test("packaged web host input routes simulator targets to the host adapter")
-    func packagedWebHostInputRoutesSimulatorTargetsToHostAdapter() {
-        #expect(webHostInputBridgeRoute(
-            platform: "ios",
-            target: "SIM-1",
-            scope: "simulator",
-            kind: "simulator",
-            source: "host"
-        ) == .host(id: "host:ios:SIM-1"))
-
-        #expect(webHostInputBridgeRoute(
-            platform: "android",
-            target: "emulator-5554",
-            scope: "emulator",
-            kind: "emulator",
-            source: "host"
-        ) == .host(id: "host:android:emulator-5554"))
-    }
-
-    @Test("packaged web host input keeps iOS real devices on runtime mirrors")
-    func packagedWebHostInputKeepsIOSRealDevicesOnRuntimeMirrors() {
-        #expect(webHostInputBridgeRoute(
-            platform: "ios",
-            target: "ios-real:abc",
-            scope: nil,
-            kind: nil,
-            source: nil
-        ) == .runtimeMirror)
-
-        #expect(webHostInputBridgeRoute(
-            platform: "macos",
-            target: "local",
-            scope: nil,
-            kind: nil,
-            source: nil
-        ) == .unsupported)
-    }
-
     @Test("web target registry marks real-device runtime ambiguous across multiple ready hosts")
     func webTargetRegistryMarksRealDeviceRuntimeAmbiguousAcrossMultipleReadyHosts() throws {
         let runtime = TKTargetSummary(
@@ -464,18 +432,10 @@ struct SingleDeviceWebPageTests {
         #expect(normalized.height == 872)
     }
 
-    @Test("iOS web host input builds Baguette-compatible host HID argv behind Triton")
-    func iOSWebHostInputBuildsBaguetteCompatibleHostHIDArgvBehindTriton() throws {
+    @Test("iOS web host tap keeps Baguette-compatible host HID argv behind Triton")
+    func iOSWebHostTapKeepsBaguetteCompatibleHostHIDArgvBehindTriton() throws {
         let command = try webIOSBaguetteCommand(
-            action: .swipe(
-                startX: 300,
-                startY: 2400,
-                endX: 300,
-                endY: 1200,
-                width: 1206,
-                height: 2622,
-                duration: 0.25
-            ),
+            action: .tap(x: 603, y: 1311, width: 1206, height: 2622),
             udid: "SIM-1",
             screen: WebIOSSimulatorScreenLayout(width: 400, height: 872),
             executable: "/opt/homebrew/bin/baguette"
@@ -483,16 +443,135 @@ struct SingleDeviceWebPageTests {
 
         #expect(command.executable == "/opt/homebrew/bin/baguette")
         #expect(command.arguments == [
-            "swipe",
+            "tap",
             "--udid", "SIM-1",
-            "--start-x", "100",
-            "--start-y", "798",
-            "--end-x", "100",
-            "--end-y", "399",
+            "--x", "200",
+            "--y", "436",
             "--width", "400",
-            "--height", "872",
-            "--duration", "0.25"
+            "--height", "872"
         ])
+    }
+
+    @Test("iOS web host swipe builds a complete touch lifecycle for vertical pagers")
+    func iOSWebHostSwipeBuildsCompleteTouchLifecycleForVerticalPagers() throws {
+        let lifecycle = try webIOSBaguetteSwipeLifecycle(
+            input: .swipe(
+                startX: 201,
+                startY: 700,
+                endX: 201,
+                endY: 200,
+                width: 402,
+                height: 874,
+                duration: 0.35
+            ),
+            udid: "SIM-1",
+            screen: WebIOSSimulatorScreenLayout(width: 402, height: 874),
+            executable: "/opt/homebrew/bin/baguette"
+        )
+
+        #expect(Array(lifecycle.command.arguments.suffix(3)) == ["input", "--udid", "SIM-1"])
+        #expect(lifecycle.duration == 0.35)
+        #expect(abs(lifecycle.cadence - (0.35 / 11)) < 0.000_001)
+        #expect(lifecycle.terminalLinger >= 0.1)
+        #expect(lifecycle.events.first == WebIOSBaguetteTouchEvent(type: "touch1-down", x: 201, y: 700, width: 402, height: 874))
+        #expect(lifecycle.events.last == WebIOSBaguetteTouchEvent(type: "touch1-up", x: 201, y: 200, width: 402, height: 874))
+        #expect(lifecycle.events.dropFirst().dropLast().allSatisfy { $0.type == "touch1-move" })
+
+        var pagerState = "idle"
+        for event in lifecycle.events.dropLast() {
+            pagerState = event.type == "touch1-down" ? "interactive" : pagerState
+        }
+        #expect(pagerState == "interactive", "down/move without terminal up reproduces the stuck UIPageViewController state")
+        if lifecycle.events.last?.type == "touch1-up" {
+            pagerState = "settled"
+        }
+        #expect(pagerState == "settled")
+    }
+
+    @Test("iOS web host swipe runner requires every lifecycle ack including terminal up")
+    func iOSWebHostSwipeRunnerRequiresEveryLifecycleAckIncludingTerminalUp() throws {
+        let lifecycle = try webIOSBaguetteSwipeLifecycle(
+            input: .swipe(
+                startX: 200,
+                startY: 700,
+                endX: 200,
+                endY: 180,
+                width: 400,
+                height: 872,
+                duration: 0.35
+            ),
+            udid: "SIM-1",
+            screen: WebIOSSimulatorScreenLayout(width: 400, height: 872),
+            executable: "/fake/baguette"
+        )
+        let missingTerminalAck = Array(repeating: #"{"ok":true}"#, count: lifecycle.events.count - 1)
+            .joined(separator: "\n") + "\n"
+
+        #expect(throws: (any Error).self) {
+            _ = try runWebIOSBaguetteLifecycle(lifecycle) { fakeLifecycle in
+                HostProcessResult(
+                    stdoutData: Data(missingTerminalAck.utf8),
+                    stderrData: Data(),
+                    exitCode: 0,
+                    sourceCommand: hostSourceCommand(fakeLifecycle.command),
+                    stdoutTruncated: false,
+                    stderrTruncated: false,
+                    stdoutLogPath: nil,
+                    stderrLogPath: nil,
+                    stdoutBytes: missingTerminalAck.utf8.count,
+                    stderrBytes: 0
+                )
+            }
+        }
+    }
+
+    @Test("iOS web host swipe default runner keeps one session alive through terminal flush")
+    func iOSWebHostSwipeDefaultRunnerKeepsOneSessionAliveThroughTerminalFlush() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-fake-baguette-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let executable = directory.appendingPathComponent("baguette").path
+        let log = directory.appendingPathComponent("events.log").path
+        let script = """
+        #!/bin/sh
+        printf 'pid:%s\\n' "$$" >> "\(log)"
+        while IFS= read -r line; do
+          printf '%s\\n' "$line" >> "\(log)"
+          printf '%s\\n' '{"ok":true}'
+        done
+        """
+        try script.write(toFile: executable, atomically: true, encoding: .utf8)
+        chmod(executable, S_IRWXU)
+
+        let lifecycle = try webIOSBaguetteSwipeLifecycle(
+            input: .swipe(
+                startX: 200,
+                startY: 700,
+                endX: 200,
+                endY: 180,
+                width: 400,
+                height: 872,
+                duration: 0.11
+            ),
+            udid: "SIM-1",
+            screen: WebIOSSimulatorScreenLayout(width: 400, height: 872),
+            executable: executable
+        )
+        let started = Date()
+        let result = try runWebIOSBaguetteLifecycle(lifecycle)
+        let elapsed = Date().timeIntervalSince(started)
+        let lines = try String(contentsOfFile: log, encoding: .utf8)
+            .split(whereSeparator: \.isNewline)
+            .map(String.init)
+        let events = try lines.dropFirst().map {
+            try JSONDecoder().decode(WebIOSBaguetteTouchEvent.self, from: Data($0.utf8))
+        }
+
+        #expect(result.exitCode == 0)
+        #expect(lines.filter { $0.hasPrefix("pid:") }.count == 1)
+        #expect(events == lifecycle.events)
+        #expect(elapsed >= lifecycle.duration + lifecycle.terminalLinger)
     }
 
     @Test("iOS web host long press uses same-point host HID swipe")

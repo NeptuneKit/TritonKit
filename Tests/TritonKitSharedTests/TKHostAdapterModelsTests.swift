@@ -136,6 +136,41 @@ struct TKHostAdapterModelsTests {
         #expect(!encoded.contains("F2LPRIVATE"))
     }
 
+    @Test("devicectl parser treats Xcode 26 available paired device as lazy-activation eligible")
+    func devicectlParserAvailablePairedDevice() throws {
+        let device = try #require(TKDevicectlDeviceListParser.parse(TKDevicectlJSONFixtures.xcode26AvailablePaired).first)
+
+        #expect(device.state == "connected")
+        #expect(device.ready)
+        #expect(device.blockedReasons == [])
+        #expect(device.transport == "wired")
+        #expect(device.scope == "real")
+        #expect(device.kind == "real-device")
+        #expect(device.source == "devicectl")
+        #expect(device.id.hasPrefix("ios-real:"))
+        #expect(!device.id.contains("COREDEVICE-AVAILABLE-PAIRED"))
+
+        let encoded = String(decoding: try JSONEncoder().encode(device), as: UTF8.self)
+        #expect(!encoded.contains("FIXTURE-DEVICE-UDID"))
+        #expect(!encoded.contains("FIXTURE-SERIAL"))
+    }
+
+    @Test("devicectl parser keeps explicit DDI missing, unpaired, and disconnected states blocked")
+    func devicectlParserExplicitDDIMissingUnpairedAndDisconnected() throws {
+        let ddi = try #require(TKDevicectlDeviceListParser.parse(TKDevicectlJSONFixtures.explicitDDIMissing).first)
+        let unpaired = try #require(TKDevicectlDeviceListParser.parse(TKDevicectlJSONFixtures.unpaired).first)
+        let disconnected = try #require(TKDevicectlDeviceListParser.parse(TKDevicectlJSONFixtures.disconnected).first)
+
+        #expect(!ddi.ready)
+        #expect(ddi.state == "blocked")
+        #expect(ddi.blockedReasons == ["ddi-missing"])
+        #expect(!unpaired.ready)
+        #expect(unpaired.blockedReasons.contains("not-trusted"))
+        #expect(!disconnected.ready)
+        #expect(disconnected.state == "offline")
+        #expect(disconnected.blockedReasons == ["offline"])
+    }
+
     @Test("devicectl parser maps blocked real-device fixtures")
     func devicectlParserBlockedDevices() throws {
         let devices = try TKDevicectlDeviceListParser.parse(Data("""
@@ -169,7 +204,7 @@ struct TKHostAdapterModelsTests {
               },
               {
                 "identifier": "DDI-DEVICE",
-                "deviceProperties": { "name": "Missing DDI", "osVersionNumber": "26.5", "developerModeStatus": "enabled", "ddiServicesAvailable": false, "lockState": "unlocked" },
+                "deviceProperties": { "name": "Missing DDI", "osVersionNumber": "26.5", "developerModeStatus": "enabled", "ddiStatus": "missing", "lockState": "unlocked" },
                 "connectionProperties": { "transportType": "usb", "pairingState": "paired", "tunnelState": "connected" },
                 "visibilityClass": "default"
               }

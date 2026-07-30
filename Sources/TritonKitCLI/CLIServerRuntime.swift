@@ -66,6 +66,11 @@ func handleResponse(
             log("── \(dict["appName"] ?? "?") | \(dict["appBundleIdentifier"] ?? "?") | Device: \(dict["deviceDescription"] ?? "?")")
         }
 
+    case .runtimeManifest:
+        targetState.setRuntimeRegistrationManifest(payload)
+        let decision = targetState.registrationDecision
+        log("── Runtime registration: \(decision.code) | SDK \(decision.sdkVersion ?? "unreported")")
+
     case .hierarchyDetails:
         checkAndShowImage(json: json, label: "solo", store: store)
         checkAndShowImage(json: json, label: "group", store: store)

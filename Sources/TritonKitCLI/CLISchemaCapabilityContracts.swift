@@ -311,16 +311,16 @@ func webViewWaitOutputContract() -> TKCommandOutputContract {
     )
 }
 
-func hostArtifactOutputContract() -> TKCommandOutputContract {
+func hostArtifactOutputContract(selector: String = "host.artifact") -> TKCommandOutputContract {
     TKCommandOutputContract(
-        selector: "host.artifact",
+        selector: selector,
         format: "json",
         kind: "host-artifact",
         model: "HostDeviceArtifactOutput",
         fields: schemaContractFields([
             ("ok", "Bool", true, "Whether host artifact capture succeeded"),
             ("action", "String", true, "Host action name"),
-            ("platform", "String", true, "ios or harmony"),
+            ("platform", "String", true, "ios, android, or harmony"),
             ("target", "HostDeviceTarget", true, "Resolved host target"),
             ("selection", "HostDeviceSelectionResult?", false, "Target selection details"),
             ("artifact", "String", true, "Written artifact path"),
@@ -331,6 +331,44 @@ func hostArtifactOutputContract() -> TKCommandOutputContract {
             ("sha256", "String", true, "SHA-256 digest of the written artifact"),
             ("capturedAt", "String", true, "Host-side capture timestamp in ISO-8601 format"),
             ("sourceCommands", "[String]", true, "Underlying host commands"),
+            ("note", "String", true, "Boundary or follow-up note"),
+        ])
+    )
+}
+
+func hostDeviceDoctorOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.device-doctor",
+        format: "json",
+        kind: "host-action",
+        model: "HostDeviceDoctorOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether host device diagnostics completed"),
+            ("platform", "String", true, "Requested host platform adapter"),
+            ("tools", "[HostToolProbeOutput]", true, "Host tool availability probes"),
+            ("capabilities", "[String]", true, "Available host device capabilities"),
+            ("strongControl", "[TKHostStrongControlCapability]", true, "Strong-control capability boundaries"),
+            ("artifactsSaved", "Bool", true, "Whether diagnostic artifacts were persisted"),
+        ])
+    )
+}
+
+func hostHarmonyRuntimeURLOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.harmony-runtime-url",
+        format: "json",
+        kind: "host-action",
+        model: "HostRuntimeURLOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether Harmony runtime URL preparation succeeded"),
+            ("platform", "String", true, "harmony"),
+            ("target", "TKHarmonyTarget", true, "Resolved Harmony target"),
+            ("localPort", "Int", true, "Local forwarded TCP port"),
+            ("remotePort", "Int", true, "Remote embedded runtime TCP port"),
+            ("baseURL", "String", true, "Prepared local runtime base URL"),
+            ("forwarded", "Bool", true, "Whether HDC fport forwarding was applied"),
+            ("sourceCommand", "String?", false, "Underlying HDC forwarding command"),
+            ("manifest", "TKRuntimeManifestResponse?", false, "Optional runtime manifest probe result"),
             ("note", "String", true, "Boundary or follow-up note"),
         ])
     )

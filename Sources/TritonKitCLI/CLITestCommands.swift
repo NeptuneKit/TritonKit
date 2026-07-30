@@ -134,6 +134,7 @@ struct TestReliability: ParsableCommand {
 
     @Option(name: .customLong("samples"), help: "Private legacy reliability sample manifest JSON") var samples: String?
     @Option(name: .customLong("collection-receipt"), help: "Private receipt created by reliability-reserve") var collectionReceipt: String?
+    @Option(name: .customLong("expect-receipt-sha256"), help: "Required lowercase SHA-256 anchor retained by the operator outside the receipt root") var expectReceiptSha256: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
@@ -141,6 +142,7 @@ struct TestReliability: ParsableCommand {
         try runTestReliabilityCommand(
             samples: samples,
             collectionReceipt: collectionReceipt,
+            expectedReceiptSha256: expectReceiptSha256,
             format: effectiveFormat(format, json: json)
         )
     }
@@ -171,6 +173,7 @@ struct TestReliabilitySample: AsyncParsableCommand {
     )
 
     @Option(name: .customLong("collection-receipt"), help: "Private receipt created by reliability-reserve") var collectionReceipt: String?
+    @Option(name: .customLong("expect-receipt-sha256"), help: "Required lowercase SHA-256 anchor retained by the operator outside the receipt root") var expectReceiptSha256: String?
     @Option(help: "Receipt flow alias such as flow_001") var flow: String?
     @Option(help: "Receipt slot number") var slot: String?
     @Option(name: .customLong("reset-receipt"), help: "Operator-created private reset receipt for this exact slot") var resetReceipt: String?
@@ -184,6 +187,7 @@ struct TestReliabilitySample: AsyncParsableCommand {
     func run() async throws {
         try await runTestReliabilitySampleCommand(
             collectionReceipt: collectionReceipt,
+            expectedReceiptSha256: expectReceiptSha256,
             flow: flow,
             slot: slot,
             resetReceipt: resetReceipt,
@@ -404,11 +408,19 @@ private func runTestReportCommand(
 private func runTestReliabilityCommand(
     samples: String?,
     collectionReceipt: String?,
+    expectedReceiptSha256: String?,
     format: ClientOutputFormat
 ) throws {
     do {
         let nonEmptySamples = samples?.trimmingCharacters(in: .whitespacesAndNewlines)
         let nonEmptyReceipt = collectionReceipt?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if nonEmptySamples?.isEmpty == false, expectedReceiptSha256 != nil {
+            throw TestReliabilityCommandFailure(detail: testReliabilityFailure(
+                code: "invalid_reliability_receipt_anchor",
+                message: "--expect-receipt-sha256 is only valid with --collection-receipt.",
+                hint: "Use legacy --samples without an anchor, or use --collection-receipt with the operator-retained anchor."
+            ))
+        }
         guard (nonEmptySamples?.isEmpty == false) != (nonEmptyReceipt?.isEmpty == false) else {
             throw TestReliabilityCommandFailure(detail: testReliabilityFailure(
                 code: "missing_required_field",
@@ -418,7 +430,10 @@ private func runTestReliabilityCommand(
         }
         let report: TKTestReliabilityReport
         if let nonEmptyReceipt, !nonEmptyReceipt.isEmpty {
-            report = try buildTritonTestReliabilityReceiptReport(collectionReceiptPath: nonEmptyReceipt)
+            report = try buildTritonTestReliabilityReceiptReport(
+                collectionReceiptPath: nonEmptyReceipt,
+                expectedReceiptSha256: expectedReceiptSha256
+            )
         } else if let nonEmptySamples, !nonEmptySamples.isEmpty {
             report = try buildTritonTestReliabilityReport(samplesPath: nonEmptySamples)
         } else {
@@ -433,6 +448,7 @@ private func runTestReliabilityCommand(
             print(try encodeJSON(report))
         case .text:
             print("ok: true")
+            print("gateAuthority: \(report.gateAuthority.rawValue)")
             print("gate: \(report.gate.status.rawValue)")
             print("evidenceCompleteness: \(report.evidenceCompleteness.rate)")
             print("failureExplainability: \(report.failureExplainability.rate)")
@@ -497,6 +513,7 @@ private func runTestReliabilityReserveCommand(
         case .text:
             print("ok: true")
             print("receipt: \(response.receiptFile)")
+            print("receiptSha256: \(response.receiptSha256)")
             print("plannedSamples: \(response.plannedSampleCount)")
         }
     } catch let failure as TestReliabilityCommandFailure {
@@ -518,6 +535,7 @@ private func runTestReliabilityReserveCommand(
 
 func runTestReliabilitySampleCommand(
     collectionReceipt: String?,
+    expectedReceiptSha256: String?,
     flow: String?,
     slot: String?,
     resetReceipt: String?,
@@ -546,6 +564,7 @@ func runTestReliabilitySampleCommand(
                 hint: "Provide the exact private receipt-bound sample arguments."
             ))
         }
+        let expectedReceiptSha256 = try requireReliabilityReceiptSha256Anchor(expectedReceiptSha256)
         guard let parsedSlot = Int(slot), parsedSlot > 0,
               let parsedPort = Int(port), parsedPort > 0 else {
             throw TestReliabilityCommandFailure(detail: testReliabilityFailure(
@@ -556,6 +575,7 @@ func runTestReliabilitySampleCommand(
         }
         let request = TKTestReliabilitySampleRequest(
             collectionReceipt: collectionReceipt,
+            expectedReceiptSha256: expectedReceiptSha256,
             flow: flow,
             slot: parsedSlot,
             resetReceipt: resetReceipt,

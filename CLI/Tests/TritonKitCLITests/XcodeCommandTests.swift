@@ -1249,6 +1249,169 @@ struct XcodeCommandTests {
         #expect(destination == "platform=iOS Simulator,id=EXPLICIT")
     }
 
+    @Test("xcode run explicit simulator destination replaces stale default lifecycle target")
+    func xcodeRunExplicitDestinationReplacesStaleDefaultLifecycleTarget() throws {
+        let fileManager = FileManager.default
+        let originalDirectory = fileManager.currentDirectoryPath
+        let temporaryDirectory = fileManager.temporaryDirectory
+            .appendingPathComponent("triton-xcode-run-target-binding-\(UUID().uuidString)", isDirectory: true)
+        try fileManager.createDirectory(at: temporaryDirectory, withIntermediateDirectories: true)
+        defer {
+            _ = fileManager.changeCurrentDirectoryPath(originalDirectory)
+            try? fileManager.removeItem(at: temporaryDirectory)
+        }
+        #expect(fileManager.changeCurrentDirectoryPath(temporaryDirectory.path))
+
+        let requestedSimulator = "60667794-96F8-40E6-8664-85538EC4663E"
+        let staleSimulator = "E7E55388-E507-4021-A4E4-78C81F420533"
+        _ = try saveHostWorkspaceDefaults(
+            TKHostWorkspaceDefaults(
+                defaultSimulatorUDID: staleSimulator,
+                xcode: TKXcodeWorkspaceDefaults(
+                    workspace: "App.xcworkspace",
+                    scheme: "App",
+                    destination: "platform=iOS Simulator,id=\(staleSimulator)"
+                )
+            )
+        )
+
+        let invocation = try resolveXcodeInvocation(
+            destination: "platform=iOS Simulator,id=\(requestedSimulator)",
+            requireConcreteSimulatorTarget: true
+        )
+
+        #expect(invocation.destination == "platform=iOS Simulator,id=\(requestedSimulator)")
+        #expect(invocation.simulatorUDID == requestedSimulator)
+
+        let simulatorInvocation = try resolveXcodeInvocation(
+            simulator: requestedSimulator,
+            requireConcreteSimulatorTarget: true
+        )
+        #expect(simulatorInvocation.destination == "platform=iOS Simulator,id=\(requestedSimulator)")
+        #expect(simulatorInvocation.simulatorUDID == requestedSimulator)
+
+        var buildTargets: [String] = []
+        var settingsTargets: [String] = []
+        var lifecycleCommands: [(event: String, command: TKHostCommand)] = []
+        let summary = try runXcodeBuildInstallLaunch(
+            invocation: invocation,
+            jsonl: true,
+            simulatorBuild: { invocation, _, _ in
+                buildTargets.append(try resolvedXcodeRunSimulatorTarget(invocation))
+                return TKXcodeActionSummary(
+                    ok: true,
+                    action: "xcode.build",
+                    workspace: invocation.workspace,
+                    project: invocation.project,
+                    package: invocation.package,
+                    scheme: invocation.scheme,
+                    configuration: invocation.configuration,
+                    sdk: invocation.sdk,
+                    destination: invocation.destination,
+                    derivedDataPath: invocation.derivedDataPath,
+                    simulatorUDID: invocation.simulatorUDID,
+                    durationMs: 10,
+                    sourceCommand: "xcodebuild -destination 'platform=iOS Simulator,id=\(requestedSimulator)' build",
+                    exitCode: 0,
+                    stdoutTruncated: false,
+                    stderrTruncated: false
+                )
+            },
+            simulatorProduct: { invocation, _, _, event in
+                #expect(event == "xcode.run.settings")
+                settingsTargets.append(try resolvedXcodeRunSimulatorTarget(invocation))
+                return TKXcodeBuiltAppProduct(
+                    target: "App",
+                    appPath: "/tmp/App.app",
+                    bundleID: "com.example.fixture"
+                )
+            },
+            simulatorHostCommand: { command, event, _ in
+                lifecycleCommands.append((event: event, command: command))
+                let sourceCommand = hostSourceCommand(command)
+                return (
+                    HostProcessResult(
+                        stdoutData: Data(),
+                        stderrData: Data(),
+                        exitCode: 0,
+                        sourceCommand: sourceCommand,
+                        stdoutTruncated: false,
+                        stderrTruncated: false,
+                        stdoutLogPath: nil,
+                        stderrLogPath: nil,
+                        stdoutBytes: 0,
+                        stderrBytes: 0
+                    ),
+                    5
+                )
+            }
+        )
+
+        #expect(buildTargets == [requestedSimulator])
+        #expect(settingsTargets == [requestedSimulator])
+        #expect(lifecycleCommands.map(\.event) == ["xcode.run.install", "xcode.run.launch"])
+        #expect(lifecycleCommands.allSatisfy { $0.command.arguments.contains(requestedSimulator) })
+        #expect(lifecycleCommands.allSatisfy { !$0.command.arguments.contains(staleSimulator) })
+        #expect(summary.destination == "platform=iOS Simulator,id=\(requestedSimulator)")
+        #expect(summary.simulatorUDID == requestedSimulator)
+        #expect(summary.sourceCommand.contains(requestedSimulator))
+        #expect(!summary.sourceCommand.contains(staleSimulator))
+        #expect(summary.nextActions?.first?.args.contains("\(TKIOSSimulatorRuntimeTargetPrefix)\(requestedSimulator)/app:com.example.fixture") == true)
+    }
+
+    @Test("xcode run fails before build when destination has no unique simulator id")
+    func xcodeRunRejectsDestinationWithoutUniqueSimulatorID() throws {
+        let unsupportedDestinations = [
+            "generic/platform=iOS Simulator",
+            "platform=iOS Simulator,name=iPhone 17",
+            "platform=iOS Simulator,id=SIM-A,id=SIM-B",
+            "platform=iOS,id=DEVICE-A",
+        ]
+
+        for destination in unsupportedDestinations {
+            do {
+                _ = try resolveXcodeInvocation(
+                    workspace: "App.xcworkspace",
+                    scheme: "App",
+                    destination: destination,
+                    requireConcreteSimulatorTarget: true
+                )
+                Issue.record("Expected run target preflight to reject \(destination)")
+            } catch XcodeWorkflowError.simulatorDestinationTargetUnresolved {
+                // Expected before any build runner can be called.
+            } catch {
+                Issue.record("Unexpected run target preflight error: \(error)")
+            }
+        }
+
+        #expect(xcodeSimulatorTargetID(from: "platform=iOS Simulator,id=SIM-A") == "SIM-A")
+        #expect(xcodeSimulatorTargetID(from: "generic/platform=iOS Simulator,id=SIM-A,OS=latest") == "SIM-A")
+        #expect(xcodeSimulatorTargetID(from: unsupportedDestinations[0]) == nil)
+        #expect(xcodeSimulatorTargetID(from: unsupportedDestinations[1]) == nil)
+        #expect(xcodeSimulatorTargetID(from: unsupportedDestinations[2]) == nil)
+        #expect(xcodeSimulatorTargetID(from: unsupportedDestinations[3]) == nil)
+
+        let failure = captureXcodeCommandOutputAllowingFailure {
+            try failXcodeCommand(
+                XcodeWorkflowError.simulatorDestinationTargetUnresolved,
+                device: nil,
+                outputFormat: .json
+            )
+        }
+        let object = try #require(
+            JSONSerialization.jsonObject(with: Data(failure.output.utf8)) as? [String: Any]
+        )
+        let error = try #require(object["error"] as? [String: Any])
+        #expect(error["code"] as? String == "xcode_run_target_unresolved")
+        #expect((error["hint"] as? String)?.contains("--simulator <udid>") == true)
+
+        let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
+        let run = try #require(xcode.subcommands.first { $0.name == "run" })
+        #expect(xcode.failureCodes.contains("xcode_run_target_unresolved"))
+        #expect(run.failureCodes.contains("xcode_run_target_unresolved"))
+        #expect(xcode.options.first { $0.name == "--destination" }?.description.contains("build/settings/install/launch/readiness") == true)
+    }
+
     @Test("xcode real-device selector defers an explicit destination to preflight validation")
     func explicitDestinationDoesNotOverrideDevicePreflight() throws {
         let destination = resolvedXcodeDestination(

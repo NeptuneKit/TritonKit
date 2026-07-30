@@ -294,7 +294,7 @@ func makeWebAutoDiscoveryPlan(options: WebAutoDiscoveryOptions) -> WebAutoDiscov
         transportPriority: priority,
         registry: "serve-owned",
         targetRegistryEndpoint: "http://127.0.0.1:19421/web/target-registry",
-        managedServeHost: "0.0.0.0"
+        managedServeHost: "127.0.0.1"
     )
 }
 
@@ -677,13 +677,47 @@ func webHostLogsUnsupportedResponse(platform: String) -> TKCLIErrorResponse {
     ))
 }
 
-private func webReadonlyInputResponse() -> TKCLIErrorResponse {
-    TKCLIErrorResponse(error: TKCLIErrorDetail(
-        code: "web_host_input_readonly",
-        message: "Bundled Triton Web is a readonly device hub and does not execute input actions.",
-        endpoint: "/web/host-input",
-        hint: "Use Triton CLI action commands for explicit control flows."
+func webReadonlyWriteResponse(endpoint: String) -> TKCLIErrorResponse {
+    let code: String
+    let hint: String
+    switch endpoint {
+    case "/web/host-input":
+        code = "web_host_input_readonly"
+        hint = "Use `triton act … --json` or another explicit CLI control command for the selected target."
+    case "/web/node-property":
+        code = "web_node_property_readonly"
+        hint = "Use `triton debug patch-node … --json` for an explicit, auditable node patch."
+    case "/web/input":
+        code = "web_input_readonly"
+        hint = "Use `triton act … --json` or the explicit runtime HTTP control contract."
+    default:
+        code = "web_write_readonly"
+        hint = "Use an explicit Triton CLI or HTTP control contract instead."
+    }
+    return TKCLIErrorResponse(error: TKCLIErrorDetail(
+        code: code,
+        message: "Triton Web is a readonly device hub and does not execute browser write actions.",
+        endpoint: endpoint,
+        hint: hint
     ))
+}
+
+func registerWebReadonlyPostRoute<Context: RequestContext>(
+    on router: Router<Context>,
+    endpoint: String
+) {
+    router.post(RouterPath(endpoint)) { _, _ -> Response in
+        jsonResponse(webReadonlyWriteResponse(endpoint: endpoint), status: .methodNotAllowed)
+    }
+}
+
+func registerWebReadonlyGetRoute<Context: RequestContext>(
+    on router: Router<Context>,
+    endpoint: String
+) {
+    router.get(RouterPath(endpoint)) { _, _ -> Response in
+        jsonResponse(webReadonlyWriteResponse(endpoint: endpoint), status: .methodNotAllowed)
+    }
 }
 
 private struct WebBridgeSource: Codable, Equatable {
@@ -980,101 +1014,16 @@ private func makeWebHostHierarchyBridgeResponse(tritonBin: String, platform: Str
     return try JSONDecoder().decode(TKHostHierarchyResponse.self, from: data)
 }
 
-enum WebHostInputBridgeRoute: Equatable {
-    case runtimeMirror
-    case host(id: String)
-    case unsupported
-}
-
-func webHostInputBridgeRoute(
-    platform: String,
-    target: String,
-    scope: String?,
-    kind: String?,
-    source: String?
-) -> WebHostInputBridgeRoute {
-    guard let hostPlatform = HostDevicePlatform(rawValue: platform), !target.isEmpty else {
-        return .unsupported
-    }
-    if isWebIOSRuntimeMirror(
-        platform: hostPlatform,
-        scope: scope,
-        kind: kind,
-        source: source,
-        target: target
-    ) {
-        return .runtimeMirror
-    }
-    guard source == "host"
-            || scope == HostDeviceScope.simulator.rawValue
-            || scope == HostDeviceScope.emulator.rawValue
-            || kind == "simulator"
-            || kind == "emulator" else {
-        return .unsupported
-    }
-    return .host(id: "host:\(platform):\(target)")
-}
-
-private func makeWebHostInputBridgeResponse(
-    platform: String,
-    target: String,
-    scope: String? = nil,
-    kind: String? = nil,
-    source: String? = nil,
-    input: TKInputRequest
-) async throws -> TKInputResult {
-    switch webHostInputBridgeRoute(
-        platform: platform,
-        target: target,
-        scope: scope,
-        kind: kind,
-        source: source
-    ) {
-    case .host(let id):
-        return try runWebHostDeviceInput(id: id, input: input)
-    case .unsupported:
-        return .unsupported(
-            action: input.type.rawValue,
-            message: "Web host input requires an iOS App runtime mirror or a supported iOS, Android, or Harmony host target."
-        )
-    case .runtimeMirror:
-        break
-    }
-    var client = TritonKitHTTPClient(host: "127.0.0.1", port: 19421)
-    let runtimeTargets: TKTargetsResponse = try await client.getJSON("/targets")
-    let resolvedScope = scope ?? (kind == "simulator" || target.hasPrefix("sim:") ? HostDeviceScope.simulator.rawValue : HostDeviceScope.real.rawValue)
-    let resolvedKind = kind ?? (resolvedScope == HostDeviceScope.simulator.rawValue ? "simulator" : "real-device")
-    let hostID = webHostDeviceTargetID(HostDeviceTarget(
-        platform: platform,
-        id: target,
-        target: target,
-        state: "Ready",
-        ready: true,
-        source: "host",
-        name: nil,
-        runtime: nil,
-        transport: nil,
-        scope: resolvedScope,
-        kind: resolvedKind
-    ))
-    if let runtimeTarget = webRuntimeInputFallbackTargetID(forHostID: hostID, runtimeTargets: runtimeTargets.targets) {
-        client.target = runtimeTarget
-    }
-    return try await executeInputRequest(input, client: client)
-}
-
 private func isWebIOSRuntimeMirror(
     platform: HostDevicePlatform,
     scope: String?,
     kind: String?,
-    source: String?,
-    target: String? = nil
+    source: String?
 ) -> Bool {
     platform == .ios && (
         source == "runtime"
             || scope == HostDeviceScope.real.rawValue
             || kind == "real-device"
-            || target?.hasPrefix("ios-real:") == true
     )
 }
 
@@ -1293,28 +1242,10 @@ private func runPackagedWebServer(_ plan: WebLaunchPlan) async throws {
             return jsonError(code: "web_host_logs_failed", message: "\(error)", endpoint: "/web/host-logs", status: .conflict)
         }
     }
-    router.post("/web/host-input") { request, _ -> Response in
-        let platform = request.uri.queryParameters.get("platform") ?? ""
-        let target = request.uri.queryParameters.get("target") ?? ""
-        let scope = request.uri.queryParameters.get("scope")
-        let kind = request.uri.queryParameters.get("kind")
-        let source = request.uri.queryParameters.get("source")
-        var bodyData = Data()
-        for try await chunk in request.body {
-            bodyData.append(Data(buffer: chunk))
-        }
-        guard let input = try? JSONDecoder().decode(TKInputRequest.self, from: bodyData) else {
-            return jsonError(code: "invalid_payload", message: "Unsupported input payload", endpoint: "/web/host-input", status: .badRequest)
-        }
-        do {
-            return jsonResponse(try await makeWebHostInputBridgeResponse(platform: platform, target: target, scope: scope, kind: kind, source: source, input: input))
-        } catch {
-            return jsonError(code: "web_host_input_failed", message: "\(error)", endpoint: "/web/host-input", status: .conflict)
-        }
-    }
-    router.get("/web/host-input") { _, _ -> Response in
-        jsonResponse(webReadonlyInputResponse(), status: .methodNotAllowed)
-    }
+    registerWebReadonlyPostRoute(on: router, endpoint: "/web/host-input")
+    registerWebReadonlyGetRoute(on: router, endpoint: "/web/host-input")
+    registerWebReadonlyPostRoute(on: router, endpoint: "/web/node-property")
+    registerWebReadonlyGetRoute(on: router, endpoint: "/web/node-property")
     router.get("/**") { request, _ -> Response in
         packagedWebResponse(webRoot: webRoot, requestPath: request.uri.path)
     }

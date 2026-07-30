@@ -25,6 +25,20 @@ extension SchemaFactSourceTests {
         #expect(malformedPlaceholders == [])
     }
 
+    @Test("reliability-sample templates retain canonical target as one argv placeholder")
+    func reliabilitySampleTemplatesRetainCanonicalTargetAsOneArgvPlaceholder() throws {
+        let test = try #require(commandSchemaMap()["test"])
+        let usage = try #require(test.usageForms.first { $0.form.hasPrefix("reliability-sample ") })
+        let example = try #require(test.examples.first { $0.hasPrefix("triton test reliability-sample ") })
+        let templates = [usage.form, example]
+
+        for template in templates {
+            #expect(template.contains("--target <canonical>"))
+            #expect(template.contains("triton:ios-simulator:<udid>/app:<bundle>") == false)
+            #expect(malformedPlaceholderTokens(in: template, context: "test") == [])
+        }
+    }
+
     @Test("workflow plan commands stay single Triton invocations")
     func workflowPlanCommandsStaySingleTritonInvocations() {
         var invalidCommands: [String] = []

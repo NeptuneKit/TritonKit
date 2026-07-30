@@ -2,9 +2,9 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（141/141 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（156/156 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-07-28
+> 最近审计：2026-07-30
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -21,6 +21,10 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 已完成（总集成候选） | [SP-156-issue-176-xcode-compact-progress](./SP-156-issue-176-xcode-compact-progress/README.md) | #176 已为 `xcode build` 增加默认 compact progress，保留 lifecycle/heartbeat/bounded diagnostics/artifact/final，显式 full 恢复旧 stream | 已进入 SP-151；联合 focused 207/207 与 local 总门禁通过，待 PR/CI |
+| 已完成（总集成候选） | [SP-152-issue-172-runtime-reregistration](./SP-152-issue-172-runtime-reregistration/README.md) | #172 embedded runtime 新进程重注册与断连重连已完成；旧 task/timer 不得污染新连接，legacy SDK 兼容/拒绝原因保持机器可读 | 已进入 SP-151；root 238/238 与联合 focused 通过，待 PR/CI |
+| 已完成（总集成候选） | [SP-153-issue-173-xcode-run-target-binding](./SP-153-issue-173-xcode-run-target-binding/README.md) | #173 已将 `xcode run` 显式 Simulator destination 固化为 build/settings/install/launch/app-scoped readiness 共用的 immutable target | 已进入 SP-151；联合 focused 通过，未运行真实 Xcode/Simulator |
+| 已完成（总集成候选） | [SP-154-issue-174-simulator-swipe-lifecycle](./SP-154-issue-174-simulator-swipe-lifecycle/README.md) | #174 已用单一 persistent Baguette session、逐事件 ack 与 terminal linger 修复 iOS Simulator swipe 生命周期；host success 仍只代表提交 | 已进入 SP-151；联合 focused 通过，真实 vertical pager smoke 未运行 |
 | 已归档 | [20260722-issue-165-xcode-schemes-discovery-timeout](./20260722-issue-165-xcode-schemes-discovery-timeout/README.md) | Xcode discover 默认递归事实已与 schemes container 对齐；schemes 支持 timeout override、禁用自动 package resolution 与机器恢复动作 | `b3cdd40c` 已推送，CI `29973762696` 通过，GitHub #165 已关闭并随 `v0.2.15` 发布 |
 | 已归档 | [20260722-issue-164-evidence-simulator-screenshot-fidelity](./20260722-issue-164-evidence-simulator-screenshot-fidelity/README.md) | iOS Simulator evidence 已区分 host-composited 与 runtime App-layer screenshot，默认视觉验收使用 host framebuffer | `e489dcfd` 已推送，CI `29973762696` 通过，GitHub #164 已关闭并随 `v0.2.15` 发布 |
 | 已归档 | [20260722-issue-159-alert-modal-boundary](./20260722-issue-159-alert-modal-boundary/README.md) | UIKit tap 已尊重 presented alert modal boundary，禁止激活背后 collection/table cell | `01d88c4b` 已合并，CI `29910680723` 通过，GitHub #159 已关闭并随 `v0.2.15` 发布 |
@@ -59,6 +63,17 @@
 | 已完成（本地） | [SP-139-issue-169-xcode-focused-testing](./SP-139-issue-169-xcode-focused-testing/README.md) | #169 已为 `triton xcode test` 增加 repeatable `--only-testing`，每项保持独立 xcodebuild argv，JSON/JSONL 可审计 sourceCommand | checkpoint `0cb7e958` 已进入本地 main；不实现 `--skip-testing`，未启动真实 Xcode、Simulator、真机或服务 |
 | 已完成（本地） | [SP-140-ios-simulator-reliability-live-harness](./SP-140-ios-simulator-reliability-live-harness/README.md) | receipt-backed reserve/sample 将 3×20+1 的 future collection 固化为 immutable contract、strict exact target 与 no-clobber slot；业务 mismatch 保持 typed result + exit 语义 | 本地 harness/契约验证完成；不得自动真实采样，后续必须先获得 dedicated Simulator、server ownership、reset recipe、negative control 与私有 evidence 授权 |
 | 已发布（v0.2.16） | [SP-141-packaged-web-simulator-input](./SP-141-packaged-web-simulator-input/README.md) | packaged `/web/host-input` 已按 iOS real runtime mirror、三平台 host target 与 unsupported 三路分流，不再错拒 Simulator | Homebrew 0.2.16 安装版真实 Simulator HTTP/页面点击通过，console 0 error/warning |
+| 已完成（本地） | [SP-142-web-readonly-contract](./SP-142-web-readonly-contract/README.md) | Web Device Hub 统一只读：browser `/web/input`、`/web/node-property`、`/web/host-input` 不再执行或转发，React/HTML 保留 DTO、截图、层级与本地 patch 草案复制 | local checkpoint 只做离线契约验证；先集成 SP-141 再集成 SP-142 后重跑 docs gate，读路径的 serve 生命周期风险另立裁决 |
+| 已完成（本地） | [SP-143-reliability-gate-integrity](./SP-143-reliability-gate-integrity/README.md) | Stage 1 reliability gate 只接受 receipt-backed authority；legacy sample 保留诊断但不能 passed，observation/failure artifact 均需 kind 与 step 时序归因 | 纯离线 TDD、focused contracts 与 release build 完成；不触碰 #164；SP-141 → SP-142 → SP-143 集成后统一复跑 docs gate |
+| 已完成（本地） | [SP-144-reliability-receipt-anchor](./SP-144-reliability-receipt-anchor/README.md) | 为 receipt-backed sample/report 增加 operator-owned SHA-256 expected anchor，阻断 root 内完整 receipt 的自洽替换 | 纯离线 BDD/TDD 与 release build 已完成；不宣称签名、远端不可抵赖、hostile filesystem、真实 reset/runtime identity 或 live sampling |
+| 已完成（本地） | [SP-145-private-identity-chain-v2](./SP-145-private-identity-chain-v2/README.md) | 基于 SP-144 root 外 anchor，记录并核验每 slot 的私有 evidence identity chain，并输出安全 aggregate | 仅离线 consistency/漂移检测；不写采样器，不主张真实 reset/App/runtime proof，也不触碰设备/服务 |
+| 已完成（本地） | [SP-146-stage1-metric-contract](./SP-146-stage1-metric-contract/README.md) | 已将 Stage 1A 的 60 supported ECR/ORR 与 Stage 1B 的 61 receipt/control integrity、FER 以 additive public contract 区分 | 纯离线合同/合成 evidence、release schema 与 focused tests 已完成；真实采样仍需 dedicated environment 授权 |
+| 已完成（本地） | [SP-147-schema-fact-source-mainline](./SP-147-schema-fact-source-mainline/README.md) | `device` / `sim app-console` machine-readable schema 已按 parser 与 host DTO 修复 direct child、argument、output/recovery contract | 已合入 SP-151；不扩 runtime/device/server |
+| 已完成（本地） | [SP-148-schema-placeholder-tokens](./SP-148-schema-placeholder-tokens/README.md) | `reliability-sample` schema 同时保留 receipt anchor 和完整 `<canonical>` argv token | 已合入 SP-151；不改 runner、server、设备或真实采样 |
+| 已完成（本地） | [SP-149-issue-166-evidence-metadata-contract](./SP-149-issue-166-evidence-metadata-contract/README.md) | #166 follow-up：`/screenshot` normalizer failure 保留 `artifact_write_failed`，test-run metadata 只描述已发布 PNG、没有旧 runtime payload/ref | 已合入 SP-151；不启动服务/设备、不改 #164 |
+| 已完成（本地） | [SP-150-reliability-failure-recovery-semantics](./SP-150-reliability-failure-recovery-semantics/README.md) | Stage 1 gate 已以 validated plan 绑定 terminal failure/recovery，阻断跨步骤与 generic/unknown 伪解释 | 纯离线 TDD、81 项关联回归和 release build 已通过；不改 runner taxonomy、anchor/identity、service/device 或 #164 |
+| 已完成（总集成候选） | [SP-151-trusted-baseline-integration](./SP-151-trusted-baseline-integration/README.md) | SP-142～156 已汇集到唯一隔离 integration branch；联合 focused 207/207、root 238/238、release build/smoke 与 docs gate 均通过 | 用户已授权 push、PR、CI merge 与关闭 issue；未触碰 #164 或真实设备环境 |
+| 已完成（总集成候选） | [SP-155-issue-175-ios-readiness-coredevice](./SP-155-issue-175-ios-readiness-coredevice/README.md) | #175 修复 CoreDevice `available (paired)` 真机被 stale tunnel/DDI flags 错判 offline 的 readiness 归一 | 已进入 SP-151；fixture/parser/selection 与 install plan 同源事实已验证，未执行真实 install/tunnel |
 | 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
@@ -70,6 +85,10 @@
 
 | Space | Branch | Worktree | 基线 | 当前状态与后续 |
 | --- | --- | --- | --- | --- |
+| `SP-156-issue-176-xcode-compact-progress` | `feat/SP-156-issue-176-xcode-compact-progress` | `../TritonKit-worktrees/SP-156-issue-176-xcode-compact-progress/` | `feat/SP-153-issue-173-xcode-run-target-binding@57ff4092` | #176 已进入总集成分支；focused 49/49，通过，不改 shared model 或真实 Xcode 状态 |
+| `SP-152-issue-172-runtime-reregistration` | `feat/SP-152-issue-172-runtime-reregistration` | `../TritonKit-worktrees/SP-152-issue-172-runtime-reregistration/` | `main@d2578089` | 本地完成；root 全量与 CLI focused tests 通过，连续编号 docs 门禁待并行 space 集成；未启动共享 server/Simulator |
+| `SP-153-issue-173-xcode-run-target-binding` | `feat/SP-153-issue-173-xcode-run-target-binding` | `../TritonKit-worktrees/SP-153-issue-173-xcode-run-target-binding/` | `main@d2578089` | #173 本地实现与 focused 验证完成；等待主控集成，不触碰真实 Xcode/Simulator |
+| `SP-154-issue-174-simulator-swipe-lifecycle` | `feat/SP-154-issue-174-simulator-swipe-lifecycle` | `../TritonKit-worktrees/SP-154-issue-174-simulator-swipe-lifecycle/` | `main@d2578089` | 已完成（本地）；focused lifecycle 与跨平台契约回归通过，真实 vertical pager smoke 留待独占 Simulator/server 条件 |
 | `SP-126-testrec-convergence` | `feat/SP-126-testrec-convergence` | `../TritonKit-worktrees/SP-126-testrec-convergence/` | `main@931645ed` | 路线、边界与 Luna 执行交接已收口；可信基线、importer、proof/gate/compatibility/preflight 已经由 `d0f09d3c` 进入本地 main |
 | `SP-127-issue-168-ios-real-device-terminate-pid` | `feat/SP-127-issue-168-ios-real-device-terminate-pid` | `../TritonKit-worktrees/SP-127-issue-168-ios-real-device-terminate-pid/` | `5f6c2f6f` | `cef52ea2` 已经由 `d0f09d3c` 进入本地 main；保留真机 smoke blocker |
 | `SP-128-issue-167-xcode-device-alias-preflight` | `feat/SP-128-issue-167-xcode-device-alias-preflight` | `../TritonKit-worktrees/SP-128-issue-167-xcode-device-alias-preflight/` | `feat/SP-126-testrec-convergence@5f6c2f6f` | `25f7e048` 已经由 `d0f09d3c` 进入本地 main；保留真实 Xcode/device 覆盖缺口 |
@@ -85,6 +104,17 @@
 | `SP-138-issue-170-xcode-real-device-destination` | `feat/SP-138-issue-170-xcode-real-device-destination` | `../TritonKit-worktrees/SP-138-issue-170-xcode-real-device-destination/` | `main@f68587be` | `5d7ffff0` 已进入本地 main；真实 Xcode/Simulator/设备/服务 smoke 未运行 |
 | `SP-139-issue-169-xcode-focused-testing` | `feat/SP-139-issue-169-xcode-focused-testing` | `../TritonKit-worktrees/SP-139-issue-169-xcode-focused-testing/` | `main@5d7ffff0` | `0cb7e958` 已进入本地 main；repeatable focused XCTest selection 不启动真实 Xcode/Simulator/设备/服务 |
 | `SP-140-ios-simulator-reliability-live-harness` | `feat/SP-140-ios-simulator-reliability-live-harness` | `../TritonKit-worktrees/SP-140-ios-simulator-reliability-live-harness/` | `main@0cb7e958` | receipt-backed harness 已 rebase 到当前 local main；focused contract 已验证，真实 3×20+1 仍明确等待授权，不触碰 #164 WIP |
+| `SP-142-web-readonly-contract` | `feat/SP-142-web-readonly-contract`（已清理） | 已清理（历史由 SP-151 merge commit 可达） | `main@d016979d` | 已由 SP-151 集成；405 readonly/loopback proof 保留在 space 文档，不改 main 或 #164 |
+| `SP-143-reliability-gate-integrity` | `feat/SP-143-reliability-gate-integrity`（已清理） | 已清理（历史由 SP-151 merge commit 可达） | `main@d016979d` | 已由 SP-151 集成；Stage 1 gate authority、typed negative、collection lease 与 artifact attribution 保留为离线合同 |
+| `SP-144-reliability-receipt-anchor` | `feat/SP-144-reliability-receipt-anchor`（已清理） | 已清理（历史由 SP-151 merge commit 可达） | `feat/SP-143-reliability-gate-integrity@33ad1f9d` | 已由 SP-151 集成；root 外 receipt SHA-256 anchor 合同保留 |
+| `SP-145-private-identity-chain-v2` | `feat/SP-145-private-identity-chain-v2`（已清理） | 已清理（历史由 SP-151 merge commit 可达） | `feat/SP-144-reliability-receipt-anchor@ab6cbf1e` | 已由 SP-151 集成；private identity-chain v2 与 fail-closed drift/missing terminal 合同保留 |
+| `SP-146-stage1-metric-contract` | `feat/SP-146-stage1-metric-contract`（已清理） | 已清理（历史由 SP-151 merge commit 可达） | `feat/SP-145-private-identity-chain-v2@50c89bea` | 已由 SP-151 集成；receipt-backed Stage 1A/1B metric contract 保留 |
+| `SP-150-reliability-failure-recovery-semantics` | `feat/SP-150-reliability-failure-recovery-semantics`（已清理） | 已清理（历史由 SP-151 merge commit 可达） | `feat/SP-146-stage1-metric-contract@ab0daf99` | 已由 SP-151 集成；terminal failure/recovery fail-closed contract 保留 |
+| `SP-147-schema-fact-source-mainline` | `feat/SP-147-schema-fact-source-mainline`（已清理） | 已清理（历史由 SP-151 merge commit 可达） | `main@d2578089` | 已由 SP-151 集成；CLI schema fact-source repair 保留为离线验证合同 |
+| `SP-148-schema-placeholder-tokens` | `feat/SP-148-schema-placeholder-tokens`（已清理） | 已清理（历史由 SP-151 merge commit 可达） | `SP-147@98110f60` | 已由 SP-151 集成；完整 `<canonical>` argv placeholder 合同保留 |
+| `SP-149-issue-166-evidence-metadata-contract` | `feat/SP-149-issue-166-evidence-metadata-contract`（已清理） | 已清理（历史由 SP-151 merge commit 可达） | `main@d2578089` | 已由 SP-151 集成；#166 metadata/error 纯函数合同保留，不触碰 #164 WIP |
+| `SP-151-trusted-baseline-integration` | `feat/SP-151-trusted-baseline-integration` | `../TritonKit-worktrees/SP-151-trusted-baseline-integration/` | `main@d2578089` | 已合并 SP-142、SP-143～146、SP-147～150；fast-forward 预检无冲突但待用户授权写入 main。源 branch/worktree 已回收，Swift 81+187、Web 21/build、release schema 与 docs gate 均通过，不触碰 #164 或真实环境 |
+| `SP-155-issue-175-ios-readiness-coredevice` | `feat/SP-155-issue-175-ios-readiness-coredevice` | `../TritonKit-worktrees/SP-155-issue-175-ios-readiness-coredevice/` | `main@d2578089` | #175 已完成（本地）；待主控按 SP-142～155 顺序集成并重跑 docs 门禁，真实设备动作未执行 |
 
 ## 维护规则
 

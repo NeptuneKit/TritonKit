@@ -105,6 +105,10 @@ struct Serve: AsyncParsableCommand {
             return jsonResponse(TKTargetsResponse(targets: state.summaries()))
         }
 
+        router.get("/runtime/registrations") { _, _ -> Response in
+            jsonResponse(state.registrationResponse())
+        }
+
         router.get("/web/targets") { _, _ -> Response in
             let runtimeTargets = state.summaries()
             webHostTargetCache.refreshIfNeeded()
@@ -569,23 +573,27 @@ struct Serve: AsyncParsableCommand {
                     encoder: encoder,
                     target: queryTarget(from: request)
                 )
-                guard let screenshot = try? JSONDecoder().decode(TKScreenshotResponse.self, from: payload),
-                      let imageData = try? await screenshotImageData(screenshot, client: TritonKitHTTPClient(host: host, port: port)),
-                      let artifactData = try? normalizeRuntimeScreenshotToPNG(
+                do {
+                    let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: payload)
+                    let imageData = try await screenshotImageData(screenshot, client: TritonKitHTTPClient(host: host, port: port))
+                    let artifactData = try normalizeRuntimeScreenshotToPNG(
                         imageData,
                         declaredFormat: screenshot.format,
                         outputPath: "screenshot.png"
-                      ) else {
+                    )
+                    return Response(status: .ok, headers: [.contentType: "image/png"],
+                                    body: .init(byteBuffer: ByteBuffer(data: artifactData)))
+                } catch {
                     return jsonError(
-                        code: "invalid_payload",
-                        message: "Invalid screenshot payload",
-                        endpoint: "/screenshot",
-                        hint: "Retry after the connected runtime responds to screenshot",
+                        detail: serveScreenshotPayloadErrorDetail(
+                            for: error,
+                            endpoint: "/screenshot",
+                            host: host,
+                            port: port
+                        ),
                         status: .internalServerError
                     )
                 }
-                return Response(status: .ok, headers: [.contentType: "image/png"],
-                                body: .init(byteBuffer: ByteBuffer(data: artifactData)))
             } catch {
                 if let timeout = error as? RuntimeRequestTimeoutError {
                     return jsonError(
@@ -991,108 +999,8 @@ struct Serve: AsyncParsableCommand {
                             body: .init(byteBuffer: ByteBuffer(data: responsePayload)))
         }
 
-        router.post("/web/input") { request, _ -> Response in
-            var bodyData = Data()
-            for try await chunk in request.body {
-                bodyData.append(Data(buffer: chunk))
-            }
-
-            guard let input = try? JSONDecoder().decode(TKInputRequest.self, from: bodyData),
-                  let payload = try? JSONEncoder().encode(input) else {
-                return jsonError(
-                    code: "invalid_payload",
-                    message: "Unsupported input payload",
-                    endpoint: "/web/input",
-                    hint: "Send one TKInputRequest JSON object such as {\"type\":\"tap\",\"x\":1,\"y\":1}",
-                    status: .badRequest
-                )
-            }
-
-            let requestedTarget = queryTarget(from: request)
-            if let target = requestedTarget, parseWebHostTargetID(target) != nil {
-                do {
-                    return jsonResponse(try runWebHostDeviceInput(id: target, input: input))
-                } catch {
-                    return jsonError(
-                        code: "host_input_failed",
-                        message: "\(error)",
-                        endpoint: "/web/input",
-                        hint: "Verify the selected host emulator is ready, then retry the input action.",
-                        status: .conflict
-                    )
-                }
-            }
-
-            let connection: TargetConnection
-            do {
-                connection = try state.resolve(requestedTarget)
-            } catch {
-                return jsonError(detail: cliErrorDetail(for: error, endpoint: "/web/input", host: host, port: port), status: .conflict)
-            }
-
-            let id = counter.next()
-            log("[tritonkit] -> input [id:\(id)]")
-            try await connection.outbound.send(TKMessage(id: id, type: .input, payload: payload), encoder: encoder)
-            guard let responsePayload = await connection.state.waitForResponse(id: id) else {
-                return jsonError(
-                    detail: TKCLIRuntimeTimeoutErrorDetail(requestType: "input", endpoint: "/web/input"),
-                    status: .requestTimeout
-                )
-            }
-            return Response(status: .ok, headers: [.contentType: "application/json"],
-                            body: .init(byteBuffer: ByteBuffer(data: responsePayload)))
-        }
-
-        router.post("/web/node-property") { request, _ -> Response in
-            let bodyData = try await requestBodyData(from: request)
-            guard let patch = try? JSONDecoder().decode(TKNodePropertyPatchRequest.self, from: bodyData),
-                  let payload = try? JSONEncoder().encode(patch) else {
-                return jsonError(
-                    code: "invalid_payload",
-                    message: "Unsupported node property patch payload",
-                    endpoint: "/web/node-property",
-                    hint: "Send {\"nodeId\":\"ios:runtime:<oid>\",\"changes\":{...}} or an explicit oid/viewOID/layerOID.",
-                    status: .badRequest
-                )
-            }
-
-            let requestedTarget = queryTarget(from: request)
-            if let target = requestedTarget, parseWebHostTargetID(target) != nil {
-                return jsonError(
-                    code: "node_property_runtime_required",
-                    message: "Host-only targets cannot mutate arbitrary runtime node properties",
-                    endpoint: "/web/node-property",
-                    hint: "Select the matching embedded App runtime target before applying node properties.",
-                    status: .notImplemented
-                )
-            }
-
-            let connection: TargetConnection
-            do {
-                connection = try state.resolve(requestedTarget)
-            } catch {
-                return jsonError(detail: cliErrorDetail(for: error, endpoint: "/web/node-property", host: host, port: port), status: .conflict)
-            }
-
-            let id = counter.next()
-            log("[tritonkit] -> node.patch [id:\(id)]")
-            try await connection.outbound.send(TKMessage(id: id, type: .modifyAttribute, payload: payload), encoder: encoder)
-            guard let responsePayload = await connection.state.waitForResponse(id: id) else {
-                return jsonError(
-                    detail: TKCLIRuntimeTimeoutErrorDetail(requestType: "modifyAttribute", endpoint: "/web/node-property"),
-                    status: .requestTimeout
-                )
-            }
-
-            let status: HTTPResponse.Status
-            if let patchResponse = try? JSONDecoder().decode(TKNodePropertyPatchResponse.self, from: responsePayload), !patchResponse.ok {
-                status = .conflict
-            } else {
-                status = .ok
-            }
-            return Response(status: status, headers: [.contentType: "application/json"],
-                            body: .init(byteBuffer: ByteBuffer(data: responsePayload)))
-        }
+        registerWebReadonlyPostRoute(on: router, endpoint: "/web/input")
+        registerWebReadonlyPostRoute(on: router, endpoint: "/web/node-property")
 
         // ---- WebSocket Control Channel ----
 
@@ -1109,6 +1017,9 @@ struct Serve: AsyncParsableCommand {
             let appInfoID = counter.next()
             log("[tritonkit] -> appInfo [id:\(appInfoID)]")
             try await outbound.send(TKMessage(id: appInfoID, type: .appInfo), encoder: encoder)
+            let runtimeManifestID = counter.next()
+            log("[tritonkit] -> runtimeManifest [id:\(runtimeManifestID)]")
+            try await outbound.send(TKMessage(id: runtimeManifestID, type: .runtimeManifest), encoder: encoder)
 
             // Then request hierarchy
             let id = counter.next()
@@ -1343,6 +1254,23 @@ private func testRecorderHTTPStatus(for failure: TKTestRecorderValidationFailure
     default:
         .conflict
     }
+}
+
+func serveScreenshotPayloadErrorDetail(
+    for error: Error,
+    endpoint: String,
+    host: String,
+    port: Int
+) -> TKCLIErrorDetail {
+    if error is RuntimeScreenshotArtifactError || error is RuntimeScreenshotNormalizationError {
+        return cliErrorDetail(for: error, endpoint: endpoint, host: host, port: port)
+    }
+    return TKCLIErrorDetail(
+        code: "invalid_payload",
+        message: "Invalid screenshot payload",
+        endpoint: endpoint,
+        hint: "Retry after the connected runtime responds to screenshot"
+    )
 }
 
 private func findAdbExecutable() -> String {

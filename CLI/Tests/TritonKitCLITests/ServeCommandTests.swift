@@ -1,9 +1,76 @@
+import Foundation
 import Testing
 import TritonKitShared
 @testable import TritonKitCLI
 
 @Suite
 struct ServeCommandTests {
+    @Test("0.2.15 legacy runtime manifest is accepted without a registration frame")
+    func legacyRuntimeManifestIsAccepted() throws {
+        let fixture = try #require("""
+        {
+          "ok": true,
+          "platform": "ios",
+          "runtime": "embedded",
+          "transport": "embedded-websocket",
+          "enabled": true,
+          "sdkVersion": "0.1.0-dev",
+          "buildConfiguration": "debug",
+          "capabilities": [],
+          "semanticDomains": [],
+          "limits": {"maxSnapshotBytes": 1, "maxAXNodes": 1, "maxLedgerEntries": 1},
+          "redaction": {
+            "secureText": "length-only",
+            "clipboard": "not-collected",
+            "network": "opt-in-only",
+            "logs": "opt-in-only",
+            "fileArtifacts": "opt-in-only"
+          }
+        }
+        """.data(using: .utf8))
+
+        let decision = runtimeRegistrationDecision(manifestPayload: fixture)
+
+        #expect(decision.accepted)
+        #expect(decision.state == "accepted")
+        #expect(decision.code == "legacy_runtime_manifest_accepted")
+        #expect(decision.sdkVersion == "0.1.0-dev")
+        #expect(decision.versionSource == "runtime-manifest-unverified-release")
+        #expect(decision.reason.contains("registration frame"))
+    }
+
+    @Test("legacy runtime remains accepted when runtimeManifest is unanswered")
+    func legacyRuntimeWithoutManifestResponseRemainsAccepted() {
+        let target = TargetState()
+
+        #expect(target.registrationDecision.accepted)
+        #expect(target.registrationDecision.code == "legacy_websocket_accepted")
+        #expect(target.registrationDecision.sdkVersion == nil)
+    }
+
+    @Test("malformed runtime registration has a stable machine-readable refusal")
+    func malformedRuntimeManifestIsRejected() {
+        let decision = runtimeRegistrationDecision(manifestPayload: Data("{}".utf8))
+
+        #expect(!decision.accepted)
+        #expect(decision.state == "rejected")
+        #expect(decision.code == "runtime_manifest_invalid")
+        #expect(decision.reason.contains("TKRuntimeManifestResponse"))
+    }
+
+    @Test("registration endpoint model explains an unobservable app process")
+    func emptyRegistrationResponseIsMachineReadable() throws {
+        let response = RuntimeRegistrationResponse(registrations: [])
+        let payload = try JSONEncoder().encode(response)
+        let json = try #require(JSONSerialization.jsonObject(with: payload) as? [String: Any])
+
+        #expect(!response.ok)
+        #expect(response.code == "runtime_registration_unobserved")
+        #expect(response.reason.contains("cannot determine whether an app process launched"))
+        #expect(json["code"] as? String == "runtime_registration_unobserved")
+        #expect((json["registrations"] as? [Any])?.isEmpty == true)
+    }
+
     @Test("serve parser defaults to loopback without starting the server")
     func parserDefaultsToLoopbackWithoutStartingTheServer() throws {
         let command = try Serve.parse([])
@@ -70,5 +137,37 @@ struct ServeCommandTests {
         ))
 
         #expect(action.args == ["--host", "192.168.1.20", "--port", "19421"])
+    }
+
+    @Test("doctor no-target diagnosis does not assume the app was never launched")
+    func doctorNoTargetExplainsUnobservableAppState() throws {
+        let response = buildDoctorResponse(
+            capabilities: TKCapabilitiesResponse(
+                ok: false,
+                serverReachable: true,
+                connected: false,
+                latestHierarchyAvailable: false,
+                targetCount: 0,
+                runtime: "none",
+                capabilities: runtimeCapabilities(
+                    host: "127.0.0.1",
+                    port: 19421,
+                    serverReachable: true,
+                    connected: false
+                ),
+                error: TKCLIErrorDetail(code: "target_unavailable", message: "No target")
+            ),
+            host: "127.0.0.1",
+            port: 19421
+        )
+
+        let connection = try #require(response.checks.first { $0.id == "runtime-connection" })
+        #expect(connection.status == "fail")
+        #expect(connection.code == "runtime_registration_unobserved")
+        #expect(connection.message.contains("cannot determine whether the app process launched"))
+        #expect(connection.hint?.contains("DEBUG bootstrap") == true)
+        #expect(connection.nextAction?.command == "target")
+        #expect(connection.nextAction?.args == ["list", "--json"])
+        #expect(response.checks.contains { $0.id == "host-device" })
     }
 }

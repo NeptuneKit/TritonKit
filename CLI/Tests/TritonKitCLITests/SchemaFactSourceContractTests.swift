@@ -279,6 +279,37 @@ extension SchemaFactSourceTests {
         #expect(uncoveredSelectors == [])
     }
 
+    @Test("device schema mirrors direct parser groups and facts")
+    func deviceSchemaMirrorsDirectParserGroupsAndFacts() throws {
+        let device = try #require(commandSchemaMap()["device"])
+        let optionNames = Set(device.options.map(\.name))
+        let subcommandNames = Set(device.subcommands.map(\.name))
+        let outputSelectors = Set(device.outputContracts.map(\.selector))
+
+        #expect(optionNames.contains("--interval"))
+        #expect(device.argumentForms.contains { $0.name == "<selector>" && $0.required == false })
+        #expect(Set(["alias", "bridge", "proxy", "start", "stop"]).isSubset(of: subcommandNames))
+        #expect(Set(["host.device-doctor", "host.device-screenshot", "host.harmony-runtime-url"]).isSubset(of: outputSelectors))
+
+        let doctor = try #require(device.outputContracts.first { $0.selector == "host.device-doctor" })
+        let screenshot = try #require(device.outputContracts.first { $0.selector == "host.device-screenshot" })
+        let runtimeURL = try #require(device.outputContracts.first { $0.selector == "host.harmony-runtime-url" })
+        let waitReady = try #require(device.subcommands.first { $0.name == "wait-ready" })
+        let selector = try #require(device.argumentForms.first { $0.name == "<selector>" })
+
+        #expect(doctor.model == "HostDeviceDoctorOutput")
+        #expect(Set(["tools", "capabilities", "strongControl", "artifactsSaved"]).isSubset(of: Set(doctor.fields.map(\.name))))
+        #expect(screenshot.model == "HostDeviceArtifactOutput")
+        #expect(Set(["artifact", "sha256", "capturedAt"]).isSubset(of: Set(screenshot.fields.map(\.name))))
+        #expect(runtimeURL.model == "HostRuntimeURLOutput")
+        #expect(Set(["baseURL", "forwarded", "manifest"]).isSubset(of: Set(runtimeURL.fields.map(\.name))))
+        #expect(waitReady.optionalOptions.contains("--device"))
+        #expect(waitReady.optionalOptions.contains("--interval"))
+        #expect(waitReady.optionalOptions.contains("<selector>") == false)
+        #expect(selector.description.contains("use or resolve"))
+        #expect(selector.description.contains("wait-ready") == false)
+    }
+
     @Test("schema failure surfaces expose stable failure codes")
     func schemaFailureSurfacesExposeStableFailureCodes() {
         let missingCodes = commandSchemas()
@@ -548,7 +579,8 @@ extension SchemaFactSourceTests {
             for subcommand in schema.subcommands {
                 let references = subcommand.requiredOptions +
                     subcommand.optionalOptions +
-                    subcommand.oneOfRequiredOptions.flatMap { $0 }
+                    subcommand.oneOfRequiredOptions.flatMap { $0 } +
+                    subcommand.oneOfRequiredOptionSets.flatMap { $0 }
 
                 for reference in references where !knownParameters.contains(reference) {
                     missingReferences.append("\(schema.name) \(subcommand.name):\(reference)")
@@ -902,6 +934,21 @@ extension SchemaFactSourceTests {
 
         #expect(mismatchedCommandLists == [])
         #expect(invalidCategories == [])
+    }
+
+    @Test("sim app-console recovery mirrors actionable next commands")
+    func simAppConsoleRecoveryMirrorsActionableNextCommands() throws {
+        let sim = try #require(commandSchemaMap()["sim"])
+        let appConsole = try #require(sim.subcommands.first { $0.name == "app-console" })
+        let expectedCommands = [
+            "triton sim logs --simulator <udid|booted> --output <path.ndjson> --duration <seconds> --json",
+            "triton sim app-console --simulator <udid|booted> --bundle-id <bundle-id> --output <new-path.log> --json",
+            "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
+        ]
+
+        #expect(appConsole.nextCommands == expectedCommands)
+        #expect(appConsole.recoveryCommands.map(\.command) == expectedCommands)
+        #expect(appConsole.recoveryCommands.map(\.category) == ["prepare-target", "prepare-target", "archive"])
     }
 
     @Test("schema failure codes map to recovery category families")
