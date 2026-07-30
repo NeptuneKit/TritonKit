@@ -456,6 +456,21 @@ func failXcodeCommand(
     device: String?,
     outputFormat: ClientOutputFormat
 ) throws -> Never {
+    if case XcodeWorkflowError.simulatorDestinationTargetUnresolved = error {
+        try failXcodeRealDevicePreflight(
+            TKCLIErrorDetail(
+                code: "xcode_run_target_unresolved",
+                message: "Xcode run requires one immutable Simulator target before build.",
+                hint: "Pass `--simulator <udid>` or `--destination 'platform=iOS Simulator,id=<udid>'`. Generic, name-only, non-Simulator, or multi-id destinations cannot drive install and launch safely.",
+                nextAction: TKCLINextAction(
+                    command: "xcode",
+                    args: ["run", "--simulator", "<udid>", "--jsonl"],
+                    category: "prepare-target"
+                )
+            ),
+            outputFormat: outputFormat
+        )
+    }
     let selector = device?.trimmingCharacters(in: .whitespacesAndNewlines)
     let hasSelector = selector?.isEmpty == false
     if let hostError = error as? HostCommandRunError,
@@ -542,7 +557,8 @@ struct XcodeRun: AsyncParsableCommand {
                 simulator: simulator,
                 device: device,
                 derivedDataPath: derivedDataPath,
-                buildSettings: buildSettings
+                buildSettings: buildSettings,
+                requireConcreteSimulatorTarget: true
             )
             let summary = try runXcodeBuildInstallLaunch(
                 invocation: resolved,
