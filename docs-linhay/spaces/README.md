@@ -59,6 +59,7 @@
 | 已完成（本地） | [SP-139-issue-169-xcode-focused-testing](./SP-139-issue-169-xcode-focused-testing/README.md) | #169 已为 `triton xcode test` 增加 repeatable `--only-testing`，每项保持独立 xcodebuild argv，JSON/JSONL 可审计 sourceCommand | checkpoint `0cb7e958` 已进入本地 main；不实现 `--skip-testing`，未启动真实 Xcode、Simulator、真机或服务 |
 | 已完成（本地） | [SP-140-ios-simulator-reliability-live-harness](./SP-140-ios-simulator-reliability-live-harness/README.md) | receipt-backed reserve/sample 将 3×20+1 的 future collection 固化为 immutable contract、strict exact target 与 no-clobber slot；业务 mismatch 保持 typed result + exit 语义 | 本地 harness/契约验证完成；不得自动真实采样，后续必须先获得 dedicated Simulator、server ownership、reset recipe、negative control 与私有 evidence 授权 |
 | 已发布（v0.2.16） | [SP-141-packaged-web-simulator-input](./SP-141-packaged-web-simulator-input/README.md) | packaged `/web/host-input` 已按 iOS real runtime mirror、三平台 host target 与 unsupported 三路分流，不再错拒 Simulator | Homebrew 0.2.16 安装版真实 Simulator HTTP/页面点击通过，console 0 error/warning |
+| 已完成（本地） | [SP-155-issue-175-ios-readiness-coredevice](./SP-155-issue-175-ios-readiness-coredevice/README.md) | #175 修复 CoreDevice `available (paired)` 真机被 stale tunnel/DDI flags 错判 offline 的 readiness 归一 | fixture/parser/selection 与 install plan 同源事实已验证；待按序集成 SP-142～155，不执行真实 install/tunnel |
 | 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
@@ -85,6 +86,7 @@
 | `SP-138-issue-170-xcode-real-device-destination` | `feat/SP-138-issue-170-xcode-real-device-destination` | `../TritonKit-worktrees/SP-138-issue-170-xcode-real-device-destination/` | `main@f68587be` | `5d7ffff0` 已进入本地 main；真实 Xcode/Simulator/设备/服务 smoke 未运行 |
 | `SP-139-issue-169-xcode-focused-testing` | `feat/SP-139-issue-169-xcode-focused-testing` | `../TritonKit-worktrees/SP-139-issue-169-xcode-focused-testing/` | `main@5d7ffff0` | `0cb7e958` 已进入本地 main；repeatable focused XCTest selection 不启动真实 Xcode/Simulator/设备/服务 |
 | `SP-140-ios-simulator-reliability-live-harness` | `feat/SP-140-ios-simulator-reliability-live-harness` | `../TritonKit-worktrees/SP-140-ios-simulator-reliability-live-harness/` | `main@0cb7e958` | receipt-backed harness 已 rebase 到当前 local main；focused contract 已验证，真实 3×20+1 仍明确等待授权，不触碰 #164 WIP |
+| `SP-155-issue-175-ios-readiness-coredevice` | `feat/SP-155-issue-175-ios-readiness-coredevice` | `../TritonKit-worktrees/SP-155-issue-175-ios-readiness-coredevice/` | `main@d2578089` | #175 已完成（本地）；待主控按 SP-142～155 顺序集成并重跑 docs 门禁，真实设备动作未执行 |
 
 ## 维护规则
 
