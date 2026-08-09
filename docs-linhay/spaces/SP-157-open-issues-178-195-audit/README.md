@@ -51,8 +51,15 @@
 - 3 条完成安全收口但仍保留能力边界：#178、#183、#186。
 - 2 条已有静态覆盖但受 live 环境限制：#180、#184。
 - #195 的可执行 DDI recovery 已拆到 SP-159；没有物理 iOS 设备时仍不宣称真实 readiness 已完成。
-- 最新线上复查包含 #196，当前队列为 #178–#196 共 19 条 open issue；集成后按逐条验证结果收口，不按初始快照误关。
+- 中途线上复查发现 #196，随后在 push/CI 期间新增 #197；两者分别由 SP-158 与 SP-160 建立独立边界并纳入同一轮串行收口，不按初始快照误关。
 - 独立 worktree 已获授权进入串行提交、冲突预检、main 集成、push 和 issue 收口流程。
+
+## 最终收口
+
+- SP-157 的 #178–#194 修复/安全边界、SP-159 的 #195 DDI recovery、SP-158 的 #196 archive/export 和 SP-160 的 #197 Harmony wait budget 均已进入主线 `e77c72b7`。
+- 主线本地 `docs-linhay/scripts/verify.sh --local` 全量通过；根包 239/239、Release CLI、Harmony/iOS smoke、iOS Simulator build、docs 160/160 和 whitespace gate 均通过。
+- 主线 CI [31301092517](https://github.com/NeptuneKit/TritonKit/actions/runs/31301092517) 全绿；GitHub API 最终 open issue 查询返回空数组，#178–#197 共 20 条均已发布脱敏验证评论并关闭。
+- 真实物理 iOS DDI/tunnel、私有 Xcode 签名/IPA 安装、真实 Harmony HDC/ArkUI smoke 仍是明确风险；#164 dirty worktree 未读取、未修改。
 
 ## 停止条件
 

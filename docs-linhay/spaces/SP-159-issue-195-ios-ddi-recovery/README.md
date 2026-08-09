@@ -48,7 +48,7 @@
 1. 先在 `DeviceCrossPlatformTests` / `FailureDiagnosticsTests` 写红灯测试，锁定 `ddi_missing.nextAction` 的完整 args。
 2. 在 `CLIHostProcessRuntime` 集中映射 DDI recovery，复用现有 `HostAppInstall` 合同。
 3. 运行 focused tests、CLI build 与 docs gate；记录真实设备缺失为环境 skipped。
-4. 更新本 space 与 memory；用户已授权远端 issue comment/close、push、PR、merge 的串行收口，但真实设备证据不足时不得伪装为 readiness 已成功。
+4. 更新本 space 与 memory；主线 CI 通过后发布脱敏验证评论并关闭 issue，真实设备证据不足时不得伪装为 readiness 已成功。
 
 ## 验收命令
 
@@ -62,5 +62,5 @@ git diff --check
 
 ## 当前结论
 
-- 仅以 parser、failure envelope、schema 和 command-builder 证据验收。
-- 真实 `devicectl` DDI preparation 需要连接且已信任的 iOS 真机及匹配 Xcode；当前环境未宣称通过。
+- 仅以 parser、failure envelope、schema 和 command-builder 证据验收；`DeviceCrossPlatformTests` 101/101、`FailureDiagnosticsTests` 16/16、主线全量门禁与 CI `31301092517` 通过。
+- 实现已合入主线 `e77c72b7`，GitHub #195 已评论并关闭。真实 `devicectl` DDI preparation 需要连接且已信任的 iOS 真机及匹配 Xcode，当前环境未宣称通过。

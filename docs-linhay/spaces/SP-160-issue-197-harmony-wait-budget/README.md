@@ -30,5 +30,5 @@
 
 ## 状态
 
-- 当前：执行中，基于已通过主线 CI 的 `faa74638` 建立独立 worktree。
-- 远端边界：用户已明确授权本轮提交、合并、push 与按验证结果关闭 issue；只在主线 CI 通过后关闭 #197。
+- 当前：已合入主线 `e77c72b7`，分支提交为 `0ff8089e`；`HarmonyWaitRuntimeTests` 5/5、分支/主线全量门禁和 CI `31301092517` 均通过，GitHub #197 已评论并关闭。
+- 远端边界：真实 Harmony HDC/ArkUI dumpLayout smoke 仍未执行；0.4 秒预算是 host command contract，不代表真实 target readiness。

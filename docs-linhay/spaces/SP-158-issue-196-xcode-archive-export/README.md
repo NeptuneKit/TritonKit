@@ -56,8 +56,8 @@
 
 ## 当前状态
 
-- 当前状态：实现完成，focused tests、full Xcode suite 与 release build 已通过；docs gate 仍被既有 registry blocker 拦截，等待主控复核。
-- 远端边界：用户已授权本轮串行提交、合并、push，并按验证结果关闭 issue；真实签名/IPA 安装缺口仍需保留为风险。
+- 当前状态：实现已合入主线 `e77c72b7`；focused tests、full Xcode suite、Release CLI、主线本地全量门禁和 CI `31301092517` 均通过，GitHub #196 已评论并关闭。
+- 远端边界：真实签名/IPA 安装、私有 workspace 和 App Store Connect 仍未执行；本 space 不把 host archive/export 通过等同于可安装发布产物。
 
 ## 实现结果
 
@@ -75,4 +75,4 @@
 - CLI help/schema smoke 已确认 `xcode archive` / `xcode export` 出现在帮助和 `schema --command xcode.archive --json` 中，二者均出现在 `providedCapabilities`。
 - release build：`swift build --package-path CLI --scratch-path .build/sp158-release -c release --product triton` 通过（641.93s），仅有既有 Objective-C selector warnings。
 - full Xcode suite：46 项通过；包含流式 host runner 工作目录、timeout、archive/export 和原有 run preflight 回归。
-- docs gate：`check-docs.sh` / `verify.sh --ci-docs` 被 worktree 原有 SP registry 非连续错误拦截：`space registry IDs must be contiguous from SP-001`。
+- 主线收口：`docs-linhay/scripts/verify.sh --local` 已验证 docs 160/160；此前 worktree 的 registry blocker 已由主线索引同步消除。

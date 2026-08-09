@@ -2,9 +2,9 @@
 
 ## 结论口径
 
-本矩阵对应 2026-08-09 通过 `gh issue list --repo NeptuneKit/TritonKit --state open --limit 100` 固定的 18 条线上未关闭 issue。收口前再次执行同一查询，仍返回 #178–#195 这 18 条，没有新增或消失的 open issue。`已修复（本地）` 表示修复和测试在本 worktree 已完成，尚未 push、开 PR 或发布；`安全收口` 表示已补充 fail-closed 或结构化恢复，但没有把未实现的自动化能力伪装成完成；`已有覆盖` 表示源码已有相关行为，本轮未发现新的静态缺口；`环境/产品阻塞` 表示需要真实设备、服务或产品决策才能继续。
+本矩阵对应 2026-08-09 首次通过 `gh issue list --repo NeptuneKit/TritonKit --state open --limit 100` 固定的 18 条线上未关闭 issue。后续线上复查发现 #196 与 #197，分别转入 SP-158、SP-160；最终主线复查返回空数组。`已修复（本地）`、`安全收口` 与 `已有覆盖` 保留本轮实现判断；最终远端收口以主线 commit、CI 与逐条 issue 评论/关闭记录为准。
 
-本轮没有关闭 issue、评论 issue、push、开 PR 或 merge；线上复查只读，且结果与初始快照一致。
+最终结果：#178–#197 共 20 条 issue 已在主线 `e77c72b7` 验证后评论并关闭；CI 为 [31301092517](https://github.com/NeptuneKit/TritonKit/actions/runs/31301092517)。
 
 ## 逐条状态
 
@@ -27,17 +27,18 @@
 | [#192](https://github.com/NeptuneKit/TritonKit/issues/192) | 已修复（本地） | Harmony stop 对缺失 launchd job 视为幂等 warning，跳过后续 bootout 并继续 DevEco `-stop`；不吞掉权限等其他错误；`DeviceCrossPlatformTests` 100 项通过。 | 没有 DevEco Emulator/launchd fixture 执行完整 stop；当前证据覆盖计划和错误分类路径。 |
 | [#193](https://github.com/NeptuneKit/TritonKit/issues/193) | 已修复（本地） | `--device current` 在没有持久 alias 时按 Harmony foreground `current:true` 唯一候选解析，保持歧义和不存在时 fail-closed；跨平台选择测试通过。 | 没有真实 Harmony foreground identity live probe。 |
 | [#194](https://github.com/NeptuneKit/TritonKit/issues/194) | 已修复（本地） | Harmony `app open-url` 增加可选 `--action`，生成 `-A ohos.want.action.viewData`，保留默认行为；schema、shared builder、流程测试通过。 | 没有真实 Harmony Want 路由 smoke。 |
-| [#195](https://github.com/NeptuneKit/TritonKit/issues/195) | 环境/产品阻塞 | 已核查 paired/available CoreDevice fixture 可被 readiness 和 install plan 共享；现有 `wait-ready` 会持续读取 `devicectl`，并对离线、DDI、trust 等返回结构化状态。 | 当前没有物理 iOS 设备，无法验证 tunnel/DDI lazy preparation；代码仍不会在 `wait-ready` 阶段主动安装 DDI 或启动 tunnel。需明确 CoreDevice preparation 授权和真实设备后再实现，不能宣称已修复。 |
+| [#195](https://github.com/NeptuneKit/TritonKit/issues/195) | 已修复（契约） | SP-159 已让 `ddi_missing` 保持稳定错误码，并提供 `app install --platform ios --scope real --device <selector> --app <app-path> --json` recovery；trust、Developer Mode、locked、offline 和 devicectl 缺失保持独立诊断。 | 当前没有物理 iOS 设备，无法验证 tunnel/DDI lazy preparation；不自动修改 signing/DDI 资产，不把 fixture 当真实 readiness。 |
 
 ## 统一验证证据
 
-- `swift test --package-path CLI --filter DeviceCrossPlatformTests`：100 项通过。
+- `swift test --package-path CLI --filter DeviceCrossPlatformTests`：SP-157 基线 100 项，合入 SP-159 后 101 项通过。
 - `swift test --package-path CLI --filter SimulatorAdvancedControlsTests`：33 项通过。
 - `swift test --package-path CLI --filter SingleDeviceWebPageTests`：28 项通过。
 - `swift test --package-path CLI --filter SchemaFactSourceContractTests`：52 项通过。
-- `swift test --package-path CLI --filter HarmonyWaitRuntimeTests`：4 项通过。
+- `swift test --package-path CLI --filter HarmonyWaitRuntimeTests`：SP-157 基线 4 项，SP-160 后 5 项通过。
 - `swift test --package-path CLI --filter EvidenceBundleTests`：25 项通过。
 - `swift test --package-path CLI --filter AppOpenURLFlowTests`：7 项通过。
 - `swift test --package-path CLI --filter XcodeCommandTests/streamingXcodeRunnerHonorsWorkingDirectory`：1 项通过；此前一次 30 秒超时为测试环境波动，单项重跑通过。
 - 根包 UIKit 相关测试在 macOS 目标下完成编译，但因 `canImport(UIKit)` 不成立没有可执行 case；这不是 iOS runtime 通过证据。
 - 本机没有 Android、Harmony 或物理 iOS target；`triton status/doctor --json` 显示 HTTP server unavailable，真实设备复现均记录为 blocker。
+- `docs-linhay/scripts/verify.sh --local`：主线 e77c72b7 全量通过；GitHub Actions run 31301092517 的 scope、contracts、podspec、Swift tests 全部 success。
