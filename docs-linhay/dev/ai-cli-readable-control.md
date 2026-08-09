@@ -503,6 +503,8 @@ Round 175 新增文本参数占位符门禁：`nextAction` 的 `--text`、`--wai
 
 Round 175 新增文本参数占位符门禁：`nextAction` 中 `--text`、`--wait-text` 和 `assert text-exists` 的文本 operand 统一固定为 `<text>`。这让 agent 在 wait/assert/smoke/webview/node-resolve 等文本驱动路径上复用同一变量绑定，不再维护别名映射。
 
+Harmony host `triton wait --platform harmony --device <selector> --exists <text> --timeout <seconds> --json` 与 layout capture 共享同一个绝对截止时间。为避免在截止时间附近启动无法完成的 `hdc shell uitest dumpLayout`，wait 轮询只会在剩余预算至少为 0.4 秒时开始下一次 layout capture；更短的剩余预算直接返回标准 `timedOut=true`、`matched=false` envelope，不再调用 `dumpLayout`/`recv`。0.4 秒是当前 host command 的 documented minimum layout capture budget，不代表真实 Harmony target 已完成 smoke。
+
 Round 178 修复 app open-url 规划的 schema 可发现性：`triton app go <url>` 与 `triton app open-url <url>` 已进入 `app.subcommands[]`，并显式声明 `<url>` argument form 与 `host.app-open-url` output selector。`plan open-url` 中 host-side `app-open-url` 步骤不再预设 `runtime.connected`，runtime 连接只作为后续 wait/assert/evidence 验证前置。Capability taxonomy 的公开说明同步包含 `test` group / workflow lane，避免 `test-validate` 这类能力被 agent 误判为未知分组。
 
 Round 179 修复 platform-focused doctor / plan 对 Harmony 与 Android host-side 验证的误导：`doctor --platform harmony|android` 现在以 `host-device` 为首个恢复 check，`primaryWorkflowCategory=target`，`nextAction=triton device list --platform <platform> --json`；runtime server 未启动只作为 `runtime-server` warning，不再把顶层 `error` 固定为 `server_unavailable`。`plan --platform harmony|android` 的 general goal 进入 host-side task plan，首步为 `device doctor --platform <platform> --json`，随后是 `device list`、`device wait-ready`、`observe tree` 与 `device screenshot`，避免 agent 在本机 Harmony / Android 验证中被带到 `triton serve` 或 `triton xcode run`。

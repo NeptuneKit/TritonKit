@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（159/159 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（160/160 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-08-09
 
@@ -25,6 +25,7 @@
 | 已合并（PR #177） | [SP-156-issue-176-xcode-compact-progress](./SP-156-issue-176-xcode-compact-progress/README.md) | #176 已为 `xcode build` 增加默认 compact progress，保留 lifecycle/heartbeat/bounded diagnostics/artifact/final，显式 full 恢复旧 stream | issue 已关闭；CI `30515397742` 通过，真实私有 workspace build 未运行 |
 | 已合并（本地） | [SP-158-issue-196-xcode-archive-export](./SP-158-issue-196-xcode-archive-export/README.md) | #196：Xcode archive 与 IPA export 的 schema-backed CLI workflow | 主线门禁通过并 push 后按真实签名风险决定 issue 收口 |
 | 已合并（本地） | [SP-159-issue-195-ios-ddi-recovery](./SP-159-issue-195-ios-ddi-recovery/README.md) | #195：`ddi_missing` 的可执行 iOS real-device app-install recovery；不自动修改 signing/DDI 资产 | 主线门禁通过并 push 后按真实设备 smoke 风险决定 issue 收口 |
+| 执行 | [SP-160-issue-197-harmony-wait-budget](./SP-160-issue-197-harmony-wait-budget/README.md) | #197：Harmony wait 在剩余预算低于 0.4 秒时不再启动 `dumpLayout`/`recv`，返回标准 timeout envelope | 完成分支门禁，合入主线并等待 CI 后关闭 issue |
 | 已合并（PR #177） | [SP-152-issue-172-runtime-reregistration](./SP-152-issue-172-runtime-reregistration/README.md) | #172 embedded runtime 新进程重注册与断连重连已完成；旧 task/timer 不得污染新连接，legacy SDK 兼容/拒绝原因保持机器可读 | issue 已关闭；root 238/238 与 CI 通过，真实 App 重装 smoke 未运行 |
 | 已合并（PR #177） | [SP-153-issue-173-xcode-run-target-binding](./SP-153-issue-173-xcode-run-target-binding/README.md) | #173 已将 `xcode run` 显式 Simulator destination 固化为 build/settings/install/launch/app-scoped readiness 共用的 immutable target | issue 已关闭；CI 通过，真实 Xcode/Simulator 未运行 |
 | 已合并（PR #177） | [SP-154-issue-174-simulator-swipe-lifecycle](./SP-154-issue-174-simulator-swipe-lifecycle/README.md) | #174 已用单一 persistent Baguette session、逐事件 ack 与 terminal linger 修复 iOS Simulator swipe 生命周期；host success 仍只代表提交 | issue 已关闭；CI 通过，真实 vertical pager smoke 未运行 |
@@ -92,6 +93,7 @@
 | `SP-157-open-issues-178-195-audit` | `feat/SP-157-open-issues-178-195-audit` | `../TritonKit-worktrees/SP-157-open-issues-178-195-audit/` | `main@252dcd21` | `ad1e55a9` 已由本地 merge 进入 `main`；待主线门禁与 push 后逐条收口 |
 | `SP-158-issue-196-xcode-archive-export` | `feat/SP-158-issue-196-xcode-archive-export` | `../TritonKit-worktrees/SP-158-issue-196-xcode-archive-export/` | `main@252dcd21` | `b3d0c27c` 已由本地 merge 进入 `main`；待主线门禁与 push 后按风险收口 |
 | `SP-159-issue-195-ios-ddi-recovery` | `feat/SP-159-issue-195-ios-ddi-recovery` | `../TritonKit-worktrees/SP-159-issue-195-ios-ddi-recovery/` | `main@252dcd21` | `45c3ebbd` 已由本地 merge 进入 `main`；待主线门禁与 push 后按真实设备 smoke 风险收口 |
+| `SP-160-issue-197-harmony-wait-budget` | `feat/SP-160-issue-197-harmony-wait-budget` | `../TritonKit-worktrees/SP-160-issue-197-harmony-wait-budget/` | `main@faa74638` | TDD 与 focused gate 已通过；待提交、分支全量门禁、主线合入与 #197 收口 |
 | `SP-152-issue-172-runtime-reregistration` | `feat/SP-152-issue-172-runtime-reregistration`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #172 已合并并关闭；runtime lifecycle/compatibility 证据保留 |
 | `SP-153-issue-173-xcode-run-target-binding` | `feat/SP-153-issue-173-xcode-run-target-binding`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #173 已合并并关闭；单目标绑定证据保留 |
 | `SP-154-issue-174-simulator-swipe-lifecycle` | `feat/SP-154-issue-174-simulator-swipe-lifecycle`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #174 已合并并关闭；persistent input lifecycle 证据保留 |

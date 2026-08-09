@@ -104,7 +104,7 @@ struct HarmonyWaitRuntimeTests {
             selected: target,
             hdc: "hdc",
             text: "Never",
-            timeout: 0.05,
+            timeout: 0.55,
             interval: 0.005,
             captureLayout: { selected, hdc, output, timeout in
                 let command = TKHarmonyHDCCommand.recvFile(
@@ -128,6 +128,35 @@ struct HarmonyWaitRuntimeTests {
         #expect(result.transientFailureCount > 0)
         #expect(result.lastTransientError?.code == "harmony_layout_recv_timeout")
         #expect(Date().timeIntervalSince(startedAt) < 0.5)
+    }
+
+    @Test("Harmony wait does not start a layout capture with a near-zero remaining budget")
+    func doesNotStartLayoutCaptureBelowMinimumBudget() async throws {
+        var captureCount = 0
+        let startedAt = Date()
+        let result = try await waitForHarmonyText(
+            selected: target,
+            hdc: "hdc",
+            text: "Never",
+            timeout: 0.05,
+            interval: 0.001,
+            captureLayout: { _, _, _, _ in
+                captureCount += 1
+                return HarmonyLayoutCapture(
+                    localPath: "/tmp/issue-197-layout.json",
+                    remotePath: "/data/local/tmp/issue-197-layout.json",
+                    sourceCommands: ["hdc dumpLayout", "hdc file recv"],
+                    data: Data(#"{"attributes":{"text":"Other"}}"#.utf8)
+                )
+            }
+        )
+
+        #expect(captureCount == 0)
+        #expect(result.pollCount == 0)
+        #expect(!result.ok)
+        #expect(!result.matched)
+        #expect(result.timedOut)
+        #expect(Date().timeIntervalSince(startedAt) < 0.25)
     }
 
     @Test("Harmony layout dump and recv share one bounded capture deadline")
