@@ -588,6 +588,8 @@ triton xcode build --build-setting CLANG_ENABLE_EXPLICIT_MODULES=NO --jsonl
 triton xcode build --package Package.swift --scheme PackageName --destination 'generic/platform=iOS Simulator' --jsonl
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl
 triton xcode test --only-testing AppTests/LoginTests/testSubmit --only-testing AppTests/SettingsTests --result-bundle /tmp/App.xcresult --jsonl
+triton xcode archive --workspace App.xcworkspace --scheme App --configuration Release --archive-path artifacts/App.xcarchive --allow-provisioning-updates --jsonl
+triton xcode export --archive-path artifacts/App.xcarchive --export-options-plist configs/ExportOptions.plist --export-path artifacts/ipa --jsonl
 triton xcresult summary --path /tmp/App.xcresult --json
 triton xcresult failures --path /tmp/App.xcresult --json
 triton xcode run --jsonl
@@ -604,6 +606,8 @@ If `triton xcode build/test/run` returns `xcodebuild_interrupted` or `orphaned_x
 `xcode settings/build/test/run --jsonl` emits invocation, stdout/stderr samples, heartbeat, and summary events with stdout/stderr log paths and byte counts, which gives agents a way to inspect long-running builds without waiting blindly.
 
 `xcode settings/build/test/run` also accepts repeatable one-off `--build-setting KEY=VALUE`. Triton validates keys against `[A-Za-z_][A-Za-z0-9_]*`, preserves each complete setting as one `xcodebuild` argv element (including spaces or `$(inherited)`), and records it in `sourceCommand`. Use it for temporary diagnosis without editing project or generated dependency files; because the value is intentionally visible in the audit command, do not pass secrets through this option.
+
+`xcode archive` is a separate archive workflow from the hierarchy `export --format archive` command. It requires `--archive-path`, always validates the destination as `generic/platform=iOS`, defaults to the `iphoneos` SDK, accepts repeatable build settings and explicit provisioning flags, and emits bounded JSON/JSONL progress plus `.xcarchive` artifact paths. `xcode export` requires an existing archive, an existing valid property-list dictionary passed via `--export-options-plist`, and an explicit `--export-path`; it invokes `xcodebuild -exportArchive`, discovers bounded `.ipa` artifacts, and never synthesizes signing or export options. Archive/export final summaries use `xcode.archive` / `xcode.export`, stable signing/provisioning/archive/export failure codes, redacted audit commands, and recovery `nextActions`. A successful host command does not prove IPA installation, App Store Connect acceptance, or business readiness.
 
 `xcode test` writes the result bundle but does not yet inline all test counts or failures into the final build summary. Run `triton xcresult summary` and `triton xcresult failures` against the bundle to produce issue-ready test evidence.
 

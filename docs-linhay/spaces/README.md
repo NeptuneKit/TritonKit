@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（156/156 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（157/157 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-07-30
 
@@ -22,6 +22,7 @@
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
 | 已合并（PR #177） | [SP-156-issue-176-xcode-compact-progress](./SP-156-issue-176-xcode-compact-progress/README.md) | #176 已为 `xcode build` 增加默认 compact progress，保留 lifecycle/heartbeat/bounded diagnostics/artifact/final，显式 full 恢复旧 stream | issue 已关闭；CI `30515397742` 通过，真实私有 workspace build 未运行 |
+| 执行 | [SP-158-issue-196-xcode-archive-export](./SP-158-issue-196-xcode-archive-export/README.md) | #196：Xcode archive 与 IPA export 的 schema-backed CLI workflow | 独立 worktree 实现中；先完成 contract tests、focused/full 门禁，再决定集成 |
 | 已合并（PR #177） | [SP-152-issue-172-runtime-reregistration](./SP-152-issue-172-runtime-reregistration/README.md) | #172 embedded runtime 新进程重注册与断连重连已完成；旧 task/timer 不得污染新连接，legacy SDK 兼容/拒绝原因保持机器可读 | issue 已关闭；root 238/238 与 CI 通过，真实 App 重装 smoke 未运行 |
 | 已合并（PR #177） | [SP-153-issue-173-xcode-run-target-binding](./SP-153-issue-173-xcode-run-target-binding/README.md) | #173 已将 `xcode run` 显式 Simulator destination 固化为 build/settings/install/launch/app-scoped readiness 共用的 immutable target | issue 已关闭；CI 通过，真实 Xcode/Simulator 未运行 |
 | 已合并（PR #177） | [SP-154-issue-174-simulator-swipe-lifecycle](./SP-154-issue-174-simulator-swipe-lifecycle/README.md) | #174 已用单一 persistent Baguette session、逐事件 ack 与 terminal linger 修复 iOS Simulator swipe 生命周期；host success 仍只代表提交 | issue 已关闭；CI 通过，真实 vertical pager smoke 未运行 |
@@ -86,6 +87,7 @@
 | Space | Branch | Worktree | 基线 | 当前状态与后续 |
 | --- | --- | --- | --- | --- |
 | `SP-156-issue-176-xcode-compact-progress` | `feat/SP-156-issue-176-xcode-compact-progress`（已清理） | 已清理（历史由 PR #177 merge 可达） | `feat/SP-153-issue-173-xcode-run-target-binding@57ff4092` | #176 已合并并关闭；compact/full 合同与 focused 证据保留 |
+| `SP-158-issue-196-xcode-archive-export` | `feat/SP-158-issue-196-xcode-archive-export` | `../TritonKit-worktrees/SP-158-issue-196-xcode-archive-export/` | `main@252dcd21` | #196 archive/export 实现中；未 push、未 merge、未关闭 issue |
 | `SP-152-issue-172-runtime-reregistration` | `feat/SP-152-issue-172-runtime-reregistration`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #172 已合并并关闭；runtime lifecycle/compatibility 证据保留 |
 | `SP-153-issue-173-xcode-run-target-binding` | `feat/SP-153-issue-173-xcode-run-target-binding`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #173 已合并并关闭；单目标绑定证据保留 |
 | `SP-154-issue-174-simulator-swipe-lifecycle` | `feat/SP-154-issue-174-simulator-swipe-lifecycle`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #174 已合并并关闭；persistent input lifecycle 证据保留 |

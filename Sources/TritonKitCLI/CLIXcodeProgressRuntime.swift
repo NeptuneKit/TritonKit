@@ -297,16 +297,15 @@ func runStreamingHostCommand(
         handleChunk(handle.availableData, stream: "stderr", log: stderrLog, accumulator: stderrAccumulator)
     }
 
+    let semaphore = DispatchSemaphore(value: 0)
+    process.terminationHandler = { _ in
+        semaphore.signal()
+    }
+
     do {
         try process.run()
     } catch {
         throw HostCommandRunError.launchFailed(error.localizedDescription)
-    }
-
-    let semaphore = DispatchSemaphore(value: 0)
-    DispatchQueue.global(qos: .utility).async {
-        process.waitUntilExit()
-        semaphore.signal()
     }
 
     let deadline = Date().addingTimeInterval(timeoutSeconds)

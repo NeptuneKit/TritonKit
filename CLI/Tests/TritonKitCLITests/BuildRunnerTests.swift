@@ -1,9 +1,103 @@
 import Foundation
 import Testing
+import TritonKitShared
 @testable import TritonKitCLI
 
 @Suite
 struct BuildRunnerTests {
+    @Test("fake archive runner returns artifact paths and stable final summary")
+    func fakeArchiveRunnerReturnsArtifactPathsAndStableFinalSummary() throws {
+        let project = try makeTemporaryProject()
+        let archive = project.appendingPathComponent("App.xcarchive")
+        try FileManager.default.createDirectory(at: archive, withIntermediateDirectories: true)
+        let invocation = ResolvedXcodeInvocation(
+            workspace: nil,
+            project: project.appendingPathComponent("App.xcodeproj").path,
+            package: nil,
+            scheme: "App",
+            configuration: "Release",
+            sdk: "iphoneos",
+            destination: "generic/platform=iOS",
+            derivedDataPath: ".triton/DerivedData",
+            buildSettings: ["CODE_SIGN_STYLE=Manual"],
+            derivedDataCache: TKXcodeDerivedDataCacheInfo(path: ".triton/DerivedData", exists: false, cacheState: "empty", incrementalExpected: false, cleanupPolicy: "preserve-by-default", guidance: "preserve") ,
+            simulatorUDID: nil,
+            device: nil
+        )
+        var captured: TKHostCommand?
+        let summary = try runXcodeArchive(
+            invocation: invocation,
+            archivePath: archive.path,
+            jsonl: true,
+            hostCommandRunner: { command, event, jsonl, progress in
+                captured = command
+                #expect(event == "xcode.archive")
+                #expect(jsonl)
+                #expect(progress == .compact)
+                return (HostProcessResult(
+                    stdoutData: Data("** ARCHIVE SUCCEEDED **\n".utf8),
+                    stderrData: Data(),
+                    exitCode: 0,
+                    sourceCommand: hostSourceCommand(command),
+                    stdoutTruncated: false,
+                    stderrTruncated: false,
+                    stdoutLogPath: "archive.stdout.log",
+                    stderrLogPath: "archive.stderr.log",
+                    stdoutBytes: 24,
+                    stderrBytes: 0
+                ), 42)
+            }
+        )
+
+        #expect(captured?.argv.contains("archive") == true)
+        #expect(summary.ok)
+        #expect(summary.action == "xcode.archive")
+        #expect(summary.artifactPaths.contains(archive.path))
+        #expect(summary.archivePath == archive.path)
+        #expect(summary.failureCode == nil)
+    }
+
+    @Test("fake export runner maps signing failure and keeps archive/export artifacts")
+    func fakeExportRunnerMapsSigningFailureAndKeepsArchiveExportArtifacts() throws {
+        let project = try makeTemporaryProject()
+        let archive = project.appendingPathComponent("App.xcarchive")
+        let export = project.appendingPathComponent("ipa output", isDirectory: true)
+        try FileManager.default.createDirectory(at: archive, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: export, withIntermediateDirectories: true)
+        let ipa = export.appendingPathComponent("App.ipa")
+        try Data("ipa".utf8).write(to: ipa)
+        var captured: TKHostCommand?
+        let summary = try runXcodeExport(
+            archivePath: archive.path,
+            exportOptionsPlist: project.appendingPathComponent("ExportOptions.plist").path,
+            exportPath: export.path,
+            jsonl: true,
+            hostCommandRunner: { command, event, jsonl, progress in
+                captured = command
+                #expect(event == "xcode.export")
+                return (HostProcessResult(
+                    stdoutData: Data(),
+                    stderrData: Data("Code signing failed: certificate not found\n".utf8),
+                    exitCode: 65,
+                    sourceCommand: hostSourceCommand(command),
+                    stdoutTruncated: false,
+                    stderrTruncated: false,
+                    stdoutLogPath: "export.stdout.log",
+                    stderrLogPath: "export.stderr.log",
+                    stdoutBytes: 0,
+                    stderrBytes: 39
+                ), 17)
+            }
+        )
+
+        #expect(captured?.argv.starts(with: ["-exportArchive", "-archivePath", archive.path]) == true)
+        #expect(summary.ok == false)
+        #expect(summary.failureCode == "xcode_signing_failed")
+        #expect(summary.artifactPaths.contains(ipa.path))
+        #expect(summary.exportPath == export.path)
+        #expect(summary.nextActions?.first?.args.contains("--export-options-plist") == true)
+    }
+
     @Test("Android build planner uses project Gradle wrapper and variant task")
     func androidPlannerUsesGradleWrapperAndVariantTask() throws {
         let project = try makeTemporaryProject()

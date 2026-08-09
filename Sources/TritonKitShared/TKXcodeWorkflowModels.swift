@@ -301,6 +301,81 @@ public enum TKXcodebuildCommand {
         )
     }
 
+    public static func archive(
+        workspace: String?,
+        project: String?,
+        package: String? = nil,
+        scheme: String,
+        configuration: String,
+        sdk: String?,
+        destination: String,
+        derivedDataPath: String?,
+        archivePath: String,
+        buildSettings: [String] = [],
+        allowProvisioningUpdates: Bool = false,
+        allowProvisioningDeviceRegistration: Bool = false,
+        redactDestination: Bool = false
+    ) -> TKHostCommand {
+        var arguments = buildArguments(
+            workspace: workspace,
+            project: project,
+            scheme: scheme,
+            configuration: configuration,
+            sdk: sdk,
+            destination: destination,
+            derivedDataPath: derivedDataPath,
+            buildSettings: buildSettings
+        )
+        if allowProvisioningUpdates {
+            arguments.append("-allowProvisioningUpdates")
+        }
+        if allowProvisioningDeviceRegistration {
+            arguments.append("-allowProvisioningDeviceRegistration")
+        }
+        arguments += ["archive", "-archivePath", archivePath]
+        return TKHostCommand(
+            executable: "xcodebuild",
+            arguments: arguments,
+            workingDirectory: packageWorkingDirectory(package),
+            redactedArgumentIndexes: redactedDestinationArgumentIndexes(arguments, redactDestination: redactDestination),
+            riskLevel: .automation,
+            requiredConfig: [.timeout, .auditRecord],
+            defaultTimeoutSeconds: 1_800,
+            capturesArtifacts: true
+        )
+    }
+
+    public static func exportArchive(
+        archivePath: String,
+        exportOptionsPlist: String,
+        exportPath: String,
+        buildSettings: [String] = [],
+        allowProvisioningUpdates: Bool = false,
+        allowProvisioningDeviceRegistration: Bool = false
+    ) -> TKHostCommand {
+        var arguments = [
+            "-exportArchive",
+            "-archivePath", archivePath,
+            "-exportOptionsPlist", exportOptionsPlist,
+            "-exportPath", exportPath,
+        ]
+        arguments += buildSettings
+        if allowProvisioningUpdates {
+            arguments.append("-allowProvisioningUpdates")
+        }
+        if allowProvisioningDeviceRegistration {
+            arguments.append("-allowProvisioningDeviceRegistration")
+        }
+        return TKHostCommand(
+            executable: "xcodebuild",
+            arguments: arguments,
+            riskLevel: .automation,
+            requiredConfig: [.timeout, .auditRecord],
+            defaultTimeoutSeconds: 1_200,
+            capturesArtifacts: true
+        )
+    }
+
     private static func containerArguments(workspace: String?, project: String?) -> [String] {
         if let workspace, !workspace.isEmpty {
             return ["-workspace", workspace]
@@ -1376,6 +1451,11 @@ public struct TKXcodeActionSummary: Codable, Equatable {
     public let postActionProcessStatus: TKXcodePostActionProcessStatus?
     public let nextActions: [TKCLINextAction]?
     public let note: String?
+    public let archivePath: String?
+    public let exportOptionsPlistPath: String?
+    public let exportPath: String?
+    public let artifactPaths: [String]
+    public let artifactBytes: [String: Int]
 
     public init(
         ok: Bool,
@@ -1411,7 +1491,12 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         xcodeDiagnostics: [TKXcodeOutputDiagnostic]? = nil,
         postActionProcessStatus: TKXcodePostActionProcessStatus? = nil,
         nextActions: [TKCLINextAction]? = nil,
-        note: String? = nil
+        note: String? = nil,
+        archivePath: String? = nil,
+        exportOptionsPlistPath: String? = nil,
+        exportPath: String? = nil,
+        artifactPaths: [String] = [],
+        artifactBytes: [String: Int] = [:]
     ) {
         self.ok = ok
         self.action = action
@@ -1447,6 +1532,11 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         self.postActionProcessStatus = postActionProcessStatus
         self.nextActions = nextActions
         self.note = note
+        self.archivePath = archivePath
+        self.exportOptionsPlistPath = exportOptionsPlistPath
+        self.exportPath = exportPath
+        self.artifactPaths = artifactPaths
+        self.artifactBytes = artifactBytes
     }
 }
 
