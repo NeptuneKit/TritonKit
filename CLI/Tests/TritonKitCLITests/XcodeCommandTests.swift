@@ -18,6 +18,164 @@ private func testXcodeDerivedDataCache() -> TKXcodeDerivedDataCacheInfo {
 
 @Suite(.serialized)
 struct XcodeCommandTests {
+    @Test("xcode archive and export commands expose explicit archive and export options")
+    func xcodeArchiveAndExportCommandsExposeExplicitOptions() throws {
+        let archive = try XcodeArchive.parse([
+            "--project", "App With Space.xcodeproj",
+            "--scheme", "App",
+            "--configuration", "Release",
+            "--sdk", "iphoneos",
+            "--archive-path", "artifacts/App With Space.xcarchive",
+            "--build-setting", "CODE_SIGN_STYLE=Manual",
+            "--build-setting", "OTHER_SWIFT_FLAGS=$(inherited) -D ARCHIVE",
+            "--allow-provisioning-updates",
+            "--allow-provisioning-device-registration",
+            "--jsonl",
+        ])
+        let export = try XcodeExport.parse([
+            "--archive-path", "artifacts/App With Space.xcarchive",
+            "--export-options-plist", "configs/Export Options.plist",
+            "--export-path", "artifacts/ipa output",
+            "--build-setting", "CODE_SIGN_STYLE=Manual",
+            "--allow-provisioning-updates",
+            "--allow-provisioning-device-registration",
+            "--jsonl",
+        ])
+
+        #expect(archive.archivePath == "artifacts/App With Space.xcarchive")
+        #expect(archive.destination == "generic/platform=iOS")
+        #expect(archive.buildSettings == ["CODE_SIGN_STYLE=Manual", "OTHER_SWIFT_FLAGS=$(inherited) -D ARCHIVE"])
+        #expect(archive.allowProvisioningUpdates)
+        #expect(archive.allowProvisioningDeviceRegistration)
+        #expect(export.archivePath == "artifacts/App With Space.xcarchive")
+        #expect(export.exportOptionsPlist == "configs/Export Options.plist")
+        #expect(export.exportPath == "artifacts/ipa output")
+        #expect(export.buildSettings == ["CODE_SIGN_STYLE=Manual"])
+        #expect(export.allowProvisioningUpdates)
+        #expect(export.allowProvisioningDeviceRegistration)
+    }
+
+    @Test("archive requires generic iOS destination and keeps every argv boundary")
+    func archiveRequiresGenericIOSDestinationAndKeepsArgvBoundaries() throws {
+        #expect(try validateXcodeArchiveDestination("generic/platform=iOS") == "generic/platform=iOS")
+        #expect(throws: ValidationError.self) {
+            _ = try validateXcodeArchiveDestination("platform=iOS Simulator,id=SIM-1")
+        }
+
+        let command = TKXcodebuildCommand.archive(
+            workspace: nil,
+            project: "App With Space.xcodeproj",
+            package: nil,
+            scheme: "App",
+            configuration: "Release",
+            sdk: "iphoneos",
+            destination: "generic/platform=iOS",
+            derivedDataPath: ".triton/Archive DerivedData",
+            archivePath: "artifacts/App With Space.xcarchive",
+            buildSettings: [
+                "CODE_SIGN_STYLE=Manual",
+                "OTHER_SWIFT_FLAGS=$(inherited) -D ARCHIVE",
+            ],
+            allowProvisioningUpdates: true,
+            allowProvisioningDeviceRegistration: true
+        )
+
+        #expect(command.executable == "xcodebuild")
+        #expect(command.argv.contains("App With Space.xcodeproj"))
+        #expect(command.argv.contains("artifacts/App With Space.xcarchive"))
+        #expect(command.argv.contains("OTHER_SWIFT_FLAGS=$(inherited) -D ARCHIVE"))
+        #expect(command.argv.suffix(5) == [
+            "-allowProvisioningUpdates",
+            "-allowProvisioningDeviceRegistration",
+            "archive",
+            "-archivePath",
+            "artifacts/App With Space.xcarchive",
+        ])
+        #expect(hostSourceCommand(command).contains("'App With Space.xcodeproj'"))
+        #expect(hostSourceCommand(command).contains("'OTHER_SWIFT_FLAGS=$(inherited) -D ARCHIVE'"))
+    }
+
+    @Test("export uses an explicit options plist and discovers IPA artifacts")
+    func exportUsesExplicitOptionsPlistAndDiscoversIPAArtifacts() throws {
+        let command = TKXcodebuildCommand.exportArchive(
+            archivePath: "artifacts/App With Space.xcarchive",
+            exportOptionsPlist: "configs/Export Options.plist",
+            exportPath: "artifacts/ipa output",
+            buildSettings: ["CODE_SIGN_STYLE=Manual"],
+            allowProvisioningUpdates: true,
+            allowProvisioningDeviceRegistration: true
+        )
+
+        #expect(command.argv == [
+            "-exportArchive",
+            "-archivePath", "artifacts/App With Space.xcarchive",
+            "-exportOptionsPlist", "configs/Export Options.plist",
+            "-exportPath", "artifacts/ipa output",
+            "CODE_SIGN_STYLE=Manual",
+            "-allowProvisioningUpdates",
+            "-allowProvisioningDeviceRegistration",
+        ])
+        let sourceCommand = hostSourceCommand(command)
+        #expect(sourceCommand.contains("'configs/Export Options.plist'"))
+        #expect(sourceCommand.contains("'artifacts/ipa output'"))
+        #expect(sourceCommand.contains("CODE_SIGN_STYLE=Manual"))
+    }
+
+    @Test("archive and export schema expose bounded progress artifacts and recovery")
+    func archiveAndExportSchemaExposeBoundedProgressArtifactsAndRecovery() throws {
+        let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
+        #expect(xcode.providedCapabilities.contains("xcode-archive"))
+        #expect(xcode.providedCapabilities.contains("xcode-export"))
+        for name in ["archive", "export"] {
+            let subcommand = try #require(xcode.subcommands.first { $0.name == name })
+            #expect(subcommand.optionalOptions.contains("--build-setting"))
+            #expect(subcommand.optionalOptions.contains("--allow-provisioning-updates"))
+            #expect(subcommand.optionalOptions.contains("--allow-provisioning-device-registration"))
+            #expect(subcommand.optionalOptions.contains("--jsonl"))
+            #expect(subcommand.jsonlEvents.contains("xcode.\(name).heartbeat"))
+            #expect(subcommand.artifacts.contains("archive" ) || subcommand.artifacts.contains("ipa"))
+            #expect(subcommand.failureCodes.contains("xcode_signing_failed"))
+            #expect(subcommand.failureCodes.contains("provisioning_profile_missing"))
+            #expect(subcommand.failureCodes.contains("xcode_\(name)_failed"))
+        }
+
+        let archive = try buildSchemaResponse(command: "xcode.archive")
+        let export = try buildSchemaResponse(command: "xcode.export")
+        #expect(archive.commands.first?.subcommands.map(\.name) == ["archive"])
+        #expect(export.commands.first?.subcommands.map(\.name) == ["export"])
+        #expect(archive.commands.first?.providedCapabilities.contains("xcode-archive") == true)
+        #expect(archive.commands.first?.providedCapabilities.contains("xcode-export") == true)
+        #expect(export.commands.first?.providedCapabilities.contains("xcode-archive") == true)
+        #expect(export.commands.first?.providedCapabilities.contains("xcode-export") == true)
+    }
+
+    @Test("archive and export failures keep one stable recovery envelope")
+    func archiveAndExportFailuresKeepOneStableRecoveryEnvelope() throws {
+        let archiveDetail = xcodeArchiveExportFailureDetail(
+            action: "xcode.archive",
+            archivePath: "artifacts/App.xcarchive",
+            exportOptionsPlist: nil,
+            exportPath: nil,
+            stderr: "Code Sign error: No signing certificate found",
+            stdout: ""
+        )
+        #expect(archiveDetail.code == "xcode_signing_failed")
+        #expect(archiveDetail.nextAction?.command == "xcode")
+        #expect(archiveDetail.nextAction?.args.contains("--allow-provisioning-updates") == true)
+
+        let exportDetail = xcodeArchiveExportFailureDetail(
+            action: "xcode.export",
+            archivePath: "artifacts/App.xcarchive",
+            exportOptionsPlist: "configs/ExportOptions.plist",
+            exportPath: "artifacts/ipa",
+            stderr: "error: exportArchive failed",
+            stdout: ""
+        )
+        #expect(exportDetail.code == "xcode_export_failed")
+        #expect(exportDetail.nextAction?.args.contains("--export-options-plist") == true)
+        #expect(exportDetail.message.contains("exportArchive failed"))
+    }
+
     @Test("xcode schemes accepts timeout and package resolution controls")
     func xcodeSchemesAcceptsTimeoutAndPackageResolutionControls() throws {
         let discover = try XcodeDiscover.parse([])

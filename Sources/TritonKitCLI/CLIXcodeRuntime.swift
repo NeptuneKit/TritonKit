@@ -79,7 +79,8 @@ func resolveXcodeInvocation(
     device: String? = nil,
     derivedDataPath: String? = nil,
     buildSettings: [String] = [],
-    requireConcreteSimulatorTarget: Bool = false
+    requireConcreteSimulatorTarget: Bool = false,
+    allowGenericIOSArchiveDestination: Bool = false
 ) throws -> ResolvedXcodeInvocation {
     let hasDevice = hasXcodeSelector(device)
     if hasDevice, hasXcodeSelector(destination) {
@@ -134,7 +135,8 @@ func resolveXcodeInvocation(
         device: device
     )
     if !hasDevice,
-       usesXcodeRealDeviceSDK(resolvedSDK) || isXcodeRealDeviceDestination(resolvedDestination) {
+       (usesXcodeRealDeviceSDK(resolvedSDK) || isXcodeRealDeviceDestination(resolvedDestination)),
+       !(allowGenericIOSArchiveDestination && isGenericXcodeIOSDestination(resolvedDestination)) {
         throw ValidationError(
             "Physical iOS xcodebuild execution requires --device so Triton can resolve a ready target and keep its raw destination execution-only."
         )
@@ -486,6 +488,159 @@ enum XcodeWorkflowError: Error, CustomStringConvertible {
     }
 }
 
+let xcodeGenericIOSArchiveDestination = "generic/platform=iOS"
+
+enum XcodeArchiveExportValidationError: Error, CustomStringConvertible {
+    case archiveDestinationMustBeGenericIOS(String)
+    case archivePathMissing
+    case exportArchiveMissing
+    case exportOptionsPlistMissing(String)
+    case exportPathMissing
+    case exportOptionsPlistInvalid(String)
+
+    var description: String {
+        switch self {
+        case .archiveDestinationMustBeGenericIOS(let destination):
+            "Xcode archive requires the generic iOS destination `generic/platform=iOS`; received `\(destination)`."
+        case .archivePathMissing:
+            "Xcode archive requires a non-empty --archive-path."
+        case .exportArchiveMissing:
+            "Xcode export requires a non-empty --archive-path pointing to an existing .xcarchive."
+        case .exportOptionsPlistMissing(let path):
+            "Export options plist was not found: \(path)"
+        case .exportPathMissing:
+            "Xcode export requires a non-empty --export-path."
+        case .exportOptionsPlistInvalid(let path):
+            "Export options plist is not a valid property-list dictionary: \(path)"
+        }
+    }
+}
+
+func validateXcodeArchiveDestination(_ value: String) throws -> String {
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard trimmed.lowercased() == xcodeGenericIOSArchiveDestination.lowercased() else {
+        throw ValidationError(XcodeArchiveExportValidationError.archiveDestinationMustBeGenericIOS(trimmed).description)
+    }
+    return xcodeGenericIOSArchiveDestination
+}
+
+func isGenericXcodeIOSDestination(_ destination: String?) -> Bool {
+    guard let destination else { return false }
+    return destination.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        == xcodeGenericIOSArchiveDestination.lowercased()
+}
+
+func validateXcodeExportOptionsPlist(_ path: String) throws {
+    let trimmed = path.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else {
+        throw XcodeArchiveExportValidationError.exportOptionsPlistMissing(path)
+    }
+    var isDirectory: ObjCBool = false
+    let exists = FileManager.default.fileExists(atPath: trimmed, isDirectory: &isDirectory)
+    guard exists, !isDirectory.boolValue else {
+        throw XcodeArchiveExportValidationError.exportOptionsPlistMissing(trimmed)
+    }
+    let url = URL(fileURLWithPath: trimmed)
+    guard !((try? url.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) ?? false) else {
+        throw XcodeArchiveExportValidationError.exportOptionsPlistMissing(trimmed)
+    }
+    do {
+        let data = try Data(contentsOf: url)
+        let propertyList = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
+        guard propertyList is [String: Any] else {
+            throw XcodeArchiveExportValidationError.exportOptionsPlistInvalid(trimmed)
+        }
+    } catch let error as XcodeArchiveExportValidationError {
+        throw error
+    } catch {
+        throw XcodeArchiveExportValidationError.exportOptionsPlistInvalid(trimmed)
+    }
+}
+
+func xcodeArchiveExportArtifactPaths(archivePath: String?, exportPath: String?) -> (paths: [String], bytes: [String: Int]) {
+    var paths: [String] = []
+    var bytes: [String: Int] = [:]
+    func add(_ path: String) {
+        let normalizedPath = URL(fileURLWithPath: path).resolvingSymlinksInPath().path
+        guard !paths.contains(normalizedPath) else { return }
+        paths.append(normalizedPath)
+        if let attributes = try? FileManager.default.attributesOfItem(atPath: normalizedPath),
+           let size = attributes[.size] as? NSNumber {
+            bytes[normalizedPath] = size.intValue
+        }
+    }
+    if let archivePath, !archivePath.isEmpty {
+        add(archivePath)
+    }
+    if let exportPath, !exportPath.isEmpty {
+        add(exportPath)
+        var isDirectory: ObjCBool = false
+        if FileManager.default.fileExists(atPath: exportPath, isDirectory: &isDirectory), isDirectory.boolValue,
+           let enumerator = FileManager.default.enumerator(at: URL(fileURLWithPath: exportPath), includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles]) {
+            var count = 0
+            for case let url as URL in enumerator {
+                guard count < 100, url.pathExtension.lowercased() == "ipa" else { continue }
+                if (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true {
+                    add(url.path)
+                    count += 1
+                }
+            }
+        }
+    }
+    return (paths, bytes)
+}
+
+func xcodeArchiveExportFailureCode(action: String, stderr: String, stdout: String) -> String {
+    let combined = [stderr, stdout].joined(separator: "\n").lowercased()
+    if combined.contains("provisioning profile") || combined.contains("no profiles") || combined.contains("provisioning") {
+        return "provisioning_profile_missing"
+    }
+    if combined.contains("code sign") || combined.contains("signing") || combined.contains("certificate") {
+        return "xcode_signing_failed"
+    }
+    return action == "xcode.archive" ? "xcode_archive_failed" : "xcode_export_failed"
+}
+
+func xcodeArchiveExportFailureDetail(
+    action: String,
+    archivePath: String?,
+    exportOptionsPlist: String?,
+    exportPath: String?,
+    stderr: String,
+    stdout: String
+) -> TKCLIErrorDetail {
+    let code = xcodeArchiveExportFailureCode(action: action, stderr: stderr, stdout: stdout)
+    let message = (stderr.isEmpty ? stdout : stderr).trimmingCharacters(in: .whitespacesAndNewlines)
+    let fallback = action == "xcode.archive" ? "xcodebuild archive failed." : "xcodebuild -exportArchive failed."
+    let args: [String]
+    if action == "xcode.archive" {
+        args = ["archive", "--archive-path", archivePath ?? "<archive.xcarchive>", "--allow-provisioning-updates", "--jsonl"]
+    } else {
+        args = [
+            "export",
+            "--archive-path", archivePath ?? "<archive.xcarchive>",
+            "--export-options-plist", exportOptionsPlist ?? "<ExportOptions.plist>",
+            "--export-path", exportPath ?? "<export-dir>",
+            "--jsonl",
+        ]
+    }
+    let hint: String
+    switch code {
+    case "provisioning_profile_missing":
+        hint = "检查显式签名/导出选项 plist、provisioning profile 与 Team 配置；Triton 不会自动修改签名资产。"
+    case "xcode_signing_failed":
+        hint = "检查证书、签名样式、Team 和 provisioning 配置；可在确认环境允许后重试 --allow-provisioning-updates。"
+    default:
+        hint = "保留 stdout/stderr artifact，检查 archive/export 输入路径与 Xcode 输出后重试。"
+    }
+    return TKCLIErrorDetail(
+        code: code,
+        message: message.isEmpty ? fallback : message,
+        hint: hint,
+        nextAction: TKCLINextAction(command: "xcode", args: args, category: "recover")
+    )
+}
+
 func prepareXcodeRealDeviceInvocation(
     invocation: ResolvedXcodeInvocation,
     resolveSelection: () throws -> HostDeviceSelectionResult
@@ -721,6 +876,154 @@ func runXcodeTest(
             successNote: "Test command finished. Use `triton xcresult summary --path <result.xcresult> --json` or `triton xcresult failures --path <result.xcresult> --json` for structured result parsing.",
             defaultFailureNote: "Test command failed. Inspect xcodeDiagnostics and xcresult details first, then stdout/stderr artifacts if needed."
         )
+    )
+}
+
+func runXcodeArchive(
+    invocation: ResolvedXcodeInvocation,
+    archivePath: String,
+    jsonl: Bool,
+    timeout: Double? = nil,
+    allowProvisioningUpdates: Bool = false,
+    allowProvisioningDeviceRegistration: Bool = false,
+    progress: XcodeProgressMode = .compact,
+    hostCommandRunner: (TKHostCommand, String, Bool, XcodeProgressMode) throws -> (HostProcessResult, Int) = { command, event, jsonl, progress in
+        try runXcodeHostCommand(command, event: event, jsonl: jsonl, allowNonZeroExit: true, progress: progress)
+    }
+) throws -> TKXcodeActionSummary {
+    let executionInvocation = try preparedXcodeInvocationForExecution(invocation)
+    let command = TKXcodebuildCommand.archive(
+        workspace: executionInvocation.workspace,
+        project: executionInvocation.project,
+        package: executionInvocation.package,
+        scheme: executionInvocation.scheme,
+        configuration: executionInvocation.configuration,
+        sdk: executionInvocation.sdk,
+        destination: executionInvocation.xcodebuildDestination ?? xcodeGenericIOSArchiveDestination,
+        derivedDataPath: executionInvocation.derivedDataPath,
+        archivePath: archivePath,
+        buildSettings: executionInvocation.buildSettings,
+        allowProvisioningUpdates: allowProvisioningUpdates,
+        allowProvisioningDeviceRegistration: allowProvisioningDeviceRegistration
+    ).withTimeout(timeout)
+    let (result, durationMs) = try hostCommandRunner(command, "xcode.archive", jsonl, progress)
+    let ok = result.exitCode == 0
+    let artifacts = xcodeArchiveExportArtifactPaths(archivePath: archivePath, exportPath: nil)
+    let failureDetail = ok ? nil : xcodeArchiveExportFailureDetail(
+        action: "xcode.archive",
+        archivePath: archivePath,
+        exportOptionsPlist: nil,
+        exportPath: nil,
+        stderr: redactedXcodePublicText(result.stderr, command: command),
+        stdout: redactedXcodePublicText(result.stdout, command: command)
+    )
+    return TKXcodeActionSummary(
+        ok: ok,
+        action: "xcode.archive",
+        failureCode: ok ? nil : failureDetail?.code,
+        workspace: executionInvocation.workspace,
+        project: executionInvocation.project,
+        package: executionInvocation.package,
+        scheme: executionInvocation.scheme,
+        configuration: executionInvocation.configuration,
+        sdk: executionInvocation.sdk,
+        destination: executionInvocation.destination,
+        derivedDataPath: executionInvocation.derivedDataPath,
+        derivedDataCache: executionInvocation.derivedDataCache,
+        appPath: nil,
+        bundleID: nil,
+        resultBundlePath: nil,
+        onlyTesting: nil,
+        simulatorUDID: nil,
+        device: executionInvocation.device,
+        durationMs: durationMs,
+        sourceCommand: redactedXcodePublicText(result.sourceCommand, command: command),
+        exitCode: result.exitCode,
+        stdoutTruncated: result.stdoutTruncated,
+        stderrTruncated: result.stderrTruncated,
+        stdoutLogPath: result.stdoutLogPath,
+        stderrLogPath: result.stderrLogPath,
+        stdoutBytes: result.stdoutBytes,
+        stderrBytes: result.stderrBytes,
+        xcodeDiagnostics: xcodeBuildOutputDiagnostics(result, redacting: command),
+        nextActions: failureDetail?.nextAction.map { [$0] },
+        note: ok
+            ? "Archive finished. Verify the .xcarchive artifact before starting IPA export; signing success is not an App Store Connect or installability assertion."
+            : "Archive failed. Inspect the bounded diagnostics and stdout/stderr artifacts, then follow nextActions.",
+        archivePath: archivePath,
+        artifactPaths: artifacts.paths,
+        artifactBytes: artifacts.bytes
+    )
+}
+
+func runXcodeExport(
+    archivePath: String,
+    exportOptionsPlist: String,
+    exportPath: String,
+    buildSettings: [String] = [],
+    jsonl: Bool,
+    timeout: Double? = nil,
+    allowProvisioningUpdates: Bool = false,
+    allowProvisioningDeviceRegistration: Bool = false,
+    progress: XcodeProgressMode = .compact,
+    hostCommandRunner: (TKHostCommand, String, Bool, XcodeProgressMode) throws -> (HostProcessResult, Int) = { command, event, jsonl, progress in
+        try runXcodeHostCommand(command, event: event, jsonl: jsonl, allowNonZeroExit: true, progress: progress)
+    }
+) throws -> TKXcodeActionSummary {
+    let command = TKXcodebuildCommand.exportArchive(
+        archivePath: archivePath,
+        exportOptionsPlist: exportOptionsPlist,
+        exportPath: exportPath,
+        buildSettings: buildSettings,
+        allowProvisioningUpdates: allowProvisioningUpdates,
+        allowProvisioningDeviceRegistration: allowProvisioningDeviceRegistration
+    ).withTimeout(timeout)
+    let (result, durationMs) = try hostCommandRunner(command, "xcode.export", jsonl, progress)
+    let ok = result.exitCode == 0
+    let artifacts = xcodeArchiveExportArtifactPaths(archivePath: archivePath, exportPath: exportPath)
+    let failureDetail = ok ? nil : xcodeArchiveExportFailureDetail(
+        action: "xcode.export",
+        archivePath: archivePath,
+        exportOptionsPlist: exportOptionsPlist,
+        exportPath: exportPath,
+        stderr: redactedXcodePublicText(result.stderr, command: command),
+        stdout: redactedXcodePublicText(result.stdout, command: command)
+    )
+    return TKXcodeActionSummary(
+        ok: ok,
+        action: "xcode.export",
+        failureCode: ok ? nil : failureDetail?.code,
+        workspace: nil,
+        project: nil,
+        package: nil,
+        scheme: "",
+        configuration: "",
+        sdk: nil,
+        destination: nil,
+        derivedDataPath: nil,
+        derivedDataCache: nil,
+        appPath: nil,
+        bundleID: nil,
+        resultBundlePath: nil,
+        onlyTesting: nil,
+        durationMs: durationMs,
+        sourceCommand: redactedXcodePublicText(result.sourceCommand, command: command),
+        exitCode: result.exitCode,
+        stdoutTruncated: result.stdoutTruncated,
+        stderrTruncated: result.stderrTruncated,
+        stdoutLogPath: result.stdoutLogPath,
+        stderrLogPath: result.stderrLogPath,
+        stdoutBytes: result.stdoutBytes,
+        stderrBytes: result.stderrBytes,
+        nextActions: failureDetail?.nextAction.map { [$0] },
+        note: ok
+            ? "Export finished. Inspect the IPA artifact path; a host export does not prove installation or business readiness."
+            : "Export failed. Inspect the bounded diagnostics and stdout/stderr artifacts, then follow nextActions.",
+        archivePath: archivePath,
+        exportOptionsPlistPath: exportOptionsPlist,
+        exportPath: exportPath,
+        artifactPaths: artifacts.paths,
+        artifactBytes: artifacts.bytes
     )
 }
 

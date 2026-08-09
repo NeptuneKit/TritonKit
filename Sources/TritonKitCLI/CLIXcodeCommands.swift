@@ -1,4 +1,5 @@
 import ArgumentParser
+import Foundation
 import TritonKitShared
 
 // MARK: - Xcode Workflow Commands
@@ -6,7 +7,7 @@ import TritonKitShared
 struct Xcode: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "xcode",
-        abstract: "Discover, configure, build, test, and run Xcode projects through Triton contracts",
+        abstract: "Discover, configure, build, test, run, archive, and export Xcode projects through Triton contracts",
         subcommands: [
             XcodeDiscover.self,
             XcodeUse.self,
@@ -16,6 +17,8 @@ struct Xcode: AsyncParsableCommand {
             XcodeSettings.self,
             XcodeBuild.self,
             XcodeTest.self,
+            XcodeArchive.self,
+            XcodeExport.self,
             XcodeRun.self,
         ]
     )
@@ -392,6 +395,114 @@ struct XcodeTest: AsyncParsableCommand {
     }
 }
 
+struct XcodeArchive: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "archive", abstract: "Archive an Xcode scheme for a generic iOS destination")
+
+    @Option(help: "Path to .xcworkspace") var workspace: String?
+    @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Path to Package.swift or its package directory") var package: String?
+    @Option(help: "Scheme name") var scheme: String?
+    @Option(help: "Build configuration") var configuration: String?
+    @Option(help: "iOS device SDK; defaults to iphoneos for archive") var sdk: String?
+    @Option(help: "Must be generic/platform=iOS") var destination: String = xcodeGenericIOSArchiveDestination
+    @Option(help: "DerivedData path used as the Xcode incremental build cache") var derivedDataPath: String?
+    @Option(name: .customLong("archive-path"), help: "Output .xcarchive path") var archivePath: String
+    @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
+    @Flag(name: .customLong("allow-provisioning-updates"), help: "Pass -allowProvisioningUpdates to xcodebuild") var allowProvisioningUpdates = false
+    @Flag(name: .customLong("allow-provisioning-device-registration"), help: "Pass -allowProvisioningDeviceRegistration to xcodebuild") var allowProvisioningDeviceRegistration = false
+    @Option(help: "Progress verbosity: compact or full") var progress: XcodeProgressMode = .compact
+    @Option(help: "Timeout in seconds") var timeout: Double?
+    @Flag(help: "Emit JSON Lines progress") var jsonl = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let destination = try validateXcodeArchiveDestination(destination)
+            guard !archivePath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw XcodeArchiveExportValidationError.archivePathMissing
+            }
+            let invocation = try resolveXcodeInvocation(
+                workspace: workspace,
+                project: project,
+                package: package,
+                scheme: scheme,
+                configuration: configuration,
+                sdk: sdk ?? "iphoneos",
+                destination: destination,
+                derivedDataPath: derivedDataPath,
+                buildSettings: buildSettings,
+                allowGenericIOSArchiveDestination: true
+            )
+            let summary = try runXcodeArchive(
+                invocation: invocation,
+                archivePath: archivePath,
+                jsonl: jsonl,
+                timeout: timeout,
+                allowProvisioningUpdates: allowProvisioningUpdates,
+                allowProvisioningDeviceRegistration: allowProvisioningDeviceRegistration,
+                progress: progress
+            )
+            try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+            if !summary.ok { throw ExitCode.failure }
+        } catch let exitCode as ExitCode {
+            throw exitCode
+        } catch {
+            try failXcodeArchiveExportCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeExport: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "export", abstract: "Export an IPA using an explicit export-options plist")
+
+    @Option(name: .customLong("archive-path"), help: "Input .xcarchive path") var archivePath: String
+    @Option(name: .customLong("export-options-plist"), help: "Explicit ExportOptions.plist path") var exportOptionsPlist: String
+    @Option(name: .customLong("export-path"), help: "Output export directory") var exportPath: String
+    @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
+    @Flag(name: .customLong("allow-provisioning-updates"), help: "Pass -allowProvisioningUpdates to xcodebuild") var allowProvisioningUpdates = false
+    @Flag(name: .customLong("allow-provisioning-device-registration"), help: "Pass -allowProvisioningDeviceRegistration to xcodebuild") var allowProvisioningDeviceRegistration = false
+    @Option(help: "Progress verbosity: compact or full") var progress: XcodeProgressMode = .compact
+    @Option(help: "Timeout in seconds") var timeout: Double?
+    @Flag(help: "Emit JSON Lines progress") var jsonl = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let archivePath = archivePath.trimmingCharacters(in: .whitespacesAndNewlines)
+            let exportPath = exportPath.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !archivePath.isEmpty else { throw XcodeArchiveExportValidationError.exportArchiveMissing }
+            guard !exportPath.isEmpty else { throw XcodeArchiveExportValidationError.exportPathMissing }
+            var isDirectory: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: archivePath, isDirectory: &isDirectory), isDirectory.boolValue else {
+                throw XcodeArchiveExportValidationError.exportArchiveMissing
+            }
+            try validateXcodeExportOptionsPlist(exportOptionsPlist)
+            _ = try validateXcodeBuildSettings(buildSettings)
+            let summary = try runXcodeExport(
+                archivePath: archivePath,
+                exportOptionsPlist: exportOptionsPlist,
+                exportPath: exportPath,
+                buildSettings: buildSettings,
+                jsonl: jsonl,
+                timeout: timeout,
+                allowProvisioningUpdates: allowProvisioningUpdates,
+                allowProvisioningDeviceRegistration: allowProvisioningDeviceRegistration,
+                progress: progress
+            )
+            try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+            if !summary.ok { throw ExitCode.failure }
+        } catch let exitCode as ExitCode {
+            throw exitCode
+        } catch {
+            try failXcodeArchiveExportCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
 func xcodeRealDeviceSelectionErrorDetail(
     _ error: HostDeviceSelectionError,
     selector: String
@@ -506,6 +617,44 @@ func failXcodeCommand(
             xcodeRealDevicePreflightErrorDetail(error, selector: selector),
             outputFormat: outputFormat
         )
+    }
+    try failHostCommand(error, outputFormat: outputFormat)
+}
+
+func failXcodeArchiveExportCommand(
+    _ error: Error,
+    outputFormat: ClientOutputFormat
+) throws -> Never {
+    if let validationError = error as? XcodeArchiveExportValidationError {
+        let detail: TKCLIErrorDetail
+        switch validationError {
+        case .exportOptionsPlistMissing:
+            detail = TKCLIErrorDetail(
+                code: "export_options_plist_not_found",
+                message: validationError.description,
+                hint: "Pass an existing, readable ExportOptions.plist via --export-options-plist; Triton does not synthesize signing/export options."
+            )
+        case .exportOptionsPlistInvalid:
+            detail = TKCLIErrorDetail(
+                code: "export_options_plist_invalid",
+                message: validationError.description,
+                hint: "Provide a valid property-list dictionary and keep signing/team/method choices explicit."
+            )
+        default:
+            detail = TKCLIErrorDetail(
+                code: "validation_failed",
+                message: validationError.description,
+                hint: "Fix the archive/export input and retry."
+            )
+        }
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+        case .text:
+            print(detail.message)
+            if let hint = detail.hint { print("hint: \(hint)") }
+        }
+        throw ExitCode.failure
     }
     try failHostCommand(error, outputFormat: outputFormat)
 }
