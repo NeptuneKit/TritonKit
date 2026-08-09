@@ -440,6 +440,8 @@ func hostActionOutput(action: String, target: String, command: TKHostCommand, no
     )
 }
 
+let harmonyWaitMinimumLayoutCaptureTimeout = 0.4
+
 func waitForHarmonyText(
     selected: TKHarmonyTarget,
     hdc: String,
@@ -485,7 +487,7 @@ func waitForHarmonyText(
 
     while true {
         let remaining = deadline.timeIntervalSinceNow
-        if remaining <= 0 {
+        if remaining < harmonyWaitMinimumLayoutCaptureTimeout {
             return response(matched: false, timedOut: true)
         }
         pollCount += 1
