@@ -1,4 +1,5 @@
 import ArgumentParser
+import Darwin
 import Foundation
 import Testing
 import TritonKitShared
@@ -333,6 +334,120 @@ struct FailureDiagnosticsTests {
         #expect(missing.isEmpty, "Missing host failure codes in schema: \(missingList)")
     }
 
+    @Test("devicectl DDI diagnostics preserve mapping and expose app install recovery")
+    func devicectlDDIDiagnosticsExposeAppInstallRecovery() {
+        let command = TKDevicectlCommand.listDevices(
+            jsonOutput: "/tmp/triton-ddi-diagnostics.json",
+            logOutput: "/tmp/triton-ddi-diagnostics.log"
+        )
+        let detail = hostCommandNonZeroExitErrorDetail(
+            command: command,
+            result: HostProcessResult(
+                stdoutData: Data(),
+                stderrData: Data("CoreDevice: Developer Disk Image is missing for this device".utf8),
+                exitCode: 1,
+                sourceCommand: hostSourceCommand(command),
+                stdoutTruncated: false,
+                stderrTruncated: false,
+                stdoutLogPath: nil,
+                stderrLogPath: nil,
+                stdoutBytes: 0,
+                stderrBytes: 0
+            )
+        )
+
+        #expect(detail.code == "ddi_missing")
+        #expect(detail.nextAction == TKCLINextAction(
+            command: "app",
+            args: [
+                "install", "--platform", "ios", "--scope", "real",
+                "--device", "<selector>", "--app", "<app-path>", "--json",
+            ],
+            category: "act"
+        ))
+        #expect(detail.hint?.contains("CoreDevice") == true)
+    }
+
+    @Test("devicectl readiness mappings keep non-DDI blockers stable")
+    func devicectlReadinessMappingsKeepNonDDIBlockersStable() {
+        let cases: [(String, String)] = [
+            ("Trust this computer on the device", "device_not_trusted"),
+            ("Developer Mode is required", "developer_mode_required"),
+            ("Device is locked", "device_locked"),
+            ("unable to locate a device matching the requested device identifier", "target_offline"),
+            ("xcrun: error: unable to find utility devicectl", "devicectl_not_found"),
+        ]
+
+        for (stderr, expectedCode) in cases {
+            let command = TKDevicectlCommand.listDevices(
+                jsonOutput: "/tmp/triton-readiness.json",
+                logOutput: "/tmp/triton-readiness.log"
+            )
+            let detail = hostCommandNonZeroExitErrorDetail(
+                command: command,
+                result: HostProcessResult(
+                    stdoutData: Data(),
+                    stderrData: Data(stderr.utf8),
+                    exitCode: 1,
+                    sourceCommand: hostSourceCommand(command),
+                    stdoutTruncated: false,
+                    stderrTruncated: false,
+                    stdoutLogPath: nil,
+                    stderrLogPath: nil,
+                    stdoutBytes: 0,
+                    stderrBytes: stderr.utf8.count
+                )
+            )
+
+            #expect(detail.code == expectedCode)
+            if expectedCode == "target_offline" {
+                #expect(detail.nextAction?.args == [
+                    "wait-ready", "--platform", "ios", "--scope", "real",
+                    "--device", "<selector>", "--json",
+                ])
+            } else {
+                #expect(detail.nextAction == nil)
+            }
+        }
+    }
+
+    @Test("failHostCommand emits DDI nextAction in the JSON error envelope")
+    func failHostCommandEmitsDDINextActionInJSONEnvelope() throws {
+        let command = TKDevicectlCommand.listDevices(
+            jsonOutput: "/tmp/triton-ddi-fail-host.json",
+            logOutput: "/tmp/triton-ddi-fail-host.log"
+        )
+        let result = HostProcessResult(
+            stdoutData: Data(),
+            stderrData: Data("Developer Disk Image is unavailable".utf8),
+            exitCode: 1,
+            sourceCommand: hostSourceCommand(command),
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            stdoutLogPath: nil,
+            stderrLogPath: nil,
+            stdoutBytes: 0,
+            stderrBytes: 0
+        )
+        let captured = captureStandardOutputAllowingFailure {
+            try failHostCommand(
+                HostCommandRunError.nonZeroExit(command: command, result: result),
+                outputFormat: .json
+            )
+        }
+
+        #expect(captured.error is ExitCode)
+        let response = try JSONDecoder().decode(
+            TKCLIErrorResponse.self,
+            from: Data(captured.output.trimmingCharacters(in: .whitespacesAndNewlines).utf8)
+        )
+        #expect(response.error.code == "ddi_missing")
+        #expect(response.error.nextAction?.args == [
+            "install", "--platform", "ios", "--scope", "real",
+            "--device", "<selector>", "--app", "<app-path>", "--json",
+        ])
+    }
+
     @Test("command-local validation and workflow schemas cover specialized failure codes")
     func commandLocalValidationAndWorkflowSchemasCoverSpecializedFailureCodes() throws {
         let schemas = Dictionary(uniqueKeysWithValues: commandSchemas().map { ($0.name, $0) })
@@ -427,6 +542,29 @@ struct FailureDiagnosticsTests {
             try expectFailureCodes(schemas, command: command, include: ["validation_failed"])
         }
     }
+}
+
+private func captureStandardOutputAllowingFailure(
+    _ body: () throws -> Void
+) -> (output: String, error: Error?) {
+    let pipe = Pipe()
+    let originalStdout = dup(STDOUT_FILENO)
+    var caughtError: Error?
+
+    fflush(stdout)
+    dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
+    do {
+        try body()
+    } catch {
+        caughtError = error
+    }
+    fflush(stdout)
+    dup2(originalStdout, STDOUT_FILENO)
+    close(originalStdout)
+    pipe.fileHandleForWriting.closeFile()
+
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    return (String(decoding: data, as: UTF8.self), caughtError)
 }
 
 private func expectFailureCodes(

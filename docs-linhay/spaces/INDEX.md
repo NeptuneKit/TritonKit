@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-08-09
-> 覆盖范围：158/158 个已存在 space
+> 覆盖范围：159/159 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 158/158 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 158/158 | 每条记录链接到现有 space README |
+| 编号登记 | 159/159 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 159/159 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -183,3 +183,4 @@
 | `SP-156-issue-176-xcode-compact-progress` | [`SP-156-issue-176-xcode-compact-progress`](./SP-156-issue-176-xcode-compact-progress/README.md) | 已合并（PR #177） | 规范目录；#176 已关闭；compact/full Xcode build progress 已进入 `main` |
 | `SP-157-open-issues-178-195-audit` | [`SP-157-open-issues-178-195-audit`](./SP-157-open-issues-178-195-audit/README.md) | 已合并（本地） | #178–#195 审计与设备/CLI 合同修复已进入本地 `main`；待主线门禁、push 与逐条 issue 收口 |
 | `SP-158-issue-196-xcode-archive-export` | [`SP-158-issue-196-xcode-archive-export`](./SP-158-issue-196-xcode-archive-export/README.md) | 已合并（本地） | #196 archive/export workflow 已进入本地 `main`；真实签名/IPA 安装仍保留为风险 |
+| `SP-159-issue-195-ios-ddi-recovery` | [`SP-159-issue-195-ios-ddi-recovery`](./SP-159-issue-195-ios-ddi-recovery/README.md) | 已合并（本地） | #195 `ddi_missing` app-install recovery 已进入本地 `main`；真实 DDI/tunnel smoke 仍待设备与授权 |

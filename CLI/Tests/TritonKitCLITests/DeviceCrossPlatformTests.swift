@@ -3452,6 +3452,26 @@ struct DeviceCrossPlatformTests {
         #expect(offlineFailure.hint.contains("device wait-ready"))
     }
 
+    @Test("DDI failure exposes executable iOS real app install recovery")
+    func ddiFailureExposesExecutableIOSRealAppInstallRecovery() {
+        let command = TKDevicectlCommand.listDevices(
+            jsonOutput: "/tmp/triton-ddi-list.json",
+            logOutput: "/tmp/triton-ddi-list.log"
+        )
+        let detail = hostCommandNonZeroExitErrorDetail(
+            command: command,
+            result: failedHostProcessResult(command, stderr: "Developer Disk Image (DDI) is unavailable")
+        )
+
+        #expect(detail.code == "ddi_missing")
+        #expect(detail.nextAction?.command == "app")
+        #expect(detail.nextAction?.args == [
+            "install", "--platform", "ios", "--scope", "real",
+            "--device", "<selector>", "--app", "<app-path>", "--json",
+        ])
+        #expect(detail.hint?.lowercased().contains("prepare") == true)
+    }
+
     @Test("iOS real selector keeps launch identity across offline and ready live inventories")
     func iosRealSelectorKeepsLaunchIdentityAcrossLiveInventories() throws {
         let request = HostDeviceSelectionRequest(device: "ios-real:abc123")

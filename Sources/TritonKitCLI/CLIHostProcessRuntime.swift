@@ -632,7 +632,7 @@ func iosDevicectlErrorMapping(stderr: String, jsonData: Data? = nil) -> (code: S
     if lowercased.contains("developer disk image") || lowercased.contains("ddi") {
         return (
             "ddi_missing",
-            "Open Xcode once or install the matching DeviceSupport/DDI for this iOS version, then retry."
+            "retry the iOS real-device app install below so CoreDevice can prepare the matching DDI; this may unblock the device but does not guarantee readiness."
         )
     }
     return (
@@ -671,6 +671,28 @@ func iosDevicectlPullErrorMapping(stderr: String, jsonData: Data? = nil) -> (cod
         "app_pull_failed",
         "Inspect the devicectl JSON/log artifacts and verify the target, domain identifier, source path, device lock state, and host destination."
     )
+}
+
+func iosDevicectlFailureNextAction(code: String) -> TKCLINextAction? {
+    switch code {
+    case "ddi_missing":
+        return TKCLINextAction(
+            command: "app",
+            args: [
+                "install", "--platform", "ios", "--scope", "real",
+                "--device", "<selector>", "--app", "<app-path>", "--json",
+            ],
+            category: "act"
+        )
+    case "target_offline":
+        return TKCLINextAction(
+            command: "device",
+            args: ["wait-ready", "--platform", "ios", "--scope", "real", "--device", "<selector>", "--json"],
+            category: "prepare-target"
+        )
+    default:
+        return nil
+    }
 }
 
 private func devicectlJSONOutputData(command: TKHostCommand) -> Data? {
@@ -976,6 +998,7 @@ func failHostCommand(
     case HostCommandRunError.nonZeroExit(let command, let result):
         let code: String
         let hint: String
+        var nextAction: TKCLINextAction?
         let isHDC = command.executable == "hdc" || command.executable.hasSuffix("/hdc")
         let isADB = command.executable == "adb" || command.executable.hasSuffix("/adb")
         let stderr = result.stderr.lowercased()
@@ -1023,6 +1046,7 @@ func failHostCommand(
                 : iosDevicectlErrorMapping(stderr: result.stderr, jsonData: jsonData)
             code = mapping.code
             hint = mapping.hint
+            nextAction = iosDevicectlFailureNextAction(code: code)
         } else if isHDC && command.arguments.contains("bm") && command.arguments.contains("dump") {
             code = "harmony_app_inspect_failed"
             hint = "Verify the Harmony bundle is installed on the selected target, then retry `triton app info --platform harmony --bundle <bundle> --json`."
@@ -1153,13 +1177,7 @@ func failHostCommand(
                 ? "\(error)\nsourceCommand: \(hostSourceCommand(command))"
                 : "\(error)",
             hint: hint,
-            nextAction: code == "target_offline"
-                ? TKCLINextAction(
-                    command: "device",
-                    args: ["wait-ready", "--platform", "ios", "--scope", "real", "--device", "<selector>", "--json"],
-                    category: "prepare-target"
-                )
-                : nil
+            nextAction: nextAction
         )
     default:
         detail = TKCLIErrorDetail(
@@ -1201,6 +1219,19 @@ func hostCommandNonZeroExitErrorDetail(command: TKHostCommand, result: HostProce
             code: "harmony_app_inspect_failed",
             message: hostProcessFailureMessage(result),
             hint: "Verify the Harmony bundle is installed on the selected target, then retry `triton app info --platform harmony --bundle <bundle> --json`."
+        )
+    }
+    if command.arguments.first == "devicectl" {
+        let isPull = command.arguments.starts(with: ["devicectl", "device", "copy", "from"])
+        let jsonData = devicectlJSONOutputData(command: command)
+        let mapping = isPull
+            ? iosDevicectlPullErrorMapping(stderr: [result.stderr, result.stdout].joined(separator: "\n"), jsonData: jsonData)
+            : iosDevicectlErrorMapping(stderr: result.stderr, jsonData: jsonData)
+        return TKCLIErrorDetail(
+            code: mapping.code,
+            message: hostProcessFailureMessage(result),
+            hint: mapping.hint,
+            nextAction: iosDevicectlFailureNextAction(code: mapping.code)
         )
     }
     return TKCLIErrorDetail(
