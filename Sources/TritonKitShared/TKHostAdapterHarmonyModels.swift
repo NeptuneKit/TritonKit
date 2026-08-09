@@ -55,8 +55,19 @@ public enum TKHarmonyHDCCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "bm", "uninstall", "-n", bundleName], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
-    public static func appOpenURL(target: String, bundleName: String, abilityName: String, url: String, executable: String = "hdc") -> TKHostCommand {
-        TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "aa", "start", "-a", abilityName, "-b", bundleName, "-U", url], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    public static func appOpenURL(target: String, bundleName: String, abilityName: String, url: String, action: String? = nil, executable: String = "hdc") -> TKHostCommand {
+        var arguments = ["-t", target, "shell", "aa", "start", "-a", abilityName, "-b", bundleName]
+        if let action, !action.isEmpty {
+            arguments.append(contentsOf: ["-A", action])
+        }
+        // `hdc shell` forwards the remaining argv through a device-side shell. Keep
+        // URL metacharacters together so `&` does not become a second shell command.
+        arguments.append(contentsOf: ["-U", harmonyRemoteShellQuoted(url)])
+        return TKHostCommand(executable: executable, arguments: arguments, riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    private static func harmonyRemoteShellQuoted(_ value: String) -> String {
+        "'\(value.replacingOccurrences(of: "'", with: "'\\''"))'"
     }
 
     public static func forwardPort(target: String, localPort: Int, remotePort: Int, executable: String = "hdc") -> TKHostCommand {

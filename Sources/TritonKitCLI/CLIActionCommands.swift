@@ -139,7 +139,7 @@ struct Wait: AsyncParsableCommand {
     @Option(name: .customLong("text"), help: "Visible text, AX label, identifier, title, or value to wait for") var text: String?
     @Option(name: .customLong("gone"), help: "Visible text, AX label, identifier, title, or value to wait to disappear") var gone: String?
     @Option(name: .customLong("exists"), help: "Alias for --text; can be combined with --role") var exists: String?
-    @Flag(name: .customLong("idle"), help: "Wait until the target is connected and hierarchy is stable across two polls") var idle = false
+    @Flag(name: .customLong("idle"), help: "Wait until an embedded runtime target is connected and hierarchy is stable across two polls; unsupported by Harmony host wait") var idle = false
     @Flag(name: .customLong("hierarchy-change"), help: "Wait until the hierarchy snapshot changes") var hierarchyChange = false
     @Option(name: .customLong("since"), help: "Hierarchy change baseline; currently supports latest") var since: String = "latest"
     @Option(name: .customLong("predicate"), help: "Safe predicate using text.exists/gone with &&, ||, !") var predicate: String?
@@ -312,6 +312,14 @@ struct Wait: AsyncParsableCommand {
             }
 
             if platform == .harmony {
+                if idle {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "Harmony host wait does not support --idle.",
+                        hint: "Use `triton wait --platform harmony --text <text>`, `--exists <text>`, or `--gone <text>`; use `triton debug ax --platform harmony --output <path> --json` for a layout snapshot.",
+                        outputFormat: outputFormat
+                    )
+                }
                 guard text != nil || gone != nil || exists != nil else {
                     try failHostValidation(
                         code: "unsupported_capability",

@@ -318,18 +318,35 @@ func resolveHostDeviceSelection(
     let allCandidates = candidates.values.flatMap { $0 }
     if let selector = request.device, !selector.isEmpty {
         if selector == "current" {
-            guard let current = aliases.current else {
+            if let current = aliases.current, current != selector {
+                var currentRequest = request
+                currentRequest.device = current
+                if let selected = try? resolveHostDeviceSelection(request: currentRequest, candidates: candidates, aliases: aliases) {
+                    return HostDeviceSelectionResult(
+                        platform: selected.platform,
+                        target: selected.target,
+                        selector: selector,
+                        source: .current,
+                        filters: selected.filters
+                    )
+                }
+            }
+
+            let liveCurrent = allCandidates.filter {
+                $0.current == true && matchesHostDeviceFilters($0, request: request)
+            }
+            guard let selected = liveCurrent.first else {
                 throw HostDeviceSelectionError.targetNotFound("current")
             }
-            var currentRequest = request
-            currentRequest.device = current
-            let selected = try resolveHostDeviceSelection(request: currentRequest, candidates: candidates, aliases: aliases)
+            guard liveCurrent.count == 1, let platform = platform(from: selected) else {
+                throw HostDeviceSelectionError.ambiguousTargets(liveCurrent)
+            }
             return HostDeviceSelectionResult(
-                platform: selected.platform,
-                target: selected.target,
+                platform: platform,
+                target: selected,
                 selector: selector,
                 source: .current,
-                filters: selected.filters
+                filters: HostDeviceSelectionFilters(request: request)
             )
         }
         if let alias = aliases.aliases[selector] {
@@ -418,18 +435,20 @@ func resolveHostDeviceTarget(platform: HostDevicePlatform, target: String?, hdc:
 }
 
 func hostDeviceTarget(from simulator: TKHostSimulatorTarget) -> HostDeviceTarget {
-    HostDeviceTarget(
+    let blockedReasons = simulator.dataPathAvailable == false ? ["simulator_data_missing"] : []
+    return HostDeviceTarget(
         platform: "ios",
         id: simulator.id,
         target: simulator.udid,
         state: simulator.state,
-        ready: simulator.isBooted,
+        ready: simulator.isBooted && simulator.isAvailable,
         source: simulator.source,
         name: simulator.name,
         runtime: simulator.runtime,
         transport: nil,
         scope: "simulator",
-        kind: "simulator"
+        kind: "simulator",
+        blockedReasons: blockedReasons
     )
 }
 
@@ -634,6 +653,9 @@ func waitForHostDeviceReady(
                 )
                 if currentTarget.ready {
                     return event
+                }
+                if currentTarget.blockedReasons.contains("simulator_data_missing") {
+                    throw HostCommandRunError.simulatorDataMissing(target: currentTarget.target, path: simulator.dataPath)
                 }
                 if currentTarget.state.lowercased() != "booted" {
                     throw HostCommandRunError.simulatorNotBooted(target: currentTarget.target, state: currentTarget.state)

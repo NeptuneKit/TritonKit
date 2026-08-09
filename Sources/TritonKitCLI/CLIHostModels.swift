@@ -600,6 +600,7 @@ struct HostDeviceStopOutput: Encodable {
     let launchdLabel: String?
     let launchdDomain: String?
     let sourceCommands: [String]
+    let warnings: [String]
     let note: String
 }
 
@@ -982,12 +983,17 @@ struct HostCombinedArtifactProcessResult {
     let terminationReason: String
 }
 
+private func hostSimulatorDataPathSuffix(_ path: String?) -> String {
+    path.map { ": " + $0 } ?? ""
+}
+
 enum HostCommandRunError: Error, CustomStringConvertible {
     case launchFailed(String)
     case timeout(command: TKHostCommand, timeoutSeconds: Double, stdoutLogPath: String?, stderrLogPath: String?)
     case nonZeroExit(command: TKHostCommand, result: HostProcessResult)
     case deviceNotReady(target: String, timeoutSeconds: Double)
     case simulatorNotBooted(target: String, state: String)
+    case simulatorDataMissing(target: String, path: String?)
     case layoutPathNotFound
     case layoutTextNotFound(String)
     case missingPreferences(path: String)
@@ -1007,6 +1013,8 @@ enum HostCommandRunError: Error, CustomStringConvertible {
             "Host device target \(target) was not ready after \(timeoutSeconds)s"
         case .simulatorNotBooted(let target, let state):
             "iOS simulator \(target) is \(state), not Booted"
+        case .simulatorDataMissing(let target, let path):
+            "iOS simulator \(target) is listed but its data path is missing\(hostSimulatorDataPathSuffix(path))"
         case .nonZeroExit(_, let result):
             hostCommandNonZeroExitDescription(result)
         case .missingPreferences(let path):

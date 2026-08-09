@@ -92,6 +92,7 @@ struct XcodeCommandTests {
         let values = [
             "CLANG_ENABLE_EXPLICIT_MODULES=NO",
             "OTHER_SWIFT_FLAGS=$(inherited) -D DEMO",
+            "EXCLUDED_ARCHS[sdk=iphonesimulator*]=x86_64",
             "EMPTY=",
         ]
 
@@ -107,6 +108,12 @@ struct XcodeCommandTests {
         }
         #expect(throws: ValidationError.self) {
             _ = try validateXcodeBuildSettings(["BAD-KEY=value"])
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try validateXcodeBuildSettings(["EXCLUDED_ARCHS[sdk=iphonesimulator*=x86_64"])
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try validateXcodeBuildSettings(["EXCLUDED_ARCHS[sdk=[iphonesimulator*]]=x86_64"])
         }
 
         let command = TKXcodebuildCommand.build(

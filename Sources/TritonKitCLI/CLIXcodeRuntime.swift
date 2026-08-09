@@ -159,20 +159,73 @@ func resolveXcodeInvocation(
 }
 
 func validateXcodeBuildSettings(_ values: [String]) throws -> [String] {
-    let firstAllowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_")
-    let restAllowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789")
     for value in values {
-        guard let separator = value.firstIndex(of: "=") else {
+        guard let separator = xcodeBuildSettingAssignmentIndex(in: value) else {
             throw ValidationError("Xcode build settings must use KEY=VALUE.")
         }
         let key = String(value[..<separator])
-        guard let first = key.unicodeScalars.first,
-              firstAllowed.contains(first),
-              key.unicodeScalars.dropFirst().allSatisfy({ restAllowed.contains($0) }) else {
-            throw ValidationError("Xcode build setting key must match [A-Za-z_][A-Za-z0-9_]*: \(key)")
+        guard isValidXcodeBuildSettingKey(key) else {
+            throw ValidationError("Xcode build setting key must contain an identifier with optional [condition=value] suffixes: \(key)")
         }
     }
     return values
+}
+
+private func xcodeBuildSettingAssignmentIndex(in value: String) -> String.Index? {
+    var bracketDepth = 0
+    for index in value.indices {
+        switch value[index] {
+        case "[":
+            bracketDepth += 1
+        case "]":
+            guard bracketDepth > 0 else { return nil }
+            bracketDepth -= 1
+        case "=" where bracketDepth == 0:
+            return index
+        default:
+            break
+        }
+    }
+    return nil
+}
+
+private func isValidXcodeBuildSettingKey(_ key: String) -> Bool {
+    let scalars = Array(key.unicodeScalars)
+    guard let first = scalars.first, isXcodeIdentifierStart(first) else { return false }
+
+    var index = 1
+    while index < scalars.count, isXcodeIdentifierContinue(scalars[index]) {
+        index += 1
+    }
+    while index < scalars.count {
+        guard scalars[index] == "[" else { return false }
+        index += 1
+
+        let conditionStart = index
+        while index < scalars.count, isXcodeIdentifierContinue(scalars[index]) {
+            index += 1
+        }
+        guard index > conditionStart, index < scalars.count, scalars[index] == "=" else { return false }
+        index += 1
+
+        let valueStart = index
+        while index < scalars.count, scalars[index] != "]" {
+            let scalar = scalars[index]
+            guard scalar != "[", !CharacterSet.controlCharacters.contains(scalar) else { return false }
+            index += 1
+        }
+        guard index > valueStart, index < scalars.count, scalars[index] == "]" else { return false }
+        index += 1
+    }
+    return true
+}
+
+private func isXcodeIdentifierStart(_ scalar: Unicode.Scalar) -> Bool {
+    CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_").contains(scalar)
+}
+
+private func isXcodeIdentifierContinue(_ scalar: Unicode.Scalar) -> Bool {
+    CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789").contains(scalar)
 }
 
 func validateXcodeOnlyTesting(_ values: [String]) throws -> [String] {

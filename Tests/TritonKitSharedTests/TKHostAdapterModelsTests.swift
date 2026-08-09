@@ -450,7 +450,8 @@ struct TKHostAdapterModelsTests {
         #expect(TKHarmonyHDCCommand.keyEvent(target: "127.0.0.1:10100", key: "Back").argv == ["-t", "127.0.0.1:10100", "shell", "uitest", "uiInput", "keyEvent", "Back"])
         #expect(TKHarmonyHDCCommand.installHap(target: "127.0.0.1:10100", hapPath: "/tmp/Demo.hap").argv == ["-t", "127.0.0.1:10100", "install", "-r", "/tmp/Demo.hap"])
         #expect(TKHarmonyHDCCommand.forceStop(target: "127.0.0.1:10100", bundleName: "com.example.demo").argv == ["-t", "127.0.0.1:10100", "shell", "aa", "force-stop", "com.example.demo"])
-        #expect(TKHarmonyHDCCommand.appOpenURL(target: "127.0.0.1:10100", bundleName: "com.example.demo", abilityName: "EntryAbility", url: "demo://nativejump/index").argv == ["-t", "127.0.0.1:10100", "shell", "aa", "start", "-a", "EntryAbility", "-b", "com.example.demo", "-U", "demo://nativejump/index"])
+        #expect(TKHarmonyHDCCommand.appOpenURL(target: "127.0.0.1:10100", bundleName: "com.example.demo", abilityName: "EntryAbility", url: "demo://nativejump/index").argv == ["-t", "127.0.0.1:10100", "shell", "aa", "start", "-a", "EntryAbility", "-b", "com.example.demo", "-U", "'demo://nativejump/index'"])
+        #expect(TKHarmonyHDCCommand.appOpenURL(target: "127.0.0.1:10100", bundleName: "com.example.demo", abilityName: "EntryAbility", url: "demo://nativejump/index?a=1&b=2", action: "ohos.want.action.viewData").argv == ["-t", "127.0.0.1:10100", "shell", "aa", "start", "-a", "EntryAbility", "-b", "com.example.demo", "-A", "ohos.want.action.viewData", "-U", "'demo://nativejump/index?a=1&b=2'"])
         #expect(TKHarmonyHDCCommand.dumpLayout(target: "127.0.0.1:10100").argv == ["-t", "127.0.0.1:10100", "shell", "uitest", "dumpLayout"])
         #expect(TKHarmonyHDCCommand.recvFile(target: "127.0.0.1:10100", remotePath: "/data/local/tmp/layout.json", localPath: "/tmp/layout.json").argv == ["-t", "127.0.0.1:10100", "file", "recv", "/data/local/tmp/layout.json", "/tmp/layout.json"])
         #expect(TKHarmonyHDCCommand.tapCoordinate(target: "127.0.0.1:10100", x: 120, y: 640).argv == ["-t", "127.0.0.1:10100", "shell", "uitest", "uiInput", "click", "120", "640"])
@@ -840,7 +841,7 @@ struct TKHostAdapterModelsTests {
             "com.apple.CoreSimulator.SimRuntime.iOS-26-5": [
               {
                 "lastBootedAt": "2026-05-20T09:00:00Z",
-                "dataPath": "/tmp/device",
+                "dataPath": "/tmp",
                 "logPath": "/tmp/logs",
                 "udid": "0333546D-2AC6-4C22-AF01-293E2F4BA5BC",
                 "isAvailable": true,
@@ -865,7 +866,36 @@ struct TKHostAdapterModelsTests {
         #expect(target.runtime == "iOS 26.5")
         #expect(target.state == "Booted")
         #expect(target.isBooted)
+        #expect(target.dataPath == "/tmp")
+        #expect(target.dataPathAvailable == true)
         #expect(target.source == "simctl")
+    }
+
+    @Test("simctl marks an explicitly missing simulator data path unavailable")
+    func simctlMissingDataPathIsUnavailable() throws {
+        let missingPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-missing-simulator-data-\(UUID().uuidString)")
+            .path
+        let json = """
+        {
+          "devices": {
+            "com.apple.CoreSimulator.SimRuntime.iOS-26-5": [
+              {
+                "dataPath": "\(missingPath)",
+                "udid": "SIM-MISSING-DATA",
+                "isAvailable": true,
+                "state": "Booted",
+                "name": "Missing Data Simulator"
+              }
+            ]
+          }
+        }
+        """
+
+        let target = try #require(TKSimctlDeviceListParser.parse(Data(json.utf8)).first)
+        #expect(target.dataPathAvailable == false)
+        #expect(!target.isAvailable)
+        #expect(!target.isBooted)
     }
 
     @Test("simctl listapps openstep plist decodes into installed app summaries")

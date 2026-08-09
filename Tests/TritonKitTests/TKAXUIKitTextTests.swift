@@ -675,6 +675,8 @@ struct TKAXUIKitTextTests {
         let labelOID = TKObjectRegistry.shared.register(label)
         let wrapperOID = TKObjectRegistry.shared.register(wrapper)
         let request = TKInputRequest.tap(
+            x: 80,
+            y: 156,
             targetOID: labelOID,
             matchedOID: labelOID,
             matchedClassName: NSStringFromClass(UILabel.self),
@@ -691,6 +693,8 @@ struct TKAXUIKitTextTests {
         #expect(result.activationClassName == NSStringFromClass(UIView.self))
         #expect(result.strategy == "ancestor-tap-gesture-recognizer")
         #expect(result.message == "UITapGestureRecognizer target actions are not exposed through public UIKit runtime APIs")
+        #expect(result.error?.code == "unsupported_capability")
+        #expect(result.error?.suggestedCommands?.contains("triton sim tap --simulator booted --x 80 --y 156 --json") == true)
     }
 
     @Test("exact tap preserves matched metadata and exact strategy")

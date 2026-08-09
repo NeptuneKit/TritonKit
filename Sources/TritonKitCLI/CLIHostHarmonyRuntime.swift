@@ -58,6 +58,30 @@ func harmonyEmulatorLicenseAgreementErrorDetail(stdoutLogPath: String?, stderrLo
     )
 }
 
+func harmonyEmulatorExitedEarlyErrorDetail(stdoutLogPath: String?, stderrLogPath: String?) -> TKCLIErrorDetail {
+    let artifacts = [
+        stdoutLogPath.map { "stdout: \($0)" },
+        stderrLogPath.map { "stderr: \($0)" },
+    ].compactMap { $0 }.joined(separator: "; ")
+    let artifactHint = artifacts.isEmpty ? "" : " Logs: \(artifacts)."
+    return TKCLIErrorDetail(
+        code: "emulator_exited_early",
+        message: "DevEco Emulator exited before Triton could verify that it remained running.",
+        hint: "Inspect the bounded startup logs for EULA, HVD/path, bootmode, or runtime errors, then retry `triton device start --platform harmony --json`.\(artifactHint)",
+        nextAction: TKCLINextAction(
+            command: "device",
+            args: ["list", "--platform", "harmony", "--json"],
+            category: "diagnose"
+        )
+    )
+}
+
+func harmonyDetachedProcessExitedEarly(pid: Int32) -> Bool {
+    guard pid > 0 else { return true }
+    if kill(pid, 0) == 0 { return false }
+    return errno == ESRCH
+}
+
 func androidEmulatorStartCommand(
     avd: String,
     emulator: String,
@@ -349,12 +373,22 @@ func captureHarmonyScreenshot(
     hdc: String,
     output: String,
     timeout: Double? = nil
-) throws -> (remotePath: String, sourceCommands: [String]) {
-    try ensureParentDirectory(for: output)
+) throws -> (remotePath: String, sourceCommands: [String], format: String) {
+    try prepareHostArtifactOutputPath(output)
     let remotePath = remoteHarmonyArtifactPath(prefix: "triton-smoke", extension: "jpeg")
+    let rawLocalPath = temporaryHarmonyArtifactPath(prefix: "triton-harmony-screenshot", extension: "jpeg")
+    defer { try? FileManager.default.removeItem(atPath: rawLocalPath) }
     let screenshotResult = try runHostCommand(TKHarmonyHDCCommand.screenshot(target: selected.target, remotePath: remotePath, executable: hdc).withTimeout(timeout))
-    let recvResult = try runHostCommand(TKHarmonyHDCCommand.recvFile(target: selected.target, remotePath: remotePath, localPath: output, executable: hdc).withTimeout(timeout))
-    return (remotePath, [screenshotResult.sourceCommand, recvResult.sourceCommand])
+    let recvResult = try runHostCommand(TKHarmonyHDCCommand.recvFile(target: selected.target, remotePath: remotePath, localPath: rawLocalPath, executable: hdc).withTimeout(timeout))
+    let data = try Data(contentsOf: URL(fileURLWithPath: rawLocalPath), options: [.mappedIfSafe])
+    let extensionName = URL(fileURLWithPath: output).pathExtension.lowercased()
+    if extensionName == "png" {
+        let normalized = try normalizeRuntimeScreenshotToPNG(data, declaredFormat: "jpeg", outputPath: output)
+        try normalized.write(to: URL(fileURLWithPath: output), options: [.atomic])
+        return (remotePath, [screenshotResult.sourceCommand, recvResult.sourceCommand], "png")
+    }
+    try data.write(to: URL(fileURLWithPath: output), options: [.atomic])
+    return (remotePath, [screenshotResult.sourceCommand, recvResult.sourceCommand], "jpeg")
 }
 
 func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDeviceTarget, selection: HostDeviceSelectionResult? = nil, hdc: String, adb: String = "adb", output: String, timeout: Double? = nil) throws -> HostDeviceArtifactOutput {
@@ -400,7 +434,7 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
             target: target,
             selection: selection,
             artifact: output,
-            format: "jpeg",
+            format: capture.format,
             metadata: try makeHostScreenshotArtifactMetadata(outputPath: output),
             sourceCommands: capture.sourceCommands,
             note: "Host-side Harmony screenshot was captured through snapshot_display using remote artifact \(capture.remotePath)."

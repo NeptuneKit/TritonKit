@@ -239,7 +239,7 @@ struct AppOpenURLFlowTests {
         #expect(harmonyLaunch.target == "harmony-real:fed789/app:com.example.demo")
 
         let harmonyOpenURL = try planHostAppOpenURL(selection: harmony, url: "demo://nativejump/index", bundleID: nil, packageName: nil, bundle: "com.example.demo", ability: "EntryAbility", adb: "adb", hdc: "hdc", devicectlArtifacts: nil)
-        #expect(harmonyOpenURL.command.argv == ["-t", "HDCREAL001", "shell", "aa", "start", "-a", "EntryAbility", "-b", "com.example.demo", "-U", "demo://nativejump/index"])
+        #expect(harmonyOpenURL.command.argv == ["-t", "HDCREAL001", "shell", "aa", "start", "-a", "EntryAbility", "-b", "com.example.demo", "-U", "'demo://nativejump/index'"])
         #expect(harmonyOpenURL.command.argv.contains("harmony-real:fed789") == false)
         #expect(harmonyOpenURL.target == "harmony-real:fed789/app:com.example.demo")
     }

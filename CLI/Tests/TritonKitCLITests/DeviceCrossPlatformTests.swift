@@ -873,11 +873,16 @@ struct DeviceCrossPlatformTests {
             let sourceCommands = session.sourceCommands
 
             #expect(command.planOnly)
-            #expect(session.ok)
+            #expect(session.ok == (testCase.platform != "ios"))
             #expect(session.configured == false)
             #expect(target.target == testCase.expectedTarget)
             if let expectedCommandFragment = testCase.expectedCommandFragment {
                 #expect(sourceCommands.contains { $0.contains(expectedCommandFragment) })
+            }
+            if testCase.platform == "ios" {
+                #expect(session.error?.code == "proxy_platform_not_supported")
+                #expect(session.targetTrafficVerified == false)
+                #expect(session.targetTrafficScope == "host-network-service")
             }
             #expect(!sourceCommands.contains { $0.contains(testCase.device) && testCase.device != testCase.expectedTarget })
         }
@@ -1985,11 +1990,13 @@ struct DeviceCrossPlatformTests {
         }
 
         #expect(plans.map(\.platform) == ["ios", "android", "harmony"])
-        #expect(plans.allSatisfy { $0.ok })
+        #expect(plans[0].ok == false)
+        #expect(plans.dropFirst().allSatisfy { $0.ok })
         #expect(plans.allSatisfy { $0.action == "proxy.start" })
         #expect(plans.allSatisfy { $0.configured == false })
         #expect(plans.allSatisfy { $0.proxyEndpoint == "127.0.0.1:19431" })
-        #expect(plans.allSatisfy { $0.limitations.contains("proxy_plan_only:not_executed") })
+        #expect(plans.dropFirst().allSatisfy { $0.limitations.contains("proxy_plan_only:not_executed") })
+        #expect(plans[0].limitations.contains("proxy_host_only:host_network_service"))
         #expect(plans[0].sourceCommands == [
             "/usr/sbin/networksetup -setwebproxy Wi-Fi 127.0.0.1 19431",
             "/usr/sbin/networksetup -setwebproxystate Wi-Fi on",
@@ -1997,6 +2004,9 @@ struct DeviceCrossPlatformTests {
             "/usr/sbin/networksetup -setsecurewebproxystate Wi-Fi on",
             "/usr/sbin/networksetup -setsocksfirewallproxystate Wi-Fi off",
         ])
+        #expect(plans[0].error?.code == "proxy_platform_not_supported")
+        #expect(plans[0].targetTrafficVerified == false)
+        #expect(plans[0].targetTrafficScope == "host-network-service")
         #expect(plans[1].sourceCommands == [
             "adb -s emulator-5554 shell settings put global http_proxy 10.0.2.2:19431",
         ])
@@ -2013,11 +2023,13 @@ struct DeviceCrossPlatformTests {
         }
 
         #expect(plans.map(\.platform) == ["ios", "android", "harmony"])
-        #expect(plans.allSatisfy { $0.ok })
+        #expect(plans[0].ok == false)
+        #expect(plans.dropFirst().allSatisfy { $0.ok })
         #expect(plans.allSatisfy { $0.action == "proxy.stop" })
         #expect(plans.allSatisfy { $0.configured == false })
         #expect(plans.allSatisfy { $0.restore?.restored == false })
-        #expect(plans.allSatisfy { $0.limitations.contains("proxy_plan_only:not_executed") })
+        #expect(plans.dropFirst().allSatisfy { $0.limitations.contains("proxy_plan_only:not_executed") })
+        #expect(plans[0].limitations.contains("proxy_host_only:host_network_service"))
         #expect(plans[0].sourceCommands == [
             "/usr/sbin/networksetup -setwebproxystate Wi-Fi off",
             "/usr/sbin/networksetup -setsecurewebproxystate Wi-Fi off",
@@ -2635,10 +2647,10 @@ struct DeviceCrossPlatformTests {
         #expect(entries.count == 1)
     }
 
-    @Test("proxy command runner can execute accepted iOS and Android start and restore plans under fake runner")
+    @Test("proxy command runner can execute accepted Android start and restore plans under fake runner")
     func proxyCommandRunnerExecutesAcceptedIOSAndAndroidPlansUnderFakeRunner() throws {
         let endpoint = try NetworkProxyEndpoint("127.0.0.1:19431")
-        for fixture in networkProxyTargetFixtures().filter({ $0.platform != .harmony }) {
+        for fixture in networkProxyTargetFixtures().filter({ $0.platform == .android }) {
             var executed: [String] = []
             let runner: NetworkProxyCommandRunner = { command in
                 executed.append(hostSourceCommand(command))
@@ -2683,7 +2695,7 @@ struct DeviceCrossPlatformTests {
         }
     }
 
-    @Test("proxy command runner reports stable start and restore failure envelopes")
+    @Test("iOS proxy execution reports host-only scope without mutating Wi-Fi")
     func proxyCommandRunnerReportsStableFailureEnvelopes() throws {
         let endpoint = try NetworkProxyEndpoint("127.0.0.1:19431")
         let iosTarget = makeSimulatorProxyTarget(simulator: "SIM-FAIL")
@@ -2702,10 +2714,11 @@ struct DeviceCrossPlatformTests {
         )
         #expect(start.ok == false)
         #expect(start.configured == false)
-        #expect(start.error?.code == "proxy_start_failed")
-        #expect(start.error?.nextAction?.category == "diagnose")
+        #expect(start.error?.code == "proxy_platform_not_supported")
+        #expect(start.error?.nextAction == nil)
         #expect(start.sourceCommands == networkProxyStartPlanCommands(platform: .ios, target: iosTarget, endpoint: endpoint).map(hostSourceCommand))
-        #expect(start.limitations.contains("proxy_execution_policy_accepted:auditRecord=ticket-fail"))
+        #expect(start.limitations.contains("proxy_host_only:host_network_service"))
+        #expect(start.limitations.contains("proxy_target_traffic_unverified:simulator_scope"))
 
         let stop = try makeNetworkProxyStopExecutedSession(
             platform: .ios,
@@ -2718,60 +2731,10 @@ struct DeviceCrossPlatformTests {
         #expect(stop.configured == false)
         #expect(stop.restore?.available == true)
         #expect(stop.restore?.restored == false)
-        #expect(stop.error?.code == "proxy_restore_failed")
+        #expect(stop.error?.code == "proxy_platform_not_supported")
         #expect(stop.sourceCommands == networkProxyStopPlanCommands(platform: .ios, target: iosTarget, restore: true).map(hostSourceCommand))
-
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("triton-proxy-restore-failure-\(UUID().uuidString)", isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let restoreCommands = [
-            TKHostCommand(
-                executable: "networksetup",
-                arguments: ["-setwebproxystate", "Wi-Fi", "off"],
-                riskLevel: .breakGlass,
-                requiredConfig: [.target, .timeout, .auditRecord]
-            ),
-        ]
-        let writtenSnapshotPath = try writeNetworkProxyRestoreSnapshot(
-            platform: .ios,
-            target: iosTarget,
-            endpoint: endpoint,
-            auditRecord: "ticket-fail",
-            startCommands: networkProxyStartPlanCommands(platform: .ios, target: iosTarget, endpoint: endpoint),
-            restoreCommands: restoreCommands,
-            outputDirectory: directory.path
-        )
-        let snapshotPath = try #require(writtenSnapshotPath)
-
-        let failedSnapshotRestore = try makeNetworkProxyStopExecutedSession(
-            platform: .ios,
-            target: iosTarget,
-            restore: false,
-            auditRecord: "ticket-fail",
-            runner: runner,
-            restoreSnapshotPath: snapshotPath
-        )
-        let restoreArtifact = try #require(failedSnapshotRestore.artifacts.first { $0.kind == "proxy-restore" })
-        #expect(failedSnapshotRestore.ok == false)
-        #expect(failedSnapshotRestore.restore?.snapshotPath == snapshotPath)
-        #expect(failedSnapshotRestore.restore?.restored == false)
-        #expect(failedSnapshotRestore.limitations.contains("proxy_restore_failure_artifact_written"))
-        #expect(restoreArtifact.path.hasSuffix("restore-failure.json"))
-        #expect((restoreArtifact.bytes ?? 0) > 0)
-        #expect(FileManager.default.fileExists(atPath: restoreArtifact.path))
-
-        let payloadData = try Data(contentsOf: URL(fileURLWithPath: restoreArtifact.path))
-        let payload = try JSONDecoder().decode(NetworkProxyRestoreFailurePayload.self, from: payloadData)
-        #expect(payload.schemaVersion == "triton.proxy.restore-failure.v1")
-        #expect(payload.platform == "ios")
-        #expect(payload.target == "SIM-FAIL")
-        #expect(payload.action == "proxy.stop")
-        #expect(payload.auditRecord == "ticket-fail")
-        #expect(payload.restoreSnapshotPath == snapshotPath)
-        #expect(payload.restoreSourceCommands == restoreCommands.map(hostSourceCommand))
-        #expect(payload.errorCode == "proxy_restore_failed")
-        #expect(payload.errorSummary == "denied")
-        #expect(payload.capturedAt.isEmpty == false)
+        #expect(stop.limitations.contains("proxy_host_only:host_network_service"))
+        #expect(stop.limitations.contains("proxy_target_traffic_unverified:simulator_scope"))
     }
 
     @Test("Harmony proxy execution remains blocked until platform mutation command is verified")
@@ -2903,6 +2866,18 @@ struct DeviceCrossPlatformTests {
         #expect(hint.lowercased().contains("xcode") == false)
     }
 
+    @Test("Harmony detached emulator exit is classified before reporting startup success")
+    func harmonyDetachedEmulatorExitIsClassifiedBeforeStartupSuccess() {
+        let detail = harmonyEmulatorExitedEarlyErrorDetail(
+            stdoutLogPath: "/tmp/harmony.stdout.log",
+            stderrLogPath: "/tmp/harmony.stderr.log"
+        )
+
+        #expect(detail.code == "emulator_exited_early")
+        #expect(detail.nextAction?.args == ["list", "--platform", "harmony", "--json"])
+        #expect(detail.hint?.contains("harmony.stdout.log") == true)
+    }
+
     @Test("Harmony launchctl stop failure uses Harmony-specific recovery hint")
     func harmonyLaunchctlStopFailureUsesHarmonySpecificRecoveryHint() {
         let command = harmonyLaunchctlPrintCommand(domain: "gui/501", label: "triton-harmony-emulator")
@@ -2916,6 +2891,22 @@ struct DeviceCrossPlatformTests {
         #expect(hint.contains("DevEco") == true)
         #expect(hint.lowercased().contains("simctl") == false)
         #expect(hint.lowercased().contains("xcode") == false)
+    }
+
+    @Test("Harmony absent launchd job is treated as an idempotent stop warning")
+    func harmonyAbsentLaunchdJobIsIdempotentStopWarning() {
+        let command = harmonyLaunchctlPrintCommand(domain: "gui/501", label: "triton-harmony-emulator")
+        let missing = HostCommandRunError.nonZeroExit(
+            command: command,
+            result: failedHostProcessResult(command, stderr: "Could not find service \\\"triton-harmony-emulator\\\" in domain for user gui: 501")
+        )
+        let unrelated = HostCommandRunError.nonZeroExit(
+            command: command,
+            result: failedHostProcessResult(command, stderr: "Operation not permitted")
+        )
+
+        #expect(isMissingHarmonyLaunchdJob(command: command, error: missing))
+        #expect(isMissingHarmonyLaunchdJob(command: command, error: unrelated) == false)
     }
 
     @Test("Harmony emulator stop requires explicit confirmation")
@@ -3883,6 +3874,22 @@ struct DeviceCrossPlatformTests {
         #expect(resolved.source == .platformFilter)
     }
 
+    @Test("host device selector resolves current from live foreground target when alias is absent")
+    func hostDeviceSelectorResolvesCurrentFromLiveForegroundTarget() throws {
+        let current = iosTarget(udid: "SIM-CURRENT", current: true)
+        let other = iosTarget(udid: "SIM-OTHER")
+
+        let resolved = try resolveHostDeviceSelection(
+            request: HostDeviceSelectionRequest(device: "current", platform: .ios),
+            candidates: [.ios: [current, other]],
+            aliases: .empty
+        )
+
+        #expect(resolved.target == current)
+        #expect(resolved.selector == "current")
+        #expect(resolved.source == .current)
+    }
+
     @Test("host device selector rejects ambiguous platform candidates")
     func hostDeviceSelectorRejectsAmbiguousPlatformCandidates() throws {
         let first = iosTarget(udid: "SIM-1", state: "Booted", ready: true, name: "iPhone 15")
@@ -4284,7 +4291,8 @@ private func iosTarget(
     state: String = "Booted",
     ready: Bool = true,
     name: String = "iPhone",
-    runtime: String = "iOS 26.5"
+    runtime: String = "iOS 26.5",
+    current: Bool = false
 ) -> HostDeviceTarget {
     HostDeviceTarget(
         platform: "ios",
@@ -4299,7 +4307,7 @@ private func iosTarget(
         appName: nil,
         bundleIdentifier: nil,
         identityState: "unknown",
-        current: false
+        current: current
     )
 }
 
