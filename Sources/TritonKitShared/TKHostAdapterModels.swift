@@ -898,6 +898,8 @@ public struct TKHostSimulatorTarget: Codable, Equatable {
     public let state: String
     public let isAvailable: Bool
     public let isBooted: Bool
+    public let dataPath: String?
+    public let dataPathAvailable: Bool?
     public let deviceTypeIdentifier: String?
     public let source: String
 
@@ -907,6 +909,7 @@ public struct TKHostSimulatorTarget: Codable, Equatable {
         runtimeIdentifier: String,
         state: String,
         isAvailable: Bool,
+        dataPath: String? = nil,
         deviceTypeIdentifier: String? = nil,
         source: String = "simctl"
     ) {
@@ -917,8 +920,11 @@ public struct TKHostSimulatorTarget: Codable, Equatable {
         self.platform = TKHostSimulatorTarget.platformName(from: runtimeIdentifier)
         self.runtime = TKHostSimulatorTarget.runtimeName(from: runtimeIdentifier)
         self.state = state
-        self.isAvailable = isAvailable
-        self.isBooted = state.lowercased() == "booted"
+        self.dataPath = dataPath
+        let resolvedDataPathAvailable = dataPath.map { FileManager.default.fileExists(atPath: $0) }
+        self.dataPathAvailable = resolvedDataPathAvailable
+        self.isAvailable = isAvailable && (resolvedDataPathAvailable ?? true)
+        self.isBooted = state.lowercased() == "booted" && self.isAvailable
         self.deviceTypeIdentifier = deviceTypeIdentifier
         self.source = source
     }
@@ -1015,6 +1021,7 @@ public enum TKSimctlDeviceListParser {
         let name: String
         let state: String
         let isAvailable: Bool
+        let dataPath: String?
         let deviceTypeIdentifier: String?
     }
 
@@ -1028,6 +1035,7 @@ public enum TKSimctlDeviceListParser {
                     runtimeIdentifier: runtimeIdentifier,
                     state: device.state,
                     isAvailable: device.isAvailable,
+                    dataPath: device.dataPath,
                     deviceTypeIdentifier: device.deviceTypeIdentifier
                 )
             }

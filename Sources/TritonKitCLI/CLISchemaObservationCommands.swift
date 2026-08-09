@@ -853,7 +853,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
         ),
         TKCommandSchema(
             name: "wait",
-            summary: "Wait for text, disappearance, idle state, hierarchy change, or a safe predicate",
+            summary: "Wait for text, disappearance, idle state, hierarchy change, or a safe predicate; Harmony host supports text/exists/gone only",
             requiresServer: false,
             requiresTarget: true,
             runtimeScope: "embedded|host-ios|host-android|host-harmony",
@@ -867,7 +867,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--gone", type: "String", description: "Wait for visible text, AX label, identifier, title, or value to disappear"),
                 TKCommandSchemaOption(name: "--exists", type: "String", description: "Alias for --text; can be combined with --role"),
                 TKCommandSchemaOption(name: "--role", type: "String", description: "Optional AX role filter for --text or --exists"),
-                TKCommandSchemaOption(name: "--idle", type: "Bool", defaultValue: "false", description: "Wait until target is connected and hierarchy is stable across two polls"),
+                TKCommandSchemaOption(name: "--idle", type: "Bool", defaultValue: "false", description: "Wait until an embedded runtime target is connected and hierarchy is stable across two polls; unsupported by Harmony host wait"),
                 TKCommandSchemaOption(name: "--hierarchy-change", type: "Bool", defaultValue: "false", description: "Wait until hierarchy snapshot changes"),
                 TKCommandSchemaOption(name: "--since", type: "latest", defaultValue: "latest", description: "Hierarchy change baseline"),
                 TKCommandSchemaOption(name: "--predicate", type: "String", description: #"Safe predicate, e.g. text.exists("console") && !text.exists("登录")"#),
@@ -887,8 +887,8 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 #"triton wait --predicate "text.exists(\"console\") && !text.exists(\"点我登录\")" --timeout 15 --json"#,
             ],
             successShape: "{ ok, matched, condition, query?, predicate?, elapsedMs, pollCount, timedOut, targetConnectionState, hierarchyCacheState, lastObservedNodeCount?, lastObservedTextSample, match? } or HostIOSWaitOutput or HostAndroidWaitOutput or HostHarmonyWaitOutput",
-            failureShape: "Timeout: { ok:false, matched:false, timedOut:true, condition, elapsedMs, pollCount, match?, sourceCommands? }; Harmony host timeout may also include transientFailureCount and lastTransientError; validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
-            outputSemantics: "Use wait before assert or after action commands. Timeout returns a structured wait result instead of an untyped error. With --platform ios, wait polls the same Simulator host AX source as observe tree and does not require an embedded runtime. Harmony layout dump/recv timeouts are bounded by the remaining wait budget, retried as transient polls, and retained in lastTransientError.",
+            failureShape: "Timeout: { ok:false, matched:false, timedOut:true, condition, elapsedMs, pollCount, match?, sourceCommands? }; Harmony host timeout may also include transientFailureCount and lastTransientError; validation/request/unsupported-condition failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
+            outputSemantics: "Use wait before assert or after action commands. Timeout returns a structured wait result instead of an untyped error. With --platform ios, wait polls the same Simulator host AX source as observe tree and does not require an embedded runtime. Harmony host wait supports text/exists/gone through layout dump; --idle, --hierarchy-change, and --predicate are rejected with unsupported_capability. Harmony layout dump/recv timeouts are bounded by the remaining wait budget, retried as transient polls, and retained in lastTransientError.",
             nextCommands: [
                 "triton status --json",
                 "triton verify text-exists <text> --json",

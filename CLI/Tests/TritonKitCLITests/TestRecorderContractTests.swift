@@ -1449,8 +1449,8 @@ struct TestRecorderContractTests {
         #expect(failure?.detail.path == "--dry-run")
     }
 
-    @Test("replay local device blocks when Triton schema cannot execute platform action")
-    func replayLocalDeviceBlocksWhenTritonSchemaCannotExecutePlatformAction() throws {
+    @Test("replay local device blocks after schema readiness when target is unresolved")
+    func replayLocalDeviceBlocksAfterSchemaReadinessWhenTargetIsUnresolved() throws {
         let caseURL = try makeTemporaryCaseDirectory()
         defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
         let evidenceURL = caseURL.deletingLastPathComponent().appendingPathComponent("local-device-readiness-blocked.tritonevidence", isDirectory: true)
@@ -1473,18 +1473,18 @@ struct TestRecorderContractTests {
         #expect(response.status == "blocked")
         #expect(response.execution.deviceCommandsExecuted == false)
         #expect(response.execution.executorRequirements.contains {
-            $0.name == "device-action-execution" && $0.required && $0.status == "missing" && $0.evidence.contains("target_capability_missing")
+            $0.name == "device-action-execution" && $0.required && $0.status == "missing" && $0.evidence.contains("act-runner:not-wired")
         })
         #expect(response.execution.executorRequirements.contains {
-            $0.name == "live-target-device" && $0.required && $0.status == "not-requested" && $0.evidence.contains("blocked-before-target-resolve")
+            $0.name == "live-target-device" && $0.required && $0.status == "missing" && $0.evidence.contains("target_not_found")
         })
-        #expect(response.execution.evidence.contains("target_capability_missing"))
+        #expect(response.execution.evidence.contains("target_not_found"))
         #expect(response.blockers.contains {
-            $0.code == "target_capability_missing" && $0.path == "triton.schema.act"
+            $0.code == "target_not_found" && $0.path == "--device"
         })
-        #expect(response.blockers.map(\.code).contains("target_not_found") == false)
+        #expect(response.blockers.map(\.code).contains("target_capability_missing") == false)
         #expect(response.steps.allSatisfy { $0.deviceCommandExecuted == false })
-        #expect(response.steps.allSatisfy { $0.failure?.code == "target_capability_missing" })
+        #expect(response.steps.allSatisfy { $0.failure?.code == "target_not_found" })
         #expect(response.pageResults.map(\.status) == ["not-run"])
         #expect(response.evidenceDir == evidenceURL.path)
         #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("manifest.json").path))
@@ -1492,12 +1492,12 @@ struct TestRecorderContractTests {
             TKTestRecorderReplayRunResponse.self,
             from: Data(contentsOf: evidenceURL.appendingPathComponent("run/replay-result.json"))
         )
-        #expect(result.blockers.map(\.code).contains("target_capability_missing"))
+        #expect(result.blockers.map(\.code).contains("target_not_found"))
         let events = try String(contentsOf: evidenceURL.appendingPathComponent("run/events.jsonl"), encoding: .utf8)
         #expect(events.contains(#""event":"testrec.replay.started""#))
         #expect(events.contains(#""local-device""#))
-        #expect(events.contains(#""failureCode":"target_capability_missing""#))
-        #expect(events.contains("target_capability_missing"))
+        #expect(events.contains(#""failureCode":"target_not_found""#))
+        #expect(events.contains("target_not_found"))
     }
 
     @Test("replay local device blocks when target is not resolved")

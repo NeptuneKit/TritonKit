@@ -523,6 +523,8 @@ func hostDeviceProxyOutputContract() -> TKCommandOutputContract {
             ("truncation", "String?", false, "Capture export truncation status; currently none for metadata-only exports"),
             ("probeResults", "[NetworkProxyProbeResult]?", false, "Readonly proxy capability probe results with command, exitCode, stdout/stderr previews, and error summary"),
             ("probeFindings", "[NetworkProxyProbeFinding]?", false, "Structured readonly proxy probe findings such as Harmony candidate parameters that still require manual verification before mutation"),
+            ("targetTrafficVerified", "Bool", true, "Whether the selected simulator or emulator traffic path was actually verified"),
+            ("targetTrafficScope", "String", true, "Scope of the claimed mutation, such as simulator, emulator, or host-network-service"),
         ])
     )
 }

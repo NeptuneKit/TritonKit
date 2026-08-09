@@ -288,6 +288,10 @@ func unsupportedAlertActionTap(
     let activationClassName = activationView.map { NSStringFromClass(type(of: $0)) }
     let actionTitles = alert.actions.compactMap(\.title).filter { !$0.isEmpty }
     let message = "UIAlertController actions cannot fall back to content behind the presented modal"
+    let suggestedCommands = hostSimulatorTapSuggestedCommands(for: request) + [
+        "triton verify text-exists <alert-title> --target <target> --json",
+        "triton schema --command act --json",
+    ]
     return TKInputResult.unsupported(
         action: action,
         message: message,
@@ -301,10 +305,7 @@ func unsupportedAlertActionTap(
             message: message,
             hint: "Use an app-owned semantic DEBUG action or a host HID adapter when the visible alert action does not support public UIKit accessibility activation.",
             nearestCandidates: actionTitles,
-            suggestedCommands: [
-                "triton verify text-exists <alert-title> --target <target> --json",
-                "triton schema --command act --json",
-            ],
+            suggestedCommands: suggestedCommands,
             candidateCount: actionTitles.count
         )
     )
@@ -834,8 +835,32 @@ func tapActivationFailure(
         matchedClassName: matched.className,
         activationOID: activationOID,
         activationClassName: activationClassName,
-        strategy: strategy ?? request.activationStrategy?.rawValue
+        strategy: strategy ?? request.activationStrategy?.rawValue,
+        error: TKCLIErrorDetail(
+            code: "unsupported_capability",
+            message: message,
+            hint: "Embedded UIKit cannot invoke private UITapGestureRecognizer target actions. Use the suggested host Simulator HID tap when running on an iOS Simulator, or expose a public UIControl/accessibility action.",
+            suggestedCommands: hostSimulatorTapSuggestedCommands(for: request)
+        )
     )
+}
+
+func hostSimulatorTapSuggestedCommands(for request: TKInputRequest) -> [String] {
+    guard let x = request.x,
+          let y = request.y,
+          x.isFinite,
+          y.isFinite,
+          x >= Double(Int.min),
+          x <= Double(Int.max),
+          y >= Double(Int.min),
+          y <= Double(Int.max)
+    else {
+        return []
+    }
+
+    return [
+        "triton sim tap --simulator booted --x \(Int(x.rounded())) --y \(Int(y.rounded())) --json",
+    ]
 }
 
 @MainActor
@@ -1761,6 +1786,12 @@ func resolveView(targetOID: UInt?, x: Double?, y: Double?) -> (view: UIView?, me
     if let targetOID {
         guard let view = TKObjectRegistry.shared.object(for: targetOID) as? UIView else {
             return (nil, "Target oid is not a UIView: \(targetOID)")
+        }
+        guard let window = view.window else {
+            return (nil, "stale_runtime_hierarchy: target oid \(targetOID) is no longer attached to a window")
+        }
+        guard keyWindows().contains(where: { $0 === window }) else {
+            return (nil, "stale_runtime_hierarchy: target oid \(targetOID) is attached to an inactive window")
         }
         return (view, "Resolved target oid")
     }

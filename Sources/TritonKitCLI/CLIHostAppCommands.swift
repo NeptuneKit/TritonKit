@@ -372,6 +372,7 @@ func planHostAppOpenURL(
     packageName: String?,
     bundle: String?,
     ability: String?,
+    harmonyAction: String? = nil,
     adb: String,
     hdc: String,
     devicectlArtifacts: (json: String, log: String)?
@@ -388,7 +389,7 @@ func planHostAppOpenURL(
         guard let bundle, let ability else {
             throw ValidationError("Harmony app open-url requires --bundle and --ability.")
         }
-        return HostAppCommandPlan(action: "app.open-url", runtimeScope: hostAppRuntimeScope(selection: selection), target: hostAppPublicTarget(selection: selection, appID: bundle), command: TKHarmonyHDCCommand.appOpenURL(target: selection.target.rawTarget, bundleName: bundle, abilityName: ability, url: url, executable: hdc), artifacts: [], note: hostAppSubmissionNote("app.open-url", followUp: "`triton wait --platform harmony`, observe, screenshot, smoke, or evidence"))
+        return HostAppCommandPlan(action: "app.open-url", runtimeScope: hostAppRuntimeScope(selection: selection), target: hostAppPublicTarget(selection: selection, appID: bundle), command: TKHarmonyHDCCommand.appOpenURL(target: selection.target.rawTarget, bundleName: bundle, abilityName: ability, url: url, action: harmonyAction, executable: hdc), artifacts: [], note: hostAppSubmissionNote("app.open-url", followUp: "`triton wait --platform harmony`, observe, screenshot, smoke, or evidence"))
     }
 }
 
@@ -1205,6 +1206,7 @@ struct HostAppOpenURL: AsyncParsableCommand {
     @Option(help: "Android package name to constrain VIEW intent") var packageName: String?
     @Option(help: "Harmony bundle name") var bundle: String?
     @Option(help: "Harmony ability name") var ability: String?
+    @Option(help: "Harmony Want action, for example ohos.want.action.viewData") var action: String?
     @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Path to adb executable") var adb: String = "adb"
@@ -1310,7 +1312,7 @@ struct HostAppOpenURL: AsyncParsableCommand {
                 note: plan.note
             )
         case .harmony:
-            let plan = try planHostAppOpenURL(selection: selection, url: url, bundleID: nil, packageName: nil, bundle: bundle, ability: ability, adb: adb, hdc: hdc, devicectlArtifacts: nil)
+            let plan = try planHostAppOpenURL(selection: selection, url: url, bundleID: nil, packageName: nil, bundle: bundle, ability: ability, harmonyAction: action, adb: adb, hdc: hdc, devicectlArtifacts: nil)
             try runSimpleHostCommand(
                 action: plan.action,
                 runtimeScope: plan.runtimeScope,

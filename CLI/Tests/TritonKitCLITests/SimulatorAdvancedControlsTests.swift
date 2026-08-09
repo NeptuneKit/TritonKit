@@ -5,6 +5,21 @@ import TritonKitShared
 
 @Suite
 struct SimulatorAdvancedControlsTests {
+    @Test("sim tap parser exposes an explicit host Simulator HID recovery command")
+    func simTapParserExposesHostHIDRecoveryCommand() throws {
+        let command = try SimTap.parse([
+            "--simulator", "booted",
+            "--x", "180",
+            "--y", "420",
+            "--json",
+        ])
+
+        #expect(command.simulator == "booted")
+        #expect(command.x == 180)
+        #expect(command.y == 420)
+        #expect(command.json)
+    }
+
     @Test("host command forwards stdin into child process")
     func runHostCommandForwardsStdin() throws {
         let command = TKHostCommand(executable: "/bin/cat", arguments: [], stdinData: Data("hello\n".utf8))
@@ -325,6 +340,34 @@ struct SimulatorAdvancedControlsTests {
         }
     }
 
+    @Test("host command treats Harmony bm dump semantic errors as failure even with zero exit")
+    func runHostCommandTreatsHarmonyBMDumpSemanticErrorAsFailure() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-fake-hdc-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let fakeHdc = directory.appendingPathComponent("hdc")
+        try Data("""
+        #!/bin/sh
+        printf 'Error: bundle not found\\n'
+        exit 0
+        """.utf8).write(to: fakeHdc)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: fakeHdc.path)
+        let command = TKHarmonyHDCCommand.appInspect(
+            target: "harmony-real:redacted",
+            bundleName: "com.example.missing",
+            executable: fakeHdc.path
+        )
+
+        do {
+            _ = try runHostCommand(command)
+            Issue.record("Harmony bm dump semantic failure was not raised")
+        } catch let HostCommandRunError.nonZeroExit(failedCommand, result) {
+            let detail = hostCommandNonZeroExitErrorDetail(command: failedCommand, result: result)
+            #expect(detail.code == "harmony_app_inspect_failed")
+        }
+    }
+
     @Test("host command timeout terminates process and leaves later commands usable")
     func runHostCommandTimeoutCleansUpProcess() throws {
         let command = TKHostCommand(
@@ -438,8 +481,9 @@ struct SimulatorAdvancedControlsTests {
         #expect(usageForms.contains(where: { $0.hasPrefix("erase ") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("upgrade ") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("personalization ") }))
-        #expect(optionNames.contains("tap --x <x> --y <y>") == false)
-        #expect(sim.subcommands.contains { $0.name == "tap" } == false)
+        #expect(optionNames.contains("--x"))
+        #expect(optionNames.contains("--y"))
+        #expect(sim.subcommands.contains { $0.name == "tap" })
         #expect(optionNames.contains("--display"))
         #expect(optionNames.contains("--device-type"))
         #expect(optionNames.contains("--data-container"))
@@ -469,6 +513,7 @@ struct SimulatorAdvancedControlsTests {
         #expect(sim.examples.contains("triton sim proxy start --simulator booted --mode record --output /tmp/ios-network --confirm --audit-record ticket-123 --execute-runner --json"))
         #expect(sim.examples.contains("triton sim proxy stop --simulator booted --restore --plan-only --json"))
         #expect(sim.examples.contains("triton sim media seed --manifest /tmp/gallery/manifest.json --simulator booted --json"))
+        #expect(sim.examples.contains("triton sim tap --simulator booted --x 180 --y 420 --json"))
         #expect(sim.examples.contains("triton sim create 'Codex iPhone' --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-16 --runtime com.apple.CoreSimulator.SimRuntime.iOS-26-0 --json"))
         #expect(sim.subcommands.first { $0.name == "create" }?.requiredOptions == ["<name>", "--device-type", "--runtime"])
     }
@@ -490,11 +535,14 @@ struct SimulatorAdvancedControlsTests {
         #expect(status.target?.kind == "simulator")
         #expect(status.limitations.contains("proxy_session_not_running"))
 
-        #expect(start.ok)
+        #expect(start.ok == false)
         #expect(start.platform == "ios")
         #expect(start.target?.target == "SIM-1")
         #expect(start.sourceCommands.contains("/usr/sbin/networksetup -setwebproxy Wi-Fi 127.0.0.1 19431"))
-        #expect(start.limitations.contains("proxy_plan_only:not_executed"))
+        #expect(start.error?.code == "proxy_platform_not_supported")
+        #expect(start.targetTrafficVerified == false)
+        #expect(start.targetTrafficScope == "host-network-service")
+        #expect(start.limitations.contains("proxy_host_only:host_network_service"))
     }
 
     @Test("iOS proxy override command plan sets HTTP and HTTPS then disables SOCKS")

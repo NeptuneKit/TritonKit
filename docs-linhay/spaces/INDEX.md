@@ -1,8 +1,8 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-07-30
-> 覆盖范围：156/156 个已存在 space
+> 最近同步：2026-08-09
+> 覆盖范围：157/157 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 156/156 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 156/156 | 每条记录链接到现有 space README |
+| 编号登记 | 157/157 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 157/157 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -181,3 +181,4 @@
 | `SP-154-issue-174-simulator-swipe-lifecycle` | [`SP-154-issue-174-simulator-swipe-lifecycle`](./SP-154-issue-174-simulator-swipe-lifecycle/README.md) | 已合并（PR #177） | 规范目录；#174 已关闭；persistent input、ack 与 terminal linger 已进入 `main` |
 | `SP-155-issue-175-ios-readiness-coredevice` | [`SP-155-issue-175-ios-readiness-coredevice`](./SP-155-issue-175-ios-readiness-coredevice/README.md) | 已合并（PR #177） | 规范目录；#175 已关闭；available-paired readiness 与 fail-closed blockers 已进入 `main` |
 | `SP-156-issue-176-xcode-compact-progress` | [`SP-156-issue-176-xcode-compact-progress`](./SP-156-issue-176-xcode-compact-progress/README.md) | 已合并（PR #177） | 规范目录；#176 已关闭；compact/full Xcode build progress 已进入 `main` |
+| `SP-157-open-issues-178-195-audit` | [`SP-157-open-issues-178-195-audit`](./SP-157-open-issues-178-195-audit/README.md) | 执行 | 2026-08-09 固定 #178–#195 共 18 条未关闭 issue 的全量验证队列；逐条审计、复现、修复隔离和收口复查 |

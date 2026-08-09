@@ -16,12 +16,49 @@ struct SimTap: AsyncParsableCommand {
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
-        try failHostValidation(
-            code: "unsupported_host_input",
-            message: "sim tap is not supported by the current public simctl io contract.",
-            hint: "This Xcode simctl io help does not expose a stable tap primitive. Use embedded runtime input, an app-owned debug hook, or another explicitly validated host tool.",
-            outputFormat: effectiveFormat(format, json: json)
-        )
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let selection = try resolveHostDeviceSelection(
+                request: HostDeviceSelectionRequest(
+                    device: simulator,
+                    platform: .ios,
+                    scope: .simulator
+                ),
+                hdc: "hdc",
+                adb: "adb"
+            )
+            let result = try runWebHostDeviceInput(
+                id: webHostDeviceTargetID(selection.target),
+                input: .tap(x: Double(x), y: Double(y))
+            )
+            guard result.ok else {
+                let error = result.error ?? TKCLIErrorDetail(
+                    code: "host_input_failed",
+                    message: result.message ?? "The iOS Simulator host HID tap was not accepted.",
+                    hint: "Verify the simulator is booted and the host HID adapter is available, then retry with the resolved simulator selector."
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(TKCLIErrorResponse(error: error)))
+                case .text:
+                    print(error.message)
+                    if let hint = error.hint {
+                        print("hint: \(hint)")
+                    }
+                }
+                throw ExitCode.failure
+            }
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(result))
+            case .text:
+                print(result.message ?? "iOS Simulator tap submitted through the host HID adapter.")
+            }
+        } catch let exitCode as ExitCode {
+            throw exitCode
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
     }
 }
 

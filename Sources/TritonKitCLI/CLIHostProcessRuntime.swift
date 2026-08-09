@@ -138,6 +138,15 @@ private func hostCommandHasSemanticFailure(_ command: TKHostCommand, result: Hos
         || combinedOutput.contains("error: failed to start")) {
         return true
     }
+    if command.arguments.contains("bm"),
+       command.arguments.contains("dump"),
+       (combinedOutput.contains("error")
+        || combinedOutput.contains("failed")
+        || combinedOutput.contains("not found")
+        || combinedOutput.contains("does not exist")
+        || combinedOutput.contains("unknown bundle")) {
+        return true
+    }
     guard command.arguments.contains("install") else {
         return false
     }
@@ -858,6 +867,12 @@ func failHostCommand(
         )
     case HostCommandRunError.simulatorNotBooted(let target, _):
         detail = simulatorNotBootedErrorDetail(target: target, message: "\(error)")
+    case HostCommandRunError.simulatorDataMissing:
+        detail = TKCLIErrorDetail(
+            code: "simulator_data_missing",
+            message: "\(error)",
+            hint: "Remove the stale simulator from CoreSimulator or repair its data directory, then rerun `triton sim list --json` and `triton sim boot <udid> --json`."
+        )
     case HostCommandRunError.layoutPathNotFound:
         detail = TKCLIErrorDetail(
             code: "harmony_layout_path_not_found",
@@ -1008,6 +1023,9 @@ func failHostCommand(
                 : iosDevicectlErrorMapping(stderr: result.stderr, jsonData: jsonData)
             code = mapping.code
             hint = mapping.hint
+        } else if isHDC && command.arguments.contains("bm") && command.arguments.contains("dump") {
+            code = "harmony_app_inspect_failed"
+            hint = "Verify the Harmony bundle is installed on the selected target, then retry `triton app info --platform harmony --bundle <bundle> --json`."
         } else if isHDC && command.arguments.contains("list") && command.arguments.contains("targets") {
             code = "host_action_failed"
             hint = "Verify hdc is installed, available on PATH, and can list Harmony targets."
@@ -1178,6 +1196,13 @@ func hostCommandNonZeroExitErrorDetail(command: TKHostCommand, result: HostProce
             )
         )
     }
+    if isHarmonyAppInspectCommand(command) {
+        return TKCLIErrorDetail(
+            code: "harmony_app_inspect_failed",
+            message: hostProcessFailureMessage(result),
+            hint: "Verify the Harmony bundle is installed on the selected target, then retry `triton app info --platform harmony --bundle <bundle> --json`."
+        )
+    }
     return TKCLIErrorDetail(
         code: "host_action_failed",
         message: hostProcessFailureMessage(result),
@@ -1205,6 +1230,13 @@ private func isHarmonyEmulatorStopFailureCommand(_ command: TKHostCommand) -> Bo
     return executable == "emulator"
         && command.arguments.contains("-stop")
         && command.arguments.contains("-path")
+}
+
+private func isHarmonyAppInspectCommand(_ command: TKHostCommand) -> Bool {
+    let executable = URL(fileURLWithPath: command.executable).lastPathComponent.lowercased()
+    return executable == "hdc"
+        && command.arguments.contains("bm")
+        && command.arguments.contains("dump")
 }
 
 func failHostUnsupportedCapability(

@@ -8,6 +8,24 @@ import UIKit
 @Suite
 struct TKRuntimeInputActionsTests {
     @MainActor
+    @Test("target oid tap fails closed after navigation detaches the old view")
+    func targetOIDTapFailsClosedForDetachedView() {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+        let oldView = UIView(frame: CGRect(x: 40, y: 80, width: 200, height: 60))
+        window.addSubview(oldView)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+
+        let oldOID = TKObjectRegistry.shared.register(oldView)
+        oldView.removeFromSuperview()
+
+        let result = performTap(.tap(targetOID: oldOID))
+
+        #expect(!result.ok)
+        #expect(result.message?.contains("stale_runtime_hierarchy") == true)
+    }
+
+    @MainActor
     @Test("UIButton primary-action menu uses public UIKit activation")
     func buttonPrimaryActionMenuUsesPublicUIKitActivation() async {
         guard #available(iOS 17.4, *) else { return }

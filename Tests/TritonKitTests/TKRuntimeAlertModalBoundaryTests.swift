@@ -58,6 +58,7 @@ struct TKRuntimeAlertModalBoundaryTests {
 
         #expect(!result.ok)
         #expect(result.error?.code == "unsupported_capability")
+        #expect(result.error?.suggestedCommands?.contains(where: { $0.hasPrefix("triton sim tap --simulator booted") }) == true)
         #expect(result.strategy == "alert-action-unsupported")
         #expect(fixture.delegate.selectedIndexPath == nil)
         #expect(fixture.collectionView.indexPathsForSelectedItems?.isEmpty != false)

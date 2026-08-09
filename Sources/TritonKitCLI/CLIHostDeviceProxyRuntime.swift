@@ -89,6 +89,8 @@ struct NetworkProxySession: Encodable, Equatable {
     let truncation: String?
     let probeResults: [NetworkProxyProbeResult]?
     let probeFindings: [NetworkProxyProbeFinding]?
+    let targetTrafficVerified: Bool
+    let targetTrafficScope: String
 
     init(
         ok: Bool,
@@ -113,7 +115,9 @@ struct NetworkProxySession: Encodable, Equatable {
         failureCount: Int? = nil,
         truncation: String? = nil,
         probeResults: [NetworkProxyProbeResult]? = nil,
-        probeFindings: [NetworkProxyProbeFinding]? = nil
+        probeFindings: [NetworkProxyProbeFinding]? = nil,
+        targetTrafficVerified: Bool = false,
+        targetTrafficScope: String = "unknown"
     ) {
         self.ok = ok
         self.surface = surface
@@ -138,6 +142,8 @@ struct NetworkProxySession: Encodable, Equatable {
         self.truncation = truncation
         self.probeResults = probeResults
         self.probeFindings = probeFindings
+        self.targetTrafficVerified = targetTrafficVerified
+        self.targetTrafficScope = targetTrafficScope
     }
 }
 
@@ -649,6 +655,15 @@ func makeNetworkProxyStartPlanSession(
         return rejected
     }
     let commands = networkProxyStartPlanCommands(platform: platform, target: target, endpoint: endpoint)
+    if platform == .ios {
+        return makeNetworkProxyIOSHostOnlySession(
+            action: .start,
+            target: target,
+            captureMode: captureMode,
+            proxyEndpoint: "\(endpoint.host):\(endpoint.port)",
+            sourceCommands: commands.map(hostSourceCommand)
+        )
+    }
     return NetworkProxySession(
         ok: true,
         surface: "host.device-proxy",
@@ -697,6 +712,15 @@ func makeNetworkProxyStopPlanSession(
     }
     if platform == .harmony {
         limitations.append("proxy_restore_probe_only:no_verified_harmony_proxy_mutation")
+    }
+    if platform == .ios {
+        return makeNetworkProxyIOSHostOnlySession(
+            action: .stop,
+            target: target,
+            captureMode: nil,
+            proxyEndpoint: nil,
+            sourceCommands: commands.map(hostSourceCommand)
+        )
     }
     return NetworkProxySession(
         ok: true,
@@ -876,6 +900,15 @@ func makeNetworkProxyStartExecutedSession(
     }
     let commands = networkProxyStartPlanCommands(platform: platform, target: target, endpoint: endpoint)
     let sourceCommands = commands.map(hostSourceCommand)
+    if platform == .ios {
+        return makeNetworkProxyIOSHostOnlySession(
+            action: .start,
+            target: target,
+            captureMode: captureMode,
+            proxyEndpoint: "\(endpoint.host):\(endpoint.port)",
+            sourceCommands: sourceCommands
+        )
+    }
     guard try endpointPreflight(endpoint) else {
         return makeNetworkProxyEndpointUnreachableSession(
             platform: platform,
@@ -1189,6 +1222,15 @@ func makeNetworkProxyStopExecutedSession(
     let snapshot = try restoreSnapshotPath.map(loadNetworkProxyRestoreSnapshot)
     let commands = snapshot?.restoreCommands ?? networkProxyStopPlanCommands(platform: platform, target: target, restore: restore)
     let sourceCommands = commands.map(hostSourceCommand)
+    if platform == .ios {
+        return makeNetworkProxyIOSHostOnlySession(
+            action: .stop,
+            target: target,
+            captureMode: nil,
+            proxyEndpoint: nil,
+            sourceCommands: sourceCommands
+        )
+    }
     do {
         try runNetworkProxyCommands(commands, runner: runner)
         var limitations = networkProxyDoctorLimitations(platform: platform) + [
@@ -1517,6 +1559,42 @@ func makeNetworkProxyUnverifiedPlatformSession(
             hint: "Run doctor/status and keep Harmony on the probe-only path until a real DevEco proxy setting command is verified.",
             nextAction: TKCLINextAction(command: "device", args: ["proxy", "doctor", "--platform", "harmony", "--json"], category: "diagnose")
         )
+    )
+}
+
+private func makeNetworkProxyIOSHostOnlySession(
+    action: NetworkProxyAction,
+    target: HostDeviceTarget,
+    captureMode: String?,
+    proxyEndpoint: String?,
+    sourceCommands: [String]
+) -> NetworkProxySession {
+    NetworkProxySession(
+        ok: false,
+        surface: "host.device-proxy",
+        action: action.rawValue,
+        platform: HostDevicePlatform.ios.rawValue,
+        target: target,
+        lane: .hostProxy,
+        captureMode: captureMode,
+        proxyEndpoint: proxyEndpoint,
+        configured: false,
+        cert: nil,
+        visibility: .none,
+        limitations: networkProxyDoctorLimitations(platform: .ios) + [
+            "proxy_host_only:host_network_service",
+            "proxy_target_traffic_unverified:simulator_scope",
+        ],
+        artifacts: [],
+        restore: NetworkProxyRestore(available: action == .stop, snapshotPath: nil, restored: action == .stop ? false : nil),
+        sourceCommands: sourceCommands,
+        error: TKCLIErrorDetail(
+            code: "proxy_platform_not_supported",
+            message: "iOS Simulator proxy commands currently mutate the host Wi-Fi service, not verified simulator traffic.",
+            hint: "TritonKit will not execute this plan. Use the sourceCommands only for review, then wait for a simulator-scoped proxy adapter or provide a verified host-network contract."
+        ),
+        targetTrafficVerified: false,
+        targetTrafficScope: "host-network-service"
     )
 }
 

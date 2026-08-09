@@ -1,4 +1,5 @@
 import ArgumentParser
+import Darwin
 import Foundation
 import TritonKitShared
 
@@ -1362,10 +1363,16 @@ struct DeviceStart: AsyncParsableCommand {
             if planOnly {
                 detached = nil
             } else {
+                let resolvedStdoutLog = platform == .harmony
+                    ? (stdoutLog ?? temporaryHarmonyArtifactPath(prefix: "triton-harmony-start", extension: "stdout.log"))
+                    : stdoutLog
+                let resolvedStderrLog = platform == .harmony
+                    ? (stderrLog ?? temporaryHarmonyArtifactPath(prefix: "triton-harmony-start", extension: "stderr.log"))
+                    : stderrLog
                 detached = try runHostCommandDetached(
                     plan.commands[0],
-                    stdoutLogPath: stdoutLog,
-                    stderrLogPath: stderrLog
+                    stdoutLogPath: resolvedStdoutLog,
+                    stderrLogPath: resolvedStderrLog
                 )
                 if platform == .harmony, let detached {
                     try failIfHarmonyLicenseAgreementBlocked(detached, outputFormat: outputFormat)
@@ -1418,7 +1425,23 @@ struct DeviceStart: AsyncParsableCommand {
         let stdout = detached.stdoutLogPath.flatMap { try? String(contentsOfFile: $0, encoding: .utf8) } ?? ""
         let stderr = detached.stderrLogPath.flatMap { try? String(contentsOfFile: $0, encoding: .utf8) } ?? ""
         guard harmonyEmulatorLicenseAgreementDetected(stdout: stdout, stderr: stderr) else {
-            return
+            guard harmonyDetachedProcessExitedEarly(pid: detached.pid) else {
+                return
+            }
+            let detail = harmonyEmulatorExitedEarlyErrorDetail(
+                stdoutLogPath: detached.stdoutLogPath,
+                stderrLogPath: detached.stderrLogPath
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+            case .text:
+                print(detail.message)
+                if let hint = detail.hint {
+                    print("hint: \(hint)")
+                }
+            }
+            throw ExitCode.failure
         }
         let detail = harmonyEmulatorLicenseAgreementErrorDetail(
             stdoutLogPath: detached.stdoutLogPath,
@@ -1512,6 +1535,7 @@ struct DeviceStop: AsyncParsableCommand {
                     launchdLabel: nil,
                     launchdDomain: nil,
                     sourceCommands: [result.sourceCommand],
+                    warnings: [],
                     note: "Android emulator stop completed. Verify with `triton device list --platform android --json`; the target should be absent or offline."
                 )
                 switch outputFormat {
@@ -1531,9 +1555,24 @@ struct DeviceStop: AsyncParsableCommand {
                     confirmed: confirm
                 )
                 var sourceCommands: [String] = []
+                var warnings: [String] = []
+                var launchdJobAbsent = false
                 for command in plan.commands {
-                    let result = try runHostCommand(command)
-                    sourceCommands.append(result.sourceCommand)
+                    if launchdJobAbsent, isHarmonyLaunchdLifecycleCommand(command, subcommand: "bootout") {
+                        sourceCommands.append(hostSourceCommand(command))
+                        continue
+                    }
+                    do {
+                        let result = try runHostCommand(command)
+                        sourceCommands.append(result.sourceCommand)
+                    } catch {
+                        guard isMissingHarmonyLaunchdJob(command: command, error: error) else {
+                            throw error
+                        }
+                        launchdJobAbsent = true
+                        sourceCommands.append(hostSourceCommand(command))
+                        warnings.append("launchd_job_absent: \(plan.launchdDomain ?? "")/\(plan.launchdLabel ?? "")")
+                    }
                 }
                 let output = HostDeviceStopOutput(
                     ok: true,
@@ -1547,7 +1586,10 @@ struct DeviceStop: AsyncParsableCommand {
                     launchdLabel: plan.launchdLabel,
                     launchdDomain: plan.launchdDomain,
                     sourceCommands: sourceCommands,
-                    note: "Harmony emulator stop completed. Verify with `triton device list --platform harmony --json`; the target should remain disconnected or absent."
+                    warnings: warnings,
+                    note: warnings.isEmpty
+                        ? "Harmony emulator stop completed. Verify with `triton device list --platform harmony --json`; the target should remain disconnected or absent."
+                        : "Harmony emulator stop completed; no Triton launchd job was present. Verify with `triton device list --platform harmony --json`; the target should remain disconnected or absent."
                 )
                 switch outputFormat {
                 case .json:
@@ -1567,4 +1609,23 @@ struct DeviceStop: AsyncParsableCommand {
             try failHostCommand(error, outputFormat: outputFormat)
         }
     }
+}
+
+private func isHarmonyLaunchdLifecycleCommand(_ command: TKHostCommand, subcommand: String) -> Bool {
+    command.executable == "launchctl"
+        && command.arguments.first == subcommand
+        && command.arguments.contains { $0.contains("triton-harmony-emulator") }
+}
+
+func isMissingHarmonyLaunchdJob(command: TKHostCommand, error: Error) -> Bool {
+    guard isHarmonyLaunchdLifecycleCommand(command, subcommand: "print")
+        || isHarmonyLaunchdLifecycleCommand(command, subcommand: "bootout") else {
+        return false
+    }
+    guard case let HostCommandRunError.nonZeroExit(_, result) = error else { return false }
+    let output = [result.stdout, result.stderr].joined(separator: "\n").lowercased()
+    return output.contains("could not find service")
+        || output.contains("service not found")
+        || output.contains("no such process")
+        || output.contains("could not find job")
 }
