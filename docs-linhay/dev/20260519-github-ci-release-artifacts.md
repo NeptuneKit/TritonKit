@@ -87,6 +87,14 @@ tag 前必须先在 `main` 完成版本契约、本地门禁和远端 validate�
 
 2026-07-28 的 `v0.2.16` 已按上述完整口径发布：Release workflow `30326964768` 的 contracts、双架构构建、arm64 首发、x86_64 backfill 与两次 tap 更新全部成功。四个公开资产重新下载后通过 checksum 与 gzip 校验；CLI 分别为 arm64/x86_64 Mach-O 且均报告 `0.2.16`，public skill bundle 的 `BUILD_INFO.json` 为 `v0.2.16` / commit `f986ba97`。Homebrew 从 `0.2.15` 升级到 `0.2.16` 并通过 formula test；安装版对真实 iOS Simulator 的 `/web/host-input` tap 返回 host-HID adapter 成功结果，原 `34127` 页面更新后同样显示 LIVE、tap 坐标且 console 0 error/warning。CocoaPods 仅完成 podspec lint，未推送 trunk。
 
+## v0.2.17 发布边界
+
+`v0.2.17` 汇总 `v0.2.16` 之后主线对 GitHub issues `#178–#197` 的实现与可靠性收口，并同步 GitHub issue 治理与 public skill 打包记忆。发布面继续保持 macOS arm64/x86_64 `triton` CLI、bundled Web、checksum manifest、四个 public skills、Homebrew formula，以及同 tag 的 SwiftPM/CocoaPods/Web 版本入口。
+
+2026-08-09 的 `v0.2.17` 已按完整口径发布：tag 指向提交 `7fa61e0567453cb30b1a9177bd44c82ab5801eea`；Release workflow `31302214544` 的 contracts、双架构构建、arm64 首发、x86_64 backfill 与两次 tap 更新全部成功。重新下载的四个公开资产通过 checksum 与 gzip 校验；两个 CLI 分别验证为 arm64/x86_64 Mach-O 且均报告 `0.2.17`；public skill bundle 的 `BUILD_INFO.json` 为 `0.2.17` / release tag `v0.2.17` / commit `7fa61e0`。Homebrew 从 `0.2.16` 升级到 `0.2.17` 并通过 formula test；安装版在仓库外的隔离端口 `34129` 启动 packaged Web 并返回 HTTP 200。CocoaPods 已通过 `TritonKit passed validation.`，仅完成 podspec lint，未推送 trunk。
+
+GitHub Release：<https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.17>。
+
 ## Homebrew
 
 新增 Homebrew 二进制安装链路：
