@@ -95,6 +95,14 @@ tag 前必须先在 `main` 完成版本契约、本地门禁和远端 validate�
 
 GitHub Release：<https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.17>。
 
+## v0.2.18 发布边界
+
+`v0.2.18` 汇总主线对 GitHub issues `#198` / `#199` 的实现：Harmony `assembleApp` 的 signed HAP 选择，以及 iOS Simulator `UICollectionViewCell` 的显式、可审计 host-HID fallback。public skills 同步补齐这两个对外契约；发布面继续保持 macOS arm64/x86_64 `triton` CLI、bundled Web、checksum manifest、四个 public skills、Homebrew formula，以及同 tag 的 SwiftPM/CocoaPods/Web 版本入口。
+
+2026-08-10 的 `v0.2.18` 已按完整口径发布：准备提交 `af3650f8`，docs-only 收口提交 `adbfc92c`；Release workflow `31401954322` 的 contracts、双架构构建、arm64 首发、x86_64 backfill 与两次 tap 更新全部成功。重新下载四个公开资产后通过 checksum 与 gzip 校验；两个 CLI 分别验证为 arm64/x86_64 Mach-O 且均报告 `0.2.18`；public skill bundle 的 `BUILD_INFO.json` 为 `0.2.18` / release tag `v0.2.18` / commit `af3650f`。Homebrew 从 `0.2.17` 升级到 `0.2.18` 并通过 formula test；安装版在仓库外隔离端口 `34129` 启动 packaged Web 并返回 HTTP 200。CocoaPods 通过 `TritonKit passed validation.`，仅完成 podspec lint，未推送 trunk。
+
+GitHub Release：<https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.18>。
+
 ## Homebrew
 
 新增 Homebrew 二进制安装链路：

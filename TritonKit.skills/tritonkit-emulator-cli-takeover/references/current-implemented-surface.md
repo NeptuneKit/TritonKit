@@ -179,6 +179,15 @@ triton coverage report --xcresult /tmp/<case>.xcresult --output /tmp/<case>-cove
 
 For iOS Simulator host AX flows, `wait --platform ios` polls the same `host-layout` source as `observe tree --platform ios --device <selector>`. It supports `--text`, `--exists`, `--gone`, and optional `--role`, returns the `host.ios-wait` contract, and remains available when the management server or embedded runtime is disconnected. It is Simulator-only; do not route iOS real-device selectors into the private-framework AX adapter. Embedded idle, hierarchy-change, and predicate waits still use plain `wait` with a runtime target.
 
+For a resolved embedded iOS `UICollectionViewCell` tap, the default remains fail-closed with `strategy=ancestor-collection-cell-unsupported` and `error.code=unsupported_capability`. Query and AX-label/oid paths may opt into one auditable host-HID coordinate submission:
+
+```bash
+triton act tap "<text>" --target <ios-runtime-target-from-triton-list> --allow-host-hid-fallback --json
+triton act tap --ax-label "<label>" --target <ios-runtime-target-from-triton-list> --allow-host-hid-fallback --json
+```
+
+The fallback is accepted only for a connected iOS Simulator with a `simulatorUDID`, fresh finite positive matched geometry, and an on-screen center. It is not available for coordinate-only taps, Android, Harmony, physical devices, stale/off-screen geometry, or an unresolved node. A fallback result must retain `source=host-hid`, `strategy=host-hid-coordinate-tap`, `fallbackFromStrategy`, matched geometry, bounded `sourceCommands`, and `verification.required=true` / `status=not-verified`. Host acknowledgement is submission evidence only; follow it with `wait` / `verify` / evidence capture before claiming a business postcondition.
+
 `triton evidence summary` / `inspect` now expose `primaryArtifacts[]`; agent should inspect those first before traversing the entire artifact set.
 
 `triton replay ... --json` should also be consumed top-down: check `recoveryProposal`, `failedStepIndex`, `failureCode`, `failureError`, `failureWorkflowCategories[]`, `failureRecoveryCategories[]`, `failurePrimaryArtifacts[]`, `recoveryCommands[]`, and `suggestedCommands[]` before traversing every replay step. `recoveryProposal` is the repair-advisor envelope: read `diagnosis`, `evidenceRefs`, `proposal.policyDecision`, and `nextActions[]` before deciding whether to retry, inspect artifacts, or stop for review. Then inspect the failed step `error` payload when present, including `wait/input/evidence` failures that only returned `ok=false`. If `failureError.nextAction` exists, expect replay recovery commands and proposal next actions to expose the same path. Prefer replay failures that preserve runtime/target/transport error codes directly; treat unnecessary fallback to `step_failed` as a control-surface bug.

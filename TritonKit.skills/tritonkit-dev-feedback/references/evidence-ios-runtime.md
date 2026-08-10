@@ -64,6 +64,8 @@ Treat a presented `UIAlertController` action as a modal boundary. A safe public 
 
 For an embedded `UITableViewCell` match, `strategy=ancestor-table-cell-selection` now means Triton honored `willSelectRowAt`, selected the resolved row, and invoked `didSelectRowAt` before returning. Preserve the success message and then verify the delegate's visible business postcondition; do not treat row selection state alone as proof when the delegate starts asynchronous work.
 
+For an embedded `UICollectionViewCell` match, keep the default `ancestor-collection-cell-unsupported` / `unsupported_capability` result fail-closed. If the finding is specifically on a connected iOS Simulator, an agent may reproduce it with the explicit `--allow-host-hid-fallback` flag after obtaining fresh finite/on-screen geometry. Preserve `source`, `strategy`, `fallbackFromStrategy`, `geometry`, `sourceCommands`, and `verification.required=true` / `status=not-verified`; host-HID acknowledgement is not a business-success proof, so follow it with `wait`, `verify`, or evidence capture. Do not recommend this fallback for physical devices, other platforms, coordinate-only taps, or stale/invalid geometry.
+
 ## WebView evidence
 
 ```bash

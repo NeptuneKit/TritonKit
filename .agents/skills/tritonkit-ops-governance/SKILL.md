@@ -27,6 +27,8 @@ metadata:
 - WebView 内 H5 控件命中问题优先保持 agent 高层入口：使用 `triton act tap --webview-aware --selector <css> --webview-id <id> --page-session-id <id> --expect-text <text> --json`，不要把 `webview tap/click` 暴露成主操作面。DOM click 为 `trusted=false`，没有 `--expect-text` 或其它显式验证时结果必须是 `uncertain`，不能宣称业务成功；`expect-request`、CDP/远程调试、任意 JS eval 和 trusted HID 合成需另建切片。
 - 面向 agent 的 action 命令统一走 `triton act find/tap/swipe/type/paste/clear/press/focus/set-text/select-segment/set-switch/input`，默认要求机器可读输出。旧 action root 不再作为兼容入口；raw layout / AX 排查走 `triton debug ax --json` 或 `triton debug hierarchy --json`。
 - 设备控制参考 Baguette 时，先区分 embedded TritonKit runtime 与 macOS host-side adapter：embedded runtime 只能承诺公开 UIKit API 可验证的 in-app 控制；SimulatorKit / HID / Home / App Switcher 等设备级动作必须等 host-side adapter，当前要返回明确 unsupported。
+- 新增 host-side fallback 时，默认 embedded 路径必须保持 fail-closed；只有显式 opt-in、目标 scope 和 geometry 校验通过后才能调用 adapter，并在结果中保留 source/strategy/geometry/sourceCommands 与 `verification.required` 边界，同时更新对外 public skill 的使用与验收说明。
+- 可安装 artifact discovery 必须遵守平台安装性约束：Harmony `assembleApp` 只选择可识别为 signed 的 HAP；没有 signed 候选时沿用单一 `hap_artifact_not_found` 失败 envelope，不把 unsigned 产物伪装成 real-device installable artifact；兼容性更宽的 emulator/debug build 路径要单独标注。
 - Wails 绑定先测绑定对象和 DTO；有真实 UI 后再补桌面窗口验收。
 - 当前已有 `Web/` React / Vite mock 工程，但它只是可运行设计原型，不是业务控制入口或 Wails 复活；任何恢复正式 Web/Wails 产品体验的工作仍必须先新建或更新 `space` 与 BDD 场景，并优先使用 `tritonkit-web-mock-ui`。
 - Package Manager 集成时，embedded TritonKit runtime 由 package 内部 Debug compile flag `TRITONKIT_RUNTIME_ENABLED` 控制；Debug package build 启用，Release package build API 保持可编译但 runtime 必须 no-op，不按端类型或 UIKit 可导入性决定是否启用。

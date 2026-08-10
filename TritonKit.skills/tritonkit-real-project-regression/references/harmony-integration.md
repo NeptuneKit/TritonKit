@@ -19,6 +19,14 @@ triton screenshot --device <hdc-target> --output /tmp/<case>.jpeg --json
 triton smoke harmony --device <hdc-target> --bundle <bundle> --ability <ability> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json
 ```
 
+When building a real Harmony app through DevEco `assembleApp`, select only the installable signed artifact:
+
+```bash
+triton build harmony --project <project> --module entry --task assembleApp --product default --mode debug --no-daemon --json
+```
+
+`assembleApp` may emit an unsigned HAP beside a `*-signed.hap` sibling. TritonKit routes `artifact` and the install `nextAction --hap` to the signed HAP only. If no signed candidate exists, it returns the single `hap_artifact_not_found` envelope with a signing hint instead of suggesting an unsigned install. The legacy `assembleHap` emulator/debug discovery path may still accept an unsigned fixture; do not treat that compatibility path as proof of real-device installability.
+
 When multiple HDC targets are `Connected`, pass `--device <alias-or-id>` or an explicit `--target`; `ambiguous_target` is the expected machine-readable failure.
 Host-side layout and screenshot artifacts may contain private UI data; inspect or summarize them before attaching evidence to public issues.
 
