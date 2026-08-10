@@ -12,7 +12,7 @@
 - [x] `swift test --package-path CLI --scratch-path .build/sp161-198 --filter BuildRuntimeTests` — 4/4 通过，含默认 assembleHap unsigned fixture。
 - [x] `git diff --check` — 通过。
 - [x] `swift build --package-path CLI --scratch-path .build/sp161-198-release -c release --product triton` — 通过（`Build of product 'triton' complete`）。
-- [ ] `docs-linhay/scripts/check-docs.sh` — 待主控把 SP-161 登记到全局 `INDEX.md` 后执行；当前因缺少索引链接阻塞。
+- [x] `docs-linhay/scripts/check-docs.sh` — 主控登记 SP-161/SP-162 后通过（`162 spaces registered`）。
 
 ## 风险 / 停止条件
 

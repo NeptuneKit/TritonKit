@@ -43,5 +43,5 @@
 ## 当前状态
 
 - 已完成实现与 focused 验证：`BuildRunnerTests` 10/10、`BuildRuntimeTests` 4/4，`git diff --check` 通过；真实 Harmony 工程、签名资产和设备不在本 space 范围内。
-- `docs-linhay/scripts/check-docs.sh` 待主控登记 SP-161 全局索引后执行；当前仅因缺少该登记链接阻塞。
-- 主控负责更新 `docs-linhay/spaces/INDEX.md`、`spaces/README.md`、memory、分支集成和 GitHub issue 收口。
+- 已由主控登记全局 `INDEX.md` / `spaces/README.md`、写回 memory，并通过 `docs-linhay/scripts/check-docs.sh`；实现已由 merge `574bbc9c` 进入本地 `main`。
+- GitHub #198 仍待用户授权后的远端验证评论、push/PR 与关闭；真实 Harmony 工程、签名资产和 HDC 安装继续保持风险边界。
