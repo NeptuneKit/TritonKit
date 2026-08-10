@@ -1,8 +1,8 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-08-09
-> 覆盖范围：160/160 个已存在 space
+> 最近同步：2026-08-10
+> 覆盖范围：162/162 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 160/160 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 160/160 | 每条记录链接到现有 space README |
+| 编号登记 | 162/162 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 162/162 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -185,3 +185,5 @@
 | `SP-158-issue-196-xcode-archive-export` | [`SP-158-issue-196-xcode-archive-export`](./SP-158-issue-196-xcode-archive-export/README.md) | 已归档 | #196 archive/export 已在主线 `e77c72b7` 验证并关闭；真实签名/IPA 安装仍保留为风险 |
 | `SP-159-issue-195-ios-ddi-recovery` | [`SP-159-issue-195-ios-ddi-recovery`](./SP-159-issue-195-ios-ddi-recovery/README.md) | 已归档 | #195 `ddi_missing` recovery 已在主线 `e77c72b7` 验证并关闭；真实 DDI/tunnel smoke 仍待设备与授权 |
 | `SP-160-issue-197-harmony-wait-budget` | [`SP-160-issue-197-harmony-wait-budget`](./SP-160-issue-197-harmony-wait-budget/README.md) | 已归档 | #197 0.4 秒最小 layout capture budget 已在主线 `e77c72b7` 验证并关闭；真实 Harmony HDC/ArkUI smoke 仍待 target |
+| `SP-161-issue-198-harmony-signed-hap` | [`SP-161-issue-198-harmony-signed-hap`](./SP-161-issue-198-harmony-signed-hap/README.md) | 已完成（本地） | #198 signed-only `assembleApp` artifact discovery 已进入本地 `main@574bbc9c`；远端 issue 尚未评论/关闭，真实 Harmony 签名工程与 HDC 安装未执行 |
+| `SP-162-issue-199-ios-collection-cell-host-hid` | [`SP-162-issue-199-ios-collection-cell-host-hid`](./SP-162-issue-199-ios-collection-cell-host-hid/README.md) | 已完成（本地） | #199 opt-in、可审计 iOS Simulator host-HID fallback 已进入本地 `main@38967558`；远端 issue 尚未评论/关闭，真实 Simulator/Baguette 未执行 |

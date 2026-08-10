@@ -2,9 +2,9 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（160/160 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（162/162 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-08-09
+> 最近审计：2026-08-10
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -26,6 +26,8 @@
 | 已归档 | [SP-158-issue-196-xcode-archive-export](./SP-158-issue-196-xcode-archive-export/README.md) | #196：Xcode archive 与 IPA export 的 schema-backed CLI workflow 已进入 `main` | CI `31301092517` 全绿并已关闭；真实签名/IPA 安装风险保留 |
 | 已归档 | [SP-159-issue-195-ios-ddi-recovery](./SP-159-issue-195-ios-ddi-recovery/README.md) | #195：`ddi_missing` 的可执行 iOS real-device app-install recovery 已进入 `main` | CI `31301092517` 全绿并已关闭；真实 DDI/tunnel smoke 风险保留 |
 | 已归档 | [SP-160-issue-197-harmony-wait-budget](./SP-160-issue-197-harmony-wait-budget/README.md) | #197：Harmony wait 在剩余预算低于 0.4 秒时不再启动 `dumpLayout`/`recv`，返回标准 timeout envelope | CI `31301092517` 全绿并已关闭；真实 Harmony HDC/ArkUI smoke 风险保留 |
+| 已完成（本地） | [SP-161-issue-198-harmony-signed-hap](./SP-161-issue-198-harmony-signed-hap/README.md) | #198：`assembleApp` 只选择 signed HAP；unsigned-only fail-closed，并保持 artifact/nextAction 同源 | `BuildRunnerTests` 10/10、`BuildRuntimeTests` 4/4、release build 通过；等待用户授权后再做远端收口，真实 Harmony smoke 未运行 |
+| 已完成（本地） | [SP-162-issue-199-ios-collection-cell-host-hid](./SP-162-issue-199-ios-collection-cell-host-hid/README.md) | #199：`act tap` 增加 `--allow-host-hid-fallback`，限 connected iOS Simulator、校验 geometry，并输出 verification/source evidence | fallback 8/8、`InputOutputTests` 4/4、release build 通过；`SchemaFactSourceTests` 的 5 项 Xcode schema 基线失败已复现，等待用户授权后再做远端收口 |
 | 已合并（PR #177） | [SP-152-issue-172-runtime-reregistration](./SP-152-issue-172-runtime-reregistration/README.md) | #172 embedded runtime 新进程重注册与断连重连已完成；旧 task/timer 不得污染新连接，legacy SDK 兼容/拒绝原因保持机器可读 | issue 已关闭；root 238/238 与 CI 通过，真实 App 重装 smoke 未运行 |
 | 已合并（PR #177） | [SP-153-issue-173-xcode-run-target-binding](./SP-153-issue-173-xcode-run-target-binding/README.md) | #173 已将 `xcode run` 显式 Simulator destination 固化为 build/settings/install/launch/app-scoped readiness 共用的 immutable target | issue 已关闭；CI 通过，真实 Xcode/Simulator 未运行 |
 | 已合并（PR #177） | [SP-154-issue-174-simulator-swipe-lifecycle](./SP-154-issue-174-simulator-swipe-lifecycle/README.md) | #174 已用单一 persistent Baguette session、逐事件 ack 与 terminal linger 修复 iOS Simulator swipe 生命周期；host success 仍只代表提交 | issue 已关闭；CI 通过，真实 vertical pager smoke 未运行 |
@@ -94,6 +96,8 @@
 | `SP-158-issue-196-xcode-archive-export` | `feat/SP-158-issue-196-xcode-archive-export` | `../TritonKit-worktrees/SP-158-issue-196-xcode-archive-export/` | `main@e77c72b7` | `b3d0c27c` 已由 merge `424113b6` 进入主线；#196 已评论并关闭，真实签名风险保留 |
 | `SP-159-issue-195-ios-ddi-recovery` | `feat/SP-159-issue-195-ios-ddi-recovery` | `../TritonKit-worktrees/SP-159-issue-195-ios-ddi-recovery/` | `main@e77c72b7` | `45c3ebbd` 已由 merge `faa74638` 进入主线；#195 已评论并关闭，真实 DDI/tunnel 风险保留 |
 | `SP-160-issue-197-harmony-wait-budget` | `feat/SP-160-issue-197-harmony-wait-budget` | `../TritonKit-worktrees/SP-160-issue-197-harmony-wait-budget/` | `main@e77c72b7` | `0ff8089e` 已由 merge `e77c72b7` 进入主线；#197 已评论并关闭，真实 Harmony smoke 风险保留 |
+| `SP-161-issue-198-harmony-signed-hap` | `feat/SP-161-issue-198-harmony-signed-hap` | `../TritonKit-worktrees/SP-161-issue-198-harmony-signed-hap/` | `main@c55c5cab` | `ffc69a34` 已由 merge `574bbc9c` 进入本地 main；#198 待远端评论/关闭，worktree 保留为审计记录 |
+| `SP-162-issue-199-ios-collection-cell-host-hid` | `feat/SP-162-issue-199-ios-collection-cell-host-hid` | `../TritonKit-worktrees/SP-162-issue-199-ios-collection-cell-host-hid/` | `main@c55c5cab` | `711db3f2` 已由 merge `38967558` 进入本地 main；#199 待远端评论/关闭，真实 Simulator/Baguette 风险保留 |
 | `SP-152-issue-172-runtime-reregistration` | `feat/SP-152-issue-172-runtime-reregistration`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #172 已合并并关闭；runtime lifecycle/compatibility 证据保留 |
 | `SP-153-issue-173-xcode-run-target-binding` | `feat/SP-153-issue-173-xcode-run-target-binding`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #173 已合并并关闭；单目标绑定证据保留 |
 | `SP-154-issue-174-simulator-swipe-lifecycle` | `feat/SP-154-issue-174-simulator-swipe-lifecycle`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #174 已合并并关闭；persistent input lifecycle 证据保留 |
