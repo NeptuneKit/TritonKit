@@ -207,6 +207,17 @@ public struct TKInputResult: Codable, Equatable {
     public let activationOID: UInt?
     public let activationClassName: String?
     public let strategy: String?
+    /// The execution source. Embedded runtime results may omit this for wire compatibility;
+    /// host fallback results use `host-hid` so callers can audit the transport boundary.
+    public let source: String?
+    /// Geometry of the matched runtime node retained as non-sensitive tap evidence.
+    public let geometry: TKRect?
+    /// Strategy that was attempted in the embedded runtime before a host fallback.
+    public let fallbackFromStrategy: String?
+    /// Host/runtime actions are submission-only unless this boundary is explicitly verified.
+    public let verification: TKInputVerificationBoundary?
+    /// Source commands are bounded, redacted command descriptions from host adapters.
+    public let sourceCommands: [String]?
     public let secure: Bool?
     public let redacted: Bool?
     public let insertedLength: Int?
@@ -224,6 +235,11 @@ public struct TKInputResult: Codable, Equatable {
         activationOID: UInt? = nil,
         activationClassName: String? = nil,
         strategy: String? = nil,
+        source: String? = nil,
+        geometry: TKRect? = nil,
+        fallbackFromStrategy: String? = nil,
+        verification: TKInputVerificationBoundary? = nil,
+        sourceCommands: [String]? = nil,
         secure: Bool? = nil,
         redacted: Bool? = nil,
         insertedLength: Int? = nil,
@@ -240,6 +256,11 @@ public struct TKInputResult: Codable, Equatable {
         self.activationOID = activationOID
         self.activationClassName = activationClassName
         self.strategy = strategy
+        self.source = source
+        self.geometry = geometry
+        self.fallbackFromStrategy = fallbackFromStrategy
+        self.verification = verification
+        self.sourceCommands = sourceCommands
         self.secure = secure
         self.redacted = redacted
         self.insertedLength = insertedLength
@@ -257,6 +278,11 @@ public struct TKInputResult: Codable, Equatable {
         activationOID: UInt? = nil,
         activationClassName: String? = nil,
         strategy: String? = nil,
+        source: String? = nil,
+        geometry: TKRect? = nil,
+        fallbackFromStrategy: String? = nil,
+        verification: TKInputVerificationBoundary? = nil,
+        sourceCommands: [String]? = nil,
         secure: Bool? = nil,
         redacted: Bool? = nil,
         insertedLength: Int? = nil,
@@ -274,6 +300,11 @@ public struct TKInputResult: Codable, Equatable {
             activationOID: activationOID,
             activationClassName: activationClassName,
             strategy: strategy,
+            source: source,
+            geometry: geometry,
+            fallbackFromStrategy: fallbackFromStrategy,
+            verification: verification,
+            sourceCommands: sourceCommands,
             secure: secure,
             redacted: redacted,
             insertedLength: insertedLength,
@@ -292,6 +323,11 @@ public struct TKInputResult: Codable, Equatable {
         activationOID: UInt? = nil,
         activationClassName: String? = nil,
         strategy: String? = nil,
+        source: String? = nil,
+        geometry: TKRect? = nil,
+        fallbackFromStrategy: String? = nil,
+        verification: TKInputVerificationBoundary? = nil,
+        sourceCommands: [String]? = nil,
         error: TKCLIErrorDetail? = nil
     ) -> TKInputResult {
         TKInputResult(
@@ -305,6 +341,11 @@ public struct TKInputResult: Codable, Equatable {
             activationOID: activationOID,
             activationClassName: activationClassName,
             strategy: strategy,
+            source: source,
+            geometry: geometry,
+            fallbackFromStrategy: fallbackFromStrategy,
+            verification: verification,
+            sourceCommands: sourceCommands,
             error: error
         )
     }
@@ -317,7 +358,12 @@ public struct TKInputResult: Codable, Equatable {
         matchedClassName: String? = nil,
         activationOID: UInt? = nil,
         activationClassName: String? = nil,
-        error: TKCLIErrorDetail? = nil
+        error: TKCLIErrorDetail? = nil,
+        source: String? = nil,
+        geometry: TKRect? = nil,
+        fallbackFromStrategy: String? = nil,
+        verification: TKInputVerificationBoundary? = nil,
+        sourceCommands: [String]? = nil
     ) -> TKInputResult {
         failure(
             action: action,
@@ -329,7 +375,33 @@ public struct TKInputResult: Codable, Equatable {
             activationOID: activationOID,
             activationClassName: activationClassName,
             strategy: strategy,
+            source: source,
+            geometry: geometry,
+            fallbackFromStrategy: fallbackFromStrategy,
+            verification: verification,
+            sourceCommands: sourceCommands,
             error: error
         )
+    }
+}
+
+/// Explicit boundary for actions submitted through a host adapter. A successful
+/// host-HID enqueue is not proof that the app navigated or selected business state.
+public struct TKInputVerificationBoundary: Codable, Equatable {
+    public let required: Bool
+    public let status: String
+    public let hint: String
+    public let suggestedCommands: [String]
+
+    public init(
+        required: Bool = true,
+        status: String = "not-verified",
+        hint: String,
+        suggestedCommands: [String] = []
+    ) {
+        self.required = required
+        self.status = status
+        self.hint = hint
+        self.suggestedCommands = suggestedCommands
     }
 }

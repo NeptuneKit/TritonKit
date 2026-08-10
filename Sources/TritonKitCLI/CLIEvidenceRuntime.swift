@@ -653,6 +653,24 @@ func printInputResult(_ result: TKInputResult, format: ClientOutputFormat) throw
         if let strategy = result.strategy {
             print("strategy: \(strategy)")
         }
+        if let source = result.source {
+            print("source: \(source)")
+        }
+        if let geometry = result.geometry {
+            print("geometry: \(formatRect(geometry))")
+        }
+        if let fallbackFromStrategy = result.fallbackFromStrategy {
+            print("fallbackFromStrategy: \(fallbackFromStrategy)")
+        }
+        if let verification = result.verification {
+            print("verification: \(verification.status) (required: \(verification.required))")
+            print("verificationHint: \(verification.hint)")
+        }
+        if let sourceCommands = result.sourceCommands {
+            for command in sourceCommands {
+                print("sourceCommand: \(command)")
+            }
+        }
         if let secure = result.secure {
             print("secure: \(secure)")
         }
