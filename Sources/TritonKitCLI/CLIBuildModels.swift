@@ -161,7 +161,11 @@ enum CLIBuildError: Error, CustomStringConvertible {
         case .buildFailed(_, let plan, _, let result):
             "Build command failed with exit \(result.exitCode): \(plan.sourceCommand)"
         case .artifactNotFound(let platform, let plan, _, _):
-            "No \(platform == "android" ? "APK" : "HAP") artifact was found after build: \(plan.project)"
+            if platform == "harmony", plan.arguments.contains(where: { $0.caseInsensitiveCompare("assembleApp") == .orderedSame }) {
+                "No signed HAP artifact was found after assembleApp: \(plan.project)"
+            } else {
+                "No \(platform == "android" ? "APK" : "HAP") artifact was found after build: \(plan.project)"
+            }
         }
     }
 }

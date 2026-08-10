@@ -204,6 +204,68 @@ struct BuildRunnerTests {
         #expect(harmony?.bytes == 3)
     }
 
+    @Test("Harmony assembleApp prefers signed HAP sibling and routes the same artifact into nextAction")
+    func harmonyAssembleAppPrefersSignedHAPSiblingAndRoutesSameArtifactIntoNextAction() throws {
+        let project = try makeTemporaryProject()
+        let fakeHvigor = project.appendingPathComponent("fake-hvigor.sh")
+        try writeExecutable(fakeHvigor, body: """
+        mkdir -p app
+        printf 'unsigned' > app/entry-default.hap
+        printf 'signed' > app/entry-default-signed.hap
+        """)
+
+        let summary = try runCLIBuild(.harmony(
+            project: project.path,
+            hvigor: fakeHvigor.path,
+            module: "entry",
+            mode: "debug",
+            device: "harmony-real",
+            timeout: 30,
+            discoveryRoot: nil,
+            task: "assembleApp"
+        ))
+
+        #expect(summary.ok)
+        #expect(summary.artifactPath?.hasSuffix("/app/entry-default-signed.hap") == true)
+        #expect(summary.artifact == summary.artifactPath)
+        #expect(summary.nextAction?.args.contains("--hap") == true)
+        #expect(summary.nextAction?.args.contains { $0.hasSuffix("/app/entry-default-signed.hap") } == true)
+        #expect(summary.nextAction?.args.contains(project.appendingPathComponent("app/entry-default.hap").path) == false)
+    }
+
+    @Test("Harmony assembleApp fails closed when only unsigned HAPs are discovered")
+    func harmonyAssembleAppFailsClosedWhenOnlyUnsignedHAPsAreDiscovered() throws {
+        let project = try makeTemporaryProject()
+        let fakeHvigor = project.appendingPathComponent("fake-hvigor.sh")
+        try writeExecutable(fakeHvigor, body: """
+        mkdir -p app
+        printf 'unsigned' > app/entry-default-unsigned.hap
+        """)
+        let request = CLIBuildRequest.harmony(
+            project: project.path,
+            hvigor: fakeHvigor.path,
+            module: "entry",
+            mode: "debug",
+            device: "harmony-real",
+            timeout: 30,
+            discoveryRoot: nil,
+            task: "assembleApp"
+        )
+
+        do {
+            _ = try runCLIBuild(request)
+            Issue.record("Expected assembleApp with only an unsigned HAP to fail closed")
+        } catch {
+            let summary = buildFailureSummary(error: error, request: request, jsonl: false)
+            #expect(summary.ok == false)
+            #expect(summary.artifact == nil)
+            #expect(summary.artifactPath == nil)
+            #expect(summary.nextAction?.command == "build")
+            #expect(summary.nextAction?.args.contains("--hap") == false)
+            #expect(summary.error?.code == "hap_artifact_not_found")
+        }
+    }
+
     @Test("non-zero Gradle exit keeps logs as artifacts")
     func nonZeroGradleExitKeepsLogsAsArtifacts() throws {
         let project = try makeTemporaryProject()

@@ -325,7 +325,9 @@ private func buildErrorDetail(_ error: CLIBuildError) -> TKCLIErrorDetail {
         return TKCLIErrorDetail(
             code: platform == "android" ? "apk_artifact_not_found" : "hap_artifact_not_found",
             message: "\(error)",
-            hint: "Pass --output to the artifact directory or verify the debug build task produced an installable artifact.",
+            hint: platform == "harmony" && harmonyBuildUsesAssembleApp(plan)
+                ? "assembleApp produced no signed HAP. Verify the Harmony signing certificate/profile and retry after producing a signed HAP."
+                : "Pass --output to the artifact directory or verify the debug build task produced an installable artifact.",
             nextAction: TKCLINextAction(command: "build", args: [platform, "--project", plan.project, "--output", "<artifact-dir>", "--json"], category: "project")
         )
     }
@@ -572,7 +574,16 @@ func discoverBuildArtifact(plan: CLIBuildPlan) -> CLIBuildArtifact? {
     let root = plan.discoveryRoot.map { URL(fileURLWithPath: $0, relativeTo: URL(fileURLWithPath: plan.project)).standardizedFileURL.path } ?? plan.project
     let fileExtension = plan.platform == "android" ? "apk" : "hap"
     let kind = fileExtension
-    let urls = allFiles(root: root, fileExtension: fileExtension)
+    let discoveredURLs = allFiles(root: root, fileExtension: fileExtension)
+    let urls: [URL]
+    if plan.platform == "harmony", harmonyBuildUsesAssembleApp(plan) {
+        // DevEco assembleApp commonly emits an unsigned HAP beside its signed
+        // sibling. Never route the unsigned candidate into an install action;
+        // when no signed candidate exists, fail closed as no artifact.
+        urls = discoveredURLs.filter(isHarmonySignedHAP)
+    } else {
+        urls = discoveredURLs
+    }
     let preferred = urls.sorted { lhs, rhs in
         artifactScore(lhs.path, plan: plan) > artifactScore(rhs.path, plan: plan)
     }.first
@@ -601,7 +612,21 @@ private func artifactScore(_ path: String, plan: CLIBuildPlan) -> Int {
     if let module = plan.module?.lowercased(), lower.contains("/\(module)/") { score += 20 }
     if let mode = plan.mode?.lowercased(), lower.contains(mode) { score += 20 }
     if lower.contains("debug") { score += 10 }
+    if plan.platform == "harmony", isHarmonySignedHAP(URL(fileURLWithPath: path)) { score += 1_000 }
     return score
+}
+
+private func harmonyBuildUsesAssembleApp(_ plan: CLIBuildPlan) -> Bool {
+    plan.arguments.contains { $0.caseInsensitiveCompare("assembleApp") == .orderedSame }
+}
+
+private func isHarmonySignedHAP(_ url: URL) -> Bool {
+    guard url.pathExtension.caseInsensitiveCompare("hap") == .orderedSame else { return false }
+    let stem = url.deletingPathExtension().lastPathComponent.lowercased()
+    let tokens = stem.split { character in
+        !character.isLetter && !character.isNumber
+    }
+    return tokens.contains { $0 == "signed" }
 }
 
 private func buildNextAction(plan: CLIBuildPlan, artifact: CLIBuildArtifact) -> TKCLINextAction {
