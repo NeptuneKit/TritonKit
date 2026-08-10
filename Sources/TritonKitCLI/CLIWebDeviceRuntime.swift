@@ -1049,6 +1049,7 @@ private func runWebIOSSimulatorInput(selected: HostDeviceTarget, input: TKInputR
         let layoutResult = try runHostCommand(layoutCommand)
         let layout = try JSONDecoder().decode(WebIOSBaguetteLayoutPayload.self, from: Data(layoutResult.stdout.utf8))
         let screen = WebIOSSimulatorScreenLayout(width: layout.screen.width, height: layout.screen.height)
+        var sourceCommands = [layoutResult.sourceCommand]
         if input.type == .swipe {
             let lifecycle = try webIOSBaguetteSwipeLifecycle(
                 input: input,
@@ -1056,14 +1057,26 @@ private func runWebIOSSimulatorInput(selected: HostDeviceTarget, input: TKInputR
                 screen: screen,
                 executable: baguette
             )
-            _ = try runWebIOSBaguetteLifecycle(lifecycle)
+            let lifecycleResult = try runWebIOSBaguetteLifecycle(lifecycle)
+            sourceCommands.append(lifecycleResult.sourceCommand)
         } else {
             let inputCommand = try webIOSBaguetteCommand(action: input, udid: selected.rawTarget, screen: screen, executable: baguette)
-            _ = try runHostCommand(inputCommand)
+            let inputResult = try runHostCommand(inputCommand)
+            sourceCommands.append(inputResult.sourceCommand)
         }
         return .success(
             action: input.type.rawValue,
-            message: "iOS Simulator \(input.type.rawValue) was submitted through Triton host-HID adapter; verify settled business state with AX, wait, or screenshot."
+            message: "iOS Simulator \(input.type.rawValue) was submitted through Triton host-HID adapter; verify settled business state with AX, wait, or screenshot.",
+            strategy: input.type == .tap ? "host-hid-coordinate-tap" : "host-hid-\(input.type.rawValue)",
+            source: "host-hid",
+            verification: TKInputVerificationBoundary(
+                hint: "Host-HID submission only confirms coordinate delivery; verify the settled business postcondition separately.",
+                suggestedCommands: [
+                    "triton verify text-exists <expected-postcondition> --json",
+                    "triton wait --text <expected-postcondition> --json",
+                ]
+            ),
+            sourceCommands: sourceCommands
         )
     case .pinch, .button, .typeText, .paste, .clear, .deleteBackward:
         return .unsupported(

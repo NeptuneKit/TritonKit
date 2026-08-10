@@ -402,6 +402,7 @@ struct Tap: AsyncParsableCommand {
     @Option(help: "Optional screen/window height in points") var height: Double?
     @Option(help: "Hold duration in seconds") var duration: Double?
     @Option(help: "Activation strategy for query or AX text matches: smart, exact, or ancestor") var strategy: TapStrategyOption?
+    @Flag(name: .customLong("allow-host-hid-fallback"), help: "Explicitly allow an auditable iOS Simulator host-HID coordinate fallback after embedded UICollectionViewCell activation is rejected") var allowHostHIDFallback = false
     @Option(help: "Select one matching query candidate by 1-based index") var index: Int?
     @Option(help: "Restrict query matching to bounds: x,y,width,height") var within: String?
     @Option(help: "Coordinate selector or query disambiguation point: x,y") var at: String?
@@ -692,7 +693,7 @@ struct Tap: AsyncParsableCommand {
 
         do {
             let point = try at.map(parsePoint)
-            let (_, runtimeClient) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
+            let (runtimeTarget, runtimeClient) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             if let query {
                 let client = runtimeClient
                 let bounds = try within.map(parseBounds)
@@ -707,7 +708,28 @@ struct Tap: AsyncParsableCommand {
                     within: bounds,
                     at: point
                 )
-                try await runInputRequest(resolution.request, client: client, format: outputFormat)
+                let embeddedResult = try await executeInputRequest(resolution.request, client: client)
+                if allowHostHIDFallback, isUnsupportedCollectionCellResult(embeddedResult) {
+                    let screenGeometry: TKGeometryResponse?
+                    do {
+                        let data = try await client.request(type: "geometry")
+                        screenGeometry = try JSONDecoder().decode(TKGeometryResponse.self, from: data)
+                    } catch {
+                        screenGeometry = nil
+                    }
+                    let result = collectionCellHostHIDFallbackResult(
+                        embeddedResult: embeddedResult,
+                        resolution: resolution,
+                        runtimeTarget: runtimeTarget,
+                        screenGeometry: screenGeometry,
+                        hostInput: { id, input in
+                            try runWebHostDeviceInput(id: id, input: input)
+                        }
+                    )
+                    try printInputResultAndRequireSuccess(result, format: outputFormat)
+                } else {
+                    try printInputResultAndRequireSuccess(embeddedResult, format: outputFormat)
+                }
                 return
             }
 
@@ -722,17 +744,45 @@ struct Tap: AsyncParsableCommand {
                         throw ExitCode.failure
                     }
                     throw RuntimeError(message)
+                }
+                let activationStrategy = strategy?.activationStrategy ?? .exact
+                let request = tapRequest(
+                    for: node,
+                    width: width,
+                    height: height,
+                    duration: duration,
+                    activationStrategy: activationStrategy
+                )
+                let embeddedResult = try await executeInputRequest(request, client: client)
+                if allowHostHIDFallback, isUnsupportedCollectionCellResult(embeddedResult) {
+                    let resolution = collectionCellHostHIDAXResolution(
+                        node: node,
+                        query: axLabel ?? axOID.map { "oid:\($0)" } ?? "ax-node",
+                        request: request,
+                        activationStrategy: activationStrategy
+                    )
+                    let screenGeometry: TKGeometryResponse?
+                    do {
+                        let geometryData = try await client.request(type: "geometry")
+                        screenGeometry = try JSONDecoder().decode(TKGeometryResponse.self, from: geometryData)
+                    } catch {
+                        screenGeometry = nil
+                    }
+                    let result = collectionCellHostHIDFallbackResult(
+                        embeddedResult: embeddedResult,
+                        resolution: resolution,
+                        runtimeTarget: runtimeTarget,
+                        screenGeometry: screenGeometry,
+                        hostInput: { id, input in
+                            try runWebHostDeviceInput(id: id, input: input)
+                        }
+                    )
+                    try printInputResultAndRequireSuccess(result, format: outputFormat)
+                } else {
+                    try printInputResultAndRequireSuccess(embeddedResult, format: outputFormat)
+                }
+                return
             }
-            let request = tapRequest(
-                for: node,
-                width: width,
-                height: height,
-                duration: duration,
-                activationStrategy: strategy?.activationStrategy ?? .exact
-            )
-            try await runInputRequest(request, client: client, format: outputFormat)
-            return
-        }
 
             let request = TKInputRequest.tap(
                 x: point?.x ?? x,
