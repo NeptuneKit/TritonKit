@@ -68,6 +68,8 @@ triton screenshot --output /tmp/<case>.png --json
 triton evidence capture --case <case> --output /tmp/<case>.tritonevidence --json
 ```
 
+For an iOS Simulator coordinate-only action, use `triton act tap --device sim:<UDID> --at <x,y> --json`. This explicit host selector bypasses embedded `/targets`, preventing a same-Simulator stale/background runtime from being selected; a canonical `triton:ios-simulator:<UDID>/app:<bundle-id>` remains the exact embedded target form. Host-HID acknowledgement is not a business verdict, so always follow it with observation, wait/verify, screenshot, or evidence.
+
 Treat evidence capture as one machine-readable completion gate: parse stdout as exactly one manifest and inspect `ok`, `partial`, top-level `error`, and every `skipped[].error`. Expected unsupported artifacts may yield `ok:true, partial:true`; request or artifact-write failures yield `ok:false, partial:true`, `error.code=evidence_capture_partial`, and a non-zero exit. Do not accept a bundle merely because some status/list/version artifacts exist.
 
 Planning and replay:

@@ -711,6 +711,14 @@ triton act tap "hello" --index 2 --json
 triton act tap "hello" --within 180,0,220,500 --json
 ```
 
+For an iOS Simulator pure coordinate tap, an explicit host selector avoids any embedded-runtime fallback:
+
+```bash
+triton act tap --device sim:<simulator-udid> --at 180,420 --json
+```
+
+`sim:<UDID>`, a raw Simulator UUID, `booted`, and `current` route this coordinate-only form directly through the ready local Simulator host-HID adapter, without querying embedded `/targets`. Canonical `triton:ios-simulator:<UDID>` and `/app:<bundle-id>` selectors retain embedded-runtime semantics. A host-HID success only acknowledges coordinate submission; verify the settled business state with `observe`, `wait`, `verify`, screenshot, or evidence.
+
 On iOS 17.4 or newer, embedded `act tap` opens a `UIButton` configured only with `menu` and `showsMenuAsPrimaryAction=true` through public UIKit `performPrimaryAction()`. A successful result uses `strategy=button-primary-menu-action`; verify the visible menu title before treating the menu as open. Selecting the presented menu item is outside the safe public embedded-runtime boundary and returns one failed `TKInputResult` with `error.code=unsupported_capability` and `strategy=button-primary-menu-item-unsupported`; use a host HID adapter or an app-owned semantic DEBUG action when item selection itself must be automated.
 
 Presented `UIAlertController` actions are modal boundaries. Embedded `act tap` only attempts public UIKit `accessibilityActivate()` on the alert action element: success returns `strategy=alert-action-accessibility-activate`; when UIKit exposes no safe activation path, Triton returns `error.code=unsupported_capability` with `strategy=alert-action-unsupported`. It never falls through to a collection/table cell behind the alert. Verify the alert disappeared or the expected postcondition before treating a successful activation as business completion.

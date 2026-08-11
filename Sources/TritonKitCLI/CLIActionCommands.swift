@@ -385,8 +385,8 @@ struct Tap: AsyncParsableCommand {
 
     @Argument(help: "Text, label, identifier, or visible option title to tap") var query: String?
     @Option(help: "Alternate flag form for the text query; use either positional <query> or --text") var text: String?
-    @Option(help: "Host platform adapter: android or harmony") var platform: HostPlatform?
-    @Option(name: [.long, .customLong("device")], help: "Target id from `triton list`; --device is an alias") var target: String = TKLocalTargetID
+    @Option(help: "Host platform adapter: ios, android, or harmony") var platform: HostPlatform?
+    @Option(name: [.long, .customLong("device")], help: "Runtime target id or host selector; pure coordinate taps with sim:<udid>, a raw Simulator UUID, booted, or current use iOS host HID. --device is an alias") var target: String = TKLocalTargetID
     @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
@@ -483,6 +483,52 @@ struct Tap: AsyncParsableCommand {
                 throw ExitCode.failure
             }
             throw RuntimeError("--strategy can only be used with <query>, --ax-oid, or --ax-label")
+        }
+
+        if let simulatorSelector = implicitIOSHostCoordinateTapSelector(
+            platform: platform,
+            target: target,
+            query: query,
+            x: x,
+            y: y,
+            at: at,
+            oid: oid,
+            axOID: axOID,
+            axLabel: axLabel
+        ) {
+            do {
+                let point = try at.map(parsePoint)
+                guard let tapX = point?.x ?? x,
+                      let tapY = point?.y ?? y,
+                      tapX.isFinite,
+                      tapY.isFinite else {
+                    try failHostValidation(
+                        code: "validation_failed",
+                        message: "iOS Simulator host coordinate tap requires finite --x/--y or --at coordinates.",
+                        hint: "Pass a finite coordinate pair from a current host observation or screenshot.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let selection = try resolveHostDeviceSelection(
+                    request: HostDeviceSelectionRequest(
+                        device: simulatorSelector,
+                        platform: .ios,
+                        scope: .simulator,
+                        ready: true
+                    ),
+                    hdc: hdc,
+                    adb: adb
+                )
+                let result = try runWebHostDeviceInput(
+                    id: webHostDeviceTargetID(selection.target),
+                    input: .tap(x: tapX, y: tapY)
+                )
+                try printInputResultAndRequireSuccess(result, format: outputFormat)
+            } catch {
+                if error is ExitCode { throw error }
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
+            return
         }
 
         if platform == .ios {

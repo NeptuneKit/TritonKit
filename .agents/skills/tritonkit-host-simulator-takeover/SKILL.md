@@ -135,6 +135,8 @@ For `triton workspace run` flows that use a selector such as `current`, `booted`
 
 `triton app open-url` only proves that the URL was submitted to Simulator. When an embedded runtime is connected, prefer `--wait-ready --snapshot` for a one-shot host action plus runtime readiness/snapshot summary. Otherwise always verify business completion with `triton wait`, `triton find`, `triton assert`, `triton app prefs get`, a fresh screenshot, or an evidence bundle.
 
+For `triton act tap`, pure coordinate input with an explicit Simulator host selector (`sim:<UDID>`, raw UUID, `booted`, or `current`) must route to the ready local host-HID adapter before embedded `/targets` lookup. Do not let the legacy same-`simulatorUDID` runtime fallback send coordinates to a stale/background App. Canonical `triton:ios-simulator:<UDID>` and `/app:<bundle-id>` remain embedded selectors. Host-HID acknowledgement remains submission-only and requires a separate business postcondition check.
+
 `simctl appinfo` can exit 0 for a missing bundle while only echoing `CFBundleIdentifier`; Triton normalizes this to `app_info_not_available`. Do not treat raw `simctl` exit code alone as proof of installed app metadata.
 
 ## Implementation Workflow

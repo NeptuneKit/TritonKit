@@ -7,7 +7,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
         name: "--target/--device",
         type: "String",
         defaultValue: TKLocalTargetID,
-        description: "Runtime target id from `triton list --json`; for iOS embedded-runtime actions pass a target such as triton:ios-simulator:<udid> or triton:ios-simulator:<udid>/app:<bundle-id>, not the host selector sim:<udid>. --device is an alias."
+        description: "Runtime target id from `triton list --json` or a host selector. iOS embedded actions use triton:ios-simulator:<udid> or triton:ios-simulator:<udid>/app:<bundle-id>; a pure coordinate tap with sim:<udid>, a raw Simulator UUID, booted, or current routes directly to host HID without embedded target fallback. --device is an alias."
     )
     let jsonText = schemaTextJSONFormats
     let formatJSONText = schemaFormatJSONTextOption
@@ -77,7 +77,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "<text>", type: "String", description: "Text value for type or paste actions"),
                 TKCommandSchemaOption(name: "<value>", type: "String|Int", description: "Segment title/index or switch state for semantic actions"),
                 runtimeBaseURLOption,
-                TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Use iOS embedded runtime actions, Android adb host adapter, or Harmony hdc host adapter. iOS gestures require --target from `triton list --json`, not sim:<udid>."),
+                TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Use iOS host AX, Android adb, or Harmony hdc explicitly. Omit --platform for iOS embedded runtime actions; canonical runtime ids stay embedded while pure coordinate taps with an explicit Simulator host selector use host HID."),
                 TKCommandSchemaOption(name: "--adb", type: "Path", defaultValue: "adb", description: "ADB executable path"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path"),
                 TKCommandSchemaOption(name: "--text", type: "String", description: "Product-surface alias for text query or input text where supported"),
@@ -117,18 +117,20 @@ func actionCommandSchemas() -> [TKCommandSchema] {
             usageForms: [
                 TKCommandUsageForm(form: "triton act find <query> --json", kind: "Subcommand", description: "Resolve a target before acting"),
                 TKCommandUsageForm(form: "triton act tap --text <text> --json", kind: "Subcommand", description: "Product-language tap entry; positional text remains supported by the underlying tap command"),
+                TKCommandUsageForm(form: "triton act tap --device <selector> --at <x,y> --json", kind: "Subcommand", description: "With sim:<udid>, a raw Simulator UUID, booted, or current, submit a pure coordinate tap through host HID without resolving an embedded runtime"),
                 TKCommandUsageForm(form: "triton act tap --webview-aware --selector <css> [--webview-id <id>] --expect-text <text> --json", kind: "Subcommand", description: "Dispatch a WebView DOM click and verify expected WebView text"),
                 TKCommandUsageForm(form: "triton act type <text> --json", kind: "Subcommand", description: "Type text into the focused field"),
             ],
             examples: [
                 "triton act tap --text 登录 --json",
+                "triton act tap --device sim:00000000-0000-0000-0000-000000000000 --at 180,420 --json",
                 "triton act tap --webview-aware --selector '#submit' --expect-text 成功 --json",
                 "triton act type hello --json",
                 "triton act find 登录 --json",
             ],
             successShape: "Delegates to the selected action primitive output contract, or WebView-aware tap { ok, action:act.tap, status:passed|failed|uncertain, context:webview, selector, target?, attempts[], verification, recoveryCommand?, sourceCommands[], note }",
             failureShape: "{ ok:false, error:{ code, message, endpoint?, hint, nextAction? } }",
-            outputSemantics: "Use act as the workflow-level action surface. Retired root action primitives are exposed here as explicit subcommands.",
+            outputSemantics: "Use act as the workflow-level action surface. For iOS, canonical triton:ios-simulator runtime ids preserve embedded routing. A pure coordinate tap with sim:<udid>, a raw Simulator UUID, booted, or current bypasses embedded /targets resolution and submits through the ready local Simulator host-HID adapter, so a background or stale runtime cannot be selected by same-UDID fallback. Host acknowledgement remains unverified: require observe, wait, verify, screenshot, or evidence before claiming business completion. Retired root action primitives are exposed here as explicit subcommands.",
             nextCommands: [
                 "triton observe current --json",
                 "triton verify text-exists <text> --json",
