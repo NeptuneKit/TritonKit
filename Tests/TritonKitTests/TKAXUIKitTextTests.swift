@@ -432,6 +432,14 @@ struct TKAXUIKitTextTests {
         #expect(result.targetOID == cellOID)
         #expect(result.activationClassName == NSStringFromClass(CollectionCell.self))
         #expect(result.strategy == "ancestor-collection-cell-unsupported")
+        #expect(result.error?.suggestedCommands?.contains(
+            "triton act tap --ax-oid \(labelOID) --strategy smart --allow-host-hid-fallback --target <ios-simulator-runtime-target> --json"
+        ) == true)
+        #expect(result.verification?.required == true)
+        #expect(result.verification?.status == "not-verified")
+        #expect(result.verification?.suggestedCommands.contains(
+            "triton verify text-exists <expected-postcondition> --target <ios-simulator-runtime-target> --json"
+        ) == true)
     }
 
     @Test("ancestor tap rejects collection view cell ancestor without selecting it")

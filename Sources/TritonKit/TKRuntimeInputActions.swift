@@ -11,6 +11,23 @@ func isSafeControlActionTarget(_ target: Any?) -> Bool {
     return target is NSObject
 }
 
+func collectionCellHostHIDRetryCommand(for request: TKInputRequest, matchedOID: UInt?) -> String? {
+    guard let matchedOID else { return nil }
+    let strategy = request.activationStrategy ?? .smart
+    return "triton act tap --ax-oid \(matchedOID) --strategy \(strategy.rawValue) --allow-host-hid-fallback --target <ios-simulator-runtime-target> --json"
+}
+
+func collectionCellHostHIDVerificationBoundary() -> TKInputVerificationBoundary {
+    TKInputVerificationBoundary(
+        hint: "Host-HID submission only confirms coordinate delivery; verify the settled business postcondition separately.",
+        suggestedCommands: [
+            "triton verify text-exists <expected-postcondition> --target <ios-simulator-runtime-target> --json",
+            "triton wait --text <expected-postcondition> --target <ios-simulator-runtime-target> --json",
+            "triton observe current --target <ios-simulator-runtime-target> --json",
+        ]
+    )
+}
+
 #if canImport(UIKit)
 @MainActor
 func performInput(_ request: TKInputRequest) async -> TKInputResult {
@@ -1000,6 +1017,8 @@ func unsupportedCollectionCellTap(
     let activationOID = oid(for: cell)
     let activationClassName = NSStringFromClass(type(of: cell))
     let message = "UICollectionViewCell selection is not a safe public embedded-runtime activation"
+    let retryCommand = collectionCellHostHIDRetryCommand(for: request, matchedOID: matched.oid)
+    let verification = collectionCellHostHIDVerificationBoundary()
     return TKInputResult.unsupported(
         action: action,
         message: message,
@@ -1011,12 +1030,12 @@ func unsupportedCollectionCellTap(
         error: TKCLIErrorDetail(
             code: "unsupported_capability",
             message: message,
-            hint: "Use a public UIControl or accessibility-activatable gesture inside the collection cell, or an app-owned semantic DEBUG action.",
-            suggestedCommands: [
+            hint: "Retry explicitly with --allow-host-hid-fallback on a connected iOS Simulator, or use a public UIControl, accessibility-activatable gesture, or app-owned semantic DEBUG action.",
+            suggestedCommands: (retryCommand.map { [$0] } ?? []) + [
                 "triton schema --command act --json",
-                "triton verify text-exists <expected> --target <target> --json",
-            ]
-        )
+            ] + verification.suggestedCommands
+        ),
+        verification: verification
     )
 }
 

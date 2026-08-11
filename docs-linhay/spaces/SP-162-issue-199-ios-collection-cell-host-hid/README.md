@@ -21,6 +21,8 @@
 - Given embedded iOS runtime 已解析出 UICollectionViewCell 且返回 `unsupported_capability`
 - When 未提供 `--allow-host-hid-fallback`
 - Then 不调用 host-HID，保持原始 `ancestor-collection-cell-unsupported` 结果。
+- Then 失败 envelope 的 `suggestedCommands` 暴露 `triton act tap --ax-oid <matched-oid> --strategy <strategy> --allow-host-hid-fallback --target <ios-simulator-runtime-target> --json`，由 agent 以本次已解析 runtime target 替换占位后显式重试，避免多 runtime 串目标。
+- Then `verification.required=true`、`status=not-verified`，且 verify/wait/observe 恢复命令绑定同一个 `--target`；恢复提示不把 host acknowledgement 当作业务成功。
 
 ### 场景 2：query/AX 显式 fallback
 
@@ -41,6 +43,7 @@ swift test --package-path CLI --scratch-path .build/sp162-199 --filter Collectio
 swift test --package-path CLI --scratch-path .build/sp162-199 --filter InputOutputTests
 swift test --package-path CLI --scratch-path .build/sp162-199 --filter SchemaFactSourceTests
 swift build --package-path CLI --scratch-path .build/sp162-199 --product triton
+swift test --scratch-path .build/sp162-199-runtime-recovery --filter TKCollectionCellRecoveryTests
 git diff --check
 ```
 
@@ -51,4 +54,5 @@ git diff --check
 - 实现已完成并通过主控审阅前的独立 worktree 验证，覆盖 query 与 AX 两条嵌入式解析路径、默认拒绝、host 成功/失败证据、iOS Simulator scope 和 geometry fail-closed。
 - `CollectionCellHostHIDFallbackTests` 8/8、`InputOutputTests` 4/4 通过；`swift build --package CLI --scratch-path .build/sp162-199-release -c release --product triton` 通过；`git diff --check` 通过。
 - `SchemaFactSourceTests` 在本 worktree 仍有 5 项既有 `xcode-archive` / `xcode-export` capability/schema 缺口；主控在未集成 SP-162 的基线 main 上复跑得到同样 5 项失败，故不归因于本 issue。该风险需后续独立修复。
+- 2026-08-11 follow-up 已补齐默认拒绝结果的可恢复 UX：恢复命令同时固定 matched AX OID、原 activation strategy、显式 opt-in flag 与 same-target 占位；verification 命令同样绑定该 target。跨平台 focused contract test 1/1、root Swift tests 240/240 通过，UIKit 场景保留相同 envelope 断言。
 - 未执行真实 Simulator/Baguette、真机或私有 API 验证；host-HID acknowledgement 仍不等价于业务 postcondition，远端 issue 评论、PR、push 和关闭待明确授权。
