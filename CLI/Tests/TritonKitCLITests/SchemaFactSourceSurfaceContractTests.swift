@@ -332,6 +332,26 @@ extension SchemaFactSourceTests {
         expectContract(app, selector: "host.app-open-url", fields: [
             "ok", "status", "hostAction", "ready", "snapshot",
         ])
+        expectContract(app, selector: "host.app-info", fields: [
+            "ok", "action", "simulatorUDID", "bundleID", "app",
+            "app.bundleID", "app.displayName", "app.name", "app.executable",
+            "app.marketingVersion", "app.buildNumber", "app.version",
+            "app.applicationType", "app.path", "app.bundleURL",
+            "app.bundleContainerURL", "app.dataContainerURL", "app.groupContainers", "app.tags",
+        ])
+        expectContract(app, selector: "host.app-list", fields: [
+            "ok", "action", "simulatorUDID", "userOnly", "count", "apps",
+            "apps[].bundleID", "apps[].displayName", "apps[].name", "apps[].executable",
+            "apps[].marketingVersion", "apps[].buildNumber", "apps[].version",
+            "apps[].applicationType", "apps[].path", "apps[].bundleURL",
+            "apps[].bundleContainerURL", "apps[].dataContainerURL", "apps[].groupContainers", "apps[].tags",
+        ])
+        let appInfoContract = try #require(app.outputContracts.first { $0.selector == "host.app-info" })
+        #expect(appInfoContract.model == "HostAppInfoOutput|HostAndroidAppInfoOutput")
+        let appListContract = try #require(app.outputContracts.first { $0.selector == "host.app-list" })
+        #expect(appListContract.model == "HostAppListOutput")
+        #expect(app.subcommands.first { $0.name == "info" }?.outputSelectors.contains("host.app-info") == true)
+        #expect(app.subcommands.first { $0.name == "list" }?.outputSelectors.contains("host.app-list") == true)
 
         #expect(map.providedCapabilities.contains("app-map-health"))
         expectContract(map, selector: "app-map.health", fields: [

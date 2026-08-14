@@ -139,6 +139,8 @@ For `triton act tap`, pure coordinate input with an explicit Simulator host sele
 
 `simctl appinfo` can exit 0 for a missing bundle while only echoing `CFBundleIdentifier`; Triton normalizes this to `app_info_not_available`. Do not treat raw `simctl` exit code alone as proof of installed app metadata.
 
+`triton app info` and `triton app list` expose installed iOS app metadata as distinct structured fields: `marketingVersion` (from `CFBundleShortVersionString`, e.g. `2.4.1`) and `buildNumber` (from `CFBundleVersion`, e.g. `42`). Use them to verify an installed Simulator app matches an expected release version instead of reading `Info.plist` separately. The legacy `version` field is retained for compatibility and maps to the build number on iOS (identical to `buildNumber`); new consumers should prefer `marketingVersion` / `buildNumber` and treat `version` as deprecated. The `host.app-info` and `host.app-list` schema contracts document these fields.
+
 ## Implementation Workflow
 
 1. Start from the simulator takeover space:

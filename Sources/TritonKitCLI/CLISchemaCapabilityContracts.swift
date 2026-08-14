@@ -507,10 +507,55 @@ func hostAppInfoOutputContract(selector: String = "host.app-info") -> TKCommandO
             ("simulatorUDID", "String?", false, "Resolved iOS simulator UDID"),
             ("bundleID", "String?", false, "iOS app bundle identifier"),
             ("app", "TKHostInstalledApp?", false, "Installed app metadata for iOS simulator apps"),
+            ("app.bundleID", "String", true, "iOS app bundle identifier"),
+            ("app.displayName", "String?", false, "CFBundleDisplayName"),
+            ("app.name", "String?", false, "CFBundleName"),
+            ("app.executable", "String?", false, "CFBundleExecutable"),
+            ("app.marketingVersion", "String?", false, "iOS marketing (short) version from CFBundleShortVersionString, for example 2.4.1; nil for non-iOS parsers"),
+            ("app.buildNumber", "String?", false, "iOS build number from CFBundleVersion, for example 42; on Android the shared parser maps versionName into this field"),
+            ("app.version", "String?", false, "Legacy alias retained for compatibility: maps to the build number (CFBundleVersion) on iOS and is identical to app.buildNumber; new consumers should prefer app.marketingVersion / app.buildNumber"),
+            ("app.applicationType", "String?", false, "User or System for iOS; Android for Android packages"),
+            ("app.path", "String?", false, "Installed app bundle path"),
+            ("app.bundleURL", "String?", false, "Bundle container URL"),
+            ("app.bundleContainerURL", "String?", false, "Bundle container URL"),
+            ("app.dataContainerURL", "String?", false, "Data container URL"),
+            ("app.groupContainers", "[String:String]", true, "App group container URLs keyed by group identifier"),
+            ("app.tags", "[String]", true, "Installed app tags such as debuggable"),
             ("platform", "String?", false, "android when inspecting Android apps"),
             ("target", "HostDeviceTarget?", false, "Resolved Android host target"),
             ("packageName", "String?", false, "Android package name"),
             ("sourceCommands", "[String]?", false, "Underlying host commands"),
+        ])
+    )
+}
+
+func hostAppListOutputContract(selector: String = "host.app-list") -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: selector,
+        format: "json",
+        kind: "host-action",
+        model: "HostAppListOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether app listing succeeded"),
+            ("action", "String", true, "app.list"),
+            ("simulatorUDID", "String", true, "Resolved iOS simulator UDID"),
+            ("userOnly", "Bool", true, "Whether only User apps were included"),
+            ("count", "Int", true, "Number of listed apps"),
+            ("apps", "[TKHostInstalledApp]", true, "Installed app summaries"),
+            ("apps[].bundleID", "String", true, "iOS app bundle identifier"),
+            ("apps[].displayName", "String?", false, "CFBundleDisplayName"),
+            ("apps[].name", "String?", false, "CFBundleName"),
+            ("apps[].executable", "String?", false, "CFBundleExecutable"),
+            ("apps[].marketingVersion", "String?", false, "iOS marketing (short) version from CFBundleShortVersionString, for example 2.4.1; nil when the app plist lacks it"),
+            ("apps[].buildNumber", "String?", false, "iOS build number from CFBundleVersion, for example 42"),
+            ("apps[].version", "String?", false, "Legacy alias retained for compatibility: maps to the build number (CFBundleVersion) on iOS and is identical to apps[].buildNumber; new consumers should prefer apps[].marketingVersion / apps[].buildNumber"),
+            ("apps[].applicationType", "String?", false, "User or System for iOS"),
+            ("apps[].path", "String?", false, "Installed app bundle path"),
+            ("apps[].bundleURL", "String?", false, "Bundle container URL"),
+            ("apps[].bundleContainerURL", "String?", false, "Bundle container URL"),
+            ("apps[].dataContainerURL", "String?", false, "Data container URL"),
+            ("apps[].groupContainers", "[String:String]", true, "App group container URLs keyed by group identifier"),
+            ("apps[].tags", "[String]", true, "Installed app tags such as debuggable"),
         ])
     )
 }

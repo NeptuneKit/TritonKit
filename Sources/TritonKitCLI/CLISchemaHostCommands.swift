@@ -963,9 +963,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 #"triton app prefs set DEBUG-mock true --device iphone15 --bundle-id com.example.app --json"#,
                 #"triton app prefs set SeedState --type data --base64 W3t9XQ== --device iphone15 --bundle-id com.example.app --json"#,
             ],
-            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? with launch env values redacted } or app pull { ok, action:app.pull, target, selection, domain, domainIdentifier, source, destination, artifact:{ path,kind,bytes,entryCount }, artifacts, sourceCommand } or { ok, action, plistPath, value?, valuePlistType?, preferences?, preferencesPlistTypes? } or { ok, action:app.prefs.set, plistPath, key, previousValue?, previousPlistType?, newValue, newPlistType, restartAdvice } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
+            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? } where apps[]/app expose marketingVersion (CFBundleShortVersionString) and buildNumber (CFBundleVersion); legacy version maps to the build number on iOS, or app pull { ok, action:app.pull, target, selection, domain, domainIdentifier, source, destination, artifact:{ path,kind,bytes,entryCount }, artifacts, sourceCommand } or { ok, action, plistPath, value?, valuePlistType?, preferences?, preferencesPlistTypes? } or { ok, action:app.prefs.set, plistPath, key, previousValue?, previousPlistType?, newValue, newPlistType, restartAdvice } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction?, leaseReason?, currentOwner?, currentLeaseID?, currentExpiresAt?, suggestedCommands? } }",
-            outputSemantics: "Use app for host-side install, launch, terminate, open-url, container, pull, and preferences. An explicit ios-real:* selector triggers live real-device discovery even when --platform ios and --scope real are omitted, so install/info/launch share one selector-resolution path; unavailable devices return the devicectl readiness failure instead of a launch-only target_not_found. app pull is iOS real-device-only, stages the transfer before atomic publication, rejects overwrite/symlink by default, and bounds directory/byte acceptance. For iOS runtime readiness, prefer open-url with --wait-ready --snapshot; for Android host flows, verify business completion with wait/observe/screenshot or smoke evidence. If `triton camera on` enabled the launched iOS Simulator bundle, app launch injects the configured camera hook environment. Parallel agent flows can pass `--lease <id>` on open-url/launch/terminate to enforce the opt-in target lease: a conflicting mutation returns the stable target_lease_conflict envelope with the current owner instead of silently changing another flow's foreground state; without `--lease`, behavior is unchanged.",
+            outputSemantics: "Use app for host-side install, launch, terminate, open-url, container, pull, and preferences. An explicit ios-real:* selector triggers live real-device discovery even when --platform ios and --scope real are omitted, so install/info/launch share one selector-resolution path; unavailable devices return the devicectl readiness failure instead of a launch-only target_not_found. app pull is iOS real-device-only, stages the transfer before atomic publication, rejects overwrite/symlink by default, and bounds directory/byte acceptance. For iOS runtime readiness, prefer open-url with --wait-ready --snapshot; for Android host flows, verify business completion with wait/observe/screenshot or smoke evidence. Installed iOS app metadata (app list / app info) returns marketingVersion (CFBundleShortVersionString) and buildNumber (CFBundleVersion) as distinct structured fields; the legacy version field remains for compatibility and maps to the build number on iOS, so new consumers should read marketingVersion/buildNumber and treat version as deprecated. If `triton camera on` enabled the launched iOS Simulator bundle, app launch injects the configured camera hook environment. Parallel agent flows can pass `--lease <id>` on open-url/launch/terminate to enforce the opt-in target lease: a conflicting mutation returns the stable target_lease_conflict envelope with the current owner instead of silently changing another flow's foreground state; without `--lease`, behavior is unchanged.",
             artifacts: ["app-container", "host-artifacts", "app-preferences", "runtime-snapshot"],
             nextCommands: [
                 "triton app go <url>",
@@ -975,6 +975,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             outputContracts: [
                 hostActionOutputContract(selector: "host.app-action", model: "HostActionOutput|HostAppContainerOutput|HostAppPullOutput|HostAppPreferenceOutput"),
+                hostAppInfoOutputContract(),
+                hostAppListOutputContract(),
                 hostAppInfoOutputContract(selector: "host.android-app-inspect"),
                 hostActionOutputContract(selector: "host.android-app-install", model: "HostActionOutput"),
                 hostActionOutputContract(selector: "host.android-app-launch", model: "HostActionOutput"),
@@ -1042,14 +1044,14 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     name: "list",
                     summary: "List installed simulator, emulator, or real-device apps",
                     optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--name", "--runtime", "--state", "--ready", "--user-only", "--format", "--json"],
-                    outputSelectors: ["host.app-action"]
+                    outputSelectors: ["host.app-action", "host.app-list"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "info",
                     summary: "Show installed app metadata",
                     oneOfRequiredOptions: [["--bundle-id"], ["--package-name"], ["--bundle"]],
                     optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--name", "--runtime", "--state", "--ready", "--format", "--json"],
-                    outputSelectors: ["host.android-app-inspect"]
+                    outputSelectors: ["host.android-app-inspect", "host.app-info"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "inspect",

@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-08-11
-> 覆盖范围：168/168 个已存在 space
+> 覆盖范围：169/169 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 168/168 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 168/168 | 每条记录链接到现有 space README |
+| 编号登记 | 169/169 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 169/169 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -193,3 +193,4 @@
 | `SP-166-issue-203-ios-text-query-consistency` | [`SP-166-issue-203-ios-text-query-consistency`](./SP-166-issue-203-ios-text-query-consistency/README.md) | 已完成（本地） | #203 embedded `wait --text` 与 `act find` 已共享 observe 的文本归一化（trim + case/diacritic fold + substring）与 hidden visibility 规则；`act find` 无匹配返回结构化 `text_not_found` 而非成功空输出；远端 issue 与真实 Simulator 验证待授权 |
 | `SP-167-issue-204-ios-webview-form-input` | [`SP-167-issue-204-ios-webview-form-input`](./SP-167-issue-204-ios-webview-form-input/README.md) | 已完成（本地） | #204 为私有 iOS WKWebView 提供 provider-backed 表单输入契约：snapshot 发现 contenteditable/textarea 表单目标、`webview focus/type/set-text` 与 `act ... --webview` 一等公民焦点切换、input/change dispatch 证据与 value 后置条件、未 opt-in 时 typed unsupported + host-HID fallback；真实 WebView/Simulator 验证待授权 |
 | `SP-168-issue-205-target-leases` | [`SP-168-issue-205-target-leases`](./SP-168-issue-205-target-leases/README.md) | 已完成（本地） | #205 并行 agent 流程现可用 opt-in 目标租约（acquire/status/release/takeover、带界 TTL、owner 标签、`target_lease_conflict` 稳定信封）；`app open-url|launch|terminate` 与 `act tap` 支持 `--lease` 门禁，只读观察豁免，无租约时行为不变；远端 issue 与真实 Simulator 验证待后续授权 |
+| `SP-169-issue-206-app-marketing-version` | [`SP-169-issue-206-app-marketing-version`](./SP-169-issue-206-app-marketing-version/README.md) | 已完成（本地） | #206 iOS `app info`/`app list` 已暴露 `marketingVersion`/`buildNumber`，legacy `version` 映射 build number；schema `host.app-info`/`host.app-list` 已挂载 |

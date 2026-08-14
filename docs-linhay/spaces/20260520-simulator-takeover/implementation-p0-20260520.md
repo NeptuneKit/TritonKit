@@ -5,7 +5,7 @@
 - 新增 `TKHostAdapterModels` shared 模型：
   - `TKSimctlCommand`：生成 P0/P1 `simctl` argv。
   - `TKHostSimulatorTarget` 与 `TKSimctlDeviceListParser`：解析 `simctl list devices available --json`。
-  - `TKHostInstalledApp` 与 `TKSimctlAppInfoParser`：解析 `simctl listapps/appinfo` 的 OpenStep plist 输出，统一为结构化 App metadata。
+  - `TKHostInstalledApp` 与 `TKSimctlAppInfoParser`：解析 `simctl listapps/appinfo` 的 OpenStep plist 输出，统一为结构化 App metadata。iOS 输出含 `marketingVersion`（`CFBundleShortVersionString`）与 `buildNumber`（`CFBundleVersion`）两个无歧义字段；legacy `version` 保留并映射到 build number（见 SP-169 #206）。
   - `TKHostWorkspaceDefaults`：定义 workspace 默认 simulator 的 repo-local 状态文件路径。
   - `TKHostPreferencesSnapshot`：解析 App preferences plist，支持 string、bool、int、double、array、dictionary、data。
   - destructive command metadata：`erase`、`uninstall`、`install_app_data` 需要确认。

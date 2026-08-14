@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（168/168 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（169/169 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-08-14
 
@@ -21,6 +21,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 已完成（本地） | [SP-169-issue-206-app-marketing-version](./SP-169-issue-206-app-marketing-version/README.md) | #206：iOS `app info`/`app list` 已暴露无歧义的 `marketingVersion`（CFBundleShortVersionString）与 `buildNumber`（CFBundleVersion），legacy `version` 保留并明确映射到 build number；schema `host.app-info`/`host.app-list` 已挂载 | focused 42/42（shared）、root 241/241、schema contract 仅剩 2 个既有基线失败；待授权后评论/关闭远端 issue，真实 Simulator 风险保留 |
 | 已完成（本地） | [SP-168-issue-205-target-leases](./SP-168-issue-205-target-leases/README.md) | #205：并行 agent 流程现可用 opt-in 目标租约（acquire/status/release/takeover、带界 TTL、owner 标签、`target_lease_conflict` 稳定信封）；`app open-url|launch|terminate` 与 `act tap` 支持 `--lease` 门禁，只读观察豁免，无租约时行为不变 | focused suites 与 release schema 通过；待授权后评论/关闭远端 issue，真实 Simulator 风险保留 |
 | 已完成（本地） | [SP-167-issue-204-ios-webview-form-input](./SP-167-issue-204-ios-webview-form-input/README.md) | #204：iOS WKWebView 表单输入契约 —— snapshot 发现 contenteditable/textarea 表单目标、`webview focus/type/set-text` 与 `act focus/set-text/type --webview` 一等公民焦点切换、input/change dispatch 证据与 value 后置条件、未 opt-in 时 typed unsupported + host-HID fallback | focused 31/31（根包 23 + CLI 8，schema/capability 门禁随行）通过；待授权后评论/关闭远端 issue，真实 WebView/Simulator 验证留待设备 |
 | 已完成（本地） | [SP-166-issue-203-ios-text-query-consistency](./SP-166-issue-203-ios-text-query-consistency/README.md) | #203：embedded `wait --text` / `act find` 已与 `observe tree`/`observe current` 共享文本归一化（trim + case/diacritic fold + substring）与 hidden visibility 规则；`act find` 无匹配返回结构化 `text_not_found` 而非成功空输出 | 共享 11/11、CLI contract 4/4 与关联回归通过；待授权后评论/关闭远端 issue，真实 Simulator/私有 App 验证保留 |
@@ -105,7 +106,12 @@
 | `SP-161-issue-198-harmony-signed-hap` | `feat/SP-161-issue-198-harmony-signed-hap` | `../TritonKit-worktrees/SP-161-issue-198-harmony-signed-hap/` | `main@c55c5cab` | `ffc69a34` 已由 merge `574bbc9c` 进入本地 main；#198 待远端评论/关闭，worktree 保留为审计记录 |
 | `SP-162-issue-199-ios-collection-cell-host-hid` | `feat/SP-162-issue-199-ios-collection-cell-host-hid` | `../TritonKit-worktrees/SP-162-issue-199-ios-collection-cell-host-hid/` | `main@c55c5cab` | `711db3f2` 已由 merge `38967558` 进入本地 main；#199 待远端评论/关闭，真实 Simulator/Baguette 风险保留 |
 | `SP-163-issue-200-simulator-foreground-runtime` | `feat/SP-163-issue-200-simulator-foreground-runtime` | `../TritonKit-worktrees/SP-163-issue-200-simulator-foreground-runtime/` | `origin/main@adbfc92c` | 已完成（本地）：focused 20/20、release schema 与 local gate 通过；未操作真实 Simulator，#200 待远端处置 |
-| `SP-168-issue-205-target-leases` | `feat/SP-168-issue-205-target-leases` | `../TritonKit-worktrees/SP-168-issue-205-target-leases/` | `origin/main@8cc72765` | 已完成（本地）：focused lease suites 转绿、release schema 通过；未操作真实 Simulator，#205 待远端处置 |
+| `SP-164-issue-201-harmony-act-find` | `feat/SP-164-issue-201-harmony-act-find` | `../TritonKit-worktrees/SP-164-issue-201-harmony-act-find/` | `origin/main@8cc72765` | 已完成（本地）：Harmony `act find` host adapter 11/11；#201 待远端处置 |
+| `SP-165-issue-202-sim-tap-help-dimensions` | `feat/SP-165-issue-202-sim-tap-help-dimensions` | `../TritonKit-worktrees/SP-165-issue-202-sim-tap-help-dimensions/` | `origin/main@8cc72765` | 已完成（本地）：sim tap point-space 62/62；#202 待远端处置 |
+| `SP-166-issue-203-ios-text-query-consistency` | `feat/SP-166-issue-203-ios-text-query-consistency` | `../TritonKit-worktrees/SP-166-issue-203-ios-text-query-consistency/` | `origin/main@8cc72765` | 已完成（本地）：共享文本归一化 245/245、4/4；#203 待远端处置 |
+| `SP-167-issue-204-ios-webview-form-input` | `feat/SP-167-issue-204-ios-webview-form-input` | `../TritonKit-worktrees/SP-167-issue-204-ios-webview-form-input/` | `origin/main@8cc72765` | 已完成（本地）：WebView 表单输入契约 31/31；#204 待远端处置 |
+| `SP-168-issue-205-target-leases` | `feat/SP-168-issue-205-target-leases` | `../TritonKit-worktrees/SP-168-issue-205-target-leases/` | `origin/main@8cc72765` | 已完成（本地）：focused lease suites 转绿、release schema 通过；#205 待远端处置 |
+| `SP-169-issue-206-app-marketing-version` | `feat/SP-169-issue-206-app-marketing-version` | `../TritonKit-worktrees/SP-169-issue-206-app-marketing-version/` | `origin/main@8cc72765` | 已完成（本地）：shared 42/42、root 241/241、schema contract 仅剩 2 个既有基线失败、release schema 通过；未操作真实 Simulator，#206 待远端处置 |
 | `SP-152-issue-172-runtime-reregistration` | `feat/SP-152-issue-172-runtime-reregistration`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #172 已合并并关闭；runtime lifecycle/compatibility 证据保留 |
 | `SP-153-issue-173-xcode-run-target-binding` | `feat/SP-153-issue-173-xcode-run-target-binding`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #173 已合并并关闭；单目标绑定证据保留 |
 | `SP-154-issue-174-simulator-swipe-lifecycle` | `feat/SP-154-issue-174-simulator-swipe-lifecycle`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #174 已合并并关闭；persistent input lifecycle 证据保留 |
