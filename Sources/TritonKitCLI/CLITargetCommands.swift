@@ -5,7 +5,7 @@ struct Target: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "target",
         abstract: "Discover, resolve, and track the current agent target",
-        subcommands: [TargetList.self, TargetUse.self, TargetCurrent.self, TargetResolve.self, TargetWaitReady.self]
+        subcommands: [TargetList.self, TargetUse.self, TargetCurrent.self, TargetResolve.self, TargetWaitReady.self, TargetLease.self]
     )
 }
 

@@ -118,6 +118,7 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "target-current", supported: true),
         TKRuntimeCapability(name: "target-resolve", supported: true),
         TKRuntimeCapability(name: "target-wait-ready", supported: true),
+        TKRuntimeCapability(name: "target-lease", supported: true),
         TKRuntimeCapability(name: "runtime-manifest", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "state-app", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "state-scene", supported: connected, reason: requiresRuntime),
@@ -360,7 +361,7 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "bootstrap"
     case "test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-reliability-gate", "test-reliability-collection-preflight", "test-reliability-reserve", "test-reliability-sample", "test-create-from-session", "testrec-session-start", "testrec-event-ingest", "testrec-session-stop", "testrec-inspect", "testrec-compile", "testrec-proposals-inspect", "testrec-page-match", "testrec-replay-dry-run", "testrec-replay-local-simulated", "testrec-matrix":
         return "test"
-    case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready":
+    case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready", "target-lease":
         return "target"
     case "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "app-semantic-state", "app-semantic-action", "media-playback", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger":
         return "runtime"
@@ -397,7 +398,7 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["runtime"]
     case "test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-reliability-gate", "test-reliability-collection-preflight", "test-reliability-reserve", "test-reliability-sample", "test-create-from-session", "testrec-session-start", "testrec-event-ingest", "testrec-session-stop", "testrec-inspect", "testrec-compile", "testrec-proposals-inspect", "testrec-page-match", "testrec-replay-dry-run", "testrec-replay-local-simulated", "testrec-matrix":
         return ["test"]
-    case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready":
+    case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready", "target-lease":
         return ["app", "runtime", "observe", "action", "assert", "evidence", "smoke"]
     case "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "app-semantic-state", "app-semantic-action", "media-playback", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger":
         return ["app", "observe", "action", "assert", "evidence"]
@@ -516,6 +517,8 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "target", args: ["resolve", "<selector>", "--json"])
     case "target-wait-ready":
         return TKCLINextAction(command: "target", args: ["wait-ready", "<selector>", "--json"])
+    case "target-lease":
+        return TKCLINextAction(command: "target", args: ["lease", "status", "--target", "<udid>", "--json"])
     case "host-device", "host-device-selector", "device-list", "device-resolve":
         return TKCLINextAction(command: "device", args: ["list", "--json"])
     case "device-alias":
@@ -960,7 +963,7 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["stdout-json", "command-schema"]
     case "record", "replay-dry-run", "plan-inspect":
         return ["tritonplan", "stdout-json"]
-    case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready":
+    case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready", "target-lease":
         return ["host-targets.json", "status-json"]
     case "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "app-semantic-state", "media-playback":
         return ["runtime-manifest", "snapshot-json"]

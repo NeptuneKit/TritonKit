@@ -440,6 +440,19 @@ triton debug ax --json
 
 Use `triton target list|use|current|resolve|wait-ready` as the preferred host target-selection entry. Use `triton list --json` for embedded runtime targets. When multiple iOS Simulator apps are connected to the same `triton serve`, runtime targets are shaped as `triton:ios-simulator:<SIMULATOR_UDID>` or `triton:ios-simulator:<SIMULATOR_UDID>/app:<bundle-id>`. Runtime actions such as `triton act swipe` need that runtime target through `--target`; do not pass a host selector such as `sim:<udid>` to iOS runtime gestures. Commands that still rely on the default `triton:local` return `error.code=ambiguous_target` instead of choosing a connection implicitly.
 
+When several automation agents run iOS Simulator smoke flows against the same `triton serve`, use the opt-in target lease so one flow cannot silently change another flow's foreground page:
+
+```bash
+triton target lease acquire --target sim:<udid> --owner agent-a --ttl 300 --json
+triton target lease status --target sim:<udid> --json
+triton app open-url 'myapp://home' --device sim:<udid> --lease <lease-id> --json
+triton act tap --device sim:<udid> --at 100,200 --lease <lease-id> --json
+triton target lease release --target sim:<udid> --lease <lease-id> --json
+triton target lease takeover --target sim:<udid> --owner agent-b --confirm --json
+```
+
+Leases are bounded by a TTL (default 300 s, range 30–86400 s), carry an opaque `--owner` label, and live in the `triton serve` process (`/v1/target-leases/*`). A mutating command that passes a `--lease` token not currently held for the resolved target fails with the stable `target_lease_conflict` envelope (including `currentOwner`/`currentLeaseID`/`suggestedCommands`) instead of executing; takeover requires explicit `--confirm`. Read-only observation (`observe`, `wait`, `app list/info`, `sim screenshot`) is exempt and never conflicts. Without `--lease`, behavior is unchanged.
+
 When validating a standalone embedded runtime HTTP endpoint before it is connected through `triton serve`, bypass the local control server with `--runtime-base-url`:
 
 ```bash

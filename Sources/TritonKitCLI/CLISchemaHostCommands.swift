@@ -914,6 +914,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--interval", type: "Double", defaultValue: "0.5", description: "Runtime readiness polling interval in seconds"),
                 TKCommandSchemaOption(name: "--target", type: "String", description: "Compatibility Harmony target selector, for example 127.0.0.1:10100; cannot be combined with --device"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path"),
+                TKCommandSchemaOption(name: "--lease", type: "String", description: "Target lease token from `triton target lease acquire`; mutating commands fail with target_lease_conflict when another flow holds the lease"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 jsonAlias,
             ],
@@ -963,8 +964,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 #"triton app prefs set SeedState --type data --base64 W3t9XQ== --device iphone15 --bundle-id com.example.app --json"#,
             ],
             successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? with launch env values redacted } or app pull { ok, action:app.pull, target, selection, domain, domainIdentifier, source, destination, artifact:{ path,kind,bytes,entryCount }, artifacts, sourceCommand } or { ok, action, plistPath, value?, valuePlistType?, preferences?, preferencesPlistTypes? } or { ok, action:app.prefs.set, plistPath, key, previousValue?, previousPlistType?, newValue, newPlistType, restartAdvice } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
-            failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
-            outputSemantics: "Use app for host-side install, launch, terminate, open-url, container, pull, and preferences. An explicit ios-real:* selector triggers live real-device discovery even when --platform ios and --scope real are omitted, so install/info/launch share one selector-resolution path; unavailable devices return the devicectl readiness failure instead of a launch-only target_not_found. app pull is iOS real-device-only, stages the transfer before atomic publication, rejects overwrite/symlink by default, and bounds directory/byte acceptance. For iOS runtime readiness, prefer open-url with --wait-ready --snapshot; for Android host flows, verify business completion with wait/observe/screenshot or smoke evidence. If `triton camera on` enabled the launched iOS Simulator bundle, app launch injects the configured camera hook environment.",
+            failureShape: "{ ok:false, error:{ code, message, hint, nextAction?, leaseReason?, currentOwner?, currentLeaseID?, currentExpiresAt?, suggestedCommands? } }",
+            outputSemantics: "Use app for host-side install, launch, terminate, open-url, container, pull, and preferences. An explicit ios-real:* selector triggers live real-device discovery even when --platform ios and --scope real are omitted, so install/info/launch share one selector-resolution path; unavailable devices return the devicectl readiness failure instead of a launch-only target_not_found. app pull is iOS real-device-only, stages the transfer before atomic publication, rejects overwrite/symlink by default, and bounds directory/byte acceptance. For iOS runtime readiness, prefer open-url with --wait-ready --snapshot; for Android host flows, verify business completion with wait/observe/screenshot or smoke evidence. If `triton camera on` enabled the launched iOS Simulator bundle, app launch injects the configured camera hook environment. Parallel agent flows can pass `--lease <id>` on open-url/launch/terminate to enforce the opt-in target lease: a conflicting mutation returns the stable target_lease_conflict envelope with the current owner instead of silently changing another flow's foreground state; without `--lease`, behavior is unchanged.",
             artifacts: ["app-container", "host-artifacts", "app-preferences", "runtime-snapshot"],
             nextCommands: [
                 "triton app go <url>",
@@ -1029,6 +1030,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "host_open_url_failed",
                 "host_command_timeout",
                 "host_action_failed",
+                "target_lease_conflict",
                 "missing_preferences",
                 "plist_not_found",
                 "preference_key_not_found",
@@ -1074,16 +1076,17 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     name: "launch",
                     summary: "Launch an installed app",
                     oneOfRequiredOptions: [["--bundle-id"], ["--package-name"], ["--bundle"]],
-                    optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--name", "--runtime", "--state", "--ready", "--activity", "--ability", "--env", "--arg", "--format", "--json"],
-                    outputSelectors: ["host.app-action"]
+                    optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--name", "--runtime", "--state", "--ready", "--activity", "--ability", "--env", "--arg", "--lease", "--host", "--port", "--format", "--json"],
+                    outputSelectors: ["host.app-action"],
+                    failureCodes: ["app_launch_failed", "target_lease_conflict"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "terminate",
                     summary: "Terminate a running app; iOS real-device bundle-ID requests fail closed when no verified PID is available",
                     oneOfRequiredOptions: [["--bundle-id"], ["--package-name"], ["--bundle"]],
-                    optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--format", "--json"],
+                    optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--lease", "--host", "--port", "--format", "--json"],
                     outputSelectors: ["host.app-action"],
-                    failureCodes: ["app_terminate_failed", "app_terminate_pid_resolution_unavailable"]
+                    failureCodes: ["app_terminate_failed", "app_terminate_pid_resolution_unavailable", "target_lease_conflict"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "go",
@@ -1096,8 +1099,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     name: "open-url",
                     summary: "Submit a URL through host-side app tooling",
                     requiredOptions: ["<url>"],
-                    optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--name", "--runtime", "--state", "--ready", "--bundle-id", "--package-name", "--bundle", "--ability", "--action", "--target", "--hdc", "--runtime-target", "--wait-ready", "--snapshot", "--snapshot-include", "--max-ax-nodes", "--host", "--port", "--timeout", "--interval", "--format", "--json"],
-                    outputSelectors: ["host.app-open-url"]
+                    optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--name", "--runtime", "--state", "--ready", "--bundle-id", "--package-name", "--bundle", "--ability", "--action", "--target", "--hdc", "--runtime-target", "--wait-ready", "--snapshot", "--snapshot-include", "--max-ax-nodes", "--host", "--port", "--timeout", "--interval", "--lease", "--format", "--json"],
+                    outputSelectors: ["host.app-open-url"],
+                    failureCodes: ["host_open_url_failed", "target_lease_conflict"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "container",

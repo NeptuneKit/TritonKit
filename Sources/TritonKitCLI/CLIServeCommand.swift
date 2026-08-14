@@ -20,9 +20,12 @@ struct Serve: AsyncParsableCommand {
         let encoder = JSONEncoder()
         let counter = MessageCounter()
         let webHostTargetCache = WebHostDeviceTargetCache()
+        let leaseStore = TargetLeaseStore()
 
         let router = Router(context: BasicWebSocketRequestContext.self)
         let webSocketRouter = Router(context: BasicWebSocketRequestContext.self)
+
+        registerTargetLeaseRoutes(on: router, store: leaseStore)
 
         // ---- HTTP Data Endpoints ----
 

@@ -108,6 +108,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "screen-workspace-projection-result",
         "smoke-result",
         "status-envelope",
+        "target-lease",
         "target-list",
         "target-resolution",
         "target-summary",
@@ -376,6 +377,8 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "plan", "archive"]
     case "invalid_reliability_collection", "invalid_reliability_receipt", "reliability_sample_confirmation_required", "invalid_reliability_sample_request", "invalid_reliability_reset_receipt", "reliability_reservation_exists", "reliability_collection_busy", "reliability_slot_already_claimed":
         return ["diagnose"]
+    case "lease_ttl_out_of_range":
+        return ["diagnose", "plan"]
     case "reliability_reservation_write_failed", "test_reliability_sample_failed", "reliability_identity_chain_write_failed":
         return ["diagnose", "archive"]
     default:

@@ -16,6 +16,11 @@ struct TritonKitHTTPClient {
         return try JSONDecoder().decode(T.self, from: data)
     }
 
+    func getJSON<T: Decodable>(_ path: String, queryItems: [URLQueryItem]) async throws -> T {
+        let data = try await data(for: URLRequest(url: url(path: path, queryItems: queryItems)))
+        return try JSONDecoder().decode(T.self, from: data)
+    }
+
     func latestHierarchyData() async throws -> Data {
         try await data(for: URLRequest(url: url(path: "/hierarchy/latest", queryItems: targetQueryItems())))
     }

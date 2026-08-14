@@ -761,6 +761,11 @@ func failHostCommand(
     let detail: TKCLIErrorDetail
     var hostDeviceCandidates: [HostDeviceTarget]?
     switch error {
+    case let httpError as CLIHTTPError where httpError.response?.error.code == "target_lease_conflict":
+        // Preserve the stable machine-readable lease conflict envelope
+        // (currentOwner/currentLeaseID/leaseReason/suggestedCommands) instead of
+        // wrapping it in the generic host_action_failed detail.
+        detail = httpError.response!.error
     case _ as ValidationError:
         detail = hostValidationErrorDetail(error)
     case HostSimulatorRecordingValidationError.truncated:

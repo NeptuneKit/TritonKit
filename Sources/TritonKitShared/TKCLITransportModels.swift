@@ -384,6 +384,16 @@ public struct TKCLIErrorDetail: Codable, Equatable {
     public let nearestCandidates: [String]?
     public let suggestedCommands: [String]?
     public let candidateCount: Int?
+    /// Stable machine-readable sub-reason for `target_lease_conflict`
+    /// failures: `held_by_other`, `lease_expired`, `lease_not_held`,
+    /// `lease_release_denied`, or `lease_takeover_required`.
+    public let leaseReason: String?
+    /// Current lease owner for `target_lease_conflict` diagnostics.
+    public let currentOwner: String?
+    /// Current lease token for `target_lease_conflict` diagnostics.
+    public let currentLeaseID: String?
+    /// Current lease expiry for `target_lease_conflict` diagnostics.
+    public let currentExpiresAt: Date?
 
     public init(
         code: String,
@@ -393,7 +403,11 @@ public struct TKCLIErrorDetail: Codable, Equatable {
         nextAction: TKCLINextAction? = nil,
         nearestCandidates: [String]? = nil,
         suggestedCommands: [String]? = nil,
-        candidateCount: Int? = nil
+        candidateCount: Int? = nil,
+        leaseReason: String? = nil,
+        currentOwner: String? = nil,
+        currentLeaseID: String? = nil,
+        currentExpiresAt: Date? = nil
     ) {
         self.code = code
         self.message = message
@@ -403,6 +417,10 @@ public struct TKCLIErrorDetail: Codable, Equatable {
         self.nearestCandidates = nearestCandidates
         self.suggestedCommands = suggestedCommands
         self.candidateCount = candidateCount
+        self.leaseReason = leaseReason
+        self.currentOwner = currentOwner
+        self.currentLeaseID = currentLeaseID
+        self.currentExpiresAt = currentExpiresAt
     }
 }
 
