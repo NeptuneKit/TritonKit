@@ -452,6 +452,45 @@ struct SingleDeviceWebPageTests {
         ])
     }
 
+    @Test("iOS web host tap derives point-space from simulator layout when dimensions are omitted")
+    func iOSWebHostTapDerivesPointSpaceFromSimulatorLayoutWhenDimensionsAreOmitted() throws {
+        let command = try webIOSBaguetteCommand(
+            action: .tap(x: 200, y: 436),
+            udid: "SIM-1",
+            screen: WebIOSSimulatorScreenLayout(width: 400, height: 872),
+            executable: "/opt/homebrew/bin/baguette"
+        )
+
+        #expect(command.executable == "/opt/homebrew/bin/baguette")
+        #expect(command.arguments == [
+            "tap",
+            "--udid", "SIM-1",
+            "--x", "200",
+            "--y", "436",
+            "--width", "400",
+            "--height", "872"
+        ])
+    }
+
+    @Test("iOS web host swipe derives point-space from simulator layout when dimensions are omitted")
+    func iOSWebHostSwipeDerivesPointSpaceFromSimulatorLayoutWhenDimensionsAreOmitted() throws {
+        let lifecycle = try webIOSBaguetteSwipeLifecycle(
+            input: .swipe(
+                startX: 201,
+                startY: 700,
+                endX: 201,
+                endY: 200,
+                duration: 0.35
+            ),
+            udid: "SIM-1",
+            screen: WebIOSSimulatorScreenLayout(width: 402, height: 874),
+            executable: "/opt/homebrew/bin/baguette"
+        )
+
+        #expect(lifecycle.events.first == WebIOSBaguetteTouchEvent(type: "touch1-down", x: 201, y: 700, width: 402, height: 874))
+        #expect(lifecycle.events.last == WebIOSBaguetteTouchEvent(type: "touch1-up", x: 201, y: 200, width: 402, height: 874))
+    }
+
     @Test("iOS web host swipe builds a complete touch lifecycle for vertical pagers")
     func iOSWebHostSwipeBuildsCompleteTouchLifecycleForVerticalPagers() throws {
         let lifecycle = try webIOSBaguetteSwipeLifecycle(

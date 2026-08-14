@@ -529,7 +529,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:sim.tap, runtimeScope:host-simulator, target, adapter, tool, exitCode, sourceCommand, strategy? } or { ok, action:sim.record, artifacts[], requestedDurationSeconds, actualDurationSeconds, minimumAcceptedDurationSeconds, containerDurationSeconds, videoTrackDurationSeconds[], durationValidation } or { ok, action:sim.logs, artifact, sourceType:unified-log, sourcesCaptured:[unified-log] } or { ok, action:sim.app-console, bundleID, artifact, artifactBytes, observedBytes, artifactTruncated, maximumBytes, requestedDurationSeconds, elapsedDurationSeconds, captureEndedBy, sourcesCaptured:[process-stdout,process-stderr], streamLayout:merged-pty } or { ok, action:sim.type, runtimeScope:host-simulator, target, adapter, tool, exitCode, sourceCommand, textEncoding?, note } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
-            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim tap is the explicit host HID recovery path for embedded iOS tap failures and reports adapter/target evidence; it does not claim embedded business selection by itself. sim record validates actual encoded video sample duration rather than the MOV container timeline and rejects materially truncated evidence. sim logs captures unified-log only and does not cover App stdout/stderr. sim app-console terminates and relaunches the selected App through console-pty, writes a duration/byte-bounded sensitive artifact, and never inlines console content in JSON. sim type remains a reserved host input entry and returns unsupported_host_input because the current public simctl io contract exposes no stable keyboard type primitive.",
+            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim tap is the explicit host HID recovery path for embedded iOS tap failures and reports adapter/target evidence; --x/--y are expressed in simulator points and the point-space dimensions are inferred from the simulator layout metadata, so callers do not pass --width/--height; it does not claim embedded business selection by itself. sim record validates actual encoded video sample duration rather than the MOV container timeline and rejects materially truncated evidence. sim logs captures unified-log only and does not cover App stdout/stderr. sim app-console terminates and relaunches the selected App through console-pty, writes a duration/byte-bounded sensitive artifact, and never inlines console content in JSON. sim type remains a reserved host input entry and returns unsupported_host_input because the current public simctl io contract exposes no stable keyboard type primitive.",
             artifacts: ["simulator-screenshot", "simulator-video", "simulator-logs", "simulator-app-process-console", "simulator-diagnostics"],
             nextCommands: [
                 "triton sim use <udid> --json",
@@ -559,6 +559,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "simulator_data_missing",
                 "host_command_failed",
                 "host_command_timeout",
+                "host_action_failed",
                 "host_input_failed",
                 "unsupported_host_input",
                 "unsupported_text_input",
@@ -656,7 +657,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "tap",
-                    summary: "Tap an iOS Simulator through the host HID adapter",
+                    summary: "Tap an iOS Simulator through the host HID adapter; --x/--y are in simulator points and the point-space dimensions are derived from the simulator layout metadata",
                     requiredOptions: ["--x", "--y"],
                     optionalOptions: ["--simulator", "--format", "--json"],
                     nextCommands: [
@@ -664,7 +665,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                         "triton verify text-exists <expected> --json",
                     ],
                     outputSelectors: ["host.simulator-input"],
-                    failureCodes: ["simulator_not_found", "simulator_not_booted", "host_input_failed", "unsupported_host_input", "host_command_timeout", "validation_failed"]
+                    failureCodes: ["simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "unsupported_host_input", "host_command_timeout", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "type",

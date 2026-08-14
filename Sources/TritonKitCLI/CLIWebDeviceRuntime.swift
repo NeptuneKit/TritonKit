@@ -789,34 +789,52 @@ func normalizeWebIOSSimulatorInput(_ input: TKInputRequest, screen: WebIOSSimula
     }
 }
 
+/// Resolve the simulator point-space width/height for a host HID command.
+/// The simulator layout metadata is the source of truth: caller-provided
+/// width/height only describe the caller's own coordinate space and are honored
+/// when both are present and positive (matching `normalizeWebIOSSimulatorInput`);
+/// otherwise the coordinates are already expressed in simulator points and the
+/// target layout dimensions are used directly. This keeps `triton sim tap
+/// --x <x> --y <y>` self-sufficient without requiring caller-supplied
+/// width/height.
+private func webIOSSimulatorPointSpace(
+    input: TKInputRequest,
+    screen: WebIOSSimulatorScreenLayout
+) -> (width: Int, height: Int) {
+    if let width = input.width, let height = input.height, width > 0, height > 0 {
+        return (Int(width.rounded()), Int(height.rounded()))
+    }
+    return (screen.width, screen.height)
+}
+
 func webIOSBaguetteCommand(action: TKInputRequest, udid: String, screen: WebIOSSimulatorScreenLayout, executable: String = "baguette") throws -> TKHostCommand {
     let input = normalizeWebIOSSimulatorInput(action, screen: screen)
     switch input.type {
     case .tap:
         let x = try requireCoordinate(input.x, name: "x", action: "tap")
         let y = try requireCoordinate(input.y, name: "y", action: "tap")
-        let width = try requireCoordinate(input.width, name: "width", action: "tap")
-        let height = try requireCoordinate(input.height, name: "height", action: "tap")
+        let pointSpace = webIOSSimulatorPointSpace(input: input, screen: screen)
         return TKHostCommand(executable: executable, arguments: [
             "tap",
             "--udid", udid,
             "--x", "\(x)",
             "--y", "\(y)",
-            "--width", "\(width)",
-            "--height", "\(height)"
+            "--width", "\(pointSpace.width)",
+            "--height", "\(pointSpace.height)"
         ])
     case .swipe:
         throw RuntimeError("iOS Simulator swipe requires the persistent Baguette input lifecycle session.")
     case .longPress:
         let x = try requireCoordinate(input.x, name: "x", action: "longPress")
         let y = try requireCoordinate(input.y, name: "y", action: "longPress")
+        let pointSpace = webIOSSimulatorPointSpace(input: input, screen: screen)
         let hold = TKInputRequest.swipe(
             startX: Double(x),
             startY: Double(y),
             endX: Double(x),
             endY: Double(y),
-            width: input.width,
-            height: input.height,
+            width: Double(pointSpace.width),
+            height: Double(pointSpace.height),
             duration: input.duration ?? 0.65
         )
         return try webIOSBaguetteSwipeCommand(input: hold, udid: udid, executable: executable, action: "longPress")
@@ -860,8 +878,9 @@ func webIOSBaguetteSwipeLifecycle(
     let startY = try requireCoordinate(normalized.startY, name: "startY", action: "swipe")
     let endX = try requireCoordinate(normalized.endX, name: "endX", action: "swipe")
     let endY = try requireCoordinate(normalized.endY, name: "endY", action: "swipe")
-    let width = try requireCoordinate(normalized.width, name: "width", action: "swipe")
-    let height = try requireCoordinate(normalized.height, name: "height", action: "swipe")
+    let pointSpace = webIOSSimulatorPointSpace(input: normalized, screen: screen)
+    let width = pointSpace.width
+    let height = pointSpace.height
     let duration = (normalized.duration ?? 0.25) > 0 ? (normalized.duration ?? 0.25) : 0.25
     let steps = max(1, moveCount)
     let cadence = duration / Double(steps + 1)
