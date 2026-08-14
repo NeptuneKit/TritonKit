@@ -412,6 +412,7 @@ struct Tap: AsyncParsableCommand {
     @Option(name: .customLong("page-session-id"), help: "Expected WebView page session id for --webview-aware tap") var pageSessionID: String?
     @Option(name: .customLong("expect-text"), help: "Expected WebView text after --webview-aware dispatch") var expectText: String?
     @Option(help: "Timeout in seconds for --webview-aware expectation") var timeout: Double = 3
+    @Option(name: .customLong("lease"), help: "Target lease token from `triton target lease acquire`; mutating actions fail with target_lease_conflict when another flow holds the lease") var leaseID: String?
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
@@ -519,6 +520,9 @@ struct Tap: AsyncParsableCommand {
                     hdc: hdc,
                     adb: adb
                 )
+                if let leaseID {
+                    try await enforceTargetLease(host: host, port: port, target: selection.target.target, leaseID: leaseID)
+                }
                 let result = try runWebHostDeviceInput(
                     id: webHostDeviceTargetID(selection.target),
                     input: .tap(x: tapX, y: tapY)
@@ -559,6 +563,9 @@ struct Tap: AsyncParsableCommand {
                         hint: "Pass a booted simulator selector such as `--device booted` or `--device sim:<udid>`.",
                         outputFormat: outputFormat
                     )
+                }
+                if let leaseID {
+                    try await enforceTargetLease(host: host, port: port, target: selected.target, leaseID: leaseID)
                 }
                 let tapPoint: CGPoint?
                 if let point {
@@ -740,6 +747,10 @@ struct Tap: AsyncParsableCommand {
         do {
             let point = try at.map(parsePoint)
             let (runtimeTarget, runtimeClient) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
+            if let leaseID {
+                let leaseKey = runtimeTarget.simulatorUDID ?? runtimeTarget.id
+                try await enforceTargetLease(host: host, port: port, target: leaseKey, leaseID: leaseID)
+            }
             if let query {
                 let client = runtimeClient
                 let bounds = try within.map(parseBounds)

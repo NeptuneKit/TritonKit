@@ -926,6 +926,9 @@ struct HostAppLaunch: AsyncParsableCommand {
     @Option(name: .customLong("arg"), help: "Argument passed to the launched iOS app; repeat for multiple arguments") var launchArguments: [String] = []
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Path to adb executable") var adb: String = "adb"
+    @Option(name: .customLong("lease"), help: "Target lease token from `triton target lease acquire`; mutating commands fail with target_lease_conflict when another flow holds the lease") var leaseID: String?
+    @Option(help: "Server host for the target lease check") var host: String = "127.0.0.1"
+    @Option(help: "Server port for the target lease check") var port: Int = 19421
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -949,6 +952,9 @@ struct HostAppLaunch: AsyncParsableCommand {
             )
             switch hostAppPlatform(from: selection.platform) {
         case .ios:
+            if selection.target.scope != "real", let leaseID {
+                try await enforceTargetLease(host: host, port: port, target: selection.target.target, leaseID: leaseID)
+            }
             var environment = try parseLaunchEnvironment(launchEnvironment)
             if selection.target.scope != "real", let bundleID {
                 environment = try simCameraLaunchEnvironment(
@@ -1086,6 +1092,9 @@ struct HostAppTerminate: AsyncParsableCommand {
     @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Path to adb executable") var adb: String = "adb"
+    @Option(name: .customLong("lease"), help: "Target lease token from `triton target lease acquire`; mutating commands fail with target_lease_conflict when another flow holds the lease") var leaseID: String?
+    @Option(help: "Server host for the target lease check") var host: String = "127.0.0.1"
+    @Option(help: "Server port for the target lease check") var port: Int = 19421
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -1106,6 +1115,9 @@ struct HostAppTerminate: AsyncParsableCommand {
                 ready: ready,
                 hdc: hdc
             )
+            if selection.platform == .ios, selection.target.scope != "real", let leaseID {
+                try await enforceTargetLease(host: host, port: port, target: selection.target.target, leaseID: leaseID)
+            }
             let plan = try planHostAppTerminate(selection: selection, bundleID: bundleID, packageName: packageName, bundle: bundle, adb: adb, hdc: hdc, devicectlArtifacts: nil)
             try runSimpleHostCommand(
                 action: plan.action,
@@ -1213,6 +1225,7 @@ struct HostAppOpenURL: AsyncParsableCommand {
     @Option(name: .customLong("runtime-target"), help: "iOS embedded runtime target id from `triton list`") var runtimeTarget: String = TKLocalTargetID
     @Flag(name: .customLong("wait-ready"), help: "After opening the URL, wait until the embedded runtime is connected and has an active hierarchy") var waitReady = false
     @Flag(help: "After opening the URL, return an embedded runtime snapshot summary") var snapshot = false
+    @Option(name: .customLong("lease"), help: "Target lease token from `triton target lease acquire`; mutating commands fail with target_lease_conflict when another flow holds the lease") var leaseID: String?
     @Option(name: .customLong("snapshot-include"), help: "Comma-separated snapshot sections") var snapshotInclude: String = "app,scene,route,ax,geometry"
     @Option(name: .customLong("max-ax-nodes"), help: "Maximum AX nodes in the runtime snapshot") var maxAXNodes: Int?
     @Option(help: "Server host") var host: String = "127.0.0.1"
@@ -1242,6 +1255,9 @@ struct HostAppOpenURL: AsyncParsableCommand {
             )
             switch hostAppPlatform(from: selection.platform) {
         case .ios:
+            if selection.target.scope != "real", let leaseID {
+                try await enforceTargetLease(host: host, port: port, target: selection.target.target, leaseID: leaseID)
+            }
             if selection.target.scope == "real" {
                 let plan = try planHostAppOpenURL(selection: selection, url: url, bundleID: bundleID, packageName: nil, bundle: nil, ability: nil, adb: adb, hdc: hdc, devicectlArtifacts: nil)
                 try runSimpleHostCommand(

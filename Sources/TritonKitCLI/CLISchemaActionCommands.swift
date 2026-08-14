@@ -47,6 +47,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
         "action_not_supported",
         "unsupported_runtime_scope",
         "unsupported_scope",
+        "target_lease_conflict",
         "geometry_required",
     ] + schemaIOSHostAXFailureCodes + webViewTapFailureCodes
 
@@ -98,6 +99,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--page-session-id", type: "String", description: "Expected WebView page session id; fails if navigation changed before tap"),
                 TKCommandSchemaOption(name: "--expect-text", type: "String", description: "Expected WebView text after --webview-aware dispatch; required to prove business completion"),
                 TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "3", description: "Timeout in seconds for --expect-text"),
+                TKCommandSchemaOption(name: "--lease", type: "String", description: "Target lease token from `triton target lease acquire`; mutating actions fail with target_lease_conflict when another flow holds the lease"),
                 TKCommandSchemaOption(name: "--secure", type: "Bool", defaultValue: "false", description: "Redact inserted text details"),
                 TKCommandSchemaOption(name: "--exact", type: "Bool", defaultValue: "false", description: "Use exact text insertion when supported"),
                 TKCommandSchemaOption(name: "--start-x", type: "Double", description: "Swipe start x coordinate"),
@@ -155,7 +157,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
             failureCodes: actFailureCodes,
             subcommands: [
                 TKCommandSubcommandSchema(name: "find", summary: "Resolve a target before acting", requiredOptions: ["<query>"], optionalOptions: ["--target", "--device", "--host", "--port", "--all", "--index", "--within", "--at", "--format", "--json"], outputSelectors: ["target.resolution"], failureCodes: ["text_not_found", "validation_failed", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"]),
-            TKCommandSubcommandSchema(name: "tap", summary: "Tap a UI target", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--text", "--x", "--y", "--at", "--oid", "--ax-oid", "--ax-label", "--strategy", "--allow-host-hid-fallback", "--index", "--within", "--webview-aware", "--selector", "--webview-id", "--page-session-id", "--expect-text", "--timeout", "--format", "--json"], outputSelectors: ["input.result", "host.ios-tap", "host.android-tap", "host.harmony-tap", "act.webview-aware-tap"], failureCodes: tapFailureCodes),
+            TKCommandSubcommandSchema(name: "tap", summary: "Tap a UI target", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--text", "--x", "--y", "--at", "--oid", "--ax-oid", "--ax-label", "--strategy", "--allow-host-hid-fallback", "--index", "--within", "--webview-aware", "--selector", "--webview-id", "--page-session-id", "--expect-text", "--timeout", "--lease", "--format", "--json"], outputSelectors: ["input.result", "host.ios-tap", "host.android-tap", "host.harmony-tap", "act.webview-aware-tap"], failureCodes: tapFailureCodes + ["target_lease_conflict"]),
                 TKCommandSubcommandSchema(name: "type", summary: "Type text into the focused field", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--text", "--oid", "--secure", "--exact", "--format", "--json"], outputSelectors: ["input.result", "host.android-text-input", "host.harmony-text-input"], failureCodes: inputCommandFailureCodes),
                 TKCommandSubcommandSchema(name: "paste", summary: "Paste exact text", requiredOptions: ["<text>"], optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--secure", "--oid", "--x", "--y", "--at", "--format", "--json"], outputSelectors: ["input.result", "host.android-text-input", "host.harmony-text-input"], failureCodes: inputCommandFailureCodes),
                 TKCommandSubcommandSchema(name: "clear", summary: "Clear text input", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--oid", "--x", "--y", "--at", "--format", "--json"], outputSelectors: ["input.result"], failureCodes: inputCommandFailureCodes),

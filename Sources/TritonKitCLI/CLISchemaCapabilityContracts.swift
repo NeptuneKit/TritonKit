@@ -493,6 +493,30 @@ func hostDeviceReadyOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func targetLeaseOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "target.lease",
+        format: "json",
+        kind: "target-lease",
+        model: "TKTargetLeaseEnvelope",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the lease request succeeded"),
+            ("status", "String", true, "acquired, already_held, taken_over, held, expired, none, or released"),
+            ("target", "String", true, "Normalized simulator target key"),
+            ("lease", "TKTargetLease?", false, "Lease with id, target, owner, acquiredAt, expiresAt, ttlSeconds, readonlyObservationAllowed, kind"),
+            ("lease.id", "String", false, "Opaque lease token passed back as --lease <id>"),
+            ("lease.owner", "String", false, "Opaque caller-provided owner label"),
+            ("lease.ttlSeconds", "Int", false, "Bounded lease TTL in seconds"),
+            ("lease.expiresAt", "Date", false, "Lease expiry"),
+            ("lease.readonlyObservationAllowed", "Bool", false, "Whether read-only observation is permitted while held"),
+            ("previousOwner", "String?", false, "Previous owner after an explicit takeover"),
+            ("released", "Bool?", false, "Whether release removed the matching lease"),
+            ("authorized", "Bool?", false, "Whether a mutation check authorized the provided lease token"),
+            ("error", "TKCLIErrorDetail?", false, "Structured failure detail; target_lease_conflict carries leaseReason/currentOwner/currentLeaseID/currentExpiresAt"),
+        ])
+    )
+}
+
 func hostDeviceProxyOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "host.device-proxy",
