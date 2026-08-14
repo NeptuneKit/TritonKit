@@ -518,6 +518,20 @@ struct SimulatorAdvancedControlsTests {
         #expect(sim.subcommands.first { $0.name == "create" }?.requiredOptions == ["<name>", "--device-type", "--runtime"])
     }
 
+    @Test("sim tap schema requires only x/y and declares inferred point-space failure codes")
+    func simTapSchemaRequiresOnlyXYAndDeclaresInferredPointSpaceFailureCodes() throws {
+        let sim = try #require(commandSchemas().first { $0.name == "sim" })
+        let tap = try #require(sim.subcommands.first { $0.name == "tap" })
+
+        #expect(tap.requiredOptions == ["--x", "--y"])
+        #expect(!tap.requiredOptions.contains("--width"))
+        #expect(!tap.requiredOptions.contains("--height"))
+        #expect(tap.optionalOptions.contains("--simulator"))
+        #expect(tap.optionalOptions.contains("--format"))
+        #expect(tap.summary.contains("point"))
+        #expect(tap.failureCodes.contains("host_action_failed"))
+    }
+
     @Test("sim proxy alias reuses the host device proxy output contract")
     func simProxyAliasReusesHostDeviceProxyContract() throws {
         let status = makeNetworkProxyStatusSession(platform: .ios, target: makeSimulatorProxyTarget(simulator: "booted"))
