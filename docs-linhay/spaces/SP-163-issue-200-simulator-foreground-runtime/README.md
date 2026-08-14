@@ -66,4 +66,4 @@ git diff --check
 - release CLI：`swift build -c release --product triton` 通过；release `triton schema --command act --json` 已验证 `/targets` bypass 语义与 `input.result` contract。
 - 本地总门禁：`TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local` 通过（根包 239/239、release CLI/smoke、Harmony host smoke、iOS runtime observe smoke、docs/diff）；按本轮边界跳过真实 Xcode/Simulator 验证。
 - 默认 CLI 全量测试可完成，但有 11 个基线 issue：5 个 Xcode archive/export schema matrix/taxonomy、1 个 public skill command snapshot、5 个 Harmony wait timing；本次 focused suites 无新增失败。
-- 风险：未连接真实 Simulator、Baguette 或私有 App；host-HID 成功仍只是提交回执，真实业务完成必须以后验 observation/evidence 证明。远端 issue 尚未评论或关闭。
+- 风险：未连接真实 Simulator、Baguette 或私有 App；host-HID 成功仍只是提交回执，真实业务完成必须以后验 observation/evidence 证明。GitHub #200 已随 CI `31778845414` 全绿后评论并关闭（合并提交 `8cc72765`，随下一 patch 发布）。

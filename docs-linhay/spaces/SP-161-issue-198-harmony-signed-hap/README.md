@@ -44,4 +44,4 @@
 
 - 已完成实现与 focused 验证：`BuildRunnerTests` 10/10、`BuildRuntimeTests` 4/4，`git diff --check` 通过；真实 Harmony 工程、签名资产和设备不在本 space 范围内。
 - 已由主控登记全局 `INDEX.md` / `spaces/README.md`、写回 memory，并通过 `docs-linhay/scripts/check-docs.sh`；实现已由 merge `574bbc9c` 进入本地 `main`。
-- GitHub #198 仍待用户授权后的远端验证评论、push/PR 与关闭；真实 Harmony 工程、签名资产和 HDC 安装继续保持风险边界。
+- GitHub #198 已随 CI `31778845414` 全绿后评论并关闭（提交 `574bbc9c`，随 `v0.2.18` 发布）；真实 Harmony 工程、签名资产和 HDC 安装继续保持风险边界。
