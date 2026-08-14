@@ -71,4 +71,5 @@ git diff --check
 - focused regression：`HarmonyActFindTests`（parser/routing/纯函数解析/schema contract）通过；`SelectorFlagTests`/`InputOutputTests`/`SchemaFactSourceTests` 复跑无新增失败。
 - release CLI：`swift build -c release --product triton` 通过；release `triton schema --command act.find --json` 与 `act --json` 已确认 `--platform`/`--hdc`、`unsupported_capability` failure code 与 harmony usage/example。
 - 文档：`check-docs.sh` 与 `git diff --check` 通过；space 已登记到 INDEX 与路线总览。
-- 风险：未连接真实 Harmony 设备/HDC；host layout 解析只经 fixture 验证，真实 `uitest dumpLayout` 文本/坐标与 embedded `/targets` 语义未在真机复测。远端 issue 尚未评论或关闭。
+- 风险：未连接真实 Harmony 设备/HDC；host layout 解析只经 fixture 验证，真实 `uitest dumpLayout` 文本/坐标与 embedded `/targets` 语义未在真机复测。
+- 已评论并关闭远端 #201（合并提交 `8469375a`，CI `31791782001` 全绿）；真实 Harmony/HDC smoke 保留为后续设备验证。

@@ -64,4 +64,5 @@ git diff --check
 - release CLI：`swift build -c release --product triton` 通过；release `triton schema --command app --json` 的 `host.app-info` / `host.app-list` contract 包含 `marketingVersion` / `buildNumber` / legacy `version` 字段。
 - 文档：`docs-linhay/spaces/SP-169-issue-206-app-marketing-version/README.md` 建立并登记 `INDEX.md` / `spaces/README.md`；`docs-linhay/memory/2026-08-11.md` 追加；`docs-linhay/dev/ai-cli-readable-control.md`、根 `README.md` 与 `tritonkit-host-simulator-takeover` skill 澄清 legacy `version` 映射。
 - 风险：未连接真实 Simulator / 私有 App，Info.plist 解析仅以 fixture 验证；Android 侧 `buildNumber` 语义沿用共享 parser 的 `versionName` 映射，未做 `versionCode` 扩展。
-- 共享文件冲突风险：`docs-linhay/spaces/INDEX.md`、`spaces/README.md` 与 SP-164～168 占位 README 与并行 worktree（SP-164～168）共享同一登记面，合入时可能 both-add 冲突，应以各 worktree 正式内容为准。远端 issue 尚未评论或关闭。
+- 共享文件冲突风险：`docs-linhay/spaces/INDEX.md`、`spaces/README.md` 与 SP-164～168 占位 README 与并行 worktree（SP-164～168）共享同一登记面，合入时可能 both-add 冲突，应以各 worktree 正式内容为准。
+- 已评论并关闭远端 #206（合并提交 `5dbbdc90`，CI `31791782001` 全绿）；真实 Simulator 的 Info.plist 解析保留为后续设备验证。

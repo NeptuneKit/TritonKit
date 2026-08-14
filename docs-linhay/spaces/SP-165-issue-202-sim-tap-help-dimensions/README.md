@@ -68,4 +68,5 @@ git diff --check
 - TDD green：最小实现后 `SingleDeviceWebPageTests` 30/30、`SimulatorAdvancedControlsTests` 34/34 通过；既有归一化/Baguette argv/swipe lifecycle 测试无回归。
 - release CLI：`swift build -c release --product triton` 通过；release `sim tap --help` 与 `schema --command sim.tap --json` 已确认 help/schema 一致（仅 `--x/--y` 必选、无 width/height、`host_action_failed` 在 failureCodes）。
 - 文档：`check-docs.sh` 与 `git diff --check` 通过；space 已登记到 INDEX 与路线总览。
-- 风险：未连接真实 Simulator/Baguette；host-HID 成功仍只是提交回执，业务后置状态须以 observe/wait/screenshot 验证。远端 issue 尚未评论或关闭；SP-164 登记由对侧 worktree 维护，本 worktree 以字节一致镜像保证编号连续。
+- 风险：未连接真实 Simulator/Baguette；host-HID 成功仍只是提交回执，业务后置状态须以 observe/wait/screenshot 验证。
+- 已评论并关闭远端 #202（合并提交 `07a11612`，CI `31791782001` 全绿）；真实 Simulator/Baguette smoke 保留为后续设备验证。

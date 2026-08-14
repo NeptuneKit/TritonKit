@@ -67,7 +67,8 @@ git diff --check
 - 已完成（本地）：共享归一化 helper `TKTextMatching.swift`（trim + case/diacritic fold + substring/exact 两种模式）落地 TritonKitShared；`wait --text`（`TKWaitFindTextMatch`）与 `verify text-exists`（`TKUIAssertEvaluate`）改走共享匹配；`act find`（`selectAXNodesByQuery`/`tapTargetCandidates`）改走共享匹配并排除 hidden 节点；deterministic test-run `match=exact` 显式保持 exact 模式。
 - TDD red：新增 `TKTextMatchingTests` 先因 helper 不存在编译失败；`IOSTextQueryConsistencyTests` 归一化/visibility 断言首次 9 项失败，`act find` 无匹配契约测试先行通过（作为回归 pin）。
 - focused green：共享 matcher/wait/assert 套件通过；`IOSTextQueryConsistencyTests` 4/4 通过；`InputOutputTests`/`FailureDiagnosticsTests` 回归无新增失败。
-- 风险：未连接真实 Simulator 或私有 App；substring 语义使 `wait --text "1"` 之类短查询可能命中包含它的长文本，与 Android/iOS host wait 既有行为一致；远端 issue 未评论或关闭。
+- 风险：未连接真实 Simulator 或私有 App；substring 语义使 `wait --text "1"` 之类短查询可能命中包含它的长文本，与 Android/iOS host wait 既有行为一致。
+- 已评论并关闭远端 #203（合并提交 `e27e0de3`，CI `31791782001` 全绿）；真实 Simulator smoke 保留为后续设备验证。
 
 ## 合并冲突风险
 

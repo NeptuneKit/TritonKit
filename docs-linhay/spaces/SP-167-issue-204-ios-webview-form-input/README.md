@@ -69,5 +69,6 @@ docs-linhay/scripts/check-docs.sh
 - TDD green：实现后根包 webview/shared 三 suite 23/23 通过；CLI `WebViewFormInputRouteTests` 6/6、`WebViewRouteTests` 18/18、`SchemaFactSourceTests` 与关联 schema/capability suite 通过（仅保留 5 个既有 Xcode archive/export schema matrix/taxonomy 基线失败，已在 stash 基线验证为 pre-existing）。
 - 契约要点：opt-in marker 统一为 `<html data-triton-form-input="1">` 或 `window.__tritonFormInput === true`；稳定身份 `#id` / `[name=...]` / `form-N`（document order，snapshot 与 focus/input 脚本同序）；`form-input` 响应携带 `eventsDispatched`、`insertedLength`、`valueLength`、`valueRedaction` 与 secure redaction。
 - CLI glue：`webview focus <selector>`、`webview type <text> [--selector] [--secure]`、`webview set-text <text> [--selector] [--secure]`；`act focus <selector> --webview`、`act set-text <selector> <text> --webview [--secure]`、`act type <text> --webview [--selector <s>] [--secure]`。
-- 风险：未连接真实 WKWebView/Simulator；DOM 脚本与 payload 契约为静态验证，真实富文本编辑器的 execCommand/InputEvent 行为需设备 smoke 复验。远端 issue 尚未评论/关闭。
+- 风险：未连接真实 WKWebView/Simulator；DOM 脚本与 payload 契约为静态验证，真实富文本编辑器的 execCommand/InputEvent 行为需设备 smoke 复验。
+- 已评论并关闭远端 #204（合并提交 `e05d6350`，CI `31791782001` 全绿；integration fix `d924253c` 修复 CocoaPods lint 实参顺序）；真实 WKWebView/Simulator smoke 保留为后续设备验证。
 - 共享文件冲突：`docs-linhay/spaces/INDEX.md`/`README.md` 与 SP-164/165/166（以及 SP-168/169）并行登记，`check-docs.sh` 的 SP 编号连续性需在合并期统一解决；`Sources/TritonKitCLI/CLIActionCommands.swift` 与其它 issue 并行修改，需在合并时留意。
