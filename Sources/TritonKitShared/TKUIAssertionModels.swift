@@ -97,7 +97,7 @@ public func TKUIAssertEvaluate(
     let normalizedRole = request.role?.lowercased()
     let matches = TKWaitVisibleTexts(from: nodes).filter { match in
         let roleMatches = normalizedRole.map { match.role?.lowercased() == $0 } ?? true
-        let textMatches = match.text == request.query
+        let textMatches = TKTextMatches(match.text, query: request.query)
         let boundsMatch = request.within.map { within in
             guard let frame = match.frame else { return false }
             return TKRectIntersects(frame, within)

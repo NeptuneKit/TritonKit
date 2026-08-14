@@ -738,7 +738,7 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
         do {
             let accessibilityData = try await runtime.client.request(type: "accessibility")
             let axNodes = try JSONDecoder().decode([TKAXNode].self, from: accessibilityData)
-            guard let node = selectAXNodesByQuery(axNodes, query: selector.text, includeValue: false).first else {
+            guard let node = selectAXNodesByQuery(axNodes, query: selector.text, includeValue: false, match: .exact).first else {
                 throw TKTapTargetResolutionFailure(
                     query: selector.text,
                     message: "No exact AX text target matched query: \(selector.text)",

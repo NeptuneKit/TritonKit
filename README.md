@@ -711,6 +711,8 @@ triton act tap "hello" --index 2 --json
 triton act tap "hello" --within 180,0,220,500 --json
 ```
 
+On the iOS embedded runtime, `wait --text`, `act find`, and `verify text-exists` share the same text normalization as `observe tree`/`observe current`: queries are trimmed of surrounding whitespace, folded case- and diacritic-insensitively, and matched as substrings, and hidden nodes are excluded from query matching while `observe` still lists them with `hidden` metadata. A node visible in `observe` is therefore matchable by `wait --text` and `act find` with the same query. When `act find` finds nothing it never reports success with empty output: it returns a structured `text_not_found` error envelope (with `candidateCount`, `nearestCandidates`, and `suggestedCommands`) and exits non-zero.
+
 For an iOS Simulator pure coordinate tap, an explicit host selector avoids any embedded-runtime fallback:
 
 ```bash
