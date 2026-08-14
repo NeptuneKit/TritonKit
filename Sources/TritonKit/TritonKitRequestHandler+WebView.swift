@@ -90,6 +90,30 @@ extension TritonKitRequestHandler {
             return webViewErrorMessage(id: message.id, type: .webViewWait, action: "webview.wait", code: .webViewWaitUnsupported, message: "WebView wait is not available in this runtime.", hint: "Use an iOS DEBUG runtime with WebKit support or register a Harmony WebView wait provider.")
             #endif
 
+        case .webViewFocus:
+            guard let data = message.payload,
+                  let request = try? JSONDecoder().decode(TKWebViewFocusRequest.self, from: data) else {
+                return webViewErrorMessage(id: message.id, type: .webViewFocus, action: "webview.focus", code: .javascriptError, message: "Missing or invalid WebView focus payload.", hint: "Pass a stable form selector from the WebView snapshot forms list.")
+            }
+            #if canImport(UIKit) && canImport(WebKit)
+            let result = await currentWebViewFocusResponse(request)
+            return TKMessage(id: message.id, type: .webViewFocus, payload: try? JSONEncoder().encode(result))
+            #else
+            return webViewErrorMessage(id: message.id, type: .webViewFocus, action: "webview.focus", code: .webViewProviderUnavailable, message: "WebView focus is not available in this runtime.", hint: "Use an iOS DEBUG runtime with WebKit support.")
+            #endif
+
+        case .webViewFormInput:
+            guard let data = message.payload,
+                  let request = try? JSONDecoder().decode(TKWebViewFormInputRequest.self, from: data) else {
+                return webViewErrorMessage(id: message.id, type: .webViewFormInput, action: "webview.form-input", code: .javascriptError, message: "Missing or invalid WebView form input payload.", hint: "Pass mode type|set with a text value and an optional stable form selector.")
+            }
+            #if canImport(UIKit) && canImport(WebKit)
+            let result = await currentWebViewFormInputResponse(request)
+            return TKMessage(id: message.id, type: .webViewFormInput, payload: try? JSONEncoder().encode(result))
+            #else
+            return webViewErrorMessage(id: message.id, type: .webViewFormInput, action: "webview.form-input", code: .webViewProviderUnavailable, message: "WebView form input is not available in this runtime.", hint: "Use an iOS DEBUG runtime with WebKit support.")
+            #endif
+
         case .webViewBridgePost, .webViewLedger:
             return webViewErrorMessage(id: message.id, type: message.type, action: message.type.rawValue, code: .webViewBridgeUnavailable, message: "WebView bridge is not available.", hint: "Expose an opt-in page bridge allowlist before calling methods, posting events, waiting on events, or reading event buffers.")
 

@@ -1266,6 +1266,8 @@ struct TypeText: AsyncParsableCommand {
     @Option(help: "Optional responder oid from `triton debug nodes`") var oid: UInt?
     @Flag(name: .customLong("secure"), help: "Redact inserted text details in command output") var secure = false
     @Flag(name: .customLong("exact"), help: "Use direct UIKeyInput insertion without keyboard autocorrect") var exact = false
+    @Flag(name: .customLong("webview"), help: "Type into an opt-in WebView DOM form target instead of the native responder") var webview = false
+    @Option(help: "Stable WebView form identity from the snapshot forms list (#id, [name=...], form-N); only used with --webview") var selector: String?
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
@@ -1279,6 +1281,39 @@ struct TypeText: AsyncParsableCommand {
                 throw RuntimeError("Provide exactly one text value: <text> or --text")
             }
             let value = textArgument ?? text ?? ""
+            if webview {
+                guard platform == nil else {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "--webview currently targets the embedded iOS runtime, not host platform adapters.",
+                        hint: "Omit --platform and use the connected DEBUG iOS runtime, or use the existing host type path.",
+                        outputFormat: outputFormat
+                    )
+                }
+                guard oid == nil else {
+                    if outputFormat == .json {
+                        try printValidationError("--webview type targets DOM form fields; --oid is not supported")
+                        throw ExitCode.failure
+                    }
+                    throw RuntimeError("--webview type does not support --oid")
+                }
+                try await runWebViewFormInput(
+                    mode: .type,
+                    text: value,
+                    selector: selector,
+                    secure: secure,
+                    platform: .ios,
+                    target: target,
+                    host: host,
+                    port: port,
+                    runtimeBaseURL: nil,
+                    webViewID: nil,
+                    pageSessionID: nil,
+                    format: format,
+                    json: json
+                )
+                return
+            }
             if platform == .android {
                 if oid != nil {
                     try failHostValidation(

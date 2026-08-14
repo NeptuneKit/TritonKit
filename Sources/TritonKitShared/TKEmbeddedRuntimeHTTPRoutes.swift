@@ -42,6 +42,10 @@ public struct TKEmbeddedRuntimeHTTPRoute: Codable, Equatable {
             TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/webview/tap")
         case .webViewWait:
             TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/webview/wait")
+        case .webViewFocus:
+            TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/webview/focus")
+        case .webViewFormInput:
+            TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/webview/form-input")
         case .webViewEvents:
             TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/webview/events")
         case .webViewLedger:

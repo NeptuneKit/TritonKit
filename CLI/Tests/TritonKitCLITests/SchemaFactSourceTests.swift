@@ -841,6 +841,7 @@ struct SchemaFactSourceTests {
         #expect(webviewSchema.providedCapabilities == [
             "webview-list", "webview-current", "webview-current-url",
             "webview-snapshot", "webview-bridge-call", "webview-events", "webview-wait",
+            "webview-focus", "webview-form-input",
         ])
         #expect(routeSchema.providedCapabilities == ["route-current-url-assert"])
 
@@ -864,6 +865,8 @@ struct SchemaFactSourceTests {
             ("webview-bridge-call", "webview", ["route", "assert", "evidence", "webview-check"], ["webview-provider", "bridge-call-result"], true, false, "webview", ["call", "<method>", "--json"]),
             ("webview-events", "webview", ["route", "assert", "evidence", "webview-check"], ["webview-provider", "page-events"], true, false, "webview", ["events", "--limit", "50", "--json"]),
             ("webview-wait", "webview", ["route", "assert", "evidence", "webview-check"], ["webview-provider", "wait-samples"], true, false, "webview", ["wait", "--text", "<text>", "--json"]),
+            ("webview-focus", "webview", ["route", "assert", "evidence", "webview-check"], ["webview-provider", "webview-form-input-result"], true, false, "webview", ["focus", "<selector>", "--json"]),
+            ("webview-form-input", "webview", ["route", "assert", "evidence", "webview-check"], ["webview-provider", "webview-form-input-result"], true, false, "webview", ["type", "<text>", "--json"]),
             ("webview-aware-tap", "action", ["action", "assert", "evidence"], ["webview-provider", "act.webview-aware-tap"], true, false, "act", ["tap", "--webview-aware", "--selector", "<css>", "--expect-text", "<text>", "--json"]),
             ("route-current-url-assert", "route", ["assert", "smoke", "evidence", "webview-check"], ["webview-provider", "route-assertion"], true, false, "route", ["assert-current-url", "<expected-url>", "--json"]),
         ]

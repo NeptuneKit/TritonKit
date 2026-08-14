@@ -5,7 +5,7 @@ struct WebView: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "webview",
         abstract: "Inspect current WebView candidates without claiming DOM or bridge access",
-        subcommands: [WebViewList.self, WebViewCurrent.self, WebViewCurrentURL.self, WebViewSnapshot.self, WebViewCall.self, WebViewEvents.self, WebViewWait.self]
+        subcommands: [WebViewList.self, WebViewCurrent.self, WebViewCurrentURL.self, WebViewSnapshot.self, WebViewCall.self, WebViewEvents.self, WebViewWait.self, WebViewFocus.self, WebViewType.self, WebViewSetText.self]
     )
 }
 
@@ -265,6 +265,106 @@ struct WebViewCall: AsyncParsableCommand {
             webViewID: webviewID,
             pageSessionID: pageSessionID,
             timeoutMs: timeoutMs,
+            format: format,
+            json: json
+        )
+    }
+}
+
+struct WebViewFocus: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "focus", abstract: "Focus an opt-in WebView DOM form target by stable selector")
+
+    @Argument(help: "Stable form identity from the WebView snapshot forms list: #id, [name=...], or form-N") var selector: String
+    @Option(help: "Observation platform: ios or harmony") var platform: ObservationPlatform = .ios
+    @Option(help: "Target id from `triton list` or Harmony hdc target") var target: String = TKLocalTargetID
+    @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
+    @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767") var runtimeBaseURL: String?
+    @Option(help: "Select a candidate id from `triton webview list`") var webviewID: String?
+    @Option(help: "Expected page session id from `triton webview current`") var pageSessionID: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runWebViewFocus(
+            selector: selector,
+            platform: platform,
+            target: target,
+            host: host,
+            port: port,
+            runtimeBaseURL: runtimeBaseURL,
+            webViewID: webviewID,
+            pageSessionID: pageSessionID,
+            format: format,
+            json: json
+        )
+    }
+}
+
+struct WebViewType: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "type", abstract: "Type text into an opt-in WebView form target")
+
+    @Argument(help: "Text to insert") var text: String
+    @Option(help: "Stable form identity from the WebView snapshot forms list; defaults to the active element") var selector: String?
+    @Option(help: "Observation platform: ios or harmony") var platform: ObservationPlatform = .ios
+    @Option(help: "Target id from `triton list` or Harmony hdc target") var target: String = TKLocalTargetID
+    @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
+    @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767") var runtimeBaseURL: String?
+    @Option(help: "Select a candidate id from `triton webview list`") var webviewID: String?
+    @Option(help: "Expected page session id from `triton webview current`") var pageSessionID: String?
+    @Flag(name: .customLong("secure"), help: "Redact inserted text details in command output") var secure = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runWebViewFormInput(
+            mode: .type,
+            text: text,
+            selector: selector,
+            secure: secure,
+            platform: platform,
+            target: target,
+            host: host,
+            port: port,
+            runtimeBaseURL: runtimeBaseURL,
+            webViewID: webviewID,
+            pageSessionID: pageSessionID,
+            format: format,
+            json: json
+        )
+    }
+}
+
+struct WebViewSetText: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "set-text", abstract: "Clear and set exact text on an opt-in WebView form target")
+
+    @Argument(help: "Exact text to set") var text: String
+    @Option(help: "Stable form identity from the WebView snapshot forms list; defaults to the active element") var selector: String?
+    @Option(help: "Observation platform: ios or harmony") var platform: ObservationPlatform = .ios
+    @Option(help: "Target id from `triton list` or Harmony hdc target") var target: String = TKLocalTargetID
+    @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
+    @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767") var runtimeBaseURL: String?
+    @Option(help: "Select a candidate id from `triton webview list`") var webviewID: String?
+    @Option(help: "Expected page session id from `triton webview current`") var pageSessionID: String?
+    @Flag(name: .customLong("secure"), help: "Redact inserted text details in command output") var secure = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runWebViewFormInput(
+            mode: .setText,
+            text: text,
+            selector: selector,
+            secure: secure,
+            platform: platform,
+            target: target,
+            host: host,
+            port: port,
+            runtimeBaseURL: runtimeBaseURL,
+            webViewID: webviewID,
+            pageSessionID: pageSessionID,
             format: format,
             json: json
         )

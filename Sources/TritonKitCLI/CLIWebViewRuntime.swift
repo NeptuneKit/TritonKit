@@ -613,6 +613,245 @@ func runWebViewEvents(
     }
 }
 
+func makeWebViewFocusRequest(
+    selector: String,
+    webViewID: String?,
+    pageSessionID: String?
+) -> TKWebViewFocusRequest {
+    TKWebViewFocusRequest(
+        webViewID: webViewID,
+        pageSessionID: pageSessionID,
+        selector: selector,
+        sourceCommand: "triton webview focus \(selector) --json"
+    )
+}
+
+func makeWebViewFormInputRequest(
+    mode: TKWebViewFormInputMode,
+    text: String,
+    selector: String?,
+    secure: Bool,
+    webViewID: String?,
+    pageSessionID: String?
+) -> TKWebViewFormInputRequest {
+    let verb = mode == .setText ? "set-text" : "type"
+    let safeText = secure ? "<redacted:length=\(text.count)>" : text
+    let sourceCommand: String
+    if let selector {
+        sourceCommand = "triton webview \(verb) \(safeText) --selector \(selector)\(secure ? " --secure" : "") --json"
+    } else {
+        sourceCommand = "triton webview \(verb) \(safeText)\(secure ? " --secure" : "") --json"
+    }
+    return TKWebViewFormInputRequest(
+        webViewID: webViewID,
+        pageSessionID: pageSessionID,
+        selector: selector,
+        mode: mode,
+        text: text,
+        secure: secure,
+        sourceCommand: sourceCommand
+    )
+}
+
+func runWebViewFocus(
+    selector: String,
+    platform: ObservationPlatform,
+    target: String,
+    host: String,
+    port: Int,
+    runtimeBaseURL: String?,
+    webViewID: String?,
+    pageSessionID: String?,
+    format: ClientOutputFormat,
+    json: Bool
+) async throws {
+    let outputFormat = effectiveFormat(format, json: json)
+    do {
+        let request = makeWebViewFocusRequest(selector: selector, webViewID: webViewID, pageSessionID: pageSessionID)
+        let payload = try JSONEncoder().encode(request)
+        let data: Data
+        switch platform {
+        case .ios:
+            if let runtimeBaseURL {
+                data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewFocus, body: payload)
+            } else {
+                let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
+                data = try await client.request(type: "webViewFocus", payload: payload)
+            }
+        case .android:
+            try failHostValidation(
+                code: "unsupported_capability",
+                message: "Android WebView form focus is not implemented yet.",
+                hint: "Use Android host tap/type on the focused field, or add an Android WebView provider.",
+                outputFormat: outputFormat
+            )
+        case .harmony:
+            guard let runtimeBaseURL else {
+                throw RuntimeError("Harmony WebView focus requires --runtime-base-url from `triton device runtime-url --platform harmony --probe-manifest --json`.")
+            }
+            data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewFocus, body: payload)
+        }
+
+        switch try decodeWebViewFocusRuntimeResult(data) {
+        case .focus(let response):
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                print("ok: \(response.ok)")
+                print("selector: \(response.selector)")
+                print("focused: \(response.focused)")
+                if let element = response.element {
+                    print("kind: \(element.kind ?? "unknown")")
+                    print("nodeID: \(element.nodeID ?? "-")")
+                    if let valueLength = element.valueLength { print("valueLength: \(valueLength)") }
+                }
+                if let error = response.error {
+                    print("\(error.code.rawValue): \(error.message)")
+                }
+                if let note = response.note { print("note: \(note)") }
+            }
+            if !response.ok {
+                throw ExitCode.failure
+            }
+        case .error(let response):
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                print("\(response.error.code): \(response.error.message)")
+            }
+            throw ExitCode.failure
+        }
+    } catch {
+        if error is ExitCode { throw error }
+        if platform == .harmony, runtimeBaseURL == nil {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+        try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
+    }
+}
+
+func runWebViewFormInput(
+    mode: TKWebViewFormInputMode,
+    text: String,
+    selector: String?,
+    secure: Bool,
+    platform: ObservationPlatform,
+    target: String,
+    host: String,
+    port: Int,
+    runtimeBaseURL: String?,
+    webViewID: String?,
+    pageSessionID: String?,
+    format: ClientOutputFormat,
+    json: Bool
+) async throws {
+    let outputFormat = effectiveFormat(format, json: json)
+    do {
+        let request = makeWebViewFormInputRequest(
+            mode: mode,
+            text: text,
+            selector: selector,
+            secure: secure,
+            webViewID: webViewID,
+            pageSessionID: pageSessionID
+        )
+        let payload = try JSONEncoder().encode(request)
+        let data: Data
+        switch platform {
+        case .ios:
+            if let runtimeBaseURL {
+                data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewFormInput, body: payload)
+            } else {
+                let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
+                data = try await client.request(type: "webViewFormInput", payload: payload)
+            }
+        case .android:
+            try failHostValidation(
+                code: "unsupported_capability",
+                message: "Android WebView form input is not implemented yet.",
+                hint: "Use Android host type on the focused field, or add an Android WebView provider.",
+                outputFormat: outputFormat
+            )
+        case .harmony:
+            guard let runtimeBaseURL else {
+                throw RuntimeError("Harmony WebView form input requires --runtime-base-url from `triton device runtime-url --platform harmony --probe-manifest --json`.")
+            }
+            data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewFormInput, body: payload)
+        }
+
+        switch try decodeWebViewFormInputRuntimeResult(data) {
+        case .formInput(let response):
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                print("ok: \(response.ok)")
+                print("mode: \(response.mode)")
+                print("selector: \(response.selector ?? "<active>")")
+                print("focused: \(response.focused)")
+                if let insertedLength = response.insertedLength { print("insertedLength: \(insertedLength)") }
+                if let valueLength = response.valueLength { print("valueLength: \(valueLength)") }
+                print("eventsDispatched: \(response.eventsDispatched.joined(separator: ","))")
+                if let error = response.error {
+                    print("\(error.code.rawValue): \(error.message)")
+                }
+                if let note = response.note { print("note: \(note)") }
+            }
+            if !response.ok {
+                throw ExitCode.failure
+            }
+        case .error(let response):
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                print("\(response.error.code): \(response.error.message)")
+            }
+            throw ExitCode.failure
+        }
+    } catch {
+        if error is ExitCode { throw error }
+        if platform == .harmony, runtimeBaseURL == nil {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+        try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
+    }
+}
+
+enum WebViewFocusRuntimeResult {
+    case focus(TKWebViewFocusResponse)
+    case error(TKWebViewErrorResponse)
+}
+
+func decodeWebViewFocusRuntimeResult(_ data: Data) throws -> WebViewFocusRuntimeResult {
+    let decoder = JSONDecoder()
+    if let response = try? decoder.decode(TKWebViewFocusResponse.self, from: data) {
+        return .focus(response)
+    }
+    if let response = try? decoder.decode(TKWebViewErrorResponse.self, from: data) {
+        return .error(response)
+    }
+    return .focus(try decoder.decode(TKWebViewFocusResponse.self, from: data))
+}
+
+enum WebViewFormInputRuntimeResult {
+    case formInput(TKWebViewFormInputResponse)
+    case error(TKWebViewErrorResponse)
+}
+
+func decodeWebViewFormInputRuntimeResult(_ data: Data) throws -> WebViewFormInputRuntimeResult {
+    let decoder = JSONDecoder()
+    if let response = try? decoder.decode(TKWebViewFormInputResponse.self, from: data) {
+        return .formInput(response)
+    }
+    if let response = try? decoder.decode(TKWebViewErrorResponse.self, from: data) {
+        return .error(response)
+    }
+    return .formInput(try decoder.decode(TKWebViewFormInputResponse.self, from: data))
+}
+
 private func webViewCandidates(
     action: String,
     platform: ObservationPlatform,

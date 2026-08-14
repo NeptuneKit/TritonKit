@@ -116,12 +116,15 @@ func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextB
       }
 
       var elements = Array.prototype.slice.call(document.querySelectorAll("body *"));
+      var formIndex = 0;
       for (var index = 0; index < elements.length; index += 1) {
         var element = elements[index];
         if (!visible(element)) { continue; }
         var tag = String(element.tagName || "").toLowerCase();
         var nodeText = clean(element.innerText || element.textContent || element.getAttribute("aria-label") || "");
         var frame = frameFor(element);
+        var isFormField = tag === "input" || tag === "textarea" || tag === "select" || (element.getAttribute("contenteditable") !== null && element.getAttribute("contenteditable") !== "false");
+        if (isFormField) { formIndex += 1; }
 
         if (include.has("dom") && dom.length < maxNodes) {
           dom.push({
@@ -136,18 +139,29 @@ func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextB
           truncationReason = truncationReason || "maxDOMNodes";
         }
 
-        if (include.has("forms") && (tag === "input" || tag === "textarea" || tag === "select") && forms.length < maxNodes) {
-          var inputType = tag === "input" ? String(element.getAttribute("type") || "text").toLowerCase() : tag;
-          var rawLength = element.value ? String(element.value).length : 0;
+        if (include.has("forms") && isFormField && forms.length < maxNodes) {
+          var formKind = tag === "input" || tag === "textarea" || tag === "select" ? tag : "contenteditable";
+          var inputType = tag === "input" ? String(element.getAttribute("type") || "text").toLowerCase() : formKind;
+          var rawValue = formKind === "contenteditable" ? (element.textContent || "") : (element.value || "");
+          var fieldSelector = element.id
+            ? ("#" + element.id)
+            : (element.getAttribute("name")
+                ? ("[name=\"" + element.getAttribute("name") + "\"]")
+                : ("form-" + formIndex));
           forms.push({
             name: element.getAttribute("name") || element.id || null,
             inputType: inputType,
+            kind: formKind,
+            selector: fieldSelector,
+            nodeID: element.id || ("form-" + formIndex),
+            focused: element === document.activeElement,
+            contentEditable: formKind === "contenteditable",
             label: labelFor(element),
             valueRedaction: "length-only",
-            valueLength: rawLength,
+            valueLength: String(rawValue).length,
             frame: frame
           });
-        } else if (include.has("forms") && (tag === "input" || tag === "textarea" || tag === "select") && forms.length >= maxNodes) {
+        } else if (include.has("forms") && isFormField && forms.length >= maxNodes) {
           truncated = true;
           truncationReason = truncationReason || "maxNodes";
         }
@@ -488,6 +502,314 @@ func webViewFocusedDeleteBackwardScript() -> String {
     """
 }
 
+/// Page opt-in marker required before Triton DOM form control (focus, type,
+/// set-text) may touch a page. The page opts in by exposing
+/// `document.documentElement[data-triton-form-input="1"]` or
+/// `window.__tritonFormInput === true`. Without opt-in, commands return the
+/// typed `webview_form_input_not_opted_in` error and document the host-HID
+/// fallback instead of silently touching DOM state.
+private let runtimeWebViewFormInputOptInExpression = """
+    (document.documentElement && document.documentElement.getAttribute("data-triton-form-input") === "1") || window.__tritonFormInput === true
+    """
+
+private let runtimeWebViewFormInputNotOptedInError = """
+    {
+      code: "webview_form_input_not_opted_in",
+      message: "The page has not opted into Triton DOM form control.",
+      hint: "Expose data-triton-form-input=\\"1\\" on <html> or set window.__tritonFormInput = true to opt in; otherwise use the host-HID fallback (tap the field, then `triton act type <text> --json`)."
+    }
+    """
+
+private let runtimeWebViewFormFieldHelpers = """
+      function clean(value) {
+        return String(value || "").replace(/\\s+/g, " ").trim();
+      }
+      function frameFor(element) {
+        try {
+          var rect = element.getBoundingClientRect();
+          return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+        } catch (_) {
+          return null;
+        }
+      }
+      function visible(element) {
+        var rect = frameFor(element);
+        if (!rect || rect.width <= 0 || rect.height <= 0) { return false; }
+        var style = window.getComputedStyle ? window.getComputedStyle(element) : null;
+        return !style || (style.visibility !== "hidden" && style.display !== "none" && style.opacity !== "0");
+      }
+      function optedIn() {
+        return \(runtimeWebViewFormInputOptInExpression);
+      }
+      function isFormField(element) {
+        if (!element) { return false; }
+        var tag = String(element.tagName || "").toLowerCase();
+        if (tag === "input" || tag === "textarea" || tag === "select") { return true; }
+        var attr = element.getAttribute("contenteditable");
+        return attr !== null && attr !== "false";
+      }
+      function formFieldElements() {
+        return Array.prototype.slice.call(document.querySelectorAll("input, textarea, select, [contenteditable]")).filter(isFormField);
+      }
+      function resolveFormSelector(selector) {
+        if (!selector || !clean(selector)) { return document.activeElement || null; }
+        if (selector.indexOf("#") === 0 && selector.indexOf(" ") < 0 && selector.indexOf("[") < 0) {
+          return document.getElementById(selector.slice(1));
+        }
+        if (selector.indexOf("[name=") === 0 && selector.lastIndexOf("]") === selector.length - 1) {
+          var nameValue = selector.slice(7, -1).replace(/^"|"$/g, "");
+          var named = Array.prototype.slice.call(document.querySelectorAll("[name]"));
+          for (var index = 0; index < named.length; index += 1) {
+            if (String(named[index].getAttribute("name") || "") === nameValue) { return named[index]; }
+          }
+          return null;
+        }
+        if (selector.indexOf("form-") === 0) {
+          var targetIndex = parseInt(selector.slice(5), 10);
+          var fields = formFieldElements();
+          if (!isNaN(targetIndex) && targetIndex >= 1 && targetIndex <= fields.length) { return fields[targetIndex - 1]; }
+          return null;
+        }
+        try {
+          return document.querySelector(selector);
+        } catch (_) {
+          return null;
+        }
+      }
+      function formKindFor(element) {
+        var tag = String(element.tagName || "").toLowerCase();
+        return (tag === "input" || tag === "textarea" || tag === "select") ? tag : "contenteditable";
+      }
+      function formValue(element, kind) {
+        return kind === "contenteditable" ? String(element.textContent || "") : String(element.value || "");
+      }
+      function dispatchInputAndChange(element, inputType, data) {
+        if (typeof InputEvent === "function") {
+          element.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: inputType, data: data }));
+        } else {
+          element.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        element.dispatchEvent(new Event("change", { bubbles: true }));
+        return ["input", "change"];
+      }
+    """
+
+func runtimeWebViewFormFocusScript(selector: String) throws -> String {
+    let selectorData = try JSONEncoder().encode(selector)
+    guard let selectorLiteral = String(data: selectorData, encoding: .utf8) else {
+        throw NSError(domain: "TritonKit.WebViewFocus", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode WebView focus selector"])
+    }
+    return """
+    (function() {
+      var selector = \(selectorLiteral);
+      \(runtimeWebViewFormFieldHelpers)
+      if (!optedIn()) {
+        return JSON.stringify({
+          ok: false,
+          optedIn: false,
+          selector: selector || null,
+          error: \(runtimeWebViewFormInputNotOptedInError)
+        });
+      }
+      var element = resolveFormSelector(selector);
+      if (!element) {
+        return JSON.stringify({
+          ok: false,
+          selector: selector || null,
+          error: {
+            code: "webview_form_target_not_found",
+            message: "No DOM form target matched selector: " + (selector || "<active>"),
+            hint: "Run `triton webview snapshot --include metadata,text,dom,forms --json` and retry with a returned selector from the forms list."
+          }
+        });
+      }
+      if (!isFormField(element)) {
+        return JSON.stringify({
+          ok: false,
+          selector: selector || null,
+          tagName: String(element.tagName || "").toUpperCase(),
+          error: {
+            code: "webview_element_not_interactable",
+            message: "Matched DOM element is not a text-editable form field.",
+            hint: "Choose an input, textarea, select, or [contenteditable=true] target from the WebView snapshot forms list."
+          }
+        });
+      }
+      if (typeof element.scrollIntoView === "function") {
+        element.scrollIntoView({ block: "center", inline: "center", behavior: "instant" });
+      }
+      if (typeof element.focus === "function") { element.focus(); }
+      var kind = formKindFor(element);
+      var rawValue = formValue(element, kind);
+      return JSON.stringify({
+        ok: true,
+        focused: element === document.activeElement,
+        kind: kind,
+        tagName: String(element.tagName || "").toUpperCase(),
+        selector: selector || null,
+        nodeID: element.id || null,
+        valueLength: rawValue.length,
+        valueRedaction: "length-only"
+      });
+    })()
+    """
+}
+
+func runtimeWebViewFormInputScript(selector: String?, mode: TKWebViewFormInputMode, text: String) throws -> String {
+    let textData = try JSONEncoder().encode(text)
+    guard let textLiteral = String(data: textData, encoding: .utf8) else {
+        throw NSError(domain: "TritonKit.WebViewInput", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode text"])
+    }
+    let selectorLiteral: String
+    if let selector {
+        let selectorData = try JSONEncoder().encode(selector)
+        guard let encoded = String(data: selectorData, encoding: .utf8) else {
+            throw NSError(domain: "TritonKit.WebViewInput", code: 2, userInfo: [NSLocalizedDescriptionKey: "Unable to encode selector"])
+        }
+        selectorLiteral = encoded
+    } else {
+        selectorLiteral = "null"
+    }
+    let modeLiteral = mode == .setText ? "\"set\"" : "\"type\""
+    let inputTypeLiteral = mode == .setText ? "\"insertText\"" : "\"insertText\""
+    return """
+    (function() {
+      var selector = \(selectorLiteral);
+      var text = \(textLiteral);
+      var mode = \(modeLiteral);
+      \(runtimeWebViewFormFieldHelpers)
+      if (!optedIn()) {
+        return JSON.stringify({
+          ok: false,
+          optedIn: false,
+          selector: selector || null,
+          error: \(runtimeWebViewFormInputNotOptedInError)
+        });
+      }
+      var element = resolveFormSelector(selector);
+      if (!element) {
+        return JSON.stringify({
+          ok: false,
+          selector: selector || null,
+          error: {
+            code: "webview_form_target_not_found",
+            message: "No DOM form target matched selector: " + (selector || "<active>"),
+            hint: "Run `triton webview snapshot --include metadata,text,dom,forms --json` and retry with a returned selector from the forms list."
+          }
+        });
+      }
+      if (!isFormField(element)) {
+        return JSON.stringify({
+          ok: false,
+          selector: selector || null,
+          tagName: String(element.tagName || "").toUpperCase(),
+          error: {
+            code: "webview_element_not_interactable",
+            message: "Matched DOM element is not a text-editable form field.",
+            hint: "Choose an input, textarea, select, or [contenteditable=true] target from the WebView snapshot forms list."
+          }
+        });
+      }
+      try {
+        var kind = formKindFor(element);
+        var events = [];
+        if (kind !== "contenteditable") {
+          var oldValue = String(element.value || "");
+          var start = 0;
+          if (mode === "type") {
+            start = typeof element.selectionStart === "number" ? element.selectionStart : oldValue.length;
+            var end = typeof element.selectionEnd === "number" ? element.selectionEnd : start;
+            oldValue = oldValue.slice(0, start) + text + oldValue.slice(end);
+          } else {
+            oldValue = text;
+          }
+          element.value = oldValue;
+          var cursor = mode === "type" ? start + text.length : oldValue.length;
+          if (typeof element.setSelectionRange === "function") {
+            element.setSelectionRange(cursor, cursor);
+          }
+          events = dispatchInputAndChange(element, \(inputTypeLiteral), text);
+          return JSON.stringify({
+            ok: true,
+            focused: element === document.activeElement,
+            kind: kind,
+            tagName: String(element.tagName || "").toUpperCase(),
+            selector: selector || null,
+            nodeID: element.id || null,
+            insertedLength: text.length,
+            valueLength: String(element.value || "").length,
+            valueRedaction: "length-only",
+            eventsDispatched: events
+          });
+        }
+        if (typeof element.focus === "function") { element.focus(); }
+        if (mode === "set") {
+          var range = document.createRange ? document.createRange() : null;
+          if (range && document.getSelection) {
+            var selection = document.getSelection();
+            range.selectNodeContents(element);
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }
+          var replaced = false;
+          if (document.execCommand && document.execCommand("insertText", false, text)) {
+            replaced = true;
+          }
+          if (!replaced) { element.textContent = text; }
+        } else {
+          var inserted = false;
+          if (document.execCommand && document.execCommand("insertText", false, text)) {
+            inserted = true;
+          }
+          if (!inserted) { element.textContent = String(element.textContent || "") + text; }
+        }
+        events = dispatchInputAndChange(element, "insertText", text);
+        return JSON.stringify({
+          ok: true,
+          focused: element === document.activeElement,
+          kind: kind,
+          tagName: String(element.tagName || "").toUpperCase(),
+          selector: selector || null,
+          nodeID: element.id || null,
+          insertedLength: text.length,
+          valueLength: String(element.textContent || "").length,
+          valueRedaction: "length-only",
+          eventsDispatched: events
+        });
+      } catch (error) {
+        return JSON.stringify({
+          ok: false,
+          selector: selector || null,
+          error: {
+            code: "javascript_error",
+            message: String(error && error.message ? error.message : error),
+            hint: "Retry with a stable form selector and verify the page has opted into Triton DOM form control."
+          }
+        });
+      }
+    })()
+    """
+}
+
+struct RuntimeWebViewFormTargetPayload: Decodable, Equatable {
+    let ok: Bool
+    let focused: Bool?
+    let kind: String?
+    let tagName: String?
+    let selector: String?
+    let nodeID: String?
+    let insertedLength: Int?
+    let valueLength: Int?
+    let valueRedaction: String?
+    let eventsDispatched: [String]?
+    let optedIn: Bool?
+    let error: TKWebViewError?
+}
+
+func decodeRuntimeWebViewFormTargetPayload(_ json: String) throws -> RuntimeWebViewFormTargetPayload {
+    try JSONDecoder().decode(RuntimeWebViewFormTargetPayload.self, from: Data(json.utf8))
+}
+
 struct WebViewFocusedTextInsertionPayload: Decodable, Equatable {
     let ok: Bool
     let message: String?
@@ -810,6 +1132,220 @@ func currentWebViewTapResponse(_ request: TKWebViewTapRequest) async -> TKWebVie
 }
 
 @MainActor
+func currentWebViewFocusResponse(_ request: TKWebViewFocusRequest) async -> TKWebViewFocusResponse {
+    let startedAt = Date()
+    let pairs = currentWKWebViewsWithDescriptors()
+    do {
+        let selected = try TKSelectCurrentWebView(from: pairs.map(\.descriptor), webViewID: request.webViewID)
+        guard let pair = pairs.first(where: { $0.descriptor.webViewID == selected.webViewID }) else {
+            throw TKWebViewSelectionError(detail: TKWebViewError(
+                code: .webviewNotFound,
+                message: "Selected WebView is no longer available.",
+                hint: "Run `triton webview current --json` again and retry."
+            ))
+        }
+        if let requestedSession = request.pageSessionID,
+           let actualSession = selected.pageSessionID,
+           requestedSession != actualSession {
+            throw TKWebViewSelectionError(detail: TKWebViewError(
+                code: .webViewNavigationChanged,
+                message: "WebView page session changed.",
+                hint: "Run `triton webview current --json` and retry against the new pageSessionID.",
+                webViewID: selected.webViewID
+            ))
+        }
+        let script = try runtimeWebViewFormFocusScript(selector: request.selector)
+        let value = try await evaluateJavaScript(script, in: pair.webView)
+        let json = value as? String ?? "\(value)"
+        let payload = try decodeRuntimeWebViewFormTargetPayload(json)
+        let element = makeWebViewFormFieldSummary(from: payload, selector: request.selector)
+        let sourceCommand = request.sourceCommand ?? "triton webViewFocus request"
+        if let error = payload.error {
+            return TKWebViewFocusResponse(
+                ok: false,
+                capturedAt: currentStateTimestamp(),
+                platform: "ios",
+                target: "embedded-runtime",
+                webViewID: selected.webViewID,
+                pageSessionID: selected.pageSessionID,
+                selector: request.selector,
+                focused: false,
+                element: element,
+                error: error,
+                elapsedMs: elapsedMilliseconds(since: startedAt),
+                sourceCommands: [sourceCommand],
+                note: error.code == .webViewFormInputNotOptedIn
+                    ? "Page has not opted into Triton DOM form control; use the host-HID fallback (tap the field, then `triton act type <text> --json`) or add the opt-in marker."
+                    : nil
+            )
+        }
+        return TKWebViewFocusResponse(
+            ok: payload.ok,
+            capturedAt: currentStateTimestamp(),
+            platform: "ios",
+            target: "embedded-runtime",
+            webViewID: selected.webViewID,
+            pageSessionID: selected.pageSessionID,
+            selector: request.selector,
+            focused: payload.focused ?? false,
+            element: element,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            sourceCommands: [sourceCommand],
+            note: payload.ok ? "Focused WebView form target; verify page state before claiming business completion." : nil
+        )
+    } catch let error as TKWebViewSelectionError {
+        return TKWebViewFocusResponse(
+            ok: false,
+            capturedAt: currentStateTimestamp(),
+            platform: "ios",
+            target: "embedded-runtime",
+            selector: request.selector,
+            focused: false,
+            error: error.detail,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            sourceCommands: [request.sourceCommand ?? "triton webViewFocus request"]
+        )
+    } catch {
+        return TKWebViewFocusResponse(
+            ok: false,
+            capturedAt: currentStateTimestamp(),
+            platform: "ios",
+            target: "embedded-runtime",
+            selector: request.selector,
+            focused: false,
+            error: TKWebViewError(
+                code: .javascriptError,
+                message: "\(error)",
+                hint: "Retry with a stable form selector from `triton webview snapshot --include metadata,text,dom,forms --json`."
+            ),
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            sourceCommands: [request.sourceCommand ?? "triton webViewFocus request"]
+        )
+    }
+}
+
+@MainActor
+func currentWebViewFormInputResponse(_ request: TKWebViewFormInputRequest) async -> TKWebViewFormInputResponse {
+    let startedAt = Date()
+    let pairs = currentWKWebViewsWithDescriptors()
+    do {
+        let selected = try TKSelectCurrentWebView(from: pairs.map(\.descriptor), webViewID: request.webViewID)
+        guard let pair = pairs.first(where: { $0.descriptor.webViewID == selected.webViewID }) else {
+            throw TKWebViewSelectionError(detail: TKWebViewError(
+                code: .webviewNotFound,
+                message: "Selected WebView is no longer available.",
+                hint: "Run `triton webview current --json` again and retry."
+            ))
+        }
+        if let requestedSession = request.pageSessionID,
+           let actualSession = selected.pageSessionID,
+           requestedSession != actualSession {
+            throw TKWebViewSelectionError(detail: TKWebViewError(
+                code: .webViewNavigationChanged,
+                message: "WebView page session changed.",
+                hint: "Run `triton webview current --json` and retry against the new pageSessionID.",
+                webViewID: selected.webViewID
+            ))
+        }
+        let script = try runtimeWebViewFormInputScript(selector: request.selector, mode: request.mode, text: request.text)
+        let value = try await evaluateJavaScript(script, in: pair.webView)
+        let json = value as? String ?? "\(value)"
+        let payload = try decodeRuntimeWebViewFormTargetPayload(json)
+        let element = makeWebViewFormFieldSummary(from: payload, selector: request.selector)
+        let secure = request.secure
+        let sourceCommand = request.sourceCommand ?? "triton webViewFormInput request"
+        if let error = payload.error {
+            return TKWebViewFormInputResponse(
+                ok: false,
+                capturedAt: currentStateTimestamp(),
+                platform: "ios",
+                target: "embedded-runtime",
+                webViewID: selected.webViewID,
+                pageSessionID: selected.pageSessionID,
+                selector: request.selector,
+                mode: request.mode.rawValue,
+                focused: false,
+                element: element,
+                error: error,
+                elapsedMs: elapsedMilliseconds(since: startedAt),
+                sourceCommands: [sourceCommand],
+                redaction: TKWebViewRedaction(secureText: secure ? "length-only" : nil),
+                note: error.code == .webViewFormInputNotOptedIn
+                    ? "Page has not opted into Triton DOM form control; use the host-HID fallback (tap the field, then `triton act type <text> --json`) or add the opt-in marker."
+                    : nil
+            )
+        }
+        return TKWebViewFormInputResponse(
+            ok: payload.ok,
+            capturedAt: currentStateTimestamp(),
+            platform: "ios",
+            target: "embedded-runtime",
+            webViewID: selected.webViewID,
+            pageSessionID: selected.pageSessionID,
+            selector: request.selector,
+            mode: request.mode.rawValue,
+            focused: payload.focused ?? false,
+            insertedLength: payload.insertedLength,
+            valueLength: payload.valueLength,
+            valueRedaction: payload.valueRedaction,
+            eventsDispatched: payload.eventsDispatched ?? [],
+            element: element,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            sourceCommands: [sourceCommand],
+            redaction: TKWebViewRedaction(secureText: secure ? "length-only" : nil),
+            note: secure ? "Inserted redacted WebView text" : "Inserted WebView text; verify the value postcondition before claiming business completion."
+        )
+    } catch let error as TKWebViewSelectionError {
+        return TKWebViewFormInputResponse(
+            ok: false,
+            capturedAt: currentStateTimestamp(),
+            platform: "ios",
+            target: "embedded-runtime",
+            selector: request.selector,
+            mode: request.mode.rawValue,
+            focused: false,
+            error: error.detail,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            sourceCommands: [request.sourceCommand ?? "triton webViewFormInput request"]
+        )
+    } catch {
+        return TKWebViewFormInputResponse(
+            ok: false,
+            capturedAt: currentStateTimestamp(),
+            platform: "ios",
+            target: "embedded-runtime",
+            selector: request.selector,
+            mode: request.mode.rawValue,
+            focused: false,
+            error: TKWebViewError(
+                code: .javascriptError,
+                message: "\(error)",
+                hint: "Retry with a stable form selector from `triton webview snapshot --include metadata,text,dom,forms --json`."
+            ),
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            sourceCommands: [request.sourceCommand ?? "triton webViewFormInput request"]
+        )
+    }
+}
+
+private func makeWebViewFormFieldSummary(from payload: RuntimeWebViewFormTargetPayload, selector: String?) -> TKWebViewFormFieldSummary? {
+    guard payload.ok || payload.error != nil, payload.kind != nil || payload.nodeID != nil || payload.valueLength != nil else {
+        return nil
+    }
+    return TKWebViewFormFieldSummary(
+        name: payload.nodeID,
+        inputType: payload.kind ?? "unknown",
+        kind: payload.kind,
+        selector: payload.selector ?? selector,
+        nodeID: payload.nodeID,
+        focused: payload.focused,
+        contentEditable: payload.kind == "contenteditable",
+        valueRedaction: payload.valueRedaction,
+        valueLength: payload.valueLength
+    )
+}
+
+@MainActor
 func currentWebViewWaitResponse(_ request: TKWebViewWaitRequest) async -> TKWebViewWaitResponse {
     let startedAt = Date()
     guard request.timeoutSeconds > 0, request.intervalSeconds > 0 else {
@@ -1129,7 +1665,7 @@ private func webViewDescriptor(for webView: WKWebView) -> TKWebViewDescriptor {
         canGoForward: webView.canGoForward,
         providerStatus: "available",
         bridgeStatus: "page-bridge-required",
-        capabilities: ["visible", "webview.current", "webview.list", "webview.current-url", "webview.metadata", "webview.snapshot", "webview.dom", "webview.text", "webview.forms", "webview.links", "webview.tap", "webview.wait", "webview.events", "webview.dom-input", "webview.contenteditable-typing", "webview.type"],
+        capabilities: ["visible", "webview.current", "webview.list", "webview.current-url", "webview.metadata", "webview.snapshot", "webview.dom", "webview.text", "webview.forms", "webview.links", "webview.tap", "webview.wait", "webview.events", "webview.dom-input", "webview.contenteditable-typing", "webview.focus", "webview.form-input", "webview.type"],
         missingCapabilities: ["webview.bridge-call"],
         providerCapabilities: TKWebViewProviderCapabilities.iosRuntimeDefaults()
     )

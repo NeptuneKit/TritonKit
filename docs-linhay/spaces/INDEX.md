@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-08-11
-> 覆盖范围：166/166 个已存在 space
+> 覆盖范围：167/167 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -191,3 +191,4 @@
 | `SP-164-issue-201-harmony-act-find` | [`SP-164-issue-201-harmony-act-find`](./SP-164-issue-201-harmony-act-find/README.md) | 已完成（本地） | #201 `act find` 已支持 `--platform harmony --device <harmony-target>` 从 Harmony uitest host layout 解析，Harmony `--device` 不再落入 embedded iOS server；`--platform ios|android` 返回 typed `unsupported_capability`；远端 issue 与真实 Harmony/HDC 验证待后续授权 |
 | `SP-165-issue-202-sim-tap-help-dimensions` | [`SP-165-issue-202-sim-tap-help-dimensions`](./SP-165-issue-202-sim-tap-help-dimensions/README.md) | 已完成（本地） | #202 `sim tap` 的 point-space 已从 Simulator layout metadata 推导，help 宣传的 `--x/--y` 形状无需 width/height 即可满足 host action model；schema failureCodes/summary 已对齐；远端 issue 与真实 Simulator/Baguette 验证待后续授权 |
 | `SP-166-issue-203-ios-text-query-consistency` | [`SP-166-issue-203-ios-text-query-consistency`](./SP-166-issue-203-ios-text-query-consistency/README.md) | 已完成（本地） | #203 embedded `wait --text` 与 `act find` 已共享 observe 的文本归一化（trim + case/diacritic fold + substring）与 hidden visibility 规则；`act find` 无匹配返回结构化 `text_not_found` 而非成功空输出；远端 issue 与真实 Simulator 验证待授权 |
+| `SP-167-issue-204-ios-webview-form-input` | [`SP-167-issue-204-ios-webview-form-input`](./SP-167-issue-204-ios-webview-form-input/README.md) | 已完成（本地） | #204 为私有 iOS WKWebView 提供 provider-backed 表单输入契约：snapshot 发现 contenteditable/textarea 表单目标、`webview focus/type/set-text` 与 `act ... --webview` 一等公民焦点切换、input/change dispatch 证据与 value 后置条件、未 opt-in 时 typed unsupported + host-HID fallback；真实 WebView/Simulator 验证待授权 |

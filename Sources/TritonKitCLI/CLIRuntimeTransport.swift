@@ -264,6 +264,8 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "webview-bridge-call", supported: connected, reason: requiresWebViewProvider),
         TKRuntimeCapability(name: "webview-events", supported: connected, reason: requiresWebViewProvider),
         TKRuntimeCapability(name: "webview-wait", supported: connected, reason: requiresWebViewProvider),
+        TKRuntimeCapability(name: "webview-focus", supported: connected, reason: requiresWebViewProvider),
+        TKRuntimeCapability(name: "webview-form-input", supported: connected, reason: requiresWebViewProvider),
         TKRuntimeCapability(name: "webview-aware-tap", supported: connected, reason: requiresWebViewProvider),
         TKRuntimeCapability(name: "route-current-url-assert", supported: connected, reason: requiresWebViewProvider),
         TKRuntimeCapability(name: "node-resolve", supported: true),
@@ -368,7 +370,7 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "host"
     case "observe", "observe-ios", "observe-ios-host-ax", "observe-android", "observe-harmony", "observe-outline", "node-resolve", "node-alias-resolve", "list", "inspect", "hierarchy", "hierarchy-scene", "android-hierarchy", "harmony-hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait":
         return "observe"
-    case "webview-list", "webview-current", "webview-current-url", "webview-snapshot", "webview-bridge-call", "webview-events", "webview-wait":
+    case "webview-list", "webview-current", "webview-current-url", "webview-snapshot", "webview-bridge-call", "webview-events", "webview-wait", "webview-focus", "webview-form-input":
         return "webview"
     case "route-current-url-assert":
         return "route"
@@ -407,7 +409,7 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["action", "assert", "evidence"]
     case "webview-list", "webview-current":
         return ["observe", "route", "assert", "evidence"]
-    case "webview-current-url", "webview-snapshot", "webview-bridge-call", "webview-events", "webview-wait":
+    case "webview-current-url", "webview-snapshot", "webview-bridge-call", "webview-events", "webview-wait", "webview-focus", "webview-form-input":
         return ["route", "assert", "evidence", "webview-check"]
     case "webview-aware-tap":
         return ["action", "assert", "evidence"]
@@ -820,6 +822,10 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "webview", args: ["events", "--limit", "50", "--json"])
     case "webview-wait":
         return TKCLINextAction(command: "webview", args: ["wait", "--text", "<text>", "--json"])
+    case "webview-focus":
+        return TKCLINextAction(command: "webview", args: ["focus", "<selector>", "--json"])
+    case "webview-form-input":
+        return TKCLINextAction(command: "webview", args: ["type", "<text>", "--json"])
     case "webview-aware-tap":
         return TKCLINextAction(command: "act", args: ["tap", "--webview-aware", "--selector", "<css>", "--expect-text", "<text>", "--json"])
     case "route-current-url-assert":
@@ -1002,6 +1008,10 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["webview-provider", "page-events"]
     case "webview-wait":
         return ["webview-provider", "wait-samples"]
+    case "webview-focus":
+        return ["webview-provider", "webview-form-input-result"]
+    case "webview-form-input":
+        return ["webview-provider", "webview-form-input-result"]
     case "webview-aware-tap":
         return ["webview-provider", "act.webview-aware-tap"]
     case "route-current-url-assert":
