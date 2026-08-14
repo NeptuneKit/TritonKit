@@ -1335,13 +1335,15 @@ private func makeWebViewFormFieldSummary(from payload: RuntimeWebViewFormTargetP
     return TKWebViewFormFieldSummary(
         name: payload.nodeID,
         inputType: payload.kind ?? "unknown",
+        label: nil,
+        valueRedaction: payload.valueRedaction,
+        valueLength: payload.valueLength,
+        frame: nil,
         kind: payload.kind,
         selector: payload.selector ?? selector,
         nodeID: payload.nodeID,
         focused: payload.focused,
-        contentEditable: payload.kind == "contenteditable",
-        valueRedaction: payload.valueRedaction,
-        valueLength: payload.valueLength
+        contentEditable: payload.kind == "contenteditable"
     )
 }
 
