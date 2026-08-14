@@ -31,6 +31,7 @@ let package = Package(
             name: "TritonKitTests",
             dependencies: ["TritonKit"],
             path: "Tests/TritonKitTests",
+            exclude: ["Fixtures"],
             swiftSettings: [
                 .define("TRITONKIT_RUNTIME_ENABLED", .when(configuration: .debug))
             ]

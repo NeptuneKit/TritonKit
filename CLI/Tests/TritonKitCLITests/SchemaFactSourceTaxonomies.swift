@@ -29,7 +29,7 @@ func capabilityEvidenceTaxonomy() -> Set<String> {
         "network-capture", "network-fixture", "network-map", "proxy-restore", "smoke-summary", "snapshot-json", "status-json", "stdout-json",
         "contract-capabilities", "screen-workspace", "surface-tree", "target.resolution", "test.normalized-plan", "trace", "tritonplan", "tritontest-yaml", "tritontestcase",
         "unsupported-envelope", "vlm-compare", "vlm-grounding", "vlm-grounding-failure", "vlm-model-cache", "vlm-model-metadata", "vlm-overlay", "vlm-parsed-point", "vlm-raw-output", "vlm-request", "vlm-response", "vlm-transform", "wait.result", "wait-samples", "webview-candidates",
-        "webview-provider", "webview-snapshot", "xcodebuild-json", "xcresult",
+        "webview-provider", "webview-form-input-result", "webview-snapshot", "xcodebuild-json", "xcresult",
     ]
 }
 
@@ -145,6 +145,8 @@ func outputContractKindTaxonomy() -> Set<String> {
         "webview-candidates",
         "webview-current",
         "webview-events",
+        "webview-focus-result",
+        "webview-form-input-result",
         "webview-provider-url",
         "webview-snapshot",
         "webview-wait-result",
@@ -342,7 +344,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["act", "observe", "verify", "archive"]
     case "confirmation_required", "destructive_action_requires_policy":
         return ["diagnose", "plan", "act"]
-    case "javascript_error", "webview_element_not_interactable":
+    case "javascript_error", "webview_element_not_interactable", "webview_form_input_not_opted_in", "webview_form_target_not_found":
         return ["diagnose", "observe", "archive"]
     case "stale_node_alias":
         return ["diagnose", "observe", "plan"]

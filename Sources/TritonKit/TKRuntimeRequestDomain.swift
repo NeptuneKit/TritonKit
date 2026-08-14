@@ -20,7 +20,7 @@ enum TKRuntimeRequestDomain: Equatable {
             return .observation
         case .input:
             return .input
-        case .webViewList, .webViewCurrent, .webViewSnapshot, .webViewBridgeCall, .webViewBridgePost, .webViewTap, .webViewWait, .webViewEvents, .webViewLedger:
+        case .webViewList, .webViewCurrent, .webViewSnapshot, .webViewBridgeCall, .webViewBridgePost, .webViewTap, .webViewWait, .webViewFocus, .webViewFormInput, .webViewEvents, .webViewLedger:
             return .webView
         case .semanticAction:
             return .semantic

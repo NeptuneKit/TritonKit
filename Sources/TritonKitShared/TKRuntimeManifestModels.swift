@@ -17,6 +17,8 @@ public enum TKRuntimeCapabilityName: String, Codable, CaseIterable {
     case webViewBridgePost = "webview.bridge-post"
     case webViewTap = "webview.tap"
     case webViewWait = "webview.wait"
+    case webViewFocus = "webview.focus"
+    case webViewFormInput = "webview.form-input"
     case webViewEvents = "webview.events"
     case webViewEval = "webview.eval"
     case semanticFocus = "semantic.focus"
@@ -303,6 +305,20 @@ public struct TKRuntimeManifestResponse: Codable, Equatable {
             scope: .optInProvider,
             boundary: .businessOptIn,
             reason: "WebView wait requires provider events or DOM snapshot support"
+        ),
+        TKRuntimeCapabilityDetail(
+            name: .webViewFocus,
+            supported: false,
+            scope: .optInProvider,
+            boundary: .businessOptIn,
+            reason: "WebView focus requires an opt-in page form-control marker and an iOS DEBUG WKWebView provider"
+        ),
+        TKRuntimeCapabilityDetail(
+            name: .webViewFormInput,
+            supported: false,
+            scope: .optInProvider,
+            boundary: .businessOptIn,
+            reason: "WebView form input requires an opt-in page form-control marker and an iOS DEBUG WKWebView provider"
         ),
         TKRuntimeCapabilityDetail(
             name: .webViewEvents,

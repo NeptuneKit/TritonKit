@@ -12,6 +12,8 @@ public enum TKWebViewErrorCode: String, Codable, Equatable {
     case webViewWaitUnsupported = "webview_wait_unsupported"
     case webViewElementNotFound = "webview_element_not_found"
     case webViewElementNotInteractable = "webview_element_not_interactable"
+    case webViewFormInputNotOptedIn = "webview_form_input_not_opted_in"
+    case webViewFormTargetNotFound = "webview_form_target_not_found"
     case javascriptTimeout = "javascript_timeout"
     case javascriptError = "javascript_error"
     case unsafeEvalDisabled = "unsafe_eval_disabled"
@@ -412,6 +414,15 @@ public struct TKWebViewFormFieldSummary: Codable, Equatable {
     public let valueRedaction: String?
     public let valueLength: Int?
     public let frame: TKRect?
+    /// Stable editable kind: input, textarea, select, or contenteditable.
+    public let kind: String?
+    /// Stable DOM identity usable by `webview focus/type/set-text`:
+    /// `#id`, `[name="..."]`, or `form-N` (document order among form fields).
+    public let selector: String?
+    public let nodeID: String?
+    /// Whether this element is the page activeElement at snapshot time.
+    public let focused: Bool?
+    public let contentEditable: Bool?
 
     public init(
         name: String? = nil,
@@ -419,7 +430,12 @@ public struct TKWebViewFormFieldSummary: Codable, Equatable {
         label: String? = nil,
         valueRedaction: String? = nil,
         valueLength: Int? = nil,
-        frame: TKRect? = nil
+        frame: TKRect? = nil,
+        kind: String? = nil,
+        selector: String? = nil,
+        nodeID: String? = nil,
+        focused: Bool? = nil,
+        contentEditable: Bool? = nil
     ) {
         self.name = name
         self.inputType = inputType
@@ -427,6 +443,11 @@ public struct TKWebViewFormFieldSummary: Codable, Equatable {
         self.valueRedaction = valueRedaction
         self.valueLength = valueLength
         self.frame = frame
+        self.kind = kind
+        self.selector = selector
+        self.nodeID = nodeID
+        self.focused = focused
+        self.contentEditable = contentEditable
     }
 }
 
@@ -691,6 +712,178 @@ public struct TKWebViewTapResponse: Codable, Equatable {
         self.error = error
         self.elapsedMs = elapsedMs
         self.sourceCommands = sourceCommands
+        self.note = note
+    }
+}
+
+public enum TKWebViewFormInputMode: String, Codable, Equatable {
+    case type
+    case setText = "set"
+}
+
+public struct TKWebViewFocusRequest: Codable, Equatable {
+    public let webViewID: String?
+    public let pageSessionID: String?
+    public let selector: String
+    public let sourceCommand: String?
+
+    public init(
+        webViewID: String? = nil,
+        pageSessionID: String? = nil,
+        selector: String,
+        sourceCommand: String? = nil
+    ) {
+        self.webViewID = webViewID
+        self.pageSessionID = pageSessionID
+        self.selector = selector
+        self.sourceCommand = sourceCommand
+    }
+}
+
+public struct TKWebViewFocusResponse: Codable, Equatable {
+    public let ok: Bool
+    public let action: String
+    public let capturedAt: String
+    public let platform: String
+    public let target: String
+    public let webViewID: String?
+    public let pageSessionID: String?
+    public let selector: String
+    public let focused: Bool
+    public let element: TKWebViewFormFieldSummary?
+    public let error: TKWebViewError?
+    public let elapsedMs: Int
+    public let sourceCommands: [String]
+    public let note: String?
+    public let redaction: TKWebViewRedaction
+
+    public init(
+        ok: Bool = true,
+        action: String = "webview.focus",
+        capturedAt: String,
+        platform: String,
+        target: String,
+        webViewID: String? = nil,
+        pageSessionID: String? = nil,
+        selector: String,
+        focused: Bool,
+        element: TKWebViewFormFieldSummary? = nil,
+        error: TKWebViewError? = nil,
+        elapsedMs: Int,
+        sourceCommands: [String] = [],
+        note: String? = nil,
+        redaction: TKWebViewRedaction = TKWebViewRedaction(secureText: "length-only")
+    ) {
+        self.ok = ok
+        self.action = action
+        self.capturedAt = capturedAt
+        self.platform = platform
+        self.target = target
+        self.webViewID = webViewID
+        self.pageSessionID = pageSessionID
+        self.selector = selector
+        self.focused = focused
+        self.element = element
+        self.error = error
+        self.elapsedMs = elapsedMs
+        self.sourceCommands = sourceCommands
+        self.note = note
+        self.redaction = redaction
+    }
+}
+
+public struct TKWebViewFormInputRequest: Codable, Equatable {
+    public let webViewID: String?
+    public let pageSessionID: String?
+    /// Stable form target identity; nil means the current activeElement.
+    public let selector: String?
+    public let mode: TKWebViewFormInputMode
+    public let text: String
+    public let secure: Bool
+    public let sourceCommand: String?
+
+    public init(
+        webViewID: String? = nil,
+        pageSessionID: String? = nil,
+        selector: String? = nil,
+        mode: TKWebViewFormInputMode,
+        text: String,
+        secure: Bool = false,
+        sourceCommand: String? = nil
+    ) {
+        self.webViewID = webViewID
+        self.pageSessionID = pageSessionID
+        self.selector = selector
+        self.mode = mode
+        self.text = text
+        self.secure = secure
+        self.sourceCommand = sourceCommand
+    }
+}
+
+public struct TKWebViewFormInputResponse: Codable, Equatable {
+    public let ok: Bool
+    public let action: String
+    public let capturedAt: String
+    public let platform: String
+    public let target: String
+    public let webViewID: String?
+    public let pageSessionID: String?
+    public let selector: String?
+    public let mode: String
+    public let focused: Bool
+    public let insertedLength: Int?
+    public let valueLength: Int?
+    public let valueRedaction: String?
+    public let eventsDispatched: [String]
+    public let element: TKWebViewFormFieldSummary?
+    public let error: TKWebViewError?
+    public let elapsedMs: Int
+    public let sourceCommands: [String]
+    public let redaction: TKWebViewRedaction
+    public let note: String?
+
+    public init(
+        ok: Bool = true,
+        action: String = "webview.form-input",
+        capturedAt: String,
+        platform: String,
+        target: String,
+        webViewID: String? = nil,
+        pageSessionID: String? = nil,
+        selector: String? = nil,
+        mode: String,
+        focused: Bool,
+        insertedLength: Int? = nil,
+        valueLength: Int? = nil,
+        valueRedaction: String? = nil,
+        eventsDispatched: [String] = [],
+        element: TKWebViewFormFieldSummary? = nil,
+        error: TKWebViewError? = nil,
+        elapsedMs: Int,
+        sourceCommands: [String] = [],
+        redaction: TKWebViewRedaction = TKWebViewRedaction(),
+        note: String? = nil
+    ) {
+        self.ok = ok
+        self.action = action
+        self.capturedAt = capturedAt
+        self.platform = platform
+        self.target = target
+        self.webViewID = webViewID
+        self.pageSessionID = pageSessionID
+        self.selector = selector
+        self.mode = mode
+        self.focused = focused
+        self.insertedLength = insertedLength
+        self.valueLength = valueLength
+        self.valueRedaction = valueRedaction
+        self.eventsDispatched = eventsDispatched
+        self.element = element
+        self.error = error
+        self.elapsedMs = elapsedMs
+        self.sourceCommands = sourceCommands
+        self.redaction = redaction
         self.note = note
     }
 }

@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（163/163 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（164/164 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-08-11
 
@@ -21,6 +21,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 已完成（本地） | [SP-167-issue-204-ios-webview-form-input](./SP-167-issue-204-ios-webview-form-input/README.md) | #204：iOS WKWebView 表单输入契约 —— snapshot 发现 contenteditable/textarea 表单目标、`webview focus/type/set-text` 与 `act focus/set-text/type --webview` 一等公民焦点切换、input/change dispatch 证据与 value 后置条件、未 opt-in 时 typed unsupported + host-HID fallback | focused 31/31（根包 23 + CLI 8，schema/capability 门禁随行）通过；待授权后评论/关闭远端 issue，真实 WebView/Simulator 验证与 docs 编号合并期处理 |
 | 已完成（本地） | [SP-163-issue-200-simulator-foreground-runtime](./SP-163-issue-200-simulator-foreground-runtime/README.md) | #200：显式 `sim:<UDID>` / 裸 UUID 的纯坐标 `act tap` 已在 embedded `/targets` 前进入 ready local host-HID，不再回退到同 Simulator 的后台 runtime | focused 20/20 与本地总门禁通过；待授权后评论/关闭远端 issue，真实 Simulator/Baguette 风险保留 |
 | 已归档 | [SP-157-open-issues-178-195-audit](./SP-157-open-issues-178-195-audit/README.md) | #178–#194 的合同修复与安全收口已进入 `main`；#195 由 SP-159、#196 由 SP-158、#197 由 SP-160 补齐，20 条 issue 已全部评论并关闭 | CI `31301092517` 全绿；真实设备/签名/Harmony smoke 风险保留，#164 原样隔离 |
 | 已合并（PR #177） | [SP-156-issue-176-xcode-compact-progress](./SP-156-issue-176-xcode-compact-progress/README.md) | #176 已为 `xcode build` 增加默认 compact progress，保留 lifecycle/heartbeat/bounded diagnostics/artifact/final，显式 full 恢复旧 stream | issue 已关闭；CI `30515397742` 通过，真实私有 workspace build 未运行 |

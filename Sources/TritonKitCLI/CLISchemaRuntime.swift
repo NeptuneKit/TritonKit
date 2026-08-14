@@ -84,6 +84,7 @@ private let unsupportedFailureCodesRequiringRecovery: Set<String> = [
     "unsupported_runtime_scope",
     "webview_method_not_allowed",
     "webview_wait_unsupported",
+    "webview_form_input_not_opted_in",
 ]
 
 private let runtimeTransportFailureCodesRequiringRecovery: Set<String> = [

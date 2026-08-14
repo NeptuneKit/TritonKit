@@ -324,7 +324,7 @@ func validateUnsupportedFailureRecovery(
 
 func requiredRecoveryCategories(forUnsupportedFailureCode failureCode: String) -> Set<String>? {
     switch failureCode {
-    case "action_not_supported", "ios_host_ax_unsupported_platform", "unsupported_capability", "unsupported_runtime_scope", "webview_method_not_allowed", "webview_wait_unsupported":
+    case "action_not_supported", "ios_host_ax_unsupported_platform", "unsupported_capability", "unsupported_runtime_scope", "webview_method_not_allowed", "webview_wait_unsupported", "webview_form_input_not_opted_in":
         return ["plan"]
     default:
         return nil

@@ -311,6 +311,66 @@ func webViewWaitOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func webViewFocusOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "webview.focus",
+        format: "json",
+        kind: "webview-focus-result",
+        model: "TKWebViewFocusResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the WebView form target was focused"),
+            ("action", "String", true, "webview.focus"),
+            ("capturedAt", "String", true, "Capture timestamp"),
+            ("platform", "String", true, "ios or harmony"),
+            ("target", "String", true, "Resolved target selector"),
+            ("webViewID", "String?", false, "Selected WebView id"),
+            ("pageSessionID", "String?", false, "Observed page session id"),
+            ("selector", "String", true, "Stable form identity: #id, [name=...], or form-N"),
+            ("focused", "Bool", true, "Whether the target became document.activeElement"),
+            ("element", "TKWebViewFormFieldSummary?", false, "Focused form target with kind, selector, nodeID, and redacted value length"),
+            ("element.kind", "String?", false, "input, textarea, select, or contenteditable"),
+            ("element.selector", "String?", false, "Stable DOM identity of the focused element"),
+            ("element.valueLength", "Int?", false, "Redacted value length postcondition"),
+            ("error", "TKWebViewError?", false, "Structured focus error; webview_form_input_not_opted_in when the page has not opted in"),
+            ("elapsedMs", "Int", true, "Elapsed milliseconds"),
+            ("sourceCommands", "[String]", true, "Underlying commands"),
+            ("note", "String?", false, "Opt-in, fallback, or verification note"),
+            ("redaction", "TKWebViewRedaction", true, "WebView redaction policy"),
+        ])
+    )
+}
+
+func webViewFormInputOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "webview.form-input",
+        format: "json",
+        kind: "webview-form-input-result",
+        model: "TKWebViewFormInputResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether WebView text input was dispatched"),
+            ("action", "String", true, "webview.form-input"),
+            ("capturedAt", "String", true, "Capture timestamp"),
+            ("platform", "String", true, "ios or harmony"),
+            ("target", "String", true, "Resolved target selector"),
+            ("webViewID", "String?", false, "Selected WebView id"),
+            ("pageSessionID", "String?", false, "Observed page session id"),
+            ("selector", "String?", false, "Stable form identity or nil for the active element"),
+            ("mode", "String", true, "type or set"),
+            ("focused", "Bool", true, "Whether the target remained document.activeElement"),
+            ("insertedLength", "Int?", false, "Inserted text length"),
+            ("valueLength", "Int?", false, "Redacted value length postcondition"),
+            ("valueRedaction", "String?", false, "length-only redaction marker"),
+            ("eventsDispatched", "[String]", true, "Dispatched DOM events such as input and change"),
+            ("element", "TKWebViewFormFieldSummary?", false, "Targeted form field summary"),
+            ("error", "TKWebViewError?", false, "Structured input error; webview_form_input_not_opted_in when the page has not opted in"),
+            ("elapsedMs", "Int", true, "Elapsed milliseconds"),
+            ("sourceCommands", "[String]", true, "Underlying commands with secure text redacted"),
+            ("redaction", "TKWebViewRedaction", true, "WebView redaction policy including secureText length-only"),
+            ("note", "String?", false, "Redaction or verification note"),
+        ])
+    )
+}
+
 func hostArtifactOutputContract(selector: String = "host.artifact") -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: selector,

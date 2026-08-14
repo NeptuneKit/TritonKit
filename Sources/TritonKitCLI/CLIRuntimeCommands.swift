@@ -227,7 +227,7 @@ struct Snapshot: AsyncParsableCommand {
 struct Focus: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "focus", abstract: "Focus a text input by selector")
 
-    @Argument(help: "Text, label, identifier, or visible placeholder to focus") var selector: String
+    @Argument(help: "Text, label, identifier, or visible placeholder to focus; with --webview a stable DOM form identity (#id, [name=...], form-N)") var selector: String
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
@@ -236,10 +236,34 @@ struct Focus: AsyncParsableCommand {
     @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
     @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
     @Option(help: "Restrict matching to candidate containing point: x,y") var at: String?
+    @Flag(name: .customLong("webview"), help: "Focus an opt-in WebView DOM form target by stable selector instead of the native AX tree") var webview = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
     func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        if webview {
+            if index != nil || within != nil || at != nil {
+                if outputFormat == .json {
+                    try printValidationError("--webview focus accepts only a stable form selector; --index/--within/--at target the native AX tree")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("--webview focus accepts only a stable form selector")
+            }
+            try await runWebViewFocus(
+                selector: selector,
+                platform: .ios,
+                target: target,
+                host: host,
+                port: port,
+                runtimeBaseURL: runtimeBaseURL,
+                webViewID: nil,
+                pageSessionID: nil,
+                format: format,
+                json: json
+            )
+            return
+        }
         try await runSemanticSelectorAction(
             action: .focus,
             sourceCommand: "focus",
@@ -260,7 +284,7 @@ struct Focus: AsyncParsableCommand {
 struct SetText: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "set-text", abstract: "Clear and set exact text by selector")
 
-    @Argument(help: "Text, label, identifier, or visible placeholder to target") var selector: String
+    @Argument(help: "Text, label, identifier, or visible placeholder to target; with --webview a stable DOM form identity (#id, [name=...], form-N)") var selector: String
     @Argument(help: "Exact text to set") var text: String
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
@@ -271,10 +295,37 @@ struct SetText: AsyncParsableCommand {
     @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
     @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
     @Option(help: "Restrict matching to candidate containing point: x,y") var at: String?
+    @Flag(name: .customLong("webview"), help: "Set exact text on an opt-in WebView DOM form target by stable selector instead of the native AX tree") var webview = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
     func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        if webview {
+            if index != nil || within != nil || at != nil {
+                if outputFormat == .json {
+                    try printValidationError("--webview set-text accepts only a stable form selector; --index/--within/--at target the native AX tree")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("--webview set-text accepts only a stable form selector")
+            }
+            try await runWebViewFormInput(
+                mode: .setText,
+                text: text,
+                selector: selector,
+                secure: secure,
+                platform: .ios,
+                target: target,
+                host: host,
+                port: port,
+                runtimeBaseURL: runtimeBaseURL,
+                webViewID: nil,
+                pageSessionID: nil,
+                format: format,
+                json: json
+            )
+            return
+        }
         try await runSemanticSelectorAction(
             action: .setText,
             sourceCommand: "set-text",

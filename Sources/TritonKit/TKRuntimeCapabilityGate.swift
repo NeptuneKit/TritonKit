@@ -35,7 +35,7 @@ enum TKRuntimeCapabilityGate {
             )
             return TKMessage(id: message.id, type: .semanticAction, payload: try? JSONEncoder().encode(response))
 
-        case .webViewList, .webViewCurrent, .webViewSnapshot, .webViewBridgeCall, .webViewBridgePost, .webViewTap, .webViewWait, .webViewEvents, .webViewLedger:
+        case .webViewList, .webViewCurrent, .webViewSnapshot, .webViewBridgeCall, .webViewBridgePost, .webViewTap, .webViewWait, .webViewFocus, .webViewFormInput, .webViewEvents, .webViewLedger:
             let response = TKWebViewErrorResponse(
                 action: action,
                 platform: "ios",
@@ -75,6 +75,10 @@ enum TKRuntimeCapabilityGate {
             return .webViewTap
         case .webViewWait:
             return .webViewWait
+        case .webViewFocus:
+            return .webViewFocus
+        case .webViewFormInput:
+            return .webViewFormInput
         case .webViewEvents:
             return .webViewEvents
         case .semanticAction:
@@ -148,6 +152,10 @@ enum TKRuntimeCapabilityGate {
             return "webview.tap"
         case .webViewWait:
             return "webview.wait"
+        case .webViewFocus:
+            return "webview.focus"
+        case .webViewFormInput:
+            return "webview.form-input"
         case .webViewEvents:
             return "webview.events"
         case .webViewLedger:
@@ -179,7 +187,7 @@ extension TritonKit.Configuration {
             return features.contains(.accessibility)
         case .semanticState, .semanticActionProvider:
             return features.contains(.semantic)
-        case .webViewList, .webViewCurrent, .webViewSnapshot, .webViewBridgeCall, .webViewBridgePost, .webViewTap, .webViewWait, .webViewEvents:
+        case .webViewList, .webViewCurrent, .webViewSnapshot, .webViewBridgeCall, .webViewBridgePost, .webViewTap, .webViewWait, .webViewFocus, .webViewFormInput, .webViewEvents:
             return features.contains(.webView)
         case .webViewEval:
             return false

@@ -156,7 +156,8 @@ extension SchemaFactSourceTests {
         ])
         let webviewProviderReasonCapabilities = Set([
             "webview-current-url", "webview-snapshot", "webview-bridge-call",
-            "webview-events", "webview-wait", "webview-aware-tap", "route-current-url-assert",
+            "webview-events", "webview-wait", "webview-focus", "webview-form-input",
+            "webview-aware-tap", "route-current-url-assert",
         ])
 
         let connected = connectedCapabilityMap()

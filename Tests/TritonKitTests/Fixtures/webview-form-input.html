@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" data-triton-form-input="1">
+<head>
+  <meta charset="utf-8">
+  <title>Triton WebView Form Input Fixture</title>
+</head>
+<body>
+  <h1>Triton WebView Form Input Fixture</h1>
+  <form id="editor-form">
+    <label for="title">Title</label>
+    <textarea id="title" name="title" placeholder="Article title">Initial title</textarea>
+    <label for="body">Body</label>
+    <div id="body" name="body" contenteditable="true" role="textbox" aria-label="Body"><p>Initial body paragraph</p></div>
+    <input id="author" name="author" type="text" value="linhey">
+    <button id="submit" type="submit">Save</button>
+  </form>
+  <script>
+    // Opt-in marker for Triton DOM form control.
+    // The iOS WebView provider contract requires this marker (or
+    // document.documentElement[data-triton-form-input="1"]) before focus,
+    // type, or set-text may touch the page DOM. Without it, commands return
+    // webview_form_input_not_opted_in with a documented host-HID fallback.
+    window.__tritonFormInput = true;
+  </script>
+</body>
+</html>

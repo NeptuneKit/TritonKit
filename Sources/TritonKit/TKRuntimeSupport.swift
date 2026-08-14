@@ -106,6 +106,16 @@ func runtimeLedgerDetails(
               let request = try? JSONDecoder().decode(TKWebViewTapRequest.self, from: payload) {
         source = request.sourceCommand ?? "cli"
         action = "webview.tap"
+    } else if message.type == .webViewFocus,
+              let payload = message.payload,
+              let request = try? JSONDecoder().decode(TKWebViewFocusRequest.self, from: payload) {
+        source = request.sourceCommand ?? "cli"
+        action = "webview.focus"
+    } else if message.type == .webViewFormInput,
+              let payload = message.payload,
+              let request = try? JSONDecoder().decode(TKWebViewFormInputRequest.self, from: payload) {
+        source = request.sourceCommand ?? "cli"
+        action = "webview.form-input"
     }
 
     guard let payload = response?.payload else {
@@ -228,6 +238,8 @@ private func resolveRuntimeCapabilitySupport(
          TKRuntimeCapabilityName.webViewSnapshot.rawValue,
          TKRuntimeCapabilityName.webViewTap.rawValue,
          TKRuntimeCapabilityName.webViewWait.rawValue,
+         TKRuntimeCapabilityName.webViewFocus.rawValue,
+         TKRuntimeCapabilityName.webViewFormInput.rawValue,
          TKRuntimeCapabilityName.webViewEvents.rawValue where webViewProviderAvailable:
         return TKRuntimeCapabilityDetail(
             name: capability.name,
