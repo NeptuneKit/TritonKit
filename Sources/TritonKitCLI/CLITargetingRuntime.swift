@@ -195,6 +195,100 @@ func resolveTapTarget(
     )
 }
 
+/// Resolve a `find` query against a Harmony host uitest layout, producing the same
+/// `TapTargetResolution` contract as the embedded path so `act find` output stays
+/// uniform across `--platform harmony` and the iOS embedded runtime.
+///
+/// Matching mirrors `act tap --platform harmony`: a node matches when its
+/// `attributes.text` equals the query and it has parseable bounds. The resolution
+/// request is a coordinate tap at the matched node center, which is exactly the
+/// request `act tap --platform harmony` would execute.
+func resolveHostHarmonyFind(
+    _ query: String,
+    selected: TKHarmonyTarget,
+    hdc: String,
+    index: Int? = nil,
+    within: TKRect? = nil,
+    at: (x: Double, y: Double)? = nil,
+    includeCandidates: Bool = false,
+    captureLayout: (TKHarmonyTarget, String) throws -> HarmonyLayoutCapture = { selected, hdc in
+        try dumpHarmonyLayout(selected: selected, hdc: hdc, output: nil)
+    }
+) throws -> TapTargetResolution {
+    if let index, index <= 0 {
+        throw RuntimeError("--index must be greater than 0")
+    }
+    let layout = try captureLayout(selected, hdc)
+    let summaries = try TKHarmonyLayoutParser.nodeSummaries(in: layout.data)
+    let matches = summaries
+        .filter { $0.text == query && $0.bounds != nil }
+        .filter { candidate in
+            guard let within, let frame = candidate.bounds else { return true }
+            return TKRectIntersects(frame, within)
+        }
+        .filter { candidate in
+            guard let at, let frame = candidate.bounds else { return true }
+            return frame.contains(x: at.x, y: at.y)
+        }
+        .sorted { lhs, rhs in
+            let lhsFrame = lhs.bounds ?? TKRect(x: 0, y: 0, width: 0, height: 0)
+            let rhsFrame = rhs.bounds ?? TKRect(x: 0, y: 0, width: 0, height: 0)
+            if lhs.depth != rhs.depth { return lhs.depth < rhs.depth }
+            if lhsFrame.y != rhsFrame.y { return lhsFrame.y < rhsFrame.y }
+            if lhsFrame.x != rhsFrame.x { return lhsFrame.x < rhsFrame.x }
+            return lhs.nodeID < rhs.nodeID
+        }
+    let candidates = matches.enumerated().map { offset, node in
+        let frame = node.bounds ?? TKRect(x: 0, y: 0, width: 0, height: 0)
+        return TapTargetCandidate(
+            index: offset + 1,
+            query: query,
+            source: "host-harmony-layout",
+            strategy: "coordinate",
+            role: node.type,
+            label: node.text,
+            value: node.originalText != node.text ? node.originalText : nil,
+            identifier: node.identifier,
+            className: node.type,
+            viewOID: nil,
+            targetOID: nil,
+            layerOID: nil,
+            frame: frame,
+            request: TKInputRequest.tap(x: frame.centerX, y: frame.centerY)
+        )
+    }
+    guard !candidates.isEmpty else {
+        throw TKTapTargetResolutionFailure(
+            query: query,
+            message: "No Harmony layout node matched query: \(query)",
+            candidateCount: 0,
+            nearestCandidates: [],
+            suggestedCommands: [
+                "triton act find \(shellQuoted(query)) --platform harmony --device <harmony-target> --all --json",
+                "triton debug ax --platform harmony --output <path> --json",
+            ]
+        )
+    }
+    let selectedIndex = index ?? 1
+    guard selectedIndex <= candidates.count else {
+        throw TKTapTargetResolutionFailure(
+            query: query,
+            message: "Only \(candidates.count) Harmony layout node(s) matched query: \(query); cannot select --index \(selectedIndex)",
+            candidateCount: candidates.count,
+            nearestCandidates: tapTargetNearestCandidates(candidates),
+            suggestedCommands: [
+                "triton act find \(shellQuoted(query)) --platform harmony --device <harmony-target> --all --json",
+                "triton debug ax --platform harmony --output <path> --json",
+            ]
+        )
+    }
+    return TapTargetResolution(
+        selected: candidates[selectedIndex - 1],
+        candidates: candidates,
+        includeCandidates: includeCandidates
+    )
+}
+
 func tapTargetCandidates(
     _ query: String,
     client: TritonKitHTTPClient,
