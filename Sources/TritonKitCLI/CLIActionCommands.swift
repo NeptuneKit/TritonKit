@@ -71,7 +71,10 @@ struct Find: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Resolve a UI target by visible text, label, identifier, or option title")
 
     @Argument(help: "Text, label, identifier, or visible option title to resolve") var query: String
-    @Option(name: [.long, .customLong("device")], help: "Target id from `triton list`; --device is an alias") var target: String = TKLocalTargetID
+    @Option(help: "Host platform adapter: ios, android, or harmony") var platform: HostPlatform?
+    @Option(name: [.long, .customLong("device")], help: "Target id from `triton list`, or a host selector such as `127.0.0.1:10100` with `--platform harmony`; --device is an alias") var target: String = TKLocalTargetID
+    @Option(help: "Path to adb executable") var adb: String = "adb"
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -93,6 +96,37 @@ struct Find: AsyncParsableCommand {
             }
             let bounds = try within.map(parseBounds)
             let point = try at.map(parsePoint)
+
+            switch actFindHostRoute(platform: platform) {
+            case .hostHarmony:
+                do {
+                    let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+                    let resolution = try resolveHostHarmonyFind(
+                        query,
+                        selected: selected,
+                        hdc: hdc,
+                        index: index,
+                        within: bounds,
+                        at: point,
+                        includeCandidates: all
+                    )
+                    try printFindResolution(resolution, outputFormat: outputFormat)
+                } catch {
+                    if error is ExitCode { throw error }
+                    try failHostCommand(error, outputFormat: outputFormat)
+                }
+                return
+            case .hostUnsupported(let unsupportedPlatform):
+                try failHostValidation(
+                    code: "unsupported_capability",
+                    message: "act find host path currently supports --platform harmony only; \(unsupportedPlatform.rawValue) host find is not available.",
+                    hint: "Use `triton observe tree --platform \(unsupportedPlatform.rawValue) --json` for host layout evidence, or `triton act tap --platform \(unsupportedPlatform.rawValue) <query> --json`.",
+                    outputFormat: outputFormat
+                )
+            case .embedded:
+                break
+            }
+
             let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             let resolution = try await resolveTapTarget(
                 query,
@@ -105,28 +139,51 @@ struct Find: AsyncParsableCommand {
                 at: point,
                 includeCandidates: all
             )
-            switch outputFormat {
-            case .json:
-                print(try encodeJSON(resolution))
-            case .text:
-                print("query: \(resolution.query)")
-                print("source: \(resolution.source)")
-                print("strategy: \(resolution.strategy)")
-                if let label = resolution.label { print("label: \(label)") }
-                if let value = resolution.value { print("value: \(value)") }
-                if let identifier = resolution.identifier { print("identifier: \(identifier)") }
-                if let className = resolution.className { print("className: \(className)") }
-                if let targetOID = resolution.targetOID { print("targetOID: \(targetOID)") }
-                if let viewOID = resolution.viewOID { print("viewOID: \(viewOID)") }
-                if let layerOID = resolution.layerOID { print("layerOID: \(layerOID)") }
-                if let frame = resolution.frame { print("frame: \(formatRect(frame))") }
-                print("matchIndex: \(resolution.matchIndex)")
-                print("matchCount: \(resolution.matchCount)")
-            }
+            try printFindResolution(resolution, outputFormat: outputFormat)
         } catch {
             if error is ExitCode { throw error }
             try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
         }
+    }
+
+    private func printFindResolution(_ resolution: TapTargetResolution, outputFormat: ClientOutputFormat) throws {
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(resolution))
+        case .text:
+            print("query: \(resolution.query)")
+            print("source: \(resolution.source)")
+            print("strategy: \(resolution.strategy)")
+            if let label = resolution.label { print("label: \(label)") }
+            if let value = resolution.value { print("value: \(value)") }
+            if let identifier = resolution.identifier { print("identifier: \(identifier)") }
+            if let className = resolution.className { print("className: \(className)") }
+            if let targetOID = resolution.targetOID { print("targetOID: \(targetOID)") }
+            if let viewOID = resolution.viewOID { print("viewOID: \(viewOID)") }
+            if let layerOID = resolution.layerOID { print("layerOID: \(layerOID)") }
+            if let frame = resolution.frame { print("frame: \(formatRect(frame))") }
+            print("matchIndex: \(resolution.matchIndex)")
+            print("matchCount: \(resolution.matchCount)")
+        }
+    }
+}
+
+enum ActFindHostRoute: Equatable {
+    case embedded
+    case hostHarmony
+    case hostUnsupported(HostPlatform)
+}
+
+func actFindHostRoute(platform: HostPlatform?) -> ActFindHostRoute {
+    switch platform {
+    case .harmony:
+        return .hostHarmony
+    case .ios:
+        return .hostUnsupported(.ios)
+    case .android:
+        return .hostUnsupported(.android)
+    case nil:
+        return .embedded
     }
 }
 

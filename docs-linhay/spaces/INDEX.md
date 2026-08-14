@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-08-11
-> 覆盖范围：163/163 个已存在 space
+> 覆盖范围：164/164 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 163/163 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 163/163 | 每条记录链接到现有 space README |
+| 编号登记 | 164/164 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 164/164 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -188,3 +188,4 @@
 | `SP-161-issue-198-harmony-signed-hap` | [`SP-161-issue-198-harmony-signed-hap`](./SP-161-issue-198-harmony-signed-hap/README.md) | 已发布（v0.2.18） | #198 signed-only `assembleApp` artifact discovery 已发布；远端 issue 尚未评论/关闭，真实 Harmony 签名工程与 HDC 安装未复测 |
 | `SP-162-issue-199-ios-collection-cell-host-hid` | [`SP-162-issue-199-ios-collection-cell-host-hid`](./SP-162-issue-199-ios-collection-cell-host-hid/README.md) | 已完成（本地 follow-up） | #199 核心 fallback 已发布于 v0.2.18，本轮补齐 same-target matched-OID recovery 与 target-bound verification；远端 issue 尚未关闭，follow-up 未发布 |
 | `SP-163-issue-200-simulator-foreground-runtime` | [`SP-163-issue-200-simulator-foreground-runtime`](./SP-163-issue-200-simulator-foreground-runtime/README.md) | 已完成（本地） | #200 显式 Simulator selector 的纯坐标 tap 已在 embedded `/targets` 前改走 ready local host-HID；远端 issue 与真实 Simulator/Baguette 验证待后续授权 |
+| `SP-164-issue-201-harmony-act-find` | [`SP-164-issue-201-harmony-act-find`](./SP-164-issue-201-harmony-act-find/README.md) | 已完成（本地） | #201 `act find` 已支持 `--platform harmony --device <harmony-target>` 从 Harmony uitest host layout 解析，Harmony `--device` 不再落入 embedded iOS server；`--platform ios|android` 返回 typed `unsupported_capability`；远端 issue 与真实 Harmony/HDC 验证待后续授权 |
