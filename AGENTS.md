@@ -57,6 +57,7 @@
 4. 每个写入型 subagent 必须有明确文件面、非目标、验证命令和停止条件；不同 agent 不得同时拥有同一实现文件。多 issue 默认一 issue 一 space / branch / worktree。
 5. 主控可自行创建、分批调度、改派、停止或续跑 subagent；仅在需求边界变化、破坏性操作、权限/环境 blocker 或用户取舍时打断用户。
 6. 远端写入（push、PR、merge、tag、release、关闭 issue）仍须有用户明确授权；不要把未完成并行工作混入主分支或发布。
+7. 多 worktree 并行时禁止使用 `git stash`（stash 是仓库级全局、跨 worktree 共享，一次 push/pop 会串扰其它 worktree 的暂存内容）；需要保存中间态改用临时分支或独立文件，合并冲突由主控按文件逐一裁决。
 
 ## 3. 验证、文档与安全
 
