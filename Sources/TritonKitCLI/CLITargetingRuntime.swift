@@ -374,7 +374,7 @@ func tapTargetCandidates(
 
     let valueAXCandidates = selectAXNodesByQuery(axNodes, query: query, includeValue: true)
         .filter { node in
-            !(node.label == query || node.identifier == query || node.title == query)
+            !TKAXNodeMatchesText(node, query: query, includeValue: false)
         }
         .map { axNode in
             let request = tapRequest(
@@ -434,14 +434,19 @@ func tapTargetCandidates(
     }
 }
 
-func selectAXNodesByQuery(_ nodes: [TKAXNode], query: String, includeValue: Bool = true) -> [TKAXNode] {
+func selectAXNodesByQuery(
+    _ nodes: [TKAXNode],
+    query: String,
+    includeValue: Bool = true,
+    match: TKTextMatchMode = .substring
+) -> [TKAXNode] {
     TKFlattenAXNodes(nodes)
         .map(\.node)
         .filter { node in
-            node.label == query
-                || node.identifier == query
-                || node.title == query
-                || (includeValue && node.value == query)
+            // Shared visibility rule with `wait --text`: hidden nodes are not
+            // query targets; `observe` remains the authoritative view that still
+            // lists them with `hidden` metadata.
+            !node.hidden && TKAXNodeMatchesText(node, query: query, mode: match, includeValue: includeValue)
         }
         .sorted { lhs, rhs in
             if axTapPriority(lhs) != axTapPriority(rhs) {

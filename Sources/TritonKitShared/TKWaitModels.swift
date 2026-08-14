@@ -138,7 +138,7 @@ public func TKWaitFindTextMatch(
     let normalizedRole = role?.lowercased()
     return TKWaitVisibleTexts(from: nodes).first { match in
         let roleMatches = normalizedRole.map { match.role?.lowercased() == $0 } ?? true
-        return roleMatches && match.text == query
+        return roleMatches && TKTextMatches(match.text, query: query)
     }
 }
 

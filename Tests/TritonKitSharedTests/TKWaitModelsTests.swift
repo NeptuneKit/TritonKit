@@ -110,6 +110,77 @@ struct TKWaitModelsTests {
         #expect(TKWaitFindTextMatch(in: nodes, query: "隐藏子节点") == nil)
     }
 
+    @Test("wait text matching shares trim, case, diacritic, and substring normalization with observe/find")
+    func waitTextMatchingSharesNormalization() {
+        let nodes = [
+            TKAXNode(
+                role: "button",
+                label: "登录",
+                value: nil,
+                identifier: nil,
+                title: nil,
+                frame: TKRect(x: 10, y: 20, width: 80, height: 44),
+                enabled: true,
+                focused: false,
+                hidden: false,
+                targetOID: 20,
+                className: "UIButton",
+                children: []
+            ),
+            TKAXNode(
+                role: "text",
+                label: "Complex harness: 1",
+                value: nil,
+                identifier: nil,
+                title: nil,
+                frame: TKRect(x: 10, y: 80, width: 200, height: 24),
+                enabled: true,
+                focused: false,
+                hidden: false,
+                targetOID: 21,
+                className: "UILabel",
+                children: []
+            ),
+            TKAXNode(
+                role: "text",
+                label: "Café",
+                value: nil,
+                identifier: nil,
+                title: nil,
+                frame: TKRect(x: 10, y: 120, width: 80, height: 24),
+                enabled: true,
+                focused: false,
+                hidden: false,
+                targetOID: 22,
+                className: "UILabel",
+                children: []
+            ),
+            TKAXNode(
+                role: "button",
+                label: "Settings",
+                value: nil,
+                identifier: nil,
+                title: nil,
+                frame: TKRect(x: 10, y: 160, width: 120, height: 44),
+                enabled: true,
+                focused: false,
+                hidden: false,
+                targetOID: 23,
+                className: "UIButton",
+                children: []
+            ),
+        ]
+
+        // whitespace-trimmed query
+        #expect(TKWaitFindTextMatch(in: nodes, query: " 登录 ")?.targetOID == 20)
+        // substring query against a longer visible label
+        #expect(TKWaitFindTextMatch(in: nodes, query: "harness")?.targetOID == 21)
+        // case-insensitive
+        #expect(TKWaitFindTextMatch(in: nodes, query: "SETTINGS")?.targetOID == 23)
+        // diacritic-insensitive
+        #expect(TKWaitFindTextMatch(in: nodes, query: "cafe")?.targetOID == 22)
+    }
+
     @Test("predicate supports exists gone boolean operators and negation")
     func predicateEvaluation() throws {
         let nodes = [
