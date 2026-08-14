@@ -1063,6 +1063,15 @@ public struct TKHostInstalledApp: Codable, Equatable {
     public let displayName: String?
     public let name: String?
     public let executable: String?
+    /// Marketing (short) version of an iOS app, from `CFBundleShortVersionString` (for example "2.4.1").
+    /// iOS-only: Android and Harmony parsers do not populate this field.
+    public let marketingVersion: String?
+    /// Build number of an iOS app, from `CFBundleVersion` (for example "42").
+    /// On Android the shared parser currently maps `versionName` into this field.
+    public let buildNumber: String?
+    /// Legacy alias retained for compatibility. On iOS it maps to the build number (`CFBundleVersion`)
+    /// and is identical to `buildNumber`; on Android it maps to `versionName`. New consumers should
+    /// prefer `marketingVersion` / `buildNumber` and treat this field as deprecated.
     public let version: String?
     public let applicationType: String?
     public let path: String?
@@ -1077,6 +1086,8 @@ public struct TKHostInstalledApp: Codable, Equatable {
         self.displayName = TKHostInstalledApp.stringValue(info["CFBundleDisplayName"])
         self.name = TKHostInstalledApp.stringValue(info["CFBundleName"])
         self.executable = TKHostInstalledApp.stringValue(info["CFBundleExecutable"])
+        self.marketingVersion = TKHostInstalledApp.stringValue(info["CFBundleShortVersionString"])
+        self.buildNumber = TKHostInstalledApp.stringValue(info["CFBundleVersion"])
         self.version = TKHostInstalledApp.stringValue(info["CFBundleVersion"])
         self.applicationType = TKHostInstalledApp.stringValue(info["ApplicationType"])
         self.path = TKHostInstalledApp.stringValue(info["Path"])

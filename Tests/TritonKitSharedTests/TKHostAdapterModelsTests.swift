@@ -908,6 +908,7 @@ struct TKHostAdapterModelsTests {
                 CFBundleExecutable = Demo;
                 CFBundleIdentifier = "com.example.demo";
                 CFBundleName = Demo;
+                CFBundleShortVersionString = "2.4.1";
                 CFBundleVersion = 42;
                 DataContainer = "file:///tmp/Data/";
                 GroupContainers = {
@@ -934,6 +935,8 @@ struct TKHostAdapterModelsTests {
         let demo = try #require(apps.first { $0.bundleID == "com.example.demo" })
         #expect(demo.displayName == "Demo")
         #expect(demo.executable == "Demo")
+        #expect(demo.marketingVersion == "2.4.1")
+        #expect(demo.buildNumber == "42")
         #expect(demo.version == "42")
         #expect(demo.applicationType == "User")
         #expect(demo.path == "/tmp/Demo.app")
@@ -949,6 +952,7 @@ struct TKHostAdapterModelsTests {
             ApplicationType = User;
             CFBundleDisplayName = Demo;
             CFBundleIdentifier = "com.example.demo";
+            CFBundleShortVersionString = "2.4.1";
             CFBundleVersion = 42;
             Path = "/tmp/Demo.app";
         }
@@ -958,8 +962,27 @@ struct TKHostAdapterModelsTests {
 
         #expect(app.bundleID == "com.example.demo")
         #expect(app.displayName == "Demo")
+        #expect(app.marketingVersion == "2.4.1")
+        #expect(app.buildNumber == "42")
         #expect(app.version == "42")
         #expect(app.applicationType == "User")
+    }
+
+    @Test("installed app JSON encodes marketingVersion, buildNumber, and legacy version")
+    func installedAppEncodesMarketingBuildAndLegacyVersion() throws {
+        let app = TKHostInstalledApp(bundleID: "com.example.demo", info: [
+            "CFBundleIdentifier": "com.example.demo",
+            "CFBundleDisplayName": "Demo",
+            "CFBundleShortVersionString": "2.4.1",
+            "CFBundleVersion": "42",
+        ])
+
+        let data = try JSONEncoder().encode(app)
+        let json = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+        #expect(json["marketingVersion"] as? String == "2.4.1")
+        #expect(json["buildNumber"] as? String == "42")
+        #expect(json["version"] as? String == "42")
     }
 
     @Test("empty simctl appinfo output is treated as not available")
