@@ -58,4 +58,4 @@ git diff --check
 
 ## 当前状态
 
-- 执行中：space 已建立，等待实现。
+- 实现完成（2026-08-21，主控接管完成）：`xcode test` 默认 compact 有界 JSONL、`--progress full` 暂存原始流；schema test 子命令挂载 `--progress` 并与 parser 契约测试对齐；`run` 保持不宣告。focused tests（Xcode/Schema filter）通过；2 个既有 `XcodeProgressTests` 断言与 6 个 Schema 套件失败在未修改 baseline 影子复现，属 pipe-drain 负载抖动/影子环境预存在问题，非本 diff 回归（详见 REPORT）。真实大型 workspace 回归保留为风险。

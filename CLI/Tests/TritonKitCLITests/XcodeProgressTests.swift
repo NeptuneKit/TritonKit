@@ -222,7 +222,7 @@ struct XcodeProgressTests {
         #expect(progress.allSatisfy { !$0.message.contains("ordinary-text") })
     }
 
-    @Test("xcode build progress option defaults compact and schema exposes routing")
+    @Test("xcode build and test progress options default compact and schema exposes routing")
     func xcodeBuildProgressOptionAndSchema() throws {
         let defaultBuild = try XcodeBuild.parse([
             "--project", "App.xcodeproj",
@@ -247,12 +247,32 @@ struct XcodeProgressTests {
         }
         for command in [
             { try XcodeSettings.parse(["--project", "App.xcodeproj", "--scheme", "App", "--progress", "compact"]) as Any },
-            { try XcodeTest.parse(["--project", "App.xcodeproj", "--scheme", "App", "--progress", "compact"]) as Any },
             { try XcodeRun.parse(["--project", "App.xcodeproj", "--scheme", "App", "--progress", "compact"]) as Any },
         ] {
             #expect(throws: Error.self) {
                 _ = try command()
             }
+        }
+
+        let defaultTest = try XcodeTest.parse([
+            "--project", "App.xcodeproj",
+            "--scheme", "App",
+            "--jsonl",
+        ])
+        let fullTest = try XcodeTest.parse([
+            "--project", "App.xcodeproj",
+            "--scheme", "App",
+            "--progress", "full",
+            "--jsonl",
+        ])
+        #expect(defaultTest.progress == .compact)
+        #expect(fullTest.progress == .full)
+        #expect(throws: Error.self) {
+            _ = try XcodeTest.parse([
+                "--project", "App.xcodeproj",
+                "--scheme", "App",
+                "--progress", "verbose",
+            ])
         }
 
         let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
@@ -261,16 +281,151 @@ struct XcodeProgressTests {
         #expect(progress.type == "compact|full")
         #expect(progress.defaultValue == "compact")
         #expect(progress.description.contains("stderr"))
+        #expect(progress.description.contains("not run"))
         #expect(build.optionalOptions.contains("--progress"))
         #expect(build.jsonlEvents.contains("xcode.build.warning"))
         #expect(build.jsonlEvents.contains("xcode.build.error"))
         #expect(build.jsonlEvents.contains("xcode.build.stdout"))
         #expect(build.jsonlEvents.contains("xcode.build.stderr"))
         #expect(build.finalEventKind == "xcode.build.summary")
-        for action in ["settings", "test", "run"] {
+        for action in ["build", "test", "archive", "export"] {
+            let subcommand = try #require(xcode.subcommands.first { $0.name == action })
+            #expect(subcommand.optionalOptions.contains("--progress"))
+        }
+        for action in ["discover", "use", "schemes", "status", "wait-idle", "settings", "run"] {
             let subcommand = try #require(xcode.subcommands.first { $0.name == action })
             #expect(!subcommand.optionalOptions.contains("--progress"))
         }
+        let test = try #require(xcode.subcommands.first { $0.name == "test" })
+        #expect(test.jsonlEvents.contains("xcode.test.warning"))
+        #expect(test.jsonlEvents.contains("xcode.test.error"))
+        #expect(test.finalEventKind == "xcode.test.summary")
+    }
+
+    @Test("xcode test compact progress bounds raw output while preserving artifacts")
+    func xcodeTestCompactProgressBoundsRawOutput() throws {
+        let command = TKHostCommand(
+            executable: "/bin/sh",
+            arguments: [
+                "-c",
+                "for i in $(seq 1 40); do echo ordinary-$i; done; for i in $(seq 1 24); do echo \"App.swift:$i: warning: fixture-warning-$i\"; done; for i in $(seq 1 24); do echo \"App.swift:$i: error: fixture-error-$i\" >&2; done",
+            ]
+        )
+
+        let captured = try captureXcodeProgressOutput {
+            try runXcodeHostCommand(
+                command,
+                event: "xcode.test",
+                jsonl: true,
+                progress: .compact
+            ).0
+        }
+        defer { removeXcodeProgressArtifacts(captured.result) }
+
+        let events = try decodeXcodeProgressLines(captured.stdout)
+        #expect(events.map(\.event).first == "xcode.test.invocation")
+        #expect(events.map(\.event).last == "xcode.test.summary")
+        #expect(!events.map(\.event).contains("xcode.test.stdout"))
+        #expect(!events.map(\.event).contains("xcode.test.stderr"))
+        // Upper bound is the contract; the lower bound proves classification ran.
+        // The exact count is load-sensitive because the streaming pipe drain can
+        // lose tail lines after process exit (see AGENTS pipe-runner guidance).
+        let warnings = events.filter { $0.event == "xcode.test.warning" }
+        let errors = events.filter { $0.event == "xcode.test.error" }
+        #expect(warnings.count <= xcodeCompactDiagnosticsPerKindLimit)
+        #expect(errors.count <= xcodeCompactDiagnosticsPerKindLimit)
+        #expect(warnings.count + errors.count >= 8)
+        #expect(events.allSatisfy { !$0.message.contains("ordinary-") })
+
+        let stdoutLogPath = try #require(captured.result.stdoutLogPath)
+        let stdoutLog = try String(contentsOfFile: stdoutLogPath, encoding: .utf8)
+        #expect(stdoutLog.contains("ordinary-1"))
+        #expect(stdoutLog.contains("fixture-warning-1"))
+    }
+
+    @Test("xcode test full progress restores raw stdout and stderr chunk events")
+    func xcodeTestFullProgressRestoresRawStream() throws {
+        let command = TKHostCommand(
+            executable: "/bin/sh",
+            arguments: ["-c", "echo test-ordinary-full; echo test-diagnostic-full >&2"]
+        )
+
+        let captured = try captureXcodeProgressOutput {
+            try runXcodeHostCommand(
+                command,
+                event: "xcode.test",
+                jsonl: true,
+                progress: .full
+            ).0
+        }
+        defer { removeXcodeProgressArtifacts(captured.result) }
+
+        let events = try decodeXcodeProgressLines(captured.stdout)
+        #expect(events.contains { $0.event == "xcode.test.stdout" && $0.message.contains("test-ordinary-full") })
+        #expect(events.contains { $0.event == "xcode.test.stderr" && $0.message.contains("test-diagnostic-full") })
+        #expect(!events.map(\.event).contains("xcode.test.warning"))
+        #expect(!events.map(\.event).contains("xcode.test.error"))
+    }
+
+    @Test("runXcodeTest injects compact progress by default and forwards explicit mode")
+    func runXcodeTestInjectsProgressModeIntoHostRunner() throws {
+        let temporaryProject = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-xcode-test-progress-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: temporaryProject.appendingPathComponent("App.xcodeproj"), withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: temporaryProject) }
+        let invocation = ResolvedXcodeInvocation(
+            workspace: nil,
+            project: temporaryProject.appendingPathComponent("App.xcodeproj").path,
+            package: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphonesimulator",
+            destination: nil,
+            derivedDataPath: ".triton/DerivedData",
+            buildSettings: [],
+            derivedDataCache: TKXcodeDerivedDataCacheInfo(path: ".triton/DerivedData", exists: false, cacheState: "empty", incrementalExpected: false, cleanupPolicy: "preserve-by-default", guidance: "preserve"),
+            simulatorUDID: nil,
+            device: nil
+        )
+
+        var capturedModes: [XcodeProgressMode] = []
+        var capturedEvents: [String] = []
+        let runner: (TKHostCommand, String, Bool, XcodeProgressMode) throws -> (HostProcessResult, Int) = { command, event, _, progress in
+            capturedModes.append(progress)
+            capturedEvents.append(event)
+            return (HostProcessResult(
+                stdoutData: Data("Test Suite 'AppTests' passed\n".utf8),
+                stderrData: Data(),
+                exitCode: 0,
+                sourceCommand: hostSourceCommand(command),
+                stdoutTruncated: false,
+                stderrTruncated: false,
+                stdoutLogPath: "test.stdout.log",
+                stderrLogPath: "test.stderr.log",
+                stdoutBytes: 30,
+                stderrBytes: 0
+            ), 17)
+        }
+
+        let defaultSummary = try runXcodeTest(
+            invocation: invocation,
+            resultBundlePath: nil,
+            jsonl: true,
+            hostCommandRunner: runner
+        )
+        let fullSummary = try runXcodeTest(
+            invocation: invocation,
+            resultBundlePath: nil,
+            jsonl: true,
+            progress: .full,
+            hostCommandRunner: runner
+        )
+
+        #expect(capturedEvents == ["xcode.test", "xcode.test"])
+        #expect(capturedModes == [.compact, .full])
+        #expect(defaultSummary.ok)
+        #expect(defaultSummary.action == "xcode.test")
+        #expect(fullSummary.ok)
     }
 }
 

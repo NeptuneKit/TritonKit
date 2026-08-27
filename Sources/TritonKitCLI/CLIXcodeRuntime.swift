@@ -797,7 +797,11 @@ func runXcodeTest(
     onlyTesting: [String] = [],
     jsonl: Bool,
     timeout: Double? = nil,
-    statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) }
+    progress: XcodeProgressMode = .compact,
+    statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) },
+    hostCommandRunner: (TKHostCommand, String, Bool, XcodeProgressMode) throws -> (HostProcessResult, Int) = { command, event, jsonl, progress in
+        try runXcodeHostCommand(command, event: event, jsonl: jsonl, allowNonZeroExit: true, progress: progress)
+    }
 ) throws -> TKXcodeActionSummary {
     let onlyTesting = try validateXcodeOnlyTesting(onlyTesting)
     let executionInvocation = try preparedXcodeInvocationForExecution(invocation)
@@ -815,7 +819,7 @@ func runXcodeTest(
         onlyTesting: onlyTesting,
         redactDestination: executionInvocation.redactsXcodebuildDestination
     ).withTimeout(timeout)
-    let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.test", jsonl: jsonl, allowNonZeroExit: true)
+    let (result, durationMs) = try hostCommandRunner(command, "xcode.test", jsonl, progress)
     let diagnostics = xcodeBuildOutputDiagnostics(result, redacting: command)
     let ok = result.exitCode == 0
     let workspaceFilter = xcodeWorkspaceFilter(for: executionInvocation)
