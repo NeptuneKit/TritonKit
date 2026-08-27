@@ -53,4 +53,4 @@ git diff --check
 
 ## 当前状态
 
-- 执行中：space 已建立，等待实现。
+- 实现完成（2026-08-21）：Harmony host-side ArkWeb bridge-call 经 HDC fport + CDP evaluate 调用 allowlisted 页面方法并等待异步 callback；显式 `--webview-id` 消歧；typed 错误族覆盖 provider missing / method not allowed / timeout / ambiguous / webview not found。`webview list` 在 CDP 可达时不再把 `webview.bridge-call` 报成永久 missing。离线 fixture 覆盖 discovery → invoke → callback → typed errors，不启动真实 HDC。真实 DevEco/HDC smoke 保留为风险。
