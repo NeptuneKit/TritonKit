@@ -28,6 +28,17 @@ func collectionCellHostHIDVerificationBoundary() -> TKInputVerificationBoundary 
     )
 }
 
+func collectionCellSelectionVerificationBoundary() -> TKInputVerificationBoundary {
+    TKInputVerificationBoundary(
+        hint: "Embedded selection invoked the public UICollectionViewDelegate callbacks; verify the visible business postcondition before claiming completion.",
+        suggestedCommands: [
+            "triton verify text-exists <expected-postcondition> --target <ios-simulator-runtime-target> --json",
+            "triton wait --text <expected-postcondition> --target <ios-simulator-runtime-target> --json",
+            "triton observe current --target <ios-simulator-runtime-target> --json",
+        ]
+    )
+}
+
 #if canImport(UIKit)
 @MainActor
 func performInput(_ request: TKInputRequest) async -> TKInputResult {
@@ -224,6 +235,14 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
             if let result = performTapGestureAccessibilityActivation(
                 from: view,
                 within: collectionCell,
+                request: request,
+                action: action,
+                matchedView: view
+            ) {
+                return result
+            }
+            if let result = performCollectionCellTap(
+                collectionCell,
                 request: request,
                 action: action,
                 matchedView: view
@@ -707,6 +726,14 @@ func performAncestorTapActivation(from view: UIView, request: TKInputRequest, ac
         ) {
             return result
         }
+        if let result = performCollectionCellTap(
+            collectionCell,
+            request: request,
+            action: action,
+            matchedView: view
+        ) {
+            return result
+        }
         return unsupportedCollectionCellTap(
             collectionCell,
             request: request,
@@ -1007,6 +1034,97 @@ func performTableCellTap(
 }
 
 @MainActor
+func performCollectionCellTap(
+    _ cell: UICollectionViewCell,
+    request: TKInputRequest,
+    action: String,
+    matchedView: UIView
+) -> TKInputResult? {
+    guard let collectionView = nearestSuperview(of: cell, matching: UICollectionView.self),
+          let indexPath = collectionView.indexPath(for: cell) else {
+        return nil
+    }
+
+    let matched = tapMatchedContext(request, fallback: matchedView)
+    let originalActivationOID = oid(for: cell)
+    let originalActivationClassName = NSStringFromClass(type(of: cell))
+
+    guard collectionView.allowsSelection, cell.isUserInteractionEnabled else {
+        let message = "UICollectionViewCell ancestor is not selectable"
+        return TKInputResult.failure(
+            action: action,
+            message: message,
+            targetOID: originalActivationOID,
+            targetClassName: originalActivationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: originalActivationOID,
+            activationClassName: originalActivationClassName,
+            strategy: "ancestor-collection-cell-selection-blocked",
+            error: TKCLIErrorDetail(
+                code: "collection_cell_selection_blocked",
+                message: message,
+                hint: "The collection view has allowsSelection disabled or the cell is not user-interactive; enable selection in the app instead of bypassing delegate eligibility.",
+                suggestedCommands: ["triton schema --command act --json"]
+            )
+        )
+    }
+
+    if collectionView.delegate?.responds(to: #selector(UICollectionViewDelegate.collectionView(_:shouldSelectItemAt:))) == true {
+        guard collectionView.delegate?.collectionView?(collectionView, shouldSelectItemAt: indexPath) == true else {
+            let message = "UICollectionViewCell ancestor selection was denied by delegate"
+            return TKInputResult.failure(
+                action: action,
+                message: message,
+                targetOID: originalActivationOID,
+                targetClassName: originalActivationClassName,
+                matchedOID: matched.oid,
+                matchedClassName: matched.className,
+                activationOID: originalActivationOID,
+                activationClassName: originalActivationClassName,
+                strategy: "ancestor-collection-cell-selection-denied",
+                error: TKCLIErrorDetail(
+                    code: "collection_cell_selection_denied",
+                    message: message,
+                    hint: "The app delegate rejected collectionView(_:shouldSelectItemAt:) for the resolved index path; the cell stays unselected and no didSelectItemAt callback fires.",
+                    suggestedCommands: ["triton schema --command act --json"]
+                )
+            )
+        }
+    }
+
+    collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
+    guard collectionView.indexPathsForSelectedItems?.contains(indexPath) == true else {
+        let message = "UICollectionViewCell ancestor selection state did not update"
+        return TKInputResult.failure(
+            action: action,
+            message: message,
+            targetOID: originalActivationOID,
+            targetClassName: originalActivationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: originalActivationOID,
+            activationClassName: originalActivationClassName,
+            strategy: "ancestor-collection-cell-selection-failed"
+        )
+    }
+    collectionView.delegate?.collectionView?(collectionView, didSelectItemAt: indexPath)
+
+    return TKInputResult.success(
+        action: action,
+        message: "Selected UICollectionViewCell ancestor and invoked delegate callback",
+        targetOID: originalActivationOID,
+        targetClassName: originalActivationClassName,
+        matchedOID: matched.oid,
+        matchedClassName: matched.className,
+        activationOID: originalActivationOID,
+        activationClassName: originalActivationClassName,
+        strategy: "ancestor-collection-cell-selection",
+        verification: collectionCellSelectionVerificationBoundary()
+    )
+}
+
+@MainActor
 func unsupportedCollectionCellTap(
     _ cell: UICollectionViewCell,
     request: TKInputRequest,
@@ -1016,7 +1134,7 @@ func unsupportedCollectionCellTap(
     let matched = tapMatchedContext(request, fallback: matchedView)
     let activationOID = oid(for: cell)
     let activationClassName = NSStringFromClass(type(of: cell))
-    let message = "UICollectionViewCell selection is not a safe public embedded-runtime activation"
+    let message = "UICollectionViewCell could not be resolved for a safe public selection path"
     let retryCommand = collectionCellHostHIDRetryCommand(for: request, matchedOID: matched.oid)
     let verification = collectionCellHostHIDVerificationBoundary()
     return TKInputResult.unsupported(
@@ -1030,7 +1148,7 @@ func unsupportedCollectionCellTap(
         error: TKCLIErrorDetail(
             code: "unsupported_capability",
             message: message,
-            hint: "Retry explicitly with --allow-host-hid-fallback on a connected iOS Simulator, or use a public UIControl, accessibility-activatable gesture, or app-owned semantic DEBUG action.",
+            hint: "The cell is not attached to a resolvable UICollectionView index path, so no public selection API can be invoked safely. Retry explicitly with --allow-host-hid-fallback on a connected iOS Simulator, or use a public UIControl, accessibility-activatable gesture, or app-owned semantic DEBUG action.",
             suggestedCommands: (retryCommand.map { [$0] } ?? []) + [
                 "triton schema --command act --json",
             ] + verification.suggestedCommands
