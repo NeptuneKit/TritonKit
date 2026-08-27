@@ -391,8 +391,8 @@ struct TKAXUIKitTextTests {
         #expect(delegate.didSelectCount == 1)
     }
 
-    @Test("smart tap rejects collection view cell ancestor without selecting it")
-    func smartTapRejectsCollectionViewCellAncestorForLabel() async throws {
+    @Test("smart tap selects collection view cell ancestor through public delegate callbacks")
+    func smartTapSelectsCollectionViewCellAncestorForLabel() async throws {
         let window = makeVisibleTestWindow()
         defer {
             window.isHidden = true
@@ -423,18 +423,15 @@ struct TKAXUIKitTextTests {
         let result = try await performInputRequest(request)
         await Task.yield()
 
-        #expect(!result.ok)
-        #expect(result.error?.code == "unsupported_capability")
-        #expect(delegate.selectedIndexPath == nil)
-        #expect(delegate.didSelectCount == 0)
+        #expect(result.ok)
+        #expect(result.strategy == "ancestor-collection-cell-selection")
+        #expect(delegate.selectedIndexPath == indexPath)
+        #expect(delegate.didSelectCount == 1)
+        #expect(collectionView.indexPathsForSelectedItems == [indexPath])
         #expect(result.matchedOID == labelOID)
         #expect(result.activationOID == cellOID)
         #expect(result.targetOID == cellOID)
         #expect(result.activationClassName == NSStringFromClass(CollectionCell.self))
-        #expect(result.strategy == "ancestor-collection-cell-unsupported")
-        #expect(result.error?.suggestedCommands?.contains(
-            "triton act tap --ax-oid \(labelOID) --strategy smart --allow-host-hid-fallback --target <ios-simulator-runtime-target> --json"
-        ) == true)
         #expect(result.verification?.required == true)
         #expect(result.verification?.status == "not-verified")
         #expect(result.verification?.suggestedCommands.contains(
@@ -442,8 +439,8 @@ struct TKAXUIKitTextTests {
         ) == true)
     }
 
-    @Test("ancestor tap rejects collection view cell ancestor without selecting it")
-    func ancestorTapRejectsCollectionViewCellAncestorForLabel() async throws {
+    @Test("ancestor tap selects collection view cell ancestor through public delegate callbacks")
+    func ancestorTapSelectsCollectionViewCellAncestorForLabel() async throws {
         let window = makeVisibleTestWindow()
         defer {
             window.isHidden = true
@@ -474,19 +471,19 @@ struct TKAXUIKitTextTests {
         let result = try await performInputRequest(request)
         await Task.yield()
 
-        #expect(!result.ok)
-        #expect(result.error?.code == "unsupported_capability")
-        #expect(delegate.selectedIndexPath == nil)
-        #expect(delegate.didSelectCount == 0)
+        #expect(result.ok)
+        #expect(result.strategy == "ancestor-collection-cell-selection")
+        #expect(delegate.selectedIndexPath == indexPath)
+        #expect(delegate.didSelectCount == 1)
+        #expect(collectionView.indexPathsForSelectedItems == [indexPath])
         #expect(result.matchedOID == labelOID)
         #expect(result.activationOID == cellOID)
         #expect(result.targetOID == cellOID)
         #expect(result.activationClassName == NSStringFromClass(CollectionCell.self))
-        #expect(result.strategy == "ancestor-collection-cell-unsupported")
     }
 
-    @Test("coordinate tap rejects collection view cell without selecting it")
-    func coordinateTapRejectsCollectionViewCellContainingPoint() async throws {
+    @Test("coordinate tap selects collection view cell containing the point")
+    func coordinateTapSelectsCollectionViewCellContainingPoint() async throws {
         let window = makeVisibleTestWindow()
         defer {
             window.isHidden = true
@@ -506,6 +503,7 @@ struct TKAXUIKitTextTests {
 
         let indexPath = IndexPath(item: 0, section: 0)
         let cell = try #require(collectionView.cellForItem(at: indexPath) as? CollectionCell)
+        let cellOID = TKObjectRegistry.shared.register(cell)
         let cellFrame = cell.convert(cell.bounds, to: nil)
         let request = TKInputRequest.tap(
             x: Double(cellFrame.midX),
@@ -514,13 +512,14 @@ struct TKAXUIKitTextTests {
         let result = try await performInputRequest(request)
         await Task.yield()
 
-        #expect(!result.ok)
-        #expect(result.error?.code == "unsupported_capability")
-        #expect(delegate.selectedIndexPath == nil)
-        #expect(delegate.didSelectCount == 0)
-        #expect(result.activationOID == TKObjectRegistry.shared.register(cell))
+        #expect(result.ok)
+        #expect(result.strategy == "ancestor-collection-cell-selection")
+        #expect(delegate.selectedIndexPath == indexPath)
+        #expect(delegate.didSelectCount == 1)
+        #expect(collectionView.indexPathsForSelectedItems == [indexPath])
+        #expect(result.activationOID == cellOID)
         #expect(result.activationClassName == NSStringFromClass(CollectionCell.self))
-        #expect(result.strategy == "ancestor-collection-cell-unsupported")
+        #expect(result.verification?.required == true)
     }
 
     @Test("smart tap keeps a nearer UIControl action inside a collection cell")
@@ -612,8 +611,8 @@ struct TKAXUIKitTextTests {
         #expect(delegate.didSelectCount == 0)
     }
 
-    @Test("collection cell tap does not escape to an outer accessible gesture")
-    func collectionCellTapRejectsOuterAccessibleGesture() async throws {
+    @Test("collection cell selection does not escape to an outer accessible gesture")
+    func collectionCellSelectionDoesNotEscapeOuterAccessibleGesture() async throws {
         let window = makeVisibleTestWindow()
         defer {
             window.isHidden = true
@@ -656,13 +655,13 @@ struct TKAXUIKitTextTests {
         ))
         await Task.yield()
 
-        #expect(!smart.ok)
-        #expect(smart.error?.code == "unsupported_capability")
-        #expect(!exact.ok)
-        #expect(exact.error?.code == "unsupported_capability")
+        #expect(smart.ok)
+        #expect(smart.strategy == "ancestor-collection-cell-selection")
+        #expect(exact.ok)
+        #expect(exact.strategy == "ancestor-collection-cell-selection")
         #expect(outerGestureSurface.activationCount == 0)
-        #expect(delegate.selectedIndexPath == nil)
-        #expect(delegate.didSelectCount == 0)
+        #expect(delegate.selectedIndexPath == indexPath)
+        #expect(delegate.didSelectCount == 2)
     }
 
     @Test("smart tap reports gesture parent unsupported without private introspection")

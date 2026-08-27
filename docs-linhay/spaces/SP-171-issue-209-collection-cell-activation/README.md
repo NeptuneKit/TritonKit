@@ -53,4 +53,10 @@ git diff --check
 
 ## 当前状态
 
-- 执行中：space 已建立，等待实现。
+- 已完成实现与离线验证（影子 worktree patch 待主控合入真实 worktree）。
+- 运行时实现：`Sources/TritonKit/TKRuntimeInputActions.swift` 新增 `performCollectionCellTap`（约 1036–1128 行）与 `collectionCellSelectionVerificationBoundary()`（约 31–39 行）；`performTap` 与 `performAncestorTapActivation` 的 collection cell 分支在 nearer UIControl / accessibility gesture 之后接入该选择路径；`unsupportedCollectionCellTap` 语义收窄为"无法安全解析公开选择路径"时的 fail-closed fallback（strategy=`ancestor-collection-cell-unsupported`、`unsupported_capability` 保留，SP-162 host-HID opt-in 契约不变）。
+- 契约：eligibility 依次检查 `collectionView.allowsSelection` + `cell.isUserInteractionEnabled`（strategy=`ancestor-collection-cell-selection-blocked`，error.code=`collection_cell_selection_blocked`）与 delegate `collectionView(_:shouldSelectItemAt:)`（strategy=`ancestor-collection-cell-selection-denied`，error.code=`collection_cell_selection_denied`）；通过后 `selectItem(at:)` 选中解析出的 index path，校验 `indexPathsForSelectedItems` 后触发公开 `didSelectItemAt` 回调，返回 strategy=`ancestor-collection-cell-selection` + verification boundary（required=true / not-verified）。
+- CLI schema：`act` outputSemantics、act/tap 的 `--strategy`、`--allow-host-hid-fallback` 描述、`tapFailureCodes`（新增两个稳定 error code）已同步；两处发布 skills 参考文档（emulator-cli-takeover、dev-feedback）的 collection cell 契约描述已对齐。
+- 测试：新增 `Tests/TritonKitTests/TKCollectionCellActivationTests.swift`（文本/坐标选择、allowsSelection=false、shouldSelect 拒绝、helper 顺序、unresolvable fallback 共 6 场景）；`TKAXUIKitTextTests.swift` 三个 reject 场景改写为 select 契约断言，外层 gesture 逃逸防护测试改为断言走 cell selection 且不触发外层 gesture。
+- 验证：根包 `swift test` 编译通过、263 项非 UIKit 测试全过；CLI release build 通过；release `triton schema` 实测新 error codes 与语义文本已进 act/tap 契约；`git diff --check` 通过。
+- 已知限制：本机 SwiftPM（Testing Library 1902，macOS destination）不执行 `#if canImport(UIKit)` fixture（与既有 `TKAXUIKitTextTests`、`TKRuntimeInputActionsTests` 同等待遇，CI 亦仅跑 macOS `swift test`）；UIKit 路径的运行期回归需 iOS destination（`xcodebuild test`）或真实 Simulator 验收，超出本 space 离线边界。
