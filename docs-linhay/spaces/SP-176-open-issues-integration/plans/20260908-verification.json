@@ -1,0 +1,57 @@
+{
+  "date": "2026-09-08",
+  "baseline": "a56d7d6a",
+  "issues": [
+    207,
+    208,
+    209,
+    210,
+    211,
+    212
+  ],
+  "status": "merged-locally-awaiting-ci",
+  "tests": {
+    "cli": {
+      "passed": 977,
+      "suites": 76
+    },
+    "root": {
+      "passed": 269,
+      "suites": 34
+    },
+    "iosSimulatorUIKit": {
+      "passed": 46,
+      "failed": 0,
+      "osVersion": "26.5"
+    }
+  },
+  "liveXcode": {
+    "cacheState": "directory-exists",
+    "reuseVerification": "unknown",
+    "incrementalExpected": false,
+    "classification": "no-compilation-observed",
+    "logCoverage": "complete",
+    "compileHeaderCounts": 0,
+    "compactProgressBytes": 2705
+  },
+  "remoteChanged": false,
+  "limitations": [
+    "No private application regression",
+    "Harmony ArkWeb tested using offline HDC/CDP/JavaScript fixtures",
+    "No package version release"
+  ],
+  "remoteAuthorization": true,
+  "implementationCommits": {
+    "207": "ef73884f",
+    "208": "3a1b36a9",
+    "209": "5681f96e",
+    "210": "cce98e4d",
+    "211": "3f668601",
+    "212": "2916fcf5"
+  },
+  "integrationFixCommits": [
+    "d2a805a5",
+    "741747ab",
+    "247aa677"
+  ]
+}

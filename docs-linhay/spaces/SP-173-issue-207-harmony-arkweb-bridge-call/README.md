@@ -83,3 +83,7 @@ window.__tritonBridge = {
 
 - [OpenHarmony hdc 官方文档](https://raw.githubusercontent.com/openharmony/docs/master/en/application-dev/dfx/hdc.md)：设备支持 `localabstract`，删除转发需 localnode 和 remotenode 两个字段。
 - [Chrome DevTools Runtime.evaluate 官方协议](https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#method-evaluate)：返回的 `exceptionDetails` 与 remote object `result` 位于响应 `result` 内；CDP 协议错误在顶层 `error`。
+
+## 2026-09-08 主控集成验收
+
+2026-09-08 用户已授权提交、合入 main、推送和关闭 issue；各实现分支已串行合入本地 main，正在等待 push/CI 后远端收口。最终 CLI 全量 977/977、根包 269/269、专用 iOS 26.5 Simulator UIKit 46/46 通过；本地总门禁通过。UIKit 覆盖包含 collection selection、longPress fail-closed、富文本 run 和实际 trait；Harmony 为离线 CDP/HDC fixture，不声称真实 DevEco smoke。详细证据与失败→修补过程见 ../SP-176-open-issues-integration/plans/20260908-issue-audit.md。

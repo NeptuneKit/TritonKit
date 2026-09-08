@@ -27,3 +27,7 @@
 - 最终 focused 验证：`swift test --package-path CLI --scratch-path .build/issue-212-cli --jobs 4 --filter 'XcodeDiagnosticsTests|XcodeCacheObservationTests'` 返回 exit 0，26 tests / 2 suites 通过（0.320 秒；增量编译 59.86 秒）。源码冻结后的最终结果有效；此前一次构建因 helper 编译期间更新触发 Swift input-modified 保护而中止，已顺序重跑。日志保留在本 worktree 的 `.build-issue212-green.log`。
 - 额外纯 Swift 负载夹具正确统计 600,000 条 CompileC 日志头；完整原始日志 fixture 验证跨 64 KiB 读取，并覆盖 178 条 C 编译与 Swift 编译头。
 - 真实 Xcode/设备验证未执行：本 issue 通过纯日志夹具和注入 runner 验收元数据与摘要传递；真实工程的重新编译根因不在本修复承诺范围。
+
+## 2026-09-08 主控集成验收
+
+2026-09-08 用户已授权提交、合入 main、推送和关闭 issue；各实现分支已串行合入本地 main，正在等待 push/CI 后远端收口。最终 CLI 全量 977/977、根包 269/269、专用 iOS 26.5 Simulator UIKit 46/46 通过；本地总门禁通过。UIKit 覆盖包含 collection selection、longPress fail-closed、富文本 run 和实际 trait；Harmony 为离线 CDP/HDC fixture，不声称真实 DevEco smoke。详细证据与失败→修补过程见 ../SP-176-open-issues-integration/plans/20260908-issue-audit.md。

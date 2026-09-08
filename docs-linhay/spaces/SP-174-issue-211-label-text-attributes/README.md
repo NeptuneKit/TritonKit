@@ -19,3 +19,7 @@
 - UIKit 测试：UIView/CALayer 请求路径、子类、font/color 回退、动态 trait、混色与隐私。
 - 根 SwiftPM 全量测试；UIKit 专属测试需在 iOS Simulator 执行，macOS 通过不作为 UIKit 行为证据。
 - [实现与验证计划](plans/20260908-implementation.md)。
+
+## 2026-09-08 主控集成验收
+
+2026-09-08 用户已授权提交、合入 main、推送和关闭 issue；各实现分支已串行合入本地 main，正在等待 push/CI 后远端收口。最终 CLI 全量 977/977、根包 269/269、专用 iOS 26.5 Simulator UIKit 46/46 通过；本地总门禁通过。UIKit 覆盖包含 collection selection、longPress fail-closed、富文本 run 和实际 trait；Harmony 为离线 CDP/HDC fixture，不声称真实 DevEco smoke。详细证据与失败→修补过程见 ../SP-176-open-issues-integration/plans/20260908-issue-audit.md。

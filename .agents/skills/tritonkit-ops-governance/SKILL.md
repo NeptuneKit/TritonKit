@@ -63,6 +63,12 @@ metadata:
 - Release 脚本完成后，完成定义是 arm64 CLI 包、skill 包、checksum manifest、GitHub Release 和 Homebrew tap 已可用；x86_64 CLI 资产由 arm64 macOS runner 交叉编译后补，不阻塞 Apple Silicon 发布闭环。若额外开了 `gh-run-summary --watch` 观察 backfill，release 脚本完成后可停止本地 watcher，但不要取消当前有效发布的 GitHub Actions run；只有被新 tag 明确 supersede 的旧 run 才可取消。
 - Release tag 推送完成后再写 memory 时，只用 docs-only commit 推回 `main`，不要移动 tag；随后观察该 docs-only main CI 通过，作为整理收尾证据。
 
+## UIKit 与 CLI 验证证据
+
+- `#if canImport(UIKit)` 测试在 macOS `swift test` 不执行；涉及 UILabel/手势/cell 行为时应在独立 Simulator 的真实 iOS destination 运行，并记录实际测试数量，不把宏条件跳过算通过。
+- UIKit 的 key window、scene 与 registry 是进程共享状态。多个 `@Suite(.serialized)` 仍可跨 suite 并行；共享窗口的 fixtures 应置于同一外层串行 suite，先断言真实 window 可见及 runtime 选择一致，不为测试放松生产安全校验。动态色需要真实 trait 树；pinch 需要 viewForZooming；坐标应从实际 view 转到 window。
+- CLI 测试使用自定义 scratch 时显式设置 `TRITON_CLI_PATH` 为本次构建产物。含全局 stdout/stderr capture 的整套测试使用 `swift test --package-path CLI --no-parallel`，避免 Swift Testing 进度混入 JSON；异步 stdout/stderr reader 必须完成有界 drain 后才发布最终字节数。
+
 ## 文档与记忆
 
 - Space 编号索引：`docs-linhay/spaces/INDEX.md`；路线总览：`docs-linhay/spaces/README.md`。

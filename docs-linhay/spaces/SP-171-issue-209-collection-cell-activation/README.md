@@ -79,3 +79,7 @@ git diff --check
 - 新增 `Tests/TritonKitTests/TKUIKitWindowTestSupport.swift`：外层 `@Suite(.serialized) TKUIKitWindowTests` 统一包住 input / collection / AX 三 suite；保留独立源文件。UIKit 测试选择器改为 `TritonKitTests/TKUIKitWindowTests`。
 - window helper 优先选择 foregroundActive / foregroundInactive UIWindowScene；hostless runner 无 scene 时创建真实 UIWindow 并使用 runtime 既有 object registry 注册。helper 严格检查 visible 与 `keyWindows().first` identity；不能成立时立即停止该 fixture 并清理窗口，不改 runtime 安全检查、不 swizzle、不伪造 scene 状态。
 - 此次修改仅 test fixture；未修改 #211 fixture。macOS recovery focused 3 tests / 2 suites 通过、diff check 通过；修补后的真实 UIKit 复跑由主控继续串行执行，尚不能宣称 iOS 通过。
+
+## 2026-09-08 主控集成验收
+
+2026-09-08 用户已授权提交、合入 main、推送和关闭 issue；各实现分支已串行合入本地 main，正在等待 push/CI 后远端收口。最终 CLI 全量 977/977、根包 269/269、专用 iOS 26.5 Simulator UIKit 46/46 通过；本地总门禁通过。UIKit 覆盖包含 collection selection、longPress fail-closed、富文本 run 和实际 trait；Harmony 为离线 CDP/HDC fixture，不声称真实 DevEco smoke。详细证据与失败→修补过程见 ../SP-176-open-issues-integration/plans/20260908-issue-audit.md。

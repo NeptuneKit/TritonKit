@@ -68,3 +68,7 @@ git diff --check
 - 内联 xcresult 保留计数，限制文本/数组样本，并在 `xcresultNote` 说明截断。详情仍使用 `triton xcresult failures`。
 - schema contract 改为携带必填参数的真实 parser 成功断言，发现并修复 build 错误宣告 `--env/--arg`。相关 Xcode/xcresult 89 项测试串行通过。
 - [审计报告](REPORT.md) 记录红灯基线、修复与验证边界。真实大型 workspace 回归仍未执行；完整 CLI suite 与远端 issue 收口由主控完成。
+
+## 2026-09-08 主控集成验收
+
+2026-09-08 用户已授权提交、合入 main、推送和关闭 issue；各实现分支已串行合入本地 main，正在等待 push/CI 后远端收口。最终 CLI 全量 977/977、根包 269/269、专用 iOS 26.5 Simulator UIKit 46/46 通过；本地总门禁通过。UIKit 覆盖包含 collection selection、longPress fail-closed、富文本 run 和实际 trait；Harmony 为离线 CDP/HDC fixture，不声称真实 DevEco smoke。详细证据与失败→修补过程见 ../SP-176-open-issues-integration/plans/20260908-issue-audit.md。
