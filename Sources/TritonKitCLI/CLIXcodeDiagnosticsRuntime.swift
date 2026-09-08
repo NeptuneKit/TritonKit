@@ -2,12 +2,13 @@ import Foundation
 import TritonKitShared
 
 func xcodeDerivedDataCacheState(path: String, fileManager: FileManager = .default) -> XcodeDerivedDataCacheState {
-    let exists = fileManager.fileExists(atPath: path)
+    var isDirectory: ObjCBool = false
+    let exists = fileManager.fileExists(atPath: path, isDirectory: &isDirectory) && isDirectory.boolValue
     return XcodeDerivedDataCacheState(
         derivedDataPath: path,
         exists: exists,
-        cacheState: exists ? "warm" : "missing-derived-data",
-        incrementalExpected: true
+        cacheState: exists ? "directory-exists" : "missing-derived-data",
+        incrementalExpected: false
     )
 }
 

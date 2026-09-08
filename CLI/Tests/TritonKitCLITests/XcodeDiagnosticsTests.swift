@@ -5,8 +5,8 @@ import TritonKitShared
 
 @Suite
 struct XcodeDiagnosticsTests {
-    @Test("derived data cache state reports warm and missing paths without cleanup")
-    func derivedDataCacheStateReportsWarmAndMissingPaths() throws {
+    @Test("derived data cache state reports directory facts without promising reuse")
+    func derivedDataCacheStateReportsDirectoryAndMissingPaths() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("triton-xcode-cache-state-\(UUID().uuidString)", isDirectory: true)
         let warm = root.appendingPathComponent("DerivedData", isDirectory: true)
@@ -16,13 +16,13 @@ struct XcodeDiagnosticsTests {
         let warmState = xcodeDerivedDataCacheState(path: warm.path)
         #expect(warmState.derivedDataPath == warm.path)
         #expect(warmState.exists == true)
-        #expect(warmState.cacheState == "warm")
-        #expect(warmState.incrementalExpected == true)
+        #expect(warmState.cacheState == "directory-exists")
+        #expect(warmState.incrementalExpected == false)
 
         let missingState = xcodeDerivedDataCacheState(path: root.appendingPathComponent("Missing").path)
         #expect(missingState.exists == false)
         #expect(missingState.cacheState == "missing-derived-data")
-        #expect(missingState.incrementalExpected == true)
+        #expect(missingState.incrementalExpected == false)
     }
 
     @Test("xcodebuild stale DerivedData outside-root output is parsed into actionable diagnostics")
@@ -251,7 +251,7 @@ struct XcodeDiagnosticsTests {
         let empty = makeXcodeDerivedDataCacheInfo(path: warmPath.path)
         #expect(empty.path == warmPath.path)
         #expect(empty.exists == false)
-        #expect(empty.cacheState == "empty")
+        #expect(empty.cacheState == "missing-derived-data")
         #expect(empty.incrementalExpected == false)
         #expect(empty.cleanupPolicy == "preserve-by-default")
         #expect(empty.guidance.contains("cleanup should not delete"))
@@ -259,8 +259,8 @@ struct XcodeDiagnosticsTests {
         try FileManager.default.createDirectory(at: warmPath, withIntermediateDirectories: true)
         let warm = makeXcodeDerivedDataCacheInfo(path: warmPath.path)
         #expect(warm.exists)
-        #expect(warm.cacheState == "warm")
-        #expect(warm.incrementalExpected)
+        #expect(warm.cacheState == "directory-exists")
+        #expect(!warm.incrementalExpected)
     }
 
     @Test("xcode action summary carries DerivedData cache guidance")
@@ -268,8 +268,8 @@ struct XcodeDiagnosticsTests {
         let cache = TKXcodeDerivedDataCacheInfo(
             path: ".triton/DerivedData",
             exists: true,
-            cacheState: "warm",
-            incrementalExpected: true,
+            cacheState: "directory-exists",
+            incrementalExpected: false,
             cleanupPolicy: "preserve-by-default",
             guidance: "Keep .triton/DerivedData to preserve Xcode incremental build cache; cleanup should not delete it by default."
         )
@@ -295,8 +295,8 @@ struct XcodeDiagnosticsTests {
         let decoded = try JSONDecoder().decode(TKXcodeActionSummary.self, from: JSONEncoder().encode(summary))
 
         #expect(decoded.derivedDataCache?.path == ".triton/DerivedData")
-        #expect(decoded.derivedDataCache?.cacheState == "warm")
-        #expect(decoded.derivedDataCache?.incrementalExpected == true)
+        #expect(decoded.derivedDataCache?.cacheState == "directory-exists")
+        #expect(decoded.derivedDataCache?.incrementalExpected == false)
     }
 
     @Test("xcodebuild output diagnostics ignore generic build failures")
