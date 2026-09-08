@@ -167,6 +167,9 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if failureCode == "timeout" {
             categories.append("verify")
         }
+        if ["collection_cell_selection_blocked", "collection_cell_selection_denied"].contains(failureCode) {
+            categories.append("diagnose")
+        }
         if failureCode == "stale_node_alias" {
             categories.append(contentsOf: ["diagnose", "observe", "plan"])
         }

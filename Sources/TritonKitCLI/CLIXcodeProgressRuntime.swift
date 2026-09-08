@@ -1,4 +1,5 @@
 import ArgumentParser
+import Darwin
 import Foundation
 import TritonKitShared
 
@@ -290,11 +291,28 @@ func runStreamingHostCommand(
         }
     }
 
-    stdout.fileHandleForReading.readabilityHandler = { handle in
-        handleChunk(handle.availableData, stream: "stdout", log: stdoutLog, accumulator: stdoutAccumulator)
+    // Drain on the owning thread: a readability callback can still be emitting
+    // diagnostics after termination, racing the final snapshot and log closure.
+    for pipe in [stdout, stderr] {
+        let fd = pipe.fileHandleForReading.fileDescriptor
+        _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK)
     }
-    stderr.fileHandleForReading.readabilityHandler = { handle in
-        handleChunk(handle.availableData, stream: "stderr", log: stderrLog, accumulator: stderrAccumulator)
+    var readBuffer = [UInt8](repeating: 0, count: 64 * 1024)
+    func drainAvailable(_ pipe: Pipe, stream: String, log: FileHandle, accumulator: HostStreamAccumulator) {
+        // Bound each turn so a continuously writing child cannot starve timeout
+        // and heartbeat handling. The pipe's buffered tail fits in this budget.
+        for _ in 0..<16 {
+            let count = readBuffer.withUnsafeMutableBytes {
+                Darwin.read(pipe.fileHandleForReading.fileDescriptor, $0.baseAddress, $0.count)
+            }
+            if count < 0 && errno == EINTR { continue }
+            guard count > 0 else { return }
+            handleChunk(Data(readBuffer.prefix(count)), stream: stream, log: log, accumulator: accumulator)
+        }
+    }
+    func drainOutput() {
+        drainAvailable(stdout, stream: "stdout", log: stdoutLog, accumulator: stdoutAccumulator)
+        drainAvailable(stderr, stream: "stderr", log: stderrLog, accumulator: stderrAccumulator)
     }
 
     let semaphore = DispatchSemaphore(value: 0)
@@ -312,12 +330,15 @@ func runStreamingHostCommand(
     let heartbeatInterval = max(0.01, heartbeatInterval)
     var nextHeartbeat = Date().addingTimeInterval(heartbeatInterval)
     while true {
+        drainOutput()
         let now = Date()
         if now >= deadline {
             process.terminate()
-            _ = semaphore.wait(timeout: .now() + 2)
-            stdout.fileHandleForReading.readabilityHandler = nil
-            stderr.fileHandleForReading.readabilityHandler = nil
+            if semaphore.wait(timeout: .now() + 2) == .timedOut, process.isRunning {
+                kill(process.processIdentifier, SIGKILL)
+                _ = semaphore.wait(timeout: .now() + 2)
+            }
+            drainOutput()
             emitProgress(TKXcodeProgressEvent(
                 event: "\(event).summary",
                 message: "timeout after \(timeoutSeconds)s",
@@ -335,7 +356,7 @@ func runStreamingHostCommand(
                 stderrLogPath: artifactPaths.stderr.path
             )
         }
-        let waitSeconds = min(1.0, max(0.01, min(deadline.timeIntervalSince(now), nextHeartbeat.timeIntervalSince(now))))
+        let waitSeconds = min(0.01, max(0.01, min(deadline.timeIntervalSince(now), nextHeartbeat.timeIntervalSince(now))))
         if semaphore.wait(timeout: .now() + waitSeconds) == .success {
             break
         }
@@ -354,10 +375,7 @@ func runStreamingHostCommand(
         }
     }
 
-    stdout.fileHandleForReading.readabilityHandler = nil
-    stderr.fileHandleForReading.readabilityHandler = nil
-    handleChunk(stdout.fileHandleForReading.availableData, stream: "stdout", log: stdoutLog, accumulator: stdoutAccumulator)
-    handleChunk(stderr.fileHandleForReading.availableData, stream: "stderr", log: stderrLog, accumulator: stderrAccumulator)
+    drainOutput()
     if progress == .compact {
         emitCompactDiagnostics(compactDiagnostics.flush())
     }

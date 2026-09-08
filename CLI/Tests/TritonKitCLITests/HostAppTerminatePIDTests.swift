@@ -61,6 +61,7 @@ struct HostAppTerminatePIDTests {
         #expect(terminate.failureCodes == [
             "app_terminate_failed",
             "app_terminate_pid_resolution_unavailable",
+            "target_lease_conflict",
         ])
     }
 

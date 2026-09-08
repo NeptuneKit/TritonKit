@@ -797,7 +797,11 @@ func runXcodeTest(
     onlyTesting: [String] = [],
     jsonl: Bool,
     timeout: Double? = nil,
-    statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) }
+    progress: XcodeProgressMode = .compact,
+    statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) },
+    hostCommandRunner: (TKHostCommand, String, Bool, XcodeProgressMode) throws -> (HostProcessResult, Int) = { command, event, jsonl, progress in
+        try runXcodeHostCommand(command, event: event, jsonl: jsonl, allowNonZeroExit: true, progress: progress)
+    }
 ) throws -> TKXcodeActionSummary {
     let onlyTesting = try validateXcodeOnlyTesting(onlyTesting)
     let executionInvocation = try preparedXcodeInvocationForExecution(invocation)
@@ -815,7 +819,7 @@ func runXcodeTest(
         onlyTesting: onlyTesting,
         redactDestination: executionInvocation.redactsXcodebuildDestination
     ).withTimeout(timeout)
-    let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.test", jsonl: jsonl, allowNonZeroExit: true)
+    let (result, durationMs) = try hostCommandRunner(command, "xcode.test", jsonl, progress)
     let diagnostics = xcodeBuildOutputDiagnostics(result, redacting: command)
     let ok = result.exitCode == 0
     let workspaceFilter = xcodeWorkspaceFilter(for: executionInvocation)
@@ -1481,120 +1485,4 @@ private func xcodeBuildWasInterrupted(_ result: HostProcessResult) -> Bool {
     let hasFailureMarker = combined.contains("build failed")
         || combined.contains("test failed")
     return hasInterruptedMarker || (result.exitCode == 15 && !hasFailureMarker)
-}
-
-struct XcodeTestResultBundleDetails {
-    let summary: TKXcresultSummaryMetrics?
-    let topFailures: [TKXcresultFailureRecord]?
-    let note: String?
-}
-
-func xcodeTestResultBundleDetails(
-    resultBundlePath: String?,
-    maximumFailures: Int = 3,
-    redacting command: TKHostCommand? = nil,
-    runCommand: (TKHostCommand) throws -> HostProcessResult = { command in
-        try runHostCommand(command, maximumOutputBytes: xcresultInlineJSONLimit)
-    }
-) -> XcodeTestResultBundleDetails {
-    guard let resultBundlePath, !resultBundlePath.isEmpty else {
-        return XcodeTestResultBundleDetails(summary: nil, topFailures: nil, note: nil)
-    }
-
-    do {
-        let summaryResult = try runCommand(TKXcresultCommand.summary(path: resultBundlePath))
-        let testsResult = try runCommand(TKXcresultCommand.tests(path: resultBundlePath))
-        let output = try makeHostXcresultFailuresOutput(
-            path: resultBundlePath,
-            includeSensitive: false,
-            summaryResult: summaryResult,
-            testsResult: testsResult
-        )
-        let exactValues = command.map { xcodeExecutionSensitiveValues(command: $0) } ?? []
-        let publicSummary = exactValues.isEmpty
-            ? output.summary
-            : TKXcresultRedaction.redact(output.summary, exactValues: exactValues)
-        let publicFailures = exactValues.isEmpty
-            ? output.failures
-            : TKXcresultRedaction.redact(output.failures, exactValues: exactValues)
-        let topFailures = Array(publicFailures.prefix(maximumFailures))
-        let note = publicFailures.count > maximumFailures
-            ? "Showing top \(maximumFailures) of \(publicFailures.count) failures. Use `triton xcresult failures --path <result.xcresult> --json` for the full list."
-            : nil
-        return XcodeTestResultBundleDetails(
-            summary: publicSummary,
-            topFailures: topFailures,
-            note: note
-        )
-    } catch {
-        let errorDescription = String(describing: error)
-        let publicErrorDescription = command.map {
-            redactedXcodePublicText(errorDescription, command: $0)
-        } ?? TKXcresultRedaction.redact(errorDescription)
-        return XcodeTestResultBundleDetails(
-            summary: nil,
-            topFailures: [],
-            note: "Result bundle was not parsed for inline failures: \(publicErrorDescription)"
-        )
-    }
-}
-
-func resolveBuiltAppProduct(
-    invocation: ResolvedXcodeInvocation,
-    timeout: Double? = nil,
-    jsonl: Bool = false,
-    event: String = "xcode.settings.resolve"
-) throws -> TKXcodeBuiltAppProduct {
-    let executionInvocation = try preparedXcodeInvocationForExecution(invocation)
-    let command = TKXcodebuildCommand.showBuildSettings(
-        workspace: executionInvocation.workspace,
-        project: executionInvocation.project,
-        package: executionInvocation.package,
-        scheme: executionInvocation.scheme,
-        configuration: executionInvocation.configuration,
-        sdk: executionInvocation.sdk,
-        destination: executionInvocation.xcodebuildDestination,
-        derivedDataPath: executionInvocation.derivedDataPath,
-        buildSettings: executionInvocation.buildSettings,
-        redactDestination: executionInvocation.redactsXcodebuildDestination
-    ).withTimeout(timeout)
-    let result: HostProcessResult
-    if jsonl {
-        result = try runXcodeHostCommand(command, event: event, jsonl: true).0
-    } else {
-        result = try runHostCommand(command)
-    }
-    do {
-        return try TKXcodeBuildSettingsParser.resolveBuiltApp(result.stdoutData)
-    } catch {
-        throw XcodeWorkflowError.appPathUnresolved
-    }
-}
-
-func bundleIdentifier(appPath: String) throws -> String {
-    let infoURL = URL(fileURLWithPath: appPath).appendingPathComponent("Info.plist")
-    let data = try Data(contentsOf: infoURL)
-    let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
-    guard let dictionary = plist as? [String: Any],
-          let bundleID = dictionary["CFBundleIdentifier"] as? String,
-          !bundleID.isEmpty else {
-        throw XcodeWorkflowError.bundleIDUnresolved(appPath)
-    }
-    return bundleID
-}
-
-func printXcodeSummary(_ summary: TKXcodeActionSummary, jsonl: Bool, outputFormat: ClientOutputFormat) throws {
-    if jsonl || outputFormat == .json {
-        if jsonl {
-            print(try encodeCompactJSON(summary))
-        } else {
-            print(try encodeJSON(summary))
-        }
-    } else {
-        if let appPath = summary.appPath {
-            print(appPath)
-        } else {
-            print(summary.action)
-        }
-    }
 }

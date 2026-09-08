@@ -354,6 +354,7 @@ struct XcodeTest: AsyncParsableCommand {
     @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(help: "Result bundle output path") var resultBundle: String?
     @Option(name: .customLong("only-testing"), help: "Focused XCTest identifier in target/class-or-method form; repeat to pass each selection to xcodebuild") var onlyTesting: [String] = []
+    @Option(help: "Progress verbosity: compact keeps lifecycle, heartbeat, bounded diagnostics, artifacts, and final summary; full streams stdout/stderr chunks") var progress: XcodeProgressMode = .compact
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Emit JSON Lines progress") var jsonl = false
     @Flag(help: "Alias for --format json") var json = false
@@ -381,7 +382,8 @@ struct XcodeTest: AsyncParsableCommand {
                 resultBundlePath: resultBundle,
                 onlyTesting: resolvedOnlyTesting,
                 jsonl: jsonl,
-                timeout: timeout
+                timeout: timeout,
+                progress: progress
             )
             try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
             if !summary.ok {

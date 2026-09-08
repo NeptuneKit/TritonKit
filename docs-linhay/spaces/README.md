@@ -21,6 +21,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 执行 | [SP-170-issue-210-xcode-test-bounded-jsonl](./SP-170-issue-210-xcode-test-bounded-jsonl/README.md) | #210：xcode test 有界 JSONL 与 schema --progress 作用域修复 进行中 | 实现 + focused tests 进行中 |
 | 已关闭 | [SP-169-issue-206-app-marketing-version](./SP-169-issue-206-app-marketing-version/README.md) | #206：iOS `app info`/`app list` 已暴露无歧义的 `marketingVersion`（CFBundleShortVersionString）与 `buildNumber`（CFBundleVersion），legacy `version` 保留并明确映射到 build number；schema `host.app-info`/`host.app-list` 已挂载 | 已随 CI `31791782001` 关闭；真实 Simulator 风险保留 |
 | 已关闭 | [SP-168-issue-205-target-leases](./SP-168-issue-205-target-leases/README.md) | #205：并行 agent 流程现可用 opt-in 目标租约（acquire/status/release/takeover、带界 TTL、owner 标签、`target_lease_conflict` 稳定信封）；`app open-url|launch|terminate` 与 `act tap` 支持 `--lease` 门禁，只读观察豁免，无租约时行为不变 | 已随 CI `31791782001` 关闭；真实 Simulator 风险保留 |
 | 已关闭 | [SP-167-issue-204-ios-webview-form-input](./SP-167-issue-204-ios-webview-form-input/README.md) | #204：iOS WKWebView 表单输入契约 —— snapshot 发现 contenteditable/textarea 表单目标、`webview focus/type/set-text` 与 `act focus/set-text/type --webview` 一等公民焦点切换、input/change dispatch 证据与 value 后置条件、未 opt-in 时 typed unsupported + host-HID fallback | 已随 CI `31791782001` 关闭；真实 WebView/Simulator 验证留待设备 |

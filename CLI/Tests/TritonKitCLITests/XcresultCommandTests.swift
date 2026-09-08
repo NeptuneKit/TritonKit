@@ -20,6 +20,29 @@ struct XcresultCommandTests {
         #expect(details.note == nil)
     }
 
+    @Test("inline result bounds long failure messages and summary text")
+    func inlineResultBoundsLongText() throws {
+        let longText = String(repeating: "failure detail ", count: 20_000)
+        let details = xcodeTestResultBundleDetails(resultBundlePath: "/tmp/App.xcresult") { command in
+            if command.arguments.contains("summary") {
+                let statistics = (0..<100).map { _ in ["title": String(repeating: "stat ", count: 400), "subtitle": "value"] }
+                var summary = try #require(JSONSerialization.jsonObject(with: Data(validSummaryJSON.utf8)) as? [String: Any])
+                summary["environmentDescription"] = longText
+                summary["statistics"] = statistics
+                return hostProcessResult(stdout: String(decoding: try JSONSerialization.data(withJSONObject: summary), as: UTF8.self))
+            }
+            return hostProcessResult(stdout: validTestsJSON.replacingOccurrences(of: "XCTAssertEqual failed: 1 is not equal to 2", with: longText))
+        }
+        #expect(details.summary?.totalTestCount == 3)
+        #expect(details.summary?.failedTests == 1)
+        #expect(details.summary?.status == "failed")
+        #expect(details.summary?.result == "Failed")
+        #expect(try #require(details.summary?.statistics).count <= 8)
+        #expect(try #require(details.summary?.environmentDescription).utf8.count < 2100)
+        #expect(try #require(details.topFailures?.first?.message).utf8.count < 2100)
+        #expect(details.note?.contains("truncated") == true)
+    }
+
     @Test("xcresult summary output maps invalid JSON to parse failed")
     func summaryOutputMapsInvalidJSONToParseFailed() throws {
         let result = hostProcessResult(stdout: #"{"unexpected":true}"#)
