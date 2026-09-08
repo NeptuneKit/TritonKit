@@ -12,7 +12,7 @@ extension TritonKitRequestHandler {
         case .hierarchyDetails:
             return handleHierarchyDetails(message)
         case .allAttrGroups:
-            return handleAllAttrGroups(message)
+            return await handleAllAttrGroups(message)
         case .modifyAttribute:
             return await handleModifyAttribute(message)
         case .invokeMethod:
@@ -28,15 +28,22 @@ extension TritonKitRequestHandler {
         TKMessage(id: message.id, type: .hierarchyDetails, payload: try? JSONEncoder().encode([TKDisplayItemDetail]()))
     }
 
-    func handleAllAttrGroups(_ message: TKMessage) -> TKMessage? {
+    func handleAllAttrGroups(_ message: TKMessage) async -> TKMessage? {
         #if canImport(UIKit)
-        guard let data = message.payload,
-              let oid = try? JSONDecoder().decode(UInt.self, from: data),
-              let object = TKObjectRegistry.shared.object(for: oid) as? CALayer else {
-            return TKMessage(id: message.id, type: .allAttrGroups,
-                payload: try? JSONEncoder().encode([TKAttributesGroup]()))
+        let groups: [TKAttributesGroup] = await MainActor.run {
+            guard let data = message.payload,
+                  let oid = try? JSONDecoder().decode(UInt.self, from: data),
+                  let object = TKObjectRegistry.shared.object(for: oid) else { return [] }
+            let layer: CALayer
+            if let view = object as? UIView {
+                layer = view.layer
+            } else if let objectLayer = object as? CALayer {
+                layer = objectLayer
+            } else {
+                return []
+            }
+            return TKAttributeGroupsBuilder.build(for: layer)
         }
-        let groups = TKAttributeGroupsBuilder.build(for: object)
         return TKMessage(id: message.id, type: .allAttrGroups, payload: try? JSONEncoder().encode(groups))
         #else
         return TKMessage(id: message.id, type: .allAttrGroups,
