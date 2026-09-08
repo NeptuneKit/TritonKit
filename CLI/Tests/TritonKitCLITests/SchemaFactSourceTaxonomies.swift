@@ -347,6 +347,8 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "plan", "act"]
     case "javascript_error", "webview_element_not_interactable", "webview_form_input_not_opted_in", "webview_form_target_not_found":
         return ["diagnose", "observe", "archive"]
+    case "collection_cell_selection_blocked", "collection_cell_selection_denied":
+        return ["diagnose"]
     case "stale_node_alias":
         return ["diagnose", "observe", "plan"]
     case "runtime_not_connected":
@@ -463,6 +465,9 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
 
 func schemaArtifactTaxonomy() -> Set<String> {
     [
+        "archive",
+        "export-directory",
+        "ipa",
         "app-container",
         "app-map",
         "app-map-viewer-html",
