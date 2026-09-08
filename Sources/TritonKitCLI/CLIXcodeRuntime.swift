@@ -18,10 +18,10 @@ func makeXcodeDerivedDataCacheInfo(path: String?) -> TKXcodeDerivedDataCacheInfo
     return TKXcodeDerivedDataCacheInfo(
         path: resolvedPath,
         exists: exists,
-        cacheState: exists ? "warm" : "empty",
-        incrementalExpected: exists,
+        cacheState: exists ? "directory-exists" : "missing-derived-data",
+        incrementalExpected: false,
         cleanupPolicy: "preserve-by-default",
-        guidance: "Keep \(resolvedPath) to preserve Xcode incremental build cache; cleanup should not delete it by default."
+        guidance: "Keep \(resolvedPath) to preserve potential Xcode cache; cleanup should not delete it by default. Directory existence does not verify reuse; incrementalExpected false means no verified expectation."
     )
 }
 
@@ -767,7 +767,7 @@ func runXcodeBuild(
         sdk: executionInvocation.sdk,
         destination: executionInvocation.destination,
         derivedDataPath: executionInvocation.derivedDataPath,
-        derivedDataCache: executionInvocation.derivedDataCache,
+        derivedDataCache: observedXcodeDerivedDataCache(executionInvocation.derivedDataCache, result: result),
         simulatorUDID: executionInvocation.simulatorUDID,
         device: executionInvocation.device,
         durationMs: durationMs,
@@ -850,7 +850,7 @@ func runXcodeTest(
         sdk: executionInvocation.sdk,
         destination: executionInvocation.destination,
         derivedDataPath: executionInvocation.derivedDataPath,
-        derivedDataCache: executionInvocation.derivedDataCache,
+        derivedDataCache: observedXcodeDerivedDataCache(executionInvocation.derivedDataCache, result: result),
         resultBundlePath: resultBundlePath,
         onlyTesting: onlyTesting.isEmpty ? nil : onlyTesting,
         simulatorUDID: executionInvocation.simulatorUDID,
@@ -929,7 +929,7 @@ func runXcodeArchive(
         sdk: executionInvocation.sdk,
         destination: executionInvocation.destination,
         derivedDataPath: executionInvocation.derivedDataPath,
-        derivedDataCache: executionInvocation.derivedDataCache,
+        derivedDataCache: observedXcodeDerivedDataCache(executionInvocation.derivedDataCache, result: result),
         appPath: nil,
         bundleID: nil,
         resultBundlePath: nil,
@@ -1068,7 +1068,7 @@ func runXcodeBuildInstallLaunch(
             sdk: invocation.sdk,
             destination: invocation.destination,
             derivedDataPath: invocation.derivedDataPath,
-            derivedDataCache: invocation.derivedDataCache,
+            derivedDataCache: buildSummary.derivedDataCache ?? invocation.derivedDataCache,
             simulatorUDID: simulator,
             device: invocation.device,
             durationMs: buildSummary.durationMs,
@@ -1116,7 +1116,7 @@ func runXcodeBuildInstallLaunch(
         sdk: invocation.sdk,
         destination: invocation.destination,
         derivedDataPath: invocation.derivedDataPath,
-        derivedDataCache: invocation.derivedDataCache,
+        derivedDataCache: buildSummary.derivedDataCache ?? invocation.derivedDataCache,
         appPath: product.appPath,
         bundleID: bundleID,
         simulatorUDID: simulator,
@@ -1227,7 +1227,7 @@ func runXcodeRealDeviceBuildInstallLaunch(
         sdk: executionInvocation.sdk,
         destination: executionInvocation.destination,
         derivedDataPath: executionInvocation.derivedDataPath,
-        derivedDataCache: executionInvocation.derivedDataCache,
+        derivedDataCache: buildSummary.derivedDataCache ?? executionInvocation.derivedDataCache,
         appPath: product.appPath,
         bundleID: bundleID,
         simulatorUDID: nil,

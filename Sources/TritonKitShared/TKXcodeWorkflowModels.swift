@@ -38,6 +38,9 @@ public struct TKXcodeDerivedDataCacheInfo: Codable, Equatable {
     public let incrementalExpected: Bool
     public let cleanupPolicy: String
     public let guidance: String
+    /// Directory presence does not verify Xcode incremental reuse.
+    public let reuseVerification: String?
+    public let observedBuild: TKXcodeBuildObservation?
 
     public init(
         path: String,
@@ -45,7 +48,9 @@ public struct TKXcodeDerivedDataCacheInfo: Codable, Equatable {
         cacheState: String,
         incrementalExpected: Bool,
         cleanupPolicy: String,
-        guidance: String
+        guidance: String,
+        reuseVerification: String? = "unknown",
+        observedBuild: TKXcodeBuildObservation? = nil
     ) {
         self.path = path
         self.exists = exists
@@ -53,6 +58,8 @@ public struct TKXcodeDerivedDataCacheInfo: Codable, Equatable {
         self.incrementalExpected = incrementalExpected
         self.cleanupPolicy = cleanupPolicy
         self.guidance = guidance
+        self.reuseVerification = reuseVerification
+        self.observedBuild = observedBuild
     }
 }
 
