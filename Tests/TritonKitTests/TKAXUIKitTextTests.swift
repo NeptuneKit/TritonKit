@@ -5,6 +5,7 @@ import TritonKitShared
 #if canImport(UIKit)
 import UIKit
 
+extension TKUIKitWindowTests {
 @MainActor
 @Suite(.serialized)
 struct TKAXUIKitTextTests {
@@ -105,8 +106,8 @@ struct TKAXUIKitTextTests {
     }
 
     @Test("AX export expands visible collection view text through deep UIKit wrappers")
-    func collectionViewTextIsDiscoverable() {
-        let window = makeVisibleTestWindow()
+    func collectionViewTextIsDiscoverable() throws {
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -144,7 +145,7 @@ struct TKAXUIKitTextTests {
 
     @Test("coordinate tap focuses non-control UIKeyInput editor views")
     func coordinateTapFocusesCustomEditorView() async throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -166,7 +167,7 @@ struct TKAXUIKitTextTests {
 
     @Test("smart tap activates parent UIControl for matched label nodes")
     func smartTapActivatesParentControlForLabel() async throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -200,7 +201,7 @@ struct TKAXUIKitTextTests {
 
     @Test("smart tap selects table view cell ancestor for matched label nodes")
     func smartTapSelectsTableViewCellAncestorForLabel() async throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -239,7 +240,7 @@ struct TKAXUIKitTextTests {
 
     @Test("ancestor tap selects table view cell ancestor for matched label nodes")
     func ancestorTapSelectsTableViewCellAncestorForLabel() async throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -277,7 +278,7 @@ struct TKAXUIKitTextTests {
 
     @Test("table cell helper completes selection and delegate callback before success")
     func tableCellHelperCompletesSelectionAndCallbackBeforeSuccess() throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer { window.isHidden = true }
         let tableView = UITableView(frame: CGRect(x: 0, y: 80, width: 390, height: 240))
         let dataSource = TableDataSource()
@@ -307,7 +308,7 @@ struct TKAXUIKitTextTests {
 
     @Test("table cell helper honors willSelect redirect")
     func tableCellHelperHonorsWillSelectRedirect() throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer { window.isHidden = true }
         let tableView = UITableView(frame: CGRect(x: 0, y: 80, width: 390, height: 240))
         let dataSource = TableDataSource()
@@ -337,7 +338,7 @@ struct TKAXUIKitTextTests {
 
     @Test("table cell helper reports willSelect denial without callback")
     func tableCellHelperReportsWillSelectDenial() throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer { window.isHidden = true }
         let tableView = UITableView(frame: CGRect(x: 0, y: 80, width: 390, height: 240))
         let dataSource = TableDataSource()
@@ -366,7 +367,7 @@ struct TKAXUIKitTextTests {
 
     @Test("coordinate table cell tap completes callback before returning")
     func coordinateTableCellTapCompletesCallbackBeforeReturning() throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer { window.isHidden = true }
         let tableView = UITableView(frame: CGRect(x: 0, y: 80, width: 390, height: 240))
         let dataSource = TableDataSource()
@@ -393,7 +394,7 @@ struct TKAXUIKitTextTests {
 
     @Test("smart tap selects collection view cell ancestor through public delegate callbacks")
     func smartTapSelectsCollectionViewCellAncestorForLabel() async throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -441,7 +442,7 @@ struct TKAXUIKitTextTests {
 
     @Test("ancestor tap selects collection view cell ancestor through public delegate callbacks")
     func ancestorTapSelectsCollectionViewCellAncestorForLabel() async throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -484,7 +485,7 @@ struct TKAXUIKitTextTests {
 
     @Test("coordinate tap selects collection view cell containing the point")
     func coordinateTapSelectsCollectionViewCellContainingPoint() async throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -524,7 +525,7 @@ struct TKAXUIKitTextTests {
 
     @Test("smart tap keeps a nearer UIControl action inside a collection cell")
     func smartTapKeepsNearerControlActionInsideCollectionCell() async throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -569,7 +570,7 @@ struct TKAXUIKitTextTests {
 
     @Test("smart tap keeps accessibility activation for a nearer gesture inside a collection cell")
     func smartTapKeepsAccessibleGestureInsideCollectionCell() async throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -613,7 +614,7 @@ struct TKAXUIKitTextTests {
 
     @Test("collection cell selection does not escape to an outer accessible gesture")
     func collectionCellSelectionDoesNotEscapeOuterAccessibleGesture() async throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -666,7 +667,7 @@ struct TKAXUIKitTextTests {
 
     @Test("smart tap reports gesture parent unsupported without private introspection")
     func smartTapReportsGestureParentUnsupportedWithoutPrivateIntrospection() async throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -706,7 +707,7 @@ struct TKAXUIKitTextTests {
 
     @Test("exact tap preserves matched metadata and exact strategy")
     func exactTapPreservesMatchedMetadataAndExactStrategy() async throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -740,7 +741,7 @@ struct TKAXUIKitTextTests {
 
     @Test("horizontal swipe inside nested vertical scroll view selects horizontal pager ancestor")
     func horizontalSwipeInsideNestedVerticalScrollViewSelectsHorizontalAncestor() async throws {
-        let window = makeVisibleTestWindow()
+        let window = try makeVisibleTestWindow()
         defer {
             window.isHidden = true
         }
@@ -786,19 +787,9 @@ struct TKAXUIKitTextTests {
         return try JSONDecoder().decode(TKInputResult.self, from: payload)
     }
 
-    private func makeVisibleTestWindow() -> UIWindow {
-        if let scene = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .first {
-            let window = UIWindow(windowScene: scene)
-            window.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
-            window.makeKeyAndVisible()
-            return window
-        }
-
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
-        window.makeKeyAndVisible()
-        return window
+    private func makeVisibleTestWindow() throws -> UIWindow {
+        try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
     }
+}
 }
 #endif

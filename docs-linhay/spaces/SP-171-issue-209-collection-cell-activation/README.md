@@ -60,3 +60,22 @@ git diff --check
 - 测试：新增 `Tests/TritonKitTests/TKCollectionCellActivationTests.swift`（文本/坐标选择、allowsSelection=false、shouldSelect 拒绝、helper 顺序、unresolvable fallback 共 6 场景）；`TKAXUIKitTextTests.swift` 三个 reject 场景改写为 select 契约断言，外层 gesture 逃逸防护测试改为断言走 cell selection 且不触发外层 gesture。
 - 验证：根包 `swift test` 编译通过、263 项非 UIKit 测试全过；CLI release build 通过；release `triton schema` 实测新 error codes 与语义文本已进 act/tap 契约；`git diff --check` 通过。
 - 已知限制：本机 SwiftPM（Testing Library 1902，macOS destination）不执行 `#if canImport(UIKit)` fixture（与既有 `TKAXUIKitTextTests`、`TKRuntimeInputActionsTests` 同等待遇，CI 亦仅跑 macOS `swift test`）；UIKit 路径的运行期回归需 iOS destination（`xcodebuild test`）或真实 Simulator 验收，超出本 space 离线边界。
+
+
+## 2026-09-08 只读审计与后续修补
+
+- Requested：文本/坐标命中 owning collection cell，尊重 selection eligibility，公开 selectItem + didSelect 回调，要求独立业务后置验证。
+- Observed / Evidence：审计提交 `5681f96e`；实现满足 `allowsSelection` / `isUserInteractionEnabled` / delegate `shouldSelectItemAt` → `selectItem` → 验证 selection state → `didSelectItemAt` 顺序。成功输出 `verification.required=true`、`status=not-verified`，未宣称业务导航完成。
+- Gaps：`TKCollectionCellActivationTests` 的 5 个 harness 用 `_` 丢弃弱引用 dataSource，可能在 iOS 测试执行前释放；CLI `WebViewRouteTests` 仍断言 collection selection 不受支持，与新 schema 矛盾。历史记录只有 macOS root tests / CLI release build，不能证明 UIKit fixture 或 CLI 全量测试通过。
+- Fixes made：在 SP-172 串行后继 worktree 保持 dataSource 至 fixture 结束；更新过期 schema 断言，覆盖 eligibility failure code 和 verification boundary。为遵守单 Swift 文件 1500 行规则，将 collection 专属 helper 机械搬至 `Sources/TritonKit/TKRuntimeCollectionActions.swift`，不改变选择逻辑。
+- Remaining risk：UIKit fixture 仍需在 iOS destination 运行；真实私有业务后置条件须由调用方以 wait/verify/evidence 验证。本轮未触碰 Simulator、真实设备或私有 App。
+
+- 后继离线验证：根包 265 tests / 33 suites 通过（macOS）；CLI `EmbeddedGestureSchemaTests|WebViewRouteTests` 20 tests / 2 suites 通过。旧 collection schema fixture 在修复前实际报 3 个反向断言失败，修复后通过；同时补齐 act 顶层 collection selection blocked/denied failure codes。`git diff --check` 通过；公共 docs check 被旧索引缺少 SP-170 阻塞，由主控统一修复。
+
+
+## UIKit 集成复跑后的 fixture 修补（2026-09-08）
+
+- 主控在独立 iOS 26.5 Simulator 合跑 4 suites，46 tests 中 19 pass / 27 fail。原始 stdout 显示三个 window suite 同时启动；大量失败为 `stale_runtime_hierarchy: attached to an inactive window` / `No key window`，部分坐标命中其他 fixture。每个 suite 单独 `.serialized` 无法避免跨 suite async 期间抢 keyWindow。
+- 新增 `Tests/TritonKitTests/TKUIKitWindowTestSupport.swift`：外层 `@Suite(.serialized) TKUIKitWindowTests` 统一包住 input / collection / AX 三 suite；保留独立源文件。UIKit 测试选择器改为 `TritonKitTests/TKUIKitWindowTests`。
+- window helper 优先选择 foregroundActive / foregroundInactive UIWindowScene；hostless runner 无 scene 时创建真实 UIWindow 并使用 runtime 既有 object registry 注册。helper 严格检查 visible 与 `keyWindows().first` identity；不能成立时立即停止该 fixture 并清理窗口，不改 runtime 安全检查、不 swizzle、不伪造 scene 状态。
+- 此次修改仅 test fixture；未修改 #211 fixture。macOS recovery focused 3 tests / 2 suites 通过、diff check 通过；修补后的真实 UIKit 复跑由主控继续串行执行，尚不能宣称 iOS 通过。

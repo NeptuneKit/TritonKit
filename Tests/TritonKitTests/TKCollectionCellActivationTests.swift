@@ -8,6 +8,7 @@ import UIKit
 /// Issue #209 BDD fixtures: a private-app style custom UICollectionViewCell that
 /// must be activated through the same public-selection contract as
 /// `ancestor-table-cell-selection` (eligibility → selectItem → didSelectItemAt).
+extension TKUIKitWindowTests {
 @MainActor
 @Suite(.serialized)
 struct TKCollectionCellActivationTests {
@@ -66,8 +67,8 @@ struct TKCollectionCellActivationTests {
 
     private func makeCollectionViewWindow(
         allowsSelection: Bool = true
-    ) -> (window: UIWindow, collectionView: UICollectionView, dataSource: TwoItemDataSource, delegate: SelectionDelegateRecorder) {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+    ) throws -> (window: UIWindow, collectionView: UICollectionView, dataSource: TwoItemDataSource, delegate: SelectionDelegateRecorder) {
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
         let layout = UICollectionViewFlowLayout()
         layout.itemSize = CGSize(width: 300, height: 60)
         let collectionView = UICollectionView(frame: CGRect(x: 0, y: 80, width: 390, height: 240), collectionViewLayout: layout)
@@ -97,8 +98,8 @@ struct TKCollectionCellActivationTests {
 
     @Test("text match selects resolved collection cell through public delegate callbacks")
     func textMatchTapSelectsResolvedCollectionCell() throws {
-        let (window, collectionView, _, delegate) = makeCollectionViewWindow()
-        defer { window.isHidden = true }
+        let (window, collectionView, dataSource, delegate) = try makeCollectionViewWindow()
+        defer { window.isHidden = true; withExtendedLifetime(dataSource) {} }
 
         let indexPath = IndexPath(item: 1, section: 0)
         let cell = try #require(collectionView.cellForItem(at: indexPath) as? ActivationCollectionCell)
@@ -127,8 +128,8 @@ struct TKCollectionCellActivationTests {
 
     @Test("coordinate tap selects collection cell containing the hit point")
     func coordinateTapSelectsCollectionCellContainingPoint() throws {
-        let (window, collectionView, _, delegate) = makeCollectionViewWindow()
-        defer { window.isHidden = true }
+        let (window, collectionView, dataSource, delegate) = try makeCollectionViewWindow()
+        defer { window.isHidden = true; withExtendedLifetime(dataSource) {} }
 
         let indexPath = IndexPath(item: 1, section: 0)
         let cell = try #require(collectionView.cellForItem(at: indexPath) as? ActivationCollectionCell)
@@ -152,8 +153,8 @@ struct TKCollectionCellActivationTests {
 
     @Test("selection-disabled collection view fails closed without delegate callbacks")
     func selectionDisabledCollectionViewFailsClosed() throws {
-        let (window, collectionView, _, delegate) = makeCollectionViewWindow(allowsSelection: false)
-        defer { window.isHidden = true }
+        let (window, collectionView, dataSource, delegate) = try makeCollectionViewWindow(allowsSelection: false)
+        defer { window.isHidden = true; withExtendedLifetime(dataSource) {} }
 
         let indexPath = IndexPath(item: 1, section: 0)
         let cell = try #require(collectionView.cellForItem(at: indexPath) as? ActivationCollectionCell)
@@ -173,8 +174,8 @@ struct TKCollectionCellActivationTests {
 
     @Test("delegate shouldSelectItemAt denial fails closed without didSelect callback")
     func delegateDenialFailsClosedWithoutDidSelect() throws {
-        let (window, collectionView, _, delegate) = makeCollectionViewWindow()
-        defer { window.isHidden = true }
+        let (window, collectionView, dataSource, delegate) = try makeCollectionViewWindow()
+        defer { window.isHidden = true; withExtendedLifetime(dataSource) {} }
         delegate.shouldSelectResult = false
 
         let indexPath = IndexPath(item: 1, section: 0)
@@ -195,8 +196,8 @@ struct TKCollectionCellActivationTests {
 
     @Test("collection cell helper completes selection and delegate callback before success")
     func collectionCellHelperCompletesSelectionAndCallback() throws {
-        let (window, collectionView, _, delegate) = makeCollectionViewWindow()
-        defer { window.isHidden = true }
+        let (window, collectionView, dataSource, delegate) = try makeCollectionViewWindow()
+        defer { window.isHidden = true; withExtendedLifetime(dataSource) {} }
 
         let indexPath = IndexPath(item: 0, section: 0)
         let cell = try #require(collectionView.cellForItem(at: indexPath) as? ActivationCollectionCell)
@@ -220,7 +221,7 @@ struct TKCollectionCellActivationTests {
 
     @Test("unresolvable collection cell keeps typed unsupported fallback")
     func unresolvableCollectionCellKeepsTypedUnsupportedFallback() throws {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
         let orphanCell = ActivationCollectionCell(frame: CGRect(x: 20, y: 120, width: 300, height: 60))
         orphanCell.label.text = "Orphan cell"
         window.addSubview(orphanCell)
@@ -235,5 +236,6 @@ struct TKCollectionCellActivationTests {
         #expect(result.error?.code == "unsupported_capability")
         #expect(result.verification?.required == true)
     }
+}
 }
 #endif
