@@ -108,6 +108,28 @@ struct CLIHelpTests {
         #expect(error["code"] as? String == "invalid_duration")
     }
 
+    @Test("host coordinate tap rejects hold duration before resolving a simulator")
+    func hostTapDoesNotSilentlyDiscardDuration() throws {
+        for selection in [
+            ["--target", "sim:A0B1C2D3-E4F5-4A6B-8C9D-0E1F2A3B4C5D", "--at", "20,30"],
+            ["--target", "A0B1C2D3-E4F5-4A6B-8C9D-0E1F2A3B4C5D", "--at", "20,30"],
+            ["--target", "local", "--at", "20,30"],
+            ["--platform", "ios", "--target", "booted", "--at", "20,30"],
+            ["--platform", "android", "--target", "fixture", "--at", "20,30"],
+            ["--platform", "harmony", "--target", "fixture", "--at", "20,30"],
+            ["--webview-aware", "--selector", "#hold"],
+        ] {
+            let result = try runTritonHelp(["act", "tap"] + selection + ["--duration", "1", "--json"])
+            #expect(result.exitCode != 0)
+            #expect(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            let object = try #require(JSONSerialization.jsonObject(with: Data(result.stdout.utf8)) as? [String: Any])
+            let error = try #require(object["error"] as? [String: Any])
+            #expect(object["ok"] as? Bool == false)
+            #expect(error["code"] as? String == "unsupported_capability")
+            #expect((error["message"] as? String)?.contains("--duration") == true)
+        }
+    }
+
     private func runTritonHelp(_ arguments: [String]) throws -> CLIHelpRunResult {
         let process = Process()
         process.executableURL = try tritonExecutableURL()
