@@ -1,6 +1,7 @@
 #if canImport(UIKit)
 import UIKit
 
+@MainActor
 public enum TKAttributeGroupsBuilder {
 
     public static func build(for layer: CALayer) -> [TKAttributesGroup] {
@@ -22,7 +23,7 @@ public enum TKAttributeGroupsBuilder {
             groups.append(buildImageViewGroup(for: imageView))
         }
         if let label = view as? UILabel {
-            groups.append(buildLabelGroup(for: label))
+            groups.append(TKLabelTextAttributes.group(for: label))
         }
         if let scrollView = view as? UIScrollView {
             groups.append(buildScrollViewGroup(for: scrollView))
@@ -156,20 +157,6 @@ public enum TKAttributeGroupsBuilder {
                 TKAttributesSection(identifier: "image", attributes: [
                     TKAttribute(identifier: "has_image", displayTitle: "Has Image", attrType: 3, value: .bool(imageView.image != nil)),
                     TKAttribute(identifier: "content_mode", displayTitle: "Content Mode", attrType: 2, value: .number(Double(imageView.contentMode.rawValue)))
-                ])
-            ]
-        )
-    }
-
-    private static func buildLabelGroup(for label: UILabel) -> TKAttributesGroup {
-        TKAttributesGroup(
-            identifier: "ui_label",
-            userCustomTitle: "UILabel",
-            attrSections: [
-                TKAttributesSection(identifier: "text", attributes: [
-                    TKAttribute(identifier: "text", displayTitle: "Text", attrType: 0, value: .string(label.text ?? "")),
-                    TKAttribute(identifier: "font_size", displayTitle: "Font Size", attrType: 1, value: .number(Double(label.font.pointSize))),
-                    TKAttribute(identifier: "lines", displayTitle: "Lines", attrType: 2, value: .number(Double(label.numberOfLines)))
                 ])
             ]
         )
