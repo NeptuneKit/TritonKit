@@ -19,16 +19,8 @@ struct XcodeSchemaParserContractTests {
             for set in subcommand.oneOfRequiredOptions { declared.append(contentsOf: set) }
             for set in subcommand.oneOfRequiredOptionSets { declared.append(contentsOf: set) }
             for name in declared {
-                let argv = ["xcode", subcommand.name] + Self.argv(for: name, type: optionTypes[name])
-                do {
-                    _ = try TritonKitCLI.parseAsRoot(argv)
-                } catch {
-                    let description = String(describing: error)
-                    #expect(
-                        !description.contains("Unknown option"),
-                        "schema advertises \(name) for xcode \(subcommand.name) but the parser rejects it: \(description)"
-                    )
-                }
+                let argv = ["xcode", subcommand.name] + Self.requiredArguments(for: subcommand.name, excluding: name) + Self.argv(for: name, type: optionTypes[name])
+                _ = try TritonKitCLI.parseAsRoot(argv)
             }
         }
     }
@@ -38,24 +30,15 @@ struct XcodeSchemaParserContractTests {
         let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
 
         for option in xcode.options where option.type != "Subcommand" {
-            var rejectionCount = 0
-            var lastDescription = ""
-            for subcommand in xcode.subcommands {
-                let argv = ["xcode", subcommand.name] + Self.argv(for: option.name, type: option.type)
-                do {
-                    _ = try TritonKitCLI.parseAsRoot(argv)
-                } catch {
-                    let description = String(describing: error)
-                    if description.contains("Unknown option") {
-                        rejectionCount += 1
-                        lastDescription = description
-                    }
-                }
+            let accepting = xcode.subcommands.filter {
+                ($0.requiredOptions + $0.optionalOptions).contains(option.name)
+                    || ["--json", "--format"].contains(option.name)
             }
-            #expect(
-                rejectionCount < xcode.subcommands.count,
-                "parent option \(option.name) is rejected by every xcode subcommand parser; last error: \(lastDescription)"
-            )
+            #expect(!accepting.isEmpty, "parent option \(option.name) must have a declared subcommand scope")
+            for subcommand in accepting {
+                let argv = ["xcode", subcommand.name] + Self.requiredArguments(for: subcommand.name, excluding: option.name) + Self.argv(for: option.name, type: option.type)
+                _ = try TritonKitCLI.parseAsRoot(argv)
+            }
         }
     }
 
@@ -65,11 +48,7 @@ struct XcodeSchemaParserContractTests {
         for action in ["build", "test", "archive", "export"] {
             let subcommand = try #require(xcode.subcommands.first { $0.name == action })
             #expect(subcommand.optionalOptions.contains("--progress"))
-            do {
-                _ = try TritonKitCLI.parseAsRoot(["xcode", action, "--progress", "compact"])
-            } catch {
-                #expect(String(describing: error).contains("Unknown option") == false)
-            }
+            _ = try TritonKitCLI.parseAsRoot(["xcode", action] + Self.requiredArguments(for: action) + ["--progress", "compact"])
         }
         for action in ["discover", "use", "schemes", "status", "wait-idle", "settings", "run"] {
             let subcommand = try #require(xcode.subcommands.first { $0.name == action })
@@ -78,6 +57,17 @@ struct XcodeSchemaParserContractTests {
                 _ = try TritonKitCLI.parseAsRoot(["xcode", action, "--progress", "compact"])
             }
         }
+    }
+
+    private static func requiredArguments(for command: String, excluding: String? = nil) -> [String] {
+        let required: [(String, String)]
+        switch command {
+        case "use": required = [("--scheme", "App")]
+        case "archive": required = [("--archive-path", "App.xcarchive")]
+        case "export": required = [("--archive-path", "App.xcarchive"), ("--export-options-plist", "ExportOptions.plist"), ("--export-path", "export")]
+        default: required = []
+        }
+        return required.filter { $0.0 != excluding }.flatMap { [$0.0, $0.1] }
     }
 
     private static func argv(for name: String, type: String?) -> [String] {

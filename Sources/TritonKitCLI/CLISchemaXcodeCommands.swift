@@ -174,9 +174,9 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                         ("stderrLogPath", "String?", false, "Stderr artifact path"),
                         ("stdoutBytes", "Int?", false, "Total stdout bytes"),
                         ("stderrBytes", "Int?", false, "Total stderr bytes"),
-                        ("testResultSummary", "TKXcresultSummaryMetrics?", false, "Inline parsed xcresult test counts for xcode.test when --result-bundle is available"),
-                        ("topFailures", "[TKXcresultFailureRecord]?", false, "Default-redacted top test failures for xcode.test; execution-only physical target IDs are additionally redacted"),
-                        ("xcresultNote", "String?", false, "Inline xcresult parsing note with execution-only physical target IDs redacted"),
+                        ("testResultSummary", "TKXcresultSummaryMetrics?", false, "Inline xcresult test counts; text samples cap at 2000 bytes and total text at 8192 bytes per DTO before truncation markers; arrays cap at 8 entries"),
+                        ("topFailures", "[TKXcresultFailureRecord]?", false, "At most 3 default-redacted test failures with bounded text/attachment samples; execution-only physical target IDs are additionally redacted"),
+                        ("xcresultNote", "String?", false, "Inline xcresult parsing/truncation note with execution-only physical target IDs redacted"),
                         ("xcodeDiagnostics", "[TKXcodeOutputDiagnostic]?", false, "Structured diagnostics parsed from xcodebuild stdout/stderr, including stale DerivedData outside-root and Swift macro plugin malformed-response recovery"),
                         ("postActionProcessStatus", "TKXcodePostActionProcessStatus?", false, "Xcode process status sampled after an interrupted xcodebuild result"),
                         ("postActionProcessStatus.active", "Bool", false, "Whether matching Xcode processes remained active after the action returned"),
@@ -290,7 +290,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "build",
                     summary: "Run xcodebuild build and emit bounded JSONL progress",
-                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--build-setting", "--env", "--arg", "--timeout", "--progress", "--jsonl"],
+                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--build-setting", "--timeout", "--progress", "--jsonl"],
                     defaultProviders: ["triton xcode use", "triton sim use"],
                     inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
                     jsonlEvents: [

@@ -327,20 +327,36 @@ struct XcodeProgressTests {
         #expect(events.map(\.event).last == "xcode.test.summary")
         #expect(!events.map(\.event).contains("xcode.test.stdout"))
         #expect(!events.map(\.event).contains("xcode.test.stderr"))
-        // Upper bound is the contract; the lower bound proves classification ran.
-        // The exact count is load-sensitive because the streaming pipe drain can
-        // lose tail lines after process exit (see AGENTS pipe-runner guidance).
         let warnings = events.filter { $0.event == "xcode.test.warning" }
         let errors = events.filter { $0.event == "xcode.test.error" }
-        #expect(warnings.count <= xcodeCompactDiagnosticsPerKindLimit)
-        #expect(errors.count <= xcodeCompactDiagnosticsPerKindLimit)
-        #expect(warnings.count + errors.count >= 8)
+        #expect(warnings.count == xcodeCompactDiagnosticsPerKindLimit)
+        #expect(errors.count == xcodeCompactDiagnosticsPerKindLimit)
         #expect(events.allSatisfy { !$0.message.contains("ordinary-") })
 
         let stdoutLogPath = try #require(captured.result.stdoutLogPath)
         let stdoutLog = try String(contentsOfFile: stdoutLogPath, encoding: .utf8)
         #expect(stdoutLog.contains("ordinary-1"))
         #expect(stdoutLog.contains("fixture-warning-1"))
+    }
+
+    @Test("compact test drains large output before publishing its final byte counts")
+    func compactTestDrainsLargeOutput() throws {
+        let command = TKHostCommand(executable: "/usr/bin/awk", arguments: [
+            "BEGIN { for (i=0;i<200000;i++) print \"ordinary-output-0123456789\"; print \"tail-marker\" }",
+        ])
+        let captured = try captureXcodeProgressOutput {
+            try runXcodeHostCommand(command, event: "xcode.test", jsonl: true, progress: .compact).0
+        }
+        defer { removeXcodeProgressArtifacts(captured.result) }
+        let log = try Data(contentsOf: URL(fileURLWithPath: #require(captured.result.stdoutLogPath)))
+        #expect(log.count == 200000 * 27 + 12)
+        #expect(captured.result.stdoutBytes == log.count)
+        #expect(String(decoding: log.suffix(12), as: UTF8.self) == "tail-marker\n")
+        let events = try decodeXcodeProgressLines(captured.stdout)
+        #expect(events.last?.stdoutBytes == log.count)
+        #expect(events.count <= 3)
+        #expect(captured.stdout.utf8.count < 10_000)
+        #expect(captured.result.stdoutData.count <= 1_048_576)
     }
 
     @Test("xcode test full progress restores raw stdout and stderr chunk events")

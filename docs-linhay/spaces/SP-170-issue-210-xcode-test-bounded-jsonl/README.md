@@ -24,7 +24,12 @@
 
 - Given 大型 workspace 的 focused test 产生大量原始 build stdout
 - When 执行 `triton xcode test --jsonl ...`
-- Then JSONL 流只包含 lifecycle / heartbeat / 有界诊断（warnings/errors 截断计数）/ 结构化失败用例 / 最终 test summary 事件；原始 build 行不再逐条转发。
+- Then JSONL 流只包含 lifecycle / heartbeat / 有界诊断（每类最多 20 条 warnings/errors）/ 结构化失败用例 / 最终 test summary 事件；原始 build 行不再逐条转发。
+
+### 场景 1a：退出时日志完整与摘要有界
+
+- Given 子进程快速输出超过 5 MB 后退出，或失败信息包含超长文本
+- Then 原始日志和最终字节计数完整，尾部标记存在；compact JSONL 不随着原始日志增长；inline summary/failure 文本与数组受界限约束，保留测试计数并明确截断。
 
 ### 场景 2：显式 full 恢复原始流
 
@@ -58,4 +63,8 @@ git diff --check
 
 ## 当前状态
 
-- 实现完成（2026-08-21，主控接管完成）：`xcode test` 默认 compact 有界 JSONL、`--progress full` 暂存原始流；schema test 子命令挂载 `--progress` 并与 parser 契约测试对齐；`run` 保持不宣告。focused tests（Xcode/Schema filter）通过；2 个既有 `XcodeProgressTests` 断言与 6 个 Schema 套件失败在未修改 baseline 影子复现，属 pipe-drain 负载抖动/影子环境预存在问题，非本 diff 回归（详见 REPORT）。真实大型 workspace 回归保留为风险。
+- 本地实现与审计修复完成（2026-09-08），等待主控集成：`xcode test` 默认 compact，`--progress full` 恢复原始流；schema build/test/archive/export 宣告 progress，run 不宣告。
+- 二次审计修复流读取回调与进程退出竞态，原始日志、诊断和最终字节计数一致；5.4 MB 退出尾部回归通过。
+- 内联 xcresult 保留计数，限制文本/数组样本，并在 `xcresultNote` 说明截断。详情仍使用 `triton xcresult failures`。
+- schema contract 改为携带必填参数的真实 parser 成功断言，发现并修复 build 错误宣告 `--env/--arg`。相关 Xcode/xcresult 89 项测试串行通过。
+- [审计报告](REPORT.md) 记录红灯基线、修复与验证边界。真实大型 workspace 回归仍未执行；完整 CLI suite 与远端 issue 收口由主控完成。
