@@ -600,12 +600,21 @@ func runWebViewBridgeCall(
     webViewID: String?,
     pageSessionID: String?,
     timeoutMs: Int?,
-    devtoolsPort: Int,
+    devtoolsPort: Int?,
     cdpLocalPort: Int?,
     format: ClientOutputFormat,
     json: Bool
 ) async throws {
     let outputFormat = effectiveFormat(format, json: json)
+    guard !method.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+          timeoutMs.map({ (1...300_000).contains($0) }) ?? true,
+          devtoolsPort.map({ (1...65535).contains($0) }) ?? true,
+          cdpLocalPort.map({ (1...65535).contains($0) }) ?? true else {
+        try failHostValidation(code: "validation_failed", message: "Bridge method must be nonempty, timeout-ms must be 1...300000, and TCP ports must be 1...65535.", hint: "Correct bridge-call options before retrying.", outputFormat: outputFormat)
+    }
+    if platform == .harmony, pageSessionID != nil {
+        try failHostValidation(code: "unsupported_capability", message: "Harmony CDP target IDs do not prove navigation session identity; --page-session-id is not supported for this adapter.", hint: "Select the current ArkWeb with --webview-id; use an embedded provider when navigation session enforcement is required.", outputFormat: outputFormat)
+    }
     let params: [String: TKJSONValue]
     do {
         params = try parseWebViewBridgeParamsJSON(paramsJSON)
@@ -719,7 +728,7 @@ private func runHarmonyWebViewBridgeCall(
     hdc: String,
     webViewID: String?,
     timeoutMs: Int?,
-    devtoolsPort: Int,
+    devtoolsPort: Int?,
     cdpLocalPort: Int?,
     outputFormat: ClientOutputFormat
 ) async throws {
@@ -1172,7 +1181,7 @@ private func harmonyWebViewCandidates(
     let cdp = try? await harmonyArkWebCDPDiscoverPages(
         selected: selected,
         hdc: hdc,
-        devtoolsPort: 9222,
+        devtoolsPort: nil,
         environment: .live()
     )
     return try harmonyWebViewCandidatesWithCDP(
@@ -1195,8 +1204,7 @@ func harmonyWebViewCandidatesWithCDP(
 ) throws -> TKWebViewListResponse {
     let bridgeCallAvailable = cdp?.pages.isEmpty == false
     var candidates = webViewDescriptors(
-        fromHarmony: try TKHarmonyLayoutParser.nodeSummaries(in: layout.data),
-        bridgeCallAvailable: bridgeCallAvailable
+        fromHarmony: try TKHarmonyLayoutParser.nodeSummaries(in: layout.data)
     )
     var sourceCommands = layout.sourceCommands
     var sources: [TKWebViewSource] = [
@@ -1217,7 +1225,7 @@ func harmonyWebViewCandidatesWithCDP(
     }
     candidates.sort(by: webViewDescriptorSort)
     let note = bridgeCallAvailable
-        ? "Harmony host layout exposes visible Web candidates and the ArkWeb DevTools CDP endpoint provides allowlisted bridge calls through `triton webview bridge-call --platform harmony`; DOM and native route state still require an embedded provider."
+        ? "Harmony host layout exposes visible Web candidates and the ArkWeb DevTools CDP endpoint provides allowlisted bridge calls (CDP candidates require in-page visibility checks; host-layout IDs are not interchangeable) through `triton webview bridge-call --platform harmony`; DOM and native route state still require an embedded provider."
         : "Harmony host layout can expose visible Web candidates only. DOM, URL, and bridge calls require an embedded provider or a reachable ArkWeb DevTools endpoint."
     return TKWebViewListResponse(
         ok: true,
@@ -1294,7 +1302,7 @@ private func webViewDescriptors(fromAX nodes: [TKAXNode], platform: String) -> [
     .sorted(by: webViewDescriptorSort)
 }
 
-private func webViewDescriptors(fromHarmony nodes: [TKHarmonyLayoutNodeSummary], bridgeCallAvailable: Bool = false) -> [TKWebViewDescriptor] {
+private func webViewDescriptors(fromHarmony nodes: [TKHarmonyLayoutNodeSummary]) -> [TKWebViewDescriptor] {
     nodes.compactMap { node in
         guard node.visible != false else { return nil }
         guard let score = webViewCandidateScore(role: node.type, className: nil, identifier: node.identifier ?? node.key ?? node.accessibilityID, text: node.text ?? node.originalText) else {
@@ -1304,16 +1312,7 @@ private func webViewDescriptors(fromHarmony nodes: [TKHarmonyLayoutNodeSummary],
         var capabilities = ["visible"]
         if node.bounds != nil { capabilities.append("host-coordinate-tap") }
         if node.scrollable == true { capabilities.append("host-scroll") }
-        // SP-173 / GitHub #207: with a reachable ArkWeb DevTools endpoint the host
-        // adapter provides allowlisted bridge calls, so the capability is no longer
-        // reported as permanently missing.
-        var missingCapabilities = ["webview.url", "webview.dom"]
-        if bridgeCallAvailable {
-            capabilities.append("webview.bridge-call")
-        } else {
-            missingCapabilities.append("webview.bridge-call")
-        }
-        missingCapabilities.append("semantic-action")
+        let missingCapabilities = ["webview.url", "webview.dom", "webview.bridge-call", "semantic-action"]
         return TKWebViewDescriptor(
             webViewID: webViewID,
             platform: "harmony",

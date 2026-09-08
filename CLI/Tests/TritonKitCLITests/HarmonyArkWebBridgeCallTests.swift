@@ -1,4 +1,5 @@
 import Foundation
+import JavaScriptCore
 import Testing
 import TritonKitShared
 @testable import TritonKitCLI
@@ -65,7 +66,7 @@ struct HarmonyArkWebBridgeCallTests {
 
         func evaluate(expression: String, timeoutSeconds: Double) async throws -> String? {
             recorder.append(expression: expression)
-            if expression.contains("Promise.resolve(bridge.methods[method](args))") {
+            if expression.contains("var returned = descriptor.value.call(bridge.methods, args, complete, reject)") {
                 return invokeAck
             }
             guard pollIndex < pollResponses.count else {
@@ -160,7 +161,7 @@ struct HarmonyArkWebBridgeCallTests {
         method: String = "getRouteState",
         params: [String: TKJSONValue] = ["k": .string("v")],
         timeoutMs: Int? = 2_000,
-        devtoolsPort: Int = 9222,
+        devtoolsPort: Int? = nil,
         cdpLocalPort: Int? = nil
     ) async throws -> WebViewBridgeCallSummary {
         try await harmonyArkWebBridgeCall(
@@ -235,10 +236,36 @@ struct HarmonyArkWebBridgeCallTests {
         #expect(try harmonyArkWebSelectPage(pages, webviewID: "page-2").id == "page-2")
     }
 
-    @Test("selection falls back to the only page for host-layout webview ids")
-    func selectionFallsBackToOnlyPageForHostLayoutID() throws {
-        let page = try harmonyArkWebSelectPage([try decodePage(singlePage)], webviewID: "harmony:host:12844")
-        #expect(page.id == "page-1")
+    @Test("explicit stale webview id never falls back to another page")
+    func selectionRejectsStaleSinglePageID() throws {
+        #expect(throws: HarmonyArkWebBridgeCallError.self) {
+            try harmonyArkWebSelectPage([try decodePage(singlePage)], webviewID: "harmony:host:12844")
+        }
+    }
+
+    @Test("allowlist excludes inherited functions and caller-supplied names")
+    func inheritedMethodsAreNotAuthorized() throws {
+        let context = try #require(JSContext())
+        context.evaluateScript("var window = this; var invoked = false; window.__tritonBridge = {methods: Object.create({danger: function() { invoked = true; }})};")
+        let script = try harmonyArkWebBridgeInvokeScript(callID: "deny", method: "danger", arguments: [:])
+        let ack = try decodeHarmonyArkWebBridgeEnvelope(context.evaluateScript(script)?.toString())
+        #expect(ack?.ok == false)
+        #expect(ack?.error?.code == "webview_method_not_allowed")
+        #expect(context.evaluateScript("invoked")?.toBool() == false)
+    }
+
+    @Test("registered asynchronous callback completes only after callback fires")
+    func actualCallbackExecution() throws {
+        let context = try #require(JSContext())
+        context.evaluateScript("var window = this; var complete; window.__tritonBridge = {methods: {route: function(args, callback) { complete = callback; }}};")
+        let script = try harmonyArkWebBridgeInvokeScript(callID: "async", method: "route", arguments: ["k": .string("v")])
+        _ = context.evaluateScript(script)
+        let poll = try harmonyArkWebBridgePollScript(callID: "async")
+        #expect(context.evaluateScript(poll)?.toString() == "")
+        context.evaluateScript("complete({code: 200})")
+        let value = try decodeHarmonyArkWebBridgeEnvelope(context.evaluateScript(poll)?.toString())
+        #expect(value?.result == .object(["code": .int(200)]))
+        #expect(context.evaluateScript(poll)?.toString() == "")
     }
 
     @Test("selection rejects unmatched webview ids across multiple pages")
@@ -289,9 +316,9 @@ struct HarmonyArkWebBridgeCallTests {
         #expect(script.contains("\"amount\""))
         #expect(script.contains("42"))
         #expect(script.contains("订单"))
-        #expect(script.contains("typeof bridge.methods[method] !== \"function\""))
+        #expect(script.contains("typeof descriptor.value !== \"function\""))
         #expect(script.contains("webview_method_not_allowed"))
-        #expect(script.contains("Promise.resolve(bridge.methods[method](args))"))
+        #expect(script.contains("var returned = descriptor.value.call(bridge.methods, args, complete, reject)"))
         #expect(script.contains("__tritonHostBridgeCalls"))
     }
 
@@ -379,15 +406,16 @@ struct HarmonyArkWebBridgeCallTests {
 
         // Audit trail: socket probe → fport → page list → CDP evaluate → fport rm teardown.
         #expect(recorder.commandLog.filter { $0.contains("cat /proc/net/unix") }.count == 1)
-        #expect(recorder.commandLog.contains { $0.contains("fport tcp:41234 tcp:9222") })
+        #expect(recorder.commandLog.contains { $0.contains("fport tcp:41234 localabstract:webview_devtools_remote_12844") })
         #expect(recorder.pageListLog == ["http://127.0.0.1:41234/json/list"])
         #expect(recorder.sessionLog == ["ws://127.0.0.1:41234/devtools/page/page-1"])
         #expect(recorder.expressionLog.count == 3) // invoke + two polls
         #expect(recorder.expressionLog.first?.contains("getRouteState") == true)
         #expect(recorder.fportRemoveCount == 1)
+        #expect(recorder.commandLog.contains { $0.contains("fport rm tcp:41234 localabstract:webview_devtools_remote_12844") })
         #expect(recorder.closeCount == 1)
         #expect(summary.sourceCommands.contains { $0.contains("/proc/net/unix") })
-        #expect(summary.sourceCommands.contains { $0.contains("fport tcp:41234 tcp:9222") })
+        #expect(summary.sourceCommands.contains { $0.contains("fport tcp:41234 localabstract:webview_devtools_remote_12844") })
         #expect(summary.sourceCommands.contains { $0.contains("GET http://127.0.0.1:41234/json/list") })
         #expect(summary.sourceCommands.contains { $0.contains("WS ws://127.0.0.1:41234/devtools/page/page-1") })
     }
@@ -407,7 +435,7 @@ struct HarmonyArkWebBridgeCallTests {
         let summary = try await callBridge(environment, webviewID: "arkweb-cdp:page-1", cdpLocalPort: 45678)
 
         #expect(summary.ok)
-        #expect(recorder.commandLog.contains { $0.contains("fport tcp:45678 tcp:9222") })
+        #expect(recorder.commandLog.contains { $0.contains("fport tcp:45678 localabstract:webview_devtools_remote_12844") })
         #expect(recorder.pageListLog == ["http://127.0.0.1:45678/json/list"])
     }
 
@@ -505,7 +533,7 @@ struct HarmonyArkWebBridgeCallTests {
             let failure = failure(error)
             #expect(failure?.error.code == .webViewMethodNotAllowed)
             #expect(failure?.error.message == "Method is not allowlisted: nope")
-            #expect(recorder.expressionLog.count == 1) // invoke only, no polls
+            #expect(recorder.expressionLog.count == 2) // invoke plus bounded cleanup, no polls
         }
     }
 
@@ -659,8 +687,8 @@ struct HarmonyArkWebBridgeCallTests {
         let cdpCandidates = response.candidates.filter { $0.source == "arkweb-cdp" }
         #expect(hostLayout.count == 1)
         #expect(cdpCandidates.map(\.webViewID) == ["arkweb-cdp:page-1", "arkweb-cdp:page-2"])
-        #expect(hostLayout.allSatisfy { !$0.missingCapabilities.contains("webview.bridge-call") })
-        #expect(hostLayout.allSatisfy { $0.capabilities.contains("webview.bridge-call") })
+        #expect(hostLayout.allSatisfy { $0.missingCapabilities.contains("webview.bridge-call") })
+        #expect(hostLayout.allSatisfy { !$0.capabilities.contains("webview.bridge-call") })
         #expect(cdpCandidates.allSatisfy { $0.providerStatus == "available" })
         #expect(cdpCandidates.allSatisfy { $0.capabilities.contains("webview.bridge-call") })
         #expect(response.sources.contains { $0.name == "arkweb-cdp" && $0.available })
@@ -714,4 +742,108 @@ struct HarmonyArkWebBridgeCallTests {
         #expect(contract.fields.contains { $0.name == "result" })
         #expect(contract.fields.contains { $0.name == "source" })
     }
+    @Test("getter entries are not executed as allowlisted methods")
+    func getterIsNotAuthorized() throws {
+        let context = try #require(JSContext())
+        context.evaluateScript("var window = this; var invoked = false; window.__tritonBridge = {methods: {get danger() { invoked = true; return function() {}; }}};")
+        let ack = try decodeHarmonyArkWebBridgeEnvelope(context.evaluateScript(try harmonyArkWebBridgeInvokeScript(callID: "getter", method: "danger", arguments: [:]))?.toString())
+        #expect(ack?.error?.code == "webview_method_not_allowed")
+        #expect(context.evaluateScript("invoked")?.toBool() == false)
+    }
+
+    @Test("hidden pages are rejected before their registered method executes")
+    func hiddenPageIsNotInvoked() throws {
+        let context = try #require(JSContext())
+        context.evaluateScript("var window = this; var document = {visibilityState: 'hidden'}; var invoked = false; window.__tritonBridge = {methods: {route: function() { invoked = true; return 1; }}};")
+        let ack = try decodeHarmonyArkWebBridgeEnvelope(context.evaluateScript(try harmonyArkWebBridgeInvokeScript(callID: "hidden", method: "route", arguments: [:]))?.toString())
+        #expect(ack?.error?.code == "webview_not_found")
+        #expect(context.evaluateScript("invoked")?.toBool() == false)
+    }
+
+    @Test("completed and abandoned callbacks cannot resurrect stored payloads")
+    func lateCallbacksCannotRecreateState() throws {
+        let context = try #require(JSContext())
+        context.evaluateScript("var window = this; var complete; window.__tritonBridge = {methods: {route: function(args, callback) { complete = callback; }}};")
+        _ = context.evaluateScript(try harmonyArkWebBridgeInvokeScript(callID: "late", method: "route", arguments: [:]))
+        context.evaluateScript("delete window.__tritonHostBridgeCalls.late; complete({code:200});")
+        #expect(context.evaluateScript("Object.keys(window.__tritonHostBridgeCalls).length")?.toInt32() == 0)
+    }
+
+    @Test("multiple sockets fail closed before forwarding or evaluating")
+    func multipleSocketsAreNotImplicitlySelected() async {
+        let recorder = Recorder()
+        let environment = makeEnvironment(recorder: recorder, socketOutput: devtoolsSocketOutput + "\nwebview_devtools_remote_99999", pageListData: nil, sessionFactory: { _ in
+            Issue.record("Must not connect to an arbitrary socket")
+            return FakeCDPSession(recorder: recorder, invokeAck: "{}", pollResponses: [])
+        })
+        do {
+            _ = try await callBridge(environment)
+            Issue.record("Expected ambiguous provider failure")
+        } catch {
+            #expect(failure(error)?.error.code == .webViewProviderUnavailable)
+            #expect(failure(error)?.error.message.contains("Multiple") == true)
+            #expect(!recorder.commandLog.contains { $0.contains("fport") })
+        }
+    }
+
+    @Test("explicit TCP endpoint and matching cleanup both carry the remote node")
+    func explicitTCPEndpointCleanup() async throws {
+        let recorder = Recorder()
+        let environment = makeEnvironment(recorder: recorder, socketOutput: "no sockets", pageListData: pageListJSON(pages: [singlePage]), sessionFactory: { _ in
+            FakeCDPSession(recorder: recorder, invokeAck: #"{"ok":true,"pending":true}"#, pollResponses: [#"{"ok":true,"result":200}"#])
+        })
+        #expect(try await callBridge(environment, devtoolsPort: 9333).ok)
+        #expect(recorder.commandLog.contains { $0.contains("fport tcp:41234 tcp:9333") })
+        #expect(recorder.commandLog.contains { $0.contains("fport rm tcp:41234 tcp:9333") })
+    }
+
+    @Test("cleanup failure never silently claims success or masks a primary error", arguments: [true, false])
+    func cleanupFailuresAreReported(pageListAvailable: Bool) async {
+        let recorder = Recorder()
+        var environment = makeEnvironment(recorder: recorder, socketOutput: devtoolsSocketOutput, pageListData: pageListAvailable ? pageListJSON(pages: [singlePage]) : nil, sessionFactory: { _ in
+            FakeCDPSession(recorder: recorder, invokeAck: #"{"ok":true,"pending":true}"#, pollResponses: [#"{"ok":true,"result":200}"#])
+        })
+        let originalRunner = environment.runner
+        environment.runner = { command in
+            if command.arguments.contains("rm") {
+                recorder.append(command: command.arguments)
+                throw RuntimeError("fixture failed cleanup")
+            }
+            return try originalRunner(command)
+        }
+        do {
+            _ = try await callBridge(environment)
+            Issue.record("Expected cleanup or primary error")
+        } catch {
+            #expect(failure(error)?.error.code == .webViewProviderUnavailable)
+            #expect(failure(error)?.error.message.contains(pageListAvailable ? "may already have executed" : "page list") == true)
+            #expect(recorder.fportRemoveCount == 1)
+        }
+    }
+
+    @Test("HDC textual failure with exit zero is not mistaken for an owned forward")
+    func textualHDCFailureIsRejected() async {
+        let recorder = Recorder()
+        var environment = makeEnvironment(recorder: recorder, socketOutput: devtoolsSocketOutput, pageListData: nil, sessionFactory: { _ in
+            Issue.record("Must not evaluate after failed forwarding")
+            return FakeCDPSession(recorder: recorder, invokeAck: "{}", pollResponses: [])
+        })
+        let originalRunner = environment.runner
+        environment.runner = { command in
+            if command.arguments.contains("fport") {
+                recorder.append(command: command.arguments)
+                return hostProcessResult(stdout: "[Fail]TCP Port listen failed", sourceCommand: hostSourceCommand(command))
+            }
+            return try originalRunner(command)
+        }
+        do {
+            _ = try await callBridge(environment)
+            Issue.record("Expected failed forward")
+        } catch {
+            #expect(failure(error)?.error.code == .webViewProviderUnavailable)
+            #expect(recorder.fportRemoveCount == 0)
+            #expect(recorder.pageListLog.isEmpty)
+        }
+    }
+
 }

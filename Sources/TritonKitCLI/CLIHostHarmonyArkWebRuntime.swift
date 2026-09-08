@@ -4,8 +4,8 @@ import TritonKitShared
 // MARK: - SP-173 / GitHub #207: Harmony host-side ArkWeb bridge-call adapter
 //
 // The host adapter reaches a visible ArkWeb instance through the DevTools CDP
-// endpoint (`webview_devtools_remote_<pid>`): HDC fport forwards an emulator TCP
-// port, `/json/list` discovers pages, and a CDP WebSocket session evaluates an
+// endpoint (`webview_devtools_remote_<pid>`): HDC fport forwards the discovered Unix
+// socket, `/json/list` discovers pages, and a CDP WebSocket session evaluates an
 // explicitly named allowlisted page bridge method (`window.__tritonBridge.methods`)
 // and polls for the asynchronous callback result. The CDP channel is an
 // implementation detail: the product surface stays `triton webview bridge-call`
@@ -23,7 +23,7 @@ struct HarmonyArkWebPage: Codable, Equatable {
 /// The resolved HDC forward for one ArkWeb DevTools endpoint.
 struct HarmonyArkWebCDPEndpoint: Equatable {
     let socketName: String
-    let remotePort: Int
+    let remoteNode: String
     let localPort: Int
     let forwardSourceCommand: String
     let socketSourceCommand: String
@@ -48,7 +48,12 @@ struct HarmonyArkWebCDPEnvironment {
         HarmonyArkWebCDPEnvironment(
             runner: { command in try runHostCommand(command) },
             pageListLoader: { url in
-                let (data, _) = try await URLSession.shared.data(from: url)
+                var request = URLRequest(url: url)
+                request.timeoutInterval = 10
+                let (data, response) = try await URLSession.shared.data(for: request)
+                guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+                    throw HarmonyArkWebBridgeCallError.providerMissing("DevTools page list returned a non-200 response")
+                }
                 return data
             },
             sessionFactory: { url in HarmonyArkWebURLSessionCDPSession(url: url) },
@@ -165,10 +170,10 @@ func harmonyArkWebProcNetUnixCommand(target: String, hdc: String) -> TKHostComma
     )
 }
 
-func harmonyArkWebRemoveForwardCommand(target: String, localPort: Int, hdc: String) -> TKHostCommand {
+func harmonyArkWebRemoveForwardCommand(target: String, localPort: Int, remoteNode: String, hdc: String) -> TKHostCommand {
     TKHostCommand(
         executable: hdc,
-        arguments: ["-t", target, "fport", "rm", "tcp:\(localPort)"],
+        arguments: ["-t", target, "fport", "rm", "tcp:\(localPort)", remoteNode],
         riskLevel: .automation,
         requiredConfig: [.target, .timeout, .auditRecord],
         defaultTimeoutSeconds: 10
@@ -180,7 +185,8 @@ func harmonyArkWebPageListURL(localPort: Int) -> URL {
 }
 
 func harmonyArkWebSocketURL(endpoint: HarmonyArkWebCDPEndpoint, pageID: String) -> URL {
-    URL(string: "ws://127.0.0.1:\(endpoint.localPort)/devtools/page/\(pageID)")!
+    let escapedID = pageID.addingPercentEncoding(withAllowedCharacters: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._~")))!
+    return URL(string: "ws://127.0.0.1:\(endpoint.localPort)/devtools/page/\(escapedID)")!
 }
 
 /// Decodes the ArkWeb DevTools `/json/list` payload into visible page targets.
@@ -195,7 +201,7 @@ func decodeHarmonyArkWebPageList(_ data: Data) throws -> [HarmonyArkWebPage] {
 func harmonyArkWebWithForward<T>(
     selected: TKHarmonyTarget,
     hdc: String,
-    devtoolsPort: Int,
+    devtoolsPort: Int?,
     localPort: Int?,
     environment: HarmonyArkWebCDPEnvironment,
     body: (HarmonyArkWebCDPEndpoint) async throws -> T
@@ -211,47 +217,70 @@ func harmonyArkWebWithForward<T>(
         )
     }
     let socketNames = harmonyArkWebSocketNames(fromProcNetUnix: socketResult.stdout)
-    guard let socketName = socketNames.first else {
+    guard devtoolsPort != nil || socketNames.count == 1 else {
         throw HarmonyArkWebBridgeCallFailure(
-            error: .providerMissing("no webview_devtools_remote_<pid> socket in /proc/net/unix"),
+            error: .providerMissing(socketNames.isEmpty
+                ? "no webview_devtools_remote_<pid> socket in /proc/net/unix"
+                : "Multiple ArkWeb DevTools sockets found; close unrelated debug apps or explicitly select an already configured endpoint with --devtools-port. No socket was selected."),
             sourceCommands: [socketResult.sourceCommand]
         )
     }
+    let socketName = socketNames.first ?? "tcp-override"
+    let remoteNode = devtoolsPort.map { "tcp:\($0)" } ?? "localabstract:\(socketName)"
     let resolvedLocalPort = localPort ?? environment.localPortProvider()
-    let forwardCommand = TKHarmonyHDCCommand.forwardPort(
-        target: selected.target,
-        localPort: resolvedLocalPort,
-        remotePort: devtoolsPort,
-        executable: hdc
+    let forwardCommand = TKHostCommand(
+        executable: hdc,
+        arguments: ["-t", selected.target, "fport", "tcp:\(resolvedLocalPort)", remoteNode],
+        riskLevel: .automation,
+        requiredConfig: [.target, .timeout, .auditRecord],
+        defaultTimeoutSeconds: 10
     )
     let forwardResult: HostProcessResult
     do {
         forwardResult = try environment.runner(forwardCommand)
+        if forwardResult.exitCode != 0 || (forwardResult.stdout + forwardResult.stderr).contains("[Fail]") {
+            throw HarmonyArkWebBridgeCallError.providerMissing("HDC reported a failed forward creation")
+        }
     } catch {
         throw HarmonyArkWebBridgeCallFailure(
-            error: .providerMissing("hdc fport tcp:\(resolvedLocalPort) tcp:\(devtoolsPort) failed: \(error)"),
+            error: .providerMissing("hdc fport tcp:\(resolvedLocalPort) \(remoteNode) failed: \(error)"),
             sourceCommands: [socketResult.sourceCommand, hostSourceCommand(forwardCommand)]
         )
     }
     let endpoint = HarmonyArkWebCDPEndpoint(
         socketName: socketName,
-        remotePort: devtoolsPort,
+        remoteNode: remoteNode,
         localPort: resolvedLocalPort,
         forwardSourceCommand: forwardResult.sourceCommand,
         socketSourceCommand: socketResult.sourceCommand
     )
-    defer {
-        // Best-effort teardown; a stale forward must never mask the primary result.
-        _ = try? environment.runner(harmonyArkWebRemoveForwardCommand(target: selected.target, localPort: resolvedLocalPort, hdc: hdc))
+    let outcome: Result<T, Error>
+    do { outcome = .success(try await body(endpoint)) }
+    catch { outcome = .failure(error) }
+    let removeCommand = harmonyArkWebRemoveForwardCommand(target: selected.target, localPort: resolvedLocalPort, remoteNode: remoteNode, hdc: hdc)
+    do {
+        let removed = try environment.runner(removeCommand)
+        if removed.exitCode != 0 || (removed.stdout + removed.stderr).contains("[Fail]") {
+            throw HarmonyArkWebBridgeCallError.providerMissing("HDC reported a failed forward removal")
+        }
+    } catch {
+        // Preserve a primary failure. A successful invocation with failed teardown
+        // must not silently claim clean delivery or invite an automatic retry.
+        if case .success = outcome {
+            throw HarmonyArkWebBridgeCallFailure(
+                error: .providerMissing("HDC forward cleanup failed; the bridge may already have executed. Remove the recorded forward before retrying. \(error)"),
+                sourceCommands: [socketResult.sourceCommand, forwardResult.sourceCommand, hostSourceCommand(removeCommand)]
+            )
+        }
     }
-    return try await body(endpoint)
+    return try outcome.get()
 }
 
 /// Discovery-only helper used by `webview list` to attach ArkWeb provider state.
 func harmonyArkWebCDPDiscoverPages(
     selected: TKHarmonyTarget,
     hdc: String,
-    devtoolsPort: Int,
+    devtoolsPort: Int?,
     localPort: Int? = nil,
     environment: HarmonyArkWebCDPEnvironment
 ) async throws -> (pages: [HarmonyArkWebPage], sourceCommands: [String]) {
@@ -290,7 +319,7 @@ func harmonyArkWebCDPDiscoverPages(
 // MARK: - Page selection
 
 /// Selection rules: an explicit `--webview-id` matches `arkweb-cdp:<pageID>` or the
-/// raw page id; any other id falls back to the only visible page. Without an id a
+/// raw page id; an explicit mismatch always fails closed. Without an id a
 /// single page is selected and multiple pages are ambiguous.
 func harmonyArkWebSelectPage(_ pages: [HarmonyArkWebPage], webviewID: String?) throws -> HarmonyArkWebPage {
     if pages.isEmpty {
@@ -303,10 +332,7 @@ func harmonyArkWebSelectPage(_ pages: [HarmonyArkWebPage], webviewID: String?) t
         if let matched {
             return matched
         }
-        guard pages.count == 1, let only = pages.first else {
-            throw HarmonyArkWebBridgeCallError.webviewIDNotFound(webviewID, pages)
-        }
-        return only
+        throw HarmonyArkWebBridgeCallError.webviewIDNotFound(webviewID, pages)
     }
     guard pages.count == 1, let only = pages.first else {
         throw HarmonyArkWebBridgeCallError.ambiguousWebView(pages)
@@ -328,14 +354,14 @@ func harmonyArkWebPageDescriptor(_ page: HarmonyArkWebPage) -> TKWebViewDescript
         role: page.type ?? "page",
         text: page.title,
         identifier: page.id,
-        candidateOnly: false,
+        candidateOnly: true,
         confidence: 0.96,
         url: page.url,
         title: page.title,
         pageSessionID: page.id,
         providerStatus: "available",
         bridgeStatus: "page-bridge-required",
-        capabilities: ["visible", "webview.url", "webview.bridge-call"],
+        capabilities: ["webview.url", "webview.bridge-call"],
         missingCapabilities: ["webview.dom", "semantic-action"]
     )
 }
@@ -344,7 +370,7 @@ func harmonyArkWebPageDescriptor(_ page: HarmonyArkWebPage) -> TKWebViewDescript
 
 /// Host-side invoke script: validates the allowlist, invokes the named method, and
 /// stores the asynchronous callback envelope under a host-generated call id.
-func harmonyArkWebBridgeInvokeScript(callID: String, method: String, arguments: [String: TKJSONValue]) throws -> String {
+func harmonyArkWebBridgeInvokeScript(callID: String, method: String, arguments: [String: TKJSONValue], timeoutMs: Int = 10_000) throws -> String {
     let encoder = JSONEncoder()
     let callIDData = try encoder.encode(callID)
     let methodData = try encoder.encode(method)
@@ -359,23 +385,40 @@ func harmonyArkWebBridgeInvokeScript(callID: String, method: String, arguments: 
       var callID = \(callIDLiteral);
       var method = \(methodLiteral);
       var args = \(argumentsLiteral);
-      var store = (window.__tritonHostBridgeCalls = window.__tritonHostBridgeCalls || {});
+      var store = (window.__tritonHostBridgeCalls = window.__tritonHostBridgeCalls || Object.create(null));
       var bridge = window.__tritonBridge;
-      if (!bridge || !bridge.methods || typeof bridge.methods[method] !== "function") {
-        var missing = JSON.stringify({ ok: false, error: { code: "webview_method_not_allowed", message: "Method is not allowlisted: " + method, hint: "Expose the method through window.__tritonBridge.methods or use triton webview snapshot --include metadata,text,dom,forms --json for linked validation." } });
-        store[callID] = missing;
-        return missing;
+      var descriptor = bridge && bridge.methods && Object.getOwnPropertyDescriptor(bridge.methods, method);
+      if (!descriptor || typeof descriptor.value !== "function") {
+        return JSON.stringify({ ok: false, error: { code: "webview_method_not_allowed", message: "Method is not allowlisted: " + method, hint: "Register an own function on window.__tritonBridge.methods." } });
+      }
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+        return JSON.stringify({ ok: false, error: { code: "webview_not_found", message: "Selected ArkWeb page is hidden." } });
+      }
+      store[callID] = null;
+      if (typeof setTimeout === "function") {
+        setTimeout(function() { delete store[callID]; }, \(max(1, min(timeoutMs, 300_000)) + 1000));
+      }
+      var settled = false;
+      function reject(error) {
+        if (settled || !Object.prototype.hasOwnProperty.call(store, callID)) return;
+        settled = true;
+        store[callID] = JSON.stringify({ ok: false, error: { code: "javascript_error", message: String(error && error.message ? error.message : error) } });
+      }
+      function complete(value) {
+        if (settled || !Object.prototype.hasOwnProperty.call(store, callID)) return;
+        try {
+          var encoded = JSON.stringify({ ok: true, result: value === undefined ? null : value });
+          settled = true;
+          store[callID] = encoded;
+        } catch (error) { reject(error); }
       }
       try {
-        Promise.resolve(bridge.methods[method](args)).then(function(value) {
-          store[callID] = JSON.stringify({ ok: true, result: value === undefined ? null : value });
-        }).catch(function(error) {
-          store[callID] = JSON.stringify({ ok: false, error: { code: "javascript_error", message: String(error && error.message ? error.message : error) } });
-        });
+        var returned = descriptor.value.call(bridge.methods, args, complete, reject);
+        if (returned !== undefined) Promise.resolve(returned).then(complete, reject);
         return JSON.stringify({ ok: true, pending: true, callID: callID });
       } catch (error) {
         var syncError = JSON.stringify({ ok: false, error: { code: "javascript_error", message: String(error && error.message ? error.message : error) } });
-        store[callID] = syncError;
+        delete store[callID];
         return syncError;
       }
     })()
@@ -424,6 +467,8 @@ func decodeHarmonyArkWebBridgeEnvelope(_ value: String?) throws -> HarmonyArkWeb
 
 func harmonyArkWebBridgeCallError(fromEnvelopeError envelopeError: HarmonyArkWebBridgeEnvelopeError) -> HarmonyArkWebBridgeCallError {
     switch envelopeError.code {
+    case "webview_not_found":
+        return .webviewNotFound
     case "webview_method_not_allowed":
         return .methodNotAllowed(envelopeError.message)
     case "javascript_error":
@@ -475,7 +520,7 @@ func harmonyArkWebBridgeCall(
     method: String,
     params: [String: TKJSONValue],
     timeoutMs: Int?,
-    devtoolsPort: Int,
+    devtoolsPort: Int?,
     cdpLocalPort: Int?,
     environment: HarmonyArkWebCDPEnvironment
 ) async throws -> WebViewBridgeCallSummary {
@@ -513,9 +558,10 @@ func harmonyArkWebBridgeCall(
             let session = environment.sessionFactory(harmonyArkWebSocketURL(endpoint: endpoint, pageID: page.id))
             sourceCommands.append("WS \(harmonyArkWebSocketURL(endpoint: endpoint, pageID: page.id).absoluteString) Runtime.evaluate")
             let callID = "triton-harmony-bridge-\(UUID().uuidString)"
+            let invocationStartedAt = environment.now()
 
             func runSessionInteraction() async throws -> WebViewBridgeCallSummary {
-                let invokeScript = try harmonyArkWebBridgeInvokeScript(callID: callID, method: method, arguments: params)
+                let invokeScript = try harmonyArkWebBridgeInvokeScript(callID: callID, method: method, arguments: params, timeoutMs: Int(timeoutSeconds * 1000))
                 let ack = try await session.evaluate(expression: invokeScript, timeoutSeconds: timeoutSeconds)
                 if let ackEnvelope = try decodeHarmonyArkWebBridgeEnvelope(ack), !ackEnvelope.ok {
                     let bridgeError = ackEnvelope.error.map(harmonyArkWebBridgeCallError(fromEnvelopeError:))
@@ -524,7 +570,7 @@ func harmonyArkWebBridgeCall(
                 }
                 let pollScript = try harmonyArkWebBridgePollScript(callID: callID)
                 while true {
-                    let elapsed = environment.now().timeIntervalSince(startedAt)
+                    let elapsed = environment.now().timeIntervalSince(invocationStartedAt)
                     guard elapsed < timeoutSeconds else {
                         throw HarmonyArkWebBridgeCallFailure(
                             error: .bridgeTimeout("ArkWeb page bridge did not call back for method \(method) within \(Int(timeoutSeconds * 1000)) ms."),
@@ -533,7 +579,7 @@ func harmonyArkWebBridgeCall(
                     }
                     let pollValue = try await session.evaluate(
                         expression: pollScript,
-                        timeoutSeconds: max(0.001, timeoutSeconds - environment.now().timeIntervalSince(startedAt))
+                        timeoutSeconds: max(0.001, timeoutSeconds - environment.now().timeIntervalSince(invocationStartedAt))
                     )
                     if let envelope = try decodeHarmonyArkWebBridgeEnvelope(pollValue) {
                         if envelope.ok {
@@ -556,7 +602,8 @@ func harmonyArkWebBridgeCall(
                             ?? HarmonyArkWebBridgeCallError.javascriptError("ArkWeb bridge call failed without an error envelope.")
                         throw HarmonyArkWebBridgeCallFailure(error: bridgeError, sourceCommands: [])
                     }
-                    try await Task.sleep(nanoseconds: UInt64(environment.pollIntervalSeconds * 1_000_000_000))
+                    let remaining = timeoutSeconds - environment.now().timeIntervalSince(invocationStartedAt)
+                    try await Task.sleep(nanoseconds: UInt64(max(0, min(environment.pollIntervalSeconds, remaining)) * 1_000_000_000))
                 }
             }
 
@@ -566,6 +613,8 @@ func harmonyArkWebBridgeCall(
             do {
                 summary = try await runSessionInteraction()
             } catch {
+                let literal = String(data: try JSONEncoder().encode(callID), encoding: .utf8)!
+                _ = try? await session.evaluate(expression: "delete (window.__tritonHostBridgeCalls || {})[\(literal)]", timeoutSeconds: 0.2)
                 await session.close()
                 switch error {
                 case let failure as HarmonyArkWebBridgeCallFailure:
@@ -613,95 +662,4 @@ func harmonyArkWebBridgeCallFailureSummary(
         sourceCommands: failure.sourceCommands,
         now: now
     )
-}
-
-// MARK: - Live CDP WebSocket session
-
-/// Default CDP session backed by `URLSessionWebSocketTask` speaking `Runtime.evaluate`.
-final class HarmonyArkWebURLSessionCDPSession: HarmonyArkWebCDPSession {
-    private let task: URLSessionWebSocketTask
-    private let lock = NSLock()
-    private var nextMessageID = 1
-
-    init(url: URL, session: URLSession = .shared) {
-        task = session.webSocketTask(with: url)
-        task.resume()
-    }
-
-    func evaluate(expression: String, timeoutSeconds: Double) async throws -> String? {
-        let messageID: Int = lock.withLock {
-            let id = nextMessageID
-            nextMessageID += 1
-            return id
-        }
-        let payload: [String: Any] = [
-            "id": messageID,
-            "method": "Runtime.evaluate",
-            "params": ["expression": expression, "returnByValue": true],
-        ]
-        let data = try JSONSerialization.data(withJSONObject: payload)
-        try await withTimeout(timeoutSeconds) { try await self.task.send(.data(data)) }
-        while true {
-            let message = try await withTimeout(timeoutSeconds) { try await self.task.receive() }
-            let messageData: Data
-            switch message {
-            case .data(let data):
-                messageData = data
-            case .string(let string):
-                messageData = Data(string.utf8)
-            @unknown default:
-                continue
-            }
-            guard let json = try? JSONSerialization.jsonObject(with: messageData) as? [String: Any] else {
-                continue
-            }
-            guard (json["id"] as? Int) == messageID else {
-                continue // CDP event or response for another message; keep reading.
-            }
-            if let exception = json["exceptionDetails"] as? [String: Any] {
-                let text = (exception["text"] as? String) ?? "Runtime.evaluate threw"
-                throw HarmonyArkWebBridgeCallError.javascriptError(text)
-            }
-            guard let result = json["result"] as? [String: Any],
-                  let inner = result["result"] as? [String: Any] else {
-                return nil
-            }
-            if let value = inner["value"] as? String {
-                return value
-            }
-            if (inner["type"] as? String) == "undefined" {
-                return nil
-            }
-            // Non-string returnByValue payloads are re-serialized to JSON text so the
-            // host-side envelope decoder keeps one code path.
-            if let value = inner["value"],
-               let data = try? JSONSerialization.data(withJSONObject: value, options: [.fragmentsAllowed]),
-               let text = String(data: data, encoding: .utf8) {
-                return text
-            }
-            return nil
-        }
-    }
-
-    func close() async {
-        task.cancel(with: .goingAway, reason: nil)
-    }
-
-    private func withTimeout<T: Sendable>(
-        _ seconds: Double,
-        _ operation: @escaping @Sendable () async throws -> T
-    ) async throws -> T {
-        try await withThrowingTaskGroup(of: T.self) { group in
-            group.addTask { try await operation() }
-            group.addTask {
-                try await Task.sleep(nanoseconds: UInt64(max(0.001, seconds) * 1_000_000_000))
-                throw HarmonyArkWebBridgeCallError.bridgeTimeout("CDP Runtime.evaluate timed out after \(Int(seconds * 1000)) ms.")
-            }
-            guard let result = try await group.next() else {
-                throw HarmonyArkWebBridgeCallError.javascriptError("CDP Runtime.evaluate produced no result.")
-            }
-            group.cancelAll()
-            return result
-        }
-    }
 }

@@ -235,7 +235,7 @@ func webViewHarmonyBridgeCallOutputContract() -> TKCommandOutputContract {
             ("webViewID", "String", true, "Selected WebView id, for example arkweb-cdp:<pageID>"),
             ("pageSessionID", "String?", false, "ArkWeb DevTools page id or provider page session id"),
             ("method", "String", true, "Explicitly named allowlisted bridge method"),
-            ("params", "[String: TKJSONValue]", true, "JSON object echo of the requested bridge arguments"),
+            ("params", "[String:TKJSONValue]", true, "JSON object echo of the requested bridge arguments"),
             ("result", "TKJSONValue?", false, "Asynchronous page bridge callback payload"),
             ("error", "TKWebViewError?", false, "Structured WebView bridge error; webview_bridge_timeout when the callback never arrives"),
             ("elapsedMs", "Int", true, "Elapsed milliseconds including the callback wait"),

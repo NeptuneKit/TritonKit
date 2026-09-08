@@ -291,7 +291,7 @@ struct WebViewBridgeCall: AsyncParsableCommand {
     @Option(help: "Select a candidate id from `triton webview list`, for example arkweb-cdp:<pageID>") var webviewID: String?
     @Option(help: "Expected page session id from `triton webview current`") var pageSessionID: String?
     @Option(help: "Bridge callback timeout in milliseconds") var timeoutMs: Int?
-    @Option(help: "ArkWeb DevTools TCP port inside the emulator for --platform harmony") var devtoolsPort: Int = 9222
+    @Option(help: "Explicit ArkWeb DevTools TCP endpoint override; default forwards the discovered Unix socket") var devtoolsPort: Int?
     @Option(help: "Fixed local port for the HDC forward; defaults to an ephemeral port") var cdpLocalPort: Int?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
