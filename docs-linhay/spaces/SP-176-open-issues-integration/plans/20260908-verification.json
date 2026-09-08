@@ -9,7 +9,7 @@
     211,
     212
   ],
-  "status": "merged-locally-awaiting-ci",
+  "status": "issues-closed",
   "tests": {
     "cli": {
       "passed": 977,
@@ -34,7 +34,7 @@
     "compileHeaderCounts": 0,
     "compactProgressBytes": 2705
   },
-  "remoteChanged": false,
+  "remoteChanged": true,
   "limitations": [
     "No private application regression",
     "Harmony ArkWeb tested using offline HDC/CDP/JavaScript fixtures",
@@ -53,5 +53,76 @@
     "d2a805a5",
     "741747ab",
     "247aa677"
-  ]
+  ],
+  "codeHead": "82a13db597ef953650f608976441f094cce32b10",
+  "codeCI": {
+    "conclusion": "success",
+    "headSha": "82a13db597ef953650f608976441f094cce32b10",
+    "status": "completed",
+    "url": "https://github.com/NeptuneKit/TritonKit/actions/runs/34179623896"
+  },
+  "closures": [
+    {
+      "closedAt": "2026-09-08T02:30:22Z",
+      "number": 207,
+      "state": "CLOSED",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/207",
+      "commentUrl": "https://github.com/NeptuneKit/TritonKit/issues/207#issuecomment-5578206483"
+    },
+    {
+      "closedAt": "2026-09-08T02:30:28Z",
+      "number": 208,
+      "state": "CLOSED",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/208",
+      "commentUrl": "https://github.com/NeptuneKit/TritonKit/issues/208#issuecomment-5578207400"
+    },
+    {
+      "closedAt": "2026-09-08T02:30:33Z",
+      "number": 209,
+      "state": "CLOSED",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/209",
+      "commentUrl": "https://github.com/NeptuneKit/TritonKit/issues/209#issuecomment-5578208060"
+    },
+    {
+      "closedAt": "2026-09-08T02:30:39Z",
+      "number": 210,
+      "state": "CLOSED",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/210",
+      "commentUrl": "https://github.com/NeptuneKit/TritonKit/issues/210#issuecomment-5578209007"
+    },
+    {
+      "closedAt": "2026-09-08T02:30:45Z",
+      "number": 211,
+      "state": "CLOSED",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/211",
+      "commentUrl": "https://github.com/NeptuneKit/TritonKit/issues/211#issuecomment-5578209600"
+    },
+    {
+      "closedAt": "2026-09-08T02:30:50Z",
+      "number": 212,
+      "state": "CLOSED",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/212",
+      "commentUrl": "https://github.com/NeptuneKit/TritonKit/issues/212#issuecomment-5578210515"
+    }
+  ],
+  "openIssueSnapshots": {
+    "initial": [
+      207,
+      208,
+      209,
+      210,
+      211,
+      212
+    ],
+    "duringCodeCI": [
+      207,
+      208,
+      209,
+      210,
+      211,
+      212
+    ],
+    "afterClosure": []
+  },
+  "archiveGate": "Verify docs-only archive push CI and final open query after this commit"
 }

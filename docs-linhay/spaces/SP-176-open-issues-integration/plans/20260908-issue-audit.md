@@ -27,7 +27,7 @@
 - Xcode真实公开package build：新的 CLI 返回 `cacheState=directory-exists`、`reuseVerification=unknown`、`incrementalExpected=false`，`observedBuild.classification=no-compilation-observed`、coverage=complete，各编译头计数0，compact progress 2705 bytes。该结果只描述观测，不升级为warm cache证明。
 - `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local` 通过；此开关仅避免脚本重复使用默认 iPhone17，已用上述独立Simulator执行实际UIKit验收。包含Release CLI build、CLI smoke、fake Harmony smoke、HTTP iOS runtime fixture smoke、docs/diff。
 - `verify.sh --ci-docs`、`check-docs.sh`、`git diff --check` 通过。分项红/绿证据与修补在 SP-170～175。
-- 主仓仅保留原有 CLAUDE.md 修改；没有提交、合并、push、issue评论/关闭或tag/release。
+- 授权前检查点：主仓仅保留原有 CLAUDE.md 修改，当时尚未提交、合并、push、issue 评论/关闭或 tag/release；授权后结果见下文。
 
 ## Remaining risk
 
@@ -40,3 +40,18 @@
 实现提交：#207 ef73884f；#208 3a1b36a9 + host duration follow-up 741747ab；#209 5681f96e；#210 cce98e4d；#211 3f668601；#212 2916fcf5 + schema follow-up 247aa677。共享schema门禁修复 d2a805a5 单独提交。主工作区 CLAUDE.md 的用户改动以 SHA256 校验保持不变，未暂存、未 stash。
 
 main push 与对应 CI 成功后再关闭已验证 issue，并独立 docs-only 归档提交/push，等待该归档 CI 与最终 open 查询后确认清零。
+
+## 远端关闭与归档
+
+已合入并推送 main（`82a13db5`），[代码 CI](https://github.com/NeptuneKit/TritonKit/actions/runs/34179623896) 通过；#207～#212 已逐条回填证据并关闭，关闭后 open 查询为 0。
+
+| Issue | 关闭时间（UTC） | 修复与验证回填 |
+| --- | --- | --- |
+| #207 | 2026-09-08T02:30:22Z | [关闭说明](https://github.com/NeptuneKit/TritonKit/issues/207#issuecomment-5578206483) |
+| #208 | 2026-09-08T02:30:28Z | [关闭说明](https://github.com/NeptuneKit/TritonKit/issues/208#issuecomment-5578207400) |
+| #209 | 2026-09-08T02:30:33Z | [关闭说明](https://github.com/NeptuneKit/TritonKit/issues/209#issuecomment-5578208060) |
+| #210 | 2026-09-08T02:30:39Z | [关闭说明](https://github.com/NeptuneKit/TritonKit/issues/210#issuecomment-5578209007) |
+| #211 | 2026-09-08T02:30:45Z | [关闭说明](https://github.com/NeptuneKit/TritonKit/issues/211#issuecomment-5578209600) |
+| #212 | 2026-09-08T02:30:50Z | [关闭说明](https://github.com/NeptuneKit/TritonKit/issues/212#issuecomment-5578210515) |
+
+初始及代码 CI 期间的 open 队列均为 #207～#212；关闭后复查为空。main 本地总门禁及 docs 门禁在集成后再次通过。归档内容只更新 space、索引、验收 JSON 与 memory；推送后需等待此 docs-only 提交自己的 CI 并最终复查 open 队列。保留所有 worktree 与用户 CLAUDE.md 修改；未发布 release/tag。

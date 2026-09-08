@@ -1,5 +1,7 @@
 # SP-174 · UILabel 文本属性取证（#211）
 
+> 当前状态：已归档。主线代码 CI 通过，对应 issue 已关闭；以下前期验证记录保留为历史。
+
 - 状态：实现与 macOS 回归完成，独立 worktree 待主控集成及 UIKit 验证。
 - Issue：[#211](https://github.com/NeptuneKit/TritonKit/issues/211)
 - 影响：embedded UIKit 属性采集与既有 `debug attrs` 读取；无新增控制面。
@@ -22,4 +24,4 @@
 
 ## 2026-09-08 主控集成验收
 
-2026-09-08 用户已授权提交、合入 main、推送和关闭 issue；各实现分支已串行合入本地 main，正在等待 push/CI 后远端收口。最终 CLI 全量 977/977、根包 269/269、专用 iOS 26.5 Simulator UIKit 46/46 通过；本地总门禁通过。UIKit 覆盖包含 collection selection、longPress fail-closed、富文本 run 和实际 trait；Harmony 为离线 CDP/HDC fixture，不声称真实 DevEco smoke。详细证据与失败→修补过程见 ../SP-176-open-issues-integration/plans/20260908-issue-audit.md。
+2026-09-08 用户授权后，已合入并推送 main（`82a13db5`），[代码 CI](https://github.com/NeptuneKit/TritonKit/actions/runs/34179623896) 通过；#207～#212 已逐条回填证据并关闭，关闭后 open 查询为 0。最终 CLI 全量 977/977、根包 269/269、专用 iOS 26.5 Simulator UIKit 46/46 通过；本地总门禁通过。UIKit 覆盖包含 collection selection、longPress fail-closed、富文本 run 和实际 trait；Harmony 为离线 CDP/HDC fixture，不声称真实 DevEco smoke。详细证据与失败→修补过程见 ../SP-176-open-issues-integration/plans/20260908-issue-audit.md。

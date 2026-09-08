@@ -13,7 +13,7 @@
 
 ## 状态
 
-本地验收通过：CLI 977/977、根包 269/269、真实 iOS Simulator UIKit 46/46。用户已授权；代码已从独立分支串行合入 main，正在等待 push/CI 与 issue 关闭。
+本地验收通过：CLI 977/977、根包 269/269、真实 iOS Simulator UIKit 46/46。已合入并推送 main（`82a13db5`），[代码 CI](https://github.com/NeptuneKit/TritonKit/actions/runs/34179623896) 通过；#207～#212 已逐条回填证据并关闭，关闭后 open 查询为 0。 本次 docs-only 归档推送后继续复核归档 CI 和最终 open 集合。
 
 ## 验收入口
 
