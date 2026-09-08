@@ -5,12 +5,13 @@ import TritonKitShared
 #if canImport(UIKit)
 import UIKit
 
-@Suite
+extension TKUIKitWindowTests {
+@Suite(.serialized)
 struct TKRuntimeInputActionsTests {
     @MainActor
     @Test("target oid tap fails closed after navigation detaches the old view")
-    func targetOIDTapFailsClosedForDetachedView() {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+    func targetOIDTapFailsClosedForDetachedView() throws {
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
         let oldView = UIView(frame: CGRect(x: 40, y: 80, width: 200, height: 60))
         window.addSubview(oldView)
         window.makeKeyAndVisible()
@@ -27,9 +28,9 @@ struct TKRuntimeInputActionsTests {
 
     @MainActor
     @Test("UIButton primary-action menu uses public UIKit activation")
-    func buttonPrimaryActionMenuUsesPublicUIKitActivation() async {
+    func buttonPrimaryActionMenuUsesPublicUIKitActivation() async throws {
         guard #available(iOS 17.4, *) else { return }
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
         let rootViewController = UIViewController()
         let button = UIButton(type: .system)
         button.frame = CGRect(x: 40, y: 80, width: 240, height: 44)
@@ -126,8 +127,8 @@ struct TKRuntimeInputActionsTests {
 
     @MainActor
     @Test("UISlider swipe sets value from end coordinate")
-    func sliderSwipeSetsValueFromEndCoordinate() {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 120))
+    func sliderSwipeSetsValueFromEndCoordinate() throws {
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 120))
         let slider = UISlider(frame: CGRect(x: 40, y: 40, width: 200, height: 40))
         slider.minimumValue = 0
         slider.maximumValue = 100
@@ -152,9 +153,9 @@ struct TKRuntimeInputActionsTests {
     }
 
     @MainActor
-    @Test("UIControl long press submits touch down and touch up events")
-    func controlLongPressSubmitsTouchEvents() async {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 120))
+    @Test("UIControl long press fails closed without synthetic control callbacks")
+    func controlLongPressDoesNotSubmitTouchEvents() async throws {
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 120))
         let control = UIControl(frame: CGRect(x: 40, y: 30, width: 160, height: 60))
         let recorder = ControlEventRecorder()
         control.addTarget(recorder, action: #selector(ControlEventRecorder.touchDown), for: .touchDown)
@@ -165,16 +166,18 @@ struct TKRuntimeInputActionsTests {
 
         let result = await performLongPress(.longPress(x: 80, y: 50, duration: 0.05))
 
-        #expect(result.ok)
+        #expect(!result.ok)
         #expect(result.action == "longPress")
-        #expect(result.strategy == "control-long-press-touch-events")
-        #expect(recorder.events == ["down", "up"])
+        #expect(result.strategy == "embedded-long-press-unsupported")
+        #expect(result.error?.code == "unsupported_capability")
+        #expect(result.error?.nextAction != nil)
+        #expect(recorder.events.isEmpty)
     }
 
     @MainActor
     @Test("UIView long press gesture does not use private recognizer target introspection")
-    func viewLongPressGestureDoesNotUsePrivateRecognizerTargetIntrospection() async {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 120))
+    func viewLongPressGestureDoesNotUsePrivateRecognizerTargetIntrospection() async throws {
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 120))
         let view = UIView(frame: CGRect(x: 40, y: 30, width: 160, height: 60))
         let target = GestureLongPressTarget()
         view.addGestureRecognizer(UILongPressGestureRecognizer(target: target, action: #selector(GestureLongPressTarget.didLongPress(_:))))
@@ -187,14 +190,66 @@ struct TKRuntimeInputActionsTests {
 
         #expect(!result.ok)
         #expect(target.longPressCount == 0)
-        #expect(result.message == "UILongPressGestureRecognizer target actions are not exposed through public UIKit runtime APIs")
+        #expect(result.error?.code == "unsupported_capability")
+        #expect(result.error?.nextAction != nil)
         #expect(result.strategy == "long-press-gesture-recognizer")
     }
 
     @MainActor
+    @Test("UIControl with local or ancestor long-press recognizer never sends touch actions")
+    func controlLongPressRecognizerFailsClosed() async throws {
+        for recognizerOnAncestor in [false, true] {
+            let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+            let container = UIView(frame: window.bounds)
+            let control = UIControl(frame: CGRect(x: 40, y: 30, width: 160, height: 60))
+            let recorder = ControlEventRecorder()
+            control.addTarget(recorder, action: #selector(ControlEventRecorder.touchDown), for: .touchDown)
+            control.addTarget(recorder, action: #selector(ControlEventRecorder.touchUpInside), for: .touchUpInside)
+            let target = GestureLongPressTarget()
+            let recognizer = UILongPressGestureRecognizer(target: target, action: #selector(GestureLongPressTarget.didLongPress(_:)))
+            (recognizerOnAncestor ? container : control).addGestureRecognizer(recognizer)
+            container.addSubview(control)
+            window.addSubview(container)
+            window.makeKeyAndVisible()
+            defer { window.isHidden = true }
+
+            let result = await performInput(.longPress(x: 80, y: 50, duration: 6))
+
+            #expect(!result.ok)
+            #expect(result.strategy == "long-press-gesture-recognizer")
+            #expect(result.error?.code == "unsupported_capability")
+            #expect(result.error?.nextAction != nil)
+            #expect(recorder.events.isEmpty)
+            #expect(target.longPressCount == 0)
+            #expect(recognizer.state == .possible)
+        }
+    }
+
+    @MainActor
+    @Test("non-scroll control swipe returns typed unsupported without gesture callbacks")
+    func nonScrollControlSwipeFailsClosed() throws {
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+        let control = UIControl(frame: CGRect(x: 40, y: 30, width: 160, height: 120))
+        let pan = UIPanGestureRecognizer()
+        control.addGestureRecognizer(pan)
+        window.addSubview(control)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+
+        let result = performSwipe(.swipe(startX: 80, startY: 100, endX: 80, endY: 40))
+
+        #expect(!result.ok)
+        #expect(result.strategy == "embedded-swipe-gesture-unsupported")
+        #expect(result.error?.code == "unsupported_capability")
+        #expect(result.error?.nextAction != nil)
+        #expect(result.targetOID == TKObjectRegistry.shared.register(control))
+        #expect(pan.state == .possible)
+    }
+
+    @MainActor
     @Test("UIView tap gesture does not use private recognizer target introspection")
-    func viewTapGestureDoesNotUsePrivateRecognizerTargetIntrospection() async {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 120))
+    func viewTapGestureDoesNotUsePrivateRecognizerTargetIntrospection() async throws {
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 120))
         let view = UIView(frame: CGRect(x: 40, y: 30, width: 160, height: 60))
         let target = GestureTapTarget()
         view.addGestureRecognizer(UITapGestureRecognizer(target: target, action: #selector(GestureTapTarget.didTap(_:))))
@@ -214,8 +269,8 @@ struct TKRuntimeInputActionsTests {
 
     @MainActor
     @Test("UITabBar private button tap selects tab bar controller index")
-    func tabBarPrivateButtonTapSelectsTabBarControllerIndex() async {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+    func tabBarPrivateButtonTapSelectsTabBarControllerIndex() async throws {
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
         let first = UIViewController()
         first.tabBarItem = UITabBarItem(title: "One", image: nil, tag: 0)
         let second = UIViewController()
@@ -227,11 +282,25 @@ struct TKRuntimeInputActionsTests {
         tabBarController.view.layoutIfNeeded()
         defer { window.isHidden = true }
 
-        let tabBarFrame = tabBarController.tabBar.frame
-        let result = performTap(.tap(
-            x: Double(tabBarFrame.minX + tabBarFrame.width * 0.75),
-            y: Double(tabBarFrame.midY)
-        ))
+        await Task.yield()
+        window.layoutIfNeeded()
+        tabBarController.tabBar.layoutIfNeeded()
+        // Modern UIKit can place tab buttons inside transformed/floating
+        // containers. A tabBar.frame point is not a window-space tap point.
+        let candidates = allSubviews(of: tabBarController.tabBar, matching: UIControl.self)
+            .filter { control in
+                !control.isHidden && control.alpha > 0 && (
+                    control.accessibilityLabel == "Two"
+                    || allSubviews(of: control, matching: UILabel.self).contains { $0.text == "Two" }
+                )
+            }
+        let point = try #require(candidates.compactMap { control -> CGPoint? in
+            let center = control.convert(CGPoint(x: control.bounds.midX, y: control.bounds.midY), to: window)
+            guard let hit = window.hitTest(center, with: nil),
+                  hit === control || hit.isDescendant(of: control) else { return nil }
+            return center
+        }.first, "The visible second tab must expose a hit-testable control before dispatch")
+        let result = performTap(.tap(x: Double(point.x), y: Double(point.y)))
         await Task.yield()
 
         #expect(result.ok)
@@ -243,7 +312,7 @@ struct TKRuntimeInputActionsTests {
     @MainActor
     @Test("UITabBar duplicate private button layers map by visual slot")
     func duplicateTabBarButtonLayersMapByVisualSlot() async throws {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 428, height: 926))
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 428, height: 926))
         let tabBar = UITabBar(frame: CGRect(x: 0, y: 843, width: 428, height: 83))
         let items = ["Server", "Photos", "Music", "Settings"].map { UITabBarItem(title: $0, image: nil, tag: 0) }
         tabBar.items = items
@@ -287,8 +356,8 @@ struct TKRuntimeInputActionsTests {
 
     @MainActor
     @Test("deleteBackward removes one character from focused UIKeyInput")
-    func deleteBackwardRemovesOneCharacterFromFocusedInput() async {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 120))
+    func deleteBackwardRemovesOneCharacterFromFocusedInput() async throws {
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 120))
         let textField = UITextField(frame: CGRect(x: 20, y: 20, width: 200, height: 44))
         textField.text = "abc"
         window.addSubview(textField)
@@ -307,18 +376,21 @@ struct TKRuntimeInputActionsTests {
 
     @MainActor
     @Test("pinch scales nearest zoomable UIScrollView")
-    func pinchScalesNearestZoomableScrollView() {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 320))
+    func pinchScalesNearestZoomableScrollView() throws {
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 320))
         let scrollView = UIScrollView(frame: CGRect(x: 20, y: 20, width: 240, height: 240))
         scrollView.minimumZoomScale = 1
         scrollView.maximumZoomScale = 4
-        scrollView.zoomScale = 1.5
         let content = UIView(frame: CGRect(x: 0, y: 0, width: 480, height: 480))
         scrollView.addSubview(content)
         scrollView.contentSize = content.bounds.size
+        let delegate = ZoomContentDelegate(content: content)
+        scrollView.delegate = delegate
         window.addSubview(scrollView)
         window.makeKeyAndVisible()
-        defer { window.isHidden = true }
+        defer { window.isHidden = true; withExtendedLifetime(delegate) {} }
+        scrollView.setZoomScale(1.5, animated: false)
+        try #require(scrollView.zoomScale == 1.5, "UIScrollView must have a public zooming view and established initial scale")
 
         let result = performPinch(.pinch(centerX: 80, centerY: 80, startDistance: 60, endDistance: 120, scale: 2))
 
@@ -330,8 +402,8 @@ struct TKRuntimeInputActionsTests {
 
     @MainActor
     @Test("pinch reports unsupported when target is not zoomable")
-    func pinchReportsUnsupportedWhenTargetIsNotZoomable() {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 320))
+    func pinchReportsUnsupportedWhenTargetIsNotZoomable() throws {
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 320))
         let view = UIView(frame: CGRect(x: 20, y: 20, width: 240, height: 240))
         window.addSubview(view)
         window.makeKeyAndVisible()
@@ -344,6 +416,19 @@ struct TKRuntimeInputActionsTests {
         #expect(result.message == "Hit view is not inside a zoomable UIScrollView")
         #expect(result.strategy == "zoomable-scroll-view-required")
     }
+}
+
+}
+
+private final class ZoomContentDelegate: NSObject, UIScrollViewDelegate {
+    let content: UIView
+
+    init(content: UIView) {
+        self.content = content
+        super.init()
+    }
+
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? { content }
 }
 
 private final class ActivatingControl: UIControl {
