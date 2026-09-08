@@ -5,7 +5,7 @@ struct WebView: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "webview",
         abstract: "Inspect current WebView candidates without claiming DOM or bridge access",
-        subcommands: [WebViewList.self, WebViewCurrent.self, WebViewCurrentURL.self, WebViewSnapshot.self, WebViewCall.self, WebViewEvents.self, WebViewWait.self, WebViewFocus.self, WebViewType.self, WebViewSetText.self]
+        subcommands: [WebViewList.self, WebViewCurrent.self, WebViewCurrentURL.self, WebViewSnapshot.self, WebViewCall.self, WebViewBridgeCall.self, WebViewEvents.self, WebViewWait.self, WebViewFocus.self, WebViewType.self, WebViewSetText.self]
     )
 }
 
@@ -265,6 +265,52 @@ struct WebViewCall: AsyncParsableCommand {
             webViewID: webviewID,
             pageSessionID: pageSessionID,
             timeoutMs: timeoutMs,
+            format: format,
+            json: json
+        )
+    }
+}
+
+/// SP-173 / GitHub #207: explicit allowlisted page bridge call with async callback
+/// wait. Harmony runs the host-side ArkWeb CDP adapter; iOS wraps the embedded
+/// runtime `webview.call` contract.
+struct WebViewBridgeCall: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "bridge-call",
+        abstract: "Call an explicitly named allowlisted WebView bridge method and wait for the async callback"
+    )
+
+    @Option(help: "Allowlisted bridge method exposed by window.__tritonBridge.methods") var method: String
+    @Option(help: "JSON object of bridge arguments, for example '{\"k\":\"v\"}'") var params: String?
+    @Option(help: "Observation platform: ios or harmony") var platform: ObservationPlatform = .harmony
+    @Option(help: "Target id from `triton list` or Harmony hdc target") var target: String = TKLocalTargetID
+    @Option(help: "Path to hdc executable for --platform harmony") var hdc: String = "hdc"
+    @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
+    @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767") var runtimeBaseURL: String?
+    @Option(help: "Select a candidate id from `triton webview list`, for example arkweb-cdp:<pageID>") var webviewID: String?
+    @Option(help: "Expected page session id from `triton webview current`") var pageSessionID: String?
+    @Option(help: "Bridge callback timeout in milliseconds") var timeoutMs: Int?
+    @Option(help: "Explicit ArkWeb DevTools TCP endpoint override; default forwards the discovered Unix socket") var devtoolsPort: Int?
+    @Option(help: "Fixed local port for the HDC forward; defaults to an ephemeral port") var cdpLocalPort: Int?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runWebViewBridgeCall(
+            method: method,
+            paramsJSON: params,
+            platform: platform,
+            target: target,
+            hdc: hdc,
+            host: host,
+            port: port,
+            runtimeBaseURL: runtimeBaseURL,
+            webViewID: webviewID,
+            pageSessionID: pageSessionID,
+            timeoutMs: timeoutMs,
+            devtoolsPort: devtoolsPort,
+            cdpLocalPort: cdpLocalPort,
             format: format,
             json: json
         )

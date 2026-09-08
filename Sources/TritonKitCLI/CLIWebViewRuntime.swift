@@ -555,6 +555,220 @@ func runWebViewCall(
     }
 }
 
+// MARK: - SP-173 / GitHub #207: webview bridge-call
+
+/// Parses `--params` as a JSON object of bridge arguments.
+func parseWebViewBridgeParamsJSON(_ paramsJSON: String?) throws -> [String: TKJSONValue] {
+    guard let paramsJSON, !paramsJSON.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        return [:]
+    }
+    guard let data = paramsJSON.data(using: .utf8),
+          let object = try? JSONSerialization.jsonObject(with: data),
+          let dictionary = object as? [String: Any] else {
+        throw RuntimeError(#"--params must be a JSON object string, for example --params '{"k":"v"}'."#)
+    }
+    return try dictionary.mapValues { try TKJSONValue.fromJSONObject($0) }
+}
+
+func printWebViewBridgeCallSummary(_ summary: WebViewBridgeCallSummary, outputFormat: ClientOutputFormat) throws {
+    switch outputFormat {
+    case .json:
+        print(try encodeJSON(summary))
+    case .text:
+        if summary.ok {
+            print("ok: true")
+            print("method: \(summary.method)")
+            print("webViewID: \(summary.webViewID)")
+            print("source: \(summary.source)")
+            if let result = summary.result { print("result: \(result)") }
+        } else {
+            print("\(summary.error?.code.rawValue ?? "webview_bridge_call_failed"): \(summary.error?.message ?? "Bridge call failed")")
+            if let hint = summary.error?.hint { print("hint: \(hint)") }
+        }
+    }
+}
+
+func runWebViewBridgeCall(
+    method: String,
+    paramsJSON: String?,
+    platform: ObservationPlatform,
+    target: String,
+    hdc: String,
+    host: String,
+    port: Int,
+    runtimeBaseURL: String?,
+    webViewID: String?,
+    pageSessionID: String?,
+    timeoutMs: Int?,
+    devtoolsPort: Int?,
+    cdpLocalPort: Int?,
+    format: ClientOutputFormat,
+    json: Bool
+) async throws {
+    let outputFormat = effectiveFormat(format, json: json)
+    guard !method.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+          timeoutMs.map({ (1...300_000).contains($0) }) ?? true,
+          devtoolsPort.map({ (1...65535).contains($0) }) ?? true,
+          cdpLocalPort.map({ (1...65535).contains($0) }) ?? true else {
+        try failHostValidation(code: "validation_failed", message: "Bridge method must be nonempty, timeout-ms must be 1...300000, and TCP ports must be 1...65535.", hint: "Correct bridge-call options before retrying.", outputFormat: outputFormat)
+    }
+    if platform == .harmony, pageSessionID != nil {
+        try failHostValidation(code: "unsupported_capability", message: "Harmony CDP target IDs do not prove navigation session identity; --page-session-id is not supported for this adapter.", hint: "Select the current ArkWeb with --webview-id; use an embedded provider when navigation session enforcement is required.", outputFormat: outputFormat)
+    }
+    let params: [String: TKJSONValue]
+    do {
+        params = try parseWebViewBridgeParamsJSON(paramsJSON)
+    } catch {
+        try failHostValidation(
+            code: "validation_failed",
+            message: "\(error)",
+            hint: #"Pass a JSON object string, for example --params '{"k":"v"}'."#,
+            outputFormat: outputFormat
+        )
+    }
+    switch platform {
+    case .android:
+        try failHostValidation(
+            code: "unsupported_capability",
+            message: "Android WebView bridge calls are not implemented yet.",
+            hint: "Add an Android WebView provider before requesting DOM bridge calls.",
+            outputFormat: outputFormat
+        )
+    case .ios:
+        try await runIOSWebViewBridgeCall(
+            method: method,
+            params: params,
+            target: target,
+            host: host,
+            port: port,
+            runtimeBaseURL: runtimeBaseURL,
+            webViewID: webViewID,
+            pageSessionID: pageSessionID,
+            timeoutMs: timeoutMs,
+            outputFormat: outputFormat
+        )
+    case .harmony:
+        try await runHarmonyWebViewBridgeCall(
+            method: method,
+            params: params,
+            target: target,
+            hdc: hdc,
+            webViewID: webViewID,
+            timeoutMs: timeoutMs,
+            devtoolsPort: devtoolsPort,
+            cdpLocalPort: cdpLocalPort,
+            outputFormat: outputFormat
+        )
+    }
+}
+
+/// iOS keeps riding the embedded runtime `webview.call` contract; this wrapper only
+/// adds the `--params` JSON object echo and the unified bridge-call summary shape.
+private func runIOSWebViewBridgeCall(
+    method: String,
+    params: [String: TKJSONValue],
+    target: String,
+    host: String,
+    port: Int,
+    runtimeBaseURL: String?,
+    webViewID: String?,
+    pageSessionID: String?,
+    timeoutMs: Int?,
+    outputFormat: ClientOutputFormat
+) async throws {
+    do {
+        let request = TKWebViewBridgeCallRequest(
+            webViewID: webViewID,
+            pageSessionID: pageSessionID,
+            method: method,
+            arguments: params,
+            timeoutMs: timeoutMs,
+            sourceCommand: "triton webview bridge-call --method \(method) --json"
+        )
+        let payload = try JSONEncoder().encode(request)
+        let data: Data
+        if let runtimeBaseURL {
+            data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewBridgeCall, body: payload)
+        } else {
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
+            data = try await client.request(type: "webViewBridgeCall", payload: payload)
+        }
+        let response = try JSONDecoder().decode(TKWebViewBridgeCallResponse.self, from: data)
+        let summary = WebViewBridgeCallSummary(
+            ok: response.ok,
+            platform: "ios",
+            capturedAt: response.capturedAt,
+            target: response.target,
+            webViewID: response.webViewID,
+            pageSessionID: response.pageSessionID,
+            method: response.method,
+            params: params,
+            result: response.result,
+            error: response.error,
+            elapsedMs: response.elapsedMs,
+            source: "embedded-runtime",
+            sourceCommands: [],
+            redaction: response.redaction
+        )
+        try printWebViewBridgeCallSummary(summary, outputFormat: outputFormat)
+        if !summary.ok {
+            throw ExitCode.failure
+        }
+    } catch {
+        if error is ExitCode { throw error }
+        try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
+    }
+}
+
+/// Harmony host adapter: HDC fport + ArkWeb DevTools CDP + allowlisted page bridge.
+private func runHarmonyWebViewBridgeCall(
+    method: String,
+    params: [String: TKJSONValue],
+    target: String,
+    hdc: String,
+    webViewID: String?,
+    timeoutMs: Int?,
+    devtoolsPort: Int?,
+    cdpLocalPort: Int?,
+    outputFormat: ClientOutputFormat
+) async throws {
+    let selected: TKHarmonyTarget
+    do {
+        selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+    } catch {
+        if error is ExitCode { throw error }
+        try failHostCommand(error, outputFormat: outputFormat)
+    }
+    let startedAt = Date()
+    do {
+        let summary = try await harmonyArkWebBridgeCall(
+            selected: selected,
+            hdc: hdc,
+            webviewID: webViewID,
+            method: method,
+            params: params,
+            timeoutMs: timeoutMs,
+            devtoolsPort: devtoolsPort,
+            cdpLocalPort: cdpLocalPort,
+            environment: .live()
+        )
+        try printWebViewBridgeCallSummary(summary, outputFormat: outputFormat)
+        if !summary.ok {
+            throw ExitCode.failure
+        }
+    } catch let failure as HarmonyArkWebBridgeCallFailure {
+        let summary = harmonyArkWebBridgeCallFailureSummary(
+            failure,
+            target: selected.target,
+            method: method,
+            params: params,
+            startedAt: startedAt
+        )
+        try printWebViewBridgeCallSummary(summary, outputFormat: outputFormat)
+        throw ExitCode.failure
+    }
+}
+
 func runWebViewEvents(
     platform: ObservationPlatform,
     target: String,
@@ -868,7 +1082,7 @@ private func webViewCandidates(
     case .android:
         throw RuntimeError("Android WebView candidates are not implemented yet.")
     case .harmony:
-        return try harmonyWebViewCandidates(action: action, target: target, hdc: hdc, runtimeBaseURL: runtimeBaseURL, output: output)
+        return try await harmonyWebViewCandidates(action: action, target: target, hdc: hdc, runtimeBaseURL: runtimeBaseURL, output: output)
     }
 }
 
@@ -952,10 +1166,67 @@ private func normalizeProviderWebViewList(_ response: TKWebViewListResponse, act
     )
 }
 
-private func harmonyWebViewCandidates(action: String, target: String, hdc: String, runtimeBaseURL: String?, output: String?) throws -> TKWebViewListResponse {
+private func harmonyWebViewCandidates(
+    action: String,
+    target: String,
+    hdc: String,
+    runtimeBaseURL: String?,
+    output: String?
+) async throws -> TKWebViewListResponse {
     let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
     let layout = try dumpHarmonyLayout(selected: selected, hdc: hdc, output: output)
-    let candidates = webViewDescriptors(fromHarmony: try TKHarmonyLayoutParser.nodeSummaries(in: layout.data))
+    // SP-173 / GitHub #207: probe the ArkWeb DevTools endpoint best-effort so the
+    // list response can expose bridge-call provider state instead of a permanent
+    // "provider not registered". A failed probe degrades to the previous shape.
+    let cdp = try? await harmonyArkWebCDPDiscoverPages(
+        selected: selected,
+        hdc: hdc,
+        devtoolsPort: nil,
+        environment: .live()
+    )
+    return try harmonyWebViewCandidatesWithCDP(
+        action: action,
+        selected: selected,
+        layout: layout,
+        cdp: cdp,
+        runtimeBaseURL: runtimeBaseURL
+    )
+}
+
+/// Pure assembly of the Harmony WebView list response with optional ArkWeb CDP
+/// provider fusion; kept offline-testable without HDC execution.
+func harmonyWebViewCandidatesWithCDP(
+    action: String,
+    selected: TKHarmonyTarget,
+    layout: HarmonyLayoutCapture,
+    cdp: (pages: [HarmonyArkWebPage], sourceCommands: [String])?,
+    runtimeBaseURL: String?
+) throws -> TKWebViewListResponse {
+    let bridgeCallAvailable = cdp?.pages.isEmpty == false
+    var candidates = webViewDescriptors(
+        fromHarmony: try TKHarmonyLayoutParser.nodeSummaries(in: layout.data)
+    )
+    var sourceCommands = layout.sourceCommands
+    var sources: [TKWebViewSource] = [
+        TKWebViewSource(name: "host-layout", available: true, sourceCommands: layout.sourceCommands),
+        TKWebViewSource(
+            name: "runtime-tree",
+            available: runtimeBaseURL != nil,
+            reason: runtimeBaseURL == nil ? "runtime-base-url not provided" : "runtime fusion not implemented for webview command",
+            sourceCommands: runtimeBaseURL.map { ["GET \($0)/snapshot"] } ?? []
+        ),
+    ]
+    if let cdp, !cdp.pages.isEmpty {
+        candidates.append(contentsOf: cdp.pages.map(harmonyArkWebPageDescriptor))
+        sources.append(TKWebViewSource(name: "arkweb-cdp", available: true, sourceCommands: cdp.sourceCommands))
+        sourceCommands.append(contentsOf: cdp.sourceCommands)
+    } else {
+        sources.append(TKWebViewSource(name: "arkweb-cdp", available: false, reason: "no ArkWeb DevTools endpoint reachable through hdc fport"))
+    }
+    candidates.sort(by: webViewDescriptorSort)
+    let note = bridgeCallAvailable
+        ? "Harmony host layout exposes visible Web candidates and the ArkWeb DevTools CDP endpoint provides allowlisted bridge calls (CDP candidates require in-page visibility checks; host-layout IDs are not interchangeable) through `triton webview bridge-call --platform harmony`; DOM and native route state still require an embedded provider."
+        : "Harmony host layout can expose visible Web candidates only. DOM, URL, and bridge calls require an embedded provider or a reachable ArkWeb DevTools endpoint."
     return TKWebViewListResponse(
         ok: true,
         action: action,
@@ -964,14 +1235,10 @@ private func harmonyWebViewCandidates(action: String, target: String, hdc: Strin
         target: selected.target,
         current: try? TKSelectCurrentWebView(from: candidates, webViewID: nil),
         candidates: candidates,
-        sources: [
-            TKWebViewSource(name: "host-layout", available: true, sourceCommands: layout.sourceCommands),
-            TKWebViewSource(name: "runtime-tree", available: runtimeBaseURL != nil, reason: runtimeBaseURL == nil ? "runtime-base-url not provided" : "runtime fusion not implemented for webview command", sourceCommands: runtimeBaseURL.map { ["GET \($0)/snapshot"] } ?? []),
-            TKWebViewSource(name: "webview-provider", available: false, reason: "provider not registered"),
-        ],
-        sourceCommands: layout.sourceCommands,
+        sources: sources,
+        sourceCommands: sourceCommands,
         warnings: harmonyRouteWebViewWarnings(hasRuntimeBaseURL: runtimeBaseURL != nil, hasCandidates: !candidates.isEmpty),
-        note: "Harmony host layout can expose visible Web candidates only. DOM, URL, JavaScript, and bridge calls require an embedded WebView provider."
+        note: note
     )
 }
 
@@ -1045,6 +1312,7 @@ private func webViewDescriptors(fromHarmony nodes: [TKHarmonyLayoutNodeSummary])
         var capabilities = ["visible"]
         if node.bounds != nil { capabilities.append("host-coordinate-tap") }
         if node.scrollable == true { capabilities.append("host-scroll") }
+        let missingCapabilities = ["webview.url", "webview.dom", "webview.bridge-call", "semantic-action"]
         return TKWebViewDescriptor(
             webViewID: webViewID,
             platform: "harmony",
@@ -1057,7 +1325,7 @@ private func webViewDescriptors(fromHarmony nodes: [TKHarmonyLayoutNodeSummary])
             visibleRatio: node.visible == false ? 0 : 1,
             confidence: score,
             capabilities: capabilities,
-            missingCapabilities: ["webview.url", "webview.dom", "webview.bridge-call", "semantic-action"]
+            missingCapabilities: missingCapabilities
         )
     }
     .sorted(by: webViewDescriptorSort)

@@ -8,6 +8,7 @@ public enum TKWebViewErrorCode: String, Codable, Equatable {
     case webViewNavigationChanged = "webview_navigation_changed"
     case webViewBridgeUnavailable = "webview_bridge_unavailable"
     case webViewMethodNotAllowed = "webview_method_not_allowed"
+    case webViewBridgeTimeout = "webview_bridge_timeout"
     case webViewWaitTimeout = "webview_wait_timeout"
     case webViewWaitUnsupported = "webview_wait_unsupported"
     case webViewElementNotFound = "webview_element_not_found"

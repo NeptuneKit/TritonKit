@@ -218,6 +218,34 @@ func webViewBridgeCallOutputContract() -> TKCommandOutputContract {
     )
 }
 
+/// SP-173 / GitHub #207: `triton webview bridge-call` contract covering the Harmony
+/// host-side ArkWeb CDP adapter and the iOS embedded-runtime wrapper.
+func webViewHarmonyBridgeCallOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "webview.bridge-call",
+        format: "json",
+        kind: "webview-bridge-call",
+        model: "WebViewBridgeCallSummary",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the allowlisted WebView bridge call succeeded"),
+            ("action", "String", true, "webview.bridge-call"),
+            ("platform", "String", true, "ios or harmony"),
+            ("capturedAt", "String", true, "Capture timestamp"),
+            ("target", "String", true, "Resolved target selector"),
+            ("webViewID", "String", true, "Selected WebView id, for example arkweb-cdp:<pageID>"),
+            ("pageSessionID", "String?", false, "ArkWeb DevTools page id or provider page session id"),
+            ("method", "String", true, "Explicitly named allowlisted bridge method"),
+            ("params", "[String:TKJSONValue]", true, "JSON object echo of the requested bridge arguments"),
+            ("result", "TKJSONValue?", false, "Asynchronous page bridge callback payload"),
+            ("error", "TKWebViewError?", false, "Structured WebView bridge error; webview_bridge_timeout when the callback never arrives"),
+            ("elapsedMs", "Int", true, "Elapsed milliseconds including the callback wait"),
+            ("source", "String", true, "arkweb-cdp for the Harmony host adapter or embedded-runtime for iOS"),
+            ("sourceCommands", "[String]", true, "Underlying hdc/CDP commands that produced this response"),
+            ("redaction", "TKWebViewRedaction", true, "WebView redaction policy"),
+        ])
+    )
+}
+
 func webViewEventsOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "webview.events",

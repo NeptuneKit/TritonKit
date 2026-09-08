@@ -197,3 +197,4 @@
 | `SP-170-issue-210-xcode-test-bounded-jsonl` | [`SP-170-issue-210-xcode-test-bounded-jsonl`](./SP-170-issue-210-xcode-test-bounded-jsonl/README.md) | 执行 | #210：xcode test 有界 JSONL 与 schema --progress 作用域修复 进行中 |
 | `SP-171-issue-209-collection-cell-activation` | [`SP-171-issue-209-collection-cell-activation`](./SP-171-issue-209-collection-cell-activation/README.md) | 执行 | #209：UICollectionViewCell 安全激活（对齐 table-cell 选择契约） 进行中 |
 | `SP-172-issue-208-longpress-gesture-path` | [`SP-172-issue-208-longpress-gesture-path`](./SP-172-issue-208-longpress-gesture-path/README.md) | 执行 | #208：longPress/坐标 swipe 手势路径 fail-closed 修复 进行中 |
+| `SP-173-issue-207-harmony-arkweb-bridge-call` | [`SP-173-issue-207-harmony-arkweb-bridge-call`](./SP-173-issue-207-harmony-arkweb-bridge-call/README.md) | 执行 | #207：Harmony ArkWeb bridge-call host-side provider 进行中 |
