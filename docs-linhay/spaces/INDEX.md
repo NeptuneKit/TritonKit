@@ -201,3 +201,4 @@
 | `SP-174-issue-211-label-text-attributes` | [`SP-174-issue-211-label-text-attributes`](./SP-174-issue-211-label-text-attributes/README.md) | 已归档 | 主线 82a13db5 / CI 34179623896 通过；对应 issue 已关闭，worktree 保留 |
 | `SP-175-issue-212-xcode-cache-evidence` | [`SP-175-issue-212-xcode-cache-evidence`](./SP-175-issue-212-xcode-cache-evidence/README.md) | 已归档 | 主线 82a13db5 / CI 34179623896 通过；对应 issue 已关闭，worktree 保留 |
 | `SP-176-open-issues-integration` | [`SP-176-open-issues-integration`](./SP-176-open-issues-integration/README.md) | 已归档 | 主线 82a13db5 / CI 34179623896 通过；对应 issue 已关闭，worktree 保留 |
+| `SP-177-issue-213-real-device-runtime` | [`SP-177-issue-213-real-device-runtime`](./SP-177-issue-213-real-device-runtime/README.md) | 执行中 | 新建规范目录 |

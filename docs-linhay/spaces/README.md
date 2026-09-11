@@ -268,3 +268,4 @@
 - [20260709-issues-141-142](./20260709-issues-141-142/README.md)
 - [20260709-packaged-web-mjpeg](./20260709-packaged-web-mjpeg/README.md)
 - [20260710-issues-144-145-action-docs](./20260710-issues-144-145-action-docs/README.md)
+| 执行中 | [SP-177-issue-213-real-device-runtime](./SP-177-issue-213-real-device-runtime/README.md) | 修复 #213 iOS 真机启动后 embedded runtime 无法连接 | 先完成 endpoint 注入、readiness 契约与 focused tests |

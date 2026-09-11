@@ -180,11 +180,16 @@ func runIOSSmoke(
         do {
             runtime = try await dependencies.makeRuntimeClient(options.target, options.host, options.port)
         } catch {
+            let hint = if options.hostTarget.scope == HostDeviceScope.real.rawValue {
+                "Host launch completed, but the iOS real-device embedded runtime did not connect. Ensure the Debug app can reach Triton server over the device network, configure TRITON_HOST/TRITON_PORT or Bonjour discovery, then rerun `triton smoke ios --scope real --device \(options.hostTarget.id)`."
+            } else {
+                "Check the local runtime service, target connectivity, and `triton status`."
+            }
             return makeFail(
                 step: "runtime.connect",
                 code: "runtime_not_connected",
                 error: error,
-                hint: "Check the local runtime service, target connectivity, and `triton status`."
+                hint: hint
             )
         }
 

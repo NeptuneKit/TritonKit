@@ -73,6 +73,8 @@ struct SmokeRuntimeTests {
         #expect(summary.status == .fail)
         #expect(summary.failure?.step == "runtime.connect")
         #expect(summary.failure?.code == "runtime_not_connected")
+        #expect(summary.failure?.hint?.contains("TRITON_HOST/TRITON_PORT") == true)
+        #expect(summary.failure?.hint?.contains("--scope real") == true)
         #expect(summary.steps.map(\.name) == ["app.open-url"])
         #expect(summary.steps[0].proofSource == .hostAction)
         #expect(summary.steps[0].businessReady == false)
