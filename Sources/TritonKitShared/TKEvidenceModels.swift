@@ -1,5 +1,14 @@
 import Foundation
 
+/// Stable artifact kinds emitted by simulator resource management.
+public enum TKEvidenceResourceArtifactKind {
+    public static let status = "simulator-resource.status"
+    public static let receipt = "simulator-resource.receipt"
+    public static let measurement = "simulator-resource.measurement"
+    public static let plan = "simulator-resource.plan"
+    public static let doctor = "simulator-resource.doctor"
+}
+
 public struct TKEvidenceManifest: Codable, Equatable {
     public let ok: Bool
     public let partial: Bool
@@ -357,6 +366,11 @@ public struct TKEvidenceArtifactSummary: Codable, Equatable {
             "run.events": 15,
             "run.run": 16,
             "run.meta": 17,
+            TKEvidenceResourceArtifactKind.status: 18,
+            TKEvidenceResourceArtifactKind.receipt: 19,
+            TKEvidenceResourceArtifactKind.measurement: 20,
+            TKEvidenceResourceArtifactKind.plan: 21,
+            TKEvidenceResourceArtifactKind.doctor: 22,
             "screen-workspace.screens": 18,
             "screen-workspace.transitions": 19,
             "status": 20,
