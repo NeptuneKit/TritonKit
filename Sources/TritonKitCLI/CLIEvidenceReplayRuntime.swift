@@ -438,6 +438,8 @@ func replayEndpoint(for action: TKReplayAction) -> String {
         return "/evidence/capture"
     case .proxyProbe, .proxyCertPlan, .proxyCertInstall, .proxyServe, .proxyStart, .proxyStatus, .proxyExport, .proxyStop:
         return "/device/proxy"
+    case .simulatorResource:
+        return "/sim/resource"
     }
 }
 
@@ -467,6 +469,8 @@ func executeReplayStep(
     startedAt: Date
 ) async throws -> TKReplayStepResult {
     switch step.action {
+    case .simulatorResource:
+        throw RuntimeError("simulator-resource replay requires host execution")
     case .tap:
         let request = try await replayTapRequest(step, variables: variables, client: client)
         let input = try await executeInputRequest(request, client: client)

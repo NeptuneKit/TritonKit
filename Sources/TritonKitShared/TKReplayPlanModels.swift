@@ -16,6 +16,7 @@ public enum TKReplayAction: String, Codable, CaseIterable {
     case proxyStatus = "proxy-status"
     case proxyExport = "proxy-export"
     case proxyStop = "proxy-stop"
+    case simulatorResource = "simulator-resource"
 }
 
 public enum TKReplayWaitCondition: String, Codable, Equatable {
@@ -456,6 +457,8 @@ public enum TKReplayStepExecution {
     public static func validationErrors(for step: TKReplayPlanStep) -> [TKReplayPlanStepValidationError] {
         var errors: [TKReplayPlanStepValidationError] = []
         switch step.action {
+        case .simulatorResource:
+            return []
         case .tap:
             let selectorCount = tapSelectorCount(step)
             if selectorCount == 0 {
@@ -586,6 +589,10 @@ public enum TKReplayStepExecution {
             return try proxyExportArgv(for: step, variables: variables, strict: strict)
         case .proxyStop:
             return try proxyStopArgv(for: step, variables: variables, strict: strict)
+        case .simulatorResource:
+            let device = try substituted(step.device ?? step.platform ?? "<udid>", variables: variables, strict: strict)
+            let profile = try substituted(step.name ?? "ci", variables: variables, strict: strict)
+            return ["triton", "sim", "resource", "apply", device, "--profile", profile, "--json"]
         }
     }
 
@@ -927,7 +934,7 @@ public enum TKReplayStepExecution {
                 ))
             }
             return errors
-        case .tap, .paste, .type, .clear, .wait, .screenshot, .evidence:
+        case .tap, .paste, .type, .clear, .wait, .screenshot, .evidence, .simulatorResource:
             return []
         }
     }
@@ -1061,6 +1068,8 @@ public enum TKReplayStepExecution {
             values = ["stdout-json", "screenshot"]
         case "evidence", "capture":
             values = ["stdout-json", "evidence-bundle"]
+        case "sim":
+            values = ["stdout-json", "simulator-resource.plan", "simulator-resource.status", "simulator-resource.receipt"]
         default:
             values = ["stdout-json"]
             }

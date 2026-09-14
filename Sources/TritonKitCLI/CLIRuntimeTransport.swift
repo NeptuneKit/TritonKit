@@ -369,6 +369,8 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "runtime"
     case "xcode-discovery", "xcode-defaults", "xcode-package-build", "xcode-diagnostics", "xcodebuild", "xcode-build", "xcode-test", "xcode-run", "xcode-archive", "xcode-export", "xcresult-summary", "xcresult-failures", "xctrace-record", "coverage-report":
         return "xcode"
+    case "simulator-resource", "simulator-resource-profiles", "simulator-resource-apply", "simulator-resource-restore", "simulator-resource-verify":
+        return "host"
     case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "ios-simulator-screenshot", "ios-host-ax", "ios-host-hid", "ios-simulator-host-type", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "android-ax", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-certificate-plan", "network-certificate-install", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-app-process-console", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "host-app", "ios-real-app", "ios-real-app-pull", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-info":
         return "host"
     case "observe", "observe-ios", "observe-ios-host-ax", "observe-android", "observe-harmony", "observe-outline", "node-resolve", "node-alias-resolve", "list", "inspect", "hierarchy", "hierarchy-scene", "android-hierarchy", "harmony-hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait":
@@ -449,6 +451,11 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "status", args: ["--json"])
     }
     switch name {
+    case "simulator-resource": return TKCLINextAction(command: "sim", args: ["resource", "status", "--json"])
+    case "simulator-resource-profiles": return TKCLINextAction(command: "sim", args: ["resource", "profiles", "--json"])
+    case "simulator-resource-apply": return TKCLINextAction(command: "sim", args: ["resource", "apply", "--profile", "<profile.json>", "--json"])
+    case "simulator-resource-restore": return TKCLINextAction(command: "sim", args: ["resource", "restore", "--receipt", "<receipt.json>", "--json"])
+    case "simulator-resource-verify": return TKCLINextAction(command: "sim", args: ["resource", "verify", "--profile", "<profile.json>", "--json"])
     case "web-device-hub":
         return TKCLINextAction(command: "web", args: ["--print-command", "--json"], requiresLongRunningProcess: false)
     case "cli-update":

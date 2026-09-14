@@ -403,6 +403,10 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             outputFormats: jsonText + ["jsonl"],
             options: [
                 TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List available simulators"),
+                TKCommandSchemaOption(name: "resource profiles|features|status|measure|doctor|plan|apply|verify|restore", type: "Subcommand", description: "Inspect, plan, apply, verify, or restore Simulator resource profiles"),
+                TKCommandSchemaOption(name: "--profile", type: "Path", description: "Simulator resource profile JSON path"),
+                TKCommandSchemaOption(name: "--receipt", type: "Path", description: "Simulator resource receipt JSON path for restore"),
+                TKCommandSchemaOption(name: "--no-reboot", type: "Bool", defaultValue: "false", description: "Apply resource changes without rebooting"),
                 TKCommandSchemaOption(name: "use <udid>", type: "Subcommand", description: "Set workspace default simulator in .triton/host-defaults.json"),
                 TKCommandSchemaOption(name: "create <name> --device-type <id> --runtime <id>", type: "Subcommand", description: "Create a simulator with schema-backed simctl create"),
                 TKCommandSchemaOption(name: "boot <udid>", type: "Subcommand", description: "Boot a simulator"),

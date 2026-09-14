@@ -22,6 +22,7 @@
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
 | 已归档 | [SP-176-open-issues-integration](./SP-176-open-issues-integration/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |
+| 规划中 | [SP-177-ios-simulator-resource-management](./SP-177-ios-simulator-resource-management/README.md) | simslim 核心能力原生 Swift 迁移与 Simulator 资源管理 | 当前完成上游调研、能力地图和分阶段 BDD；尚未改实现 |
 | 已归档 | [SP-175-issue-212-xcode-cache-evidence](./SP-175-issue-212-xcode-cache-evidence/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |
 | 已归档 | [SP-174-issue-211-label-text-attributes](./SP-174-issue-211-label-text-attributes/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |
 | 已归档 | [SP-173-issue-207-harmony-arkweb-bridge-call](./SP-173-issue-207-harmony-arkweb-bridge-call/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |

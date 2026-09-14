@@ -201,3 +201,4 @@
 | `SP-174-issue-211-label-text-attributes` | [`SP-174-issue-211-label-text-attributes`](./SP-174-issue-211-label-text-attributes/README.md) | 已归档 | 主线 82a13db5 / CI 34179623896 通过；对应 issue 已关闭，worktree 保留 |
 | `SP-175-issue-212-xcode-cache-evidence` | [`SP-175-issue-212-xcode-cache-evidence`](./SP-175-issue-212-xcode-cache-evidence/README.md) | 已归档 | 主线 82a13db5 / CI 34179623896 通过；对应 issue 已关闭，worktree 保留 |
 | `SP-176-open-issues-integration` | [`SP-176-open-issues-integration`](./SP-176-open-issues-integration/README.md) | 已归档 | 主线 82a13db5 / CI 34179623896 通过；对应 issue 已关闭，worktree 保留 |
+| `SP-177-ios-simulator-resource-management` | [`SP-177-ios-simulator-resource-management`](./SP-177-ios-simulator-resource-management/README.md) | 规划中 | simslim 核心能力原生 Swift 迁移与长期资源管理路线；当前仅调研和契约规划 |
