@@ -114,6 +114,7 @@ struct Sim: AsyncParsableCommand {
         abstract: "Control iOS simulators through host-side Apple tools",
         subcommands: [
             SimList.self,
+            SimResource.self,
             SimUse.self,
             SimCreate.self,
             SimBoot.self,
