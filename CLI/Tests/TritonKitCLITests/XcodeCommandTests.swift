@@ -18,6 +18,15 @@ private func testXcodeDerivedDataCache() -> TKXcodeDerivedDataCacheInfo {
 
 @Suite(.serialized)
 struct XcodeCommandTests {
+    @Test("derived-data commands default to inspect and dry-run")
+    func derivedDataCommandContracts() throws {
+        let inspect = try XcodeDerivedDataInspect.parse(["--root", ".triton/DerivedData", "--json"])
+        #expect(inspect.root == ".triton/DerivedData")
+        let cleanup = try XcodeDerivedDataCleanup.parse(["--root", ".triton/DerivedData", "--json"])
+        #expect(cleanup.confirm == false)
+        let confirmed = try XcodeDerivedDataCleanup.parse(["--root", ".triton/DerivedData", "--confirm", "--json"])
+        #expect(confirmed.confirm == true)
+    }
     @Test("xcode archive and export commands expose explicit archive and export options")
     func xcodeArchiveAndExportCommandsExposeExplicitOptions() throws {
         let archive = try XcodeArchive.parse([

@@ -230,10 +230,13 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "export_options_plist_invalid",
                 "xcode_archive_failed",
                 "xcode_export_failed",
+                "derived_data_root_invalid",
             ],
             subcommands: [
                 TKCommandSubcommandSchema(
-                    name: "discover",
+                    name: "derived-data", summary: "Inspect or clean Xcode DerivedData safely", optionalOptions: [], retryable: false, nextCommands: ["triton xcode derived-data inspect --json", "triton xcode derived-data cleanup --json"], failureCodes: ["derived_data_root_invalid"], subcommands: [TKCommandSubcommandSchema(name: "inspect", summary: "Inspect DerivedData", optionalOptions: ["--root", "--format", "--json"]), TKCommandSubcommandSchema(name: "cleanup", summary: "Clean DerivedData", requiresConfirmation: true, optionalOptions: ["--root", "--confirm", "--format", "--json"])]
+                 ), TKCommandSubcommandSchema(
+                     name: "discover",
                     summary: "Discover Xcode workspaces, projects, and packages",
                     optionalOptions: ["--path", "--max-depth"],
                     retryable: true,

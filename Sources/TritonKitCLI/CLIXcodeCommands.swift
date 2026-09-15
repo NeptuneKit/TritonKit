@@ -20,6 +20,7 @@ struct Xcode: AsyncParsableCommand {
             XcodeArchive.self,
             XcodeExport.self,
             XcodeRun.self,
+            XcodeDerivedData.self,
         ]
     )
 }
