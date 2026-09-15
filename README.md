@@ -881,4 +881,14 @@ For maintainers, the release flow is:
 
 `xcode test --jsonl` defaults to compact lifecycle/heartbeat/diagnostic output with bounded inline failures and full raw log artifacts; use `--progress full` for raw streaming. Consult the subcommand schema before passing an option: `xcode run` does not accept `--progress`. DerivedData `cacheState` now describes directory existence, while `reuseVerification` remains `unknown` and `observedBuild` records task-log counts and coverage. Neither directory existence nor log counts prove an incremental cache hit or a full rebuild.
 
+For repo-local cache disk usage, use the read-only inspector first:
+
+```bash
+triton xcode derived-data inspect --root .triton/DerivedData --json
+triton xcode derived-data cleanup --root .triton/DerivedData --json
+triton xcode derived-data cleanup --root .triton/DerivedData --confirm --json
+```
+
+`cleanup` is a dry-run unless `--confirm` is explicit. It reports total bytes, file counts, per-entry breakdown and skipped symlinks. Only canonical repo-local `.triton/DerivedData` or the explicit user Xcode DerivedData root is accepted; source, configuration, credential and business-data paths are rejected. Do not clean while Xcode is using the directory; each top-level path is rechecked before deletion.
+
 `debug attrs --oid <oid>` accepts both view and layer IDs. UILabel attributes include resolved fonts/colors and bounded UTF-16 attributed runs; the existing text field is retained as a bounded preview with truncation metadata. Collection-cell taps honor selection eligibility and delegate callbacks and require visible postcondition verification. `act tap --duration` returns typed unsupported before dispatch; embedded longPress/non-scroll gesture requests do not claim UIKit recognizer transitions that public APIs cannot provide.

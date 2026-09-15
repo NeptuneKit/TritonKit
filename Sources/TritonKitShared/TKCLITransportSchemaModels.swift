@@ -364,6 +364,7 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
     public let recoveryCommands: [TKCommandRecoveryCommand]
     public let outputSelectors: [String]
     public let failureCodes: [String]
+    public let subcommands: [TKCommandSubcommandSchema]
 
     enum CodingKeys: String, CodingKey {
         case name
@@ -387,6 +388,7 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
         case recoveryCommands
         case outputSelectors
         case failureCodes
+        case subcommands
     }
 
     public init(
@@ -410,7 +412,8 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
         nextCommands: [String] = [],
         recoveryCommands: [TKCommandRecoveryCommand] = [],
         outputSelectors: [String] = [],
-        failureCodes: [String] = []
+        failureCodes: [String] = [],
+        subcommands: [TKCommandSubcommandSchema] = []
     ) {
         self.name = name
         self.summary = summary
@@ -435,6 +438,7 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
             recoveryCommands
         self.outputSelectors = outputSelectors
         self.failureCodes = failureCodes
+        self.subcommands = subcommands
     }
 
     public init(from decoder: any Decoder) throws {
@@ -460,7 +464,8 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
             nextCommands: try container.decodeIfPresent([String].self, forKey: .nextCommands) ?? [],
             recoveryCommands: try container.decodeIfPresent([TKCommandRecoveryCommand].self, forKey: .recoveryCommands) ?? [],
             outputSelectors: try container.decodeIfPresent([String].self, forKey: .outputSelectors) ?? [],
-            failureCodes: try container.decodeIfPresent([String].self, forKey: .failureCodes) ?? []
+            failureCodes: try container.decodeIfPresent([String].self, forKey: .failureCodes) ?? [],
+             subcommands: try container.decodeIfPresent([TKCommandSubcommandSchema].self, forKey: .subcommands) ?? []
         )
     }
 }
@@ -638,6 +643,7 @@ public struct TKCommandSchema: Codable, Equatable {
             recoveryCommands: try container.decodeIfPresent([TKCommandRecoveryCommand].self, forKey: .recoveryCommands) ?? [],
             outputContracts: try container.decodeIfPresent([TKCommandOutputContract].self, forKey: .outputContracts) ?? [],
             failureCodes: try container.decodeIfPresent([String].self, forKey: .failureCodes) ?? [],
+
             subcommands: try container.decodeIfPresent([TKCommandSubcommandSchema].self, forKey: .subcommands) ?? [],
             inputActions: try container.decodeIfPresent([TKInputActionSchema].self, forKey: .inputActions),
             providedCapabilities: try container.decodeIfPresent([String].self, forKey: .providedCapabilities) ?? [],

@@ -1,4 +1,5 @@
 import Foundation
+import TritonKitShared
 import Testing
 @testable import TritonKitCLI
 
@@ -14,32 +15,40 @@ struct XcodeSchemaParserContractTests {
         let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
         let optionTypes = Dictionary(uniqueKeysWithValues: xcode.options.map { ($0.name, $0.type) })
 
-        for subcommand in xcode.subcommands {
+        func visit(_ subcommand: TKCommandSubcommandSchema, path: [String]) throws {
             var declared = subcommand.requiredOptions + subcommand.optionalOptions
             for set in subcommand.oneOfRequiredOptions { declared.append(contentsOf: set) }
             for set in subcommand.oneOfRequiredOptionSets { declared.append(contentsOf: set) }
             for name in declared {
-                let argv = ["xcode", subcommand.name] + Self.requiredArguments(for: subcommand.name, excluding: name) + Self.argv(for: name, type: optionTypes[name])
+                let leaf = path.last ?? subcommand.name
+                let argv = ["xcode"] + path + Self.requiredArguments(for: leaf, excluding: name) + Self.argv(for: name, type: optionTypes[name])
                 _ = try TritonKitCLI.parseAsRoot(argv)
             }
+            for child in subcommand.subcommands { try visit(child, path: path + [child.name]) }
         }
+        for subcommand in xcode.subcommands { try visit(subcommand, path: [subcommand.name]) }
     }
 
     @Test("every parent xcode option is accepted by at least one subcommand parser")
     func parentOptionsAreAcceptedSomewhere() throws {
         let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
 
-        for option in xcode.options where option.type != "Subcommand" {
-            let accepting = xcode.subcommands.filter {
-                ($0.requiredOptions + $0.optionalOptions).contains(option.name)
-                    || ["--json", "--format"].contains(option.name)
+            func collect(_ command: TKCommandSubcommandSchema, path: [String]) -> [([String], TKCommandSubcommandSchema)] {
+                [(path, command)] + command.subcommands.flatMap { collect($0, path: path + [$0.name]) }
             }
-            #expect(!accepting.isEmpty, "parent option \(option.name) must have a declared subcommand scope")
-            for subcommand in accepting {
-                let argv = ["xcode", subcommand.name] + Self.requiredArguments(for: subcommand.name, excluding: option.name) + Self.argv(for: option.name, type: option.type)
-                _ = try TritonKitCLI.parseAsRoot(argv)
+            let all = xcode.subcommands.flatMap { collect($0, path: [$0.name]) }
+            for option in xcode.options where option.type != "Subcommand" && !["--json", "--format"].contains(option.name) {
+                let accepting = all.filter { item in
+                    let s = item.1
+                    return (s.requiredOptions + s.optionalOptions).contains(option.name)
+                }
+                #expect(!accepting.isEmpty, "parent option \(option.name) must have a declared subcommand scope")
+                for (path, subcommand) in accepting {
+                    let leaf = path.last ?? subcommand.name
+                    let argv = ["xcode"] + path + Self.requiredArguments(for: leaf, excluding: option.name) + Self.argv(for: option.name, type: option.type)
+                    _ = try TritonKitCLI.parseAsRoot(argv)
+                }
             }
-        }
     }
 
     @Test("progress flag scope stays limited to build, test, archive, and export")

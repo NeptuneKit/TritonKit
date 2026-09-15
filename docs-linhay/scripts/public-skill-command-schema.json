@@ -40,7 +40,7 @@
   "web": ["doctor", "status"],
   "webview": [],
   "workspace": ["export-flow", "inspect", "merge-map", "run", "stop"],
-  "xcode": ["archive", "build", "discover", "export", "run", "schemes", "settings", "status", "test", "use", "wait-idle"],
+  "xcode": ["archive", "build", "derived-data", "discover", "export", "run", "schemes", "settings", "status", "test", "use", "wait-idle"],
   "xcresult": ["failures", "summary"],
   "xctrace": ["record"]
   }
