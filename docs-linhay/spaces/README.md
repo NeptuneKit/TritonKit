@@ -21,7 +21,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 已完成（本地） | [SP-178-issue-213-real-device-runtime](./SP-178-issue-213-real-device-runtime/README.md) | #213：真机 runtime readiness 诊断、单一 smoke JSON 与可执行 setup；不自动注入 endpoint | focused 5/5、CLI 978/978、root 269/269、Release 与总门禁通过（跳过 Simulator build）；已获授权并集成主线，准备 v0.2.21；真机验收待环境 |
+| 已归档 | [SP-178-issue-213-real-device-runtime](./SP-178-issue-213-real-device-runtime/README.md) | #213：真机 runtime readiness 诊断、单一 smoke JSON 与可执行 setup；不自动注入 endpoint | v0.2.21 已发布并回复关闭；CLI 983/root 269、CocoaPods lint、双架构与 Homebrew 验证全过；真机端到端未复测 |
 | 已归档 | [SP-176-open-issues-integration](./SP-176-open-issues-integration/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |
 | 规划中 | [SP-177-ios-simulator-resource-management](./SP-177-ios-simulator-resource-management/README.md) | simslim 核心能力原生 Swift 迁移与 Simulator 资源管理 | 当前完成上游调研、能力地图和分阶段 BDD；尚未改实现 |
 | 已归档 | [SP-175-issue-212-xcode-cache-evidence](./SP-175-issue-212-xcode-cache-evidence/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |

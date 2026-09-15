@@ -202,4 +202,4 @@
 | `SP-175-issue-212-xcode-cache-evidence` | [`SP-175-issue-212-xcode-cache-evidence`](./SP-175-issue-212-xcode-cache-evidence/README.md) | 已归档 | 主线 82a13db5 / CI 34179623896 通过；对应 issue 已关闭，worktree 保留 |
 | `SP-176-open-issues-integration` | [`SP-176-open-issues-integration`](./SP-176-open-issues-integration/README.md) | 已归档 | 主线 82a13db5 / CI 34179623896 通过；对应 issue 已关闭，worktree 保留 |
 | `SP-177-ios-simulator-resource-management` | [`SP-177-ios-simulator-resource-management`](./SP-177-ios-simulator-resource-management/README.md) | 规划中 | simslim 核心能力原生 Swift 迁移与长期资源管理路线；当前仅调研和契约规划 |
-| `SP-178-issue-213-real-device-runtime` | [`SP-178-issue-213-real-device-runtime`](./SP-178-issue-213-real-device-runtime/README.md) | 已完成（本地） | 集成时修正旧 issue 分支 SP-177 编号冲突；focused 5/5、CLI 978/978、root 269/269、本地门禁通过；准备 v0.2.21，真机验收待环境 |
+| `SP-178-issue-213-real-device-runtime` | [`SP-178-issue-213-real-device-runtime`](./SP-178-issue-213-real-device-runtime/README.md) | 已归档 | 已发布 v0.2.21 并回复关闭 #213；CLI 983/root 269、CocoaPods lint 与门禁通过，Release 34943378497 双架构与 Homebrew 全过；真机端到端未复测 |

@@ -16,7 +16,11 @@
 
 ## 验收与状态
 
-- 状态：已获发布授权，正在主线集成与 v0.2.21 发布门禁；线上 issue 仍打开。
+- 状态：已随 [v0.2.21](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.21) 发布并于 2026-09-15 回复关闭 #213；tag 指向 `2a814fde3ad780540997662635ae2ae32d619799`。
+- 主线集成门禁：CLI 983 tests / 77 suites、root 269 tests / 34 suites、Web build、CocoaPods lint、public skill/版本/发布契约与本地门禁通过；主线 CI `34942529692`、tag CI `34943378446` 成功。
+- Release workflow `34943378497` 双架构、x86_64 后补与两次 Homebrew tap 更新全部成功。全新下载的三个压缩包通过 checksum/gzip；双架构 CLI 与四个 skills 均为 0.2.21、skill git metadata 对齐 tag。
+- Homebrew 从 0.2.19 升级到 0.2.21 并通过 formula test；仓库外隔离端口 34129 的 packaged Web HTML/JS/CSS 均 HTTP 200，验收进程已停止，不重启共享 runtime/server。
+- [关闭回复](https://github.com/NeptuneKit/TritonKit/issues/213#issuecomment-5676856920) 保留真机端到端未复测、不提供 USB tunnel/自动绑定的边界；CocoaPods 仅 lint，未推送 trunk。
 - 总门禁：`TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local` 通过，根包 269 tests / 34 suites、Release CLI build、CLI/Harmony/iOS runtime observe 脚本 smoke、docs 与 diff 检查通过；明确跳过真实 Simulator build，不等于真机端到端验收。
 - Red：旧实现下 5 tests 中 2 failed，共 5 个断言失败（resolver 打印额外 JSON 并抛 ExitCode，真机 hint 缺少可执行 setup）。
 - Green：focused 5/5；CLI 全量 978 tests / 76 suites 通过。

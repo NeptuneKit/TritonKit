@@ -149,7 +149,9 @@ brew upgrade triton
 
 本版修复 GitHub #213 的 iOS 真机 smoke readiness 诊断与单一 JSON 输出，并发布完整真机 App endpoint 配置指引。采用 issue 允许的「精确失败 + setup 路径」方案，不承诺自动 endpoint 注入、USB tunnel 或已完成真机端到端验收。
 
-版本对齐 `TritonKit.podspec`、`Web/package.json`、`Web/package-lock.json` 为 `0.2.21`；SwiftPM 通过 tag 解析，CLI 与四个 public skills 由 CI stamp 同 tag 版本。发布面保持双架构 macOS CLI、bundled Web、skills、checksum 和 Homebrew；CocoaPods 本轮只 lint、不推送 trunk。发布成功后再以公开资产和 CI 为证据回复关闭 #213。
+版本对齐 `TritonKit.podspec`、`Web/package.json`、`Web/package-lock.json` 为 `0.2.21`；SwiftPM 通过 tag 解析，CLI 与四个 public skills 由 CI stamp 同 tag 版本。发布面保持双架构 macOS CLI、bundled Web、skills、checksum 和 Homebrew；CocoaPods 本轮只 lint、不推送 trunk。
+
+2026-09-15 已发布 [v0.2.21](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.21)，tag 指向 `2a814fde3ad780540997662635ae2ae32d619799`。主线 CI `34942529692`、tag CI `34943378446`、Release `34943378497` 全部成功，包含双架构构建、x86_64 backfill 及两次 tap 更新。重新下载的三个 tarball 通过 checksum/gzip，两个 Mach-O 分别为 arm64/x86_64 且都报告 0.2.21；四个 public skills 的 BUILD_INFO 对齐 tag/commit 且 dirty=false。Homebrew 从 0.2.19 升级至 0.2.21 后 formula test 通过，仓库外安装版 packaged Web 在隔离端口 34129 的 HTML/JS/CSS 均 HTTP 200，验证进程已停止。#213 已回复并关闭，仍明确真机端到端未复测；CocoaPods 仅完成 lint，未推送 trunk。
 
 ## 交付辅助脚本
 
