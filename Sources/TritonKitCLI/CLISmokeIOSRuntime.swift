@@ -74,8 +74,9 @@ struct IOSSmokeDependencies {
     static func live() -> IOSSmokeDependencies {
         IOSSmokeDependencies(
             makeRuntimeClient: { target, host, port in
-                let resolved = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
-                return LiveSmokeRuntimeClient(client: resolved.client)
+                // Smoke owns the failure envelope; the CLI resolver prints before throwing.
+                let resolved = try await resolveTarget(target, host: host, port: port)
+                return LiveSmokeRuntimeClient(client: TritonKitHTTPClient(host: host, port: port, target: resolved.id))
             },
             openURL: { selected, bundleID, url in
                 if selected.scope == HostDeviceScope.real.rawValue {
@@ -181,7 +182,7 @@ func runIOSSmoke(
             runtime = try await dependencies.makeRuntimeClient(options.target, options.host, options.port)
         } catch {
             let hint = if options.hostTarget.scope == HostDeviceScope.real.rawValue {
-                "Host launch completed, but the iOS real-device embedded runtime did not connect. Ensure the Debug app can reach Triton server over the device network, configure TRITON_HOST/TRITON_PORT or Bonjour discovery, then rerun `triton smoke ios --scope real --device \(options.hostTarget.id)`."
+                "Host launch is not business readiness. Ensure a Debug TritonKit bootstrap is enabled. On a trusted development network, explicitly start `triton serve --host 0.0.0.0 --port \(options.port)` (or bind a specific Mac LAN IP); do not expose it publicly. Configure TRITON_HOST/TRITON_PORT in the App process, not only the Mac shell: use `triton app launch --platform ios --scope real --device <ios-real-selector> --bundle-id <bundle-id> --env TRITON_ENABLED=1 --env TRITON_HOST=<mac-lan-ip> --env TRITON_PORT=\(options.port) --json` with placeholders replaced. Allow local-network access and restart the App if needed. Device loopback is not the Mac. Confirm the intended App runtime via `triton list --json` (with matching --host/--port), then rerun the original smoke command with its explicit --target runtime id. See docs-linhay/dev/20260519-ios-integration-guide.md; no automatic endpoint injection or USB tunnel is provided."
             } else {
                 "Check the local runtime service, target connectivity, and `triton status`."
             }

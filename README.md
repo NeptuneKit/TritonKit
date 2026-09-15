@@ -425,6 +425,8 @@ triton serve --host 0.0.0.0 --port 19421
 
 Then verify from another shell:
 
+For real-device `smoke ios`, host install/launch success is **not** runtime readiness. Inject endpoint settings into the **App process**, for example `triton app launch --platform ios --scope real --device '<ios-real-selector>' --bundle-id '<bundle-id>' --env TRITON_ENABLED=1 --env 'TRITON_HOST=<mac-lan-ip>' --env TRITON_PORT=19421 --json`; exporting them only in the Mac shell is insufficient. Use a Debug bootstrap, allow local-network access, and only expose the server on a trusted development network. Confirm the intended App runtime with `triton list --json`, then pass its runtime id via `smoke ios --target` separately from the host `--device` selector. The CLI does not automatically inject an endpoint or establish a USB tunnel. See the [real-device runtime readiness setup](docs-linhay/dev/20260519-ios-integration-guide.md) for the complete launch/list/smoke sequence and limitations.
+
 ```bash
 triton status --json
 triton list --json

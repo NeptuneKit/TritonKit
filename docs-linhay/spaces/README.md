@@ -2,9 +2,9 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（176/176 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（177/177 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-09-08
+> 最近审计：2026-09-15
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -21,6 +21,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 已完成（本地） | [SP-177-issue-213-real-device-runtime](./SP-177-issue-213-real-device-runtime/README.md) | #213：真机 runtime readiness 诊断、单一 smoke JSON 与可执行 setup；不自动注入 endpoint | focused 5/5、CLI 978/978、root 269/269、Release 与总门禁通过（跳过 Simulator build）；待授权提交/集成，真机验收待环境 |
 | 已归档 | [SP-176-open-issues-integration](./SP-176-open-issues-integration/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |
 | 已归档 | [SP-175-issue-212-xcode-cache-evidence](./SP-175-issue-212-xcode-cache-evidence/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |
 | 已归档 | [SP-174-issue-211-label-text-attributes](./SP-174-issue-211-label-text-attributes/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |
@@ -268,4 +269,3 @@
 - [20260709-issues-141-142](./20260709-issues-141-142/README.md)
 - [20260709-packaged-web-mjpeg](./20260709-packaged-web-mjpeg/README.md)
 - [20260710-issues-144-145-action-docs](./20260710-issues-144-145-action-docs/README.md)
-| 执行中 | [SP-177-issue-213-real-device-runtime](./SP-177-issue-213-real-device-runtime/README.md) | 修复 #213 iOS 真机启动后 embedded runtime 无法连接 | 先完成 endpoint 注入、readiness 契约与 focused tests |

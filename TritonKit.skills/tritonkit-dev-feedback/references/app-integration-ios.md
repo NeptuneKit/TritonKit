@@ -108,7 +108,20 @@ For physical devices, bind to a reachable Mac interface and set `TRITON_HOST` to
 triton serve --host 0.0.0.0 --port 19421
 ```
 
-If validating unreleased source changes:
+### Real-device runtime readiness
+
+For real-device smoke, launch success only proves host submission (`businessReady=false`), not runtime connectivity. After starting the server on a trusted development network, inject variables into the Debug **App process**:
+
+```bash
+triton app launch --platform ios --scope real --device '<ios-real-selector>' \
+  --bundle-id '<bundle-id>' --env TRITON_ENABLED=1 \
+  --env 'TRITON_HOST=<mac-lan-ip>' --env TRITON_PORT=19421 --json
+triton list --json
+```
+
+Replace placeholders, allow local-network access, and relaunch an already-running App as needed for environment changes. Mac shell exports alone do not configure the device process; device loopback is not the Mac, and `0.0.0.0` is a bind address, not the App endpoint. Do not automatically widen server exposure. Match the intended App runtime from `list` and pass its id via `smoke ios --target` separately from `--device`; no USB tunnel, auto endpoint injection, or host/runtime identity binding is promised. If runtime resolution fails, stop and report `runtime.connect/runtime_not_connected`; do not continue to wait/assert/evidence or count host success as business pass.
+
+Build unreleased CLI changes with:
 
 ```bash
 swift build --package-path CLI --scratch-path .build/cli -c release --product triton
