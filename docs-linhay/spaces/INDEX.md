@@ -1,8 +1,8 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-09-08
-> 覆盖范围：176/176 个已存在 space
+> 最近同步：2026-09-15
+> 覆盖范围：178/178 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 176/176 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 176/176 | 每条记录链接到现有 space README |
+| 编号登记 | 178/178 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 178/178 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -202,3 +202,4 @@
 | `SP-175-issue-212-xcode-cache-evidence` | [`SP-175-issue-212-xcode-cache-evidence`](./SP-175-issue-212-xcode-cache-evidence/README.md) | 已归档 | 主线 82a13db5 / CI 34179623896 通过；对应 issue 已关闭，worktree 保留 |
 | `SP-176-open-issues-integration` | [`SP-176-open-issues-integration`](./SP-176-open-issues-integration/README.md) | 已归档 | 主线 82a13db5 / CI 34179623896 通过；对应 issue 已关闭，worktree 保留 |
 | `SP-177-ios-simulator-resource-management` | [`SP-177-ios-simulator-resource-management`](./SP-177-ios-simulator-resource-management/README.md) | 规划中 | simslim 核心能力原生 Swift 迁移与长期资源管理路线；当前仅调研和契约规划 |
+| `SP-178-issue-213-real-device-runtime` | [`SP-178-issue-213-real-device-runtime`](./SP-178-issue-213-real-device-runtime/README.md) | 已完成（本地） | 集成时修正旧 issue 分支 SP-177 编号冲突；focused 5/5、CLI 978/978、root 269/269、本地门禁通过；准备 v0.2.21，真机验收待环境 |

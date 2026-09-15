@@ -1,3 +1,4 @@
+import ArgumentParser
 import Foundation
 import Testing
 import TritonKitShared
@@ -5,6 +6,34 @@ import TritonKitShared
 
 @Suite
 struct SmokeRuntimeTests {
+    @Test("live smoke runtime resolution preserves errors for the single smoke envelope")
+    func liveRuntimeResolutionDoesNotPrintCLIEnvelope() async throws {
+        let temp = try makeSmokeWorkspace(prefix: "live-resolution-output")
+        defer { try? FileManager.default.removeItem(at: temp.root) }
+        let outputURL = temp.root.appendingPathComponent("stdout.txt")
+        FileManager.default.createFile(atPath: outputURL.path, contents: nil)
+        let output = try FileHandle(forWritingTo: outputURL)
+        defer { try? output.close() }
+        fflush(stdout)
+        let original = dup(STDOUT_FILENO)
+        defer { close(original) }
+        var caught: Error?
+        do {
+            dup2(output.fileDescriptor, STDOUT_FILENO)
+            defer {
+                fflush(stdout)
+                dup2(original, STDOUT_FILENO)
+            }
+            do {
+                _ = try await IOSSmokeDependencies.live().makeRuntimeClient("local", "127.0.0.1", 1)
+            } catch {
+                caught = error
+            }
+        }
+        #expect(caught != nil)
+        #expect(!(caught is ExitCode))
+        #expect(try String(contentsOf: outputURL, encoding: .utf8).isEmpty)
+    }
     @Test("smoke ios reports runtime wait failure after open-url succeeds")
     func reportsWaitFailureAfterOpenURL() async throws {
         let runtime = FakeSmokeRuntimeClient(
@@ -73,6 +102,12 @@ struct SmokeRuntimeTests {
         #expect(summary.status == .fail)
         #expect(summary.failure?.step == "runtime.connect")
         #expect(summary.failure?.code == "runtime_not_connected")
+        #expect(summary.failure?.hint?.contains("TRITON_HOST/TRITON_PORT") == true)
+        #expect(summary.failure?.hint?.contains("triton serve --host 0.0.0.0 --port") == true)
+        #expect(summary.failure?.hint?.contains("Mac LAN IP") == true)
+        #expect(summary.failure?.hint?.contains("triton list --json") == true)
+        #expect(summary.failure?.hint?.contains("--env TRITON_HOST=") == true)
+        #expect(summary.failure?.hint?.contains("--scope real") == true)
         #expect(summary.steps.map(\.name) == ["app.open-url"])
         #expect(summary.steps[0].proofSource == .hostAction)
         #expect(summary.steps[0].businessReady == false)

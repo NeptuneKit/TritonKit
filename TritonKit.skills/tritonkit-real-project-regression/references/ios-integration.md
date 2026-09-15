@@ -64,6 +64,24 @@ enum TritonKitDebugBootstrap {
 
 Enable it from Xcode with launch argument `--triton-enabled`, environment variable `TRITON_ENABLED=1`, or Debug-only user default `TRITON_ENABLED=true`. `config.endpoint = .environment()` reads `TRITON_HOST` / `TRITON_PORT` and falls back to `127.0.0.1:19421`. Use `TritonKit.shared.start { config in config.endpoint = .device("192.168.1.20", port: 19421) }` when a physical device needs to connect to a Mac LAN address.
 
+## Real-device runtime readiness before smoke
+
+Host install/launch success is not business readiness. Start `triton serve --host 0.0.0.0 --port 19421` only with explicit operator intent on a trusted development network (or bind a specific Mac LAN interface); do not expose the development server publicly or stop another session's server. The Debug App must start TritonKit and have local-network permission. Use a reachable Mac LAN IP, not device loopback or the `0.0.0.0` bind address.
+
+```bash
+triton app launch --platform ios --scope real --device '<ios-real-selector>' \
+  --bundle-id '<bundle-id>' --env TRITON_ENABLED=1 \
+  --env 'TRITON_HOST=<mac-lan-ip>' --env TRITON_PORT=19421 --json
+triton status --json
+triton list --json
+triton smoke ios --scope real --device '<ios-real-selector>' \
+  --target '<runtime-id-from-list>' --bundle-id '<bundle-id>' \
+  --open-url '<app-route>' --wait-text '<expected-text>' \
+  --timeout 20 --interval 0.5 --evidence '<evidence-dir>' --format json
+```
+
+Replace placeholders and verify the intended device/App runtime identity from `list` before smoke. Environment must reach the App process; a Mac shell export alone is insufficient. If already running, arrange an App restart so new environment settings apply. `--device` is host selection, `--target` is embedded runtime selection; there is no automatic binding, USB tunnel or endpoint injection. CLI `--host` does not configure the App endpoint. Explicit bootstrap endpoints override environment-based setup. Bonjour is optional, not guaranteed discovery. Runtime connection failure must stop the flow with `runtime.connect/runtime_not_connected`, preserving a single smoke JSON summary; host `pass` with `businessReady=false` is not a successful smoke. Check `ok/status/failure`, and do not claim connected-device acceptance based only on fake tests.
+
 Preferred facade APIs:
 
 | Need | API |

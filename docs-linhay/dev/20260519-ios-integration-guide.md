@@ -34,6 +34,36 @@ TritonKit 需要在仓库 README 和项目级 skill 中提供 iOS 侧接入指�
 6. 验证：使用 `triton status --json`、`triton list --json`、`triton debug hierarchy --json`、`triton debug ax --json`。
 7. Release：public API 保持可编译，但 Release package build 和 CocoaPods Release 配置都不定义 `TRITONKIT_RUNTIME_ENABLED`，因此 `TritonKit.isRuntimeEnabled == false`，runtime 不连接、不采集、不上传、不响应控制；接入示例仍必须显式 `#if DEBUG`，不能只依赖 no-op。
 
+## 真机 host launch 成功但 runtime 未连接（#213）
+
+`app install/launch` 成功只证明 host 命令提交成功；USB 已连接、Developer Mode ready 不等于 embedded runtime 已连接。`smoke ios` 的 host step 保持 `businessReady=false`，只有 runtime wait/assert 才能证明业务就绪。`runtime.connect/runtime_not_connected` 时停止，不把缺失 evidence 当成通过。
+
+1. App 必须使用 Debug 构建，并通过文件级 `#if DEBUG` bootstrap 启动 TritonKit。若 bootstrap 使用 `startIfEnabled`，需同时设置 `TRITON_ENABLED=1`；Release no-op 不可用于 smoke。
+2. 在可信开发网络中，由操作者显式启动 `triton serve --host 0.0.0.0 --port 19421`，或绑定指定 Mac LAN 地址。`0.0.0.0` 是监听地址，不是 App endpoint；设备上的 `127.0.0.1` 指向设备自身。禁止自动扩展监听面，不把未认证开发服务暴露到公网。已有 server 占端口时先确认其归属，不擅自停止其它会话的服务。
+3. 允许 Debug App 的本地网络访问，确认 Mac 防火墙和 Wi-Fi/VPN 路由可达。按需配置 `NSLocalNetworkUsageDescription` 与 Debug-only ATS；不要给生产 Release 添加宽泛例外。
+4. 环境变量必须进入 **App 进程**，仅在 Mac shell `export TRITON_HOST=...` 不会自动传给真机 App。将下例占位符替换为本机真实值，使用现有 host launch 注入（如 App 已运行，先由操作者安排终止/重新启动，以使环境生效）：
+
+```bash
+triton app launch --platform ios --scope real --device '<ios-real-selector>' \
+  --bundle-id '<bundle-id>' --env TRITON_ENABLED=1 \
+  --env 'TRITON_HOST=<mac-lan-ip>' --env TRITON_PORT=19421 --json
+triton status --json
+triton list --json
+```
+
+也可在 Xcode Debug scheme 设置上述环境，或通过 `config.endpoint = .device(...)` / Debug 配置的 `TritonKitDefaultHost`、`TritonKitDefaultPort` 固定 endpoint；固定 bootstrap endpoint 不会被环境自动覆盖。Bonjour 是可选发现路径，不保证 USB 自动转发或跨网段发现，诊断优先显式 LAN endpoint。
+
+5. 从 `triton list --json` 确认目标 App 的 runtime 已连接，核对设备与 bundle identity 后使用返回的 runtime id。`--device` 选择 host 真机，`--target` 选择 embedded runtime；它们不是同一 id。不要依赖默认 local target 证明选中真机的业务状态。然后运行：
+
+```bash
+triton smoke ios --scope real --device '<ios-real-selector>' \
+  --target '<runtime-id-from-list>' --bundle-id '<bundle-id>' \
+  --open-url '<app-route>' --wait-text '<expected-text>' \
+  --timeout 20 --interval 0.5 --evidence '<evidence-dir>' --format json
+```
+
+Mac CLI 的 `--host` 是 CLI 到 server 的地址，默认仍可用 `127.0.0.1`；它不会注入 App endpoint。server 使用非默认端口时，App `TRITON_PORT` 及 `status/list/smoke --port` 必须一致。若启动后 runtime 尚未注册，先复查 list 再重试；当前 smoke 不承诺自动等待连接或自动绑定 host/runtime。消费 smoke 必须检查 summary 的 `ok/status/failure`，host step 的 `pass` 不是整体 pass。
+
 ## 变更位置
 
 - `README.md`
