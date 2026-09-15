@@ -145,6 +145,12 @@ brew upgrade triton
 - 用 Python YAML parser 校验 `.github/workflows/ci.yml` 与 `.github/workflows/release.yml` 语法可解析。
 - `docs-linhay/scripts/verify-release-automation.sh` 必须防止 Release workflow 回退到 `macos-15-intel`，并检查 x86_64 cross build triple、架构校验、SwiftPM cache key 与 x86 publish checkout。
 
+## v0.2.21 发布边界
+
+本版修复 GitHub #213 的 iOS 真机 smoke readiness 诊断与单一 JSON 输出，并发布完整真机 App endpoint 配置指引。采用 issue 允许的「精确失败 + setup 路径」方案，不承诺自动 endpoint 注入、USB tunnel 或已完成真机端到端验收。
+
+版本对齐 `TritonKit.podspec`、`Web/package.json`、`Web/package-lock.json` 为 `0.2.21`；SwiftPM 通过 tag 解析，CLI 与四个 public skills 由 CI stamp 同 tag 版本。发布面保持双架构 macOS CLI、bundled Web、skills、checksum 和 Homebrew；CocoaPods 本轮只 lint、不推送 trunk。发布成功后再以公开资产和 CI 为证据回复关闭 #213。
+
 ## 交付辅助脚本
 
 - `docs-linhay/scripts/gh-run-summary.sh --watch <run-id>`：低噪音观察 GitHub Actions run，只输出 job 状态和 URL；失败后再进入详细日志。
