@@ -203,4 +203,4 @@
 | `SP-176-open-issues-integration` | [`SP-176-open-issues-integration`](./SP-176-open-issues-integration/README.md) | 已归档 | 主线 82a13db5 / CI 34179623896 通过；对应 issue 已关闭，worktree 保留 |
 | `SP-177-ios-simulator-resource-management` | [`SP-177-ios-simulator-resource-management`](./SP-177-ios-simulator-resource-management/README.md) | 规划中 | simslim 核心能力原生 Swift 迁移与长期资源管理路线；当前仅调研和契约规划 |
 | `SP-178-issue-213-real-device-runtime` | [`SP-178-issue-213-real-device-runtime`](./SP-178-issue-213-real-device-runtime/README.md) | 已归档 | 已发布 v0.2.21 并回复关闭 #213；CLI 983/root 269、CocoaPods lint 与门禁通过，Release 34943378497 双架构与 Homebrew 全过；真机端到端未复测 |
-| `SP-179-issue-214-derived-data-cleanup` | [`SP-179-issue-214-derived-data-cleanup`](./SP-179-issue-214-derived-data-cleanup/README.md) | 执行中 | DerivedData inspect/cleanup 命令草稿；默认 dry-run，待专用安全测试与文档收口 |
+| `SP-179-issue-214-derived-data-cleanup` | [`SP-179-issue-214-derived-data-cleanup`](./SP-179-issue-214-derived-data-cleanup/README.md) | 已发布／待安全补验 | v0.2.22 双架构、skills、checksum 与 Release CI 已确认；#214 仍 OPEN，路径白名单/活动构建保护/完整 CLI 回归待补 |
