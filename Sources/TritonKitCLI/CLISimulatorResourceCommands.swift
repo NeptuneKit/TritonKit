@@ -2,7 +2,7 @@ import ArgumentParser
 import Foundation
 import TritonKitShared
 
-struct SimResource: AsyncParsableCommand { static let configuration=CommandConfiguration(commandName:"resource",abstract:"Manage simulator resources",subcommands:[SimResourceProfiles.self,SimResourceFeatures.self,SimResourceStatus.self,SimResourceMeasure.self,SimResourceDoctor.self,SimResourcePlan.self,SimResourceApply.self,SimResourceVerify.self,SimResourceRestore.self]) }
+struct SimResource: AsyncParsableCommand { static let configuration=CommandConfiguration(commandName:"resource",abstract:"Manage simulator resources",subcommands:[SimResourceProfiles.self,SimResourceFeatures.self,SimResourceStatus.self,SimResourceMeasure.self,SimResourceDoctor.self,SimResourcePlan.self,SimResourceApply.self,SimResourceVerify.self,SimResourceRestore.self,SimResourceWatch.self]) }
 func resourceRun(_ req: SimulatorResourceRequest) throws {
     let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
     switch req.action {
@@ -72,5 +72,35 @@ struct SimResourceRestore: AsyncParsableCommand {
         let value = try JSONDecoder().decode(TKSimulatorResourceReceipt.self, from: data)
         try CLISimulatorResourceRuntime().restore(value)
         print("{\"ok\":true,\"receipt\":\"\(receipt)\"}")
+    }
+}
+struct SimResourceWatch: AsyncParsableCommand {
+    @Option var profile: String = "ci"
+    @Option var interval: Double = 3
+    @Flag(name: .long) var json = false
+    static let configuration = CommandConfiguration(commandName: "watch", abstract: "Slim booted simulators as parallel-testing clones appear")
+    func run() async throws {
+        let runtime = CLISimulatorResourceRuntime()
+        var seen = Set<String>()
+        while !Task.isCancelled {
+            let listed = try runHostCommand(TKSimctlCommand.listAvailableDevices())
+            let devices = try TKSimctlDeviceListParser.parse(listed.stdoutData)
+            let booted = Set(devices.filter { $0.isBooted }.map(\.udid))
+            seen.formIntersection(booted)
+            for udid in booted.subtracting(seen).sorted() {
+                seen.insert(udid)
+                do {
+                    let state = try runtime.readOverrides(udid: udid)
+                    let previous = TKSimulatorResourceStatus(udid: udid, runtime: "unknown", enabled: !state.overrides.isEmpty)
+                    let receipt = try runtime.apply(.init(action: .apply, udid: udid, profile: profile, noReboot: true), previous: previous)
+                    if json { print(String(decoding: try JSONEncoder().encode(receipt), as: UTF8.self)) }
+                    else { print("Slimmed \(udid)") }
+                } catch {
+                    seen.remove(udid)
+                    if json { print("{\"ok\":false,\"simulatorUDID\":\"\(udid)\",\"error\":\"watch_failed\"}") }
+                }
+            }
+            try await Task.sleep(nanoseconds: UInt64(max(interval, 0.25) * 1_000_000_000))
+        }
     }
 }

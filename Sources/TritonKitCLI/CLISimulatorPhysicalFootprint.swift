@@ -3,7 +3,7 @@ import Foundation
 import Darwin
 #endif
 
-/// Simulator isolation follows simslim measure.go at f3b979ecd913f56904a9b6100cad1f84fe01d228.
+/// Simulator isolation follows simslim measure.go at 4ae1659a0c0265787c2a7047fab466b326ba6d7e.
 /// Sampling uses libproc's byte-accurate phys_footprint rather than rounded top output or RSS.
 struct SimulatorPhysicalFootprint {
     struct ProcessEntry: Equatable {

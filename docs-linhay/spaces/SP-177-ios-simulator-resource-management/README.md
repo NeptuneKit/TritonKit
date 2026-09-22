@@ -40,7 +40,7 @@
 
 ### 2026-09-14 验证校正
 
-- 上游 catalog 固定至 `f3b979ecd913f56904a9b6100cad1f84fe01d228`：15 categories、24 features、170 unique slimmable labels。
+- 上游 catalog 已跟进至 `4ae1659a0c0265787c2a7047fab466b326ba6d7e`：15 categories、24 features、170 unique slimmable labels。该提交新增了关机设备 offline override 快路径与 parallel-testing clone watch；TritonKit 已同步 catalog pin 与 `resource watch` CLI，offline store 仍保持 host adapter 的后续切片。
 - `status` / `doctor` 已接 `launchctl print-disabled` 原生读取；新增 4 项 inspection 测试，明确 doctor 只检查服务 override，不代表业务功能验证。
 - 原 RSS parser 单位错误已修正为 KiB × 1024，拒绝损坏/重复/负数和溢出；3 项测试通过。RSS 不作为 phys_footprint 收益证据。
 - `measure` 改接 host launchd_sim 子树 + libproc `ri_phys_footprint`；6 项测试包括当前进程真实 libproc 采样、目标隔离、partial 和全失败。

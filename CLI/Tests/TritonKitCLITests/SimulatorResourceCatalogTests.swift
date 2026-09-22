@@ -5,7 +5,7 @@ import Testing
 struct SimulatorResourceCatalogTests {
     @Test("Pinned upstream catalog includes every category, feature and managed service")
     func completeCatalog() {
-        #expect(SimulatorResourceCatalog.sourceCommit == "f3b979ecd913f56904a9b6100cad1f84fe01d228")
+        #expect(SimulatorResourceCatalog.sourceCommit == "4ae1659a0c0265787c2a7047fab466b326ba6d7e")
         #expect(SimulatorResourceCatalog.categories.map(\.id) == [
             "widgets", "siri", "search", "icloud", "store", "pim", "web", "family",
             "health", "photos", "apps", "messaging", "connectivity", "telemetry", "other",

@@ -1,6 +1,6 @@
 /*
 Ported from https://github.com/MobAI-App/simslim
-profiles.go and features.go at commit f3b979ecd913f56904a9b6100cad1f84fe01d228
+ profiles.go and features.go at commit 4ae1659a0c0265787c2a7047fab466b326ba6d7e
 
 MIT License
 
@@ -50,7 +50,7 @@ enum SimulatorResourceCatalogError: Error, Equatable {
 }
 
 enum SimulatorResourceCatalog {
-    static let sourceCommit = "f3b979ecd913f56904a9b6100cad1f84fe01d228"
+    static let sourceCommit = "4ae1659a0c0265787c2a7047fab466b326ba6d7e"
     static let sourceURL = "https://github.com/MobAI-App/simslim"
     static let alwaysEnabledLabels: Set<String> = ["com.apple.sharingd"]
     static let alwaysEnabledReasons = ["com.apple.sharingd": "Required for system share sheets."]
