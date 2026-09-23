@@ -36,8 +36,13 @@ extension CLISimulatorResourceRuntime {
         guard let udid=request.udid else { throw SimulatorResourceMutationError.missingUDID }
         guard let p=request.profile, !p.isEmpty else { throw SimulatorResourceMutationError.missingProfile }
         let profile = try Self.resolveProfile(p)
-        let observed = try readOverrides(udid: udid)
         let desired = Set(SimulatorResourceMutationPlanner.labels(for: profile))
+        if !request.noReboot, (try? simulatorIsBooted(udid: udid)) == false {
+            if let receipt = try? applyOffline(request, previous: previous, profile: profile, desired: desired) {
+                return receipt
+            }
+        }
+        let observed = try readOverrides(udid: udid)
         let actual = Set(observed.overrides.compactMap { $0.value ? $0.key : nil })
         let toDisable = desired.subtracting(actual)
         for command in SimulatorResourceMutationPlanner.disableCommands(udid: udid, labels: Array(toDisable).sorted()) {
@@ -50,6 +55,23 @@ extension CLISimulatorResourceRuntime {
         let previousStatus = TKSimulatorResourceStatus(udid: udid, runtime: previous.runtime, profileID: previous.profileID, enabled: !actual.isEmpty, disabledCategories: previous.disabledCategories)
         let appliedStatus = TKSimulatorResourceStatus(udid: udid, runtime: previous.runtime, profileID: profile.id, enabled: true, disabledCategories: profile.disabledCategories)
         return TKSimulatorResourceReceipt(udid: udid, profile: profile, previous: previousStatus, applied: appliedStatus, noReboot: request.noReboot, previousManagedDisabled: actual.intersection(desired), appliedManagedDisabled: appliedLabels.intersection(desired))
+    }
+
+    private func applyOffline(_ request: SimulatorResourceRequest, previous: TKSimulatorResourceStatus, profile: TKSimulatorResourceProfile, desired: Set<String>) throws -> TKSimulatorResourceReceipt {
+        guard let udid = request.udid else { throw SimulatorResourceMutationError.missingUDID }
+        let entries = try SimulatorResourceOfflineStore.read(udid)
+        let actual = Set(entries.compactMap { $0.value ? $0.key : nil })
+        try SimulatorResourceOfflineStore.merge(udid, disable: desired.subtracting(actual), enable: actual.subtracting(desired))
+        for command in SimulatorResourceMutationPlanner.bootCommands(udid: udid) {
+            let result = try runner.run(command)
+            guard result.exitCode == 0 else { throw SimulatorResourceMutationError.commandFailed }
+        }
+        let after = try readOverrides(udid: udid)
+        let appliedLabels = Set(after.overrides.compactMap { $0.value ? $0.key : nil })
+        guard desired.isSubset(of: appliedLabels) else { throw SimulatorResourceMutationError.verificationFailed }
+        let previousStatus = TKSimulatorResourceStatus(udid: udid, runtime: previous.runtime, profileID: previous.profileID, enabled: !actual.isEmpty, disabledCategories: previous.disabledCategories)
+        let appliedStatus = TKSimulatorResourceStatus(udid: udid, runtime: previous.runtime, profileID: profile.id, enabled: true, disabledCategories: profile.disabledCategories)
+        return TKSimulatorResourceReceipt(udid: udid, profile: profile, previous: previousStatus, applied: appliedStatus, noReboot: false, previousManagedDisabled: actual.intersection(desired), appliedManagedDisabled: appliedLabels.intersection(desired))
     }
     static func resolveProfile(_ value: String) throws -> TKSimulatorResourceProfile {
         if value == "stock" { return TKSimulatorResourceProfile(id: "stock") }
@@ -99,6 +121,9 @@ struct SimulatorResourceMutationPlanner {
     }
     static func rebootCommands(udid: String) -> [TKHostCommand] {
         [TKHostCommand(arguments:["simctl","shutdown",udid]), TKHostCommand(arguments:["simctl","boot",udid])]
+    }
+    static func bootCommands(udid: String) -> [TKHostCommand] {
+        [TKHostCommand(arguments:["simctl","boot",udid]), TKHostCommand(arguments:["simctl","bootstatus",udid,"-b"])]
     }
 }
 
