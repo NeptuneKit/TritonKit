@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（179/179 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（180/180 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-09-15
 
@@ -21,6 +21,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 兼容修复验证／命中待补 | [SP-180-xcode27-simulator-frameworks](./SP-180-xcode27-simulator-frameworks/README.md) | 已选Xcode只读查询、仅适配器子进程补框架；8测试与加载器恢复验证 | 10-06 CLI993+14/本地门禁通过；业务bridge截图完成，host HID导航另补，不将ACK算命中 |
 | 已发布／待安全补验 | [SP-179-issue-214-derived-data-cleanup](./SP-179-issue-214-derived-data-cleanup/README.md) | #214：v0.2.22 已发布，issue 仍 OPEN | 精确路径白名单、活动构建保护、fixture 与完整 CLI 回归；补验前仅推荐 inspect/dry-run |
 | 已归档 | [SP-178-issue-213-real-device-runtime](./SP-178-issue-213-real-device-runtime/README.md) | #213：真机 runtime readiness 诊断、单一 smoke JSON 与可执行 setup；不自动注入 endpoint | v0.2.21 已发布并回复关闭；CLI 983/root 269、CocoaPods lint、双架构与 Homebrew 验证全过；真机端到端未复测 |
 | 已归档 | [SP-176-open-issues-integration](./SP-176-open-issues-integration/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |

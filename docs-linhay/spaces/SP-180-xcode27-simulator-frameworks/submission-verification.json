@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-07",
+  "scope": "Selected Xcode Baguette child-only framework compatibility; no push or release",
+  "cli_serial": {
+    "command": "swift test --package-path CLI --no-parallel",
+    "swift_testing_tests": 993,
+    "swift_testing_suites": 79,
+    "xctest_tests": 14,
+    "failures": 0,
+    "swift_testing_duration_seconds": 22.961
+  },
+  "parallel_observation": {
+    "command": "swift test --package-path CLI",
+    "completed_attempt": "993 tests, 12 issues in Harmony bounded timing and process-global stdout/stderr capture",
+    "second_attempt": "Same unrelated failures; cancelled, owned orphan SwiftPM/helper identified through exact log handles and stopped",
+    "interpretation": "Serial passing does not prove the parallel suite is fixed or uniquely establish a cause; no test assertions or unrelated implementations changed"
+  },
+  "loader_runtime": "Earlier automatic no-parent-DYLD runtime no longer reported missing framework/classes; host HID navigation still not accepted as passed",
+  "app_commit": "Overloaded eb77dfba",
+  "privacy": "No device receipts, credentials, raw AX trees or app screenshots copied into this tool repository"
+}

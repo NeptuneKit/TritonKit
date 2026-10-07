@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-09-15
-> 覆盖范围：179/179 个已存在 space
+> 覆盖范围：180/180 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 179/179 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 179/179 | 每条记录链接到现有 space README |
+| 编号登记 | 180/180 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 180/180 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -204,3 +204,4 @@
 | `SP-177-ios-simulator-resource-management` | [`SP-177-ios-simulator-resource-management`](./SP-177-ios-simulator-resource-management/README.md) | 规划中 | simslim 核心能力原生 Swift 迁移与长期资源管理路线；当前仅调研和契约规划 |
 | `SP-178-issue-213-real-device-runtime` | [`SP-178-issue-213-real-device-runtime`](./SP-178-issue-213-real-device-runtime/README.md) | 已归档 | 已发布 v0.2.21 并回复关闭 #213；CLI 983/root 269、CocoaPods lint 与门禁通过，Release 34943378497 双架构与 Homebrew 全过；真机端到端未复测 |
 | `SP-179-issue-214-derived-data-cleanup` | [`SP-179-issue-214-derived-data-cleanup`](./SP-179-issue-214-derived-data-cleanup/README.md) | 已发布／待安全补验 | v0.2.22 双架构、skills、checksum 与 Release CI 已确认；#214 仍 OPEN，路径白名单/活动构建保护/完整 CLI 回归待补 |
+| `SP-180-xcode27-simulator-frameworks` | [`SP-180-xcode27-simulator-frameworks`](./SP-180-xcode27-simulator-frameworks/README.md) | 兼容修复验证／命中待补 | Xcode27 SharedFrameworks 子进程加载器恢复；8测试、CLI993+14及本地门禁通过（10-06）；host ACK导航仍待独立补验，未发布 |

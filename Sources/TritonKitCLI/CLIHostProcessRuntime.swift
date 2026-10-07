@@ -166,6 +166,17 @@ func configureHostProcessExecutable(_ process: Process, command: TKHostCommand) 
         }
         process.environment = environment
     }
+    let inheritedEnvironment = process.environment ?? ProcessInfo.processInfo.environment
+    if isBaguetteHostExecutable(command.executable, environment: inheritedEnvironment) {
+        let frameworkEnvironment = baguetteFrameworkEnvironment(
+            executable: command.executable,
+            environment: inheritedEnvironment,
+            developerDirectory: baguetteDeveloperDirectory(environment: inheritedEnvironment)
+        )
+        if frameworkEnvironment != inheritedEnvironment {
+            process.environment = frameworkEnvironment
+        }
+    }
     if command.executable.contains("/") {
         process.executableURL = URL(fileURLWithPath: command.executable)
         process.arguments = command.processArguments

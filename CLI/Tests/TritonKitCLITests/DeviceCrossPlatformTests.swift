@@ -1176,14 +1176,15 @@ struct DeviceCrossPlatformTests {
 
     @Test("device proxy serve parses proxy requests into redacted capture events")
     func deviceProxyServeParsesProxyRequestsIntoRedactedCaptureEvents() throws {
-        let request = Data((
-            "GET http://example.test/path?q=1 HTTP/1.1\r\n" +
-            "Host: example.test\r\n" +
-            "Authorization: secret\r\n" +
-            "Cookie: session=secret\r\n" +
-            "Proxy-Connection: keep-alive\r\n" +
-            "\r\n"
-        ).utf8)
+        let requestText = [
+            "GET http://example.test/path?q=1 HTTP/1.1\r\n",
+            "Host: example.test\r\n",
+            "Authorization: secret\r\n",
+            "Cookie: session=secret\r\n",
+            "Proxy-Connection: keep-alive\r\n",
+            "\r\n",
+        ].joined()
+        let request = Data(requestText.utf8)
 
         let event = try parseNetworkProxyHTTPHeader(
             request,
