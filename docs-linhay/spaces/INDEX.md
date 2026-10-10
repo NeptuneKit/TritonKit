@@ -1,8 +1,8 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-08（隔离分支；主仓已登记的 SP-181/182 未复制）
-> 覆盖范围：181/181 个已存在 space
+> 最近同步：2026-10-10（历史分支收口；补回主线已有 SP-181/182 登记）
+> 覆盖范围：183/183 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,15 +17,9 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 181/181 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 181/181 | 每条记录链接到现有 space README |
+| 编号登记 | 183/183 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 183/183 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
-
-## 本分支新增登记
-
-| 编号 | 入口 | 状态 | 边界 |
-| --- | --- | --- | --- |
-| `SP-183-device-hub-official-adapter` | [`SP-183-device-hub-official-adapter`](./SP-183-device-hub-official-adapter/README.md) | 全能力接入中／未集成 | 保留旧26；发现/专用生命周期/info/rename/files/mountpoint已验；CLI1104+14/root303+7；info explicit hardware observation/modern-legacy/oldCodable/nestedCLI已验，actualios-iphone-physical非控制；Apple六family catalog/可选availableSim15 metadata计数过（非控制/物理inventory/设备硬件）/unknown/privacy/旧namespace不变；独立pair/unpair/diagnose --plan-only三实际fresh-real只读plan已验，SDKhelp非动作/executablefalse/privacy，execution/archivepolicy仍缺；三namespace/单native容器/受限相对子目录metadata实际2/2项privacy/budgets/全names-state恢复，UTF8homeauthority/提前组合预算验证过；语义bundle/group/crash/temporarypolicy/配对/诊断/平台等持续推进，不把切片称完整；docs缺181/182待集成复验，本次授权SP183本地整理提交，不推送合并发布 |
 
 ## Space 登记表
 
@@ -131,8 +125,8 @@
 | `SP-098-web-hierarchy-source-tabs` | [`20260706-web-hierarchy-source-tabs`](./20260706-web-hierarchy-source-tabs/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
 | `SP-099-web-inspect-session-slots` | [`20260706-web-inspect-session-slots`](./20260706-web-inspect-session-slots/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
 | `SP-100-web-stream-gesture-mapping` | [`20260706-web-stream-gesture-mapping`](./20260706-web-stream-gesture-mapping/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
-| `SP-101-github-issue-batch` | [`20260707-github-issue-batch`](./20260707-github-issue-batch/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
-| `SP-102-issue-140-redaction-preflight` | [`20260707-issue-140-redaction-preflight`](./20260707-issue-140-redaction-preflight/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
+| `SP-101-github-issue-batch` | [`20260707-github-issue-batch`](./20260707-github-issue-batch/README.md) | 已归档 | 历史目录保留；2026-10-10 源分支经 `69bdb3b9` 合入 main 并清理 |
+| `SP-102-issue-140-redaction-preflight` | [`20260707-issue-140-redaction-preflight`](./20260707-issue-140-redaction-preflight/README.md) | 已归档 | 历史目录保留；2026-10-10 源分支经 `e4a09384` 合入 main 并清理 |
 | `SP-103-issues-141-142` | [`20260709-issues-141-142`](./20260709-issues-141-142/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
 | `SP-104-packaged-web-mjpeg` | [`20260709-packaged-web-mjpeg`](./20260709-packaged-web-mjpeg/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
 | `SP-105-issues-144-145-action-docs` | [`20260710-issues-144-145-action-docs`](./20260710-issues-144-145-action-docs/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
@@ -154,7 +148,7 @@
 | `SP-121-issue-161-runtime-screenshot-format` | [`20260722-issue-161-runtime-screenshot-format`](./20260722-issue-161-runtime-screenshot-format/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
 | `SP-122-issue-162-ios-real-device-launch-resolution` | [`20260722-issue-162-ios-real-device-launch-resolution`](./20260722-issue-162-ios-real-device-launch-resolution/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
 | `SP-123-issue-163-xcresult-array-decoding` | [`20260722-issue-163-xcresult-array-decoding`](./20260722-issue-163-xcresult-array-decoding/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
-| `SP-124-issue-164-evidence-simulator-screenshot-fidelity` | [`20260722-issue-164-evidence-simulator-screenshot-fidelity`](./20260722-issue-164-evidence-simulator-screenshot-fidelity/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
+| `SP-124-issue-164-evidence-simulator-screenshot-fidelity` | [`20260722-issue-164-evidence-simulator-screenshot-fidelity`](./20260722-issue-164-evidence-simulator-screenshot-fidelity/README.md) | 已归档 | 历史目录保留；2026-10-10 源分支经 `5f6fbecb` 合入 main 并清理 |
 | `SP-125-issue-165-xcode-schemes-discovery-timeout` | [`20260722-issue-165-xcode-schemes-discovery-timeout`](./20260722-issue-165-xcode-schemes-discovery-timeout/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
 | `SP-126-testrec-convergence` | [`SP-126-testrec-convergence`](./SP-126-testrec-convergence/README.md) | 已登记 | 规范目录；非历史迁移对象 |
 | `SP-127-issue-168-ios-real-device-terminate-pid` | [`SP-127-issue-168-ios-real-device-terminate-pid`](./SP-127-issue-168-ios-real-device-terminate-pid/README.md) | 已发布（v0.2.16） | 规范目录；#168 已关闭；无可证实 PID 时 fail closed，未声称真机 bundle-ID terminate 成功 |
@@ -211,3 +205,6 @@
 | `SP-178-issue-213-real-device-runtime` | [`SP-178-issue-213-real-device-runtime`](./SP-178-issue-213-real-device-runtime/README.md) | 已归档 | 已发布 v0.2.21 并回复关闭 #213；CLI 983/root 269、CocoaPods lint 与门禁通过，Release 34943378497 双架构与 Homebrew 全过；真机端到端未复测 |
 | `SP-179-issue-214-derived-data-cleanup` | [`SP-179-issue-214-derived-data-cleanup`](./SP-179-issue-214-derived-data-cleanup/README.md) | 已发布／待安全补验 | v0.2.22 双架构、skills、checksum 与 Release CI 已确认；#214 仍 OPEN，路径白名单/活动构建保护/完整 CLI 回归待补 |
 | `SP-180-xcode27-simulator-frameworks` | [`SP-180-xcode27-simulator-frameworks`](./SP-180-xcode27-simulator-frameworks/README.md) | 兼容修复验证／命中待补 | Xcode27 SharedFrameworks 子进程加载器恢复；8测试、CLI993+14及本地门禁通过（10-06）；host ACK导航仍待独立补验，未发布 |
+| `SP-181-device-hub-paradigm` | [`SP-181-device-hub-paradigm`](./SP-181-device-hub-paradigm/README.md) | 研究已归档／实现待定 | Device Hub 范式研究已归档；后续实现需独立立项 |
+| `SP-182-trusted-execution-system` | [`SP-182-trusted-execution-system`](./SP-182-trusted-execution-system/README.md) | 设计已归档／实施待立项 | 可信执行系统双路径设计已归档；尚未进入产品实现 |
+| `SP-183-device-hub-official-adapter` | [`SP-183-device-hub-official-adapter`](./SP-183-device-hub-official-adapter/README.md) | 全能力接入中／未集成 | 保留旧26；发现/专用生命周期/info/rename/files/mountpoint已验；CLI1104+14/root303+7；info explicit hardware observation/modern-legacy/oldCodable/nestedCLI已验，actualios-iphone-physical非控制；Apple六family catalog/可选availableSim15 metadata计数过（非控制/物理inventory/设备硬件）/unknown/privacy/旧namespace不变；独立pair/unpair/diagnose --plan-only三实际fresh-real只读plan已验，SDKhelp非动作/executablefalse/privacy，execution/archivepolicy仍缺；三namespace/单native容器/受限相对子目录metadata实际2/2项privacy/budgets/全names-state恢复，UTF8homeauthority/提前组合预算验证过；语义bundle/group/crash/temporarypolicy/配对/诊断/平台等持续推进，不把切片称完整；docs缺181/182待集成复验，本次授权SP183本地整理提交，不推送合并发布 |

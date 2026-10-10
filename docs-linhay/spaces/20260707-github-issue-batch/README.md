@@ -75,3 +75,8 @@ And password input 应显式关闭 autocomplete / autocorrect / autocapitalize /
 - CLI smoke：`triton plan --platform harmony --device harmony-real:abc123 --json` 返回 host-side `device-doctor` 首步，且前三步为 `device-doctor/device-list/device-wait-ready`。
 - Demo guard：`TRITON_STATIC_ONLY=1 docs-linhay/scripts/verify-ios-webview-harness.sh`。
 - Triton-first Demo build：`triton schema --command xcode --json` 确认 schema 后，使用 `triton xcode build --project Examples/TritonKitDemo/TritonKitDemo.xcodeproj --scheme TritonKitDemo --configuration Debug --sdk iphonesimulator --derived-data-path /tmp/tritonkit-issue-batch-deriveddata --timeout 240 --jsonl` 构建通过。
+
+## 2026-10-10 分支收口
+
+- 原 `codex/20260707-github-issue-batch` tip `9c0b63b0` 经 merge `69bdb3b9` 纳入 `main` 历史；原有内容已由后续主线提交覆盖，冲突保留主线最新实现与归档记录，合并前后文件树一致。
+- 按用户要求清理该源分支；#164 旧 worktree 目录已不存在，本次只移除其失效注册。

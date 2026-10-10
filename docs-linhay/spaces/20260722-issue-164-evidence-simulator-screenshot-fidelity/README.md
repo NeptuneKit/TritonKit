@@ -94,3 +94,8 @@
 - Triton-first 真实 Simulator smoke：`triton sim list --json` 发现 booted Simulator；`triton sim screenshot --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --output /private/tmp/triton-issue164-host-20260723-01.png --json` 成功返回 1206×2622 PNG、`runtimeScope=host-simulator` 与可审计 source command。
 - Triton-first 真实 evidence smoke：启动本机 `triton serve` 后连接到带 `simulatorUDID` 的 iOS runtime，`evidence capture --include list,screenshot` 把 187271-byte host framebuffer 发布为主 `screenshot.png`，manifest 明确 `scope=host-simulator`、`source=simctl-framebuffer`、`fidelity=full-screen`、`visualAcceptance=true`。连接 App 仍返回旧 JPEG runtime screenshot，因此 runtime 辅助 artifact 按 PNG 契约被拒绝为 `artifact_write_failed`，bundle 为 failed-partial，但 host 全屏主 artifact 保持有效；runtime PNG 成功分支由 `EvidenceBundleTests` 直接覆盖。
 - 项目内部 host-simulator skill、public skills 与长期技术文档均已同步；实现由 `e489dcfd` 推送到 `main`，GitHub CI `29973762696` 全绿后关闭 #164。
+
+## 2026-10-10 分支收口
+
+- 原 `codex/20260722-issue-164-evidence-simulator-screenshot-fidelity` tip `fcd57ce5` 经 merge `5f6fbecb` 纳入 `main` 历史；原有内容已由后续主线提交覆盖，冲突保留主线最新实现与归档记录，合并前后文件树一致。
+- 按用户要求清理该源分支；#164 旧 worktree 目录已不存在，本次只移除其失效注册。

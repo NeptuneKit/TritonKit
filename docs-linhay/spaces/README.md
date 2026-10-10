@@ -4,7 +4,7 @@
 >
 > 编号登记册：[INDEX.md](./INDEX.md)（181/181 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-08（本隔离分支仅新增SP-183；主仓SP-181/182未提交文档未复制）
+> 最近审计：2026-10-10（历史分支收口；补回主线已有 SP-181/182 登记）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -21,6 +21,8 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 研究已归档／实现待定 | [SP-181-device-hub-paradigm](./SP-181-device-hub-paradigm/README.md) | Device Hub 范式研究已归档；后续实现需独立立项 | 按该 space 的边界另行推进 |
+| 设计已归档／实施待立项 | [SP-182-trusted-execution-system](./SP-182-trusted-execution-system/README.md) | 可信执行系统双路径设计已归档；尚未进入产品实现 | 按该 space 的边界另行推进 |
 | 全能力接入中／未集成 | [SP-183-device-hub-official-adapter](./SP-183-device-hub-official-adapter/README.md) | 保留旧26；发现/生命周期/info/rename/files/mountpoint及三namespace/单native容器/受限相对子目录metadata已验；CLI1104+14/root303+7，info explicit hardware observation/nestedschema/oldCodable及actualios-iphone-physical只读已验、非控制，Apple六family catalog/可选availableSim15 readonlymetadata计数已验/unknown/privacy/非控制或physicalinventory，独立pair/unpair/diagnose --plan-only三fresh-real只读plan过（非动作/executablefalse/privacy），execution/archivepolicy仍缺，子目录actual2/2项privacy/budgets/全names-state恢复，UTF8homeauthority/提前组合预算过，更新[逐能力矩阵](./SP-183-device-hub-official-adapter/plans/20261009-full-capability-matrix.md)，不把切片称完整 | 语义bundle/group/crash/temporarypolicy、配对/诊断/平台与GUI-only边界继续，docs缺181/182待集成复验，本次授权SP183本地整理提交，不推送合并发布 |
 | 兼容修复验证／命中待补 | [SP-180-xcode27-simulator-frameworks](./SP-180-xcode27-simulator-frameworks/README.md) | 已选Xcode只读查询、仅适配器子进程补框架；8测试与加载器恢复验证 | 10-06 CLI993+14/本地门禁通过；业务bridge截图完成，host HID导航另补，不将ACK算命中 |
 | 已发布／待安全补验 | [SP-179-issue-214-derived-data-cleanup](./SP-179-issue-214-derived-data-cleanup/README.md) | #214：v0.2.22 已发布，issue 仍 OPEN | 精确路径白名单、活动构建保护、fixture 与完整 CLI 回归；补验前仅推荐 inspect/dry-run |
@@ -273,3 +275,10 @@
 - [20260709-issues-141-142](./20260709-issues-141-142/README.md)
 - [20260709-packaged-web-mjpeg](./20260709-packaged-web-mjpeg/README.md)
 - [20260710-issues-144-145-action-docs](./20260710-issues-144-145-action-docs/README.md)
+
+## 2026-10-10 指定历史分支收口
+
+- `20260707-github-issue-batch`：源 tip `9c0b63b0` 经 `69bdb3b9` 合入 `main`；保留主线最新文件内容，清理对应 `codex/20260707-github-issue-batch` 分支。
+- `20260707-issue-140-redaction-preflight`：源 tip `ab6f1263` 经 `e4a09384` 合入 `main`；保留主线最新文件内容，清理对应 `codex/20260707-issue-140-redaction-preflight` 分支。
+- `20260722-issue-164-evidence-simulator-screenshot-fidelity`：源 tip `fcd57ce5` 经 `5f6fbecb` 合入 `main`；保留主线最新文件内容，清理对应 `codex/20260722-issue-164-evidence-simulator-screenshot-fidelity` 分支。
+- #164 旧 worktree 目录已不存在，仅移除对应失效注册；其他分支与 worktree 不在本次清理范围。

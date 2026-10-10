@@ -53,3 +53,8 @@ Then skill 必须要求 summarize evidence，不直接上传或粘贴原始内�
 
 - 红灯：只新增 `verify-skill-package.sh` 门禁后运行 `docs-linhay/scripts/verify-skill-package.sh`，因打包后的 `issue-filing.md` 尚无 `Public issue preflight` 而失败。
 - 绿灯：补齐 public skill 内容后，`docs-linhay/scripts/verify-skill-package.sh` 通过。
+
+## 2026-10-10 分支收口
+
+- 原 `codex/20260707-issue-140-redaction-preflight` tip `ab6f1263` 经 merge `e4a09384` 纳入 `main` 历史；原有内容已由后续主线提交覆盖，冲突保留主线最新实现与归档记录，合并前后文件树一致。
+- 按用户要求清理该源分支；#164 旧 worktree 目录已不存在，本次只移除其失效注册。
