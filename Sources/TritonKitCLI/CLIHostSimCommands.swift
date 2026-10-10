@@ -117,6 +117,7 @@ struct Sim: AsyncParsableCommand {
             SimResource.self,
             SimUse.self,
             SimCreate.self,
+            SimRename.self,
             SimBoot.self,
             SimShutdown.self,
             SimPair.self,

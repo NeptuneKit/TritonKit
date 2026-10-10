@@ -1,0 +1,16 @@
+{
+  "slice": "identity-bound-device-info-explicit-hardware-observation",
+  "verificationDate": "2026-10-10",
+  "fullIntegrationComplete": false,
+  "acceptedScope": "Additive optional hardware.platformObservation through existing device info, pure shared parser/Codable and nested CLI schema, fresh identity-bound current physical iOS readonly evidence only",
+  "tdd": {"sharedFunctionalRed": "5 tests/19 issues", "cliSchemaFunctionalRed": "14 tests run/1 failed test/3 issues; nested runtime propagation assertions already green"},
+  "cliRegression": {"swiftTestingTests": 1104, "suites": 95, "xctestTests": 14, "seconds": 22.054, "passed": true},
+  "rootRegression": {"swiftTestingTests": 303, "xctestTests": 7, "passed": true},
+  "release": {"seconds": 150.10, "passed": true},
+  "actualCLI": {"accepted": true, "targetPublicPrimaryHashBound": true, "systemFamily": "ios", "deviceFamily": "iphone", "reality": "physical", "sourceLayout": "modern-properties-hardware", "authority": "explicit-sdk-hardware-only", "actionOrBusinessReadinessVerification": false, "lockRequested": false},
+  "parsing": "Exact ASCII <=64 byte platform/deviceType/reality whitelist only, no raw unknown observations echoed; known system seven spellings incl xrOS/visionOS grouping, device seven spellings six families, two realities, absent unknown. No name/product/marketing/runtime/capabilities or legacy ios/real assumptions. Reported iOS+iPad remains ios/ipad. Modern presence/null/wrongtype/partial blocks deprecated mirrors. Old hardware Codable missing optional field nil-compatible and nested roundtrip",
+  "compatibility": "No discovery target/dispatch/identity/hash/argv/model migration, no new dependencies or CLI-only root deps; old SDK synthetic evidence only, no installed Xcode26 required. Existing hardware whitelist fields retained; unknown-value privacy promise is scoped to new observation",
+  "gate": {"localProductSubgatesPassed": true, "localReleaseSeconds": 176.87, "genericSimulatorBuild": "explicit TRITON_VERIFY_XCODE=0 skip", "localDocsOwnFailureAndFix": "New private regression log -final names triggered existing no latest/final checker; two exact resolved absolute source/destination paths checked before move to knownfamilies names, no checker weakened. Postrepair direct ci-docs/check-docs both confirmed only preexisting isolated SP181/182 contiguous registry gap; main both passed with 183 registered spaces"},
+  "remaining": ["Non-iOS physical discovery/selection metadata integration and per-family live acceptance", "Specialized watch/tv/vision/mac public controls", "Semantic bundle/group/Crash/Temporary policy", "Administration accepted execution/auth/audit/native fileJSON/postconditions/archive policy and rest full matrix"],
+  "safety": "No physical write/pair/unpair/diagnostic collection/Simulator lifecycle/business Simulator mutation/global SDK switch/credentials/Finder/profile/DDI/commit/merge/push/release/installed CLI replacement. Readonly metadata service communication/cache/private JSON-log artifact writes possible, not business or hardware authenticity proof"
+}

@@ -1,0 +1,13 @@
+{
+  "selectedToolchain": {"xcodeVersion": "27.1", "buildVersion": "27A9275", "devicectlVersion": "651.13.5"},
+  "verification": "help-advertised-only",
+  "scopes": {"simulator": {"ok": true, "supportedCommands": 2}, "real": {"ok": true, "supportedCommands": 4}, "all": {"ok": true, "supportedCommands": 6}},
+  "tests": {"cliSwiftTesting": 1011, "cliSuites": 81, "cliXCTest": 14, "rootSwiftTesting": 281, "rootXCTest": 7, "failures": 0, "cliExecution": "serial"},
+  "releaseConfigurationBuild": "passed-development-version-not-published",
+  "discoveryRerun": {"simulatorCount": 14, "realCount": 3, "duplicates": 0, "singleFailureEnvelope": true},
+  "oldXcodeEvidence": "synthetic-help-and-command-environment-fixtures-plus-legacy-JSON-only",
+  "oldXcodeActualRun": false,
+  "deviceActionsExecuted": false,
+  "globalXcodeSelectionChanged": false,
+  "residualGate": "isolated-worktree-missing-main-only-SP181-SP182; strict-docs-requires-integration"
+}

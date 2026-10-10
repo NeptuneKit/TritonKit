@@ -531,6 +531,10 @@ public enum TKSimctlCommand {
         command(["simctl", "boot", udid], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
+    public static func rename(udid: String, name: String) -> TKHostCommand {
+        command(["simctl", "rename", udid, name], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
     public static func shutdown(udid: String) -> TKHostCommand {
         command(["simctl", "shutdown", udid], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }

@@ -359,6 +359,7 @@ struct HostDeviceDoctorOutput: Encodable {
     let capabilities: [String]
     let strongControl: [TKHostStrongControlCapability]
     let artifactsSaved: Bool
+    var commandSupport: [HostAppleCommandSupport]? = nil
 }
 
 struct HostDeviceBridgeOutput: Encodable, Equatable {

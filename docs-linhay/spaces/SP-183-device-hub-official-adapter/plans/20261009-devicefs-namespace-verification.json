@@ -1,0 +1,15 @@
+{
+ "slice":"devicefs-fixed-container-namespace-metadata",
+ "fullIntegrationComplete":false,
+ "appGroupIdentifierNavigationImplemented":false,
+ "views":["mount-root","app-data-containers","app-group-containers"],
+ "tdd":{"entrySchemaRedTests":2,"entrySchemaRedIssues":3,"namespaceTokenMappingRedTests":1,"namespaceTokenMappingRedIssues":5,"rootOwnerBypassRedTests":1,"rootOwnerBypassRedIssues":1,"nativeSyntheticInodeRedTests":1,"nativeSyntheticInodeRedIssues":1},
+ "nativeFailure":{"firstOwnedNamespaceCLI":"device_fs_read_failed; not accepted","finallyRestorationSeparatelyVerified":true,"metadataOnlyDiagnostic":{"filesystemType":"devicefs from same final descriptor","readdirStatInodes":"different synthesized IDs observed","independentNoFollowSecondStatInode":"matches first stat","noContentsOrSymlinkTargetsRead":true,"allProbeNamesStatesRestored":true}},
+ "fix":{"fixedNamespaceOnly":true,"arbitraryRelativeInput":false,"freshDeviceBinding":true,"deviceRootOwnerBeforeRelativeOpen":true,"finalNamespaceOwnerChecked":true,"sameFDChain":true,"mountRootTokenCompatibility":true,"viewSaltForNamespaceTokens":true,"nativeInodeRule":"exact native fstatfs devicefs only: synthetic dirent ID not comparable; all filesystems double-stat ino/dev/kind unchanged, non-devicefs still strict dirent ID binding","atomicSnapshotMountProvenanceClaimed":false},
+ "verificationStatus":"accepted fixed namespace shallow metadata slice; full objective active",
+ "tests":{"cliSwiftTesting":1076,"cliSuites":90,"cliXCTest":14,"cliSeconds":21.304,"rootSwiftTesting":298,"rootXCTest":7,"releaseSeconds":131.56,"postNativeFailureRevalidated":true,"nonDeviceFSZeroHelperRedIssues":5,"nonDeviceFSZeroExemptionRemoved":true,"strictPostReviewActualOwnedCLIRevalidated":true,"privateHostDiagnosticReferencesIntentionallyAllowedTested":true},
+ "localGate":{"exitCode":1,"productSubgatesPassed":true,"releaseSeconds":184.23,"genericSimulatorBuild":"explicit skip, owned CLI metadata action separate acceptance","docs":"known isolated181/182 registry gap only"},
+ "review":{"designNamespaceAndImplementationClosingReceived":true,"nativeInodeReReviewClosingReceived":true,"reviewersWriteBuildDeviceActions":false,"zeroDirentObservation":"pure helper RED proved gap in strict rule; Darwin readdir skips zero entries, not an observed native exploit","artifactReferencePolicy":"private host diagnostic references intentionally exposed locally; native DeviceFS dataPath never inlined, refs/contents must not be published"},
+ "actualOwnedCLI":{"mountRootEntries":4,"appDataNamespaceEntries":35,"appGroupNamespaceEntries":34,"allViewsActualEntryMax1Rejected":true,"allViewsActualJSONMax1Rejected":true,"defaultNamesPrivate":true,"namesOnlyOptIn":true,"tokensStableAcrossFreshQuery":true,"artifacts07000600Verified":true,"contentsRead":false,"recursive":false,"physicalQuery":false,"ownedFinalState":"Shutdown","allSimulatorNamesStatesUnchanged":true},
+ "remaining":["bundle/group identifier navigation","crash namespace mapping","temporary side-effect policy","remaining whole capability matrix"]
+}

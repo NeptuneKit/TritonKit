@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-09",
+  "scope": "Xcode26 command retention and Xcode27.1 task-owned Simulator lifecycle",
+  "toolchain": {"version": "27.1", "build": "27A9275", "globalSelectionChanged": false, "xcode26InstalledOrExecuted": false},
+  "retainedRegistrations": {"sim": 30, "app": 12, "device": 13, "xcode": 12, "includesHiddenCompatibilityCommands": true},
+  "tests": {"focusedSwiftTesting": 12, "cliSwiftTesting": 1014, "cliSuites": 83, "cliXCTest": 14, "failures": 0, "cliDurationSeconds": 20.554, "rootDispatchAndNonemptyLaunchMetadataGuards": true},
+  "releaseBuild": {"passed": true, "durationSeconds": 123.65, "installedOrPublished": false},
+  "dedicatedSimulator": {"createdThroughTriton": true, "ownershipCapturedPrivately": true, "singleCommandLifecyclePassed": true, "uninstallVerifiedByMissingAppInfo": true, "xcodeRunPassedAfterFix": true, "xcodeRunDurationMs": 5277, "remainingUserApps": 0, "finalState": "Shutdown", "retainedForReproduction": true},
+  "timeoutFix": {"redIssues": 2, "appliesTo": ["simulator install", "simulator launch"], "explicitOverrideHonored": true, "nilPreservesLegacyDefaults": true, "perPhaseNotSharedDeadline": true, "alternateBackendRetry": false},
+  "executionDeviation": {"firstRoundUsedExistingShutdownStandardDevice": true, "notCountedAsDedicatedAcceptance": true, "testAppsRemovedAndShutdownRestored": true},
+  "recovery": {"installTimedOutBeforeFix": true, "readOnlyQueryConfirmedInstalled": true, "noBlindReinstall": true, "confirmedTestInstallationRemovedBeforeFreshAcceptance": true},
+  "boundaries": {"helpIsNotActionVerification": true, "blackScreenshotIsNotRenderingProof": true, "businessReadinessVerified": false, "realDeviceActionsExecuted": false, "existingBootedBusinessSimulatorStillBooted": true, "xcodeListResolutionArtifactRestoredToBaseline": true, "commitMergeReleasePerformed": false}
+}

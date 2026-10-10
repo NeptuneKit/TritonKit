@@ -170,6 +170,9 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if ["collection_cell_selection_blocked", "collection_cell_selection_denied"].contains(failureCode) {
             categories.append("diagnose")
         }
+        if ["device_files_limit_exceeded", "device_mountpoint_limit_exceeded", "device_fs_limit_exceeded", "device_fs_unsafe_root"].contains(failureCode) {
+            categories.append(contentsOf: ["diagnose", "plan"])
+        }
         if failureCode == "stale_node_alias" {
             categories.append(contentsOf: ["diagnose", "observe", "plan"])
         }

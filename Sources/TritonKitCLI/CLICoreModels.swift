@@ -295,10 +295,11 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("--include-sensitive", "输出私有路径、邮箱和 token-like 片段；默认关闭并自动脱敏"),
         ]),
         "runtime": ChineseCommandHelp(name: "runtime", overview: "读取 embedded runtime manifest、能力边界、限制和脱敏策略。", usage: "triton runtime manifest [选项]", options: target + hostPort + formatTextJSON),
-        "sim": ChineseCommandHelp(name: "sim", overview: "控制 iOS Simulator 生命周期、截图和维护。", usage: "triton sim <list|use|boot|shutdown|screenshot|record|logs|diagnose|logverbose|runtime|status-bar|privacy|location|ui|pasteboard|push> [选项]", options: formatTextJSON + [
+        "sim": ChineseCommandHelp(name: "sim", overview: "控制 iOS Simulator 生命周期、截图和维护。", usage: "triton sim <list|use|rename|boot|shutdown|screenshot|record|logs|diagnose|logverbose|runtime|status-bar|privacy|location|ui|pasteboard|push> [选项]", options: formatTextJSON + [
             ("list", "列出可用 simulator"),
             ("use <udid>", "写入工作区默认 simulator"),
             ("boot <udid>", "启动 simulator"),
+            ("rename <udid> <name> [--timeout <seconds>]", "重命名单个显式 UUID，不自动启动或删除；需用 device list 独立核对名称"),
             ("shutdown <udid|booted>", "关闭 simulator"),
             ("screenshot --output <path>", "采集 simulator 截图"),
             ("record --output <path.mov> --duration <seconds>", "录制 simulator 视频"),

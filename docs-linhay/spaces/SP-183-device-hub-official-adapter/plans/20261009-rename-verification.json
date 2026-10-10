@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-09",
+  "slice": "standalone-simulator-rename",
+  "fullIntegrationComplete": false,
+  "tests": {"redIssues": 4, "focusedCLI": 59, "focusedShared": 1, "cliSwiftTesting": 1033, "cliSuites": 85, "cliXCTest": 14, "cliSeconds": 20.282, "rootSwiftTesting": 288, "rootXCTest": 7, "failures": 0, "releaseBuildSeconds": 131.74},
+  "contract": {"explicitSingleUUID": true, "opaqueUnicodeName": true, "invalidSelectorNameTimeoutRejectedBeforeBackend": true, "nilPreservesDefaultCommandMetadata": true, "successIsSubmissionOnly": true, "noMandatoryRunBootCloneDelete": true},
+  "liveAcceptance": {"ownedSimulatorOnly": true, "initialState": "Shutdown", "observedNameChanged": true, "canonicalIdentityPreserved": true, "bootStatePreserved": true, "originalNameRestored": true, "otherSimulatorNamesAndStatesUnchanged": true, "singleJSONInvalidInputErrors": "parameter_conflict"},
+  "localGate": {"exitCode": 1, "productSubgatesPassed": ["dependency boundary", "DEBUG isolation", "root tests", "Release build", "Release smoke", "Harmony smoke", "iOS runtime observe smoke"], "releaseBuildSeconds": 178.80, "genericSimulatorBuild": "explicitly skipped; owned acceptance separate", "docsFailure": "Known isolated baseline SP181/182 registry gap; checker unchanged"},
+  "nextSliceFacts": {"filesAuditSubagentClosingReceived": true, "physicalSystemCrashLogsMetadataListExitCode": 0, "physicalFilesResultShape": ["deviceIdentifier", "domain", "files"], "physicalFilesContentFetched": false, "simulatorSystemCrashLogsFilesQueryExitCode": 1, "simulatorFilesError": "CoreDevice1001 listFiles unsupported", "simulatorMountpointQueryExitCode": 0, "mountpointResultField": "result.dataPath", "rawMountPathPublished": false, "probeSimulatorStateRestored": true, "otherSimulatorStatesUnchanged": true, "temporaryDomainQueried": false, "tritonFilesMountpointImplemented": false},
+  "docsGates": {"mainDocsCIExit": 0, "mainCheckDocsExit": 0, "mainRegisteredSpaces": 183, "worktreeDocsCIExit": 1, "worktreeCheckDocsExit": 1, "knownIsolatedRegistryGap": [181, 182], "diffWhitespaceExit": 0, "publicJSONPythonSyntaxExit": 0},
+  "safety": {"physicalWrites": false, "businessSimulatorWrites": false, "globalXcodeSwitch": false, "commitMergeRelease": false}
+}

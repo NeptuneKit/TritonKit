@@ -1,0 +1,17 @@
+{
+  "slice": "Apple-platform-catalog-and-available-Simulator-metadata-counts",
+  "verificationDate": "2026-10-10",
+  "fullIntegrationComplete": false,
+  "acceptedScope": "Independent device platforms static six-family integration catalog, optional one available Simulator metadata query/global OS-family counts, not physical inventory/action/business support",
+  "tdd": {"entryFunctionalRed": "2 tests/3 issues", "runtimeFunctionalRed": "4 tests/17 issues"},
+  "cliRegression": {"swiftTestingTests": 1104, "suites": 95, "xctestTests": 14, "seconds": 26.331, "passed": true},
+  "rootRegression": {"swiftTestingTests": 298, "xctestTests": 7, "passed": true},
+  "release": {"seconds": 188.48, "passed": true},
+  "actualCLI": {"catalog": "six known families; unqueried inventoryObserved=false/counts-sources empty", "filter": "watchos one catalog profile without queries", "inventory": "15 available Simulator records counted, seven family buckets including unknown; no names/IDs/raw runtimes", "unknownFilter": "single parameter_conflict JSON; DI zero provider counter before IO", "platformControlsPhysicalInventoryOrLifecycleAcceptance": false},
+  "classification": "Exact native CoreSimulator prefix with ASCII numeric version; iOS/watchOS/tvOS/xrOS-or-visionOS only. iOS cannot distinguish iPhone/iPad/prove iPadOS; no Mac Simulator/name guessing. Unknown stays unknown, count zero not platform unavailable proof, runtime shape not authenticity or action authorization",
+  "boundaries": "Catalog filter only, global observed counts retained; default zero host queries proved by source/DI not external process trace. Source descriptors reconstructed, inventory errors only existing stable codes/static messages, no backend logs/candidates/path. Existing ios namespace/IDs/argv/output models unchanged, no cap-array/generic-command automatic specialized controls, no new shared/embedded deps or server/Run, no physical query/boot/pair/input/Finder/profile/DDI/SDK switch or installed CLI replacement",
+  "catalogFlags": "platformSpecificControlAccepted/actionsAuthorized=false describe lack of acceptance/authorization BY THIS REPORT only, not denial of existing entrypoints",
+  "gate": {"localProductSubgatesPassed": true, "localReleaseSeconds": 211.16, "genericSimulatorBuild": "explicit TRITON_VERIFY_XCODE=0 skip", "isolatedDocs": "only preexisting registry gap SP-181/SP-182, not weakened or fabricated"},
+  "remaining": ["physical/individual-target/hardware provenance platform model", "watch/tv/vision/mac dedicated public controls and acceptance", "semantic bundle/group identity/DeviceFS Crash/Temporary policy", "accepted real administration execution/auth/audit/fileJSON/postconditions/archive policy and rest full matrix"],
+  "publication": "Uncommitted/unmerged/unreleased; no commit/push/installed CLI replacement"
+}
