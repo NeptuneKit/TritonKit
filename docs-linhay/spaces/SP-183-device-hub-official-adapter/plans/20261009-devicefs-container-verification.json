@@ -1,0 +1,16 @@
+{
+  "slice":"explicit-single-native-container-shallow-metadata",
+  "fullIntegrationComplete":false,
+  "startedBatchDate":"2026-10-09",
+  "completedVerificationDate":"2026-10-10",
+  "views":["app-data-containers","app-group-containers"],
+  "parameter":"--container-identifier",
+  "selectionSemantics":"private explicit native child directory name, not verified bundle/group identity or installation evidence",
+  "tdd":{"entryRedTests":2,"entryRedIssues":4,"runtimeRedTests":2,"runtimeRedIssues":44},
+  "safety":{"preDiscoveryAndArtifactValidation":true,"singleComponentUTF8Bytes":"1...255, no empty/dot/dotdot/slash/control, no normalization","rootAndEveryRelativeOwnerCheckSameFD":true,"allPathNoFollow":true,"leafDoubleNoFollowStat":true,"contentsRead":false,"recursive":false,"nativePathEcho":false,"inputSelectionFieldEcho":false,"leafNameCoincidenceOnlyWhenOptIn":true,"defaultTokenCompatibility":true,"containerViewTokenIsolation":true,"tokenSecrecyAuthorizationOrPhysicalEqualityClaim":false,"arbitrarySubdirectory":false,"verifiedBundleIdentity":false,"mountAuthorizationBusinessReadiness":false},
+  "extraFixtureEvidence":{"exact255ASCIIAndUTF8BytesAccepted":true,"NFCNFDOriginalBytesAndDifferentCorrelationTokens":true,"twoLayerDirectorySymlinkFIFOAndShallowOnly":true,"intermediateDifferentOwnerFixture":"not fabricated: unprivileged owned fixture cannot chown intermediate to another uid; same-FD loop audited, inherited actual root/final-owner regressions retained"},
+  "review":{"readonlyClosingReceived":true,"reviewerWritesBuildsOrDeviceActions":false,"blockingBugReported":false,"byteBoundaryCoverageGapClosed":true,"CLIValidationEvidence":"actual invalid selector with deliberately nonexistent device yields parameter_conflict before resolution; code order verifies validation before discovery, runtime artifact/runner spies prove no query/list IO"},
+  "verification":{"cliSwiftTesting":1083,"cliSuites":90,"cliXCTest":14,"cliSeconds":25.411,"rootSwiftTesting":298,"rootXCTest":7,"postContractReleaseSeconds":141.68,"postContractOwnedCLIRevalidated":true,"localProductSubgatesPassed":true,"localReleaseSeconds":191.21,"localExitCode":1,"localDocsFailure":"known isolated worktree missing SP181/182 registry entries, checker unchanged","genericSimulatorBuild":"explicit skip; separate task-owned CLI metadata acceptance"},
+  "actualOwnedEvidence":{"appDataSelectedContainerEntries":5,"appGroupSelectedContainerEntries":2,"bothViewsDefaultOptInTokensStable":true,"bothActualEntryMax1AndJSONMax1Rejected":true,"privateArtifacts07000600":true,"requestedSelectorNotEchoed":true,"allSimulatorNamesStatesUnchanged":true,"ownedFinalState":"Shutdown at acceptance","AppInstallLaunchWrites":false,"physicalQueries":false},
+  "remaining":["arbitrary subdirectory navigation policy","verified semantic bundle/group identity mapping","crash mapping","temporary policy","remaining full capability matrix"]
+}

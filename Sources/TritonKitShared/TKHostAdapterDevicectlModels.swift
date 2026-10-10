@@ -42,6 +42,23 @@ public enum TKDevicectlCommand {
         command(["devicectl", "device", "info", "details", "--device", identifier] + artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput))
     }
 
+    public static func deviceInfoFiles(identifier: String, request: TKDevicectlFilesRequest, jsonOutput: String, logOutput: String) -> TKHostCommand {
+        var arguments = ["devicectl", "device", "info", "files", "--device", identifier, "--domain-type", request.domain, "--no-recurse"]
+        var redacted: Set<Int> = [5]
+        for (flag, value) in [("--domain-identifier", request.domainIdentifier), ("--subdirectory", request.subdirectory), ("--username", request.username)] {
+            if let value { arguments.append(flag); redacted.insert(arguments.count); arguments.append(value) }
+        }
+        return command(arguments + artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput), requiredConfig: [.target, .timeout, .artifactDir, .redactionPolicy], redactedArgumentIndexes: redacted)
+    }
+
+    public static func deviceInfoMountpoint(identifier: String, jsonOutput: String, logOutput: String) -> TKHostCommand {
+        command(["devicectl", "device", "info", "mountpoint", "--device", identifier] + artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput), requiredConfig: [.target, .timeout, .artifactDir, .redactionPolicy], redactedArgumentIndexes: [5])
+    }
+
+    public static func deviceInfoLockState(identifier: String, jsonOutput: String, logOutput: String) -> TKHostCommand {
+        command(["devicectl", "device", "info", "lockState", "--device", identifier] + artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput), redactedArgumentIndexes: [5])
+    }
+
     public static func deviceInfoApps(identifier: String, jsonOutput: String, logOutput: String) -> TKHostCommand {
         command(["devicectl", "device", "info", "apps", "--device", identifier] + artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput))
     }
@@ -189,7 +206,11 @@ public struct TKDevicectlDeviceTarget: Codable, Equatable {
         transport: String? = nil,
         blockedReasons: [String],
         source: String = "devicectl",
-        alternateIdentifiers: [String] = []
+        alternateIdentifiers: [String] = [],
+        platform: String = "ios",
+        scope: String = "real",
+        kind: String = "real-device",
+        simulatorUDID: String? = nil
     ) {
         self.identifier = identifier
         self.name = name
@@ -199,10 +220,15 @@ public struct TKDevicectlDeviceTarget: Codable, Equatable {
         self.transport = transport
         self.blockedReasons = blockedReasons
         self.source = source
-        self.platform = "ios"
-        self.scope = "real"
-        self.kind = "real-device"
-        self.id = "ios-real:\(TKDevicectlDeviceTarget.stableHash(identifier))"
+        self.platform = platform
+        self.scope = scope
+        self.kind = kind
+        if scope == "simulator", let simulatorUDID {
+            let canonicalUDID = UUID(uuidString: simulatorUDID)?.uuidString ?? simulatorUDID
+            self.id = "sim:\(canonicalUDID)"
+        } else {
+            self.id = "ios-\(scope):\(TKDevicectlDeviceTarget.stableHash(identifier))"
+        }
         self.redactedTarget = self.id
         self.alternateIdentifiers = Array(NSOrderedSet(array: alternateIdentifiers.filter { !$0.isEmpty && $0 != identifier })) as? [String] ?? alternateIdentifiers
     }
@@ -238,6 +264,8 @@ public struct TKDevicectlDeviceTarget: Codable, Equatable {
 public enum TKDevicectlParserError: Error, Equatable {
     case malformedJSON(String)
     case missingDevices
+    case invalidDeviceIdentifier
+    case unsuccessfulOutcome
 }
 
 public enum TKDevicectlDeviceListParser {
@@ -256,21 +284,69 @@ public enum TKDevicectlDeviceListParser {
             throw TKDevicectlParserError.missingDevices
         }
 
-        return devices.compactMap(parseDevice(_:))
+        if let outcome = (dictionary["info"] as? [String: Any])?["outcome"], normalized(string(outcome)) != "success" {
+            throw TKDevicectlParserError.unsuccessfulOutcome
+        }
+        return try devices.map(parseDevice(_:))
     }
 
-    private static func parseDevice(_ record: [String: Any]) -> TKDevicectlDeviceTarget? {
-        guard let identifier = string(record["identifier"] ?? record["deviceIdentifier"]) else {
-            return nil
+    private static func parseDevice(_ record: [String: Any]) throws -> TKDevicectlDeviceTarget {
+        guard let rawIdentifier = (record["identifier"] ?? record["deviceIdentifier"]) as? String,
+              !rawIdentifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw TKDevicectlParserError.invalidDeviceIdentifier
         }
-        let deviceProperties = dictionary(record["deviceProperties"])
-        let hardwareProperties = dictionary(record["hardwareProperties"])
-        let connectionProperties = dictionary(record["connectionProperties"])
+        let identifier = rawIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
+        // properties is authoritative when present, including empty/unknown sections.
+        // Never resurrect stale deprecated mirrors to manufacture readiness.
+        let modern = record["properties"] != nil
+        let properties = dictionary(record["properties"])
+        var deviceProperties = modern ? dictionary(properties["state"]) : dictionary(record["deviceProperties"])
+        let hardwareProperties = modern ? dictionary(properties["hardware"]) : dictionary(record["hardwareProperties"])
+        var connectionProperties = modern ? dictionary(properties["connection"]) : dictionary(record["connectionProperties"])
+        if modern {
+            connectionProperties["tunnelState"] = connectionProperties["state"]
+            let version = dictionary(properties["software"])["osVersionNumber"]
+            deviceProperties["osVersionNumber"] = dictionary(version)["stringValue"] ?? version
+            if let mode = deviceProperties["developerModeStatus"] as? [String: Any] {
+                deviceProperties["developerModeStatus"] = mode.count == 1 && mode["enabled"] is [String: Any] ? "enabled"
+                    : (mode.count == 1 && mode["disabled"] is [String: Any] ? "disabled" : "unknown")
+            }
+        }
         let name = string(deviceProperties["name"] ?? deviceProperties["deviceName"])
         let runtime = runtimeName(from: string(deviceProperties["osVersionNumber"] ?? deviceProperties["osVersion"] ?? deviceProperties["productVersion"]))
         let transport = string(connectionProperties["transportType"] ?? connectionProperties["transport"] ?? connectionProperties["connectionType"])
-        let blockedReasons = blockedReasons(record: record, deviceProperties: deviceProperties, connectionProperties: connectionProperties)
-        let state = blockedReasons.contains("offline") ? "offline" : (blockedReasons.isEmpty ? "connected" : "blocked")
+        var stateRecord = record
+        if deviceProperties["visibilityClass"] != nil { stateRecord["visibilityClass"] = deviceProperties["visibilityClass"] }
+        let reality = normalized(string(hardwareProperties["reality"]))
+        let declaredPlatform = normalized(string(hardwareProperties["platform"]))
+        let platform = declaredPlatform.isEmpty && !modern ? "ios" : (declaredPlatform.isEmpty ? "unknown" : declaredPlatform)
+        let simulatorUDID = string(hardwareProperties["udid"])?.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Legacy list payloads describe physical devices. New payloads require an
+        // explicit reality; neither a UUID, transport, nor device name proves kind.
+        let legacyPhysical = !modern && reality.isEmpty && !deviceProperties.isEmpty && !connectionProperties.isEmpty
+        let scope = platform == "ios" && reality == "simulated" && simulatorUDID?.isEmpty == false ? "simulator"
+            : (platform == "ios" && (reality == "physical" || legacyPhysical) ? "real" : "unknown")
+        let kind = scope == "simulator" ? "simulator" : (scope == "real" ? "real-device" : "unknown")
+        var reasons = blockedReasons(record: stateRecord, deviceProperties: deviceProperties, connectionProperties: connectionProperties)
+        if scope == "simulator" {
+            let boot = normalized(string(deviceProperties["bootState"]))
+            if boot != "booted" { reasons.append(boot == "shutdown" ? "not-booted" : "readiness-unknown") }
+        } else if scope == "real" {
+            let pairing = normalized(string(connectionProperties["pairingState"] ?? connectionProperties["pairingStatus"]))
+            let paired = ["paired", "trusted"].contains(pairing) || bool(connectionProperties["trusted"]) == true
+            let mode = normalized(string(deviceProperties["developerModeStatus"] ?? deviceProperties["developerMode"]))
+            let enabled = ["enabled", "on", "true", "available"].contains(mode) || bool(deviceProperties["developerModeEnabled"]) == true
+            let tunnel = normalized(string(connectionProperties["tunnelState"] ?? connectionProperties["connectionState"]))
+            let boot = normalized(string(deviceProperties["bootState"]))
+            if !boot.isEmpty && boot != "booted" { reasons.append(boot == "shutdown" ? "not-booted" : "readiness-unknown") }
+            let visibility = normalized(string(stateRecord["visibilityClass"]))
+            let unknownVisibility = stateRecord["visibilityClass"] != nil && !["default", "available", "offline", "unavailable", "hidden"].contains(visibility)
+            if reasons.isEmpty && (!paired || !enabled || !["connected", "disconnected"].contains(tunnel) || unknownVisibility) { reasons.append("readiness-unknown") }
+        } else {
+            reasons.append("readiness-unknown")
+        }
+        let blockedReasons = Array(NSOrderedSet(array: reasons)) as? [String] ?? reasons
+        let state = blockedReasons.contains("offline") ? "offline" : (blockedReasons.contains("readiness-unknown") ? "unknown" : (blockedReasons.isEmpty ? "connected" : "blocked"))
         return TKDevicectlDeviceTarget(
             identifier: identifier,
             name: name,
@@ -279,7 +355,11 @@ public enum TKDevicectlDeviceListParser {
             ready: blockedReasons.isEmpty,
             transport: transport,
             blockedReasons: blockedReasons,
-            alternateIdentifiers: alternateIdentifiers(record: record, deviceProperties: deviceProperties, hardwareProperties: hardwareProperties)
+            alternateIdentifiers: alternateIdentifiers(record: record, deviceProperties: deviceProperties, hardwareProperties: hardwareProperties),
+            platform: platform,
+            scope: scope,
+            kind: kind,
+            simulatorUDID: simulatorUDID
         )
     }
 
@@ -289,6 +369,7 @@ public enum TKDevicectlDeviceListParser {
             string(deviceProperties["udid"] ?? deviceProperties["UDID"] ?? deviceProperties["uniqueDeviceID"] ?? deviceProperties["uniqueDeviceIdentifier"]),
             string(hardwareProperties["udid"] ?? hardwareProperties["UDID"] ?? hardwareProperties["uniqueDeviceID"] ?? hardwareProperties["uniqueDeviceIdentifier"]),
             string(hardwareProperties["serialNumber"] ?? hardwareProperties["serial"]),
+            string(hardwareProperties["ecid"]),
         ]
         return Array(NSOrderedSet(array: values.compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty })) as? [String] ?? []
     }
@@ -317,7 +398,7 @@ public enum TKDevicectlDeviceListParser {
         if pairingState == "untrusted" || pairingState == "nottrusted" || pairingState == "not-trusted" || pairingState == "not trusted" || pairingState == "unpaired" || trusted == false {
             reasons.append("not-trusted")
         }
-        if (developerMode.isEmpty == false && !["enabled", "on", "true", "available"].contains(developerMode)) || bool(deviceProperties["developerModeEnabled"]) == false {
+        if ["disabled", "off", "false", "unavailable"].contains(developerMode) || bool(deviceProperties["developerModeEnabled"]) == false {
             reasons.append("developer-mode-required")
         }
         if lockState == "locked" || lockState == "passcodelocked" || lockState == "passcode-locked" || bool(deviceProperties["isLocked"]) == true {

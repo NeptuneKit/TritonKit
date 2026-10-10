@@ -3435,8 +3435,10 @@ struct DeviceCrossPlatformTests {
 
     @Test("explicit iOS host selectors discover real devices without requiring scope real")
     func explicitIOSHostSelectorsDiscoverRealDevicesWithoutRequiringScopeReal() {
-        #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "ios-real:abc123", platform: .ios)) == .all)
-        #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "ios-real:abc123")) == .all)
+        // Typed real selectors still discover physical devices, but no longer
+        // depend on an unrelated simulator backend to succeed.
+        #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "ios-real:abc123", platform: .ios)) == .real)
+        #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "ios-real:abc123")) == .real)
         #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "COREDEVICE-IDENTIFIER", platform: .ios)) == .all)
         #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "IOS-DEVICE-UDID", platform: .ios)) == .all)
         #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "booted", platform: .ios)) == .simulator)

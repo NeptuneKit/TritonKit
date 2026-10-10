@@ -361,6 +361,8 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "prepare-target", "plan"]
     case "devicectl_json_missing":
         return ["diagnose", "archive"]
+    case "device_files_limit_exceeded", "device_mountpoint_limit_exceeded", "device_fs_limit_exceeded", "device_fs_unsafe_root":
+        return ["diagnose", "plan"]
     case "provisioning_profile_missing":
         return ["diagnose", "project"]
     case "swift_macro_plugin_malformed_response":

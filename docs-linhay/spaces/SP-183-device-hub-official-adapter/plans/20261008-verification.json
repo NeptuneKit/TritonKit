@@ -1,0 +1,13 @@
+{
+  "space": "SP-183-device-hub-official-adapter",
+  "baseline": "0231d8833eefae8ccb54207390f2171c7979c41d",
+  "delivery": "uncommitted isolated worktree; no merge/push/release/installed binary replacement",
+  "focused": {"shared": 54, "cli": 173, "exitCode": 0},
+  "fullCLI": {"swiftTesting": 1002, "suites": 80, "xctest": 14, "failures": 0, "scheduling": "--no-parallel", "binaryOverride": "TRITON_CLI_PATH points at this build", "seconds": 26.852},
+  "rootTests": {"swiftTesting": 281, "xctest": 7, "failures": 0},
+  "localGate": {"exitCode": 1, "productStagesPassed": ["dependency boundary", "DEBUG isolation", "root tests", "Release CLI build", "Release CLI smoke", "Harmony host smoke", "iOS runtime observe smoke"], "simulatorProjectBuild": "explicitly skipped via TRITON_VERIFY_XCODE=0", "docsFailure": "Strict registry requires contiguous IDs; this isolated baseline omits uncommitted main SP-181/182. Canonical SP-183 link label was fixed; gap independently reproduced. Revalidate full local after integration."},
+  "readonlyAcceptance": {"ok": true, "binaryVersion": "0.1.0-dev", "jsonVersion": 5, "devicectlVersion": "651.13.5", "rawRealityCounts": {"simulated": 5, "physical": 3}, "mergedScopeCounts": {"simulator": 14, "real": 3}, "duplicateCanonicalTargets": 0, "simulatorResolved": true, "singleFailureEnvelope": true, "commandExitCodes": {"version": 0, "schema-device": 0, "ios-all": 0, "ios-real": 0, "ios-simulator": 0, "resolve-simulator": 0, "missing-simulator": 1}},
+  "priorFailedRun": "Default parallel full suite had binary-discovery and stdout/deadline failures, was cancelled; verified task-owned SwiftPM/helper orphans alone were terminated. Serial green does not fix parallel-suite interference.",
+  "docsGates": {"mainCI": 0, "mainCheckDocs": 0, "mainSpaces": 183, "mainDiffCheck": 0, "worktreeDiffCheck": 0, "worktreeCI": 1, "worktreeCIReason": "contiguous registry lacks SP-181/182 in isolated baseline"},
+  "boundary": "No boot/install/launch/input/pairing/settings change. Physical discovery ready is development-service eligibility, not proven lock state, App runtime or business readiness. Captures/names/identifiers remain private."
+}

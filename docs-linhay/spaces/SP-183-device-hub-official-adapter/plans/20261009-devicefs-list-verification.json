@@ -1,0 +1,13 @@
+{
+ "slice": "explicit-devicefs-mount-root-shallow-list",
+ "fullIntegrationComplete": false,
+ "domainNavigationImplemented": false,
+ "tdd": {"entrySchemaRedTests":2,"entrySchemaRedIssues":3,"runtimeRedTestsIncludingExistingMountpoint":12,"runtimeRedIssues":8,"sameFDOwnerRedTests":1,"sameFDOwnerRedIssues":1,"fullCLIRecoveryTaxonomyRedIssues":1,"recoveryFix":"device_fs_unsafe_root/device_fs_limit_exceeded diagnose+plan; no checker relaxation"},
+ "contract": {"backend":"devicefs","view":"mount-root","arbitraryHostPathAccepted":false,"relativeNavigationAccepted":false,"domainMappingGuessed":false,"freshBoundMountpointRequired":true,"pathPreservedByteForByte":true,"standardRootOnly":true,"physicalUUIDAuthority":"current discovery primary only","simulatorUUIDAuthority":"current discovery primary and UUID aliases","sameFinalDescriptorOwnerRequired":true,"namesDefaultPrivate":true,"includeSensitive":"entry names only","contentsRead":false,"recursive":false,"mountStateVerified":false,"readWriteAuthorizationVerified":false,"businessReadinessVerified":false,"budget":"local acceptance only; query timeout not FUSE syscall deadline/remote hardlimit/atomic snapshot","automaticFilesErrorFallback":false,"automaticBootPairUnlock":false,"FinderExplicitMountUnmount":false},
+ "verificationStatus":"accepted explicit mount-root slice only; complete objective remains active",
+ "tests":{"focusedRuntimeReaderMountpoint":22,"cliSwiftTesting":1070,"cliSuites":89,"cliXCTest":14,"cliSeconds":19.156,"rootSwiftTesting":298,"rootXCTest":7,"releaseSeconds":193.99},
+ "ownedLive":{"backend":"actual CLI DeviceFS root metadata","defaultNamesPrivate":true,"namesOnlyOptIn":true,"tokensStableAcrossFreshQuery":true,"actualEntryLimitRejected":true,"actualJSONLimitRejected":true,"privateArtifacts07000600Verified":true,"nativePathNotInlined":true,"ownedFinalState":"Shutdown","allSimulatorNamesStatesUnchanged":true,"physicalFSQueried":false,"firstScriptFailure":"entry name root matched mount-root vocabulary via substring; finally restoration separately verified then exactJSON stringvalue + entry whitelist correction passed rerun"},
+ "review":{"designAndImplementationClosingReceived":true,"reviewerWritesBuildsDeviceActions":false,"blockingImplementationIssues":false,"SimulatorUUID":"existing discovery public contract retained; physical raw IDs and aliases private"},
+ "localGate":{"exitCode":1,"productSubgatesPassed":true,"localReleaseSeconds":225.69,"genericSimulatorBuild":"explicit skip; actual ownedCLI metadata lifecycle separately accepted","docs":"isolated181/182 registry baseline gap only; no checker change"},
+ "remaining":["app/group/crash domain policy and bounded navigation","temporary write policy","remaining full capability matrix"]
+}

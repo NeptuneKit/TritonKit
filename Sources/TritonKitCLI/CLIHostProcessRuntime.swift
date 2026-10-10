@@ -779,6 +779,20 @@ func failHostCommand(
         detail = httpError.response!.error
     case _ as ValidationError:
         detail = hostValidationErrorDetail(error)
+    case let error as HostApplePlatformInventoryFailure:
+        detail = error.detail
+    case let error as HostDeviceAdministrationDiscoveryFailure:
+        detail = error.detail
+    case let error as HostDeviceInfoError:
+        detail = error.detail
+    case let error as HostDeviceFilesError:
+        detail = error.detail
+    case let error as HostDeviceFSError:
+        detail = error.detail
+    case let error as HostDeviceMountpointError:
+        detail = error.detail
+    case let error as TKDevicectlFilesError:
+        detail = deviceFilesRequestErrorDetail(error)
     case HostSimulatorRecordingValidationError.truncated:
         detail = TKCLIErrorDetail(
             code: "sim_record_truncated",

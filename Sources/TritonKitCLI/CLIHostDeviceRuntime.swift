@@ -89,22 +89,40 @@ private func parseHarmonyTargets(from result: HostProcessResult) -> [TKHarmonyTa
     TKHdcTargetListParser.parse([result.stdout, result.stderr].joined(separator: "\n"))
 }
 
-private func iosHostDeviceTargets(scope: HostDeviceScope?) throws -> (targets: [HostDeviceTarget], sourceCommand: String) {
+typealias IOSDeviceDiscoveryProvider = () throws -> (targets: [HostDeviceTarget], sourceCommand: String)
+
+func iosHostDeviceTargets(
+    scope: HostDeviceScope?,
+    simulatorProvider: IOSDeviceDiscoveryProvider = iosSimulatorDeviceTargets,
+    coreDeviceProvider: IOSDeviceDiscoveryProvider = iosCoreDeviceTargets
+) throws -> (targets: [HostDeviceTarget], sourceCommand: String) {
     switch scope {
     case .real:
-        return try iosRealDeviceTargets()
+        let result = try coreDeviceProvider()
+        return (result.targets.filter { $0.platform == "ios" && $0.scope == "real" }, result.sourceCommand)
     case .emulator:
         return ([], "ios scope emulator is not applicable")
     case .all:
-        let simulatorResult = try iosSimulatorDeviceTargets()
-        do {
-            let realResult = try iosRealDeviceTargets()
-            return (simulatorResult.targets + realResult.targets, [simulatorResult.sourceCommand, realResult.sourceCommand].joined(separator: "\n"))
-        } catch {
-            return simulatorResult
+        let simulatorResult = try simulatorProvider()
+        // CoreDevice now includes simulated devices. simctl remains authoritative
+        // for local lifecycle facts; canonical sim IDs join the two inventories.
+        // A backend error must not be disguised as a complete successful inventory.
+        let coreResult = try coreDeviceProvider()
+        var positions: [String: Int] = [:]
+        var targets: [HostDeviceTarget] = []
+        for target in simulatorResult.targets + coreResult.targets {
+            guard target.platform == "ios" || target.platform == "unknown" else { continue }
+            let key = "\(target.platform):\(target.id)"
+            if let position = positions[key] {
+                targets[position] = mergingHostDeviceAliases(targets[position], from: target)
+            } else {
+                positions[key] = targets.count
+                targets.append(target)
+            }
         }
+        return (targets, [simulatorResult.sourceCommand, coreResult.sourceCommand].joined(separator: "\n"))
     case .simulator, nil:
-        return try iosSimulatorDeviceTargets()
+        return try simulatorProvider()
     }
 }
 
@@ -114,7 +132,7 @@ private func iosSimulatorDeviceTargets() throws -> (targets: [HostDeviceTarget],
     return (targets, result.sourceCommand)
 }
 
-private func iosRealDeviceTargets() throws -> (targets: [HostDeviceTarget], sourceCommand: String) {
+private func iosCoreDeviceTargets() throws -> (targets: [HostDeviceTarget], sourceCommand: String) {
     let artifacts = try freshDevicectlArtifactPaths(action: "list-devices")
     let command = TKDevicectlCommand.listDevices(jsonOutput: artifacts.json, logOutput: artifacts.log)
     let result = try runHostCommand(command)
@@ -271,13 +289,14 @@ func hostDeviceDiscoveryScope(for request: HostDeviceSelectionRequest) -> HostDe
     guard request.scope == nil, let selector = request.device, !selector.isEmpty else {
         return request.scope
     }
-    let explicitlyIOS = request.platform == .ios
-        || (request.platform == nil && (selector.hasPrefix("ios-real:") || selector.hasPrefix("triton:ios-real:")))
-    guard explicitlyIOS else { return request.scope }
-    if selector == "booted" {
+    guard request.platform == nil || request.platform == .ios else { return request.scope }
+    if selector.hasPrefix("sim:") || selector.hasPrefix("triton:ios-simulator:") || (request.platform == .ios && selector == "booted") {
         return .simulator
     }
-    return .all
+    if selector.hasPrefix("ios-real:") || selector.hasPrefix("triton:ios-real:") {
+        return .real
+    }
+    return request.platform == .ios ? .all : request.scope
 }
 
 private func uniqueHostDeviceTarget(
@@ -453,10 +472,11 @@ func hostDeviceTarget(from simulator: TKHostSimulatorTarget) -> HostDeviceTarget
 }
 
 func hostDeviceTarget(from target: TKDevicectlDeviceTarget) -> HostDeviceTarget {
-    HostDeviceTarget(
+    let dispatchTarget = target.scope == "simulator" ? String(target.id.dropFirst("sim:".count)) : target.identifier
+    return HostDeviceTarget(
         platform: target.platform,
         id: target.id,
-        target: target.redactedTarget,
+        target: target.scope == "simulator" ? dispatchTarget : target.redactedTarget,
         state: target.state,
         ready: target.ready,
         source: target.source,
@@ -467,8 +487,8 @@ func hostDeviceTarget(from target: TKDevicectlDeviceTarget) -> HostDeviceTarget 
         kind: target.kind,
         blockedReasons: target.blockedReasons,
         sensitive: false,
-        rawTarget: target.identifier,
-        rawTargetAliases: target.alternateIdentifiers
+        rawTarget: dispatchTarget,
+        rawTargetAliases: target.alternateIdentifiers + (target.scope == "simulator" ? [target.identifier] : [])
     )
 }
 
@@ -619,7 +639,7 @@ func waitForHostDeviceReady(
         switch platform {
         case .ios:
             if selected.scope == HostDeviceScope.real.rawValue {
-                let result = try iosRealDeviceTargets()
+                let result = try iosHostDeviceTargets(scope: .real)
                 guard let currentTarget = result.targets.first(where: { $0.id == selected.id || $0.target == selected.target || $0.rawTarget == selected.rawTarget || $0.rawTargetAliases.contains(selected.rawTarget) }) else {
                     throw HostDeviceSelectionError.targetNotFound(selected.target)
                 }

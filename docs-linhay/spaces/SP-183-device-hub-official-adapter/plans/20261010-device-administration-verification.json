@@ -1,0 +1,16 @@
+{
+  "slice": "independent-real-device-administration-policy-plans",
+  "verificationDate": "2026-10-10",
+  "fullIntegrationComplete": false,
+  "acceptedScope": "device pair/unpair/diagnose --plan-only standalone policy review only, not execution/postconditions/archive/business acceptance; old sim entry/argv preserved",
+  "tdd": {"entryFunctionalRed": "2 test declarations/7 issues (3 operation argument instances)", "runtimeFunctionalRed": "3 tests/48 issues", "discoveryPrivacyFunctionalRed": "1 test/11 issues", "nonFunctionalFixtureFailures": "ArgumentParser properties uninitialized; parser-error type/path label/throwing macro fixes; not counted as functional RED"},
+  "cliRegression": {"swiftTestingTests": 1098, "suites": 93, "xctestTests": 14, "seconds": 22.381, "passed": true},
+  "rootRegression": {"swiftTestingTests": 298, "xctestTests": 7, "passed": true},
+  "release": {"seconds": 150.99, "passed": true},
+  "actualCLI": {"plans": ["pair", "unpair", "diagnose"], "freshRealPrimaryHash": true, "sdkRequiredFlagsHelpAdvertised": true, "previewIdentityAndArchiveRedacted": true, "alwaysExecutableAndExecutedFalse": true, "preflightErrorSingleStaticJSON": true, "archiveCreated": false, "operationOrPhysicalStateAcceptance": false},
+  "review": {"readonly": true, "finding": "Resolver raw errors bypassed initial targetNotFound/platformMismatch masking; lead reproduced functional RED and bounded every resolver failure, keeping only existing stable code with static message/hint, no raw error/candidate/log/path", "remaining": "Review/source/DI/actual plan envelope evidence are not native action tracing or physical postcondition evidence"},
+  "executionEvidenceCorrection": "First PATH xcrun wrapper acceptance failed empty trace because product intentionally pins /usr/bin/xcrun. Preserve failure; do not change secure SDK resolution or claim trace proof. Rewritten actual script explicitly distinguishes source/DI/envelopes, no pair/unpair/diagnose native execution backend exposed",
+  "gate": {"localProductSubgatesPassed": true, "localReleaseSeconds": 194.93, "genericSimulatorBuild": "explicit TRITON_VERIFY_XCODE=0 skip", "isolatedDocs": "only preexisting contiguous registry gap SP-181/SP-182, not softened or fabricated"},
+  "remaining": ["accepted administration execution/auth/audit/native fileJSON/postconditions", "diagnostic archive content scope/permissions/nooverwrite/nofollow/size admission", "semantic bundle/group identity and DeviceFS crash mapping", "Temporary creation policy", "Apple platform/capability report and remaining full matrix"],
+  "boundaries": "No physical administration writes or diagnostics collected, no Simulator lifecycle in this slice, no Finder/profile/DDI preparation/credentials storage; readonly metadata caches/service communication remain. No global SDK switch/install/commit/merge/push/release/installed CLI replacement"
+}

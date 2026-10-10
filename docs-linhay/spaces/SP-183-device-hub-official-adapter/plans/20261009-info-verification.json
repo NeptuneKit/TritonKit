@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-09",
+  "slice": "standalone-device-info-and-optional-lock-state",
+  "status": "slice-accepted-full-integration-in-progress",
+  "fullIntegrationComplete": false,
+  "toolchain": {"xcodeVersion": "27.1", "build": "27A9275", "legacySDKExecutionVerified": false},
+  "tests": {
+    "cli": {"swiftTesting": 1028, "suites": 84, "xctest": 14, "failures": 0, "swiftTestingSeconds": 21.268},
+    "root": {"swiftTesting": 287, "xctest": 7, "failures": 0},
+    "releaseBuild": {"passed": true, "seconds": 124.18}
+  },
+  "tddEvidence": [
+    "root dispatch and schema missing: 4 issues",
+    "different physical CoreDevice record accepted through stale hardware alias: 1 issue",
+    "structured lock capability rejection incorrectly generic: 2 issues",
+    "structured info output contract missing: 1 issue",
+    "contradictory backend error/result envelopes incorrectly successful: 2 issues"
+  ],
+  "liveAcceptance": {
+    "physicalIOS": {"readonlyOnly": true, "detailsSucceeded": true, "lockStateSucceeded": true},
+    "ownedSimulator": {"detailsSucceeded": true, "lockStateRequested": true, "lockStateSucceeded": false, "expectedFailureCode": "unsupported_device_info_query", "appleError": "CoreDevice 1001 getlockstate unsupported", "lockProbeSilentlyDropped": false, "finalState": "Shutdown", "otherSimulatorStatesUnchanged": true},
+    "singleJSONFailureEnvelopes": {"unsupportedPlatform": "unsupported_device_info_platform", "negativeTimeoutEqualsSyntax": "parameter_conflict", "missingTarget": "target_not_found", "unsupportedLockQuery": "unsupported_device_info_query"},
+    "sourceCommandIdentityRedactionVerified": true,
+    "artifactDirectoryMode": "0700",
+    "artifactFileMode": "0600",
+    "businessReadinessVerified": false,
+    "screenLockedInferred": false
+  },
+  "localGate": {
+    "exitCode": 1,
+    "productSubgatesPassed": ["SwiftPM dependency boundary", "DEBUG isolation", "root tests", "Release CLI build", "Release CLI smoke", "Harmony host smoke", "iOS runtime observe smoke"],
+    "genericSimulatorBuild": "explicitly skipped; owned Simulator acceptance performed separately",
+    "docsFailure": "Existing isolated baseline excludes main-workspace SP-181/SP-182; registry contiguity check fails at SP-183; checker unchanged",
+    "releaseBuildSeconds": 181.00
+  },
+  "docsGates": {"mainWorkspaceRegisteredSpaces": 183, "mainDocsCIExit": 0, "mainCheckDocsExit": 0, "worktreeDocsCIExit": 1, "worktreeCheckDocsExit": 1, "worktreeKnownRegistryGap": [181, 182], "diffWhitespaceExit": 0, "acceptancePythonAndJSONSyntaxExit": 0},
+  "safety": {"physicalWrites": false, "businessSimulatorWrites": false, "globalXcodeSwitch": false, "commitMergeRelease": false},
+  "remaining": ["device files and DeviceFS", "copy/domain coverage", "pairing and diagnostic contracts", "Simulator lifecycle and environment gaps", "Apple platform capability modeling", "GUI-only/public-backend evidence", "per-capability applicable acceptance and integration gates"]
+}

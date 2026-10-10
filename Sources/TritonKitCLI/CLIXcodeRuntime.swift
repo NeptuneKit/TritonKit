@@ -1098,14 +1098,14 @@ func runXcodeBuildInstallLaunch(
         bundleID = try bundleIdentifier(appPath: product.appPath)
     }
 
-    let installCommand = TKSimctlCommand.installApp(udid: simulator, appPath: product.appPath)
+    let installCommand = TKSimctlCommand.installApp(udid: simulator, appPath: product.appPath).withTimeout(timeout)
     _ = try simulatorHostCommand(installCommand, "xcode.run.install", jsonl)
     let launchCommand = TKSimctlCommand.launchApp(
         udid: simulator,
         bundleID: bundleID,
         environment: launchEnvironment,
         arguments: launchArguments
-    )
+    ).withTimeout(timeout)
     let (launchResult, launchDurationMs) = try simulatorHostCommand(launchCommand, "xcode.run.launch", jsonl)
     let runtimeTarget = "\(TKIOSSimulatorRuntimeTargetPrefix)\(simulator)/app:\(bundleID)"
 

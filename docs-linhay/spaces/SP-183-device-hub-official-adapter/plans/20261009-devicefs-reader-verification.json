@@ -1,0 +1,12 @@
+{
+  "slice": "internal-devicefs-descriptor-reader-foundation",
+  "fullIntegrationComplete": false,
+  "publicDeviceFSListImplemented": false,
+  "ownedNativeMetadataProbes": {"rootAndOneRootNamespaceLevelOnly": true, "directDiagnosticReportsObserved": false, "domainMappingGuessed": false, "physicalQuery": false, "fileContentsFetched": false, "deviceFSWrites": false, "ownedFinalState": "Shutdown", "allSimulatorNamesStatesUnchanged": true},
+  "tdd": {"initialRedTests": 5, "initialRedIssues": 25, "fixtureCorrection": "APFS cannot create invalid UTF8 leaf; decode dirent byte boundary directly. Initial RED includes fixture creation failure, not product acceptance."},
+  "readerContract": {"privateNonEncodableMetadata": true, "rootAndAncestorsNoFollow": true, "relativeSegmentsNoFollow": true, "leafStatNoFollow": true, "regularFileSizeOnly": true, "entrySymlinkTargetNeverOpened": true, "entryLimit": "1...10000; reject on max+1 before its stat, no silent partial output", "depthLimit": 64, "pathUTF8ByteLimit": 16384, "FUSEDeadlineOrRemoteHardLimitsClaimed": false, "atomicSnapshotClaimed": false},
+  "audit": {"designSubagentFailedNoClosing": true, "actualReaderReviewClosingReceived": true, "subagentWritesBuildsDeviceActions": false, "confirmedRecordExtractionAndBudgetIssues": "RED two tests/three issues then fixed; original unsafe tuple guard-page crash not executed/claimed", "fix": "raw name-offset/count read bounded by d_reclen + NUL, exact combined path bytes, atomic CLOEXEC duplicate", "obsoletePreAuditReleaseBuild": "canceled before source edits; not accepted Release evidence"},
+  "tests": {"readerTests": 9, "cliSwiftTesting": 1063, "cliSuites": 88, "cliXCTest": 14, "cliSeconds": 20.666, "rootSwiftTesting": 298, "rootXCTest": 7, "releaseBuildSeconds": 127.48, "failures": 0, "guardPageShortRecordPassed": true, "FIFOContentNotOpened": true, "direntAndPathBudgetRedIssues": 3},
+  "localGate": {"exitCode": 1, "productSubgatesPassed": ["dependency boundary", "DEBUG isolation", "root tests", "Release build", "Release smoke", "Harmony smoke", "iOS runtime observe smoke"], "releaseBuildSeconds": 274.61, "genericSimulatorBuild": "explicitly skipped; owned metadata probes separate", "docsFailure": "isolated SP181/182 baseline registry gap; checker unchanged"},
+  "remaining": [ "fresh native root/target identity/domain binding", "actual DeviceFS safe-reader CLI acceptance", "public DTO/token/privacy/schema", "domain policy and bounded navigation", "full remaining capability matrix"]
+}
