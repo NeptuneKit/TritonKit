@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1940" viewBox="0 0 2200 1940">
+<title>TritonKit 新可信执行系统：多端统一语义架构（设计提案）</title>
+<desc>统一语义经唯一执行内核调用本机平台适配器，回执与新观察参与独立验证、资源恢复和证据提交。模型只提议，Web/Wails只读，旧编排被消融。不是已实现系统。</desc>
+<rect width="2200" height="1940" fill="#f5f7fb"/>
+<text x="60" y="42" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="54" font-weight="600" fill="#14263f">TritonKit · 新可信执行系统</text>
+<text x="62" y="112" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="29" font-weight="400" fill="#5b6c82">单点自由编排  /  高级命令封装  /  共享执行核心与多端统一语义</text>
+<rect x="1790" y="42" width="350" height="58" rx="14" fill="#e9efff" stroke="none" stroke-width="2"/>
+<text x="1815" y="57" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="28" font-weight="600" fill="#356ce7">设计提案 · 尚未实现</text>
+<rect x="60" y="180" width="1500" height="132" rx="20" fill="#ffffff" stroke="#d9e2ef" stroke-width="2"/>
+<text x="88" y="205" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="32" font-weight="600" fill="#14263f">01  Agent 双操作面  ·  CLI / HTTP</text>
+<rect x="90" y="240" width="700" height="48" rx="10" fill="#f0f4fb" stroke="none" stroke-width="2"/>
+<text x="108" y="251" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#14263f">A  单点：observe / act / verify / evidence</text>
+<rect x="820" y="240" width="710" height="48" rx="10" fill="#f0f4fb" stroke="none" stroke-width="2"/>
+<text x="838" y="251" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#14263f">B  高级：replay / workspace / 封装流程</text>
+<text x="95" y="325" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#5b6c82">A 由 agent 自行组合与验收；B 由系统托管编排。单点无需先创建 Run 或 session。</text>
+<polyline points="810,352 810,385" fill="none" stroke="#356ce7" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="810,385 804.7804135906653,374.1946347717679 815.2195864093347,374.1946347717679" fill="#356ce7"/>
+<rect x="60" y="395" width="1500" height="218" rx="20" fill="#eef3ff" stroke="#a6bff5" stroke-width="2"/>
+<text x="88" y="420" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="32" font-weight="600" fill="#14263f">02  多端统一语义层  ·  Semantic Contract</text>
+<rect x="90" y="462" width="700" height="103" rx="12" fill="#ffffff" stroke="#d2def5" stroke-width="2"/>
+<text x="112" y="480" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="28" font-weight="600" fill="#14263f">意图 / 效果 / 条件 / 观察 / 能力 / 结果</text>
+<text x="112" y="527" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#5b6c82">activate · set-value · reveal · launch · verify</text>
+<rect x="820" y="462" width="710" height="103" rx="12" fill="#ffffff" stroke="#d2def5" stroke-width="2"/>
+<text x="842" y="480" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="28" font-weight="600" fill="#14263f">Compiler + Capability Matching</text>
+<text x="842" y="527" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#5b6c82">OperationSpec / RunSpec；保证不足不静默降级</text>
+<text x="94" y="581" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#356ce7">统一语义 ≠ 同名命令；unknown 不补 false；能力不足不静默降级</text>
+<polyline points="810,613 810,660" fill="none" stroke="#356ce7" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="810,660 804.7804135906653,649.1946347717678 815.2195864093347,649.1946347717678" fill="#356ce7"/>
+<rect x="60" y="670" width="1500" height="477" rx="20" fill="#ffffff" stroke="#356ce7" stroke-width="2"/>
+<text x="88" y="695" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="32" font-weight="600" fill="#14263f">03  执行子系统  ·  可选 WorkflowEngine + 共享 ExecutionCore</text>
+<text x="92" y="728" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="26" font-weight="400" fill="#5b6c82">WorkflowEngine（B 高级路径）：Run 编排、业务验收、恢复与证据聚合</text>
+<text x="832" y="632" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="22" font-weight="400" fill="#356ce7">B 高级流程</text>
+<polyline points="60,500 30,500 30,1096 90,1096" fill="none" stroke="#356ce7" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="90,1096 79.19463477176788,1101.2195864093349 79.19463477176788,1090.7804135906651" fill="#356ce7"/>
+<text x="94" y="1040" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="22" font-weight="400" fill="#356ce7">A 单点直达共享 Core，不经过完整工作流</text>
+<rect x="90" y="780" width="330" height="103" rx="13" fill="#f3f6fc" stroke="#dce5f3" stroke-width="2"/>
+<text x="108" y="798" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="26" font-weight="600" fill="#14263f">1  Bind</text>
+<text x="108" y="841" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="22" font-weight="400" fill="#5b6c82">设备 / App / runtime 身份</text>
+<rect x="450" y="780" width="330" height="103" rx="13" fill="#f3f6fc" stroke="#dce5f3" stroke-width="2"/>
+<text x="468" y="798" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="26" font-weight="600" fill="#14263f">2  Observe</text>
+<text x="468" y="841" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="22" font-weight="400" fill="#5b6c82">来源 / 新鲜度 / coverage</text>
+<rect x="810" y="780" width="330" height="103" rx="13" fill="#f3f6fc" stroke="#dce5f3" stroke-width="2"/>
+<text x="828" y="798" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="26" font-weight="600" fill="#14263f">3  Resolve</text>
+<text x="828" y="841" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="22" font-weight="400" fill="#5b6c82">唯一目标 / 几何 / scope</text>
+<rect x="1170" y="780" width="330" height="103" rx="13" fill="#f3f6fc" stroke="#dce5f3" stroke-width="2"/>
+<text x="1188" y="798" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="26" font-weight="600" fill="#14263f">4  Guard</text>
+<text x="1188" y="841" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="22" font-weight="400" fill="#5b6c82">能力 / 策略 / writer 授权</text>
+<rect x="1170" y="930" width="330" height="103" rx="13" fill="#f3f6fc" stroke="#dce5f3" stroke-width="2"/>
+<text x="1188" y="948" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="26" font-weight="600" fill="#14263f">5  Dispatch</text>
+<text x="1188" y="991" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="22" font-weight="400" fill="#5b6c82">Attempt / Receipt 事实</text>
+<rect x="810" y="930" width="330" height="103" rx="13" fill="#f3f6fc" stroke="#dce5f3" stroke-width="2"/>
+<text x="828" y="948" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="26" font-weight="600" fill="#14263f">6  Fresh Observe</text>
+<text x="828" y="991" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="22" font-weight="400" fill="#5b6c82">后置观察；拒绝陈旧证据</text>
+<rect x="450" y="930" width="330" height="103" rx="13" fill="#f3f6fc" stroke="#dce5f3" stroke-width="2"/>
+<text x="468" y="948" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="26" font-weight="600" fill="#14263f">7  Verify</text>
+<text x="468" y="991" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="22" font-weight="400" fill="#5b6c82">声明条件 → 独立证据结论</text>
+<rect x="90" y="930" width="330" height="103" rx="13" fill="#f3f6fc" stroke="#dce5f3" stroke-width="2"/>
+<text x="108" y="948" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="26" font-weight="600" fill="#14263f">8  Reconcile / Finalize</text>
+<text x="108" y="991" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="22" font-weight="400" fill="#5b6c82">调和 / 恢复 / 提交 / 裁决</text>
+<polyline points="420,831 450,831" fill="none" stroke="#356ce7" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="450,831 439.1946347717679,836.2195864093347 439.1946347717679,825.7804135906653" fill="#356ce7"/>
+<polyline points="780,831 810,831" fill="none" stroke="#356ce7" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="810,831 799.1946347717678,836.2195864093347 799.1946347717678,825.7804135906653" fill="#356ce7"/>
+<polyline points="1140,831 1170,831" fill="none" stroke="#356ce7" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1170,831 1159.1946347717678,836.2195864093347 1159.1946347717678,825.7804135906653" fill="#356ce7"/>
+<polyline points="1335,883 1335,930" fill="none" stroke="#356ce7" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1335,930 1329.7804135906651,919.1946347717678 1340.2195864093349,919.1946347717678" fill="#356ce7"/>
+<polyline points="1170,981 1140,981" fill="none" stroke="#356ce7" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1140,981 1150.8053652282322,975.7804135906653 1150.8053652282322,986.2195864093347" fill="#356ce7"/>
+<polyline points="810,981 780,981" fill="none" stroke="#356ce7" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="780,981 790.8053652282322,975.7804135906653 790.8053652282322,986.2195864093347" fill="#356ce7"/>
+<polyline points="450,981 420,981" fill="none" stroke="#356ce7" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="420,981 430.8053652282321,975.7804135906653 430.8053652282321,986.2195864093347" fill="#356ce7"/>
+<rect x="90" y="1070" width="1440" height="51" rx="10" fill="#eaf6f4" stroke="none" stroke-width="2"/>
+<text x="111" y="1083" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#118a82">共享 ExecutionCore：绑定 / 观察 / 解析 / 授权与协调 / dispatch / verify / evidence</text>
+<polyline points="700,1147 700,1220" fill="none" stroke="#356ce7" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="700,1220 694.7804135906653,1209.1946347717678 705.2195864093347,1209.1946347717678" fill="#356ce7"/>
+<text x="286" y="1170" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="24" font-weight="400" fill="#356ce7">执行 / 观察请求（唯一 dispatch 路径）</text>
+<polyline points="980,1220 980,1147" fill="none" stroke="#118a82" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="980,1147 985.2195864093347,1157.8053652282322 974.7804135906653,1157.8053652282322" fill="#118a82"/>
+<text x="1000" y="1170" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="24" font-weight="400" fill="#118a82">回执 / 新观察 / 限制</text>
+<rect x="60" y="1230" width="1500" height="242" rx="20" fill="#ffffff" stroke="#d9e2ef" stroke-width="2"/>
+<text x="88" y="1255" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="32" font-weight="600" fill="#14263f">04  Adapter Registry  ·  统一能力契约，封装平台实现</text>
+<rect x="90" y="1300" width="460" height="144" rx="13" fill="#f0f8f6" stroke="#bfddd7" stroke-width="2"/>
+<text x="110" y="1320" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="29" font-weight="600" fill="#14263f">iOS Simulator</text>
+<text x="110" y="1366" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="24" font-weight="400" fill="#118a82">Embedded Debug / Host Adapter</text>
+<text x="110" y="1406" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="23" font-weight="400" fill="#5b6c82">UIKit runtime / simctl / helper</text>
+<rect x="580" y="1300" width="460" height="144" rx="13" fill="#f0f8f6" stroke="#bfddd7" stroke-width="2"/>
+<text x="600" y="1320" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="29" font-weight="600" fill="#14263f">Android Emulator</text>
+<text x="600" y="1366" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="24" font-weight="400" fill="#118a82">现有 host / runtime 路径</text>
+<text x="600" y="1406" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="23" font-weight="400" fill="#5b6c82">adb 与平台 provider</text>
+<rect x="1070" y="1300" width="460" height="144" rx="13" fill="#f0f8f6" stroke="#bfddd7" stroke-width="2"/>
+<text x="1090" y="1320" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="29" font-weight="600" fill="#14263f">Harmony Emulator</text>
+<text x="1090" y="1366" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="24" font-weight="400" fill="#118a82">现有 host / runtime 路径</text>
+<text x="1090" y="1406" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="23" font-weight="400" fill="#5b6c82">hdc 与平台 provider</text>
+<text x="95" y="1500" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="27" font-weight="400" fill="#5b6c82">本机设备边界；原始工具与传输细节不向上泄漏为业务决策</text>
+<text x="95" y="1545" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#5b6c82">首片：iOS + fake 多端；随后第二真实平台。真机 / 云 / 私有远控不在首期。</text>
+<rect x="1620" y="180" width="520" height="177" rx="20" fill="#fff8eb" stroke="#ecd7af" stroke-width="2"/>
+<text x="1648" y="205" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="32" font-weight="600" fill="#14263f">Agent 自主  /  模型提议</text>
+<text x="1648" y="241" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="24" font-weight="400" fill="#a76d13">Agent 自选 A / B；模型提供候选</text>
+<text x="1648" y="279" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="24" font-weight="400" fill="#a76d13">两路径不绕过 Core 安全语义</text>
+<polyline points="1620,310 1590,310 1590,490 1560,490" fill="none" stroke="#a76d13" stroke-width="3" stroke-linejoin="round" stroke-dasharray="8 7"/>
+<polygon points="1560,490 1570.8053652282322,484.78041359066526 1570.8053652282322,495.21958640933474" fill="#a76d13"/>
+<rect x="1620" y="395" width="520" height="318" rx="20" fill="#ffffff" stroke="#d9e2ef" stroke-width="2"/>
+<text x="1648" y="420" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="32" font-weight="600" fill="#14263f">核心对象  ·  权威归属</text>
+<text x="1648" y="460" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#14263f">SessionContext  →  可选目标绑定</text>
+<text x="1648" y="502" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#14263f">Operation  →  单点，不强制 Run</text>
+<text x="1648" y="544" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#14263f">Run  →  高级流程聚合</text>
+<text x="1648" y="586" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#14263f">Step / Attempt  →  意图 / 实际发送</text>
+<text x="1648" y="628" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#14263f">Observation  →  带失效边界的快照</text>
+<text x="1648" y="683" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="23" font-weight="400" fill="#5b6c82">上下文可复用；执行结果不可混用</text>
+<rect x="1620" y="770" width="520" height="377" rx="20" fill="#eef8f6" stroke="#bdded6" stroke-width="2"/>
+<text x="1648" y="795" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="31" font-weight="600" fill="#14263f">Journal / Evidence / Outcome</text>
+<text x="1648" y="835" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#5b6c82">事件追加 · 脱敏 artifacts · manifest</text>
+<text x="1648" y="875" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#5b6c82">四维结果，不能压成一个 ok：</text>
+<text x="1648" y="927" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#14263f">Execution       提交 / 交付未知</text>
+<text x="1648" y="966" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#14263f">Verification    通过 / 失败 / 不确定</text>
+<text x="1648" y="1005" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#14263f">Recovery        完成 / 部分 / 人工</text>
+<text x="1648" y="1044" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#14263f">Evidence        完整 / 部分 / 不可用</text>
+<text x="1648" y="1106" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="600" fill="#118a82">单点事实 ≠ 整体业务通过</text>
+<polyline points="1560,981 1620,981" fill="none" stroke="#118a82" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1620,981 1609.1946347717678,986.2195864093347 1609.1946347717678,975.7804135906653" fill="#118a82"/>
+<rect x="1620" y="1210" width="520" height="202" rx="20" fill="#ffffff" stroke="#d9e2ef" stroke-width="2"/>
+<text x="1648" y="1235" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="32" font-weight="600" fill="#14263f">Web / Wails  ·  只读投影</text>
+<text x="1648" y="1275" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="24" font-weight="400" fill="#5b6c82">Run 状态 / 观察 / 证据 timeline</text>
+<text x="1648" y="1312" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="24" font-weight="400" fill="#5b6c82">展示为什么成功、失败或不确定</text>
+<text x="1648" y="1349" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="24" font-weight="400" fill="#5b6c82">不持有业务策略、写操作与重试</text>
+<polyline points="1880,1147 1880,1210" fill="none" stroke="#118a82" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1880,1210 1874.7804135906651,1199.1946347717678 1885.2195864093349,1199.1946347717678" fill="#118a82"/>
+<rect x="1620" y="1460" width="520" height="178" rx="20" fill="#fff8eb" stroke="#ecd7af" stroke-width="2"/>
+<text x="1648" y="1485" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="32" font-weight="600" fill="#14263f">跨端 Conformance</text>
+<text x="1648" y="1526" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="24" font-weight="400" fill="#a76d13">同一语义 fixtures / 同一裁决标准</text>
+<text x="1648" y="1564" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="24" font-weight="400" fill="#a76d13">逐端验证效果、限制与错误边界</text>
+<polyline points="1620,1570 1590,1570 1590,1380 1560,1380" fill="none" stroke="#a76d13" stroke-width="3" stroke-linejoin="round" stroke-dasharray="8 7"/>
+<polygon points="1560,1380 1570.8053652282322,1374.7804135906651 1570.8053652282322,1385.2195864093349" fill="#a76d13"/>
+<rect x="60" y="1655" width="2080" height="199" rx="20" fill="#ffffff" stroke="#d9e2ef" stroke-width="2"/>
+<text x="88" y="1680" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="32" font-weight="600" fill="#14263f">双路径并存：消融重复执行判断，不消融 agent 自由编排能力</text>
+<text x="94" y="1726" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="31" font-weight="600" fill="#356ce7">聚合</text>
+<text x="94" y="1778" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="26" font-weight="400" fill="#5b6c82">高级流程用 Run；单点独立 Operation</text>
+<text x="782" y="1726" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="31" font-weight="600" fill="#356ce7">封装</text>
+<text x="782" y="1778" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="26" font-weight="400" fill="#5b6c82">两路径共用 Core 与多端语义</text>
+<text x="1470" y="1726" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="31" font-weight="600" fill="#356ce7">消融</text>
+<text x="1470" y="1778" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="26" font-weight="400" fill="#5b6c82">去掉重复 dispatch / verify，不禁手动组合</text>
+<text x="62" y="1885" dominant-baseline="text-before-edge" font-family="Heiti SC, PingFang SC, Arial Unicode MS, sans-serif" font-size="25" font-weight="400" fill="#5b6c82">硬边界：ACK ≠ 业务成功  ·  未知交付不盲重发  ·  不静默降级  ·  仅清理自有资源  ·  不承诺外部 GUI 排他</text>
+</svg>
