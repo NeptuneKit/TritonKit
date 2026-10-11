@@ -97,3 +97,7 @@
 4. DeviceFS verified bundle/group语义身份映射、Crash namespace来源映射、Temporary副作用policy仍未接入；不能猜root/Library语义、不domain-errorfallback，不以container tmp算Temporary域创建。
 5. Simulator restart/delete/扩展io-ui、watch/tv/vision专门公开控制契约分别推进；owned可逆验收，新增destructive行为先明确授权，不借业务实例。
 6. GUI-only/public接口未证项继续调查，准确限制/手动fallback，不新增Web/GUI控制面代替。持续full/root/Release/local/真实scope，SDKhelp、fixture、actualenvelope、liveaction分层；docs/skills/memory写回。本次用户已授权SP183本地整理提交，不合并/推送/发布，见[四批交付与沉淀](<./20261010-session-recap-v01.md>)，不得把切片提交当goal完成。
+
+## 2026-10-10 四批实际能力更新
+
+此前表格保留历史切片证据；当前新增SDK语义容器、Crash namespace、Temporary可能创建策略、管理执行后端、watch配对关系、Apple physical独立发现/选择，详见[当前四批能力矩阵](./20261010-capability-batches-matrix.md)。后端fixture、专用Simulator实际、仅计划、GUI描述/未支持分别列示；不能把历史“execution缺失”继续当成当前实现状态，也不能把本轮后端完成称为真机或所有专门平台完整接入。

@@ -4,13 +4,14 @@ struct HostDeviceMountpointOutput: Encodable {
     let ok: Bool = true
     let action: String = "device.mountpoint"
     let runtimeScope: String = "host-device"
-    let riskLevel: String = "readonly"
+    let riskLevel: String = "automation"
     let target: HostDeviceTarget
     let mountpointToken: String
     let identityBinding: String = "exact-file-json-device-argument"
     let verification: String = "executed-file-json"
     let hostFilesystemInspected: Bool = false
     let mountStateVerified: Bool = false
+    let mountCreated: String = "unknown"
     let contentsListed: Bool = false
     let businessReadinessVerified: Bool = false
     let maximumJSONBytes: Int
@@ -31,6 +32,6 @@ enum HostDeviceMountpointError: Error, Equatable {
         case .invalidJSON: code = "devicectl_json_parse_failed"
         case .limitExceeded: code = "device_mountpoint_limit_exceeded"
         }
-        return TKCLIErrorDetail(code: code, message: "No bound DeviceFS mountpoint metadata snapshot was produced (\(code)).", hint: "Inspect private artifacts and refresh selection. No Finder, path traversal, explicit mount/unmount, boot/pair/unlock or alternate-backend retry was performed. CoreDevice service communication and private artifact production occur; a returned path does not prove existence, mount state or read/write access. Local JSON acceptance only.")
+        return TKCLIErrorDetail(code: code, message: "No bound DeviceFS mountpoint metadata snapshot was produced (\(code)).", hint: "Inspect private artifacts and refresh selection. The native query may implicitly mount the device filesystem; mountCreated remains unknown. No Finder, path traversal, explicit unmount, boot/pair/unlock or alternate-backend retry was performed. CoreDevice service communication and private artifact production occur; a returned path does not prove existence, mount state or read/write access. Local JSON acceptance only.")
     }
 }

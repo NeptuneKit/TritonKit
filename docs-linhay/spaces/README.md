@@ -4,7 +4,7 @@
 >
 > 编号登记册：[INDEX.md](./INDEX.md)（181/181 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-10（历史分支收口；补回主线已有 SP-181/182 登记）
+> 最近审计：2026-10-11（历史分支收口与 SP-183 四批能力合并）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -23,7 +23,7 @@
 | --- | --- | --- | --- |
 | 研究已归档／实现待定 | [SP-181-device-hub-paradigm](./SP-181-device-hub-paradigm/README.md) | Device Hub 范式研究已归档；后续实现需独立立项 | 按该 space 的边界另行推进 |
 | 设计已归档／实施待立项 | [SP-182-trusted-execution-system](./SP-182-trusted-execution-system/README.md) | 可信执行系统双路径设计已归档；尚未进入产品实现 | 按该 space 的边界另行推进 |
-| 全能力接入中／未集成 | [SP-183-device-hub-official-adapter](./SP-183-device-hub-official-adapter/README.md) | 保留旧26；发现/生命周期/info/rename/files/mountpoint及三namespace/单native容器/受限相对子目录metadata已验；CLI1104+14/root303+7，info explicit hardware observation/nestedschema/oldCodable及actualios-iphone-physical只读已验、非控制，Apple六family catalog/可选availableSim15 readonlymetadata计数已验/unknown/privacy/非控制或physicalinventory，独立pair/unpair/diagnose --plan-only三fresh-real只读plan过（非动作/executablefalse/privacy），execution/archivepolicy仍缺，子目录actual2/2项privacy/budgets/全names-state恢复，UTF8homeauthority/提前组合预算过，更新[逐能力矩阵](./SP-183-device-hub-official-adapter/plans/20261009-full-capability-matrix.md)，不把切片称完整 | 语义bundle/group/crash/temporarypolicy、配对/诊断/平台与GUI-only边界继续，docs缺181/182待集成复验，本次授权SP183本地整理提交，不推送合并发布 |
+| 四批后端已验／待集成 | [SP-183-device-hub-official-adapter](./SP-183-device-hub-official-adapter/README.md) | SDK 语义容器、Crash/Temporary policy、审计执行后端、DeviceFS 可能隐式挂载策略与 Apple physical metadata 已实现；CLI1142/102 suites、root264/34 suites、local gate 通过 | 继续按能力矩阵推进 watch/tvOS 接入与 visionOS 可验证边界；无真机写入/诊断采集，不称完整 Device Hub 接入 |
 | 兼容修复验证／命中待补 | [SP-180-xcode27-simulator-frameworks](./SP-180-xcode27-simulator-frameworks/README.md) | 已选Xcode只读查询、仅适配器子进程补框架；8测试与加载器恢复验证 | 10-06 CLI993+14/本地门禁通过；业务bridge截图完成，host HID导航另补，不将ACK算命中 |
 | 已发布／待安全补验 | [SP-179-issue-214-derived-data-cleanup](./SP-179-issue-214-derived-data-cleanup/README.md) | #214：v0.2.22 已发布，issue 仍 OPEN | 精确路径白名单、活动构建保护、fixture 与完整 CLI 回归；补验前仅推荐 inspect/dry-run |
 | 已归档 | [SP-178-issue-213-real-device-runtime](./SP-178-issue-213-real-device-runtime/README.md) | #213：真机 runtime readiness 诊断、单一 smoke JSON 与可执行 setup；不自动注入 endpoint | v0.2.21 已发布并回复关闭；CLI 983/root 269、CocoaPods lint、双架构与 Homebrew 验证全过；真机端到端未复测 |

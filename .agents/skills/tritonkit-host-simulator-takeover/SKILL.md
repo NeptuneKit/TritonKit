@@ -265,3 +265,7 @@ Keep P0/P1 focused on real-project regression value:
 - Do not put host-side process execution into the iOS embedded runtime.
 - Do not expose XcodeBuildMCP tool names as TritonKit product API; use it as reference only.
 - Do not use interactive confirmation gates for long-running automation. Use `riskLevel`, objective required config, audit metadata, and explicit command flags/policy instead.
+
+## Device Hub 容器与管理执行证据
+
+SDK apps 显式 bundle/group 成员与原生路径绑定不等于 DeviceFS 目录绑定；保留两个独立后端，禁止目录名猜语义。Temporary 按可能创建域建模，完整执行策略与持久审计前不得query。管理命令以严格原生JSON和独立后置状态判结果，现代字段存在（包括null）不得复活旧镜像；未知 result 布局保持partial，trust不冒充pairing。诊断ZIP校验须关联central/local records与payload边界，安全发布与真实采集验收分开，fixture不能称真机验证。

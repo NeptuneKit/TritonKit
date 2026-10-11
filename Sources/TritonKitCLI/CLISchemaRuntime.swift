@@ -69,6 +69,7 @@ private let actionFailureCodesRequiringRecovery: Set<String> = [
 private let destructivePolicyFailureCodesRequiringRecovery: Set<String> = [
     "confirmation_required",
     "destructive_action_requires_policy",
+    "device_mount_execution_uncertain",
 ]
 
 private let unsupportedFailureCodesRequiringRecovery: Set<String> = [

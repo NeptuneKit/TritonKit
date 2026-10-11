@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-10",
+  "scope": "SP-183 capability batches; CLI/shared/schema",
+  "completionClaim": "partial integration; not full Device Hub support",
+  "baseline": "21e6c1db",
+  "tests": {
+    "focusedCLI": {
+      "tests": 37,
+      "suites": 8,
+      "exit": 0
+    },
+    "sharedFocused": {
+      "tests": 10,
+      "suites": 4,
+      "exit": 0
+    },
+    "fullCLI": {
+      "swiftTesting": 1135,
+      "suites": 101,
+      "xctest": 14,
+      "exit": 0,
+      "log": "private cli-full-5.log; includes recursive schema and Temporary audited runtime fixture"
+    },
+    "root": {
+      "swiftTesting": 313,
+      "suites": 44,
+      "xctest": 7,
+      "exit": 0
+    },
+    "docs": {
+      "spaces": 183,
+      "ciDocs": 0,
+      "diffCheck": 0,
+      "note": "ci-docs/check-docs/diff passed after traceable private capture rename"
+    },
+    "localGate": {
+      "exit": 0,
+      "releaseBuild": true,
+      "dependencyBoundary": true,
+      "debugIsolation": true,
+      "cliSmoke": true,
+      "harmonyHostSmoke": true,
+      "iosRuntimeObserveSmoke": true,
+      "genericXcodeSimulatorBuild": "explicitly skipped TRITON_VERIFY_XCODE=0; dedicated Simulator metadata acceptance separate",
+      "log": "private local-gate-2.log"
+    }
+  },
+  "actual": {
+    "newDedicatedSimulator": true,
+    "appMetadataEntries": 5,
+    "groupMetadataEntries": 2,
+    "sdkExplicitMembershipAndPaths": true,
+    "deviceFSBindingVerified": false,
+    "entryAndJSONBudgetsRejected": true,
+    "groupMismatchRejected": true,
+    "rawSelectionPrivate": true,
+    "privateArtifactModes": "0700/0600",
+    "crashDirectory": "device_fs_directory_unavailable; no guessed mapping",
+    "legacyDeviceFSAppNamespaceEntries": 36,
+    "simPairs": {
+      "count": 0,
+      "nonemptyAcceptance": "fixture-only"
+    },
+    "physicalInventory": {
+      "count": 3,
+      "families": [
+        "ios/iphone"
+      ],
+      "exactSelectionCount": 1,
+      "nonIOSAcceptance": "fixture-only"
+    },
+    "unauthorizedTemporaryAndAdministration": "single failure JSON before execution",
+    "ownedFinalState": "Shutdown",
+    "existingSimulatorNamesStatesUnchanged": true,
+    "businessFileContentsRead": false,
+    "realTargetManagementExecuted": false,
+    "realDiagnosticsCollected": false,
+    "temporaryDomainQueried": false
+  },
+  "limitations": [
+    "specialized watch/tv/vision controls have no verified programmable backend",
+    "macOS Xcode workflow not Device Hub control",
+    "old SDK fixture compatibility, no SDK26 runtime",
+    "administration native action-specific layouts not live validated",
+    "temporary domain creation is possible, actual creation unknown",
+    "ZIP acceptance budget is not collection peak disk limit",
+    "external devicectl path use leaves same-user TOCTOU limitation"
+  ],
+  "fixtureIsolationIncident": {
+    "description": "initial whitespace-audit regression fixture omitted runner injection while testing stale compiled validation; one attempt used nonexistent constant fixture identifier and failed; no real target selected",
+    "resolution": "all policy tests now inject probe/runner/workspace; local audit retained",
+    "realActionAcceptance": false
+  }
+}

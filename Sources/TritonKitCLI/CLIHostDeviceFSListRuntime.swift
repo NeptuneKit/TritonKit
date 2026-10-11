@@ -19,7 +19,7 @@ func boundDeviceFSRoot(path: String, selection: HostDeviceSelectionResult, homeD
     return path
 }
 func makeIOSDeviceFSListOutput(
-    selection: HostDeviceSelectionResult, view: DeviceFSView = .mountRoot, containerIdentifier: String? = nil, subdirectory: String? = nil, includeSensitive: Bool = false, timeout: Double? = nil,
+    selection: HostDeviceSelectionResult, mountPolicy: HostDeviceMountPolicy? = nil, view: DeviceFSView = .mountRoot, containerIdentifier: String? = nil, subdirectory: String? = nil, includeSensitive: Bool = false, timeout: Double? = nil,
     maximumJSONBytes: Int = 1_048_576, maximumEntries: Int = 1000, homeDirectory: String = NSHomeDirectory(),
     artifactProvider: (String) throws -> (json: String, log: String) = freshDeviceInfoArtifactPaths,
     runner: (TKHostCommand) throws -> HostProcessResult = { try runHostCommand($0) },
@@ -30,17 +30,21 @@ func makeIOSDeviceFSListOutput(
     try validateDeviceFilesLimits(timeout: timeout, maximumJSONBytes: maximumJSONBytes, maximumEntries: maximumEntries)
     let relativeDirectory = try deviceFSRelativeDirectory(view: view, containerIdentifier: containerIdentifier, subdirectory: subdirectory)
     try validateDeviceFSSelectionBudget(homeDirectory: homeDirectory, relativeDirectory: relativeDirectory)
-    let snapshot = try queryIOSDeviceMountpointSnapshot(selection: selection, timeout: timeout, maximumJSONBytes: maximumJSONBytes, artifactProvider: artifactProvider, runner: runner, reader: JSONReader)
+    let snapshot = try queryIOSDeviceMountpointSnapshot(selection: selection, mountPolicy: mountPolicy, timeout: timeout, maximumJSONBytes: maximumJSONBytes, artifactProvider: artifactProvider, runner: runner, reader: JSONReader)
     let root = try boundDeviceFSRoot(path: snapshot.payload.dataPath, selection: selection, homeDirectory: homeDirectory)
     do { _ = try validatedDeviceFSComponents(root: root, relativeDirectory: relativeDirectory) }
     catch { throw HostDeviceSelectionError.parameterConflict("Combined DeviceFS directory selection exceeds local depth/path bounds; query artifacts may exist, directory IO not started.") }
     let metadata: [DeviceFSMetadataEntry]
     do { metadata = try listReader(root, relativeDirectory, maximumEntries) }
     catch DeviceFSReaderError.limitExceeded { throw HostDeviceFSError.limitExceeded }
+    catch DeviceFSReaderError.directoryUnavailable { throw HostDeviceFSError.directoryUnavailable }
     catch DeviceFSReaderError.unsafeDirectory { throw HostDeviceFSError.unsafeRoot }
     catch { throw HostDeviceFSError.readFailed }
     guard metadata.count <= maximumEntries else { throw HostDeviceFSError.limitExceeded }
-    let scopeKey = snapshot.output.mountpointToken + "\0" + (view == .mountRoot ? "" : view.rawValue + "\0") + (containerIdentifier.map { $0 + "\0" } ?? "") + (subdirectory.map { $0 + "\0" } ?? "")
+    var scopeKey = snapshot.output.mountpointToken + "\0"
+    if view != .mountRoot { scopeKey += view.rawValue + "\0" }
+    if let containerIdentifier { scopeKey += containerIdentifier + "\0" }
+    if let subdirectory { scopeKey += subdirectory + "\0" }
     let directoryToken = containerIdentifier.map { _ in "directory:" + SHA256.hash(data: Data(scopeKey.utf8)).map { String(format: "%02x", $0) }.joined() }
     let entries = metadata.map { item in
         let key = scopeKey + item.name

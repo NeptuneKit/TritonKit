@@ -1,6 +1,6 @@
 # SP-183 Device Hub 官方设备能力适配
 
-> 建立2026-10-08，更新2026-10-10；状态：全能力接入中／未集成，不能称完整支持；用户已授权本次本地整理提交，不合并/推送/发布；local文档子门禁缺号待集成后复验；基线 `0231d883`。
+> 建立2026-10-08，更新2026-10-10；原批次已并入基线 `21e6c1db`；当前四批中可验证后端已实现并完成fixture/专用Simulator分层验收，专门平台输入仍未支持，最终local门禁通过，独立 worktree `SP-183-device-hub-capability-batches`，本轮不提交/合并/推送/发布、不真机写入或诊断采集。历史记录保留当时授权与状态，不能视为当前授权。
 
 [会话沉淀与四批后续计划](<./plans/20261010-session-recap-v01.md>)统一记录已接入能力、证据分层和提交范围。历史“未提交”段落保留当时快照；本次授权不覆盖主仓SP-181/182或扩展真机动作范围。
 
@@ -163,3 +163,7 @@ Given fresh identity-bound existing device info JSON，When读取hardware.platfo
 - [shared匿名测试](../../../Tests/TritonKitSharedTests/TKDeviceHubOfficialAdapterTests.swift)
 - [host discovery](../../../Sources/TritonKitCLI/CLIHostDeviceRuntime.swift)
 - [CLI测试](../../../CLI/Tests/TritonKitCLITests/DeviceHubDiscoveryTests.swift)
+
+## 四批实际能力推进（2026-10-10）
+
+以[四批实施与验收](./plans/20261010-capability-batches.md)和[能力矩阵](./plans/20261009-full-capability-matrix.md)为当前事实。SDK bundle/group 原生容器绑定独立于 DeviceFS 名称；Temporary 明确可能创建、完整策略/审计前拒绝；管理动作仅隔离fixture；专门平台后端缺口诚实保留。基线SP-181/182已存在，本轮补登记解除旧docs索引缺口；主工作区既有三处UU保持原样。

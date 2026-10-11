@@ -787,9 +787,21 @@ func failHostCommand(
         detail = error.detail
     case let error as HostDeviceFilesError:
         detail = error.detail
+    case let error as HostTemporaryDomainFailure:
+        detail = error.detail
+    case let error as HostDeviceAdministrationError:
+        detail = TKCLIErrorDetail(code: error.code, message: error.description, hint: "Inspect private audit records; do not retry uncertain actions automatically.")
+    case let error as HostSimulatorPairsFailure:
+        detail = error.detail
+    case let error as HostAppContainerBindingError:
+        detail = error.detail
     case let error as HostDeviceFSError:
         detail = error.detail
     case let error as HostDeviceMountpointError:
+        detail = error.detail
+    case let error as HostDeviceMountPolicyError:
+        detail = error.detail
+    case let error as HostDeviceMountExecutionFailure:
         detail = error.detail
     case let error as TKDevicectlFilesError:
         detail = deviceFilesRequestErrorDetail(error)

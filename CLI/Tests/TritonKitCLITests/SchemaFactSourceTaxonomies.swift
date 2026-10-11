@@ -361,7 +361,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "prepare-target", "plan"]
     case "devicectl_json_missing":
         return ["diagnose", "archive"]
-    case "device_files_limit_exceeded", "device_mountpoint_limit_exceeded", "device_fs_limit_exceeded", "device_fs_unsafe_root":
+    case "device_files_limit_exceeded", "device_mountpoint_limit_exceeded", "device_mount_execution_uncertain", "device_fs_limit_exceeded", "device_fs_unsafe_root", "device_fs_directory_unavailable", "device_file_domain_execution_uncertain", "device_administration_policy_required", "device_administration_result_invalid", "device_administration_identity_mismatch", "device_administration_unsafe_artifact", "device_administration_limit_exceeded", "device_administration_audit_failed", "device_administration_failed", "device_administration_timeout", "device_administration_postcondition_unverified", "unsupported_device_administration", "app_container_unsupported_platform", "app_container_unsupported_sdk", "app_container_unsupported_listing", "app_container_query_failed", "app_container_timeout", "app_container_json_missing", "app_container_invalid_json", "app_container_identity_mismatch", "app_container_unavailable", "app_container_root_mismatch", "app_container_unsafe_root", "app_container_read_failed", "app_container_limit_exceeded", "sim_pairs_query_failed":
         return ["diagnose", "plan"]
     case "provisioning_profile_missing":
         return ["diagnose", "project"]

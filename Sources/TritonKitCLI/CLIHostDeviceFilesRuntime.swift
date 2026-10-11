@@ -30,6 +30,38 @@ func readBoundedDeviceFilesJSON(_ path: String, maximumBytes: Int) throws -> Dat
 
 func makeIOSDeviceFilesOutput(
     selection: HostDeviceSelectionResult, request: TKDevicectlFilesRequest,
+    includeSensitive: Bool = false, timeout: Double? = nil, maximumJSONBytes: Int = 1_048_576, maximumEntries: Int = 1000, temporaryPolicy: HostTemporaryDomainPolicy? = nil,
+    temporaryWorkspaceProvider: () throws -> String = makeDeviceAdministrationWorkspace,
+    artifactProvider: (String) throws -> (json: String, log: String) = freshDeviceInfoArtifactPaths,
+    runner: (TKHostCommand) throws -> HostProcessResult = { try runHostCommand($0) },
+    reader: (String, Int) throws -> Data = readBoundedDeviceFilesJSON
+) throws -> HostDeviceFilesOutput {
+    guard selection.platform == .ios, ["simulator", "real"].contains(selection.target.scope) else { throw HostDeviceFilesError.unsupportedPlatform }
+    try validateDeviceFilesLimits(timeout: timeout, maximumJSONBytes: maximumJSONBytes, maximumEntries: maximumEntries)
+    var auditArtifacts: [String] = []
+    func query() throws -> HostDeviceFilesOutput {
+        try acceptedIOSDeviceFilesOutput(selection: selection, request: request, includeSensitive: includeSensitive, timeout: timeout, maximumJSONBytes: maximumJSONBytes, maximumEntries: maximumEntries, artifactProvider: { action in
+            let paths = try artifactProvider(action)
+            auditArtifacts = [paths.json, paths.log]
+            return paths
+        }, runner: runner, reader: reader)
+    }
+    if request.domain == "temporary" {
+        guard let temporaryPolicy else { throw TKDevicectlFilesError.temporaryRequiresPolicy }
+        return try withTemporaryDomainAudit(policy: temporaryPolicy, target: selection.target.id, domainIdentifier: request.domainIdentifier ?? "", workspace: temporaryWorkspaceProvider, artifacts: { auditArtifacts }) { token in
+            var output = try query()
+            output.riskLevel = "automation"
+            output.temporaryDomainPolicy = "explicit-possible-creation-authorized; actual-creation-state-unknown"
+            output.auditToken = token
+            return output
+        }
+    }
+    guard temporaryPolicy == nil else { throw HostDeviceSelectionError.parameterConflict("Temporary creation policy applies only to the temporary domain.") }
+    return try query()
+}
+
+private func acceptedIOSDeviceFilesOutput(
+    selection: HostDeviceSelectionResult, request: TKDevicectlFilesRequest,
     includeSensitive: Bool = false, timeout: Double? = nil, maximumJSONBytes: Int = 1_048_576, maximumEntries: Int = 1000,
     artifactProvider: (String) throws -> (json: String, log: String) = freshDeviceInfoArtifactPaths,
     runner: (TKHostCommand) throws -> HostProcessResult = { try runHostCommand($0) },
@@ -41,7 +73,7 @@ func makeIOSDeviceFilesOutput(
     let command = TKDevicectlCommand.deviceInfoFiles(identifier: selection.target.rawTarget, request: request, jsonOutput: paths.json, logOutput: paths.log).withTimeout(timeout)
     defer {
         for path in [paths.json, paths.log] where FileManager.default.fileExists(atPath: path) {
-            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: path)
+            hardenPrivateArtifact(path: path)
         }
     }
     func failure() -> HostDeviceFilesError {
@@ -58,6 +90,7 @@ func makeIOSDeviceFilesOutput(
     do { data = try reader(paths.json, maximumJSONBytes) }
     catch let error as HostDeviceFilesError { throw error }
     catch { throw HostDeviceFilesError.jsonMissing }
+    if request.domain == "temporary" { try validateTemporaryFilesReceipt(data, command: command) }
     let payload: TKDevicectlFilesPayload
     do { payload = try TKDevicectlFilesParser.parse(data, maximumJSONBytes: maximumJSONBytes, maximumEntries: maximumEntries) }
     catch TKDevicectlFilesError.limitExceeded { throw HostDeviceFilesError.limitExceeded }

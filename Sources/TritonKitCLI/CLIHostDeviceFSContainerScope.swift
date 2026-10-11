@@ -12,7 +12,7 @@ func deviceFSRelativeDirectory(view: DeviceFSView, containerIdentifier: String?,
         do { _ = try decodedDeviceFSName(Data(value.utf8)) }
         catch { throw failure }
     }
-    guard let namespace = view.relativeDirectory else { throw failure }
+    guard [.appDataContainers, .appGroupContainers].contains(view), let namespace = view.relativeDirectory else { throw failure }
     try component(identifier)
     if let subdirectory {
         guard !subdirectory.isEmpty, subdirectory.utf8.count <= 4096 else { throw failure }
