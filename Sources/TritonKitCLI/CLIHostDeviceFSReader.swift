@@ -7,7 +7,7 @@ struct DeviceFSMetadataEntry {
     let kind: String
     let sizeBytes: UInt64?
 }
-enum DeviceFSReaderError: Error, Equatable { case invalidPath, invalidLimit, unsafeDirectory, enumerationFailed, limitExceeded }
+enum DeviceFSReaderError: Error, Equatable { case invalidPath, invalidLimit, directoryUnavailable, unsafeDirectory, enumerationFailed, limitExceeded }
 func deviceFSEntryIdentityAccepted(directoryInode: UInt64, first: stat, second: stat, filesystemType: String) -> Bool {
     // Observed DeviceFS provides different synthetic IDs for readdir vs stat. Never apply this exception to other FS types.
     (filesystemType == "devicefs" || directoryInode == first.st_ino) && first.st_ino == second.st_ino && first.st_dev == second.st_dev && first.st_mode & S_IFMT == second.st_mode & S_IFMT
@@ -57,7 +57,7 @@ func readDeviceFSShallowMetadata(root: String, relativeDirectory: String? = nil,
     }
     for (index, segment) in segments.enumerated() {
         let child = openat(descriptor, segment, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
-        guard child >= 0 else { throw DeviceFSReaderError.unsafeDirectory }
+        guard child >= 0 else { throw errno == ENOENT ? DeviceFSReaderError.directoryUnavailable : DeviceFSReaderError.unsafeDirectory }
         close(descriptor)
         descriptor = child
         // Verify device root and every relative directory before continuing, on this same FD chain.

@@ -40,4 +40,10 @@ struct TKMountpointTests {
             #expect(throws: TKDevicectlMountpointError.limitExceeded) { _ = try TKDevicectlMountpointParser.parse(fixture, maximumJSONBytes: limit) }
         }
     }
+    @Test func nativeMountpointCommandDeclaresPossibleMountAutomation() {
+        let command = TKDevicectlCommand.deviceInfoMountpoint(identifier: "fixture", jsonOutput: "/fixture/result.json", logOutput: "/fixture/native.log")
+        #expect(command.riskLevel == .automation)
+        #expect(command.requiredConfig.contains(.auditRecord))
+    }
+
 }

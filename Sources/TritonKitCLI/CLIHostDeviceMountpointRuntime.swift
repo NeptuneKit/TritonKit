@@ -11,19 +11,22 @@ struct BoundDeviceMountpointSnapshot {
     let payload: TKDevicectlMountpointPayload
 }
 func queryIOSDeviceMountpointSnapshot(
-    selection: HostDeviceSelectionResult, timeout: Double? = nil, maximumJSONBytes: Int = 1_048_576,
+    selection: HostDeviceSelectionResult, mountPolicy: HostDeviceMountPolicy? = nil, timeout: Double? = nil, maximumJSONBytes: Int = 1_048_576,
     artifactProvider: (String) throws -> (json: String, log: String) = freshDeviceInfoArtifactPaths,
     runner: (TKHostCommand) throws -> HostProcessResult = { try runHostCommand($0) },
     reader: (String, Int) throws -> Data = readBoundedDeviceFilesJSON
 ) throws -> BoundDeviceMountpointSnapshot {
+    guard let mountPolicy else { throw HostDeviceMountPolicyError.required }
+    try mountPolicy.validate()
     guard selection.platform == .ios, ["simulator", "real"].contains(selection.target.scope),
           (selection.target.scope == "simulator" && selection.target.kind == "simulator") || (selection.target.scope == "real" && selection.target.kind == "real-device") else { throw HostDeviceMountpointError.unsupportedPlatform }
     try validateDeviceMountpointLimits(timeout: timeout, maximumJSONBytes: maximumJSONBytes)
     let paths = try artifactProvider("device-mountpoint")
-    let command = TKDevicectlCommand.deviceInfoMountpoint(identifier: selection.target.rawTarget, jsonOutput: paths.json, logOutput: paths.log).withTimeout(timeout)
+    let baseCommand = TKDevicectlCommand.deviceInfoMountpoint(identifier: selection.target.rawTarget, jsonOutput: paths.json, logOutput: paths.log)
+    let command = TKHostCommand(arguments: baseCommand.arguments, redactedArgumentIndexes: baseCommand.redactedArgumentIndexes, riskLevel: .automation, requiredConfig: baseCommand.requiredConfig.union([.auditRecord]), defaultTimeoutSeconds: baseCommand.defaultTimeoutSeconds, capturesArtifacts: true, sensitiveOutput: true).withTimeout(timeout)
     defer {
         for path in [paths.json, paths.log] where FileManager.default.fileExists(atPath: path) {
-            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: path)
+            hardenPrivateArtifact(path: path)
         }
     }
     let result: HostProcessResult
@@ -36,7 +39,7 @@ func queryIOSDeviceMountpointSnapshot(
     catch HostDeviceFilesError.limitExceeded { throw HostDeviceMountpointError.limitExceeded }
     catch { throw HostDeviceMountpointError.jsonMissing }
     let payload: TKDevicectlMountpointPayload
-    do { payload = try TKDevicectlMountpointParser.parse(data, maximumJSONBytes: maximumJSONBytes) }
+    do { try validateDeviceMountReceipt(data, command: command); payload = try TKDevicectlMountpointParser.parse(data, maximumJSONBytes: maximumJSONBytes) }
     catch TKDevicectlMountpointError.limitExceeded { throw HostDeviceMountpointError.limitExceeded }
     catch { throw HostDeviceMountpointError.invalidJSON }
     // No result identity in the observed protocol: bind exact echoed request, not path/alias guesses.
@@ -52,10 +55,10 @@ func queryIOSDeviceMountpointSnapshot(
     return BoundDeviceMountpointSnapshot(output: output, payload: payload)
 }
 func makeIOSDeviceMountpointOutput(
-    selection: HostDeviceSelectionResult, timeout: Double? = nil, maximumJSONBytes: Int = 1_048_576,
+    selection: HostDeviceSelectionResult, mountPolicy: HostDeviceMountPolicy? = nil, timeout: Double? = nil, maximumJSONBytes: Int = 1_048_576,
     artifactProvider: (String) throws -> (json: String, log: String) = freshDeviceInfoArtifactPaths,
     runner: (TKHostCommand) throws -> HostProcessResult = { try runHostCommand($0) },
     reader: (String, Int) throws -> Data = readBoundedDeviceFilesJSON
 ) throws -> HostDeviceMountpointOutput {
-    try queryIOSDeviceMountpointSnapshot(selection: selection, timeout: timeout, maximumJSONBytes: maximumJSONBytes, artifactProvider: artifactProvider, runner: runner, reader: reader).output
+    try queryIOSDeviceMountpointSnapshot(selection: selection, mountPolicy: mountPolicy, timeout: timeout, maximumJSONBytes: maximumJSONBytes, artifactProvider: artifactProvider, runner: runner, reader: reader).output
 }

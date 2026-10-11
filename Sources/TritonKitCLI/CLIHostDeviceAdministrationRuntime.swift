@@ -45,8 +45,8 @@ func makeDeviceAdministrationPlan(operation: DeviceAdministrationOperation, opti
     let support = HostAppleCommandSupport(name: probed.name, supported: probed.supported, requiredOptions: probed.requiredOptions, missingOptions: probed.missingOptions, sourceCommand: hostSourceCommand(TKHostCommand(arguments: helpArgs)), error: probed.error == nil ? nil : "help_probe_failed")
     let command = plannedDeviceAdministrationCommand(operation: operation, nativeIdentifier: target.rawTarget, archiveDestination: options.output, timeout: options.timeout)
     let publicID = TKDevicectlDeviceTarget(identifier: target.rawTarget, state: target.state, ready: target.ready, blockedReasons: []).id
-    var blockers = ["execution-backend-not-accepted", "real-device-operation-authorization-and-audit-required", "native-fileJSON-result-and-postcondition-not-accepted"]
+    var blockers = ["explicit-execution-policy-required", "real-device-operation-authorization-and-audit-required", "native-fileJSON-result-and-postcondition-required", "physical-execution-acceptance-not-performed"]
     if !support.supported { blockers.append("required-sdk-help-flags-not-advertised") }
-    if operation == .diagnose { blockers.append("archive-content-scope-permissions-nooverwrite-nofollow-size-policy-not-accepted") }
+    if operation == .diagnose { blockers.append("private-archive-publication-policy-required;content-completeness-not-verified") }
     return HostDeviceAdministrationPlanOutput(action: "device." + operation.rawValue, target: publicID, plannedRiskLevel: command.riskLevel.rawValue, plannedSourceCommand: support.supported ? hostSourceCommand(command) : nil, commandSupport: support, blockedRequirements: blockers, diagnosticScopeHint: operation == .diagnose ? "If executed, CoreDevice collects local host CoreDevice logs plus the explicit device where DDI is already mounted. --no-include-host-sysdiagnose disables only host sysdiagnose, not all host data; no device-only or crash-report equivalence claimed." : nil, archiveDestinationSupplied: options.output != nil)
 }

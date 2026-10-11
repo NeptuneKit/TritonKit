@@ -48,11 +48,11 @@ public enum TKDevicectlCommand {
         for (flag, value) in [("--domain-identifier", request.domainIdentifier), ("--subdirectory", request.subdirectory), ("--username", request.username)] {
             if let value { arguments.append(flag); redacted.insert(arguments.count); arguments.append(value) }
         }
-        return command(arguments + artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput), requiredConfig: [.target, .timeout, .artifactDir, .redactionPolicy], redactedArgumentIndexes: redacted)
+        return command(arguments + artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput), riskLevel: request.domain == "temporary" ? .automation : .readonly, requiredConfig: Set<TKHostRequiredConfig>([.target, .timeout, .artifactDir, .redactionPolicy]).union(request.domain == "temporary" ? [.auditRecord] : []), redactedArgumentIndexes: redacted)
     }
 
     public static func deviceInfoMountpoint(identifier: String, jsonOutput: String, logOutput: String) -> TKHostCommand {
-        command(["devicectl", "device", "info", "mountpoint", "--device", identifier] + artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput), requiredConfig: [.target, .timeout, .artifactDir, .redactionPolicy], redactedArgumentIndexes: [5])
+        command(["devicectl", "device", "info", "mountpoint", "--device", identifier] + artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput), riskLevel: .automation, requiredConfig: [.target, .timeout, .artifactDir, .redactionPolicy, .auditRecord], redactedArgumentIndexes: [5])
     }
 
     public static func deviceInfoLockState(identifier: String, jsonOutput: String, logOutput: String) -> TKHostCommand {

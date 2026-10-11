@@ -15,7 +15,9 @@ struct HostDeviceFilesOutput: Encodable {
     let ok: Bool = true
     let action: String = "device.files"
     let runtimeScope: String = "host-device"
-    let riskLevel: String = "readonly"
+    var riskLevel: String = "readonly"
+    var temporaryDomainPolicy: String? = nil
+    var auditToken: String? = nil
     let target: HostDeviceTarget
     let domain: String
     let recursive: Bool = false
@@ -45,13 +47,13 @@ enum HostDeviceFilesError: Error, Equatable {
         case .invalidJSON: code = "devicectl_json_parse_failed"
         case .limitExceeded: code = "device_files_limit_exceeded"
         }
-        return TKCLIErrorDetail(code: code, message: "No successful device file metadata snapshot was produced (\(code)).", hint: "Inspect private artifacts and refresh device selection. This is a shallow metadata query, not file content or write permission. No automatic boot/pair/unlock, temporary namespace creation or alternate-backend retry was performed; limits apply to local acceptance only.")
+        return TKCLIErrorDetail(code: code, message: "No successful device file metadata snapshot was produced (\(code)).", hint: "Inspect private artifacts and refresh device selection. This is a shallow metadata query, not file content or write permission. No automatic boot/pair/unlock or alternate-backend retry was performed; authorized temporary queries may have created their client domain; limits apply to local acceptance only.")
     }
 }
 func deviceFilesRequestErrorDetail(_ error: TKDevicectlFilesError) -> TKCLIErrorDetail {
     switch error {
     case .temporaryRequiresPolicy:
-        return TKCLIErrorDetail(code: "device_file_domain_policy_required", message: "The temporary namespace requires a separate side-effect policy and is not admitted by this readonly command.", hint: "Do not infer platform unsupported or silently create a temporary space; use an implemented readonly domain.")
+        return TKCLIErrorDetail(code: "device_file_domain_policy_required", message: "The temporary namespace requires explicit possible-creation authorization and durable audit before querying.", hint: "Do not infer platform unsupported or silently create a temporary space; supply --allow-domain-creation --confirm --execute-runner --audit-record <id>, or use a readonly domain.")
     case .invalidRequest:
         return TKCLIErrorDetail(code: "parameter_conflict", message: "Invalid file domain, identifier, relative directory or username.", hint: "App domains require a nonblank identifier; crash logs omit it. Paths must be domain-relative without empty/dot/traversal segments or control characters.")
     case .limitExceeded: return HostDeviceFilesError.limitExceeded.detail

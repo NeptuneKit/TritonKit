@@ -7,6 +7,7 @@ func hostDeviceMountpointOutputContract() -> TKCommandOutputContract {
         ("action", "String", true, "device.mountpoint"),
         ("runtimeScope", "String", true, "host-device; standalone, no mandatory Run/server"),
         ("riskLevel", "String", true, "readonly information query; CoreDevice service/private artifact side effects remain"),
+        ("mountCreated", "String", true, "Always unknown because devicectl mountpoint may implicitly mount the device filesystem"),
         ("target", "HostDeviceTarget", true, "Canonical redacted selector; raw identities/aliases private"),
         ("mountpointToken", "String", true, "devicefs: SHA256 target/path correlation token, not path disclosure or authorization"),
         ("identityBinding", "String", true, "Exact unique echoed --device matching actual raw request; no path guessing"),

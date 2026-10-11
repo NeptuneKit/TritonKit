@@ -12,9 +12,9 @@ public struct TKDevicectlFilesRequest: Equatable {
     public let domainIdentifier: String?
     public let subdirectory: String?
     public let username: String?
-    public init(domain: String, domainIdentifier: String? = nil, subdirectory: String? = nil, username: String? = nil) throws {
-        if domain == "temporary" { throw TKDevicectlFilesError.temporaryRequiresPolicy }
-        guard ["appDataContainer", "appGroupDataContainer", "systemCrashLogs"].contains(domain) else { throw TKDevicectlFilesError.invalidRequest }
+    public init(domain: String, domainIdentifier: String? = nil, subdirectory: String? = nil, username: String? = nil, allowTemporaryCreation: Bool = false) throws {
+        if domain == "temporary", !allowTemporaryCreation { throw TKDevicectlFilesError.temporaryRequiresPolicy }
+        guard ["appDataContainer", "appGroupDataContainer", "systemCrashLogs", "temporary"].contains(domain) else { throw TKDevicectlFilesError.invalidRequest }
         func valid(_ value: String) -> Bool { !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && value.rangeOfCharacter(from: .controlCharacters) == nil }
         if domain == "systemCrashLogs" {
             guard domainIdentifier == nil else { throw TKDevicectlFilesError.invalidRequest }
@@ -75,7 +75,7 @@ public enum TKDevicectlFilesParser {
             } else { arguments = nil }
             let payload = try JSONDecoder().decode(Result.self, from: JSONSerialization.data(withJSONObject: result))
             guard payload.files.count <= maximumEntries else { throw TKDevicectlFilesError.limitExceeded }
-            guard !payload.deviceIdentifier.isEmpty, ["appDataContainer", "appGroupDataContainer", "systemCrashLogs"].contains(payload.domain) else { throw TKDevicectlFilesError.malformedJSON }
+            guard !payload.deviceIdentifier.isEmpty, ["appDataContainer", "appGroupDataContainer", "systemCrashLogs", "temporary"].contains(payload.domain) else { throw TKDevicectlFilesError.malformedJSON }
             var paths: Set<String> = []
             let files = try payload.files.map { entry in
                 guard TKDevicectlFilesRequest.validRelativePath(entry.relativePath),

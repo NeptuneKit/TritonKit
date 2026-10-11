@@ -40,6 +40,18 @@ struct ApplePlatformReportTests {
         #expect(!text.contains("PRIVATE") && !text.contains("com.apple.CoreSimulator.SimRuntime"))
         #expect(!report.physicalInventoryObserved && !report.actionsExecuted && report.sourceCommands.count == 1)
     }
+    @Test func explicitPhysicalInventoryAndSelection() throws {
+        let data = Data(#"{"info":{"outcome":"success"},"result":{"devices":[{"identifier":"PRIVATE-WATCH","properties":{"hardware":{"platform":"watchOS","deviceType":"AppleWatch","reality":"physical"}}}]}}"#.utf8)
+        var calls = 0
+        let report = try makeApplePlatformReport(includeRealDevices: true, device: "PRIVATE-WATCH", physicalProvider: { calls += 1; return data })
+        #expect(calls == 1 && report.physicalInventoryObserved && report.physicalDevices.count == 1)
+        #expect(report.physicalDevices[0].observation.systemFamily == .watchos)
+        #expect(!report.inventoryObserved && report.simulatorCounts.isEmpty && !report.actionsExecuted)
+        #expect(try !encodeJSON(report).contains("PRIVATE-WATCH"))
+        #expect(throws: HostDeviceSelectionError.self) { _ = try makeApplePlatformReport(device: "PRIVATE-WATCH", physicalProvider: { calls += 1; return data }) }
+        #expect(calls == 1)
+        #expect(throws: HostDeviceSelectionError.self) { _ = try makeApplePlatformReport(includeRealDevices: true, device: "missing", physicalProvider: { data }) }
+    }
     @Test func failurePrivacy() throws {
         do { _ = try makeApplePlatformReport(inventory: true, simulatorProvider: { throw NSError(domain: "PRIVATE", code: 1, userInfo: [NSLocalizedDescriptionKey: "PRIVATE-LOG-PATH"]) }); Issue.record("expected failure") }
         catch { #expect(error is HostApplePlatformInventoryFailure); #expect(!String(describing: error).contains("PRIVATE")) }

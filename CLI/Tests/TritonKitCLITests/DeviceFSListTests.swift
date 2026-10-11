@@ -7,6 +7,7 @@ import TritonKitShared
 
 @Suite("Explicit DeviceFS mount-root listing")
 struct DeviceFSListTests {
+    private let policy = HostDeviceMountPolicy(allowMount: true, confirm: true, executeRunner: true, auditRecord: "fixture")
     private let primary = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"
     private let alias = "11111111-2222-3333-4444-555555555555"
     private let home = "/private/FIXTURE-HOME"
@@ -16,7 +17,7 @@ struct DeviceFSListTests {
     }
     private func path(_ identifier: String) -> String { home + "/Library/Developer/CoreDevice/DeviceFS/device-" + identifier + ".localized" }
     private func json(_ device: String, root: String) throws -> Data {
-        try JSONSerialization.data(withJSONObject: ["info": ["arguments": ["--device", device], "outcome": "success", "commandType": "devicectl.device.info.mountpoint"], "result": ["dataPath": root]])
+        try JSONSerialization.data(withJSONObject: ["info": ["arguments": ["devicectl", "device", "info", "mountpoint", "--device", device, "--json-output", "/fixture/device-mountpoint.json", "--log-output", "/fixture/device-mountpoint.log"], "outcome": "success", "commandType": "devicectl.device.info.mountpoint"], "result": ["dataPath": root]])
     }
     private func artifacts(_ action: String) -> (json: String, log: String) { ("/fixture/" + action + ".json", "/fixture/" + action + ".log") }
     private func result(_ command: TKHostCommand) -> HostProcessResult {
@@ -35,7 +36,7 @@ struct DeviceFSListTests {
     func subdirectoryScope() throws {
         var tokens: Set<String> = []; var directories: Set<String> = []
         for path in ["PRIVATE-DIR/one", "PRIVATE-DIR/two", "café", "cafe\u{301}"] {
-            let output = try makeIOSDeviceFSListOutput(selection: selection(), view: .appDataContainers, containerIdentifier: "SECRET-ID", subdirectory: path, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: self.path(primary)) }, listReader: { _, relative, _ in
+            let output = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, view: .appDataContainers, containerIdentifier: "SECRET-ID", subdirectory: path, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: self.path(primary)) }, listReader: { _, relative, _ in
                 #expect(Array(relative!.utf8) == Array(("AppDataContainers/SECRET-ID/" + path).utf8))
                 return [DeviceFSMetadataEntry(name: "same-name", kind: "directory", sizeBytes: nil)]
             })
@@ -47,12 +48,12 @@ struct DeviceFSListTests {
     @Test("relative input before query, combined bound path before directory IO")
     func subdirectoryBeforeIO() throws {
         var queried = false; var read = false
-        #expect(throws: (any Error).self) { _ = try makeIOSDeviceFSListOutput(selection: selection(), view: .appDataContainers, containerIdentifier: "id", subdirectory: "../PRIVATE-ESCAPE", artifactProvider: { queried = true; return artifacts($0) }, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, _, _ in read = true; return [] }) }
+        #expect(throws: (any Error).self) { _ = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, view: .appDataContainers, containerIdentifier: "id", subdirectory: "../PRIVATE-ESCAPE", artifactProvider: { queried = true; return artifacts($0) }, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, _, _ in read = true; return [] }) }
         #expect(!queried && !read)
         let deep = "/" + Array(repeating: "h", count: 57).joined(separator: "/")
         let native = deep + "/Library/Developer/CoreDevice/DeviceFS/device-" + primary + ".localized"
         var artifactCalls = 0; var runnerCalls = 0; var JSONCalls = 0
-        #expect(throws: (any Error).self) { _ = try makeIOSDeviceFSListOutput(selection: selection(), view: .appDataContainers, containerIdentifier: "id", subdirectory: "Library", homeDirectory: deep, artifactProvider: { artifactCalls += 1; return artifacts($0) }, runner: { runnerCalls += 1; return result($0) }, JSONReader: { _, _ in JSONCalls += 1; return try json(primary, root: native) }, listReader: { _, _, _ in read = true; return [] }) }
+        #expect(throws: (any Error).self) { _ = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, view: .appDataContainers, containerIdentifier: "id", subdirectory: "Library", homeDirectory: deep, artifactProvider: { artifactCalls += 1; return artifacts($0) }, runner: { runnerCalls += 1; return result($0) }, JSONReader: { _, _ in JSONCalls += 1; return try json(primary, root: native) }, listReader: { _, _, _ in read = true; return [] }) }
         #expect(!read && artifactCalls == 0 && runnerCalls == 0 && JSONCalls == 0)
     }
     @Test("single container scopes directory and entry tokens, requested identifier always private")
@@ -61,7 +62,7 @@ struct DeviceFSListTests {
         for view in [DeviceFSView.appDataContainers, .appGroupContainers] {
             for identifier in ["SECRET-CONTAINER", "DIFFERENT-CONTAINER", "原始é"] {
                 for sensitive in [false, true] {
-                    let output = try makeIOSDeviceFSListOutput(selection: selection(), view: view, containerIdentifier: identifier, includeSensitive: sensitive, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, relative, _ in
+                    let output = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, view: view, containerIdentifier: identifier, includeSensitive: sensitive, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, relative, _ in
                         #expect(relative == view.relativeDirectory! + "/" + identifier)
                         return [DeviceFSMetadataEntry(name: "same-name", kind: "directory", sizeBytes: nil)]
                     })
@@ -78,7 +79,7 @@ struct DeviceFSListTests {
     }
     @Test("opt-in leaf names may coincide with a selector, without selection field echo")
     func containerLeafCoincidence() throws {
-        let output = try makeIOSDeviceFSListOutput(selection: selection(), view: .appDataContainers, containerIdentifier: "same-name", includeSensitive: true, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, _, _ in [DeviceFSMetadataEntry(name: "same-name", kind: "directory", sizeBytes: nil)] })
+        let output = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, view: .appDataContainers, containerIdentifier: "same-name", includeSensitive: true, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, _, _ in [DeviceFSMetadataEntry(name: "same-name", kind: "directory", sizeBytes: nil)] })
         #expect(output.entries[0].name == "same-name")
         let object = try #require(JSONSerialization.jsonObject(with: Data(try encodeJSON(output).utf8)) as? [String: Any])
         #expect(object["containerIdentifier"] == nil && object["relativeDirectory"] == nil && output.directoryToken != nil)
@@ -87,7 +88,7 @@ struct DeviceFSListTests {
     func containerByteBoundaries() throws {
         var tokens: Set<String> = []
         for identifier in [String(repeating: "a", count: 255), String(repeating: "é", count: 127) + "a", "café", "cafe\u{301}"] {
-            let output = try makeIOSDeviceFSListOutput(selection: selection(), view: .appDataContainers, containerIdentifier: identifier, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, relative, _ in
+            let output = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, view: .appDataContainers, containerIdentifier: identifier, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, relative, _ in
                 #expect(Array(relative!.utf8) == Array(("AppDataContainers/" + identifier).utf8))
                 return []
             })
@@ -102,7 +103,7 @@ struct DeviceFSListTests {
             for identifier in bad {
                 var queried = false; var read = false
                 do {
-                    _ = try makeIOSDeviceFSListOutput(selection: selection(), view: view, containerIdentifier: identifier, homeDirectory: home, artifactProvider: { queried = true; return artifacts($0) }, runner: { queried = true; return result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, _, _ in read = true; return [] })
+                    _ = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, view: view, containerIdentifier: identifier, homeDirectory: home, artifactProvider: { queried = true; return artifacts($0) }, runner: { queried = true; return result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, _, _ in read = true; return [] })
                     Issue.record("Invalid selector was accepted")
                 } catch let error as HostDeviceSelectionError {
                     if case .parameterConflict(let message) = error { #expect(!message.contains("valid-component") && !message.contains("outside")) } else { Issue.record("Wrong selector error") }
@@ -113,7 +114,7 @@ struct DeviceFSListTests {
     }
     @Test("empty namespace is accepted metadata, never App/group existence", arguments: DeviceFSView.allCases)
     func emptyNamespace(view: DeviceFSView) throws {
-        let output = try makeIOSDeviceFSListOutput(selection: selection(), view: view, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, _, _ in [] })
+        let output = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, view: view, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, _, _ in [] })
         #expect(output.ok && output.count == 0 && output.entries.isEmpty && output.view == view.rawValue)
         #expect(!output.contentsRead && !output.recursive && !output.mountStateVerified && !output.readWriteAuthorizationVerified && !output.businessReadinessVerified)
     }
@@ -121,7 +122,7 @@ struct DeviceFSListTests {
     func namespaceTokens() throws {
         var tokens: [String] = []
         for (view, expected) in [(DeviceFSView.mountRoot, Optional<String>.none), (.appDataContainers, "AppDataContainers"), (.appGroupContainers, "AppGroupContainers")] {
-            let output = try makeIOSDeviceFSListOutput(selection: selection(), view: view, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { root, relative, _ in
+            let output = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, view: view, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { root, relative, _ in
                 #expect(root == path(primary) && relative == expected)
                 return [DeviceFSMetadataEntry(name: "SAME-PRIVATE-NAME", kind: "symbolic-link", sizeBytes: nil)]
             })
@@ -146,7 +147,7 @@ struct DeviceFSListTests {
     func privacy(sensitive: Bool) throws {
         var queries = 0
         var reads = 0
-        let output = try makeIOSDeviceFSListOutput(selection: selection(), includeSensitive: sensitive, timeout: 12, homeDirectory: home, artifactProvider: artifacts, runner: { command in queries += 1; #expect(command.defaultTimeoutSeconds == 12); return result(command) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { root, relative, limit in reads += 1; #expect(root == path(primary) && relative == nil && limit == 1000); return [DeviceFSMetadataEntry(name: "SECRET-NAME", kind: "directory", sizeBytes: nil)] })
+        let output = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, includeSensitive: sensitive, timeout: 12, homeDirectory: home, artifactProvider: artifacts, runner: { command in queries += 1; #expect(command.defaultTimeoutSeconds == 12); return result(command) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { root, relative, limit in reads += 1; #expect(root == path(primary) && relative == nil && limit == 1000); return [DeviceFSMetadataEntry(name: "SECRET-NAME", kind: "directory", sizeBytes: nil)] })
         #expect(queries == 1 && reads == 1 && output.count == 1 && !output.contentsRead && !output.recursive && output.hostFilesystemInspected && !output.readWriteAuthorizationVerified)
         // Local private diagnostic references are intentional; native DeviceFS dataPath remains private.
         #expect(output.artifacts == ["/fixture/device-mountpoint.json", "/fixture/device-mountpoint.log"])
@@ -158,15 +159,15 @@ struct DeviceFSListTests {
     }
     @Test("unsafe returned root fails before reader; stale physical alias is never root authority")
     func preReadFailure() throws {
-        #expect(throws: HostDeviceFSError.rootMismatch) { _ = try makeIOSDeviceFSListOutput(selection: selection(), homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(alias)) }, listReader: { _, _, _ in Issue.record("No unbound path read"); return [] }) }
+        #expect(throws: HostDeviceFSError.rootMismatch) { _ = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(alias)) }, listReader: { _, _, _ in Issue.record("No unbound path read"); return [] }) }
     }
     @Test("injected oversized list and actual reader limits reject, do not truncate")
     func limits() throws {
         let leaf = DeviceFSMetadataEntry(name: "SECRET", kind: "regular-file", sizeBytes: 1)
-        #expect(throws: HostDeviceFSError.limitExceeded) { _ = try makeIOSDeviceFSListOutput(selection: selection(), maximumEntries: 1, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, _, _ in [leaf, leaf] }) }
-        #expect(throws: HostDeviceFSError.limitExceeded) { _ = try makeIOSDeviceFSListOutput(selection: selection(), homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, _, _ in throw DeviceFSReaderError.limitExceeded }) }
+        #expect(throws: HostDeviceFSError.limitExceeded) { _ = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, maximumEntries: 1, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, _, _ in [leaf, leaf] }) }
+        #expect(throws: HostDeviceFSError.limitExceeded) { _ = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, homeDirectory: home, artifactProvider: artifacts, runner: { result($0) }, JSONReader: { _, _ in try json(primary, root: path(primary)) }, listReader: { _, _, _ in throw DeviceFSReaderError.limitExceeded }) }
         for count in [0, 10001] {
-            #expect(throws: HostDeviceSelectionError.self) { _ = try makeIOSDeviceFSListOutput(selection: selection(), maximumEntries: count, artifactProvider: { _ in Issue.record("No query on invalid budget"); return ("", "") }) }
+            #expect(throws: HostDeviceSelectionError.self) { _ = try makeIOSDeviceFSListOutput(selection: selection(), mountPolicy: policy, maximumEntries: count, artifactProvider: { _ in Issue.record("No query on invalid budget"); return ("", "") }) }
         }
     }
     @Test("fs list dispatch is independent; no implicit devicectl files replacement")

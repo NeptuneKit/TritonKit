@@ -7,7 +7,7 @@ func hostDeviceFSListOutputContract() -> TKCommandOutputContract {
         ("runtimeScope", "String", true, "host-device; standalone/no required server"),
         ("riskLevel", "String", true, "readonly; CoreDevice service/host descriptor and private artifact side effects remain"),
         ("backend", "String", true, "devicefs; explicit independent backend, never files-error fallback"),
-        ("view", "String", true, "mount-root (default)|app-data-containers|app-group-containers; fixed namespace or explicit bounded container-relative selected directory shallow metadata, not verified bundle/group identity/outside-container/crash/Temporary-domain navigation"),
+        ("view", "String", true, "mount-root (default)|app-data-containers|app-group-containers|diagnostic-reports; fixed namespace or explicit bounded container-relative selected directory shallow metadata, not verified bundle/group identity or Temporary-domain navigation; DiagnosticReports is a fixed DeviceFS namespace, not systemCrashLogs equivalence or a diagnostic ZIP"),
         ("directoryToken", "String", false, "Only with explicit container; hashes exact view/container/optional subdirectory bytes. Omitted subdirectory keeps old scope tokens. No authorization/secrecy/identity proof; requested scope fields private, opt-in leaf names may coincide."),
         ("target", "HostDeviceTarget", true, "Redacted stable device selector; aliases/raw physical ID private"),
         ("mountpointToken", "String", true, "devicefs hash correlation; not path, authorization or secrecy guarantee"),
