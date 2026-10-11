@@ -13,8 +13,8 @@
 | pair / unpair | 已实现执行后端 | fixture；未做真机写入 | `execute-runner + confirm + audit-record`；file JSON 身份绑定；后置 paired/unpaired 独立确认 |
 | diagnose | 已实现执行与安全发布 | fixture；未做真实采集 | 失败/超时/部分完成分开；ZIP no-overwrite/nofollow/权限/大小预算；不等于 device-only |
 | watch 配对关系 | 已实现 | 专用环境空集合真实 + fixture | 不证明物理 Watch 配对或输入；保留旧 sim pair/unpair |
-| watch Crown / Action | 未接入 | 公共 XCTest API 已核实，未实测 | 计划独立 watch runner；硬件缺失返回 unsupported；普通侧键无稳定公开 API |
-| tvOS 焦点 / 选择 / 返回 | 未接入 | `XCUIRemote`/`hasFocus` API 已核实，未实测 | 计划独立 tvOS runner；菜单返回需后置状态断言 |
+| watch Crown / Action | Crown runner 产物已编译；输入未验收 | 原生 build-for-testing；runtime 下载网络失败 | Crown 待专用 runtime；Action 无可验证后置断言不发送，侧键未支持 |
+| tvOS 焦点 / 选择 / 返回 | runner 产物已编译；输入未验收 | 原生 build-for-testing；runtime 下载网络失败 | 独立网格/详情 UI-test 已编译，仍需专用 runtime 上后置断言通过 |
 | visionOS 2D UI | 计划 | 公共方向已核实，未接入 | 单独验证 Designed for iPad 2D 元素路径 |
 | visionOS 空间 / gaze / 6DoF | 未支持 | 无稳定 headless 后端 | 不以 GUI、pinch 或 capability 名称冒充实现 |
 | macOS Xcode workflow | 已实现 | 既有兼容测试 | 不扩展为 Device Hub 观察/控制 |

@@ -2,7 +2,7 @@
   "space": "SP-183-device-hub-official-adapter",
   "date": "2026-10-11",
   "scope": "capability-batches-1-to-4",
-  "status": "contract-closeout",
+  "status": "live-acceptance-blocked-runtime-download",
   "evidence_levels": [
     "implemented",
     "real-acceptance",
@@ -72,9 +72,11 @@
       "status": "planned",
       "evidence": "public-xctest-api-reviewed",
       "triton_runner": false,
-      "runner_gate": "implemented",
-      "runner_artifact": "not-present",
-      "specialized_simulator_runtime": "not-available-on-host"
+      "runner_gate": "transport-and-audit-repaired-fixture-validation",
+      "runner_artifact": "native-build-for-testing-passed",
+      "specialized_simulator_runtime": "official-download-failed-mobileasset-47",
+      "real_input": "not-run",
+      "action_button_postcondition": "not-implemented-no-event-sent"
     },
     {
       "id": "watch-side-key",
@@ -87,9 +89,10 @@
       "status": "planned",
       "evidence": "public-xcuiremote-and-focus-api-reviewed",
       "triton_runner": false,
-      "runner_gate": "implemented",
-      "runner_artifact": "not-present",
-      "specialized_simulator_runtime": "not-available-on-host"
+      "runner_gate": "transport-and-audit-repaired-fixture-validation",
+      "runner_artifact": "native-build-for-testing-passed",
+      "specialized_simulator_runtime": "official-download-failed-mobileasset-47",
+      "real_input": "not-run"
     },
     {
       "id": "visionos-2d-ui",

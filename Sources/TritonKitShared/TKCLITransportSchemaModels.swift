@@ -148,6 +148,10 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
     }
 
     public static func recoveryCategories(forFailureCode failureCode: String) -> [String] {
+        // Runner failures may follow delivered input. Inspect evidence before replanning; never suggest replay.
+        if failureCode.hasPrefix("runner_") || failureCode.hasPrefix("invalid_runner_") || failureCode == "unsupported_runner_action" {
+            return ["diagnose", "plan"]
+        }
         var categories: [String] = []
         if targetFailureCodesRequiringRecovery.contains(failureCode) {
             categories.append("prepare-target")

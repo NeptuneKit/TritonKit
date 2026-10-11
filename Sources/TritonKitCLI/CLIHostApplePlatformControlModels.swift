@@ -1,8 +1,8 @@
 import ArgumentParser
 import Foundation
 
-/// The Apple platform controls that have a public XCTest vocabulary but no
-/// Triton host runner yet. These values are intentionally narrower than the
+/// The Apple platform controls that have a public XCTest vocabulary and no
+/// implicit device execution. These values are intentionally narrower than the
 /// platform catalogue: a catalogue entry is not evidence of an executor.
 enum HostApplePlatformControlPlatform: String, CaseIterable, Codable, ExpressibleByArgument {
     case watchos

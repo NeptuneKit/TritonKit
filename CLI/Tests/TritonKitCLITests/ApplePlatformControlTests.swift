@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TritonKitShared
 @testable import TritonKitCLI
 
 @Suite("Apple specialized platform controls remain explicit fixture-only contracts")
@@ -13,7 +14,17 @@ struct ApplePlatformControlTests {
         #expect(control.requiredOptions == ["--platform", "--action"])
         #expect(control.optionalOptions.contains("--delta"))
         #expect(control.outputSelectors == ["host.apple-platform-control"])
+        #expect(control.failureCodes.contains("runner_target_family_mismatch"))
+        #expect(control.failureCodes.contains("runner_timed_out"))
+        #expect(Set(control.failureCodes).isSubset(of: Set(device.failureCodes)))
         #expect(commandSchemas().flatMap(\.outputContracts).contains { $0.selector == "host.apple-platform-control" })
+    }
+
+    @Test("runner failure recovery never suggests replaying input")
+    func runnerFailureRecovery() {
+        for code in applePlatformRunnerFailureCodes {
+            #expect(TKCommandRecoveryCommand.recoveryCategories(forFailureCode: code) == ["diagnose", "plan"])
+        }
     }
 
     @Test("watchOS Crown and Action map only to public XCTest symbols")

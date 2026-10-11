@@ -20,7 +20,7 @@
 
 ### Crown、Action 和侧键
 
-- 状态：**runner 执行门禁已实现，真实验收待 runner 产物与专用 runtime**。
+- 状态：**runner 请求/附件/审计修复，双平台测试产物构建通过；真实输入受 runtime 下载失败阻塞**。
 - 可编程方向：watch UI-test 可使用 `XCUIDevice.shared.rotateDigitalCrown(delta:)` 及 velocity 变体；Action button 可通过 `hasHardwareButton(.action)` 和 `press(.action)` 建模。
 - 侧键：公开 XCTest 没有可稳定表达普通侧键的精确枚举；不得用 Action button 或 GUI 菜单替代。
 - 接入前 BDD：
@@ -33,7 +33,7 @@
 
 ### 焦点导航、选择和返回
 
-- 状态：**runner 执行门禁已实现，真实验收待 runner 产物与专用 runtime**。
+- 状态：**runner 请求/附件/审计修复，双平台测试产物构建通过；真实输入受 runtime 下载失败阻塞**。
 - 可编程方向：`XCUIRemote.shared.press(.up/.down/.left/.right/.select/.menu)`；焦点后置断言使用 `XCUIElement.hasFocus`。
 - `menu` 的返回语义必须由目标 UI 后置状态确认，不能只依据按键调用无异常。
 - 接入前 BDD：
@@ -82,3 +82,5 @@
 - 审计目录和诊断归档使用私有权限、原始 FD/device+inode 校验、nofollow 和有界复制；目录替换后不可向替代路径报告成功。
 - 诊断 ZIP 的大小上限是本地接纳和发布预算，不等于采集阶段磁盘峰值；不覆盖既有文件、不跟随符号链接、不解压业务内容。
 - 不执行真机配对、诊断采集、临时域真实创建或未授权挂载验收。
+
+2026-10-11 真实验收启动发现旧门禁未向 XCTest 传参、误解析 stdout、无持久审计；已进入修复回归。tvOS/watchOS 独立测试工程均实际 build-for-testing 通过，但 runtime 官方下载报 MobileAsset 网络错误 47，因此尚无输入送达或后置状态成功证据。Action 按钮的可验证后置断言仍未实现，不发送事件。

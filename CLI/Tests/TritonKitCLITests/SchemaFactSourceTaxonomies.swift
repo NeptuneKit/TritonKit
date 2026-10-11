@@ -322,6 +322,9 @@ func recoveryCommandRootCategoryMap() -> [String: String] {
 }
 
 func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
+    if failureCode.hasPrefix("runner_") || failureCode.hasPrefix("invalid_runner_") || failureCode == "unsupported_runner_action" {
+        return ["diagnose", "plan"]
+    }
     switch failureCode {
     case "ambiguous_target", "android_target_unauthorized", "device_not_ready", "simulator_not_booted", "simulator_not_found", "target_not_found", "target_platform_mismatch", "target_unavailable":
         return ["discover", "prepare-target", "diagnose"]

@@ -25,7 +25,7 @@ private func applePlatformProfiles() -> [HostApplePlatformProfile] {
     ]
 }
 
-func makeApplePlatformReport(inventory: Bool = false, family: HostApplePlatformFamily? = nil, includeRealDevices: Bool = false, device: String? = nil, simulatorProvider: (() throws -> [HostDeviceTarget])? = nil, physicalProvider: (() throws -> Data)? = nil) throws -> HostApplePlatformReport {
+func makeApplePlatformReport(inventory: Bool = false, family: HostApplePlatformFamily? = nil, includeRealDevices: Bool = false, device: String? = nil, simulatorProvider: (() throws -> [TKHostSimulatorTarget])? = nil, physicalProvider: (() throws -> Data)? = nil) throws -> HostApplePlatformReport {
     guard family != .unknown else { throw HostDeviceSelectionError.parameterConflict("Choose a known Apple catalog family; unknown is metadata classification only, not a control selector.") }
     if let device {
         guard includeRealDevices, !device.isEmpty, device.utf8.count <= 1024,
@@ -40,8 +40,12 @@ func makeApplePlatformReport(inventory: Bool = false, family: HostApplePlatformF
     var physicalDevices: [TKApplePhysicalInventoryDevice] = []
     do {
         if inventory {
-            let targets = try (simulatorProvider ?? { try hostDeviceTargets(platform: .ios, scope: .simulator, hdc: "hdc", adb: "adb").targets })()
-            for target in targets { counts[appleSimulatorPlatformFamily(runtime: target.runtime), default: 0] += 1 }
+            // Classify native identifiers before the legacy display DTO turns
+            // them into values such as "iOS 27.0".
+            let targets = try (simulatorProvider ?? {
+                try TKSimctlDeviceListParser.parse(runHostCommand(TKSimctlCommand.listAvailableDevices()).stdoutData)
+            })()
+            for target in targets { counts[appleSimulatorPlatformFamily(runtime: target.runtimeIdentifier), default: 0] += 1 }
             sources.append(hostSourceCommand(TKSimctlCommand.listAvailableDevices()))
         }
         if includeRealDevices {

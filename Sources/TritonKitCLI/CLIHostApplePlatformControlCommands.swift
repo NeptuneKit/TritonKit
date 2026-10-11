@@ -1,14 +1,15 @@
 import ArgumentParser
+import Foundation
 
 struct DevicePlatformControl: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "platform-control", abstract: "Describe watchOS/tvOS public control contracts without executing device input")
+    static let configuration = CommandConfiguration(commandName: "platform-control", abstract: "Describe Apple platform controls or explicitly execute one audited specialized XCTest method")
 
     @Option(help: "Apple family: watchos|tvos|visionos|macos") var platform: HostApplePlatformControlPlatform
     @Option(help: "Control vocabulary: crown-rotate|action-button|remote-up|remote-down|remote-left|remote-right|remote-select|remote-menu|focus|side-button|gaze|pinch|scene") var action: HostApplePlatformControlAction
     @Option(help: "watchOS crown delta; finite non-zero value in -1000...1000, required only for crown-rotate") var delta: Double?
     @Option(help: "Exact Simulator UDID for an explicit XCTest runner execution") var device: String?
     @Option(name: .customLong("xctestrun"), help: "Absolute private .xctestrun bundle for an explicit runner execution") var xctestrun: String?
-    @Option(name: .customLong("test-identifier"), help: "One XCTest target/class[/method] identifier") var testIdentifier: String?
+    @Option(name: .customLong("test-identifier"), help: "One exact XCTest Target/Class/testMethod identifier") var testIdentifier: String?
     @Option(name: .customLong("result-bundle"), help: "Fresh private .xcresult path") var resultBundle: String?
     @Option(help: "Runner timeout in seconds") var timeout: Double = 120
     @Option(name: .customLong("audit-record"), help: "Opaque audit record for explicit runner execution") var auditRecord: String?
@@ -25,12 +26,13 @@ struct DevicePlatformControl: AsyncParsableCommand {
                 guard let device, let xctestrun, let testIdentifier, let auditRecord else {
                     throw HostApplePlatformControlError(code: "runner_options_incomplete", message: "Explicit runner execution requires --device, --xctestrun, --test-identifier, --result-bundle, and --audit-record.", hint: "Omit runner options for fixture-only planning, or provide the complete audited runner request.")
                 }
-                let request = try makeApplePlatformRunnerRequest(platform: platform, action: action, device: device, xctestrun: xctestrun, testIdentifier: testIdentifier, resultBundle: resultBundle, nonce: auditRecord, timeout: timeout, executeRunner: executeRunner, confirm: confirm, auditRecord: auditRecord)
+                let request = try makeApplePlatformRunnerRequest(platform: platform, action: action, device: device, xctestrun: xctestrun, testIdentifier: testIdentifier, resultBundle: resultBundle, nonce: UUID().uuidString, timeout: timeout, executeRunner: executeRunner, confirm: confirm, auditRecord: auditRecord, crownDelta: delta)
                 let receipt = try executeApplePlatformRunner(request)
                 switch outputFormat {
                 case .json: print(try encodeJSON(receipt))
                 case .text: print("\(receipt.platform.rawValue)\t\(receipt.control.rawValue)\t\(receipt.outcome.rawValue)\t\(receipt.verification)")
                 }
+                if !receipt.ok { throw ExitCode.failure }
                 return
             }
             let output = try makeApplePlatformControlPlan(platform: platform, action: action, crownDelta: delta)
