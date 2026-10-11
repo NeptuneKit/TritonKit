@@ -1,12 +1,10 @@
 import Foundation
 import Testing
+import TritonKitShared
 @testable import TritonKitCLI
 
 @Suite("Apple platform report fails closed without changing legacy targets")
 struct ApplePlatformReportTests {
-    private func target(_ runtime: String?, name: String = "PRIVATE-IPAD-NAME") -> HostDeviceTarget {
-        HostDeviceTarget(platform: "ios", id: "sim:PRIVATE-ID", target: "PRIVATE-ID", state: "Booted", ready: true, source: "simctl", name: name, runtime: runtime, transport: nil, scope: "simulator", kind: "simulator")
-    }
     @Test func catalogWithoutIO() throws {
         var calls = 0
         let report = try makeApplePlatformReport(simulatorProvider: { calls += 1; return [] })
@@ -27,13 +25,22 @@ struct ApplePlatformReportTests {
         }
     }
     @Test func singleMetadataQueryNoNameInferenceOrRawEcho() throws {
+        // Exercise the native parser boundary instead of injecting identifiers
+        // into HostDeviceTarget.runtime, which is a human-readable display value.
+        let data = Data(#"{"devices":{"com.apple.CoreSimulator.SimRuntime.iOS-27-0":[{"udid":"PRIVATE-IOS-0","name":"PRIVATE-iPad","state":"Shutdown","isAvailable":true}],"com.apple.CoreSimulator.SimRuntime.iOS-27-1":[{"udid":"PRIVATE-IOS-1","name":"PRIVATE-Apple-Watch","state":"Shutdown","isAvailable":true}],"com.apple.CoreSimulator.SimRuntime.watchOS-27-0":[{"udid":"PRIVATE-WATCH","name":"PRIVATE-iPhone","state":"Shutdown","isAvailable":true}],"com.apple.CoreSimulator.SimRuntime.tvOS-27-0":[{"udid":"PRIVATE-TV","name":"PRIVATE-TV","state":"Shutdown","isAvailable":true}],"com.apple.CoreSimulator.SimRuntime.xrOS-27-0":[{"udid":"PRIVATE-VISION","name":"PRIVATE-Vision","state":"Shutdown","isAvailable":true}],"PRIVATE-RUNTIME":[{"udid":"PRIVATE-UNKNOWN","name":"PRIVATE-iPhone","state":"Shutdown","isAvailable":true}],"iOS 27.0":[{"udid":"PRIVATE-DISPLAY","name":"PRIVATE-iPad","state":"Shutdown","isAvailable":true}]}}"#.utf8)
+        let targets = try TKSimctlDeviceListParser.parse(data)
+        let ios = try #require(targets.first { $0.udid == "PRIVATE-IOS-0" })
+        #expect(hostDeviceTarget(from: ios).runtime == "iOS 27.0")
         var calls = 0
         let report = try makeApplePlatformReport(inventory: true, family: .ipados, simulatorProvider: {
             calls += 1
-            return [target("com.apple.CoreSimulator.SimRuntime.iOS-27-0"), target("com.apple.CoreSimulator.SimRuntime.watchOS-27-0"), target(nil), target("PRIVATE-RUNTIME")]
+            return targets
         })
         #expect(calls == 1 && report.inventoryObserved && report.profiles.count == 1 && report.profiles.first?.family == .ipados)
-        #expect(report.simulatorCounts.first { $0.family == .ios }?.count == 1)
+        #expect(report.simulatorCounts.first { $0.family == .ios }?.count == 2)
+        #expect(report.simulatorCounts.first { $0.family == .watchos }?.count == 1)
+        #expect(report.simulatorCounts.first { $0.family == .tvos }?.count == 1)
+        #expect(report.simulatorCounts.first { $0.family == .visionos }?.count == 1)
         #expect(report.simulatorCounts.first { $0.family == .ipados }?.count == 0)
         #expect(report.simulatorCounts.first { $0.family == .unknown }?.count == 2)
         let text = try encodeJSON(report)

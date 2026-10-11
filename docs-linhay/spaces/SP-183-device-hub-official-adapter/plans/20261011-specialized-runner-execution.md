@@ -2,7 +2,7 @@
 
 本切片把 watchOS/tvOS 的“公开 XCTest API fixture”推进到可审计的 Triton 执行边界，同时保留没有 runner 产物或专用 Simulator 时的失败关闭行为。
 
-## 已实现
+## 初始切片（历史）
 
 - `device platform-control` 增加显式 runner 参数：`--device`、`--xctestrun`、`--test-identifier`、`--result-bundle`、`--timeout`、`--audit-record`、`--execute-runner`、`--confirm`。
 - 只接受完整 36 字符 Simulator UDID；拒绝 `booted`、`current`、名称、别名和 physical selector。
@@ -26,3 +26,7 @@
 ## 下一步
 
 准备一个隔离的 watchOS/tvOS UI-test target 和 build-for-testing 产物后，使用专用 Simulator 重跑真实 Crown/Action、remote/select/menu 后置断言；在此之前保持 fixture-only/unsupported 分层。
+
+## 真实验收启动后的修正
+
+初始实现仅有 fixture，实际 xcodebuild stdout 不能作为单个结果 JSON，action/delta/nonce 未传给 XCTest，审计未落盘，不能称为可执行完成。2026-10-11 后续修复见[真实验收记录](20261011-live-platform-acceptance.md)：私有 plist 注入、原生 xcresult attachment、单方法/单次执行与持久 audit，SDK 测试构建已通过，实际输入仍受 runtime 下载网络失败阻塞。

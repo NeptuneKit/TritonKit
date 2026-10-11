@@ -1,6 +1,6 @@
 # SP-183 Device Hub 官方设备能力适配
 
-> 建立2026-10-08，更新2026-10-10；原批次已并入基线 `21e6c1db`；当前四批中可验证后端已实现并完成fixture/专用Simulator分层验收，专门平台输入仍未支持，最终local门禁通过，独立 worktree `SP-183-device-hub-capability-batches`，本轮不提交/合并/推送/发布、不真机写入或诊断采集。历史记录保留当时授权与状态，不能视为当前授权。
+> 建立 2026-10-08，更新 2026-10-11。当前开始专门平台真实验收，执行修复位于 `SP-183-live-platform-acceptance`。tvOS/watchOS SDK 构建通过，runtime 官方下载遭遇 MobileAsset 网络错误 47，尚无真实输入成功证据。此前 runner gate 的单测不证明可执行闭环；本轮修正请求传递、附件与审计。用户已授权测后本地合并，未授权推送/发布或真机配对、解除配对、诊断采集。历史段落仅记录当时状态。
 
 [会话沉淀与四批后续计划](<./plans/20261010-session-recap-v01.md>)统一记录已接入能力、证据分层和提交范围。历史“未提交”段落保留当时快照；本次授权不覆盖主仓SP-181/182或扩展真机动作范围。
 
@@ -167,3 +167,7 @@ Given fresh identity-bound existing device info JSON，When读取hardware.platfo
 ## 四批实际能力推进（2026-10-10）
 
 以[四批实施与验收](./plans/20261010-capability-batches.md)和[能力矩阵](./plans/20261009-full-capability-matrix.md)为当前事实。SDK bundle/group 原生容器绑定独立于 DeviceFS 名称；Temporary 明确可能创建、完整策略/审计前拒绝；管理动作仅隔离fixture；专门平台后端缺口诚实保留。基线SP-181/182已存在，本轮补登记解除旧docs索引缺口；主工作区既有三处UU保持原样。
+
+## 2026-10-11 真实验收启动
+
+见[真实验收执行记录](plans/20261011-live-platform-acceptance.md)。双平台独立 App/XCTest 已实际 build-for-testing，通过不等于动作验收；无 runtime 不创建业务实例替代。

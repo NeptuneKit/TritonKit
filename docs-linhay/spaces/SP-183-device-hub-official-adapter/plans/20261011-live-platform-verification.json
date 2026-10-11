@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-11",
+  "status": "blocked-specialized-runtime",
+  "requested": "dedicated-watchos-tvos-live-input-acceptance",
+  "actual": {
+    "tvosBuildForTesting": "passed",
+    "watchosBuildForTesting": "passed",
+    "macosXCTestAttachmentTransport": {
+      "entrypoint": "triton xcode test",
+      "testsPassed": 1,
+      "deviceInput": false,
+      "testIdRequiresParentheses": true,
+      "attachmentNamePattern": "triton-platform-result_<index>_<UUID>.json"
+    },
+    "simulatorInventory": {
+      "before": {
+        "ios": 0,
+        "unknown": 18
+      },
+      "after": {
+        "ios": 18,
+        "unknown": 0
+      }
+    },
+    "runtimeDownloads": {
+      "tvos": {
+        "attempts": 2,
+        "exitCode": 70,
+        "errorDomain": "com.apple.MobileAssetError.Download",
+        "errorCode": 47
+      },
+      "watchos": {
+        "attempts": 1,
+        "exitCode": 70,
+        "errorDomain": "com.apple.MobileAssetError.Download",
+        "errorCode": 47
+      }
+    },
+    "specializedInputExecuted": false,
+    "realDeviceWrites": false,
+    "diagnosticsCollected": false,
+    "existingSimulatorsMutated": false,
+    "preflightCLI": [
+      {
+        "case": "unavailable",
+        "failureCode": "runner_target_unavailable",
+        "outcome": "not_started",
+        "exitCode": 1,
+        "singleJSON": true,
+        "auditPrivate": true,
+        "xcodebuildInvoked": false
+      },
+      {
+        "case": "wrong-family",
+        "failureCode": "runner_target_family_mismatch",
+        "outcome": "not_started",
+        "exitCode": 1,
+        "singleJSON": true,
+        "auditPrivate": true,
+        "xcodebuildInvoked": false
+      }
+    ],
+    "simulatorNamesStatesCompared": 18
+  },
+  "remaining": [
+    "official watchOS/tvOS Simulator runtime installation",
+    "dedicated Simulator creation and real Crown/remote/focus postcondition acceptance",
+    "watch Action isolated observable postcondition"
+  ],
+  "rawEvidence": "private .triton/live-acceptance in retained SP-183-live-platform-acceptance worktree",
+  "verification": "Native XCTest attachment transport is not watchOS/tvOS input acceptance.",
+  "regression": {
+    "cliSwiftTesting": {
+      "passed": 1153,
+      "suites": 104
+    },
+    "cliXCTest": {
+      "passed": 26
+    },
+    "ciDocs": "passed",
+    "docsStructure": "passed",
+    "rootSwiftTesting": {
+      "passed": 314,
+      "suites": 44
+    },
+    "rootXCTest": {
+      "passed": 7
+    },
+    "localGate": {
+      "passed": true,
+      "xcodeGenericBuild": "explicitly-skipped-TRITON_VERIFY_XCODE=0",
+      "dedicatedTVWatchBuild": "separately-passed"
+    }
+  }
+}

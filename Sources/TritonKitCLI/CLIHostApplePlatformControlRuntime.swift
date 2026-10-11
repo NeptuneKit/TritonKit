@@ -43,7 +43,7 @@ func makeApplePlatformControlPlan(platform: HostApplePlatformControlPlatform, ac
             sourceAPI: descriptor.sourceAPI,
             verification: fixtureVerification,
             limitations: [
-                "The public XCTest symbol is recorded as a fixture contract only; Triton has no watchOS/tvOS UI-test runner or target binding.",
+                "This request only describes a public XCTest contract; explicit runner execution requires a dedicated built artifact, exact target and complete execution policy.",
                 "No simulator, physical device, app, focus tree, Crown delta, or remote event was read or changed.",
                 "A fixture-only result must not be reported as input delivery or business-state completion."
             ]
