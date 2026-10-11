@@ -1,0 +1,35 @@
+{
+  "space": "SP-183-device-hub-official-adapter",
+  "date": "2026-10-11",
+  "scope": "capability-batches-1-to-4",
+  "status": "contract-closeout",
+  "evidence_levels": ["implemented", "real-acceptance", "fixture", "planned", "gui-only", "unsupported"],
+  "real_device_actions": "not-authorized-and-not-run",
+  "capabilities": [
+    {"id": "app-container-binding", "status": "implemented", "evidence": "real-shallow-metadata-plus-fixture", "business_content_read": false},
+    {"id": "app-group-binding", "status": "implemented", "evidence": "real-shallow-metadata-plus-mismatch-fixture", "name_inference": false},
+    {"id": "devicefs-mountpoint", "status": "implemented", "evidence": "fixture-and-regression", "side_effect": "possible-implicit-mount", "mount_created": "unknown", "audit_required": true},
+    {"id": "crash-file-domain", "status": "implemented", "evidence": "existing-real-evidence-and-regression", "content_copy": false},
+    {"id": "crash-devicefs-domain", "status": "implemented", "evidence": "fixture", "missing_directory": "directory_unavailable"},
+    {"id": "temporary-domain", "status": "implemented", "evidence": "fixture-and-early-rejection", "may_create_domain": true, "real_creation": "not-run"},
+    {"id": "device-pair-unpair", "status": "implemented", "evidence": "fixture", "real_write": "not-run", "post_state_required": true},
+    {"id": "device-diagnose", "status": "implemented", "evidence": "fixture", "real_collection": "not-run", "archive_no_overwrite": true, "archive_nofollow": true},
+    {"id": "watch-crown-action", "status": "planned", "evidence": "public-xctest-api-reviewed", "triton_runner": false},
+    {"id": "watch-side-key", "status": "unsupported", "evidence": "no-stable-public-enum", "gui_only": true},
+    {"id": "tvos-focus-remote", "status": "planned", "evidence": "public-xcuiremote-and-focus-api-reviewed", "triton_runner": false},
+    {"id": "visionos-2d-ui", "status": "planned", "evidence": "public-direction-reviewed", "triton_runner": false},
+    {"id": "visionos-spatial-gaze-6dof", "status": "unsupported", "evidence": "no-stable-headless-backend", "gui_only": false},
+    {"id": "macos-xcode-workflow", "status": "implemented", "evidence": "existing-compatibility-tests", "device_hub_control": false},
+    {"id": "non-ios-physical-discovery", "status": "fixture", "evidence": "ios-real-plus-non-ios-fixture", "unknown_fields": "preserved"},
+    {"id": "sdk-xcode-compatibility", "status": "implemented", "evidence": "new-old-fixtures-and-current-sdk-regression", "old_sdk_real": false},
+    {"id": "security-audit-budget", "status": "implemented", "evidence": "replacement-symlink-permission-size-fixtures", "business_content_read": false}
+  ],
+  "required_gates": [
+    "schema-and-public-command-snapshot-match",
+    "old-command-and-argument-regression",
+    "identity-bound-file-json",
+    "explicit-side-effect-policy-and-audit",
+    "no-overwrite-nofollow-private-archive",
+    "dedicated-target-real-evidence-for-real-acceptance"
+  ]
+}

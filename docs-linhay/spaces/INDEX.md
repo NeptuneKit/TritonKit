@@ -1,7 +1,7 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-10（合入基线已含 SP-181/182，补齐登记；SP-183能力组独立worktree）
+> 最近同步：2026-10-11（SP-183 四批契约与兼容矩阵已验，待主线收口）
 > 覆盖范围：183/183 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
@@ -209,4 +209,4 @@
 | `SP-180-xcode27-simulator-frameworks` | [`SP-180-xcode27-simulator-frameworks`](./SP-180-xcode27-simulator-frameworks/README.md) | 兼容修复验证／命中待补 | Xcode27 SharedFrameworks 子进程加载器恢复；8测试、CLI993+14及本地门禁通过（10-06）；host ACK导航仍待独立补验，未发布 |
 | `SP-181-device-hub-paradigm` | [`SP-181-device-hub-paradigm`](./SP-181-device-hub-paradigm/README.md) | 研究已归档 | 基线已有目录，补回索引；实现待定 |
 | `SP-182-trusted-execution-system` | [`SP-182-trusted-execution-system`](./SP-182-trusted-execution-system/README.md) | 设计已归档 | 基线已有目录，补回索引；实施待立项 |
-| `SP-183-device-hub-official-adapter` | [`SP-183-device-hub-official-adapter`](./SP-183-device-hub-official-adapter/README.md) | 本批后端已验／待集成 | 原SP183已并入基线21e6c1db；新worktree SP-183-device-hub-capability-batches SDK语义容器/Crash/Temporary policy/管理执行/watch配对/physical metadata已实现；CLI1135+14/root313+7；App5/Group2实际、管理/非iOS硬件fixture、专门输入未支持；fixture/live分层，无真机写/诊断采集、无提交合并发布 |
+| `SP-183-device-hub-official-adapter` | [`SP-183-device-hub-official-adapter`](./SP-183-device-hub-official-adapter/README.md) | 四批契约已验／待主线收口 | 容器语义、Crash/Temporary 边界、管理执行后端、watch 配对与 Apple physical metadata 已实现；watchOS/tvOS 控制 fixture-only，visionOS 空间与 macOS Device Hub unsupported；兼容矩阵与 public schema 已回归；不执行真机写入、诊断采集或 Temporary 创建 |
