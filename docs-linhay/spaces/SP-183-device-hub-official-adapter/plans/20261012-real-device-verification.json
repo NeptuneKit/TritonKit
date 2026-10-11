@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-12",
+  "status": "readonly-real-device-validation-passed",
+  "scope": "SP-183 Apple physical readonly metadata",
+  "cliSourceCommit": "6f20aec1",
+  "deviceInventory": {
+    "physicalRecords": 3,
+    "connected": 2,
+    "offline": 1,
+    "families": [
+      "iphone"
+    ],
+    "connectionStatesUnchanged": true
+  },
+  "passed": {
+    "deviceInfoAndLockState": 2,
+    "waitReady": 2,
+    "crashShallowMetadata": {
+      "devices": 2,
+      "entryCounts": [
+        159,
+        23
+      ],
+      "contentsRead": false
+    },
+    "appContainerSDKBindings": 4,
+    "appGroupSDKBindings": 1,
+    "hostFilesystemInspected": false,
+    "crashBudgetRejection": "device_files_limit_exceeded",
+    "temporaryNoPolicyRejection": "device_file_domain_policy_required",
+    "realContainerListingRejection": "app_container_unsupported_listing",
+    "administrationPlans": {
+      "pair": "planned-not-executed",
+      "unpair": "planned-not-executed",
+      "diagnose": "planned-not-executed"
+    }
+  },
+  "privacy": {
+    "artifactsChecked": 24,
+    "nativeArtifactsOwnerOnly": true,
+    "diagnosticArchiveExists": false,
+    "rawEvidence": "retained SP-183-live-platform-acceptance worktree .triton/real-acceptance-20261012"
+  },
+  "notExecuted": [
+    "pair/unpair writes",
+    "diagnostic collection",
+    "temporary domain creation",
+    "DeviceFS mount",
+    "app install/launch/uninstall",
+    "business file reads",
+    "watchOS/tvOS physical input"
+  ],
+  "limitations": [
+    "embedded server unavailable; host metadata validation only",
+    "no connected non-iOS Apple hardware",
+    "SDK identity binding does not prove real-device filesystem enumeration"
+  ]
+}

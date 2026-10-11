@@ -1,6 +1,8 @@
 # SP-183 Device Hub 官方设备能力适配
 
-> 建立 2026-10-08，更新 2026-10-11。当前开始专门平台真实验收，执行修复位于 `SP-183-live-platform-acceptance`。tvOS/watchOS SDK 构建通过，runtime 官方下载遭遇 MobileAsset 网络错误 47，尚无真实输入成功证据。此前 runner gate 的单测不证明可执行闭环；本轮修正请求传递、附件与审计。用户已授权测后本地合并，未授权推送/发布或真机配对、解除配对、诊断采集。历史段落仅记录当时状态。
+2026-10-12：[真机只读验收](./plans/20261012-real-device-verification.md)在2台在线 iPhone 上通过设备信息/锁状态/readiness/Crash metadata，另通过4个App容器与1个App Group的SDK语义绑定；管理命令仅计划，真实写入与诊断仍未验收。
+
+> 建立 2026-10-08，更新 2026-10-12。当前开始专门平台真实验收，执行修复位于 `SP-183-live-platform-acceptance`。tvOS/watchOS SDK 构建通过，runtime 官方下载遭遇 MobileAsset 网络错误 47，尚无真实输入成功证据。此前 runner gate 的单测不证明可执行闭环；本轮修正请求传递、附件与审计。用户已授权测后本地合并，未授权推送/发布或真机配对、解除配对、诊断采集。历史段落仅记录当时状态。
 
 [会话沉淀与四批后续计划](<./plans/20261010-session-recap-v01.md>)统一记录已接入能力、证据分层和提交范围。历史“未提交”段落保留当时快照；本次授权不覆盖主仓SP-181/182或扩展真机动作范围。
 

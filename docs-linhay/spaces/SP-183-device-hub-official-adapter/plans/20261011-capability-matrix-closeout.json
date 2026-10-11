@@ -11,19 +11,22 @@
     "gui-only",
     "unsupported"
   ],
-  "real_device_actions": "not-authorized-and-not-run",
+  "real_device_actions": "readonly-metadata-validated; writes-and-collection-not-run",
   "capabilities": [
     {
       "id": "app-container-binding",
       "status": "implemented",
       "evidence": "real-shallow-metadata-plus-fixture",
-      "business_content_read": false
+      "business_content_read": false,
+      "physical_sdk_binding": "4-apps-passed",
+      "physical_filesystem_listing": "unsupported"
     },
     {
       "id": "app-group-binding",
       "status": "implemented",
       "evidence": "real-shallow-metadata-plus-mismatch-fixture",
-      "name_inference": false
+      "name_inference": false,
+      "physical_sdk_binding": "1-membership-and-path-passed"
     },
     {
       "id": "devicefs-mountpoint",
@@ -37,7 +40,9 @@
       "id": "crash-file-domain",
       "status": "implemented",
       "evidence": "existing-real-evidence-and-regression",
-      "content_copy": false
+      "content_copy": false,
+      "physical_readonly_devices": 2,
+      "physical_budget_rejection": "passed"
     },
     {
       "id": "crash-devicefs-domain",
@@ -138,5 +143,7 @@
     "explicit-side-effect-policy-and-audit",
     "no-overwrite-nofollow-private-archive",
     "dedicated-target-real-evidence-for-real-acceptance"
-  ]
+  ],
+  "updated": "2026-10-12",
+  "real_device_verification": "20261012-real-device-verification.json"
 }

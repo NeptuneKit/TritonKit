@@ -4,10 +4,10 @@
 
 | 能力组 | 当前状态 | 证据等级 | 下一步 / 明确边界 |
 | --- | --- | --- | --- |
-| App 容器 bundle → 原生容器 | 已实现 | 真实浅 metadata + fixture | 仅接受 SDK bundle identity 与精确目标绑定；不从目录名推断，不读业务内容 |
-| App Group group ID → 原生容器 | 已实现 | 真实浅 metadata + 错配 fixture | membership 与 path 双校验；不从 App 名称或目录名推断 |
+| App 容器 bundle → 原生容器 | 已实现 | Simulator 浅 metadata + iPhone SDK 绑定真实 + fixture | 仅接受 SDK bundle identity 与精确目标绑定；不从目录名推断，不读业务内容 |
+| App Group group ID → 原生容器 | 已实现 | Simulator 浅 metadata + iPhone SDK membership/path 真实 + 错配 fixture | membership 与 path 双校验；不从 App 名称或目录名推断 |
 | 原生 DeviceFS 容器/受限子目录 | 已实现 | 真实既有路径 + mount/目录替换 fixture | 可能隐式挂载，必须显式策略与审计；`mountCreated=unknown`；保留 view、child 和预算 |
-| Crash 文件日志域 | 已实现 | 既有真实证据 + 回归 | 与 DeviceFS `DiagnosticReports` 目录、整机诊断 ZIP 分离；不复制内容 |
+| Crash 文件日志域 | 已实现 | 2台 iPhone 浅 metadata 与预算拒绝真实 + 回归 | 与 DeviceFS `DiagnosticReports` 目录、整机诊断 ZIP 分离；不复制内容 |
 | Crash DeviceFS 目录 | 已实现 | fixture；当前专用 Simulator 缺目录 | 固定目录和 `directory_unavailable`；不猜 root、不降级为其他域 |
 | Temporary 查询域 | 已实现执行边界 | fixture + 无策略早拒绝 | 可能创建临时域；必须显式策略、intent/completion 审计；真实创建未授权 |
 | pair / unpair | 已实现执行后端 | fixture；未做真机写入 | `execute-runner + confirm + audit-record`；file JSON 身份绑定；后置 paired/unpaired 独立确认 |
@@ -36,3 +36,5 @@
 ## 本批完成判定
 
 四批可以称为“文档与契约收口”，但不能称为完整 Device Hub 接入，除非 watch/tvOS runner、visionOS 2D（如要支持）和对应专用目标真实验收均完成。当前仍有明确计划和未支持项，且未执行真机写入、真实诊断采集、Temporary 真实创建或未授权挂载。
+
+2026-10-12 真机增量：[只读验收](20261012-real-device-verification.md)。仍不升级 pair/unpair/diagnose、Temporary 创建或 watch/tvOS 输入的证据等级。
