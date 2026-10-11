@@ -162,3 +162,5 @@ Crash 的三条契约独立：`device files --domain-type systemCrashLogs` 是 C
 Temporary 查询可能创建客户端域，实际是否新建没有可靠后置证据。默认继续返回 `device_file_domain_policy_required`；只有 `device files --domain-type temporary --domain-identifier <client-id> --allow-domain-creation --confirm --execute-runner --audit-record <id>` 才允许执行，执行前持久审计，`riskLevel=automation`、creation unknown，失败可能已经创建且不自动重试。本轮无真实 Temporary 查询。
 
 `sim pairs --json` 读取原生 watch/phone 配对关系，不证明输入、连接或业务就绪。`device platforms --include-real-devices [--device <exact-id-or-inventory-token>] --json` 独立发现/选择 Apple physical 硬件元数据；只有 SDK 显式 physical 纳入，不从名称、transport 或 capability 数组推断，旧 iOS 路由不扩大。Crown/侧键、tvOS 焦点/选择/返回、visionOS 视角/场景/专门输入仍无已验证程序后端，明确未支持；macOS 仍区分 Xcode build/test 工作流与 Device Hub 控制。
+
+`device platform-control --platform <watchos|tvos|visionos|macos> --action <control> --json` 目前只提供事实契约：watchOS Crown/Action 与 tvOS remote/focus 返回 `fixture-only`（Crown 需有限非零 `--delta`），visionOS gaze/pinch/scene、watchOS side-button 与 macOS Device Hub 控制返回 `unsupported`。所有这些结果均为 `executable=false`、`actionsExecuted=false`；没有 Triton XCTest runner 或目标绑定时，不得把 XCTest API 名称、fixture 或 GUI 证据升级为真实输入验收。

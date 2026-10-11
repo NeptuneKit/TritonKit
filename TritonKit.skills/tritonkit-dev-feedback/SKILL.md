@@ -93,4 +93,6 @@ Temporary 查询可能创建客户端域，实际是否新建没有可靠后置�
 
 `sim pairs --json` 读取原生 watch/phone 配对关系，不证明输入、连接或业务就绪。`device platforms --include-real-devices [--device <exact-id-or-inventory-token>] --json` 独立发现/选择 Apple physical 硬件元数据；只有 SDK 显式 physical 纳入，不从名称、transport 或 capability 数组推断，旧 iOS 路由不扩大。Crown/侧键、tvOS 焦点/选择/返回、visionOS 视角/场景/专门输入仍无已验证程序后端，明确未支持；macOS 仍区分 Xcode build/test 工作流与 Device Hub 控制。
 
+`device platform-control --platform <watchos|tvos|visionos|macos> --action <control> --json` 目前只提供事实契约：watchOS Crown/Action 与 tvOS remote/focus 返回 `fixture-only`（Crown 需有限非零 `--delta`），visionOS gaze/pinch/scene、watchOS side-button 与 macOS Device Hub 控制返回 `unsupported`。所有这些结果均为 `executable=false`、`actionsExecuted=false`；没有 Triton XCTest runner 或目标绑定时，不得把 XCTest API 名称、fixture 或 GUI 证据升级为真实输入验收。
+
 `device pair|unpair|diagnose --platform ios --scope real --device <selector> --plan-only --json` 保留只读策略审查。执行后端要求 `--execute-runner --confirm --audit-record <id>`；diagnose 另需 `--output <private.zip>`，可设 `--maximum-archive-bytes`。先持久化 intent，再单次原生命令、严格 file-JSON 绑定和独立配对后置状态 / 诊断 ZIP 检查，最后写 completion；成功、失败、超时、部分完成分开，未知状态不重试。诊断仍可能包含宿主 CoreDevice 日志，即使关闭 host sysdiagnose；与 Crash 日志域不同。输出目录须已存在且仅当前用户可访问，拒绝覆盖/符号链接，0600 发布及本地大小限额不等于原生采集峰值限制。外部工具使用路径，前后 inode 检查不消除同用户并发替换风险。此后端本轮仅隔离 fixture 验证，未获真机执行/诊断采集验收授权；旧 `sim pair/unpair/diagnose` 保留。
