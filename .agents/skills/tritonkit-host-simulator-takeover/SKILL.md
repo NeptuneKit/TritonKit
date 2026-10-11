@@ -271,3 +271,5 @@ Keep P0/P1 focused on real-project regression value:
 SDK apps 显式 bundle/group 成员与原生路径绑定不等于 DeviceFS 目录绑定；保留两个独立后端，禁止目录名猜语义。Temporary 按可能创建域建模，完整执行策略与持久审计前不得query。管理命令以严格原生JSON和独立后置状态判结果，现代字段存在（包括null）不得复活旧镜像；未知 result 布局保持partial，trust不冒充pairing。诊断ZIP校验须关联central/local records与payload边界，安全发布与真实采集验收分开，fixture不能称真机验证。
 
 `device platform-control --platform <watchos|tvos|visionos|macos> --action <control> --json` 目前只提供事实契约：watchOS Crown/Action 与 tvOS remote/focus 返回 `fixture-only`（Crown 需有限非零 `--delta`），visionOS gaze/pinch/scene、watchOS side-button 与 macOS Device Hub 控制返回 `unsupported`。所有这些结果均为 `executable=false`、`actionsExecuted=false`；没有 Triton XCTest runner 或目标绑定时，不得把 XCTest API 名称、fixture 或 GUI 证据升级为真实输入验收。
+
+显式执行门禁（仍需专用 runner 产物和专用 runtime）：`device platform-control ... --device <exact-udid> --xctestrun <private.xctestrun> --test-identifier <target/class[/method]> --result-bundle <fresh.xcresult> --audit-record <id> --execute-runner --confirm --json`。只接受精确 UDID，执行前校验 watchOS/tvOS runtime family，使用 `xcodebuild test-without-building`；结果必须绑定 target/action/nonce/event/postcondition。普通 exit 0、缺结果、超时或目标替换保持 unknown，不自动重试。

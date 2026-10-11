@@ -20,7 +20,7 @@
 
 ### Crown、Action 和侧键
 
-- 状态：**计划**，尚未接入 Triton runner。
+- 状态：**runner 执行门禁已实现，真实验收待 runner 产物与专用 runtime**。
 - 可编程方向：watch UI-test 可使用 `XCUIDevice.shared.rotateDigitalCrown(delta:)` 及 velocity 变体；Action button 可通过 `hasHardwareButton(.action)` 和 `press(.action)` 建模。
 - 侧键：公开 XCTest 没有可稳定表达普通侧键的精确枚举；不得用 Action button 或 GUI 菜单替代。
 - 接入前 BDD：
@@ -33,7 +33,7 @@
 
 ### 焦点导航、选择和返回
 
-- 状态：**计划**，尚未接入 Triton runner。
+- 状态：**runner 执行门禁已实现，真实验收待 runner 产物与专用 runtime**。
 - 可编程方向：`XCUIRemote.shared.press(.up/.down/.left/.right/.select/.menu)`；焦点后置断言使用 `XCUIElement.hasFocus`。
 - `menu` 的返回语义必须由目标 UI 后置状态确认，不能只依据按键调用无异常。
 - 接入前 BDD：
@@ -41,6 +41,12 @@
   2. Given 选择或返回事件，Then 断言焦点、页面或导航栈变化；无法观察时返回 `unverified`。
   3. Given runner 不可用或目标类型错误，Then 返回 `unsupported`，不得回退到 GUI-only 伪成功。
 - 真实验收前置：独立 tvOS runner、焦点 fixture、选择/返回后置断言和专用目标证据。
+
+## Runner 执行门禁（本批新增）
+
+- `device platform-control` 可在显式 `--execute-runner --confirm`、精确 Simulator UDID、`.xctestrun`、结果包和审计记录齐全时构建一次 `test-without-building` 调用。
+- 执行前校验 Simulator runtime family；结果必须绑定 target/action/nonce/后置断言。普通 exit 0、缺少结果、超时和目标替换均保持 unknown/失败，不自动重试。
+- 当前本机只有 watchOS/tvOS SDK，没有可用对应 Simulator runtime，仓库也没有专用 `.xctestrun`；本批仍无真实输入证据。详见 [runner 执行切片](./20261011-specialized-runner-execution.md)。
 
 ## visionOS
 

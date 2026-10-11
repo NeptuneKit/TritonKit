@@ -14,6 +14,11 @@ func hostApplePlatformControlOutputContract() -> TKCommandOutputContract {
         ("backendKind", "String", true, "public-xctest-api or none"),
         ("sourceAPI", "String?", false, "Public symbol recorded as a contract hint, not proof of execution"),
         ("verification", "String", true, "Fixture-only or unsupported boundary"),
-        ("limitations", "[String]", true, "No runner, target binding, event delivery, focus proof or business completion claim")
+        ("limitations", "[String]", true, "No runner, target binding, event delivery, focus proof or business completion claim"),
+        ("outcome", "String?", false, "planned, executed, failed or unknown for an explicit runner request"),
+        ("targetBinding", "String?", false, "Opaque exact Simulator binding receipt"),
+        ("nonce", "String?", false, "Opaque runner correlation nonce"),
+        ("sourceCommand", "String?", false, "Redacted xcodebuild command for an explicit runner request"),
+        ("failureCode", "String?", false, "Stable runner failure or unknown outcome code")
     ]))
 }
