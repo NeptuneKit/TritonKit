@@ -37,7 +37,7 @@ struct XcodeSchemaParserContractTests {
                 [(path, command)] + command.subcommands.flatMap { collect($0, path: path + [$0.name]) }
             }
             let all = xcode.subcommands.flatMap { collect($0, path: [$0.name]) }
-            for option in xcode.options where option.type != "Subcommand" && !["--json", "--format"].contains(option.name) {
+            for option in xcode.options where option.type != "Subcommand" {
                 let accepting = all.filter { item in
                     let s = item.1
                     return (s.requiredOptions + s.optionalOptions).contains(option.name)
@@ -80,6 +80,8 @@ struct XcodeSchemaParserContractTests {
     }
 
     private static func argv(for name: String, type: String?) -> [String] {
+        if name == "--root" { return [name, ".triton/DerivedData"] }
+        if name == "--format" { return [name, "json"] }
         guard let type, !type.isEmpty else { return [name] }
         if type.hasPrefix("Bool") { return [name] }
         if type.contains("|") {

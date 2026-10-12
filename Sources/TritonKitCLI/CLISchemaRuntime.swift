@@ -315,7 +315,10 @@ private func subcommandWithFailureFamilyRecovery(
         nextCommands: nextCommands,
         recoveryCommands: recoveryCommands,
         outputSelectors: subcommand.outputSelectors,
-        failureCodes: subcommand.failureCodes
+        failureCodes: subcommand.failureCodes,
+        subcommands: subcommand.subcommands.map {
+            subcommandWithFailureFamilyRecovery($0, targetRecoveryOverride: targetRecoveryOverride)
+        }
     )
 }
 

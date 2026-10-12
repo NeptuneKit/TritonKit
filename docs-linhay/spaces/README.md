@@ -27,7 +27,7 @@
 | 设计已归档／实施待立项 | [SP-182-trusted-execution-system](./SP-182-trusted-execution-system/README.md) | 可信执行系统双路径设计已归档；尚未进入产品实现 | 按该 space 的边界另行推进 |
 | v0.2.24已发布／双架构与Homebrew通过／专门平台输入未验收 | [SP-183-device-hub-official-adapter](./SP-183-device-hub-official-adapter/README.md) | 容器语义、Crash/Temporary 边界、管理执行后端、平台控制边界、兼容矩阵与 public schema 已实现；watchOS/tvOS runner 已实现并编译，真实输入未验收；visionOS 空间与 macOS Device Hub unsupported | 继续按能力矩阵推进专用 runner 与真实验收；真机 pair/unpair、安装启动、诊断发布已验收；Temporary 创建未验收，不称完整 Device Hub 接入 |
 | 兼容修复验证／命中待补 | [SP-180-xcode27-simulator-frameworks](./SP-180-xcode27-simulator-frameworks/README.md) | 已选Xcode只读查询、仅适配器子进程补框架；8测试与加载器恢复验证 | 10-06 CLI993+14/本地门禁通过；业务bridge截图完成，host HID导航另补，不将ACK算命中 |
-| 已发布／待安全补验 | [SP-179-issue-214-derived-data-cleanup](./SP-179-issue-214-derived-data-cleanup/README.md) | #214：v0.2.22 已发布，issue 仍 OPEN | 精确路径白名单、活动构建保护、fixture 与完整 CLI 回归；补验前仅推荐 inspect/dry-run |
+| 安全补丁本地待集成 | [SP-179-issue-214-derived-data-cleanup](./SP-179-issue-214-derived-data-cleanup/README.md) | #214：v0.2.22 已发布，issue 仍 OPEN | 精确白名单与只读统计修复；confirm 暂时 fail closed，排他/竞态删除安全仍未收口 |
 | 已归档 | [SP-178-issue-213-real-device-runtime](./SP-178-issue-213-real-device-runtime/README.md) | #213：真机 runtime readiness 诊断、单一 smoke JSON 与可执行 setup；不自动注入 endpoint | v0.2.21 已发布并回复关闭；CLI 983/root 269、CocoaPods lint、双架构与 Homebrew 验证全过；真机端到端未复测 |
 | 已归档 | [SP-176-open-issues-integration](./SP-176-open-issues-integration/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |
 | 规划中 | [SP-177-ios-simulator-resource-management](./SP-177-ios-simulator-resource-management/README.md) | simslim 核心能力原生 Swift 迁移与 Simulator 资源管理 | 当前完成上游调研、能力地图和分阶段 BDD；尚未改实现 |

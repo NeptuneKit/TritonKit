@@ -911,10 +911,9 @@ For repo-local cache disk usage, use the read-only inspector first:
 ```bash
 triton xcode derived-data inspect --root .triton/DerivedData --json
 triton xcode derived-data cleanup --root .triton/DerivedData --json
-triton xcode derived-data cleanup --root .triton/DerivedData --confirm --json
 ```
 
-`cleanup` is a dry-run unless `--confirm` is explicit. It reports total bytes, file counts, per-entry breakdown and skipped symlinks. Only canonical repo-local `.triton/DerivedData` or the explicit user Xcode DerivedData root is accepted; source, configuration, credential and business-data paths are rejected. Do not clean while Xcode is using the directory; each top-level path is rechecked before deletion.
+`cleanup` currently supports dry-run only. `--confirm` fails closed with `derived_data_cleanup_unavailable` before deletion; observed Xcode activity returns `xcode_not_idle`. Inspect and dry-run report logical regular-file bytes (not reclaimable disk space), recursive file counts, top-level directory counts, modification time (not last use), and skipped symlinks. Roots must end in exact `.triton/DerivedData` components or equal the user's global Xcode DerivedData root. Relative roots resolve from the invocation working directory, so workspace and child-project invocations can create separate caches; this does not prove duplication. Symlink targets are not followed. Confirmed cleanup remains unavailable pending exclusive build/cache coordination and race-safe deletion; see [issue #214](https://github.com/NeptuneKit/TritonKit/issues/214).
 
 `debug attrs --oid <oid>` accepts both view and layer IDs. UILabel attributes include resolved fonts/colors and bounded UTF-16 attributed runs; the existing text field is retained as a bounded preview with truncation metadata. Collection-cell taps honor selection eligibility and delegate callbacks and require visible postcondition verification. `act tap --duration` returns typed unsupported before dispatch; embedded longPress/non-scroll gesture requests do not claim UIKit recognizer transitions that public APIs cannot provide.
 

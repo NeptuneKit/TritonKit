@@ -551,3 +551,5 @@ Temporary 查询可能创建客户端域，实际是否新建没有可靠后置�
 ## Offline Simulator swipe (#215)
 
 `triton sim swipe --simulator booted --start-x 360 --start-y 700 --end-x 80 --end-y 700 --duration 0.35 --json` 通过现有 Baguette host HID 适配器执行，不依赖 embedded server 或 Web 服务。默认坐标为 Simulator points；可成对传 `--width/--height` 表示源图坐标空间。duration 为有限正数且最多 10 秒。成功只证明 host submission，必须用同目标 `triton sim ax --device <udid> --json` / `triton sim screenshot` 检查 settled 后置条件。后端不可用时失败关闭，不自动落回 embedded runtime。
+
+DerivedData safety (#214): `xcode derived-data inspect` and `cleanup` are read-only usage/preview commands. Confirmed cleanup fails closed with `derived_data_cleanup_unavailable` before deletion; observed or unknown Xcode activity is rejected. Counts describe logical regular-file bytes and top-level directories, and timestamps describe modification, not last use. Exact root suffix components are required; external build/cache exclusivity and descriptor-relative race safety remain prerequisites for restoring deletion.
