@@ -467,6 +467,22 @@ struct XcodeCommandTests {
         #expect(hostSourceCommand(command).hasPrefix("cd /tmp/Demo && xcodebuild "))
     }
 
+    @Test("package-relative result bundles resolve against the package working directory")
+    func packageRelativeResultBundleUsesPackageWorkingDirectory() {
+        #expect(
+            xcodePackageArtifactPath(".triton/ExampleTests.xcresult", package: "/tmp/Demo/Package.swift")
+                == "/tmp/Demo/.triton/ExampleTests.xcresult"
+        )
+        #expect(
+            xcodePackageArtifactPath("/tmp/ExampleTests.xcresult", package: "/tmp/Demo/Package.swift")
+                == "/tmp/ExampleTests.xcresult"
+        )
+        #expect(
+            xcodePackageArtifactPath(".triton/ExampleTests.xcresult", package: nil)
+                == ".triton/ExampleTests.xcresult"
+        )
+    }
+
     @Test("streaming xcode runner honors package working directory")
     func streamingXcodeRunnerHonorsWorkingDirectory() throws {
         let directory = URL(fileURLWithPath: NSTemporaryDirectory())

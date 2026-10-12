@@ -8,6 +8,19 @@ struct XcodeTestResultBundleDetails {
     let note: String?
 }
 
+/// xcodebuild executes package actions from the package directory. Resolve
+/// relative result artifacts against that same directory before parsing them,
+/// so the parser observes the bundle xcodebuild just produced.
+func xcodePackageArtifactPath(_ path: String?, package: String?) -> String? {
+    guard let path, !path.isEmpty else { return path }
+    guard !path.hasPrefix("/"), let package, !package.isEmpty else { return path }
+    let packageURL = URL(fileURLWithPath: package).standardizedFileURL
+    let directory = packageURL.lastPathComponent == "Package.swift"
+        ? packageURL.deletingLastPathComponent()
+        : packageURL
+    return directory.appendingPathComponent(path).standardizedFileURL.path
+}
+
 func xcodeTestResultBundleDetails(
     resultBundlePath: String?,
     maximumFailures: Int = 3,

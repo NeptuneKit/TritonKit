@@ -817,6 +817,10 @@ func runXcodeTest(
 ) throws -> TKXcodeActionSummary {
     let onlyTesting = try validateXcodeOnlyTesting(onlyTesting)
     let executionInvocation = try preparedXcodeInvocationForExecution(invocation)
+    let resolvedResultBundlePath = xcodePackageArtifactPath(
+        resultBundlePath,
+        package: executionInvocation.package
+    )
     let command = TKXcodebuildCommand.test(
         workspace: executionInvocation.workspace,
         project: executionInvocation.project,
@@ -826,7 +830,7 @@ func runXcodeTest(
         sdk: executionInvocation.sdk,
         destination: executionInvocation.xcodebuildDestination,
         derivedDataPath: executionInvocation.derivedDataPath,
-        resultBundlePath: resultBundlePath,
+        resultBundlePath: resolvedResultBundlePath,
         buildSettings: executionInvocation.buildSettings,
         onlyTesting: onlyTesting,
         redactDestination: executionInvocation.redactsXcodebuildDestination
@@ -851,7 +855,7 @@ func runXcodeTest(
         postActionProcessStatus: postActionProcessStatus
     )
     let resultDetails = xcodeTestResultBundleDetails(
-        resultBundlePath: resultBundlePath,
+        resultBundlePath: resolvedResultBundlePath,
         redacting: command
     )
     return TKXcodeActionSummary(
@@ -867,7 +871,7 @@ func runXcodeTest(
         destination: executionInvocation.destination,
         derivedDataPath: executionInvocation.derivedDataPath,
         derivedDataCache: observedXcodeDerivedDataCache(executionInvocation.derivedDataCache, result: result),
-        resultBundlePath: resultBundlePath,
+        resultBundlePath: resolvedResultBundlePath,
         onlyTesting: onlyTesting.isEmpty ? nil : onlyTesting,
         simulatorUDID: executionInvocation.simulatorUDID,
         device: executionInvocation.device,
