@@ -11,7 +11,7 @@
     "gui-only",
     "unsupported"
   ],
-  "real_device_actions": "pair-and-unpair-postconditions-passed; diagnostics-collected-over-publication-limit; fixture-installed-launch-locked",
+  "real_device_actions": "pair/unpair verified; iphone16 fixture installed/launched; iphone16 diagnostics privately published",
   "capabilities": [
     {
       "id": "app-container-binding",
@@ -68,11 +68,12 @@
     {
       "id": "device-diagnose",
       "status": "implemented",
-      "evidence": "physical-native-collection-plus-budget-rejection",
+      "evidence": "physical-native-collection-and-private-publication; default-budget-and-overwrite-rejection",
       "real_collection": "executed",
       "archive_no_overwrite": true,
       "archive_nofollow": true,
-      "publication": "blocked-archive-size-limit"
+      "publication": "iphone16-passed-explicit-512MiB",
+      "verification_report": "20261012-diagnostic-closeout.json"
     },
     {
       "id": "watch-crown-action",

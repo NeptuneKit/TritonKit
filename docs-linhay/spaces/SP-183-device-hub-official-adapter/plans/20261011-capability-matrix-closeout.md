@@ -11,7 +11,7 @@
 | Crash DeviceFS 目录 | 已实现 | fixture；当前专用 Simulator 缺目录 | 固定目录和 `directory_unavailable`；不猜 root、不降级为其他域 |
 | Temporary 查询域 | 已实现执行边界 | fixture + 无策略早拒绝 | 可能创建临时域；必须显式策略、intent/completion 审计；真实创建未授权 |
 | pair / unpair | 已实现执行后端 | 真机 pair/unpair 后置通过 + fixture | `execute-runner + confirm + audit-record`；file JSON 身份绑定；后置 paired/unpaired 独立确认 |
-| diagnose | 已实现执行与安全发布 | 真实采集成功、发布预算拒绝 + fixture | 失败/超时/部分完成分开；ZIP no-overwrite/nofollow/权限/大小预算；不等于 device-only |
+| diagnose | 已实现执行与安全发布 | 16 Pro真实采集/私有发布成功 + 默认预算/覆盖拒绝 + fixture | 失败/超时/部分完成分开；ZIP no-overwrite/nofollow/权限/大小预算；不等于 device-only |
 | watch 配对关系 | 已实现 | 专用环境空集合真实 + fixture | 不证明物理 Watch 配对或输入；保留旧 sim pair/unpair |
 | watch Crown / Action | Crown runner 产物已编译；输入未验收 | 原生 build-for-testing；runtime 下载网络失败 | Crown 待专用 runtime；Action 无可验证后置断言不发送，侧键未支持 |
 | tvOS 焦点 / 选择 / 返回 | runner 产物已编译；输入未验收 | 原生 build-for-testing；runtime 下载网络失败 | 独立网格/详情 UI-test 已编译，仍需专用 runtime 上后置断言通过 |
@@ -40,3 +40,5 @@
 2026-10-12 真机增量：[只读验收](20261012-real-device-verification.md)。仍不升级 pair/unpair/diagnose、Temporary 创建或 watch/tvOS 输入的证据等级。
 
 后续用户明确授权真机写入：[管理与App执行](20261012-real-device-execution.md)。pair/unpair后置通过，诊断已采集但超发布预算；恢复配对和App启动仍待解锁重连。本文此前未授权/未执行描述为历史快照。
+
+诊断成功路径增量：[16 Pro私有归档发布通过](20261012-diagnostic-closeout.md)，显式512MiB接受预算；原13ProMax的默认256MiB超限结果保留。
