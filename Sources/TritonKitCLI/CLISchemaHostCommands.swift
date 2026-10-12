@@ -394,7 +394,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "doctor",
                     summary: "Probe platform host tool availability",
-                    optionalOptions: ["--platform", "--scope", "--hdc", "--adb", "--format", "--json"],
+                    optionalOptions: ["--platform", "--scope", "--device", "--hdc", "--adb", "--format", "--json"],
                     outputSelectors: ["host.device-doctor"]
                 ),
                 TKCommandSubcommandSchema(
@@ -671,6 +671,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 hostSimulatorMediaSeedOutputContract(),
             ],
             failureCodes: [
+                "ios_host_hid_legacy_backend_unavailable",
+                "ios_host_hid_simulator_kit_load_failed",
                 "target_not_found",
                 "ambiguous_target",
                 "sim_pairs_query_failed",
@@ -787,7 +789,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                         "triton verify text-exists <expected> --json",
                     ],
                     outputSelectors: ["host.simulator-input"],
-                    failureCodes: ["simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "unsupported_host_input", "host_command_timeout", "validation_failed"]
+                    failureCodes: ["simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "ios_host_hid_legacy_backend_unavailable", "ios_host_hid_simulator_kit_load_failed", "unsupported_host_input", "host_command_timeout", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "swipe",

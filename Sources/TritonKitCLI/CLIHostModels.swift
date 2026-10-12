@@ -360,6 +360,7 @@ struct HostDeviceDoctorOutput: Encodable {
     let strongControl: [TKHostStrongControlCapability]
     let artifactsSaved: Bool
     var commandSupport: [HostAppleCommandSupport]? = nil
+    var hidCompatibility: IOSHostHIDProbe? = nil
 }
 
 struct HostDeviceBridgeOutput: Encodable, Equatable {

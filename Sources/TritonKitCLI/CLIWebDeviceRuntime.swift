@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 import Hummingbird
 import NIOCore
@@ -948,6 +949,8 @@ private func runWebIOSBaguetteLifecycleProcess(_ lifecycle: WebIOSBaguetteSwipeL
     process.standardInput = stdin
     process.standardOutput = stdout
     process.standardError = stderr
+    let terminated = DispatchSemaphore(value: 0)
+    process.terminationHandler = { _ in terminated.signal() }
 
     do {
         try process.run()
@@ -955,9 +958,16 @@ private func runWebIOSBaguetteLifecycleProcess(_ lifecycle: WebIOSBaguetteSwipeL
         throw HostCommandRunError.launchFailed(error.localizedDescription)
     }
 
+    // Drain stderr concurrently so a verbose bootstrap failure cannot fill its
+    // pipe before the first acknowledgement. The collector retains at most 16 KiB.
+    try? stderr.fileHandleForWriting.close()
+    let diagnostics = WebIOSBaguetteStderrDrain(handle: stderr.fileHandleForReading)
     let timeoutWorkItem = DispatchWorkItem {
         if process.isRunning {
             process.terminate()
+            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 0.5) {
+                if process.isRunning { kill(process.processIdentifier, SIGKILL) }
+            }
         }
     }
     DispatchQueue.global(qos: .utility).asyncAfter(
@@ -1000,23 +1010,45 @@ private func runWebIOSBaguetteLifecycleProcess(_ lifecycle: WebIOSBaguetteSwipeL
         if process.isRunning {
             process.terminate()
         }
+        if terminated.wait(timeout: .now() + 0.5) == .timedOut, process.isRunning {
+            kill(process.processIdentifier, SIGKILL)
+            _ = terminated.wait(timeout: .now() + 0.5)
+        }
+        let diagnostic = diagnostics.finish()
+        let result = HostProcessResult(
+            stdoutData: acknowledged, stderrData: diagnostic.data,
+            exitCode: process.isRunning ? -1 : process.terminationStatus,
+            sourceCommand: hostSourceCommand(command), stdoutTruncated: false,
+            stderrTruncated: diagnostic.truncated, stdoutLogPath: nil, stderrLogPath: nil,
+            stdoutBytes: acknowledged.count, stderrBytes: diagnostic.bytes
+        )
+        // Preserve bootstrap diagnostics even if the adapter exits zero before
+        // producing its first ack; never convert that EOF into a generic error.
+        if result.exitCode != 0 || iosHostHIDFailureCode(stderr: result.stderr) != nil {
+            throw HostCommandRunError.nonZeroExit(command: command, result: result)
+        }
         throw error
     }
 
-    process.waitUntilExit()
+    if terminated.wait(timeout: .now() + command.defaultTimeoutSeconds + 1) == .timedOut {
+        if process.isRunning { kill(process.processIdentifier, SIGKILL) }
+        _ = terminated.wait(timeout: .now() + 0.5)
+        _ = diagnostics.finish()
+        throw HostCommandRunError.timeout(command: command, timeoutSeconds: command.defaultTimeoutSeconds, stdoutLogPath: nil, stderrLogPath: nil)
+    }
     timeoutWorkItem.cancel()
-    let stderrData = (try? stderr.fileHandleForReading.readToEnd()) ?? Data()
+    let diagnostic = diagnostics.finish()
     let result = HostProcessResult(
         stdoutData: acknowledged,
-        stderrData: stderrData,
+        stderrData: diagnostic.data,
         exitCode: process.terminationStatus,
         sourceCommand: hostSourceCommand(command),
         stdoutTruncated: false,
-        stderrTruncated: false,
+        stderrTruncated: diagnostic.truncated,
         stdoutLogPath: nil,
         stderrLogPath: nil,
         stdoutBytes: acknowledged.count,
-        stderrBytes: stderrData.count
+        stderrBytes: diagnostic.bytes
     )
     guard result.exitCode == 0 else {
         throw HostCommandRunError.nonZeroExit(command: command, result: result)

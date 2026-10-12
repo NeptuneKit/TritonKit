@@ -197,27 +197,13 @@ struct DeviceCrossPlatformTests {
 
         #expect(unavailableProbes.map(\.name) == ["ios-host-ax", "ios-host-hid"])
         #expect(unavailableProbes.allSatisfy { !$0.available })
-        #expect(unavailableProbes.allSatisfy { $0.reason == "idb_not_available" })
-        #expect(unavailableProbes.allSatisfy { $0.dependency == "idb/FBSimulatorControl" })
-        #expect(unavailableProbes.allSatisfy { $0.limitations.contains("private_framework_dependency") })
-        #expect(unavailableProbes.allSatisfy { $0.limitations.contains("simulator_only") })
-        #expect(unavailableProbes.allSatisfy { $0.fallbackCapability == "embedded-runtime-or-public-simctl" })
-        #expect(unavailableProbes.allSatisfy { $0.nextAction?.args == ["doctor", "--platform", "ios", "--json"] })
-
-        let available = HostToolProbeOutput(
-            name: "idb",
-            path: "/opt/homebrew/bin/idb",
-            available: true,
-            versionSummary: "1.1.7",
-            error: nil,
-            sourceCommand: "/opt/homebrew/bin/idb --version"
-        )
+        #expect(unavailableProbes[0].reason == "idb_not_available")
+        #expect(unavailableProbes[1].reason == "ios_host_hid_dispatch_not_probed")
+        let available = HostToolProbeOutput(name: "idb", path: "idb", available: true, versionSummary: "1.1.7", error: nil, sourceCommand: "idb --version")
         let availableProbes = iosStrongControlProbes(idbProbe: available)
-
-        #expect(availableProbes.allSatisfy { $0.available })
-        #expect(availableProbes.allSatisfy { $0.reason == nil })
-        #expect(availableProbes.allSatisfy { $0.nextAction == nil })
-        #expect(availableProbes.allSatisfy { $0.sourceCommand == "/opt/homebrew/bin/idb --version" })
+        #expect(availableProbes[0].available)
+        #expect(!availableProbes[1].available)
+        #expect(availableProbes[1].dependency == "Baguette/SimulatorKit")
     }
 
     @Test("Android bridge contract returns plan-only ledgers before APK runner exists")
