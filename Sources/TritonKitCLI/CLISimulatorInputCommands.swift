@@ -63,12 +63,17 @@ struct SimTap: AsyncParsableCommand {
 }
 
 struct SimType: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "type", abstract: "Type ASCII text into the focused simulator field")
+    static let configuration = CommandConfiguration(
+        commandName: "type",
+        abstract: "Reserved host-side simulator text entry; currently unavailable (returns unsupported_host_input)"
+    )
 
     @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
-    @Option(help: "ASCII text to type into the focused simulator field") var text: String
+    @Option(help: "ASCII text to validate before returning unsupported_host_input; does not insert text") var text: String
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    private static let unsupportedHint = "Stage text only with `triton sim pasteboard set <text> --simulator <udid|booted> --json`; this does not paste into the focused field. Use embedded runtime semantic input, an app-owned debug hook, or an external keyboard/paste adapter, then verify the field with host AX/observe and the app's saved value."
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
@@ -76,22 +81,22 @@ struct SimType: AsyncParsableCommand {
             try failHostValidation(
                 code: "validation_failed",
                 message: "sim type requires non-empty --text.",
-                hint: "Pass ASCII text with --text after focusing the destination field.",
+                hint: "This reserved command validates non-empty ASCII text, then returns unsupported_host_input without inserting it.",
                 outputFormat: outputFormat
             )
         }
         guard text.unicodeScalars.allSatisfy(\.isASCII) else {
             try failHostValidation(
                 code: "unsupported_text_input",
-                message: "sim type currently supports ASCII text only.",
-                hint: "Use embedded runtime semantic input, a pasteboard flow, or wait for a Unicode-safe host primitive.",
+                message: "sim type rejects non-ASCII text; host text insertion remains unavailable.",
+                hint: "Use embedded runtime semantic input or an app-owned debug hook; pasteboard staging still does not insert text.",
                 outputFormat: outputFormat
             )
         }
         try failHostValidation(
             code: "unsupported_host_input",
             message: "sim type is not supported by the current public simctl io contract.",
-            hint: "This Xcode simctl io help does not expose a stable keyboard type primitive. Use embedded runtime semantic input or a pasteboard/debug-hook flow.",
+            hint: Self.unsupportedHint,
             outputFormat: outputFormat
         )
     }

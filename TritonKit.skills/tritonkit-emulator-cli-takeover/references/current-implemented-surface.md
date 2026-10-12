@@ -210,3 +210,7 @@ triton debug runtime manifest --runtime-base-url <verified-runtime-url> --json
 Reuse an existing healthy HDC forward rather than recreating it: a repeated forward can fail with a host listen conflict. Preserve the verified URL and distinguish mock contract tests from real emulator runtime checks. Repository-only smoke scripts are not shipped in this bundle.
 
 Android Emulator host-side support is now part of the implemented local CLI takeover surface. Treat `adb`-backed device discovery, readiness, start/stop, screenshot, app lifecycle, UIAutomator observe/wait/tap, and `smoke android` as schema-backed Triton commands; continue to keep DTOs, evidence, and command-ledger schemas platform-neutral across iOS, Android, and Harmony.
+
+## Reserved iOS host text input
+
+`triton sim type --help` describes a failure-only reserved command; `ios-simulator-host-type` is unsupported even with a connected embedded runtime. Inspect `triton schema --command "sim type" --json` before attempting host text entry. `triton sim pasteboard set <text> --simulator <udid> --json` only stages the Simulator clipboard. Confirm the explicit Simulator, foreground App and field focus first. Actual paste requires a separately verified external keyboard/paste adapter or App debug hook. Re-read host AX/observe field value where available, then verify the App saved/business postcondition; clipboard contents and input acknowledgements alone prove neither. Preserve unsupported evidence and record the external fallback instead of attributing it to Triton.

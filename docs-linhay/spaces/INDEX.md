@@ -208,3 +208,5 @@
 | `SP-181-device-hub-paradigm` | [`SP-181-device-hub-paradigm`](./SP-181-device-hub-paradigm/README.md) | 研究已归档／实现待定 | Device Hub 范式研究已归档；后续实现需独立立项 |
 | `SP-182-trusted-execution-system` | [`SP-182-trusted-execution-system`](./SP-182-trusted-execution-system/README.md) | 设计已归档／实施待立项 | 可信执行系统双路径设计已归档；尚未进入产品实现 |
 | `SP-183-device-hub-official-adapter` | [`SP-183-device-hub-official-adapter`](./SP-183-device-hub-official-adapter/README.md) | v0.2.24已发布／双架构与Homebrew通过／专门平台输入未验收 | 容器语义、Crash/Temporary 边界、管理执行后端、watch 配对与 Apple physical metadata 已实现；watchOS/tvOS runner 已实现并编译，真实输入未验收；visionOS 空间与 macOS Device Hub unsupported；兼容矩阵与 public schema 已回归；真机 pair/unpair、安装启动、诊断发布已验收；Temporary 创建未验收 |
+
+| `SP-185-issue-216-host-input-discovery` | [`SP-185-issue-216-host-input-discovery`](./SP-185-issue-216-host-input-discovery/README.md) | 本地实现／待集成 | #216 reserved type discovery 与 pasteboard 边界；focused 37 tests 通过 |

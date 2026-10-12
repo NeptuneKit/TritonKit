@@ -163,7 +163,15 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "ios-host-ax", supported: true),
         TKRuntimeCapability(name: "ios-host-hid", supported: true),
         TKRuntimeCapability(name: "ios-simulator-host-tap", supported: true),
-        TKRuntimeCapability(name: "ios-simulator-host-type", supported: true),
+        TKRuntimeCapability(
+            name: "ios-simulator-host-type",
+            supported: false,
+            reason: "Host-side iOS Simulator text input is not supported by the current public simctl io contract; no stable keyboard type primitive is advertised",
+            group: "host",
+            requiredBy: ["action", "smoke", "assert", "evidence"],
+            nextAction: TKCLINextAction(command: "schema", args: ["--command", "sim type", "--json"]),
+            evidence: ["unsupported-envelope", "command-schema"]
+        ),
         TKRuntimeCapability(name: "android-device", supported: true),
         TKRuntimeCapability(name: "android-device-doctor", supported: true),
         TKRuntimeCapability(name: "android-device-list", supported: true),
@@ -573,7 +581,7 @@ func runtimeCapabilityNextAction(
     case "android-bridge-forward":
         return TKCLINextAction(command: "device", args: ["bridge", "forward", "--platform", "android", "--device", "<selector>", "--confirm", "--audit-record", "<id>", "--execute-runner", "--json"])
     case "ios-simulator-host-type":
-        return TKCLINextAction(command: "sim", args: ["type", "--simulator", "<udid|booted>", "--text", "<text>", "--json"])
+        return TKCLINextAction(command: "schema", args: ["--command", "sim type", "--json"])
     case "device-proxy-ios":
         return TKCLINextAction(command: "device", args: ["proxy", "doctor", "--platform", "ios", "--json"])
     case "device-proxy-android":

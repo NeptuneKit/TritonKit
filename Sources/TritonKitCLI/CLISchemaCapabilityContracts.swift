@@ -963,7 +963,7 @@ func hostSimulatorInputOutputContract() -> TKCommandOutputContract {
         model: "HostSimulatorInputOutput",
         fields: schemaContractFields([
             ("ok", "Bool", true, "Whether the host simulator input command completed"),
-            ("action", "String", true, "sim.tap or sim.type"),
+            ("action", "String", true, "sim.tap; sim.type is failure-only and does not produce this success contract"),
             ("runtimeScope", "String", true, "host-simulator"),
             ("target", "String", true, "Simulator target selector"),
             ("adapter", "String", true, "Host adapter name, currently xcrun-simctl"),
@@ -977,9 +977,9 @@ func hostSimulatorInputOutputContract() -> TKCommandOutputContract {
             ("stderr", "String?", false, "Bounded stderr sample"),
             ("x", "Int?", false, "Tap x coordinate when action is sim.tap"),
             ("y", "Int?", false, "Tap y coordinate when action is sim.tap"),
-            ("insertedLength", "Int?", false, "Typed text length when action is sim.type"),
-            ("textEncoding", "String?", false, "Text encoding boundary, currently ascii for sim.type"),
-            ("note", "String", true, "Boundary or follow-up verification note"),
+            ("insertedLength", "Int?", false, "Typed text length when a future supported host adapter reports insertion"),
+            ("textEncoding", "String?", false, "Text encoding boundary when a future supported host adapter reports insertion"),
+            ("note", "String", true, "Boundary or follow-up verification note; pasteboard preparation is not input completion"),
         ])
     )
 }

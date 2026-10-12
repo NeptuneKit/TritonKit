@@ -5,6 +5,32 @@ import TritonKitShared
 
 @Suite
 struct SimulatorAdvancedControlsTests {
+    @Test("sim type help exposes its failure-only host input boundary")
+    func simTypeHelpExposesFailureOnlyBoundary() throws {
+        let command = try SimType.parse([
+            "--simulator", "booted",
+            "--text", "sample",
+            "--json",
+        ])
+
+        #expect(command.simulator == "booted")
+        #expect(command.text == "sample")
+        #expect(command.json)
+        #expect(SimType.configuration.abstract.contains("unsupported_host_input"))
+    }
+
+    @Test("sim type schema points to clipboard staging and verification without claiming a paste")
+    func simTypeSchemaDocumentsSafePasteboardGuidance() throws {
+        let sim = try #require(commandSchemas().first { $0.name == "sim" })
+        let type = try #require(sim.subcommands.first { $0.name == "type" })
+
+        #expect(type.summary.contains("failure-only"))
+        #expect(type.failureCodes.contains("unsupported_host_input"))
+        #expect(type.nextCommands.contains("triton sim pasteboard set <text> --simulator <udid|booted> --json"))
+        #expect(type.nextCommands.contains("triton sim pasteboard get --simulator <udid|booted> --json"))
+        #expect(type.nextCommands.contains("triton observe tree --platform ios --device <udid|booted> --json"))
+    }
+
     @Test("sim tap parser exposes an explicit host Simulator HID recovery command")
     func simTapParserExposesHostHIDRecoveryCommand() throws {
         let command = try SimTap.parse([

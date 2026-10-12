@@ -3,6 +3,22 @@ import TritonKitShared
 @testable import TritonKitCLI
 
 extension SchemaFactSourceTests {
+    @Test("iOS Simulator host type capability is explicitly unsupported and fail-closed")
+    func iosSimulatorHostTypeCapabilityIsUnsupported() throws {
+        for fixture in capabilityStateFixtures() {
+            let capability = try #require(fixture.capabilities.first { $0.name == "ios-simulator-host-type" })
+
+            #expect(!capability.supported)
+            #expect(capability.reason?.contains("no stable keyboard type primitive") == true)
+            #expect(capability.group == "host")
+            #expect(capability.requiredBy.contains("action"))
+            #expect(capability.requiredBy.contains("smoke"))
+            #expect(capability.evidence == ["unsupported-envelope", "command-schema"])
+            #expect(capability.nextAction?.command == "schema")
+            #expect(capability.nextAction?.args == ["--command", "sim type", "--json"])
+        }
+    }
+
     @Test("device wait-ready capability actions use the parser-supported selector option")
     func deviceWaitReadyCapabilityActionsUseTheParserSupportedSelectorOption() throws {
         let capabilities = connectedCapabilityMap()

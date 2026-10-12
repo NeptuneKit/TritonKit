@@ -21,6 +21,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 执行 | [SP-185-issue-216-host-input-discovery](./SP-185-issue-216-host-input-discovery/README.md) | #216：host type reserved discovery 与 clipboard staging 边界 | focused 验证后由主控集成 |
 | 研究已归档／实现待定 | [SP-181-device-hub-paradigm](./SP-181-device-hub-paradigm/README.md) | Device Hub 范式研究已归档；后续实现需独立立项 | 按该 space 的边界另行推进 |
 | 设计已归档／实施待立项 | [SP-182-trusted-execution-system](./SP-182-trusted-execution-system/README.md) | 可信执行系统双路径设计已归档；尚未进入产品实现 | 按该 space 的边界另行推进 |
 | v0.2.24已发布／双架构与Homebrew通过／专门平台输入未验收 | [SP-183-device-hub-official-adapter](./SP-183-device-hub-official-adapter/README.md) | 容器语义、Crash/Temporary 边界、管理执行后端、平台控制边界、兼容矩阵与 public schema 已实现；watchOS/tvOS runner 已实现并编译，真实输入未验收；visionOS 空间与 macOS Device Hub unsupported | 继续按能力矩阵推进专用 runner 与真实验收；真机 pair/unpair、安装启动、诊断发布已验收；Temporary 创建未验收，不称完整 Device Hub 接入 |
