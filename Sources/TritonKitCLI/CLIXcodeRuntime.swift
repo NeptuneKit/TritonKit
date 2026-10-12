@@ -151,7 +151,10 @@ func resolveXcodeInvocation(
             "Physical iOS xcodebuild execution requires --device so Triton can resolve a ready target and keep its raw destination execution-only."
         )
     }
-    let resolvedDerivedDataPath = derivedDataPath ?? xcode?.derivedDataPath ?? defaultXcodeDerivedDataPath
+    let resolvedDerivedDataPath = xcodePackageArtifactPath(
+        derivedDataPath ?? xcode?.derivedDataPath ?? defaultXcodeDerivedDataPath,
+        package: resolvedPackage
+    ) ?? defaultXcodeDerivedDataPath
     let resolvedBuildSettings = try validateXcodeBuildSettings(buildSettings)
     let derivedDataCache = makeXcodeDerivedDataCacheInfo(path: resolvedDerivedDataPath)
     return ResolvedXcodeInvocation(
@@ -813,6 +816,9 @@ func runXcodeTest(
     statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) },
     hostCommandRunner: (TKHostCommand, String, Bool, XcodeProgressMode) throws -> (HostProcessResult, Int) = { command, event, jsonl, progress in
         try runXcodeHostCommand(command, event: event, jsonl: jsonl, allowNonZeroExit: true, progress: progress)
+    },
+    resultCommandRunner: (TKHostCommand) throws -> HostProcessResult = { command in
+        try runHostCommand(command, maximumOutputBytes: xcresultInlineJSONLimit)
     }
 ) throws -> TKXcodeActionSummary {
     let onlyTesting = try validateXcodeOnlyTesting(onlyTesting)
@@ -856,7 +862,8 @@ func runXcodeTest(
     )
     let resultDetails = xcodeTestResultBundleDetails(
         resultBundlePath: resolvedResultBundlePath,
-        redacting: command
+        redacting: command,
+        runCommand: resultCommandRunner
     )
     return TKXcodeActionSummary(
         ok: ok,

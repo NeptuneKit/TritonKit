@@ -930,3 +930,5 @@ Temporary 查询可能创建客户端域，实际是否新建没有可靠后置�
 `device platform-control --platform watchos|tvos --action <control> --device <exact-udid> --xctestrun <private.xctestrun> --test-identifier <Target/Class/testMethod> --result-bundle <fresh.xcresult> --audit-record <id> --execute-runner --confirm --json` 是专门输入的显式执行门禁。它只接受精确 Simulator UDID，先校验 watchOS/tvOS runtime family，再执行一次 `xcodebuild test-without-building`；结果必须绑定 target、action、nonce、eventDelivered 和 postconditionVerified。普通 exit 0、缺结果、超时或目标替换都保持 `unknown`，不自动重试。没有专用 runner 产物和对应 Simulator runtime 时，仍返回 fixture-only/结构化不可用边界。
 
 专门平台 runner 真实执行必须传递版本化 `TRITON_PLATFORM_REQUEST`（含 Crown delta 与唯一 nonce），并从 xcresult 的指定测试/设备附件校验结果，不能解析 xcodebuild stdout 作为成功 JSON。只运行一个精确测试方法，禁用并行与重复执行，先持久 intent 再执行并写 completion；未知送达保持未知且退出非零、不重试。独立验收工程在 `Examples/ApplePlatformAcceptance`，SDK build-for-testing 不代表 runtime/input 实测。结果父目录需 owned 0700 且路径无符号链接。
+
+`triton xcode ... --package <Package.swift-or-directory>` 的相对 `--derived-data-path` 按 package 工作目录解析并在 invocation/cache 元数据中给出绝对路径；`xcode test --result-bundle <relative>` 同样按 package 工作目录规范化，执行命令、inline xcresult parser 和最终 `resultBundlePath` 共享该位置。绝对路径保持不变；非 package 工作流保留调用目录语义。
