@@ -46,6 +46,27 @@ struct SimulatorAdvancedControlsTests {
         #expect(command.json)
     }
 
+    @Test("sim swipe parser exposes host Simulator HID coordinates and duration")
+    func simSwipeParserExposesHostHIDGestureCommand() throws {
+        let command = try SimSwipe.parse([
+            "--simulator", "booted",
+            "--start-x", "360",
+            "--start-y", "700",
+            "--end-x", "80",
+            "--end-y", "700",
+            "--duration", "0.45",
+            "--json",
+        ])
+
+        #expect(command.simulator == "booted")
+        #expect(command.startX == 360)
+        #expect(command.startY == 700)
+        #expect(command.endX == 80)
+        #expect(command.endY == 700)
+        #expect(command.duration == 0.45)
+        #expect(command.json)
+    }
+
     @Test("host command forwards stdin into child process")
     func runHostCommandForwardsStdin() throws {
         let command = TKHostCommand(executable: "/bin/cat", arguments: [], stdinData: Data("hello\n".utf8))
@@ -510,6 +531,7 @@ struct SimulatorAdvancedControlsTests {
         #expect(optionNames.contains("--x"))
         #expect(optionNames.contains("--y"))
         #expect(sim.subcommands.contains { $0.name == "tap" })
+        #expect(sim.subcommands.contains { $0.name == "swipe" })
         #expect(optionNames.contains("--display"))
         #expect(optionNames.contains("--device-type"))
         #expect(optionNames.contains("--data-container"))
@@ -540,8 +562,24 @@ struct SimulatorAdvancedControlsTests {
         #expect(sim.examples.contains("triton sim proxy stop --simulator booted --restore --plan-only --json"))
         #expect(sim.examples.contains("triton sim media seed --manifest /tmp/gallery/manifest.json --simulator booted --json"))
         #expect(sim.examples.contains("triton sim tap --simulator booted --x 180 --y 420 --json"))
+        #expect(sim.examples.contains("triton sim swipe --simulator booted --start-x 360 --start-y 700 --end-x 80 --end-y 700 --duration 0.35 --json"))
         #expect(sim.examples.contains("triton sim create 'Codex iPhone' --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-16 --runtime com.apple.CoreSimulator.SimRuntime.iOS-26-0 --json"))
         #expect(sim.subcommands.first { $0.name == "create" }?.requiredOptions == ["<name>", "--device-type", "--runtime"])
+    }
+
+    @Test("sim swipe schema requires endpoints and exposes host verification boundary")
+    func simSwipeSchemaRequiresEndpointsAndExposesHostVerificationBoundary() throws {
+        let sim = try #require(commandSchemas().first { $0.name == "sim" })
+        let swipe = try #require(sim.subcommands.first { $0.name == "swipe" })
+
+        #expect(swipe.requiredOptions == ["--start-x", "--start-y", "--end-x", "--end-y"])
+        #expect(swipe.optionalOptions.contains("--simulator"))
+        #expect(swipe.optionalOptions.contains("--duration"))
+        #expect(swipe.optionalOptions.contains("--format"))
+        #expect(swipe.summary.contains("host HID"))
+        #expect(swipe.nextCommands.contains("triton sim screenshot --simulator <udid|booted> --output <new-path> --json"))
+        #expect(swipe.failureCodes.contains("unsupported_host_input"))
+        #expect(swipe.outputSelectors.contains("input.result"))
     }
 
     @Test("sim tap schema requires only x/y and declares inferred point-space failure codes")

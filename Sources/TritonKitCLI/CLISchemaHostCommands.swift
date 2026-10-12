@@ -577,9 +577,15 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--text", type: "String", description: "ASCII text for host-side simulator type"),
                 TKCommandSchemaOption(name: "--x", type: "Int", description: "Horizontal Simulator tap coordinate in points"),
                 TKCommandSchemaOption(name: "--y", type: "Int", description: "Vertical Simulator tap coordinate in points"),
+                TKCommandSchemaOption(name: "--width", type: "Int", description: "Swipe source coordinate-space width; requires --height"),
+                TKCommandSchemaOption(name: "--height", type: "Int", description: "Swipe source coordinate-space height; requires --width"),
+                TKCommandSchemaOption(name: "--start-x", type: "Int", description: "Horizontal Simulator swipe start coordinate in points"),
+                TKCommandSchemaOption(name: "--start-y", type: "Int", description: "Vertical Simulator swipe start coordinate in points"),
+                TKCommandSchemaOption(name: "--end-x", type: "Int", description: "Horizontal Simulator swipe end coordinate in points"),
+                TKCommandSchemaOption(name: "--end-y", type: "Int", description: "Vertical Simulator swipe end coordinate in points"),
                 TKCommandSchemaOption(name: "--display", type: "String", description: "CoreSimulator display selector for screenshot or video, for example internal, external, screen id, or display UUID"),
                 TKCommandSchemaOption(name: "--output", type: "Path", description: "Artifact output path for screenshot, record, unified logs, App process console, or diagnose"),
-                TKCommandSchemaOption(name: "--duration", type: "Double", description: "Bounded record, unified log, or App process console capture duration in seconds"),
+                TKCommandSchemaOption(name: "--duration", type: "Double", description: "Capture duration in seconds; swipe duration defaults to 0.35 and must be finite, greater than zero and at most 10 seconds"),
                 TKCommandSchemaOption(name: "--max-bytes", type: "Int", defaultValue: "10485760", description: "Maximum App process console artifact bytes; excess output is drained but not written"),
                 TKCommandSchemaOption(name: "--env", type: "KEY=VALUE", description: "Repeatable App process console launch environment; values use SIMCTL_CHILD_* and are redacted from sourceCommand"),
                 TKCommandSchemaOption(name: "--arg", type: "String", description: "Repeatable App process console launch argument"),
@@ -615,6 +621,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl",
                 "triton sim screenshot --simulator booted --output /tmp/sim.png --json",
                 "triton sim tap --simulator booted --x 180 --y 420 --json",
+                "triton sim swipe --simulator booted --start-x 360 --start-y 700 --end-x 80 --end-y 700 --duration 0.35 --json",
                 "triton sim type --simulator booted --text http://127.0.0.1:8000 --json",
                 "triton sim record --simulator booted --output /tmp/sim.mov --duration 10 --json",
                 "triton sim logs --simulator booted --output /tmp/sim.ndjson --duration 5 --style ndjson --json",
@@ -635,9 +642,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim personalization scan-and-personalize --json",
                 "triton sim media seed --manifest /tmp/gallery/manifest.json --simulator booted --json",
             ],
-            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:sim.tap, runtimeScope:host-simulator, target, adapter, tool, exitCode, sourceCommand, strategy? } or { ok, action:sim.record, artifacts[], requestedDurationSeconds, actualDurationSeconds, minimumAcceptedDurationSeconds, containerDurationSeconds, videoTrackDurationSeconds[], durationValidation } or { ok, action:sim.logs, artifact, sourceType:unified-log, sourcesCaptured:[unified-log] } or { ok, action:sim.app-console, bundleID, artifact, artifactBytes, observedBytes, artifactTruncated, maximumBytes, requestedDurationSeconds, elapsedDurationSeconds, captureEndedBy, sourcesCaptured:[process-stdout,process-stderr], streamLayout:merged-pty } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? }; sim.type is failure-only and returns unsupported_host_input after ASCII validation. JSONL { ok, action, state, ready, attempt, elapsedMs }",
+            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:tap|swipe, source:host-hid, strategy, sourceCommands[], verification } or { ok, action:sim.record, artifacts[], requestedDurationSeconds, actualDurationSeconds, minimumAcceptedDurationSeconds, containerDurationSeconds, videoTrackDurationSeconds[], durationValidation } or { ok, action:sim.logs, artifact, sourceType:unified-log, sourcesCaptured:[unified-log] } or { ok, action:sim.app-console, bundleID, artifact, artifactBytes, observedBytes, artifactTruncated, maximumBytes, requestedDurationSeconds, elapsedDurationSeconds, captureEndedBy, sourcesCaptured:[process-stdout,process-stderr], streamLayout:merged-pty } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? }; sim.type is failure-only and returns unsupported_host_input after ASCII validation. JSONL { ok, action, state, ready, attempt, elapsedMs }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
-            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim tap is the explicit host HID recovery path for embedded iOS tap failures and reports adapter/target evidence; --x/--y are expressed in simulator points and the point-space dimensions are inferred from the simulator layout metadata, so callers do not pass --width/--height; it does not claim embedded business selection by itself. sim record validates actual encoded video sample duration rather than the MOV container timeline and rejects materially truncated evidence. sim logs captures unified-log only and does not cover App stdout/stderr. sim app-console terminates and relaunches the selected App through console-pty, writes a duration/byte-bounded sensitive artifact, and never inlines console content in JSON. sim type is a reserved, failure-only host input entry and returns unsupported_host_input because the current public simctl io contract exposes no stable keyboard type primitive. sim pasteboard set only stages clipboard contents; it does not paste into a focused field or prove that an App accepted or saved the value. Use embedded semantic input, an app-owned debug hook, or an explicitly verified external keyboard/paste adapter, then verify focus/value through host AX or observe and the App postcondition.",
+            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim tap and sim swipe are explicit host HID recovery paths for embedded iOS input failures and report adapter/target evidence; tap --x/--y and swipe --start/--end coordinates are expressed in simulator points and the point-space dimensions are inferred from simulator layout metadata, swipe optionally accepts paired --width/--height to normalize source-image coordinates; host acknowledgement does not claim embedded business selection or settled pager state. sim record validates actual encoded video sample duration rather than the MOV container timeline and rejects materially truncated evidence. sim logs captures unified-log only and does not cover App stdout/stderr. sim app-console terminates and relaunches the selected App through console-pty, writes a duration/byte-bounded sensitive artifact, and never inlines console content in JSON. sim type is a reserved, failure-only host input entry and returns unsupported_host_input because the current public simctl io contract exposes no stable keyboard type primitive. sim pasteboard set only stages clipboard contents; it does not paste into a focused field or prove that an App accepted or saved the value. Use embedded semantic input, an app-owned debug hook, or an explicitly verified external keyboard/paste adapter, then verify focus/value through host AX or observe and the App postcondition.",
             artifacts: ["simulator-screenshot", "simulator-video", "simulator-logs", "simulator-app-process-console", "simulator-diagnostics"],
             nextCommands: [
                 "triton sim use <udid> --json",
@@ -657,12 +664,15 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 hostSimulatorProcessConsoleOutputContract(),
                 hostSimulatorAXOutputContract(),
                 hostSimulatorInputOutputContract(),
+                inputResultOutputContract(),
                 hostActionOutputContract(selector: "host.simulator-action", model: "HostActionOutput|HostArtifactCaptureOutput|HostSimulatorUseOutput|HostSimulatorCreateOutput|HostSimulatorReadyEvent"),
                 hostSimulatorScreenshotMetadataOutputContract(),
                 hostDeviceProxyOutputContract(),
                 hostSimulatorMediaSeedOutputContract(),
             ],
             failureCodes: [
+                "target_not_found",
+                "ambiguous_target",
                 "sim_pairs_query_failed",
                 "parameter_conflict",
                 "simulator_not_found",
@@ -778,6 +788,18 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     ],
                     outputSelectors: ["host.simulator-input"],
                     failureCodes: ["simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "unsupported_host_input", "host_command_timeout", "validation_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "swipe",
+                    summary: "Swipe an iOS Simulator through the host HID adapter; coordinates default to Simulator points; paired --width/--height normalize a source coordinate space; submission-only, no embedded server",
+                    requiredOptions: ["--start-x", "--start-y", "--end-x", "--end-y"],
+                    optionalOptions: ["--simulator", "--width", "--height", "--duration", "--format", "--json"],
+                    nextCommands: [
+                        "triton sim screenshot --simulator <udid|booted> --output <new-path> --json",
+                        "triton sim ax --device <udid|booted> --json",
+                    ],
+                    outputSelectors: ["input.result"],
+                    failureCodes: ["target_not_found", "ambiguous_target", "simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "unsupported_host_input", "host_command_timeout", "invalid_duration", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "type",
@@ -941,7 +963,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     failureCodes: ["media_seed_manifest_invalid", "host_command_failed", "host_command_timeout", "simulator_not_found", "validation_failed"]
                 ),
             ],
-            providedCapabilities: ["host-simulator", "ios-simulator-host-type", "ios-host-ax", "sim-video", "sim-logs", "sim-app-process-console", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "device-proxy-ios", "network-capture-export"]
+            providedCapabilities: ["host-simulator", "ios-simulator-host-swipe", "ios-simulator-host-type", "ios-host-ax", "sim-video", "sim-logs", "sim-app-process-console", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "device-proxy-ios", "network-capture-export"]
         ),
         TKCommandSchema(
             name: "app",

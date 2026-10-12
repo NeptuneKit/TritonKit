@@ -124,3 +124,7 @@ For iOS Simulator evidence, inspect `manifest.primaryArtifact.fidelity` before v
 Use the Triton-first resource surface for iOS Simulator daemon overrides:
 `triton sim resource profiles|features|status|doctor|plan|apply|verify|measure|restore --json`.
 `apply` emits a receipt containing exact managed labels; retain it and pass it to `restore` for lossless rollback. `measure` reports `phys_footprint` for the target `launchd_sim` process tree and must be treated as invalid when `partial=true`.
+
+## Offline Simulator swipe (#215)
+
+`triton sim swipe --simulator booted --start-x 360 --start-y 700 --end-x 80 --end-y 700 --duration 0.35 --json` 通过现有 Baguette host HID 适配器执行，不依赖 embedded server 或 Web 服务。默认坐标为 Simulator points；可成对传 `--width/--height` 表示源图坐标空间。duration 为有限正数且最多 10 秒。成功只证明 host submission，必须用同目标 `triton sim ax --device <udid> --json` / `triton sim screenshot` 检查 settled 后置条件。后端不可用时失败关闭，不自动落回 embedded runtime。

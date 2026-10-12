@@ -284,3 +284,7 @@
 - `20260707-issue-140-redaction-preflight`：源 tip `ab6f1263` 经 `e4a09384` 合入 `main`；保留主线最新文件内容，清理对应 `codex/20260707-issue-140-redaction-preflight` 分支。
 - `20260722-issue-164-evidence-simulator-screenshot-fidelity`：源 tip `fcd57ce5` 经 `5f6fbecb` 合入 `main`；保留主线最新文件内容，清理对应 `codex/20260722-issue-164-evidence-simulator-screenshot-fidelity` 分支。
 - #164 旧 worktree 目录已不存在，仅移除对应失效注册；其他分支与 worktree 不在本次清理范围。
+
+## 2026-10-12 · Issue #215
+
+- [SP-184-issue-215-host-swipe](./SP-184-issue-215-host-swipe/README.md)：独立 worktree `../TritonKit-worktrees/SP-184-issue-215-host-swipe`，待集成；host-only CLI swipe 与单独 UI 后置验证。

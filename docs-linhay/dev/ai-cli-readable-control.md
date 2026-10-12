@@ -547,3 +547,7 @@ Temporary 查询可能创建客户端域，实际是否新建没有可靠后置�
 专门平台 runner 真实执行必须传递版本化 `TRITON_PLATFORM_REQUEST`（含 Crown delta 与唯一 nonce），并从 xcresult 的指定测试/设备附件校验结果，不能解析 xcodebuild stdout 作为成功 JSON。只运行一个精确测试方法，禁用并行与重复执行，先持久 intent 再执行并写 completion；未知送达保持未知且退出非零、不重试。独立验收工程在 `Examples/ApplePlatformAcceptance`，SDK build-for-testing 不代表 runtime/input 实测。结果父目录需 owned 0700 且路径无符号链接。
 
 - `triton xcode build --package Package.swift --scheme <scheme> --sdk iphoneos --destination 'generic/platform=iOS' --build-setting CODE_SIGNING_ALLOWED=NO --json` 支持无物理设备的 SDK-only 编译。SDK/destination 必须显式给出，不继承此 opt-in；不接受 `--device`/`--simulator`，不包含安装或启动，也不证明产物可安装。settings/test/run 仍保留真机 ready preflight。
+
+## Offline Simulator swipe (#215)
+
+`triton sim swipe --simulator booted --start-x 360 --start-y 700 --end-x 80 --end-y 700 --duration 0.35 --json` 通过现有 Baguette host HID 适配器执行，不依赖 embedded server 或 Web 服务。默认坐标为 Simulator points；可成对传 `--width/--height` 表示源图坐标空间。duration 为有限正数且最多 10 秒。成功只证明 host submission，必须用同目标 `triton sim ax --device <udid> --json` / `triton sim screenshot` 检查 settled 后置条件。后端不可用时失败关闭，不自动落回 embedded runtime。

@@ -211,3 +211,5 @@
 
 | `SP-185-issue-216-host-input-discovery` | [`SP-185-issue-216-host-input-discovery`](./SP-185-issue-216-host-input-discovery/README.md) | 本地实现／待集成 | #216 reserved type discovery 与 pasteboard 边界；focused 37 tests 通过 |
 | `SP-188-issue-219-generic-ios-build` | [`SP-188-issue-219-generic-ios-build`](./SP-188-issue-219-generic-ios-build/README.md) | 本地验证通过 | #219：显式 generic iOS SDK-only build；真机与 run 保护保持 |
+
+| `SP-184-issue-215-host-swipe` | [`SP-184-issue-215-host-swipe`](./SP-184-issue-215-host-swipe/README.md) | 待集成 | #215 offline Simulator CLI swipe；host HID submission 与 settled 验证边界 |
