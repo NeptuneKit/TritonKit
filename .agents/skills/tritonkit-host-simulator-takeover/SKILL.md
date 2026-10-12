@@ -275,3 +275,7 @@ SDK apps 显式 bundle/group 成员与原生路径绑定不等于 DeviceFS 目�
 显式执行门禁（仍需专用 runner 产物和专用 runtime）：`device platform-control ... --device <exact-udid> --xctestrun <private.xctestrun> --test-identifier <Target/Class/testMethod> --result-bundle <fresh.xcresult> --audit-record <id> --execute-runner --confirm --json`。只接受精确 UDID，执行前校验 watchOS/tvOS runtime family，使用 `xcodebuild test-without-building`；结果必须绑定 target/action/nonce/event/postcondition。普通 exit 0、缺结果、超时或目标替换保持 unknown，不自动重试。
 
 专门平台 runner 真实执行必须传递版本化 `TRITON_PLATFORM_REQUEST`（含 Crown delta 与唯一 nonce），并从 xcresult 的指定测试/设备附件校验结果，不能解析 xcodebuild stdout 作为成功 JSON。只运行一个精确测试方法，禁用并行与重复执行，先持久 intent 再执行并写 completion；未知送达保持未知且退出非零、不重试。独立验收工程在 `Examples/ApplePlatformAcceptance`，SDK build-for-testing 不代表 runtime/input 实测。结果父目录需 owned 0700 且路径无符号链接。
+
+## 真机管理执行的 timeout 兼容
+
+CoreDevice `--timeout` 原生参数按整数秒解析；将正有限 CLI 秒数向上取整序列化为无小数的 ASCII 字符串，host deadline 保留原始精度。`30.0` 会在动作前 exit64 且没有 native JSON/log，不能当作设备拒绝配对。实际失败后先检查审计和只读后置状态；参数修复后用新审计执行，不对未知动作盲重试。真机安装成功后 launch 仍可能因自动锁屏返回 device_locked，此时要求用户解锁，不绕过锁屏。

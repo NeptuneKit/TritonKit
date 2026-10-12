@@ -11,7 +11,7 @@
     "gui-only",
     "unsupported"
   ],
-  "real_device_actions": "readonly-metadata-validated; writes-and-collection-not-run",
+  "real_device_actions": "pair-and-unpair-postconditions-passed; diagnostics-collected-over-publication-limit; fixture-installed-launch-locked",
   "capabilities": [
     {
       "id": "app-container-binding",
@@ -60,17 +60,19 @@
     {
       "id": "device-pair-unpair",
       "status": "implemented",
-      "evidence": "fixture",
-      "real_write": "not-run",
-      "post_state_required": true
+      "evidence": "physical-pair-and-unpair-plus-fixture",
+      "real_write": "executed",
+      "post_state_required": true,
+      "restore_pairing": "blocked-target-disappeared-needs-reconnect"
     },
     {
       "id": "device-diagnose",
       "status": "implemented",
-      "evidence": "fixture",
-      "real_collection": "not-run",
+      "evidence": "physical-native-collection-plus-budget-rejection",
+      "real_collection": "executed",
       "archive_no_overwrite": true,
-      "archive_nofollow": true
+      "archive_nofollow": true,
+      "publication": "blocked-archive-size-limit"
     },
     {
       "id": "watch-crown-action",
@@ -145,5 +147,6 @@
     "dedicated-target-real-evidence-for-real-acceptance"
   ],
   "updated": "2026-10-12",
-  "real_device_verification": "20261012-real-device-verification.json"
+  "real_device_verification": "20261012-real-device-verification.json",
+  "real_device_execution": "20261012-real-device-execution.json"
 }
