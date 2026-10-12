@@ -182,8 +182,9 @@ jobs:
           esac
 
   build-cli-arm64:
+    # Publication is owned exclusively by the Release workflow.
+    if: ${{ false }}
     name: Build CLI (arm64)
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.classify-validate.outputs.is_release_tag == 'true' }}
     needs:
       - classify-validate
       - validate
@@ -276,8 +277,9 @@ jobs:
           if-no-files-found: error
 
   build-cli-x86_64:
+    # Publication is owned exclusively by the Release workflow.
+    if: ${{ false }}
     name: Build CLI (x86_64)
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.classify-validate.outputs.is_release_tag == 'true' }}
     needs:
       - classify-validate
       - validate
@@ -370,6 +372,8 @@ jobs:
           if-no-files-found: error
 
   package-release-assets:
+    # Publication is owned exclusively by the Release workflow.
+    if: ${{ false }}
     name: Package arm64 release assets
     needs: build-cli-arm64
     runs-on: ubuntu-latest
@@ -513,8 +517,9 @@ jobs:
           gh release upload "${tag}" dist/* --clobber
 
   publish-x86-release-asset:
+    # Publication is owned exclusively by the Release workflow.
+    if: ${{ false }}
     name: Publish x86_64 release asset
-    if: ${{ needs.classify-validate.outputs.is_release_tag == 'true' }}
     needs:
       - classify-validate
       - package-release-assets
@@ -570,8 +575,9 @@ jobs:
             --clobber
 
   update-homebrew-tap:
+    # Publication is owned exclusively by the Release workflow.
+    if: ${{ false }}
     name: Update Homebrew tap (arm64)
-    if: ${{ needs.classify-validate.outputs.is_release_tag == 'true' }}
     needs:
       - classify-validate
       - package-release-assets
@@ -582,8 +588,9 @@ jobs:
     secrets: inherit
 
   update-homebrew-tap-x86:
+    # Publication is owned exclusively by the Release workflow.
+    if: ${{ false }}
     name: Update Homebrew tap (x86_64 backfill)
-    if: ${{ needs.classify-validate.outputs.is_release_tag == 'true' }}
     needs:
       - classify-validate
       - publish-x86-release-asset
