@@ -25,3 +25,12 @@
 ## 正式发布推进
 
 用户后续明确授权推送、tag 和发布。main c3887682 已推送；正式发布以 v0.2.24 为目标，等待 main CI 的标准 CocoaPods lint 补齐本机旧最低版本门禁。发布前发现旧 CI 仍有可执行 tag 发布任务，与独立 Release 重复上传同名资产；本次停用全部旧 CI 发布任务并补防回归断言，保持 Release 为唯一发布路径。实际 tag/资产/安装结果在完成后写回。
+
+## 发布结果
+
+- v0.2.24 已发布，tag 固定指向 9c687b59c7a8b010208d0f7ccaffe5c5e479c5ab；main 已推送。
+- [Release 38201287688](https://github.com/NeptuneKit/TritonKit/actions/runs/38201287688) 全部通过：arm64/x86_64、skills、checksum、两次 Homebrew tap 更新。main 完整 CI 38201067605（含原始标准 pod lint 明确 passed validation）、发布防重复修复 CI 38201255534、tag CI 38201287807 均通过。
+- 重新下载三份正式 tar.gz，SHA-256 全匹配；Mach-O 分别验证 arm64/x86_64。正式技能包四个技能均 0.2.24，BUILD_INFO 绑定正确 tag/commit；私有证据不在包内。
+- Homebrew 从 0.2.22 升至 0.2.24，brew test 通过；仓库外 version 与 Web packaged mode 正确。独立端口启动正式 Web，首页与两项静态资源 HTTP 200，随后停止本任务监听。此项仅验证打包和服务，不是业务输入验收。
+- [GitHub Release](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.24) 已写入本次能力边界说明。SwiftPM 使用 v0.2.24；podspec 已对齐且 lint 通过，未推 CocoaPods trunk。
+- 继续保留 Temporary 真实创建、watch/tv 专门输入、原目标配对恢复等前述缺口；发布不等于全平台能力完成。
