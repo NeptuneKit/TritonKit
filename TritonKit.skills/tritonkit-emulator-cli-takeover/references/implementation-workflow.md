@@ -11,7 +11,7 @@
 5. Update `commandSchemas()` for every agent-facing command.
 6. Sync docs and skills:
    - `README.md`;
-   - `docs-linhay/dev/ai-cli-readable-control.md`;
+   - the owning project’s CLI contract documentation;
    - current emulator takeover space;
    - `tritonkit-real-project-regression`;
    - `tritonkit-dev-feedback`;

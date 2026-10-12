@@ -1,8 +1,6 @@
-## Existing Regression Entrypoints
+## Regression entrypoints
 
-- Generic complex harness: `docs-linhay/scripts/verify-complex-harness.sh`
-- Intent CLI smoke: `docs-linhay/scripts/verify-intent-cli-smoke.sh`
-- Overloaded real-app smoke: `docs-linhay/scripts/verify-overloaded-triton-smoke.sh`
+Use [the regression workflow](workflow.md) with the installed CLI. Repository-maintainer smoke scripts are not included in the public skill package; create a task-owned `.tritonplan` and inspect its schema-supported steps before executing it.
 
 ## Replay Plan Notes
 

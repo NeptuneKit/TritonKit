@@ -227,7 +227,7 @@
    - after taps, submissions, and navigation, use `triton wait --text`, `triton wait --gone`, `triton wait --idle`, or a safe `triton wait --predicate` instead of fixed sleeps;
    - use `triton verify text-exists|text-not-exists <text> --json` for final pass/fail checks; add `--within x,y,width,height`, `--role`, or `--count` when labels repeat across headers, sidebars, and cells;
    - assert expected state through `wait`, a second `ax`, `find`, `screenshot`, archive check, or a fresh `evidence` bundle.
-12. Store outputs under `/tmp` during iteration, then copy only durable screenshots or docs into the correct `docs-linhay/spaces/<space-key>/` location when the result is worth keeping.
+12. Store sensitive outputs in a private user-owned directory during iteration, then copy only redacted durable screenshots or docs into the owning project’s evidence area when the result is worth keeping.
 13. Before sharing evidence outside the real app repo, sanitize project and personal information:
    - replace private project names, app names, bundle IDs, team IDs, organization names, user names, account IDs, email addresses, phone numbers, local usernames, internal domains, and absolute private paths with stable placeholders;
    - keep platform/tool versions, TritonKit version, command names, error codes, redacted route shape, and minimal sanitized snippets needed for reproduction;
