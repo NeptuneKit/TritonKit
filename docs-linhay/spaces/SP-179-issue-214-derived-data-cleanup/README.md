@@ -59,3 +59,7 @@ BDD：近似/后代根目录被拒绝；dry-run 保持 cache/外部文件不变�
 schema 修复同时保留 normalization 各层 subcommands 递归复制，并验证嵌套 JSON round-trip，避免转换时静默丢失 cleanup 子命令。
 
 最终补验：parent `--format/--json` 不再跳过；为实际接受这两个参数的 Xcode 叶子子命令显式声明 scope，以 `--format json` 验真实 parser。父 `derived-data` 不增虚假 flag。第三个 public real-project-regression 指南同步禁止 confirm 自动回退删除。
+
+## 2026-10-12 本轮集成状态
+
+安全止血已本地集成至 [SP-190](../SP-190-open-issues-integration/README.md)；完整门禁通过，远端操作待授权。保留本轮 12 tests / 3 suites 的临时 fixture 验证证据；未删除真实用户缓存。#214 仍 OPEN：本轮只禁用危险删除并修复只读检查，不能视为完整安全清理实现或竞态安全验收。

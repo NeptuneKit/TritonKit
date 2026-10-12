@@ -68,6 +68,33 @@ struct XcodeSchemaParserContractTests {
         }
     }
 
+    @Test("parent and nested Xcode schemas preserve every DerivedData cleanup failure")
+    func derivedDataFailureInventoryMatchesCleanup() throws {
+        let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
+        let derivedData = try #require(xcode.subcommands.first { $0.name == "derived-data" })
+        let cleanup = try #require(derivedData.subcommands.first { $0.name == "cleanup" })
+        let expectedCodes = [
+            XcodeDerivedDataSafetyError.invalidRoot("fixture").code,
+            XcodeDerivedDataSafetyError.missingRoot("fixture").code,
+            XcodeDerivedDataSafetyError.activeBuild("fixture").code,
+            XcodeDerivedDataSafetyError.cleanupUnavailable.code,
+            "host_action_failed",
+        ]
+        #expect(Set(cleanup.failureCodes) == Set(expectedCodes))
+        for selector in ["xcode", "xcode.derived-data.cleanup", "xcode derived-data cleanup"] {
+            let response = try buildSchemaResponse(command: selector)
+            let schema = try #require(response.commands.first)
+            let decoded = try JSONDecoder().decode(TKCommandSchema.self, from: JSONEncoder().encode(schema))
+            let failureShape = try #require(decoded.failureShape)
+            #expect(!decoded.failureCodes.contains("derived_data_root_invalid"))
+            #expect(!failureShape.contains("derived_data_root_invalid"))
+            for code in expectedCodes {
+                #expect(decoded.failureCodes.contains(code), "\(selector) must advertise \(code)")
+                #expect(failureShape.contains(code), "\(selector) failure shape must advertise \(code)")
+            }
+        }
+    }
+
     private static func requiredArguments(for command: String, excluding: String? = nil) -> [String] {
         let required: [(String, String)]
         switch command {

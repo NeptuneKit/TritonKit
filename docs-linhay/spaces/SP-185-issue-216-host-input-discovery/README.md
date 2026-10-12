@@ -1,7 +1,7 @@
 # SP-185：Issue #216 host 文本输入发现边界
 
 - Issue：https://github.com/NeptuneKit/TritonKit/issues/216
-- 状态：本地实现与 focused 验证通过，待主控提交集成。
+- 状态：已本地集成／完整门禁通过／待远端授权；GitHub #216 保持 OPEN。
 - 影响层：CLI help、capability、schema、恢复指引；不新增 keyboard adapter、HTTP 或 Web 控制面。
 - 分支：`feat/SP-185-issue-216-host-input-discovery`
 - worktree：`../TritonKit-worktrees/SP-185-issue-216-host-input-discovery`
@@ -30,5 +30,7 @@
 
 - 本次构建 `triton`：help 显示 reserved/unsupported；capabilities `supported=false` 且 nextAction 指向 schema；嵌套 schema 为合法 JSON。
 - ASCII、Unicode、空文本分别返回 `unsupported_host_input`、`unsupported_text_input`、`validation_failed`；均 exit 1、单一 JSON envelope，无 Simulator 操作。
-- `git diff --check` 通过。`check-docs.sh` 报 SP-185 前缺 SP-184；该 space 属于同时处理的 issue 队列，主控统一集成索引。
+- `git diff --check` 通过。独立 worktree 的 `check-docs.sh` 曾因 SP-184 缺号阻塞；SP-190 已统一登记，集成后文档门禁通过。
 - `swift test --package-path CLI --filter 'SimulatorAdvancedControlsTests|SchemaFactSourceTests/(iosSimulatorHostTypeCapabilityIsUnsupported)'`：37 tests / 2 suites 全过。
+
+本轮集成入口：[SP-190](../SP-190-open-issues-integration/README.md)。以上 focused 记录来自各 issue 分支，不代表集成后完整门禁已通过。

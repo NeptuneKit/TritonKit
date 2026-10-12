@@ -42,6 +42,18 @@ import TritonKitShared
         #expect(unavailable.error?.code == "unsupported_host_input")
     }
 
+    @Test func hostInputSchemasMatchRuntimeResultsAndBootstrapFailures() throws {
+        let sim = try #require(commandSchemas().first { $0.name == "sim" })
+        for action in ["tap", "swipe"] {
+            let leaf = try #require(sim.subcommands.first { $0.name == action })
+            #expect(leaf.outputSelectors == ["input.result"])
+            for code in ["ios_host_hid_legacy_backend_unavailable", "ios_host_hid_simulator_kit_load_failed"] {
+                #expect(leaf.failureCodes.contains(code))
+                #expect(sim.failureCodes.contains(code))
+            }
+        }
+    }
+
     @Test func offlineCapabilityAndParserAreDiscoverable() throws {
         let capability = try #require(runtimeCapabilities(host: "127.0.0.1", port: 1, serverReachable: false, connected: false).first { $0.name == "ios-simulator-host-swipe" })
         #expect(capability.supported)

@@ -788,7 +788,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                         "triton sim screenshot --simulator <udid|booted> --output <new-path> --json",
                         "triton verify text-exists <expected> --json",
                     ],
-                    outputSelectors: ["host.simulator-input"],
+                    outputSelectors: ["input.result"],
                     failureCodes: ["simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "ios_host_hid_legacy_backend_unavailable", "ios_host_hid_simulator_kit_load_failed", "unsupported_host_input", "host_command_timeout", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
@@ -801,7 +801,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                         "triton sim ax --device <udid|booted> --json",
                     ],
                     outputSelectors: ["input.result"],
-                    failureCodes: ["target_not_found", "ambiguous_target", "simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "unsupported_host_input", "host_command_timeout", "invalid_duration", "validation_failed"]
+                    failureCodes: ["target_not_found", "ambiguous_target", "simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "ios_host_hid_legacy_backend_unavailable", "ios_host_hid_simulator_kit_load_failed", "unsupported_host_input", "host_command_timeout", "invalid_duration", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "type",

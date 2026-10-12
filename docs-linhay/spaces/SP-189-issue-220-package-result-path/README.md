@@ -1,5 +1,8 @@
 # SP-189 — Issue #220 package-relative xcresult path
 
+- 状态：已本地集成／完整门禁通过／待远端授权；GitHub #220 保持 OPEN。
+- 集成入口：[SP-190](../SP-190-open-issues-integration/README.md)。
+
 ## Scope
 
 Fix `triton xcode test --package ... --result-bundle <relative>` so xcodebuild and inline xcresult parsing resolve the bundle against the package working directory.

@@ -79,7 +79,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "triton xcode run --device <ios-real-target> --sdk iphoneos --jsonl",
             ],
             successShape: "discover/use/schemes/status/wait-idle/settings JSON envelopes or bounded JSONL progress plus final TKXcodeActionSummary with archive/export artifact paths",
-            failureShape: "{ ok:false, error:{ code: validation_failed|parameter_conflict|invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|xcode_run_target_unresolved|device_not_ready|device_not_trusted|developer_mode_required|ddi_missing|xcode_signing_failed|provisioning_profile_missing|export_options_plist_not_found|export_options_plist_invalid|xcode_archive_failed|xcode_export_failed|xcode_not_idle|xcode_schemes_timeout|xcodebuild_failed|xcodebuild_interrupted|orphaned_xcodebuild|swift_macro_plugin_malformed_response|app_path_unresolved|bundle_id_unresolved|target_not_found|ambiguous_target|target_platform_mismatch, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+            failureShape: "{ ok:false, error:{ code: validation_failed|parameter_conflict|invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|xcode_run_target_unresolved|device_not_ready|device_not_trusted|developer_mode_required|ddi_missing|xcode_signing_failed|provisioning_profile_missing|export_options_plist_not_found|export_options_plist_invalid|xcode_archive_failed|xcode_export_failed|xcode_not_idle|xcode_schemes_timeout|xcodebuild_failed|xcodebuild_interrupted|orphaned_xcodebuild|swift_macro_plugin_malformed_response|app_path_unresolved|bundle_id_unresolved|target_not_found|ambiguous_target|target_platform_mismatch|derived_data_root_rejected|derived_data_root_missing|derived_data_cleanup_unavailable|host_action_failed, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
             inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
             jsonlEvents: [
                 "xcode.<action>.invocation",
@@ -231,7 +231,10 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "export_options_plist_invalid",
                 "xcode_archive_failed",
                 "xcode_export_failed",
-                "derived_data_root_invalid",
+                "derived_data_root_rejected",
+                "derived_data_root_missing",
+                "derived_data_cleanup_unavailable",
+                "host_action_failed",
             ],
             subcommands: [
                 TKCommandSubcommandSchema(

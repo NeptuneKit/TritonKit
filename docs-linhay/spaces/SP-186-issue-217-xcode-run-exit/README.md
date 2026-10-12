@@ -1,7 +1,7 @@
 # SP-186 · xcode run 构建失败退出传播
 
 - Issue：[#217](https://github.com/NeptuneKit/TritonKit/issues/217)
-- 状态：修复与聚焦验证完成，待主控集成。
+- 状态：已本地集成／完整门禁通过／待远端授权；GitHub #217 保持 OPEN。
 - 影响层：CLI 命令退出状态；保留 shared summary 与 JSON/JSONL 输出契约。
 - 分支：`feat/SP-186-issue-217-xcode-run-exit`
 - Worktree：`../TritonKit-worktrees/SP-186-issue-217-xcode-run-exit/`
@@ -18,6 +18,8 @@ Given build phase 返回 `ok:false`、`exitCode:70`、`failureCode:xcodebuild_fa
 
 - `swift test --package-path CLI --filter XcodeCommandTests.xcodeRunFailedBuild --no-parallel`：通过 2 tests（子进程测试含 JSON/JSONL 两个 cases），1.554s；本次构建 binary 真实退出非零、final 单一且无 settings/install/launch。
 - `git diff --check`：通过。
-- `check-docs.sh`：当前仅因新增 space 未同步全局 index 阻塞；INDEX/路线/memory 由主控统一集成，避免多 issue 并行修改冲突。
+- `check-docs.sh`：独立 worktree 曾因新增 space 未同步全局 index 阻塞；SP-190 已统一登记，集成后文档门禁通过。
 - 不操作真实 Simulator；此 issue 仅修复 CLI 退出语义，不承担 Xcode destination 兼容验证。
-- 根包、完整 CLI 与本地总门禁由主控集成后统一验证。
+- 根包、完整 CLI 与本地总门禁由主控在 SP-190 统一验证，已通过。
+
+本轮集成入口：[SP-190](../SP-190-open-issues-integration/README.md)。以上 focused 记录来自各 issue 分支，不代表集成后完整门禁已通过。

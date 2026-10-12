@@ -1,6 +1,6 @@
 # SP-187 · Issue 218 host HID availability
 
-- 状态：本地实现与 focused 验证通过，待主控集成。
+- 状态：已本地集成／完整门禁通过／待远端授权；GitHub #218 保持 OPEN。
 - Issue：[218](https://github.com/NeptuneKit/TritonKit/issues/218)
 - 影响层：CLI host adapter / doctor / schema；无新 HTTP/Web 控制面。
 
@@ -17,7 +17,7 @@
 `IOSHostHIDProbeTests` 覆盖 selected layout、缺失/loading/legacy/modern typed reason、class-only 边界、诊断保留和 parser。旧 idb doctor 测试同步收紧。真实现代 Xcode touch 及业务命中本轮未执行，不宣称恢复 host input。
 
 - 2026-10-12：focused 15 tests / 3 suites 通过；隔离 bootstrap 缺框架实际 CLI envelope 返回 loaded=false、dlopen_failed。未触碰设备输入。
-- `git diff --check` 通过；`verify.sh --ci-docs` 与 `check-docs.sh` 目前仅因新 SP-187 尚未由主控统一登记 index 而失败，待集成写回。
+- `git diff --check` 通过；独立 worktree 的 `verify.sh --ci-docs` 与 `check-docs.sh` 曾因 SP-187 尚未登记 index 失败；SP-190 已统一登记，集成后文档门禁通过。
 - 本轮通过隔离子进程读取 framework/class metadata；既有 action 不以此诊断作前置 gate。实际 bootstrap 失败 typed 分类并脱敏，不重试/不切换后端。
 
 ### Bootstrap EOF follow-up
@@ -26,3 +26,5 @@
 - 真实 fake process 输出超过 16 KiB 的 bootstrap 诊断并 exit 1，经过 lifecycle 和最终 error envelope 验证为 `ios_host_hid_legacy_backend_unavailable`，不泄漏私有路径/原日志。
 - 新增 probe + bootstrap + 既有完整 touch lifecycle focused 8 tests / 2 suites 通过；未执行真实 Simulator input。
 - provenance 区分 `provided`、`DEVELOPER_DIR` 与 `xcode-select`，只有实际查询时记录 xcode-select；隔离 bootstrap 命令用静态路径占位，不公开本地路径。
+
+本轮集成入口：[SP-190](../SP-190-open-issues-integration/README.md)。以上 focused 记录来自各 issue 分支，不代表集成后完整门禁已通过。

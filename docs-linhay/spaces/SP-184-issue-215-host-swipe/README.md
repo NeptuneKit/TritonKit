@@ -1,5 +1,8 @@
 # SP-184 · Offline iOS Simulator host swipe
 
+- 状态：已本地集成／完整门禁通过／待远端授权；GitHub #215 保持 OPEN。
+- 集成入口：[SP-190](../SP-190-open-issues-integration/README.md)。
+
 对应 GitHub issue #215。范围是本机 iOS Simulator 的 CLI host 输入，不启动 embedded Triton server，也不扩展到真机、远端 agent 或 Web 控制面。
 
 ## BDD 验收
@@ -15,4 +18,4 @@
 - `TRITON_CLI_PATH="$PWD/CLI/.build/out/Products/Debug/triton" swift test --package-path CLI --filter 'SimulatorSwipeTests|SimulatorAdvancedControlsTests|CLIHelpTests/simSwipeHelpAndValidationAreOffline|SchemaFactSourceTests' --no-parallel`：163 tests / 4 suites 通过。
 - `docs-linhay/scripts/verify.sh --ci-docs`、`docs-linhay/scripts/check-docs.sh`、`git diff --check` 通过。
 - `sim swipe --help`、非法 duration / 缺半边 geometry 的单 JSON 非零失败、host dispatch fixture、source-space 归一化与 terminal-up fixture 已覆盖。
-- 未运行真实 Simulator pager 验证、完整 CLI suite 或 local gate；交由主控集成验证。状态：ready-to-commit，按主控要求由主控串行提交。
+- 未运行真实 Simulator swipe/pager 验证；已本地集成至 SP-190，完整 CLI suite 与 local gate 通过，远端操作待授权。

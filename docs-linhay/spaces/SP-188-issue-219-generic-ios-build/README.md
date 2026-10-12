@@ -2,7 +2,7 @@
 
 ## 状态与边界
 
-- 状态：本地实现完成，focused 验证通过；GitHub #219 保持 OPEN。
+- 状态：已本地集成／完整门禁通过／待远端授权；GitHub #219 保持 OPEN。
 - Issue：[GitHub #219](https://github.com/NeptuneKit/TritonKit/issues/219)
 - Branch：`feat/SP-188-issue-219-generic-ios-build`
 - Worktree：`../TritonKit-worktrees/SP-188-issue-219-generic-ios-build/`
@@ -26,5 +26,7 @@
 - 独立 scratch：`.build/sp188-issue219`，不与其他 issue 共享。
 - `XcodeCommandTests` 51/51 通过（含 #170 真机与 run target 回归）；`git diff --check` 通过。`XcodeSchemaParserContractTests` / `XcodeArchiveCapabilityTests` 5/5 通过；实际 `triton schema --command xcode.build --json` 输出合法 JSON。
 - 未执行真实 SDK cross-compilation、物理设备、Simulator、安装或启动；本轮证据为 resolver、argv 和 CLI schema 契约。
-- `check-docs.sh` 与 `verify.sh --ci-docs` 已执行，因独立 worktree 的 SP-184～187 尚未登记而在 space 连号校验停止；主控在集成时统一补齐。
-- 本地实现由主控统一提交/集成；未 push、merge 或关闭 issue。
+- `check-docs.sh` 与 `verify.sh --ci-docs` 已执行，因独立 worktree 的 SP-184～187 尚未登记而在 space 连号校验停止；SP-190 已统一补齐，集成后文档门禁通过。
+- 已本地集成至 SP-190；本轮未 push、远端 merge 或关闭 issue。
+
+本轮集成入口：[SP-190](../SP-190-open-issues-integration/README.md)。以上 focused 记录来自各 issue 分支，不代表集成后完整门禁已通过。
