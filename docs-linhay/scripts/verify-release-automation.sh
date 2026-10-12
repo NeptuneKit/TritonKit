@@ -177,10 +177,26 @@ grep -A12 'publish-x86-release-asset:' "${release_workflow}" | grep -Fq 'actions
   || fail "release workflow must checkout before gh release download in the x86_64 publish job"
 grep -Fq 'is_release_tag: ${{ steps.validate-scope.outputs.is_release_tag }}' "${ci_workflow}" \
   || fail "ci workflow must expose release tag detection from classify-validate"
-grep -Fq "needs.classify-validate.outputs.is_release_tag == 'true'" "${ci_workflow}" \
-  || fail "ci workflow release jobs must depend on classify-validate release output"
-grep -Fq 'if: ${{ needs.classify-validate.outputs.is_release_tag == '\''true'\'' }}' "${ci_workflow}" \
-  || fail "ci workflow release job conditions must use explicit GitHub expressions for needs outputs"
+# CI is validation-only. The Release workflow exclusively owns publication,
+# including manual dispatches; inspect job-level conditions rather than matching
+# an unrelated step or comment containing a disabled expression.
+ruby -ryaml - "${ci_workflow}" <<'RUBY' || fail "CI release jobs must remain disabled; use the Release workflow"
+jobs = YAML.load_file(ARGV.fetch(0)).fetch("jobs")
+legacy_release_jobs = %w[
+  build-cli-arm64
+  build-cli-x86_64
+  package-release-assets
+  publish-x86-release-asset
+  update-homebrew-tap
+  update-homebrew-tap-x86
+]
+legacy_release_jobs.each do |job_name|
+  job = jobs.fetch(job_name)
+  next if job["if"] == '${{ false }}'
+
+  abort "CI job #{job_name} must have job-level if: ${{ false }}"
+end
+RUBY
 grep -Fq 'completed successfully before arm64 release assets were created' "${release_script}" \
   || fail "release script must fail if a tag run succeeds without creating release assets"
 
