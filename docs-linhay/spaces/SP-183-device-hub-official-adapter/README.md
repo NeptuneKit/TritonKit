@@ -1,6 +1,6 @@
 # SP-183 Device Hub 官方设备能力适配
 
-当前正在[准备 v0.2.24](./plans/20261012-release-preparation.md)：代码已合入main，整理public/internal skills、对齐包版本和运行发布门禁；[发布说明草稿](./plans/20261012-v0.2.24-release-notes.md)。正式推送/tag/Release尚未执行。
+当前正在[准备 v0.2.24](./plans/20261012-release-preparation.md)：代码已合入main，整理public/internal skills、对齐包版本和运行发布门禁；[发布说明](./plans/20261012-v0.2.24-release-notes.md)。正式推送/tag/Release尚未执行。
 
 2026-10-12 继续验收：[16 Pro诊断归档成功](./plans/20261012-diagnostic-closeout.md)，显式512MiB预算、约310MiB私有ZIP、权限/hash/防覆盖通过；原13 Pro Max恢复仍待设备重连。
 

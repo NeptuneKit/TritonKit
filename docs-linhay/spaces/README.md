@@ -4,7 +4,7 @@
 >
 > 编号登记册：[INDEX.md](./INDEX.md)（183/183 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-12（SP-183 真机验收与 v0.2.24 skills/发版准备）
+> 最近审计：2026-10-12（SP-183 真机验收与 v0.2.24 skills整理与发布验收）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -23,7 +23,7 @@
 | --- | --- | --- | --- |
 | 研究已归档／实现待定 | [SP-181-device-hub-paradigm](./SP-181-device-hub-paradigm/README.md) | Device Hub 范式研究已归档；后续实现需独立立项 | 按该 space 的边界另行推进 |
 | 设计已归档／实施待立项 | [SP-182-trusted-execution-system](./SP-182-trusted-execution-system/README.md) | 可信执行系统双路径设计已归档；尚未进入产品实现 | 按该 space 的边界另行推进 |
-| v0.2.24发布中／标准Pod lint云端通过／专门平台输入未验收 | [SP-183-device-hub-official-adapter](./SP-183-device-hub-official-adapter/README.md) | 容器语义、Crash/Temporary 边界、管理执行后端、平台控制边界、兼容矩阵与 public schema 已实现；watchOS/tvOS runner 已实现并编译，真实输入未验收；visionOS 空间与 macOS Device Hub unsupported | 继续按能力矩阵推进专用 runner 与真实验收；真机 pair/unpair、安装启动、诊断发布已验收；Temporary 创建未验收，不称完整 Device Hub 接入 |
+| v0.2.24已发布／双架构与Homebrew通过／专门平台输入未验收 | [SP-183-device-hub-official-adapter](./SP-183-device-hub-official-adapter/README.md) | 容器语义、Crash/Temporary 边界、管理执行后端、平台控制边界、兼容矩阵与 public schema 已实现；watchOS/tvOS runner 已实现并编译，真实输入未验收；visionOS 空间与 macOS Device Hub unsupported | 继续按能力矩阵推进专用 runner 与真实验收；真机 pair/unpair、安装启动、诊断发布已验收；Temporary 创建未验收，不称完整 Device Hub 接入 |
 | 兼容修复验证／命中待补 | [SP-180-xcode27-simulator-frameworks](./SP-180-xcode27-simulator-frameworks/README.md) | 已选Xcode只读查询、仅适配器子进程补框架；8测试与加载器恢复验证 | 10-06 CLI993+14/本地门禁通过；业务bridge截图完成，host HID导航另补，不将ACK算命中 |
 | 已发布／待安全补验 | [SP-179-issue-214-derived-data-cleanup](./SP-179-issue-214-derived-data-cleanup/README.md) | #214：v0.2.22 已发布，issue 仍 OPEN | 精确路径白名单、活动构建保护、fixture 与完整 CLI 回归；补验前仅推荐 inspect/dry-run |
 | 已归档 | [SP-178-issue-213-real-device-runtime](./SP-178-issue-213-real-device-runtime/README.md) | #213：真机 runtime readiness 诊断、单一 smoke JSON 与可执行 setup；不自动注入 endpoint | v0.2.21 已发布并回复关闭；CLI 983/root 269、CocoaPods lint、双架构与 Homebrew 验证全过；真机端到端未复测 |
