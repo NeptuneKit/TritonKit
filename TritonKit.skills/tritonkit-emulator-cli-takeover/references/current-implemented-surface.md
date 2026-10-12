@@ -203,9 +203,10 @@ For the Harmony demo, `28767` is the host-access embedded runtime port exposed t
 When debugging Harmony direct runtime defaults, verify against a real HDC target before changing CLI defaults:
 
 ```bash
-TRITON_BIN=.build/cli-scratch/debug/triton docs-linhay/scripts/verify-harmony-runtime-emulator-smoke.sh --target <hdc-target> --no-forward
+triton device runtime-url --device <hdc-target> --probe-manifest --json
+triton debug runtime manifest --runtime-base-url <verified-runtime-url> --json
 ```
 
-Use `--no-forward` when the HDC fport already exists, because repeating `hdc fport tcp:28767 tcp:28767` can fail with a host listen conflict even though the existing forwarded endpoint is healthy. Keep mock contract smoke separate from real emulator smoke: the mock script should use an isolated test port while asserting the schema/default output remains `28767`.
+Reuse an existing healthy HDC forward rather than recreating it: a repeated forward can fail with a host listen conflict. Preserve the verified URL and distinguish mock contract tests from real emulator runtime checks. Repository-only smoke scripts are not shipped in this bundle.
 
 Android Emulator host-side support is now part of the implemented local CLI takeover surface. Treat `adb`-backed device discovery, readiness, start/stop, screenshot, app lifecycle, UIAutomator observe/wait/tap, and `smoke android` as schema-backed Triton commands; continue to keep DTOs, evidence, and command-ledger schemas platform-neutral across iOS, Android, and Harmony.

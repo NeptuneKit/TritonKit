@@ -38,27 +38,14 @@ For Device Hub information, prefer `triton device info --platform ios --device <
 | Ordinary bug, docs gap, feature request, or existing evidence to file | `references/issue-filing.md` |
 | iOS embedded runtime hierarchy, snapshot, state, AX, input, WebView, media, semantic provider, or Xcode-run evidence | `references/evidence-ios-runtime.md` |
 | Host-side iOS Simulator, Android Emulator, HarmonyOS / DevEco Emulator, Web Device Hub, install/launch/screenshot/readiness evidence | `references/evidence-host-devices.md` |
+| Device Hub metadata, management, containers, or specialized platform evidence | [device-hub-feedback.md](references/device-hub-feedback.md) |
 | CLI schema, capabilities, doctor, plan, replay, recovery, output contract, failure code, or taxonomy inconsistency | `references/schema-contract-feedback.md` |
 | User asks how to add TritonKit to an iOS app via SwiftPM/CocoaPods | `references/app-integration-ios.md` |
 | User asks how to use TritonKit with Harmony host-side validation or embedded SDK | `references/app-integration-harmony.md` |
 
-## Device Hub metadata feedback
+## Device Hub feedback
 
-For `device files`, record selector/domain/optional directory/user scope with private values redacted. Default output is shallow token metadata, not file content; --include-sensitive filenames/relative paths and private JSON artifacts must not enter an issue. distinguish unsupported_device_file_query (observed CoreDevice capability restriction), device_file_domain_policy_required (temporary before backend), device_files_limit_exceeded (local acceptance budget, not remote transport/disk hard limit), and identity/domain/request-scope mismatch (fail closed). Never silently retry DeviceFS/another backend or boot/pair/unlock a device to make feedback green; missing metadata is unknown, non-directory is not necessarily regular, isWritable does not authorize a write. Full Device Hub progress is per capability and actual acceptance, not help or one metadata query.
-
-For `device mountpoint` feedback, preserve command/error/token/identityBinding metadata but never publish private JSON dataPath/raw IDs. Exact unique echoed-device binding is required because result has no identity. query_failed is not proof of global platform unsupported; a token/artifact is not path existence, mounted state, contents, read/write or business verification. No automatic target preparation/Finder/explicit mount-unmount/backend retry; CoreDevice service and private artifact side effects should be declared.
-
-Hardware observation feedback: device info.hardware.platformObservation optional additive/exact explicit platform/deviceType/reality with layout source, old missing field nil-compatible. No name/product/marketing/runtime/capabilities/legacy ios OS/iPadOS/physical inference, reported iOS+iPad stays ios/ipad; unknown reality not physical and unknown raw observation values not echoed. Present modern even null/partial blocks deprecated mirrors, no controls/business/ID/argv/dispatch change. Require nested schema/CLI binding/roundtrip/current SDK readonly evidence, fixtures other families not control acceptance.
-
-Platform feedback: device platforms --json is compiled Apple catalog, optional --apple-platform catalog filter; --inventory one availableSimulator metadata/globalfamilycount, unknown retained/no IDs/names/rawruntime. Default zeroqueries/no physical/boot/control/server. iOS runtime not iPadOS/iPhone-iPad proof, no Mac guess; 0 not unavailable. Report-only auth/control false not old command denial. Old ios namespace/IDs/argv stable; generic sim and Applecap arrays not specialized acceptance. Require fixture default/filter/provider/staticerrorprivacy plus actual envelopes, never native action/state claim from counts.
-
-Administration regression and feedback must distinguish readonly --plan-only, fixture-tested explicit execution, and separately authorized physical acceptance. Use the Device Hub 能力组 section below; do not execute real pairing or diagnostic collection without task authorization. Private native logs and identifiers must remain local.
-
-Relative-directory feedback adds optional --subdirectory only inside explicit native container/app view (raw1..32/4096UTF8/255each, no absolute/dot/dotdot/empty/control, no normalize/URLdecode). Do not publish scope fields or nativepath; exact directoryToken/entry scope correlation, not auth/secrecy. Input+standard-root shape totalbudget before discovery/artifacts and fresh actual UTF8-home/UUID binding+recheck before directory IO; root and each relative-layer same-FD owner/nofollow, system ancestors nofollow only. No content/recursive/outsidecontainer/Temporary-domain creation/Finder/autoprep/fallback; require actual owned state restore, not readonlyreview/fixtures.
-
-Single container feedback preserves optional directoryToken and container-scoped entry tokens; --container-identifier is a private one-component native name only with app views, never verified bundle/group identity. Do not paste selector input or nativepath/private artifacts in issues. Input never selection-field echoed; include-sensitive leaf names can coincidentally match it. Root/each-relative-layer owner/nofollow and pre-discovery/artifact parameter validation are required; never normalize, auto-select, fallback or recurse. This remains shallow metadata, not installation/auth/business proof.
-
-For explicit `device fs list` feedback preserve backend=devicefs/view=mount-root|app-data-containers|app-group-containers, entryIdentityVerification (native devicefs synthetic dirent/stat IDs not comparable; same-directory nofollow double-stat, other FS strict dirent binding; not atomic/provenance), default private entry tokens/kind/regular size and typed root/reader/limit errors; never publish nativepath/private fileJSON, include-sensitive names or raw physical IDs/aliases. It inspects shallow root metadata but not contents/domain mapping/mount provenance/writeauthorization/business readiness. Same-FD owner/nofollow and currentUUID root binding are required, query timeout is not FUSE deadline/remotehardlimit/atomic snapshot; no files-error fallback or autoprep/Finder/explicitmount. Real acceptance is owned-only state restore proof, not static fixture success or proof of physical listing.
+For discovery, containers, Crash/Temporary, physical administration or specialized platforms, read [Device Hub feedback](references/device-hub-feedback.md). Preserve per-capability implementation and acceptance levels; historical execution never authorizes actions for the current report.
 
 ## Always keep
 
@@ -82,22 +69,3 @@ For explicit `device fs list` feedback preserve backend=devicefs/view=mount-root
 - `debug attrs --oid` 支持 UIView/CALayer oid；UILabel 的有效字体/颜色与 UTF-16 run 有界输出，正文预览和 run 都要检查截断字段。
 - collection cell 激活尊重 allowsSelection/delegate，success 只证明公开 callback，必须验证业务后置条件。`act tap --duration` 不支持长按，提前 typed unsupported；embedded longPress 和非滚动手势也不伪造成功，使用 App 显式注册的 semantic DEBUG action 或检查实际 provider 能力。
 - Harmony ArkWeb bridge-call 需可达 DevTools socket 与页面 `window.__tritonBridge.methods` 自有函数白名单；函数接收 `(params, complete, reject)`，支持返回值/Promise/callback。明确选中 CDP page ID，stale/ambiguous 失败关闭；不把 CDP page ID 当导航 session 验证，清理失败也可能发生在页面方法已执行之后，重试前先验业务状态。
-
-## Device Hub 能力组（2026-10-10）
-
-`device containers --device <selector> --bundle-id <id> [--group-id <id>] [--list] --json` 查询 SDK 显式 bundle/group membership 与容器路径绑定，默认只公开 tokens、状态和能力边界。`--list` 只对所选 Simulator 的受限原生容器做浅层元数据读取，逐级 nofollow/owner/预算检查，不读取业务内容。真实设备支持 SDK 元数据，不将其设备路径当作本机路径打开。旧 SDK 缺少参数明确 unsupported，缺绑定字段 unavailable；不能按 App 名/目录名猜归属，`deviceFSBindingVerified=false` 始终保留。
-
-Crash 的三条契约独立：`device files --domain-type systemCrashLogs` 是 CoreDevice 浅元数据文件域；`device fs list --view diagnostic-reports` 只枚举 DeviceFS 明确的 `DiagnosticReports` namespace，缺目录就失败，不能猜 root 映射或宣称与文件域逐项等价；`device diagnose` 是敏感诊断 ZIP 采集，可能含宿主日志。均不得由目录存在推导额外权限。
-
-Temporary 查询可能创建客户端域，实际是否新建没有可靠后置证据。默认继续返回 `device_file_domain_policy_required`；只有 `device files --domain-type temporary --domain-identifier <client-id> --allow-domain-creation --confirm --execute-runner --audit-record <id>` 才允许执行，执行前持久审计，`riskLevel=automation`、creation unknown，失败可能已经创建且不自动重试。本轮无真实 Temporary 查询。
-
-`sim pairs --json` 读取原生 watch/phone 配对关系，不证明输入、连接或业务就绪。`device platforms --include-real-devices [--device <exact-id-or-inventory-token>] --json` 独立发现/选择 Apple physical 硬件元数据；只有 SDK 显式 physical 纳入，不从名称、transport 或 capability 数组推断，旧 iOS 路由不扩大。Crown/侧键、tvOS 焦点/选择/返回、visionOS 视角/场景/专门输入仍无已验证程序后端，明确未支持；macOS 仍区分 Xcode build/test 工作流与 Device Hub 控制。
-
-`device platform-control --platform <watchos|tvos|visionos|macos> --action <control> --json` 目前只提供事实契约：watchOS Crown/Action 与 tvOS remote/focus 返回 `fixture-only`（Crown 需有限非零 `--delta`），visionOS gaze/pinch/scene、watchOS side-button 与 macOS Device Hub 控制返回 `unsupported`。所有这些结果均为 `executable=false`、`actionsExecuted=false`；没有 Triton XCTest runner 或目标绑定时，不得把 XCTest API 名称、fixture 或 GUI 证据升级为真实输入验收。
-
-显式执行门禁（仍需专用 runner 产物和专用 runtime）：`device platform-control ... --device <exact-udid> --xctestrun <private.xctestrun> --test-identifier <Target/Class/testMethod> --result-bundle <fresh.xcresult> --audit-record <id> --execute-runner --confirm --json`。只接受精确 UDID，执行前校验 watchOS/tvOS runtime family，使用 `xcodebuild test-without-building`；结果必须绑定 target/action/nonce/event/postcondition。普通 exit 0、缺结果、超时或目标替换保持 unknown，不自动重试。
-
-
-`device pair|unpair|diagnose --platform ios --scope real --device <selector> --plan-only --json` 保留只读策略审查。执行后端要求 `--execute-runner --confirm --audit-record <id>`；diagnose 另需 `--output <private.zip>`，可设 `--maximum-archive-bytes`。先持久化 intent，再单次原生命令、严格 file-JSON 绑定和独立配对后置状态 / 诊断 ZIP 检查，最后写 completion；成功、失败、超时、部分完成分开，未知状态不重试。诊断仍可能包含宿主 CoreDevice 日志，即使关闭 host sysdiagnose；与 Crash 日志域不同。输出目录须已存在且仅当前用户可访问，拒绝覆盖/符号链接，0600 发布及本地大小限额不等于原生采集峰值限制。外部工具使用路径，前后 inode 检查不消除同用户并发替换风险。此后端本轮仅隔离 fixture 验证，未获真机执行/诊断采集验收授权；旧 `sim pair/unpair/diagnose` 保留。
-
-专门平台 runner 真实执行必须传递版本化 `TRITON_PLATFORM_REQUEST`（含 Crown delta 与唯一 nonce），并从 xcresult 的指定测试/设备附件校验结果，不能解析 xcodebuild stdout 作为成功 JSON。只运行一个精确测试方法，禁用并行与重复执行，先持久 intent 再执行并写 completion；未知送达保持未知且退出非零、不重试。独立验收工程在 `Examples/ApplePlatformAcceptance`，SDK build-for-testing 不代表 runtime/input 实测。结果父目录需 owned 0700 且路径无符号链接。

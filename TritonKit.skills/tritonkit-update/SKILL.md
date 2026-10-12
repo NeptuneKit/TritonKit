@@ -79,13 +79,7 @@ This downloads `tritonkit-skills.tar.gz` from the selected release and replaces 
    - `TritonKit.skills/tritonkit-update/SKILL.md` exists.
    - Every bundled public skill `metadata.version` matches the intended release.
 
-When the TritonKit repository is available locally, prefer:
-
-```sh
-docs-linhay/scripts/install-public-skills.sh "$AGENT_SKILLS_DIR" --from-tar tritonkit-skills.tar.gz
-```
-
-Without the repository, extract the tarball to a temporary directory and copy the extracted `TritonKit.skills/` directory into the agent skills directory.
+For a manual install, extract the verified release tarball to a fresh temporary directory and replace the installed `TritonKit.skills/` as one bundle. Preserve local customizations separately before replacement. Cross-skill references require all four bundled skills; do not copy individual `SKILL.md` files alone.
 
 ## Update App Dependencies
 

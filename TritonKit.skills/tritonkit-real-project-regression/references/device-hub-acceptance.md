@@ -1,0 +1,16 @@
+# Device Hub acceptance
+
+Use the shared [Device Hub contracts](../../tritonkit-emulator-cli-takeover/references/device-hub-contracts.md) for command and safety details. This workflow covers an explicitly selected capability group; it does not authorize operations by itself.
+
+1. Record the current authorized target and actions, installed CLI/Xcode, current schema and baseline state. Match fresh SDK identity; changing devices needs explicit task authorization. A device name or unlocked alternate device is not the same identity.
+2. Keep private evidence in a fresh user-owned mode 0700 directory. Use bounded metadata and no business file content. Save a single JSON result, exit status and private intent/completion audits for each operation.
+3. For containers, prove SDK bundle/group membership binding. Native child names select directories only. Physical container listing remains unsupported; retain that rejection rather than opening a remote path on the host.
+4. For pair/unpair/diagnose, review the plan and execute once with the required policy fields. Independently check postconditions. Unpair can make a target disappear and require the user to reconnect/trust it; keep restore incomplete until the same identity is paired again. A successful operation on a replacement target does not restore the original.
+5. For diagnostics, fix a budget before capture. Verify native target/result, fresh archive, permission and ZIP checks; preserve partial when the local budget rejects a completed native capture. Do not automatically increase limits or retry. Successful private archive publication does not prove contents are complete or safe to publish.
+6. For App lifecycle, use an explicitly authorized signed fixture: build/install, query installed state, launch and independently verify the same process identity. A locked-device rejection is not successful launch. If the CLI lacks process inspection, first preserve that schema gap before a deliberate readonly native fallback. Business UI readiness needs separate evidence.
+7. For watchOS/tvOS, prepare a dedicated target/runtime and runner artifact. Native SDK build, macOS attachment transport and negative target checks do not validate Crown or remote input. Require event and App postcondition receipts. Mark runtime unavailability or missing Action postcondition as blocked; do not borrow business instances or replace it with GUI proof.
+8. Restore only owned state within the task's authorization; compare all other instance names/states unchanged. Report each retained artifact/App, unresolved pairing restore and partial operation separately. Never mark a whole platform integrated because one batch passed.
+
+Temporary queries still need explicit possible-creation authorization and persistent audit; no real acceptance is established by current fixtures. Side-button, visionOS specialized input and macOS Device Hub controls remain unsupported; macOS Xcode build/test has a separate boundary.
+
+The recorded physical iOS pair/unpair, diagnostic archive and fixture install/launch successes are historical product evidence. Recheck current permission, target identity, SDK behavior and postconditions for every new external acceptance task. Keep raw captures local and use [evidence and issues](evidence-and-issues.md) for redacted handoff.

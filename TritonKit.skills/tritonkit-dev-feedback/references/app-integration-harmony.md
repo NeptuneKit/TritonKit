@@ -56,11 +56,7 @@ triton act set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http
 
 For the Harmony demo, `28767` is the host-access embedded runtime port exposed through HDC `fport`; `18765` is the device-to-host gateway fallback port used by the demo UI.
 
-If an HDC fport already exists, use:
-
-```bash
-docs-linhay/scripts/verify-harmony-runtime-emulator-smoke.sh --target <hdc-target> --no-forward
-```
+If an HDC fport already exists, reuse its confirmed runtime URL for the readonly manifest and snapshot checks above. Do not recreate a forward merely to run a smoke check; repository-only test scripts are not included in this public skill bundle.
 
 ## Distribution notes
 

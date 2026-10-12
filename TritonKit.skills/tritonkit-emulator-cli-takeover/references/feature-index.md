@@ -4,6 +4,7 @@ Use this file to choose the smallest reference needed for an emulator CLI takeov
 
 | Feature / Task | Read |
 |---|---|
+| Apple Device Hub discovery, containers, Crash/Temporary, management and specialized platform contracts | [device-hub-contracts.md](device-hub-contracts.md) |
 | Decide whether a capability belongs in `triton` CLI | `cli-admission-rules.md` |
 | Add or change WebView-aware `act tap` / `webview.tap` | `webview-actions.md` |
 | Work on `device proxy`, `sim proxy`, capture, mock, block, throttle, certs, or proxy evidence | `network-proxy.md` |
