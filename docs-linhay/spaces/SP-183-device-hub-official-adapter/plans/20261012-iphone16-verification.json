@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-12",
+  "status": "iphone16-app-install-launch-and-pair-passed",
+  "targetChange": "user explicitly selected iPhone 16 Pro after original iPhone 13 Pro Max disappeared",
+  "deviceModel": "iPhone 16 Pro",
+  "signedFixtureProfileIncludesDevice": true,
+  "fixturePreviouslyInstalled": false,
+  "install": "passed",
+  "postInstallInfo": "passed",
+  "nativeLaunch": "success",
+  "independentProcessCheck": {
+    "running": true,
+    "identityMatchesLaunch": true,
+    "fallback": "readonly devicectl device info processes; no equivalent in current device schema"
+  },
+  "pair": {
+    "status": "succeeded",
+    "nativeResultVerified": true,
+    "pairingStateVerified": true,
+    "pairingState": "paired"
+  },
+  "businessReadinessVerified": false,
+  "fixtureRetainedInstalled": true,
+  "notRepeated": [
+    "unpair already validated on iPhone 13 Pro Max",
+    "diagnostics already collected on iPhone 13 Pro Max"
+  ],
+  "remaining": [
+    "original iPhone 13 Pro Max pairing not restored; original device unavailable",
+    "original diagnostic ZIP exceeds configured publication limit; private raw archive retained"
+  ],
+  "rawEvidence": "retained worktree .triton/iphone16-execution-20261012"
+}

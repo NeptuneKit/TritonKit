@@ -1,5 +1,7 @@
 # SP-183 Device Hub 官方设备能力适配
 
+用户后续切换 iPhone 16 Pro：[安装启动与配对通过](./plans/20261012-iphone16-verification.json)，独立进程核验通过。13 Pro Max 恢复配对和诊断ZIP发布仍未完成；后文等待启动的描述为先前设备历史状态。
+
 2026-10-12 后续已明确授权写入：[管理与App验收](./plans/20261012-real-device-execution.md)。pair/unpair独立后置通过；诊断已采集但超过发布预算；fixture安装成功，启动需解锁。解除配对后USB目标消失，恢复配对等待用户重连。后续授权覆盖下文历史排除，尚未全部验收完成。
 
 2026-10-12：[真机只读验收](./plans/20261012-real-device-verification.md)在2台在线 iPhone 上通过设备信息/锁状态/readiness/Crash metadata，另通过4个App容器与1个App Group的SDK语义绑定；管理命令仅计划，真实写入与诊断仍未验收。
