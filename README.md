@@ -627,6 +627,7 @@ triton xcode settings --jsonl --timeout 1800
 triton xcode build --jsonl --timeout 1800
 triton xcode build --build-setting CLANG_ENABLE_EXPLICIT_MODULES=NO --jsonl
 triton xcode build --package Package.swift --scheme PackageName --destination 'generic/platform=iOS Simulator' --jsonl
+triton xcode build --package Package.swift --scheme PackageName --sdk iphoneos --destination 'generic/platform=iOS' --build-setting CODE_SIGNING_ALLOWED=NO --jsonl
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl
 triton xcode test --only-testing AppTests/LoginTests/testSubmit --only-testing AppTests/SettingsTests --result-bundle /tmp/App.xcresult --jsonl
 triton xcode archive --workspace App.xcworkspace --scheme App --configuration Release --archive-path artifacts/App.xcarchive --allow-provisioning-updates --jsonl

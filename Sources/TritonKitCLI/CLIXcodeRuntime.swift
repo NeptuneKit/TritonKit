@@ -80,7 +80,8 @@ func resolveXcodeInvocation(
     derivedDataPath: String? = nil,
     buildSettings: [String] = [],
     requireConcreteSimulatorTarget: Bool = false,
-    allowGenericIOSArchiveDestination: Bool = false
+    allowGenericIOSArchiveDestination: Bool = false,
+    allowGenericIOSSDKOnlyBuildDestination: Bool = false
 ) throws -> ResolvedXcodeInvocation {
     let hasDevice = hasXcodeSelector(device)
     if hasDevice, hasXcodeSelector(destination) {
@@ -134,9 +135,18 @@ func resolveXcodeInvocation(
         simulatorUDID: resolvedSimulator,
         device: device
     )
+    let genericIOSSDKOnlyBuild = allowGenericIOSSDKOnlyBuildDestination
+        && !hasDevice
+        && !hasXcodeSelector(simulator)
+        && isGenericXcodeIOSDestination(destination)
+    if genericIOSSDKOnlyBuild && !usesXcodeRealDeviceSDK(sdk) {
+        throw ValidationError(
+            "SDK-only generic iOS builds require an iPhoneOS SDK (`--sdk iphoneos`) and cannot target a Simulator SDK."
+        )
+    }
     if !hasDevice,
        (usesXcodeRealDeviceSDK(resolvedSDK) || isXcodeRealDeviceDestination(resolvedDestination)),
-       !(allowGenericIOSArchiveDestination && isGenericXcodeIOSDestination(resolvedDestination)) {
+       !(genericIOSSDKOnlyBuild || (allowGenericIOSArchiveDestination && isGenericXcodeIOSDestination(resolvedDestination))) {
         throw ValidationError(
             "Physical iOS xcodebuild execution requires --device so Triton can resolve a ready target and keep its raw destination execution-only."
         )
@@ -155,7 +165,7 @@ func resolveXcodeInvocation(
         derivedDataPath: resolvedDerivedDataPath,
         buildSettings: resolvedBuildSettings,
         derivedDataCache: derivedDataCache,
-        simulatorUDID: resolvedSimulator,
+        simulatorUDID: genericIOSSDKOnlyBuild ? nil : resolvedSimulator,
         device: device
     )
 }
@@ -785,7 +795,9 @@ func runXcodeBuild(
         note: xcodeBuildSummaryNote(
             ok: ok,
             failureCode: failureCode,
-            successNote: "Build finished. Use `triton xcode run --jsonl` or verify business readiness with runtime `triton status/wait/assert`.",
+            successNote: isGenericXcodeIOSDestination(executionInvocation.destination)
+                ? "SDK-only generic iOS build finished. No physical device was selected, installed, or launched; build success does not prove installability or business readiness."
+                : "Build finished. Use `triton xcode run --jsonl` or verify business readiness with runtime `triton status/wait/assert`.",
             defaultFailureNote: "Build failed. Inspect xcodeDiagnostics first, then stdout/stderr artifacts if needed."
         )
     )

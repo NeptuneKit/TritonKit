@@ -1233,6 +1233,120 @@ struct XcodeCommandTests {
         #expect(valid.destination == nil)
     }
 
+    @Test("xcode build accepts only explicit iphoneos SDK with generic iOS destination")
+    func xcodeBuildAllowsSDKOnlyGenericIOSCrossCompilation() throws {
+        let invocation = try resolveXcodeInvocation(
+            workspace: "App.xcworkspace",
+            scheme: "App",
+            sdk: "iphoneos",
+            destination: "generic/platform=iOS",
+            allowGenericIOSSDKOnlyBuildDestination: true
+        )
+        #expect(invocation.sdk == "iphoneos")
+        #expect(invocation.destination == "generic/platform=iOS")
+        #expect(invocation.device == nil)
+
+        let command = TKXcodebuildCommand.build(
+            workspace: invocation.workspace,
+            project: invocation.project,
+            package: invocation.package,
+            scheme: invocation.scheme,
+            configuration: invocation.configuration,
+            sdk: invocation.sdk,
+            destination: invocation.xcodebuildDestination,
+            derivedDataPath: invocation.derivedDataPath,
+            buildSettings: ["CODE_SIGNING_ALLOWED=NO", "ARCHS=arm64", "ONLY_ACTIVE_ARCH=YES"],
+            allowProvisioningUpdates: false
+        )
+        #expect(command.argv.contains("-sdk"))
+        #expect(command.argv.contains("iphoneos"))
+        #expect(command.argv.contains("generic/platform=iOS"))
+        #expect(command.argv.contains("CODE_SIGNING_ALLOWED=NO"))
+        #expect(command.argv.contains("ARCHS=arm64"))
+        #expect(command.argv.contains("ONLY_ACTIVE_ARCH=YES"))
+    }
+
+    @Test("xcode generic iOS SDK-only exception does not widen to simulator, test, run, or device paths")
+    func xcodeGenericIOSSDKOnlyExceptionStaysBuildScoped() throws {
+        for destination in ["platform=iOS,id=PRIVATE", "generic/platform=iOS,id=PRIVATE", "platform=iOS,name=Phone"] {
+            #expect(throws: ValidationError.self) {
+                _ = try resolveXcodeInvocation(workspace: "App.xcworkspace", scheme: "App", sdk: "iphoneos", destination: destination, allowGenericIOSSDKOnlyBuildDestination: true)
+            }
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                sdk: "iphonesimulator",
+                destination: "generic/platform=iOS",
+                allowGenericIOSSDKOnlyBuildDestination: true
+            )
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                destination: "generic/platform=iOS",
+                allowGenericIOSSDKOnlyBuildDestination: true
+            )
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                sdk: "iphoneos",
+                destination: "generic/platform=iOS"
+            )
+        }
+        #expect(throws: HostDeviceSelectionError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                sdk: "iphoneos",
+                destination: "generic/platform=iOS",
+                device: "team-phone",
+                allowGenericIOSSDKOnlyBuildDestination: true
+            )
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                sdk: "iphoneos",
+                destination: "generic/platform=iOS",
+                simulator: "SIM-1",
+                allowGenericIOSSDKOnlyBuildDestination: true
+            )
+        }
+    }
+
+    @Test("generic iOS SDK-only build ignores stale simulator identity and cannot inherit its opt-in")
+    func xcodeGenericIOSSDKOnlyBuildDoesNotInheritTarget() throws {
+        let fileManager = FileManager.default
+        let original = fileManager.currentDirectoryPath
+        let directory = fileManager.temporaryDirectory.appendingPathComponent("triton-generic-build-\(UUID().uuidString)")
+        try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer {
+            _ = fileManager.changeCurrentDirectoryPath(original)
+            try? fileManager.removeItem(at: directory)
+        }
+        #expect(fileManager.changeCurrentDirectoryPath(directory.path))
+        _ = try saveHostWorkspaceDefaults(TKHostWorkspaceDefaults(
+            defaultSimulatorUDID: "STALE-SIMULATOR",
+            xcode: TKXcodeWorkspaceDefaults(workspace: "App.xcworkspace", scheme: "App", sdk: "iphoneos", destination: "generic/platform=iOS")
+        ))
+        let invocation = try resolveXcodeInvocation(sdk: "iphoneos", destination: "generic/platform=iOS", allowGenericIOSSDKOnlyBuildDestination: true)
+        #expect(invocation.simulatorUDID == nil)
+        #expect(invocation.device == nil)
+        #expect(try preparedXcodeInvocationForExecution(invocation).destination == "generic/platform=iOS")
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(sdk: "iphoneos", allowGenericIOSSDKOnlyBuildDestination: true)
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(destination: "generic/platform=iOS", allowGenericIOSSDKOnlyBuildDestination: true)
+        }
+    }
+
     @Test("xcode real-device preflight never falls back to public identity or generic destination")
     func xcodeRealDevicePreflightUsesOnlyRawTargetForDestination() throws {
         let rawTarget = "00008110-UNIQUE-RAW-TARGET"
@@ -1704,6 +1818,18 @@ struct XcodeCommandTests {
         )
 
         #expect(destination == nil)
+    }
+
+    @Test("xcode schema documents the build-only generic iOS SDK contract")
+    func xcodeSchemaDocumentsSDKOnlyGenericIOSBuild() throws {
+        let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
+        let sdk = try #require(xcode.options.first { $0.name == "--sdk" })
+        let destination = try #require(xcode.options.first { $0.name == "--destination" })
+        let build = try #require(xcode.subcommands.first { $0.name == "build" })
+        #expect(sdk.description.contains("SDK-only"))
+        #expect(destination.description.contains("SDK-only"))
+        #expect(build.summary.contains("generic/platform=iOS"))
+        #expect(build.summary.contains("never selects a physical device"))
     }
 }
 

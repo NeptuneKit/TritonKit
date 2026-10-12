@@ -65,6 +65,8 @@ triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json 
 
 Current boundaries:
 
+- `xcode build --sdk iphoneos --destination 'generic/platform=iOS'` is SDK-only compilation without a physical device. Both options must be explicit and no `--device` / `--simulator` may be selected; versioned iPhoneOS SDK names are accepted. Keep signing choices in explicit build settings, for example `CODE_SIGNING_ALLOWED=NO`. This exception applies only to build, does not install/launch, and never downgrades a `--device` request or changes settings/test/run preflight.
+
 - `xcode run --timeout <seconds>` applies to Simulator build/settings/install/launch phases individually, not an end-to-end shared deadline. Without it, retain existing per-command defaults. Boot the explicitly owned Simulator before running; do not infer service/UI readiness from Booted alone. On an install timeout, inspect `app info/list` before retry: the App may already be installed. Keep common old/new argv and do not switch backends or blindly resend writes.
 
 - Xcode DerivedData defaults to the fixed repo-local `.triton/DerivedData` incremental cache across `xcode settings/build/test/run` and `build ios`. Do not auto-derive project/workspace hash subdirectories or defer this default until a conflict is detected. Use an explicit `--derived-data-path` only when the caller needs isolation or cache recovery, and preserve the default cache unless cleanup is explicitly requested.
