@@ -4,7 +4,7 @@
 >
 > 编号登记册：[INDEX.md](./INDEX.md)（190/190 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-12（SP-190 open issues 本地集成；完整门禁通过，待远端授权）
+> 最近审计：2026-10-12（SP-190 v0.2.25 发布归档；#215～220 关闭，#214 安全能力待完成）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -16,24 +16,24 @@
 | 待定 | 暂停实现，必须先完成产品合并、范围取舍或环境条件判断 |
 | 废弃 | 不再作为独立 roadmap 推进；保留历史文档和仍有价值的既有代码 |
 | 已归档 | 本期验收已满足或原型已完成，不再追加远期设想 |
-| 已本地集成／完整门禁通过／待远端授权 | 已进入本地 SP-190 集成分支；完整 CLI 与本地门禁已通过，尚未进行本轮远端写入或关闭 issue |
+| v0.2.25 已发布／#215–220 已关闭 | 已进入本地 SP-190 集成分支；完整 CLI、本地门禁及线上 CI 通过；#215～220 已回复关闭，#214 继续开放 |
 
 ## 路线裁决
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 已本地集成／完整门禁通过／待远端授权 | [SP-190-open-issues-integration](./SP-190-open-issues-integration/README.md) | #214–#220 本地集成与统一验收；保留各项证据边界，未关闭 issue | 完整门禁已通过；远端操作待明确授权 |
-| 已本地集成／完整门禁通过／待远端授权 | [SP-189-issue-220-package-result-path](./SP-189-issue-220-package-result-path/README.md) | #220：package result 路径与 inline parser 一致；49 + 2 focused tests 通过，夹具贯通执行结果路径解析，非实际 Xcode test | 完整门禁已通过；远端操作待明确授权 |
-| 已本地集成／完整门禁通过／待远端授权 | [SP-188-issue-219-generic-ios-build](./SP-188-issue-219-generic-ios-build/README.md) | #219：显式 generic iOS SDK-only build；51 + 5 focused tests 通过，未做真实 SDK 编译 | 完整门禁已通过；远端操作待明确授权 |
-| 已本地集成／完整门禁通过／待远端授权 | [SP-187-issue-218-host-hid-availability](./SP-187-issue-218-host-hid-availability/README.md) | #218：隔离兼容性诊断与实际 bootstrap 失败分类；15 + 8 focused tests 通过，不宣称现代 HID 可用 | 完整门禁已通过；远端操作待明确授权 |
-| 已本地集成／完整门禁通过／待远端授权 | [SP-186-issue-217-xcode-run-exit](./SP-186-issue-217-xcode-run-exit/README.md) | #217：xcode run 构建失败非零退出与单一 final；2 focused tests 通过 | 完整门禁已通过；远端操作待明确授权 |
-| 已本地集成／完整门禁通过／待远端授权 | [SP-185-issue-216-host-input-discovery](./SP-185-issue-216-host-input-discovery/README.md) | #216：type discovery 与 pasteboard guidance；37 focused tests 通过，输入仍 fail closed | 完整门禁已通过；远端操作待明确授权 |
-| 已本地集成／完整门禁通过／待远端授权 | [SP-184-issue-215-host-swipe](./SP-184-issue-215-host-swipe/README.md) | #215：离线 Simulator swipe CLI；163 focused tests 通过，真实 swipe/pager 未验证 | 完整门禁已通过；远端操作待明确授权 |
+| v0.2.25 已发布／#215–220 已关闭 | [SP-190-open-issues-integration](./SP-190-open-issues-integration/README.md) | #214–#220 本地集成与统一验收；保留各项证据边界，#215～220 已关闭，#214 继续开放 | main CI / Release / Homebrew 通过，已回复关闭 |
+| v0.2.25 已发布／#215–220 已关闭 | [SP-189-issue-220-package-result-path](./SP-189-issue-220-package-result-path/README.md) | #220：package result 路径与 inline parser 一致；49 + 2 focused tests 通过，夹具贯通执行结果路径解析，非实际 Xcode test | main CI / Release / Homebrew 通过，已回复关闭 |
+| v0.2.25 已发布／#215–220 已关闭 | [SP-188-issue-219-generic-ios-build](./SP-188-issue-219-generic-ios-build/README.md) | #219：显式 generic iOS SDK-only build；51 + 5 focused tests 通过，未做真实 SDK 编译 | main CI / Release / Homebrew 通过，已回复关闭 |
+| v0.2.25 已发布／#215–220 已关闭 | [SP-187-issue-218-host-hid-availability](./SP-187-issue-218-host-hid-availability/README.md) | #218：隔离兼容性诊断与实际 bootstrap 失败分类；15 + 8 focused tests 通过，不宣称现代 HID 可用 | main CI / Release / Homebrew 通过，已回复关闭 |
+| v0.2.25 已发布／#215–220 已关闭 | [SP-186-issue-217-xcode-run-exit](./SP-186-issue-217-xcode-run-exit/README.md) | #217：xcode run 构建失败非零退出与单一 final；2 focused tests 通过 | main CI / Release / Homebrew 通过，已回复关闭 |
+| v0.2.25 已发布／#215–220 已关闭 | [SP-185-issue-216-host-input-discovery](./SP-185-issue-216-host-input-discovery/README.md) | #216：type discovery 与 pasteboard guidance；37 focused tests 通过，输入仍 fail closed | main CI / Release / Homebrew 通过，已回复关闭 |
+| v0.2.25 已发布／#215–220 已关闭 | [SP-184-issue-215-host-swipe](./SP-184-issue-215-host-swipe/README.md) | #215：离线 Simulator swipe CLI；163 focused tests 通过，真实 swipe/pager 未验证 | main CI / Release / Homebrew 通过，已回复关闭 |
 | 研究已归档／实现待定 | [SP-181-device-hub-paradigm](./SP-181-device-hub-paradigm/README.md) | Device Hub 范式研究已归档；后续实现需独立立项 | 按该 space 的边界另行推进 |
 | 设计已归档／实施待立项 | [SP-182-trusted-execution-system](./SP-182-trusted-execution-system/README.md) | 可信执行系统双路径设计已归档；尚未进入产品实现 | 按该 space 的边界另行推进 |
 | v0.2.24已发布／双架构与Homebrew通过／专门平台输入未验收 | [SP-183-device-hub-official-adapter](./SP-183-device-hub-official-adapter/README.md) | 容器语义、Crash/Temporary 边界、管理执行后端、平台控制边界、兼容矩阵与 public schema 已实现；watchOS/tvOS runner 已实现并编译，真实输入未验收；visionOS 空间与 macOS Device Hub unsupported | 继续按能力矩阵推进专用 runner 与真实验收；真机 pair/unpair、安装启动、诊断发布已验收；Temporary 创建未验收，不称完整 Device Hub 接入 |
 | 兼容修复验证／命中待补 | [SP-180-xcode27-simulator-frameworks](./SP-180-xcode27-simulator-frameworks/README.md) | 已选Xcode只读查询、仅适配器子进程补框架；8测试与加载器恢复验证 | 10-06 CLI993+14/本地门禁通过；业务bridge截图完成，host HID导航另补，不将ACK算命中 |
-| 已本地集成／完整门禁通过／待远端授权 | [SP-179-issue-214-derived-data-cleanup](./SP-179-issue-214-derived-data-cleanup/README.md) | #214：v0.2.22 已发布，issue 仍 OPEN | 精确白名单与只读统计修复；confirm 暂时 fail closed，12 focused tests 通过；排他/竞态删除安全仍未收口 |
+| 安全补丁已发布／#214 保持开放 | [SP-179-issue-214-derived-data-cleanup](./SP-179-issue-214-derived-data-cleanup/README.md) | #214：v0.2.22 已发布，issue 仍 OPEN | 精确白名单与只读统计修复；confirm 暂时 fail closed，12 focused tests 通过；排他/竞态删除安全仍未收口 |
 | 已归档 | [SP-178-issue-213-real-device-runtime](./SP-178-issue-213-real-device-runtime/README.md) | #213：真机 runtime readiness 诊断、单一 smoke JSON 与可执行 setup；不自动注入 endpoint | v0.2.21 已发布并回复关闭；CLI 983/root 269、CocoaPods lint、双架构与 Homebrew 验证全过；真机端到端未复测 |
 | 已归档 | [SP-176-open-issues-integration](./SP-176-open-issues-integration/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |
 | 规划中 | [SP-177-ios-simulator-resource-management](./SP-177-ios-simulator-resource-management/README.md) | simslim 核心能力原生 Swift 迁移与 Simulator 资源管理 | 当前完成上游调研、能力地图和分阶段 BDD；尚未改实现 |
@@ -293,4 +293,4 @@
 
 ## 2026-10-12 · Open issues 本地集成
 
-- `SP-190-open-issues-integration`：集成 worktree `../TritonKit-worktrees/SP-190-open-issues-integration`，已本地集成 SP-179 安全止血与 SP-184～189 各 issue 切片；完整门禁通过，远端操作待授权。各独立分支的 focused 证据与真实平台缺口保留在对应 README，#214～#220 未关闭。
+- `SP-190-open-issues-integration`：集成 worktree `../TritonKit-worktrees/SP-190-open-issues-integration`，已本地集成 SP-179 安全止血与 SP-184～189 各 issue 切片；完整门禁与线上 CI 通过，v0.2.25 已发布。各独立分支的 focused 证据与真实平台缺口保留在对应 README，#215～#220 已关闭，#214 保持开放。

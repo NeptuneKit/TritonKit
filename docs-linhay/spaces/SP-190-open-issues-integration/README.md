@@ -33,3 +33,7 @@
 ## v0.2.25 发布推进
 
 用户已明确授权合并 main、提交、推送、发版、回复和关闭。已合并验证后的集成分支；CLI/Web/public skills/CocoaPods spec 对齐 v0.2.25，发布门禁及线上 CI 验证后发布。#215～220 按已声明范围回复关闭；#214 仅安全止损，保留 OPEN。
+
+## 发布完成
+
+v0.2.25 发布成功，main CI `38211500153`、tag CI `38212512574`、Release `38212512464` 全通过。双架构 CLI/内置 Web/四技能包/checksum 已重新下载验证；Homebrew 升级和测试、仓库外 Web HTTP smoke 通过。CocoaPods 标准 lint 由 CI 通过，未推 trunk。#215～220 已逐项回复关闭；#214 已回复并保持 OPEN。详见 [发布记录](plans/20261012-v0.2.25-release.md)。

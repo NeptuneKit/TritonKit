@@ -63,3 +63,7 @@ schema 修复同时保留 normalization 各层 subcommands 递归复制，并验
 ## 2026-10-12 本轮集成状态
 
 安全止血已本地集成至 [SP-190](../SP-190-open-issues-integration/README.md)；完整门禁通过，远端操作待授权。保留本轮 12 tests / 3 suites 的临时 fixture 验证证据；未删除真实用户缓存。#214 仍 OPEN：本轮只禁用危险删除并修复只读检查，不能视为完整安全清理实现或竞态安全验收。
+
+## v0.2.25 安全补丁发布
+
+安全禁用删除及只读统计修复已发布，main CI、Release 与 Homebrew 通过。#214 保持 OPEN；merge commit 文案曾被 GitHub 识别为关闭关键字并自动关闭，发布复查已重新打开并解释安全删除仍未完成。

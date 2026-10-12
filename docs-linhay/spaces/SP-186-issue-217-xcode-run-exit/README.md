@@ -1,7 +1,7 @@
 # SP-186 · xcode run 构建失败退出传播
 
 - Issue：[#217](https://github.com/NeptuneKit/TritonKit/issues/217)
-- 状态：已本地集成／完整门禁通过／待远端授权；GitHub #217 保持 OPEN。
+- 状态：v0.2.25 已发布／已回复关闭；GitHub #217 已关闭。
 - 影响层：CLI 命令退出状态；保留 shared summary 与 JSON/JSONL 输出契约。
 - 分支：`feat/SP-186-issue-217-xcode-run-exit`
 - Worktree：`../TritonKit-worktrees/SP-186-issue-217-xcode-run-exit/`
@@ -23,3 +23,7 @@ Given build phase 返回 `ok:false`、`exitCode:70`、`failureCode:xcodebuild_fa
 - 根包、完整 CLI 与本地总门禁由主控在 SP-190 统一验证，已通过。
 
 本轮集成入口：[SP-190](../SP-190-open-issues-integration/README.md)。以上 focused 记录来自各 issue 分支，不代表集成后完整门禁已通过。
+
+## 发布归档
+
+已通过 main CI `38211500153`（标准 Podspec lint）、Release `38212512464` 与安装验证，随 v0.2.25 回复并关闭。合并 `2959c6a1`，发布提交 `987540e5`；上述真实平台验收边界仍保留。

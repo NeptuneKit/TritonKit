@@ -1,6 +1,6 @@
 # SP-189 — Issue #220 package-relative xcresult path
 
-- 状态：已本地集成／完整门禁通过／待远端授权；GitHub #220 保持 OPEN。
+- 状态：v0.2.25 已发布／已回复关闭；GitHub #220 已关闭。
 - 集成入口：[SP-190](../SP-190-open-issues-integration/README.md)。
 
 ## Scope
@@ -19,3 +19,7 @@ Fix `triton xcode test --package ... --result-bundle <relative>` so xcodebuild a
 本次未执行真实 Xcode 测试。注入式回归模拟成功构建实际创建 bundle，再让 inline parser 读取同一目录，并核对成功计数与摘要；真实 XCTest 兼容性不由 fixture 代证。
 
 2026-10-12：XcodeCommandTests 与 package pipeline 共 49 tests 通过；补充路径 variants 后 2 个 package tests 通过。覆盖 package dir/Package.swift、绝对/相对路径、空路径、默认 DerivedData、落盘与 parser、计数/summary 一致性。修正 cache 元数据按 package cwd 解析；非 package 行为不变。注入 parser 的参数仅加到 test，archive/export 不变。
+
+## 发布归档
+
+已通过 main CI `38211500153`（标准 Podspec lint）、Release `38212512464` 与安装验证，随 v0.2.25 回复并关闭。合并 `2959c6a1`，发布提交 `987540e5`；上述真实平台验收边界仍保留。

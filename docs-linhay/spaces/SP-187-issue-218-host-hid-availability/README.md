@@ -1,6 +1,6 @@
 # SP-187 · Issue 218 host HID availability
 
-- 状态：已本地集成／完整门禁通过／待远端授权；GitHub #218 保持 OPEN。
+- 状态：v0.2.25 已发布／已回复关闭；GitHub #218 已关闭。
 - Issue：[218](https://github.com/NeptuneKit/TritonKit/issues/218)
 - 影响层：CLI host adapter / doctor / schema；无新 HTTP/Web 控制面。
 
@@ -28,3 +28,7 @@
 - provenance 区分 `provided`、`DEVELOPER_DIR` 与 `xcode-select`，只有实际查询时记录 xcode-select；隔离 bootstrap 命令用静态路径占位，不公开本地路径。
 
 本轮集成入口：[SP-190](../SP-190-open-issues-integration/README.md)。以上 focused 记录来自各 issue 分支，不代表集成后完整门禁已通过。
+
+## 发布归档
+
+已通过 main CI `38211500153`（标准 Podspec lint）、Release `38212512464` 与安装验证，随 v0.2.25 回复并关闭。合并 `2959c6a1`，发布提交 `987540e5`；上述真实平台验收边界仍保留。

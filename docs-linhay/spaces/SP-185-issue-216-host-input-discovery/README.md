@@ -1,7 +1,7 @@
 # SP-185：Issue #216 host 文本输入发现边界
 
 - Issue：https://github.com/NeptuneKit/TritonKit/issues/216
-- 状态：已本地集成／完整门禁通过／待远端授权；GitHub #216 保持 OPEN。
+- 状态：v0.2.25 已发布／已回复关闭；GitHub #216 已关闭。
 - 影响层：CLI help、capability、schema、恢复指引；不新增 keyboard adapter、HTTP 或 Web 控制面。
 - 分支：`feat/SP-185-issue-216-host-input-discovery`
 - worktree：`../TritonKit-worktrees/SP-185-issue-216-host-input-discovery`
@@ -34,3 +34,7 @@
 - `swift test --package-path CLI --filter 'SimulatorAdvancedControlsTests|SchemaFactSourceTests/(iosSimulatorHostTypeCapabilityIsUnsupported)'`：37 tests / 2 suites 全过。
 
 本轮集成入口：[SP-190](../SP-190-open-issues-integration/README.md)。以上 focused 记录来自各 issue 分支，不代表集成后完整门禁已通过。
+
+## 发布归档
+
+已通过 main CI `38211500153`（标准 Podspec lint）、Release `38212512464` 与安装验证，随 v0.2.25 回复并关闭。合并 `2959c6a1`，发布提交 `987540e5`；上述真实平台验收边界仍保留。
