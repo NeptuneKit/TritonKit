@@ -1,7 +1,7 @@
 {
   "date": "2026-10-12",
   "scope": "explicitly-authorized-usb-iphone-administration-and-fixture-lifecycle",
-  "status": "needs-device-reconnect-and-unlock",
+  "status": "app-install-launch-completed-on-user-selected-iphone16; original-device-restore-unresolved",
   "pair": {
     "executed": true,
     "nativeResultVerified": true,
@@ -56,5 +56,6 @@
     "restore pairing after device reconnect",
     "launch after unlock",
     "diagnostic publication success is not claimed; private archive exceeds configured acceptance budget"
-  ]
+  ],
+  "followup": "20261012-iphone16-verification.json"
 }

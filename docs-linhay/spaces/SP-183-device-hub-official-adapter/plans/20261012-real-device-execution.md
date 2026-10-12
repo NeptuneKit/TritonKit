@@ -16,3 +16,13 @@ BDD：管理动作必须显式策略及审计，精确身份、原生file JSON�
 - 专用fixture此前未安装；签名真机构建、安装和app info通过。launch被device_locked阻塞，App仍安装在设备，未声称成功启动或业务ready。
 
 [机器可读结果](20261012-real-device-execution.json)。恢复配对与启动仍待用户设备操作；另一台网络iPhone未执行写入。
+
+## 用户切换至 iPhone 16 Pro
+
+用户明确改用当前USB iPhone 16 Pro。重新核实SDK硬件型号及锁状态，原生已安装清单确认fixture不存在；现有签名profile明确包含该设备，复用已通过Triton构建的同一fixture产物。
+
+Triton app install、app info、app launch均exit0/ok；原生launch file JSON outcome=success并给出进程ID。当前device schema不暴露真机进程枚举，记录缺口后只读fallback `xcrun devicectl device info processes`，同一deviceIdentifier与launch PID仍匹配，证实进程运行；不把进程存在当作业务UI验收。Triton pair再次成功，native与paired独立后置通过。保留已启动测试App。
+
+本次完成安装启动，不重复已通过的13 Pro Max解除配对，也不重复诊断采集。原13 Pro Max仍不可发现、未恢复配对；此前344410367字节原生诊断ZIP仍因256MiB预算未发布，私有保留。用户切换目标不等于原设备恢复。无代码变更，文档门禁后按已有授权本地合并。
+
+[16 Pro脱敏结果](20261012-iphone16-verification.json)
