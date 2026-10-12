@@ -128,6 +128,7 @@ struct Sim: AsyncParsableCommand {
             SimUpgrade.self,
             SimScreenshot.self,
             SimTap.self,
+            SimSwipe.self,
             SimType.self,
             SimRecord.self,
             SimLogs.self,

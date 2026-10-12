@@ -435,7 +435,20 @@ func hostDeviceDoctorOutputContract() -> TKCommandOutputContract {
             ("platform", "String", true, "Requested host platform adapter"),
             ("tools", "[HostToolProbeOutput]", true, "Host tool availability probes"),
             ("capabilities", "[String]", true, "Available host device capabilities"),
-            ("strongControl", "[TKHostStrongControlCapability]", true, "Strong-control capability boundaries"),
+            ("strongControl", "[TKHostStrongControlCapability]", true, "Strong-control capability boundaries; idb or inventory success never proves HID availability"),
+            ("hidCompatibility", "IOSHostHIDProbe?", false, "Explicit selected Simulator framework compatibility only; no input dispatched"),
+            ("hidCompatibility.compatible", "Bool", false, "Legacy class presence only, not a touch or device-client test"),
+            ("hidCompatibility.available", "Bool", false, "Always false: input dispatch was not probed"),
+            ("hidCompatibility.verification", "String", false, "framework-compatibility-only"),
+            ("hidCompatibility.inputDispatchVerified", "Bool", false, "Always false"),
+            ("hidCompatibility.target", "String", false, "Resolved Simulator selector; never physical-device probe"),
+            ("hidCompatibility.backend", "String", false, "Legacy SimulatorKit compatibility target"),
+            ("hidCompatibility.message", "String", false, "Static sanitized compatibility description"),
+            ("hidCompatibility.hint", "String", false, "Recovery boundary without private framework paths"),
+            ("hidCompatibility.toolchainSource", "String?", false, "DEVELOPER_DIR, xcode-select, or provided; no private path"),
+            ("hidCompatibility.sourceCommands", "[String]", false, "Selected toolchain discovery provenance"),
+            ("hidCompatibility.code", "String", false, "Stable selected toolchain compatibility diagnosis"),
+            ("hidCompatibility.frameworkLayout", "String?", false, "Layout category without the private absolute path"),
             ("artifactsSaved", "Bool", true, "Whether diagnostic artifacts were persisted"),
         ])
     )
@@ -963,7 +976,7 @@ func hostSimulatorInputOutputContract() -> TKCommandOutputContract {
         model: "HostSimulatorInputOutput",
         fields: schemaContractFields([
             ("ok", "Bool", true, "Whether the host simulator input command completed"),
-            ("action", "String", true, "sim.tap or sim.type"),
+            ("action", "String", true, "sim.tap; sim.type is failure-only and does not produce this success contract"),
             ("runtimeScope", "String", true, "host-simulator"),
             ("target", "String", true, "Simulator target selector"),
             ("adapter", "String", true, "Host adapter name, currently xcrun-simctl"),
@@ -977,9 +990,9 @@ func hostSimulatorInputOutputContract() -> TKCommandOutputContract {
             ("stderr", "String?", false, "Bounded stderr sample"),
             ("x", "Int?", false, "Tap x coordinate when action is sim.tap"),
             ("y", "Int?", false, "Tap y coordinate when action is sim.tap"),
-            ("insertedLength", "Int?", false, "Typed text length when action is sim.type"),
-            ("textEncoding", "String?", false, "Text encoding boundary, currently ascii for sim.type"),
-            ("note", "String", true, "Boundary or follow-up verification note"),
+            ("insertedLength", "Int?", false, "Typed text length when a future supported host adapter reports insertion"),
+            ("textEncoding", "String?", false, "Text encoding boundary when a future supported host adapter reports insertion"),
+            ("note", "String", true, "Boundary or follow-up verification note; pasteboard preparation is not input completion"),
         ])
     )
 }

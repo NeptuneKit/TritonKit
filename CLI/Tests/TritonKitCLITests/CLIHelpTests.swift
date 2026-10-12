@@ -76,6 +76,21 @@ struct CLIHelpTests {
         #expect(result.stdout.contains("sim:<udid>"))
     }
 
+    @Test("sim swipe help and invalid arguments are offline")
+    func simSwipeHelpAndValidationAreOffline() throws {
+        let help = try runTritonHelp(["sim", "swipe", "--help"])
+        #expect(help.exitCode == 0)
+        #expect(help.stdout.contains("without an embedded server"))
+        #expect(help.stdout.contains("--width"))
+        for extra in [["--duration", "0"], ["--duration", "nan"], ["--duration", "11"], ["--width", "400"]] {
+            let result = try runTritonHelp(["sim", "swipe", "--start-x", "300", "--start-y", "400", "--end-x", "100", "--end-y", "400", "--json"] + extra)
+            #expect(result.exitCode != 0)
+            let object = try #require(JSONSerialization.jsonObject(with: Data(result.stdout.utf8)) as? [String: Any])
+            let error = try #require(object["error"] as? [String: Any])
+            #expect(["invalid_duration", "validation_failed"].contains(error["code"] as? String ?? ""))
+        }
+    }
+
     @Test("sim app-console help exposes bounded sensitive artifact controls")
     func simAppConsoleHelpExposesBoundedArtifactControls() throws {
         let result = try runTritonHelp(["sim", "app-console", "--help"])

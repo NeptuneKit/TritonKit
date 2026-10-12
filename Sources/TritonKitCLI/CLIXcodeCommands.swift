@@ -291,8 +291,8 @@ struct XcodeBuild: AsyncParsableCommand {
     @Option(help: "Path to Package.swift or its package directory") var package: String?
     @Option(help: "Scheme name") var scheme: String?
     @Option(help: "Build configuration") var configuration: String?
-    @Option(help: "SDK, for example iphonesimulator; iphoneos requires --device") var sdk: String?
-    @Option(help: "Simulator xcodebuild destination; platform=iOS requires --device") var destination: String?
+    @Option(help: "SDK, for example iphonesimulator; explicit iphoneos is accepted with generic/platform=iOS for SDK-only build without --device") var sdk: String?
+    @Option(help: "Simulator destination, or the exact generic/platform=iOS destination with explicit iphoneos for SDK-only build without --device") var destination: String?
     @Option(help: "Simulator UDID or name used to synthesize an id= or name= destination") var simulator: String?
     @Option(help: "Real-device selector preflighted as a ready iOS target before xcodebuild") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
@@ -318,7 +318,8 @@ struct XcodeBuild: AsyncParsableCommand {
                 simulator: simulator,
                 device: device,
                 derivedDataPath: derivedDataPath,
-                buildSettings: buildSettings
+                buildSettings: buildSettings,
+                allowGenericIOSSDKOnlyBuildDestination: true
             )
             let summary = try runXcodeBuild(
                 invocation: resolved,
@@ -721,7 +722,9 @@ struct XcodeRun: AsyncParsableCommand {
                 jsonl: jsonl,
                 timeout: timeout
             )
-            try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+            try printXcodeSummaryAndPropagateFailure(summary, jsonl: jsonl, outputFormat: outputFormat)
+        } catch let exitCode as ExitCode {
+            throw exitCode
         } catch {
             try failXcodeCommand(error, device: device, outputFormat: outputFormat)
         }

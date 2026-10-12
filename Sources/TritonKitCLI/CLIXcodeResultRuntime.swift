@@ -1,3 +1,4 @@
+import ArgumentParser
 import Foundation
 import TritonKitShared
 
@@ -5,6 +6,19 @@ struct XcodeTestResultBundleDetails {
     let summary: TKXcresultSummaryMetrics?
     let topFailures: [TKXcresultFailureRecord]?
     let note: String?
+}
+
+/// xcodebuild executes package actions from the package directory. Resolve
+/// relative result artifacts against that same directory before parsing them,
+/// so the parser observes the bundle xcodebuild just produced.
+func xcodePackageArtifactPath(_ path: String?, package: String?) -> String? {
+    guard let path, !path.isEmpty else { return path }
+    guard !path.hasPrefix("/"), let package, !package.isEmpty else { return path }
+    let packageURL = URL(fileURLWithPath: package).standardizedFileURL
+    let directory = packageURL.lastPathComponent == "Package.swift"
+        ? packageURL.deletingLastPathComponent()
+        : packageURL
+    return directory.appendingPathComponent(path).standardizedFileURL.path
 }
 
 func xcodeTestResultBundleDetails(
@@ -122,6 +136,21 @@ func printXcodeSummary(_ summary: TKXcodeActionSummary, jsonl: Bool, outputForma
         } else {
             print(summary.action)
         }
+    }
+}
+
+/// Keep the final typed summary intact while making the process status agree
+/// with a failed Xcode action. JSONL progress may have already emitted
+/// successful lifecycle events, but a failed final summary must still fail the
+/// CLI command.
+func printXcodeSummaryAndPropagateFailure(
+    _ summary: TKXcodeActionSummary,
+    jsonl: Bool,
+    outputFormat: ClientOutputFormat
+) throws {
+    try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+    if !summary.ok {
+        throw ExitCode.failure
     }
 }
 

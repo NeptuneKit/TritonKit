@@ -1045,7 +1045,12 @@ func failHostCommand(
         let isADB = command.executable == "adb" || command.executable.hasSuffix("/adb")
         let stderr = result.stderr.lowercased()
         let simctlSubcommand = command.arguments.dropFirst().first
-        if isHarmonyEmulatorStopFailureCommand(command) {
+        if isBaguetteHostExecutable(command.executable, environment: ProcessInfo.processInfo.environment),
+           let hidCode = iosHostHIDFailureCode(stderr: result.stderr + "\n" + result.stdout) {
+            code = hidCode
+            hint = "Selected Xcode SimulatorKit HID bootstrap failed. Run triton device doctor --platform ios --device <simulator> --json; inventory/layout readiness is not touch availability. No alternate input backend was attempted."
+            nextAction = TKCLINextAction(command: "device", args: ["doctor", "--platform", "ios", "--device", "<simulator>", "--json"], category: "diagnose")
+        } else if isHarmonyEmulatorStopFailureCommand(command) {
             code = "harmony_emulator_stop_failed"
             hint = "Check the Harmony HVD name/path, DevEco Emulator process, and launchd label/domain. If no Triton launchd job exists, retry with --skip-launchd, then verify with triton device list --platform harmony --json."
         } else if command.executable == "xcodebuild" {
@@ -1215,7 +1220,9 @@ func failHostCommand(
         }
         detail = TKCLIErrorDetail(
             code: code,
-            message: command.arguments.contains("--console-pty")
+            message: code.hasPrefix("ios_host_hid_")
+                ? "The selected host HID adapter failed during SimulatorKit bootstrap; no compatible input session was established."
+                : command.arguments.contains("--console-pty")
                 ? "\(error)\nsourceCommand: \(hostSourceCommand(command))"
                 : "\(error)",
             hint: hint,

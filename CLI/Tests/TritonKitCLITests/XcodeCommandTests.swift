@@ -467,6 +467,22 @@ struct XcodeCommandTests {
         #expect(hostSourceCommand(command).hasPrefix("cd /tmp/Demo && xcodebuild "))
     }
 
+    @Test("package-relative result bundles resolve against the package working directory")
+    func packageRelativeResultBundleUsesPackageWorkingDirectory() {
+        #expect(
+            xcodePackageArtifactPath(".triton/ExampleTests.xcresult", package: "/tmp/Demo/Package.swift")
+                == "/tmp/Demo/.triton/ExampleTests.xcresult"
+        )
+        #expect(
+            xcodePackageArtifactPath("/tmp/ExampleTests.xcresult", package: "/tmp/Demo/Package.swift")
+                == "/tmp/ExampleTests.xcresult"
+        )
+        #expect(
+            xcodePackageArtifactPath(".triton/ExampleTests.xcresult", package: nil)
+                == ".triton/ExampleTests.xcresult"
+        )
+    }
+
     @Test("streaming xcode runner honors package working directory")
     func streamingXcodeRunnerHonorsWorkingDirectory() throws {
         let directory = URL(fileURLWithPath: NSTemporaryDirectory())
@@ -1233,6 +1249,120 @@ struct XcodeCommandTests {
         #expect(valid.destination == nil)
     }
 
+    @Test("xcode build accepts only explicit iphoneos SDK with generic iOS destination")
+    func xcodeBuildAllowsSDKOnlyGenericIOSCrossCompilation() throws {
+        let invocation = try resolveXcodeInvocation(
+            workspace: "App.xcworkspace",
+            scheme: "App",
+            sdk: "iphoneos",
+            destination: "generic/platform=iOS",
+            allowGenericIOSSDKOnlyBuildDestination: true
+        )
+        #expect(invocation.sdk == "iphoneos")
+        #expect(invocation.destination == "generic/platform=iOS")
+        #expect(invocation.device == nil)
+
+        let command = TKXcodebuildCommand.build(
+            workspace: invocation.workspace,
+            project: invocation.project,
+            package: invocation.package,
+            scheme: invocation.scheme,
+            configuration: invocation.configuration,
+            sdk: invocation.sdk,
+            destination: invocation.xcodebuildDestination,
+            derivedDataPath: invocation.derivedDataPath,
+            buildSettings: ["CODE_SIGNING_ALLOWED=NO", "ARCHS=arm64", "ONLY_ACTIVE_ARCH=YES"],
+            allowProvisioningUpdates: false
+        )
+        #expect(command.argv.contains("-sdk"))
+        #expect(command.argv.contains("iphoneos"))
+        #expect(command.argv.contains("generic/platform=iOS"))
+        #expect(command.argv.contains("CODE_SIGNING_ALLOWED=NO"))
+        #expect(command.argv.contains("ARCHS=arm64"))
+        #expect(command.argv.contains("ONLY_ACTIVE_ARCH=YES"))
+    }
+
+    @Test("xcode generic iOS SDK-only exception does not widen to simulator, test, run, or device paths")
+    func xcodeGenericIOSSDKOnlyExceptionStaysBuildScoped() throws {
+        for destination in ["platform=iOS,id=PRIVATE", "generic/platform=iOS,id=PRIVATE", "platform=iOS,name=Phone"] {
+            #expect(throws: ValidationError.self) {
+                _ = try resolveXcodeInvocation(workspace: "App.xcworkspace", scheme: "App", sdk: "iphoneos", destination: destination, allowGenericIOSSDKOnlyBuildDestination: true)
+            }
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                sdk: "iphonesimulator",
+                destination: "generic/platform=iOS",
+                allowGenericIOSSDKOnlyBuildDestination: true
+            )
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                destination: "generic/platform=iOS",
+                allowGenericIOSSDKOnlyBuildDestination: true
+            )
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                sdk: "iphoneos",
+                destination: "generic/platform=iOS"
+            )
+        }
+        #expect(throws: HostDeviceSelectionError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                sdk: "iphoneos",
+                destination: "generic/platform=iOS",
+                device: "team-phone",
+                allowGenericIOSSDKOnlyBuildDestination: true
+            )
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                sdk: "iphoneos",
+                destination: "generic/platform=iOS",
+                simulator: "SIM-1",
+                allowGenericIOSSDKOnlyBuildDestination: true
+            )
+        }
+    }
+
+    @Test("generic iOS SDK-only build ignores stale simulator identity and cannot inherit its opt-in")
+    func xcodeGenericIOSSDKOnlyBuildDoesNotInheritTarget() throws {
+        let fileManager = FileManager.default
+        let original = fileManager.currentDirectoryPath
+        let directory = fileManager.temporaryDirectory.appendingPathComponent("triton-generic-build-\(UUID().uuidString)")
+        try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer {
+            _ = fileManager.changeCurrentDirectoryPath(original)
+            try? fileManager.removeItem(at: directory)
+        }
+        #expect(fileManager.changeCurrentDirectoryPath(directory.path))
+        _ = try saveHostWorkspaceDefaults(TKHostWorkspaceDefaults(
+            defaultSimulatorUDID: "STALE-SIMULATOR",
+            xcode: TKXcodeWorkspaceDefaults(workspace: "App.xcworkspace", scheme: "App", sdk: "iphoneos", destination: "generic/platform=iOS")
+        ))
+        let invocation = try resolveXcodeInvocation(sdk: "iphoneos", destination: "generic/platform=iOS", allowGenericIOSSDKOnlyBuildDestination: true)
+        #expect(invocation.simulatorUDID == nil)
+        #expect(invocation.device == nil)
+        #expect(try preparedXcodeInvocationForExecution(invocation).destination == "generic/platform=iOS")
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(sdk: "iphoneos", allowGenericIOSSDKOnlyBuildDestination: true)
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(destination: "generic/platform=iOS", allowGenericIOSSDKOnlyBuildDestination: true)
+        }
+    }
+
     @Test("xcode real-device preflight never falls back to public identity or generic destination")
     func xcodeRealDevicePreflightUsesOnlyRawTargetForDestination() throws {
         let rawTarget = "00008110-UNIQUE-RAW-TARGET"
@@ -1586,6 +1716,114 @@ struct XcodeCommandTests {
         #expect(xcode.options.first { $0.name == "--destination" }?.description.contains("build/settings/install/launch/readiness") == true)
     }
 
+    @Test("xcode run failed build keeps one final summary and exits nonzero before install or launch")
+    func xcodeRunFailedBuildPropagatesFailureAndSkipsLifecycle() throws {
+        let invocation = ResolvedXcodeInvocation(
+            workspace: "/fixture/App.xcworkspace", project: nil, package: nil, scheme: "App", configuration: "Debug",
+            sdk: "iphonesimulator", destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: "/fixture/DerivedData", buildSettings: [],
+            derivedDataCache: makeXcodeDerivedDataCacheInfo(path: "/fixture/DerivedData"), simulatorUDID: "SIM-1", device: nil
+        )
+        var lifecycleEvents: [String] = []
+        let summary = try runXcodeBuildInstallLaunch(
+            invocation: invocation,
+            jsonl: true,
+            simulatorBuild: { invocation, _, _ in
+                TKXcodeActionSummary(
+                    ok: false,
+                    action: "xcode.build",
+                    failureCode: "xcodebuild_failed",
+                    workspace: invocation.workspace,
+                    project: invocation.project,
+                    package: invocation.package,
+                    scheme: invocation.scheme,
+                    configuration: invocation.configuration,
+                    sdk: invocation.sdk,
+                    destination: invocation.destination,
+                    derivedDataPath: invocation.derivedDataPath,
+                    durationMs: 1,
+                    sourceCommand: "xcodebuild build",
+                    exitCode: 70,
+                    stdoutTruncated: false,
+                    stderrTruncated: false,
+                    note: "Build failed."
+                )
+            },
+            simulatorProduct: { _, _, _, _ in
+                Issue.record("Failed build must not resolve product settings")
+                return TKXcodeBuiltAppProduct(target: "App", appPath: "/fixture/App.app", bundleID: "fixture.app")
+            },
+            simulatorHostCommand: { _, event, _ in
+                lifecycleEvents.append(event)
+                return (
+                    HostProcessResult(
+                        stdoutData: Data(), stderrData: Data(), exitCode: 0, sourceCommand: "fixture",
+                        stdoutTruncated: false, stderrTruncated: false, stdoutLogPath: nil, stderrLogPath: nil,
+                        stdoutBytes: 0, stderrBytes: 0
+                    ),
+                    1
+                )
+            }
+        )
+
+        #expect(summary.ok == false)
+        #expect(summary.action == "xcode.run")
+        #expect(summary.exitCode == 70)
+        #expect(summary.failureCode == "xcodebuild_failed")
+        #expect(lifecycleEvents.isEmpty)
+
+        let captured = captureXcodeCommandOutputAllowingFailure {
+            try printXcodeSummaryAndPropagateFailure(summary, jsonl: true, outputFormat: .json)
+        }
+        #expect(captured.error is ExitCode)
+        #expect(captured.output.split(whereSeparator: { $0.isNewline }).count == 1)
+        let decoded = try JSONDecoder().decode(TKXcodeActionSummary.self, from: Data(captured.output.utf8))
+        #expect(decoded.ok == false)
+        #expect(decoded.action == "xcode.run")
+        #expect(decoded.exitCode == 70)
+    }
+
+    @Test("xcode run CLI failure exits nonzero with one typed final JSON result", arguments: ["--json", "--jsonl"])
+    func xcodeRunFailedBuildCLI(outputFlag: String) throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("triton-run-exit-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let calls = root.appendingPathComponent("calls.txt")
+        for name in ["xcodebuild", "xcrun"] {
+            let script = root.appendingPathComponent(name)
+            let body = "#!/bin/sh\nprintf '%s\\n' \"\(name) $*\" >> \"$TRITON_TEST_CALLS\"\nprintf '** BUILD FAILED **\\n' >&2\nexit 70\n"
+            try body.write(to: script, atomically: true, encoding: .utf8)
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        }
+        var environment = ProcessInfo.processInfo.environment
+        environment["PATH"] = root.path + ":" + (environment["PATH"] ?? "/usr/bin:/bin")
+        environment["TRITON_TEST_CALLS"] = calls.path
+        let result = try runXcodeTriton([
+            "xcode", "run", "--workspace", root.appendingPathComponent("App.xcworkspace").path,
+            "--scheme", "App", "--simulator", "SIM-1", outputFlag,
+        ], environment: environment)
+        #expect(result.exitCode != 0)
+        let objects: [[String: Any]]
+        if outputFlag == "--jsonl" {
+            objects = try result.stdout.split(whereSeparator: \.isNewline).map {
+                try #require(JSONSerialization.jsonObject(with: Data($0.utf8)) as? [String: Any])
+            }
+        } else {
+            objects = [try #require(JSONSerialization.jsonObject(with: Data(result.stdout.utf8)) as? [String: Any])]
+        }
+        let summaries = objects.filter { $0["action"] as? String == "xcode.run" }
+        #expect(summaries.count == 1)
+        let final = try #require(objects.last)
+        #expect(final["action"] as? String == "xcode.run")
+        #expect(final["ok"] as? Bool == false)
+        #expect(final["exitCode"] as? Int == 70)
+        #expect(final["failureCode"] as? String == "xcodebuild_failed")
+        #expect(objects.allSatisfy { $0["error"] == nil })
+        let commands = try String(contentsOf: calls, encoding: .utf8).split(whereSeparator: \.isNewline)
+        #expect(commands.count == 1)
+        #expect(commands.first?.hasPrefix("xcodebuild ") == true)
+    }
+
     @Test("xcode real-device selector defers an explicit destination to preflight validation")
     func explicitDestinationDoesNotOverrideDevicePreflight() throws {
         let destination = resolvedXcodeDestination(
@@ -1596,6 +1834,18 @@ struct XcodeCommandTests {
         )
 
         #expect(destination == nil)
+    }
+
+    @Test("xcode schema documents the build-only generic iOS SDK contract")
+    func xcodeSchemaDocumentsSDKOnlyGenericIOSBuild() throws {
+        let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
+        let sdk = try #require(xcode.options.first { $0.name == "--sdk" })
+        let destination = try #require(xcode.options.first { $0.name == "--destination" })
+        let build = try #require(xcode.subcommands.first { $0.name == "build" })
+        #expect(sdk.description.contains("SDK-only"))
+        #expect(destination.description.contains("SDK-only"))
+        #expect(build.summary.contains("generic/platform=iOS"))
+        #expect(build.summary.contains("never selects a physical device"))
     }
 }
 
@@ -1628,10 +1878,11 @@ private struct XcodeCLIRunResult {
     let stderr: String
 }
 
-private func runXcodeTriton(_ arguments: [String]) throws -> XcodeCLIRunResult {
+private func runXcodeTriton(_ arguments: [String], environment: [String: String]? = nil) throws -> XcodeCLIRunResult {
     let process = Process()
     process.executableURL = try xcodeTritonExecutableURL()
     process.arguments = arguments
+    process.environment = environment
 
     let stdout = Pipe()
     let stderr = Pipe()

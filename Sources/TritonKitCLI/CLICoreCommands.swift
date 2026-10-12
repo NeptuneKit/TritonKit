@@ -147,11 +147,18 @@ func buildSchemaResponse(command: String?) throws -> TKCLISchemaResponse {
 
 private func schemaForNestedCommand(_ command: String, commands: [TKCommandSchema]) -> TKCommandSchema? {
     let parts = command.split { $0 == " " || $0 == "." }.map(String.init)
-    guard parts.count == 2,
-          let schema = commands.first(where: { $0.name == parts[0] }),
-          let subcommand = schema.subcommands.first(where: { $0.name == parts[1] }) else {
+    guard parts.count >= 2,
+          let schema = commands.first(where: { $0.name == parts[0] }) else {
         return nil
     }
+    var candidates = schema.subcommands
+    var selected: TKCommandSubcommandSchema?
+    for part in parts.dropFirst() {
+        guard let child = candidates.first(where: { $0.name == part }) else { return nil }
+        selected = child
+        candidates = child.subcommands
+    }
+    guard let subcommand = selected else { return nil }
     return TKCommandSchema(
         name: schema.name,
         summary: schema.summary,

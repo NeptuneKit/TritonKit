@@ -1,0 +1,20 @@
+{
+  "scope": "selected local iOS Simulator, read-only diagnostic",
+  "command": "triton device doctor --platform ios --scope simulator --device <selected-simulator> --json",
+  "exitCode": 0,
+  "probe": {
+    "compatible": true,
+    "available": false,
+    "inputDispatchVerified": false,
+    "verification": "framework-compatibility-only",
+    "code": "ios_host_hid_framework_compatible",
+    "frameworkLayout": "contents-shared-frameworks",
+    "toolchainSource": "xcode-select"
+  },
+  "limits": [
+    "No input dispatched",
+    "No device or toolchain mutation",
+    "No business postcondition verified"
+  ],
+  "redaction": "Device identity and local paths omitted"
+}

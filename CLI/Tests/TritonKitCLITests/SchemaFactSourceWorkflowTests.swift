@@ -657,12 +657,14 @@ extension SchemaFactSourceTests {
         let harmonyClearBoundary = "Host-side Harmony clear is not available in the current adapter"
         let pressBoundary = "Host-side HID is not available in the embedded runtime"
         let iosRealScreenshotBoundary = "iOS real-device screenshot is not supported by the current host adapter"
+        let iosSimulatorTypeBoundary = "Host-side iOS Simulator text input is not supported by the current public simctl io contract; no stable keyboard type primitive is advertised"
         let knownUnsupportedReasons = Set([
             requiresRuntime,
             requiresWebViewProvider,
             harmonyClearBoundary,
             pressBoundary,
             iosRealScreenshotBoundary,
+            iosSimulatorTypeBoundary,
         ])
 
         var supportedWithReason: [String] = []
@@ -691,13 +693,15 @@ extension SchemaFactSourceTests {
                 }
 
                 if fixture.name == "runtime-connected" {
-                    if !["press", "harmony-clear-text", "ios-real-device-screenshot"].contains(capability.name) {
+                    if !["press", "harmony-clear-text", "ios-real-device-screenshot", "ios-simulator-host-type"].contains(capability.name) {
                         connectedUnexpectedUnsupported.append("\(capability.name):\(reason)")
                     } else if capability.name == "press", reason != pressBoundary {
                         connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
                     } else if capability.name == "harmony-clear-text", reason != harmonyClearBoundary {
                         connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
                     } else if capability.name == "ios-real-device-screenshot", reason != iosRealScreenshotBoundary {
+                        connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
+                    } else if capability.name == "ios-simulator-host-type", reason != iosSimulatorTypeBoundary {
                         connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
                     }
                 }
@@ -739,6 +743,12 @@ extension SchemaFactSourceTests {
         #expect(connectedHarmonyClear.reason == harmonyClearBoundary)
         #expect(disconnectedHarmonyClear.reason == harmonyClearBoundary)
         #expect(unavailableServerHarmonyClear.reason == harmonyClearBoundary)
+
+        for capabilities in [connected, disconnected, unavailableServer] {
+            let type = try #require(capabilities["ios-simulator-host-type"])
+            #expect(!type.supported)
+            #expect(type.reason == iosSimulatorTypeBoundary)
+        }
 
         #expect(supportedWithReason == [])
         #expect(unsupportedWithoutReason == [])

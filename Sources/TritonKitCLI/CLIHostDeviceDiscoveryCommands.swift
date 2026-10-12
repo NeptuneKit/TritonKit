@@ -5,6 +5,7 @@ import TritonKitShared
 func iosHostDeviceDoctor(
     scope: HostDeviceScope,
     commandProbe: ((AppleHostCommandSpecification) -> HostAppleCommandSupport)? = nil,
+    hidProbe: IOSHostHIDProbe? = nil,
     probe: (String, TKHostCommand) -> HostToolProbeOutput = probeHostTool
 ) -> HostDeviceDoctorOutput {
     var tools: [HostToolProbeOutput] = []
@@ -28,7 +29,7 @@ func iosHostDeviceDoctor(
     }
     let requiredNames = Set(specifications.filter(\.requiredForDiscovery).map(\.name))
     let discoverySupported = commands?.filter { requiredNames.contains($0.name) }.allSatisfy(\.supported) ?? true
-    return HostDeviceDoctorOutput(ok: tools.allSatisfy(\.available) && discoverySupported, platform: "ios", tools: tools, capabilities: iosHostDeviceDoctorCapabilities(scope: scope), strongControl: iosStrongControlProbes(idbProbe: idb), artifactsSaved: false, commandSupport: commands)
+    return HostDeviceDoctorOutput(ok: tools.allSatisfy(\.available) && discoverySupported, platform: "ios", tools: tools, capabilities: iosHostDeviceDoctorCapabilities(scope: scope), strongControl: iosStrongControlProbes(idbProbe: idb, hidProbe: hidProbe), artifactsSaved: false, commandSupport: commands, hidCompatibility: hidProbe)
 }
 
 func iosHostDeviceDoctorCapabilities(scope: HostDeviceScope) -> [String] {
@@ -52,6 +53,7 @@ struct DeviceDoctor: AsyncParsableCommand {
 
     @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform = .harmony
     @Option(help: "Device scope: simulator|emulator|real|all") var scope: HostDeviceScope = .all
+    @Option(help: "Optional selected iOS Simulator selector for an independent host HID compatibility probe") var device: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Optional path to DevEco Emulator executable") var emulator: String?
@@ -61,9 +63,36 @@ struct DeviceDoctor: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         let output: HostDeviceDoctorOutput
+        if device != nil && (platform != .ios || scope == .real || scope == .emulator) {
+            try failHostValidation(code: "unsupported_scope", message: "Selected-device HID compatibility requires --platform ios with simulator or all scope.", hint: "Use --scope simulator for this readonly compatibility probe; real-device HID is unsupported.", outputFormat: outputFormat)
+        }
         switch platform {
         case .ios:
-            output = iosHostDeviceDoctor(scope: scope, commandProbe: { probeAppleHostCommand($0) })
+            let hidProbe: IOSHostHIDProbe?
+            if let device {
+                do {
+                    let selected = try resolveHostDeviceSelection(
+                        request: HostDeviceSelectionRequest(device: device, platform: .ios, scope: .simulator, ready: true),
+                        hdc: hdc,
+                        adb: adb
+                    ).target
+                    hidProbe = probeIOSHostHID(selectedDevice: selected.rawTarget)
+                } catch {
+                    hidProbe = IOSHostHIDProbe(
+                        target: device,
+                        compatible: false,
+                        code: "ios_host_hid_selected_device_unavailable",
+                        message: "The selected simulator could not be resolved for the host HID compatibility probe.",
+                        hint: "Resolve one booted simulator explicitly; inventory or layout output alone does not establish touch support.",
+                        backend: "SimulatorKit.SimDeviceLegacyHIDClient",
+                        frameworkLayout: nil,
+                        sourceCommands: ["triton device resolve --platform ios --scope simulator --device \(device) --ready --json"]
+                    )
+                }
+            } else {
+                hidProbe = nil
+            }
+            output = iosHostDeviceDoctor(scope: scope, commandProbe: { probeAppleHostCommand($0) }, hidProbe: hidProbe)
         case .harmony:
             let hdcProbe = probeHostTool(name: "hdc", command: TKHarmonyHDCCommand.version(executable: hdc))
             let emulatorProbe = emulator.map { path in
@@ -102,19 +131,20 @@ struct DeviceDoctor: AsyncParsableCommand {
     }
 }
 
-func iosStrongControlProbes(idbProbe: HostToolProbeOutput) -> [TKHostStrongControlCapability] {
+func iosStrongControlProbes(idbProbe: HostToolProbeOutput, hidProbe: IOSHostHIDProbe? = nil) -> [TKHostStrongControlCapability] {
     ["ios-host-ax", "ios-host-hid"].map { name in
-        TKHostStrongControlCapability(
+        let isHID = name == "ios-host-hid"
+        return TKHostStrongControlCapability(
             name: name,
             platform: "ios",
             runtimeScope: "host-simulator",
-            available: idbProbe.available,
-            reason: idbProbe.available ? nil : "idb_not_available",
-            dependency: "idb/FBSimulatorControl",
-            limitations: ["private_framework_dependency", "simulator_only", "xcode_version_coupled"],
+            available: isHID ? false : idbProbe.available,
+            reason: isHID ? (hidProbe?.compatible == false ? hidProbe?.code : "ios_host_hid_dispatch_not_probed") : (idbProbe.available ? nil : "idb_not_available"),
+            dependency: isHID ? "Baguette/SimulatorKit" : "idb/FBSimulatorControl",
+            limitations: ["private_framework_dependency", "simulator_only", "xcode_version_coupled"] + (isHID ? ["input_dispatch_not_probed", "inventory_does_not_prove_hid"] : []),
             fallbackCapability: "embedded-runtime-or-public-simctl",
-            sourceCommand: idbProbe.sourceCommand,
-            nextAction: idbProbe.available ? nil : TKCLINextAction(command: "device", args: ["doctor", "--platform", "ios", "--json"], category: "diagnose")
+            sourceCommand: isHID ? hidProbe?.sourceCommands.first : idbProbe.sourceCommand,
+            nextAction: isHID ? TKCLINextAction(command: "device", args: ["doctor", "--platform", "ios", "--device", hidProbe?.target ?? "<simulator>", "--json"], category: "diagnose") : (idbProbe.available ? nil : TKCLINextAction(command: "device", args: ["doctor", "--platform", "ios", "--json"], category: "diagnose"))
         )
     }
 }

@@ -1,6 +1,20 @@
 import Foundation
 import TritonKitShared
 
+func makeXcodeDerivedDataCacheInfo(path: String?) -> TKXcodeDerivedDataCacheInfo {
+    let resolvedPath = (path?.isEmpty == false ? path : nil) ?? defaultXcodeDerivedDataPath
+    var isDirectory: ObjCBool = false
+    let exists = FileManager.default.fileExists(atPath: resolvedPath, isDirectory: &isDirectory) && isDirectory.boolValue
+    return TKXcodeDerivedDataCacheInfo(
+        path: resolvedPath,
+        exists: exists,
+        cacheState: exists ? "directory-exists" : "missing-derived-data",
+        incrementalExpected: false,
+        cleanupPolicy: "preserve-by-default",
+        guidance: "Keep \(resolvedPath) to preserve potential Xcode cache; cleanup should not delete it by default. Directory existence does not verify reuse; incrementalExpected false means no verified expectation."
+    )
+}
+
 func observedXcodeDerivedDataCache(_ cache: TKXcodeDerivedDataCacheInfo, result: HostProcessResult) -> TKXcodeDerivedDataCacheInfo {
     TKXcodeDerivedDataCacheInfo(
         path: cache.path, exists: cache.exists, cacheState: cache.cacheState,

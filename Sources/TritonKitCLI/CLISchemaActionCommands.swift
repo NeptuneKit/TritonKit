@@ -12,7 +12,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
     let jsonText = schemaTextJSONFormats
     let formatJSONText = schemaFormatJSONTextOption
     let jsonAlias = schemaJSONAliasOption
-    let inputCommandFailureCodes = schemaInputCommandFailureCodes
+    let inputCommandFailureCodes = schemaInputCommandFailureCodes + ["ios_host_hid_legacy_backend_unavailable", "ios_host_hid_simulator_kit_load_failed"]
     let runtimeBaseURLOption = schemaRuntimeBaseURLOption
     let semanticActionFailureCodes = schemaSemanticActionFailureCodes
     let webViewTapFailureCodes = [
@@ -27,8 +27,10 @@ func actionCommandSchemas() -> [TKCommandSchema] {
         "webview_wait_unsupported",
         "javascript_error",
     ]
-    let tapFailureCodes = schemaInputCommandFailureCodes + ["text_not_found", "host_command_failed", "collection_cell_selection_blocked", "collection_cell_selection_denied"] + schemaIOSHostAXFailureCodes + webViewTapFailureCodes
+    let tapFailureCodes = schemaInputCommandFailureCodes + ["text_not_found", "host_command_failed", "ios_host_hid_legacy_backend_unavailable", "ios_host_hid_simulator_kit_load_failed", "collection_cell_selection_blocked", "collection_cell_selection_denied"] + schemaIOSHostAXFailureCodes + webViewTapFailureCodes
     let actFailureCodes = [
+        "ios_host_hid_legacy_backend_unavailable",
+        "ios_host_hid_simulator_kit_load_failed",
         "text_not_found",
         "validation_failed",
         "unsupported_capability",
