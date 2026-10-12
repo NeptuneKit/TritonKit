@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-12",
+  "scope": "explicitly-authorized-usb-iphone-administration-and-fixture-lifecycle",
+  "status": "needs-device-reconnect-and-unlock",
+  "pair": {
+    "executed": true,
+    "nativeResultVerified": true,
+    "pairingStateVerified": true,
+    "pairingState": "paired"
+  },
+  "unpair": {
+    "executed": true,
+    "nativeResultVerified": true,
+    "pairingStateVerified": true,
+    "pairingState": "unpaired"
+  },
+  "restorePair": {
+    "executed": false,
+    "errorCode": "target_not_found",
+    "remaining": "unlock same device and reconnect USB; then explicit fresh discovery and restore"
+  },
+  "diagnose": {
+    "executed": true,
+    "nativeResultVerified": true,
+    "status": "partial",
+    "nativeArchiveBytes": 344410367,
+    "nativeArchiveMode": "0600",
+    "acceptanceLimitBytes": 268435456,
+    "diagnosticArchiveVerified": false,
+    "destinationPublished": false,
+    "errorCode": "device_administration_limit_exceeded",
+    "rawArchiveRetainedPrivately": true,
+    "contentCompletenessVerified": false
+  },
+  "app": {
+    "previouslyInstalled": false,
+    "signedDeviceBuild": "passed",
+    "install": "passed",
+    "postInstallInfo": "passed",
+    "launch": "blocked-device_locked",
+    "businessReadinessVerified": false,
+    "installedFixtureRetained": true
+  },
+  "fix": {
+    "nativeTimeout": "ceil-positive-seconds-integer-string",
+    "hostDeadline": "original-double",
+    "redAssertions": 12,
+    "administrationTestsPassed": 20,
+    "cliSwiftTestingPassed": 1154,
+    "cliXCTestPassed": 26,
+    "localGate": "passed; generic iOS Simulator build explicitly skipped; signed physical fixture build separately passed"
+  },
+  "otherDeviceWrites": false,
+  "rawEvidence": "retained worktree .triton/real-execution-20261012 and private ~/.triton/device-administration",
+  "remaining": [
+    "restore pairing after device reconnect",
+    "launch after unlock",
+    "diagnostic publication success is not claimed; private archive exceeds configured acceptance budget"
+  ]
+}

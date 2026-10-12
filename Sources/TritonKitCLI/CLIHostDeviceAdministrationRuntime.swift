@@ -22,7 +22,7 @@ func plannedDeviceAdministrationCommand(operation: DeviceAdministrationOperation
         redacted.insert(args.count); args.append(archiveDestination ?? "<planned-private-archive>")
     }
     let seconds = timeout ?? (operation == .diagnose ? 120 : 30)
-    args += ["--timeout", String(seconds), "--json-output", "<planned-private-json>", "--log-output", "<planned-private-log>"]
+    args += ["--timeout", String(format: "%.0f", locale: Locale(identifier: "en_US_POSIX"), ceil(seconds)), "--json-output", "<planned-private-json>", "--log-output", "<planned-private-log>"]
     return TKHostCommand(arguments: args, redactedArgumentIndexes: redacted, riskLevel: operation == .diagnose ? .diagnostic : .breakGlass, requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord], defaultTimeoutSeconds: seconds, capturesArtifacts: true, sensitiveOutput: true)
 }
 

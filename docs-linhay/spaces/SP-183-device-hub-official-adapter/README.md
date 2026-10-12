@@ -1,5 +1,7 @@
 # SP-183 Device Hub 官方设备能力适配
 
+2026-10-12 后续已明确授权写入：[管理与App验收](./plans/20261012-real-device-execution.md)。pair/unpair独立后置通过；诊断已采集但超过发布预算；fixture安装成功，启动需解锁。解除配对后USB目标消失，恢复配对等待用户重连。后续授权覆盖下文历史排除，尚未全部验收完成。
+
 2026-10-12：[真机只读验收](./plans/20261012-real-device-verification.md)在2台在线 iPhone 上通过设备信息/锁状态/readiness/Crash metadata，另通过4个App容器与1个App Group的SDK语义绑定；管理命令仅计划，真实写入与诊断仍未验收。
 
 > 建立 2026-10-08，更新 2026-10-12。当前开始专门平台真实验收，执行修复位于 `SP-183-live-platform-acceptance`。tvOS/watchOS SDK 构建通过，runtime 官方下载遭遇 MobileAsset 网络错误 47，尚无真实输入成功证据。此前 runner gate 的单测不证明可执行闭环；本轮修正请求传递、附件与审计。用户已授权测后本地合并，未授权推送/发布或真机配对、解除配对、诊断采集。历史段落仅记录当时状态。

@@ -24,6 +24,17 @@ struct DeviceAdministrationExecutionTests {
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
         return url.path
     }
+    @Test("native administration timeout is an integer while host deadline stays precise")
+    func nativeTimeout() throws {
+        for operation in [DeviceAdministrationOperation.pair, .unpair, .diagnose] {
+            for value in [0.1, 1.0, 1.5, 30.0] {
+                let command = plannedDeviceAdministrationCommand(operation: operation, nativeIdentifier: "PRIVATE-NATIVE", archiveDestination: "/private/archive.zip", timeout: value)
+                let index = try #require(command.arguments.firstIndex(of: "--timeout"))
+                #expect(command.arguments[index + 1] == String(format: "%.0f", ceil(value)))
+                #expect(command.defaultTimeoutSeconds == value)
+            }
+        }
+    }
     @Test("incomplete policy refuses before discovery or runner")
     func policy() throws {
         let value = try DevicePair.parse(["--device", "fixture", "--execute-runner"]).options
