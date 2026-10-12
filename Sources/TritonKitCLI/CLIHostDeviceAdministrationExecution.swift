@@ -29,7 +29,7 @@ struct HostDeviceAdministrationExecutionOutput: Encodable {
     let status: String
     let target: String
     let riskLevel: String
-    let verification = "native-file-json-and-independent-postcondition; backend-fixture-tested, physical-acceptance-not-performed"
+    let verification = "native-file-json-and-independent-postcondition"
     let auditToken: String
     let auditIntentPersisted: Bool
     let auditCompletionPersisted: Bool
@@ -39,7 +39,7 @@ struct HostDeviceAdministrationExecutionOutput: Encodable {
     let diagnosticArchiveVerified: Bool
     let archiveBytes: Int?
     let error: TKCLIErrorDetail?
-    let limitations = ["No physical administration or diagnostics acceptance performed by this implementation task.", "Native success requires exact file-JSON argv binding; unknown layouts remain partial, never inferred from exit zero.", "Timeout/failure may leave device changes or native temporary artifacts; never retry automatically.", "Diagnostics may include local host CoreDevice logs; disabling host sysdiagnose is not device-only collection.", "Native devicectl receives paths: workspace identity is checked before/after, but native IO cannot be fully FD-anchored or eliminate all same-user concurrent replacement races.", "Archive size limits acceptance/publication, not native collection, transport or peak disk usage. ZIP structure is checked without extraction; payload content/completeness and CRC are not verified."]
+    let limitations = ["Native success requires exact file-JSON argv binding; unknown layouts remain partial, never inferred from exit zero.", "Timeout/failure may leave device changes or native temporary artifacts; never retry automatically.", "Diagnostics may include local host CoreDevice logs; disabling host sysdiagnose is not device-only collection.", "Native devicectl receives paths: workspace identity is checked before/after, but native IO cannot be fully FD-anchored or eliminate all same-user concurrent replacement races.", "Archive size limits acceptance/publication, not native collection, transport or peak disk usage. ZIP structure is checked without extraction; payload content/completeness and CRC are not verified."]
 }
 
 /// Strict common CoreDevice envelope contract, not a guessed operation-specific result shape.

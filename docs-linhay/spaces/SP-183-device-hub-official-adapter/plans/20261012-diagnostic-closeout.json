@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-12",
+  "device": "iPhone 16 Pro",
+  "status": "diagnostic-collection-and-private-publication-passed",
+  "nativeResultVerified": true,
+  "diagnosticArchiveVerified": true,
+  "archiveBytes": 324630005,
+  "maximumArchiveBytes": 536870912,
+  "destinationMode": "0o600",
+  "parentMode": "0o700",
+  "sourceDestinationSHA256Match": true,
+  "intentAndCompletionPersisted": true,
+  "existingDestinationRejection": {
+    "exitCode": 1,
+    "code": "device_administration_unsafe_artifact",
+    "newAuditWorkspaceCreated": false,
+    "archiveUnchanged": true
+  },
+  "payloadExtracted": false,
+  "payloadCompletenessVerified": false,
+  "original13ProMaxRestored": false,
+  "rawEvidence": "retained worktree .triton/real-closeout-20261012; private diagnostic archive not committed",
+  "regression": {
+    "cliSwiftTesting": 1154,
+    "cliXCTest": 26,
+    "ciDocs": "passed",
+    "docsStructure": "passed",
+    "localGate": "passed; generic iOS Simulator build explicitly skipped"
+  },
+  "connectionStatesUnchanged": true
+}

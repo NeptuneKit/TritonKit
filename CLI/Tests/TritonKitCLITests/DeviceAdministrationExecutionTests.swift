@@ -100,6 +100,8 @@ struct DeviceAdministrationExecutionTests {
                 return result(command)
             }, pairingProbe: { _, _, _ in mode == "success" ? (operation == .pair ? "paired" : "unpaired") : mode == "trusted" ? (operation == .pair ? "trusted" : "untrusted") : nil }, workspaceProvider: { directory })
             #expect(calls == 1 && output.executed && output.auditCompletionPersisted)
+            #expect(output.verification == "native-file-json-and-independent-postcondition")
+            #expect(!output.limitations.contains { $0.contains("implementation task") })
             #expect(output.status == (mode == "success" ? "succeeded" : mode == "timeout" ? "timed-out" : mode == "failed" ? "failed" : "partial"))
             #expect(output.ok == (mode == "success"))
             #expect(!(try encodeJSON(output)).contains("PRIVATE-NATIVE"))
