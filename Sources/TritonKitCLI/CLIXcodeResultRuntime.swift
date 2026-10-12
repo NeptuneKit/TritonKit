@@ -1,3 +1,4 @@
+import ArgumentParser
 import Foundation
 import TritonKitShared
 
@@ -122,6 +123,21 @@ func printXcodeSummary(_ summary: TKXcodeActionSummary, jsonl: Bool, outputForma
         } else {
             print(summary.action)
         }
+    }
+}
+
+/// Keep the final typed summary intact while making the process status agree
+/// with a failed Xcode action. JSONL progress may have already emitted
+/// successful lifecycle events, but a failed final summary must still fail the
+/// CLI command.
+func printXcodeSummaryAndPropagateFailure(
+    _ summary: TKXcodeActionSummary,
+    jsonl: Bool,
+    outputFormat: ClientOutputFormat
+) throws {
+    try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+    if !summary.ok {
+        throw ExitCode.failure
     }
 }
 

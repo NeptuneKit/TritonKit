@@ -721,7 +721,9 @@ struct XcodeRun: AsyncParsableCommand {
                 jsonl: jsonl,
                 timeout: timeout
             )
-            try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+            try printXcodeSummaryAndPropagateFailure(summary, jsonl: jsonl, outputFormat: outputFormat)
+        } catch let exitCode as ExitCode {
+            throw exitCode
         } catch {
             try failXcodeCommand(error, device: device, outputFormat: outputFormat)
         }
