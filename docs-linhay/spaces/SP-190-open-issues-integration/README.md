@@ -29,3 +29,7 @@
 - `verify.sh --ci-docs` 通过，190/190 space 已登记。
 - 所选 Simulator 只读 HID probe 真实执行成功，框架兼容但 input 未验证；[脱敏摘要](plans/20261012-selected-hid-probe.json)。
 - 详见 [交付评审](plans/20261012-integration-review.md)，以及 [提交前线上复查](plans/20261012-pre-publish-issues.json)。#214–#220 仍 OPEN，远端操作待授权。
+
+## v0.2.25 发布推进
+
+用户已明确授权合并 main、提交、推送、发版、回复和关闭。已合并验证后的集成分支；CLI/Web/public skills/CocoaPods spec 对齐 v0.2.25，发布门禁及线上 CI 验证后发布。#215～220 按已声明范围回复关闭；#214 仅安全止损，保留 OPEN。
