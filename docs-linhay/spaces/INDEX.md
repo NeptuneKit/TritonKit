@@ -1,7 +1,7 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-13（登记 SP-191：默认使用 Xcode 全局 DerivedData）
+> 最近同步：2026-10-13（SP-191 已随 v0.2.26 发布：默认使用 Xcode 全局 DerivedData）
 > 覆盖范围：191/191 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
@@ -216,4 +216,4 @@
 | `SP-189-issue-220-package-result-path` | [`SP-189-issue-220-package-result-path`](./SP-189-issue-220-package-result-path/README.md) | v0.2.25 已发布／#215–220 已关闭 | #220：package result 路径与 inline parser 一致；49 + 2 focused tests 通过，夹具贯通执行结果路径解析，非实际 Xcode test |
 | `SP-190-open-issues-integration` | [`SP-190-open-issues-integration`](./SP-190-open-issues-integration/README.md) | v0.2.25 已发布／#215–220 已关闭 | #214–#220 本地集成与统一验收；保留各项证据边界，#215～220 已关闭，#214 继续开放 |
 
-| `SP-191-default-xcode-deriveddata` | [`SP-191-default-xcode-deriveddata`](./SP-191-default-xcode-deriveddata/README.md) | 已完成（本地） | 默认使用 Xcode 全局 DerivedData；CLI/root tests、schema smoke 与 docs 门禁通过；`--derived-data-path` 仅显式隔离/恢复，可能造成高磁盘占用 |
+| `SP-191-default-xcode-deriveddata` | [`SP-191-default-xcode-deriveddata`](./SP-191-default-xcode-deriveddata/README.md) | 已发布 | 默认使用 Xcode 全局 DerivedData；`v0.2.26` 已发布，CLI/root tests、schema smoke、docs 门禁与远端 CI 通过；`--derived-data-path` 仅显式隔离/恢复，可能造成高磁盘占用 |

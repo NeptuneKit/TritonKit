@@ -20,3 +20,9 @@
 - 默认路径行为由 focused CLI/shared tests 锁定；命令构造测试确认默认不含 `-derivedDataPath`，显式覆盖仍含该参数。
 - JSON/schema 的 `derivedDataPath` 在默认模式下为空/缺省，`derivedDataCache.path` 指向用户级 Xcode DerivedData 根，避免把“Xcode 默认策略”误报成仓库路径。
 - 验收阶段仅运行本地测试和文档门禁；不自动删除现有 `.triton/DerivedData`，不执行用户全局缓存清理。远端提交与发布按后续发布流程单独执行。
+
+## 发布收口
+
+- 提交：`772ef10c`，已快进到 `main` 并推送。
+- 发布：[`v0.2.26`](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.26)。
+- 远端 CI 与 Release workflow 通过；arm64/x86_64 CLI、checksum、public skills 与 Homebrew tap 资产已核验。

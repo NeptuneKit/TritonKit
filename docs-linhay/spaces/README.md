@@ -4,7 +4,7 @@
 >
 > 编号登记册：[INDEX.md](./INDEX.md)（191/191 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-13（SP-191 默认使用 Xcode 全局 DerivedData；#215～220 关闭，#214 安全能力待完成）
+> 最近审计：2026-10-13（SP-191 默认使用 Xcode 全局 DerivedData，已随 v0.2.26 发布；#215～220 关闭，#214 安全能力待完成）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -297,4 +297,4 @@
 
 ## 2026-10-13 · 默认 DerivedData 路径调整
 
-- [SP-191-default-xcode-deriveddata](./SP-191-default-xcode-deriveddata/README.md)：已完成（本地）；默认交给 Xcode 使用用户级 DerivedData，显式 `--derived-data-path` 仅用于隔离/恢复并提示高磁盘占用；CLI/root tests、schema smoke 与 docs 门禁通过。
+- [SP-191-default-xcode-deriveddata](./SP-191-default-xcode-deriveddata/README.md)：已发布（`v0.2.26`）；默认交给 Xcode 使用用户级 DerivedData，显式 `--derived-data-path` 仅用于隔离/恢复并提示高磁盘占用；CLI/root tests、schema smoke、docs 门禁与远端 CI 通过。
