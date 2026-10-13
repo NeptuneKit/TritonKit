@@ -8,7 +8,8 @@ public struct TKXcodeWorkspaceDefaults: Codable, Equatable {
     public let configuration: String
     public let sdk: String
     public let destination: String?
-    public let derivedDataPath: String
+    /// Optional explicit override. `nil` delegates DerivedData placement to Xcode.
+    public let derivedDataPath: String?
 
     public init(
         workspace: String? = nil,
@@ -18,7 +19,7 @@ public struct TKXcodeWorkspaceDefaults: Codable, Equatable {
         configuration: String = "Debug",
         sdk: String = "iphonesimulator",
         destination: String? = nil,
-        derivedDataPath: String = ".triton/DerivedData"
+        derivedDataPath: String? = nil
     ) {
         self.workspace = workspace
         self.project = project

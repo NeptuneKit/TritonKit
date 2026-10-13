@@ -297,12 +297,12 @@ process.exit
 
 规则：
 
-1. 默认 DerivedData 固定为当前 repo 的 `.triton/DerivedData`，`xcode settings/build/test/run` 与 `build ios` 复用同一增量缓存；不按 project/workspace 自动派生 `<project>-<hash>` 子目录，也不以检测到冲突作为启用条件。
-2. 用户显式指定 `--derived-data-path`、`--result-bundle`、`--output` 时以显式路径为准；需要并行隔离或恢复损坏缓存时，由调用方选择独立的 `--derived-data-path`。
+1. 默认不传 `-derivedDataPath`，由 Xcode 使用用户级 DerivedData；Triton 不在当前 repo 的 `.triton/` 下复制一份默认构建缓存，也不按 project/workspace 另行派生默认子目录。
+2. 用户显式指定 `--derived-data-path`、`--result-bundle`、`--output` 时以显式路径为准；`--derived-data-path` 可能造成高磁盘占用，只有并行隔离或恢复损坏缓存等明确场景才启用。旧 workspace 默认值 `.triton/DerivedData` 迁移为 Xcode 默认，显式传入旧路径仍保留。
 3. `.app` path 优先从 `xcodebuild -showBuildSettings` 的 `BUILT_PRODUCTS_DIR + FULL_PRODUCT_NAME` 解析，不手猜 `Build/Products`。
 4. `settings/build/test/run` 的一次性 build setting 统一建模为有序 `[String]`，CLI 在 host command 前验证 `KEY=VALUE` 与 key grammar，共享 command builder 只把每个已验证值追加为一个 argv 元素。禁止拼接 shell command；`sourceCommand` 通过统一 shell escaping 仅用于审计展示。
 5. bundle id 通过 Info.plist 读取，失败时返回 `bundle_id_unresolved`。
-6. Triton 默认保留 `.triton/DerivedData`，不自动清理增量缓存；build/test/log/coverage artifact 后续必须能进入 `.tritonevidence`。
+6. Triton 默认交给 Xcode 管理 DerivedData，不自动清理 Xcode 用户级缓存；build/test/log/coverage artifact 后续必须能进入 `.tritonevidence`。
 
 ## Parser Strategy
 

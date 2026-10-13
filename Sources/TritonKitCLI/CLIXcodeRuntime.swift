@@ -2,7 +2,12 @@ import ArgumentParser
 import Foundation
 import TritonKitShared
 
-let defaultXcodeDerivedDataPath = ".triton/DerivedData"
+/// Xcode's user-level DerivedData root. Leaving `-derivedDataPath` out of the
+/// xcodebuild argv lets Xcode choose its normal project-specific subdirectory.
+let defaultXcodeDerivedDataPath = FileManager.default.homeDirectoryForCurrentUser
+    .appendingPathComponent("Library/Developer/Xcode/DerivedData", isDirectory: true)
+    .path
+let legacyRepoLocalXcodeDerivedDataPath = ".triton/DerivedData"
 
 func validateXcodeSchemesTimeout(_ value: Double) throws -> Double {
     guard value.isFinite, value > 0 else {
@@ -137,12 +142,13 @@ func resolveXcodeInvocation(
             "Physical iOS xcodebuild execution requires --device so Triton can resolve a ready target and keep its raw destination execution-only."
         )
     }
-    let resolvedDerivedDataPath = xcodePackageArtifactPath(
-        derivedDataPath ?? xcode?.derivedDataPath ?? defaultXcodeDerivedDataPath,
+    let resolvedDerivedDataPath = resolveXcodeDerivedDataOverride(
+        explicit: derivedDataPath,
+        configured: xcode?.derivedDataPath,
         package: resolvedPackage
-    ) ?? defaultXcodeDerivedDataPath
+    )
     let resolvedBuildSettings = try validateXcodeBuildSettings(buildSettings)
-    let derivedDataCache = makeXcodeDerivedDataCacheInfo(path: resolvedDerivedDataPath)
+    let derivedDataCache = makeXcodeDerivedDataCacheInfo(path: resolvedDerivedDataPath ?? defaultXcodeDerivedDataPath)
     return ResolvedXcodeInvocation(
         workspace: resolvedWorkspace,
         project: resolvedProject,
@@ -157,6 +163,24 @@ func resolveXcodeInvocation(
         simulatorUDID: genericIOSSDKOnlyBuild ? nil : resolvedSimulator,
         device: device
     )
+}
+
+/// Returns an explicit DerivedData override or nil when Xcode should use its
+/// own global default. A saved repo-local default from older Triton versions
+/// is treated as historical configuration and migrated to nil; callers that
+/// pass the same path explicitly still retain that explicit override.
+func resolveXcodeDerivedDataOverride(explicit: String?, configured: String?, package: String?) -> String? {
+    let explicit = explicit?.trimmingCharacters(in: .whitespacesAndNewlines)
+    if let explicit, !explicit.isEmpty {
+        return xcodePackageArtifactPath(explicit, package: package)
+    }
+
+    let configured = configured?.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard let configured, !configured.isEmpty else { return nil }
+    if configured == legacyRepoLocalXcodeDerivedDataPath || configured == "./.triton/DerivedData" {
+        return nil
+    }
+    return xcodePackageArtifactPath(configured, package: package)
 }
 
 func validateXcodeBuildSettings(_ values: [String]) throws -> [String] {

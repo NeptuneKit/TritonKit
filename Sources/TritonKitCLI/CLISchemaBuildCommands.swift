@@ -24,7 +24,7 @@ func buildCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--destination", type: "String", description: "Explicit iOS xcodebuild destination"),
                 TKCommandSchemaOption(name: "--configuration", type: "String", defaultValue: "Debug", description: "iOS Xcode build configuration"),
                 TKCommandSchemaOption(name: "--sdk", type: "String", defaultValue: "iphoneos", description: "iOS SDK for xcodebuild"),
-                TKCommandSchemaOption(name: "--derived-data-path", type: "Path", description: "iOS DerivedData output path"),
+                TKCommandSchemaOption(name: "--derived-data-path", type: "Path", description: "Explicit iOS DerivedData override; omitted uses Xcode's default user-level folder. May consume substantial disk space; use only for isolation or recovery"),
                 TKCommandSchemaOption(name: "--variant", type: "String", defaultValue: "debug", description: "Android Gradle build variant"),
                 TKCommandSchemaOption(name: "--module", type: "String", defaultValue: "entry", description: "Harmony module name"),
                 TKCommandSchemaOption(name: "--mode", type: "String", defaultValue: "debug", description: "Harmony build mode"),

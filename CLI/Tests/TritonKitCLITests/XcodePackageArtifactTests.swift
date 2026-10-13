@@ -15,8 +15,8 @@ struct XcodePackageArtifactTests {
         #expect(xcodePackageArtifactPath("/tmp/Tests.xcresult", package: package) == "/tmp/Tests.xcresult")
         #expect(xcodePackageArtifactPath("Tests.xcresult", package: nil) == "Tests.xcresult")
         let invocation = try resolveXcodeInvocation(package: package, scheme: "Example", sdk: "iphonesimulator", destination: "generic/platform=iOS Simulator")
-        #expect(invocation.derivedDataPath == base.appendingPathComponent(".triton/DerivedData").path)
-        #expect(invocation.derivedDataCache.path == invocation.derivedDataPath)
+        #expect(invocation.derivedDataPath == nil)
+        #expect(invocation.derivedDataCache.path == defaultXcodeDerivedDataPath)
     }
 
     @Test("package test execution and inline parser read the same generated bundle")

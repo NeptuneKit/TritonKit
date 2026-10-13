@@ -23,7 +23,7 @@ struct BuildIOS: AsyncParsableCommand {
     @Option(help: "SDK; defaults to iphoneos for --device") var sdk: String?
     @Option(help: "Real-device selector or UDID used to synthesize destination") var device: String?
     @Option(help: "Explicit xcodebuild destination") var destination: String?
-    @Option(help: "DerivedData path") var derivedDataPath: String?
+    @Option(help: "Explicit DerivedData override; omitted uses Xcode's default user-level folder. May consume substantial disk space; use only for isolation or recovery") var derivedDataPath: String?
     @Option(help: "Build timeout in seconds") var timeout: Double?
     @Flag(help: "Emit JSON Lines progress and final summary") var jsonl = false
     @Flag(help: "Alias for --format json") var json = false

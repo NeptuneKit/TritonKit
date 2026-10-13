@@ -41,7 +41,7 @@ struct XcodeDiagnosticsTests {
         #expect(diagnostic.samples[0].path == "/Users/old/repo/.triton/DerivedData/Build/Intermediates.noindex/App.build/Debug-iphonesimulator/App.build/Objects-normal/arm64/HomeView.o")
         #expect(diagnostic.samples[0].message.contains("allowed root paths"))
         #expect(diagnostic.recovery.contains("--derived-data-path"))
-        #expect(diagnostic.recovery.contains(".triton/DerivedData"))
+        #expect(diagnostic.recovery.contains("fresh explicit path"))
         #expect(diagnostic.nextAction.command == "xcode")
         #expect(diagnostic.nextAction.args == ["build", "--derived-data-path", "<fresh-derived-data-path>", "--jsonl"])
         #expect(diagnostic.nextAction.category == "project")

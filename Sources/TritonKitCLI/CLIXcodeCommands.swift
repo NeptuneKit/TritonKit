@@ -62,7 +62,7 @@ struct XcodeUse: AsyncParsableCommand {
     @Option(help: "SDK, for example iphonesimulator") var sdk: String = "iphonesimulator"
     @Option(help: "Simulator UDID or name; synthesizes an id= or name= destination") var simulator: String?
     @Option(help: "xcodebuild destination") var destination: String?
-    @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String = defaultXcodeDerivedDataPath
+    @Option(help: "Explicit DerivedData override; omitted uses Xcode's default user-level folder. This can consume substantial disk space; use only for isolation or recovery") var derivedDataPath: String?
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -222,7 +222,7 @@ struct XcodeSettings: AsyncParsableCommand {
     @Option(help: "Simulator xcodebuild destination; platform=iOS requires --device") var destination: String?
     @Option(help: "Simulator UDID or name used to synthesize an id= or name= destination") var simulator: String?
     @Option(help: "Real-device selector preflighted as a ready iOS target before xcodebuild") var device: String?
-    @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
+    @Option(help: "Explicit DerivedData override; omitted uses Xcode's default user-level folder. May consume substantial disk space; use only for isolation or recovery") var derivedDataPath: String?
     @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices") var allowProvisioningUpdates = false
@@ -295,7 +295,7 @@ struct XcodeBuild: AsyncParsableCommand {
     @Option(help: "Simulator destination, or the exact generic/platform=iOS destination with explicit iphoneos for SDK-only build without --device") var destination: String?
     @Option(help: "Simulator UDID or name used to synthesize an id= or name= destination") var simulator: String?
     @Option(help: "Real-device selector preflighted as a ready iOS target before xcodebuild") var device: String?
-    @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
+    @Option(help: "Explicit DerivedData override; omitted uses Xcode's default user-level folder. May consume substantial disk space; use only for isolation or recovery") var derivedDataPath: String?
     @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices") var allowProvisioningUpdates = false
@@ -352,7 +352,7 @@ struct XcodeTest: AsyncParsableCommand {
     @Option(help: "Simulator xcodebuild destination; platform=iOS requires --device") var destination: String?
     @Option(help: "Simulator UDID or name used to synthesize an id= or name= destination") var simulator: String?
     @Option(help: "Real-device selector preflighted as a ready iOS target before xcodebuild") var device: String?
-    @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
+    @Option(help: "Explicit DerivedData override; omitted uses Xcode's default user-level folder. May consume substantial disk space; use only for isolation or recovery") var derivedDataPath: String?
     @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(help: "Result bundle output path") var resultBundle: String?
     @Option(name: .customLong("only-testing"), help: "Focused XCTest identifier in target/class-or-method form; repeat to pass each selection to xcodebuild") var onlyTesting: [String] = []
@@ -409,7 +409,7 @@ struct XcodeArchive: AsyncParsableCommand {
     @Option(help: "Build configuration") var configuration: String?
     @Option(help: "iOS device SDK; defaults to iphoneos for archive") var sdk: String?
     @Option(help: "Must be generic/platform=iOS") var destination: String = xcodeGenericIOSArchiveDestination
-    @Option(help: "DerivedData path used as the Xcode incremental build cache") var derivedDataPath: String?
+    @Option(help: "Explicit DerivedData override; omitted uses Xcode's default user-level folder. May consume substantial disk space; use only for isolation or recovery") var derivedDataPath: String?
     @Option(name: .customLong("archive-path"), help: "Output .xcarchive path") var archivePath: String
     @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Flag(name: .customLong("allow-provisioning-updates"), help: "Pass -allowProvisioningUpdates to xcodebuild") var allowProvisioningUpdates = false
@@ -689,7 +689,7 @@ struct XcodeRun: AsyncParsableCommand {
     @Option(help: "Simulator xcodebuild destination; platform=iOS requires --device") var destination: String?
     @Option(help: "Simulator UDID or name; synthesizes an id= or name= destination") var simulator: String?
     @Option(help: "Real-device selector preflighted as a ready iOS target before build, install, and launch") var device: String?
-    @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
+    @Option(help: "Explicit DerivedData override; omitted uses Xcode's default user-level folder. May consume substantial disk space; use only for isolation or recovery") var derivedDataPath: String?
     @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(name: .customLong("env"), help: "iOS app launch environment in KEY=VALUE form; values are redacted in output") var launchEnvironment: [String] = []
     @Option(name: .customLong("arg"), help: "Argument passed to the launched iOS app; repeat for multiple arguments") var launchArguments: [String] = []

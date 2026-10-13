@@ -37,7 +37,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--destination", type: "String", description: "Simulator xcodebuild destination for build/test/run; xcode build additionally accepts the exact generic/platform=iOS destination with an explicit iphoneos SDK for SDK-only compilation without --device; xcode run requires one platform=iOS Simulator,id=<udid> target so build/settings/install/launch/readiness stay bound, xcode archive accepts only generic/platform=iOS, while other physical platform=iOS destinations require --device"),
                 TKCommandSchemaOption(name: "--simulator", type: "String", description: "Simulator UDID, sim:<UDID>, or name; synthesizes id=<UDID> or name=<name> and overrides saved destination when explicit"),
                 TKCommandSchemaOption(name: "--device", type: "String", description: "Real-device selector from `triton target`; preflights a ready iOS target before xcodebuild, uses only its raw execution destination, and redacts selector/target identity from public output"),
-                TKCommandSchemaOption(name: "--derived-data-path", type: "Path", defaultValue: ".triton/DerivedData", description: "Repo-local DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default; use a fresh path to recover Swift macro plugin malformed-response failures"),
+                TKCommandSchemaOption(name: "--derived-data-path", type: "Path", description: "Explicit incremental DerivedData override; omitted delegates to Xcode's default user-level folder. Cleanup should preserve it by default. May consume substantial disk space; use only when isolation, Swift macro recovery, or another explicit recovery case requires it"),
                 TKCommandSchemaOption(name: "--build-setting", type: "KEY=VALUE[]", description: "Repeatable one-off xcodebuild setting for settings/build/test/archive/export/run; keys must match [A-Za-z_][A-Za-z0-9_]* and may use Xcode conditional suffixes such as EXCLUDED_ARCHS[sdk=iphonesimulator*]; each full KEY=VALUE is preserved as one argv element and exposed in sourceCommand"),
                 TKCommandSchemaOption(name: "--only-testing", type: "String[]", description: "Repeatable focused XCTest identifier for xcode test only; each target/class-or-method selection stays as one -only-testing:<identifier> argv value and is exposed in sourceCommand"),
                 TKCommandSchemaOption(name: "--env", type: "KEY=VALUE", description: "Repeatable iOS app launch environment for xcode run; values are passed as SIMCTL_CHILD_* on Simulator or devicectl --environment-variables JSON on real devices and redacted in sourceCommand"),
@@ -153,9 +153,9 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                         ("sdk", "String?", false, "SDK"),
                         ("destination", "String?", false, "xcodebuild destination; real-device destination is redacted in public output"),
                         ("device", "String?", false, "Real-device selector; identity is redacted in public output"),
-                        ("derivedDataPath", "String?", false, "DerivedData path"),
-                        ("derivedDataCache", "TKXcodeDerivedDataCacheInfo?", false, "DerivedData directory snapshot, unverified reuse, and observed build log activity"),
-                        ("derivedDataCache.path", "String", false, "Resolved DerivedData path used by xcodebuild"),
+                        ("derivedDataPath", "String?", false, "Explicit DerivedData override; absent means xcodebuild uses Xcode's default user-level folder"),
+                        ("derivedDataCache", "TKXcodeDerivedDataCacheInfo?", false, "DerivedData directory snapshot, unverified reuse, and observed build log activity; explicit overrides may consume substantial disk space"),
+                        ("derivedDataCache.path", "String", false, "Observed DerivedData root; defaults to Xcode's user-level folder when no override is passed"),
                         ("derivedDataCache.exists", "Bool", false, "Whether the DerivedData directory exists before the action"),
                         ("derivedDataCache.cacheState", "String", false, "Directory snapshot: directory-exists or missing-derived-data; not proof of incremental cache reuse"),
                         ("derivedDataCache.incrementalExpected", "Bool", false, "Legacy field; false means no verified incremental expectation, not a prediction of a full rebuild"),
@@ -170,7 +170,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                         ("derivedDataCache.observedBuild.stderrLogPath", "String?", false, "Build-phase raw stderr artifact, if available"),
                         ("derivedDataCache.observedBuild.note", "String", false, "Interpretation limits for overlapping Swift headers and absent baseline"),
                         ("derivedDataCache.cleanupPolicy", "String", false, "Cleanup policy; preserve-by-default means Triton should not delete the cache automatically"),
-                        ("derivedDataCache.guidance", "String", false, "Human-readable guidance for preserving or intentionally resetting the cache"),
+                        ("derivedDataCache.guidance", "String", false, "Human-readable guidance; explicit legacy .triton/DerivedData may be large and requires asking the user before cleanup"),
                         ("appPath", "String?", false, "Built app path"),
                         ("bundleID", "String?", false, "Resolved bundle id"),
                         ("resultBundlePath", "String?", false, "Result bundle path"),
@@ -238,9 +238,9 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
             ],
             subcommands: [
                 TKCommandSubcommandSchema(
-                    name: "derived-data", summary: "Inspect or preview DerivedData cleanup; confirmed deletion is unavailable", optionalOptions: [], retryable: false, nextCommands: ["triton xcode derived-data inspect --json", "triton xcode derived-data cleanup --json"], failureCodes: ["derived_data_root_rejected", "derived_data_root_missing"], subcommands: [
-                        TKCommandSubcommandSchema(name: "inspect", summary: "Read-only logical file bytes, file count, top-level directory count and modification time; not reclaimable bytes or last use", optionalOptions: ["--root", "--format", "--json"], failureCodes: ["derived_data_root_rejected", "derived_data_root_missing", "host_action_failed"]),
-                        TKCommandSubcommandSchema(name: "cleanup", summary: "Dry-run only; --confirm fails closed before deletion pending race-safe cleanup and build coordination", optionalOptions: ["--root", "--confirm", "--format", "--json"], failureCodes: ["derived_data_root_rejected", "derived_data_root_missing", "xcode_not_idle", "derived_data_cleanup_unavailable", "host_action_failed"])
+                    name: "derived-data", summary: "Inspect or preview Xcode's user-level DerivedData; confirmed deletion is unavailable", optionalOptions: [], retryable: false, nextCommands: ["triton xcode derived-data inspect --json", "triton xcode derived-data cleanup --json"], failureCodes: ["derived_data_root_rejected", "derived_data_root_missing"], subcommands: [
+                        TKCommandSubcommandSchema(name: "inspect", summary: "Read-only logical file bytes, file count, top-level directory count and modification time for Xcode's default root; not reclaimable bytes or last use; explicit legacy roots include a cleanup reminder", optionalOptions: ["--root", "--format", "--json"], failureCodes: ["derived_data_root_rejected", "derived_data_root_missing", "host_action_failed"]),
+                        TKCommandSubcommandSchema(name: "cleanup", summary: "Dry-run only; defaults to Xcode's user-level root; explicit legacy roots remind the agent to ask the user before cleanup; --confirm fails closed before deletion pending race-safe cleanup and build coordination", optionalOptions: ["--root", "--confirm", "--format", "--json"], failureCodes: ["derived_data_root_rejected", "derived_data_root_missing", "xcode_not_idle", "derived_data_cleanup_unavailable", "host_action_failed"])
                     ]
                  ), TKCommandSubcommandSchema(
                      name: "discover",

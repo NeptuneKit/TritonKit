@@ -129,7 +129,7 @@ XcodeBuildMCP 不直接使用全局默认 DerivedData，而是按 workspace key 
 
 TritonKit 应采纳：
 
-1. TritonKit 不照搬 XcodeBuildMCP 的 workspace-key 分目录策略；默认固定复用 repo-local `.triton/DerivedData`，用户可用 `--derived-data-path` 显式切换隔离路径。
+1. TritonKit 不照搬 XcodeBuildMCP 的 workspace-key 分目录策略；默认省略 `-derivedDataPath`，交给 Xcode 管理用户级 DerivedData。`--derived-data-path` 仅作为显式隔离/恢复入口，可能造成高磁盘占用，非必要不要启用；旧 `.triton/DerivedData` 默认值迁移为 Xcode 默认，显式传入旧路径仍保留。
 2. `.app` path 只能从 build settings / build result 推导，不猜 `Build/Products/...`。
 3. bundle id 读取要走 plist API 或 `/usr/libexec/PlistBuddy` fallback。
 4. final artifacts 必须包含 `derivedDataPath`、`appPath`、`bundleID`、`buildLogPath`。
@@ -305,8 +305,6 @@ P0 暂不做 coverage/log stream/debug/device/macOS。`xcode run` 可以复用�
 ```text
 .triton/
   host-defaults.json
-  DerivedData/
-    ... # Xcode 管理的增量缓存内容
   artifacts/
     xcode/
       <timestamp>-build.log
@@ -317,7 +315,7 @@ P0 暂不做 coverage/log stream/debug/device/macOS。`xcode run` 可以复用�
       <bundle-id>-oslog-<timestamp>.log
 ```
 
-默认构建固定复用 `.triton/DerivedData`，不自动生成 project/workspace hash 子目录；允许用户通过 `--derived-data-path` 显式指定隔离路径，并通过 `/tmp` 或其他 output path 保存一次性 artifact。禁止把 build/test/log 产物散落在 repo root。
+默认构建不传 `-derivedDataPath`，由 Xcode 复用用户级 DerivedData；不自动生成 project/workspace hash 子目录。允许用户通过 `--derived-data-path` 显式指定隔离路径，并通过 `/tmp` 或其他 output path 保存一次性 artifact；该选项可能造成高磁盘占用，非必要不要启用。禁止把 build/test/log 产物散落在 repo root。
 
 ### Error Code
 

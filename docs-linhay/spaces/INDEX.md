@@ -1,8 +1,8 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-12（SP-190 v0.2.25 发布归档；#215～220 关闭，#214 安全能力待完成）
-> 覆盖范围：190/190 个已存在 space
+> 最近同步：2026-10-13（登记 SP-191：默认使用 Xcode 全局 DerivedData）
+> 覆盖范围：191/191 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 190/190 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 190/190 | 每条记录链接到现有 space README |
+| 编号登记 | 191/191 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 191/191 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -215,3 +215,5 @@
 | `SP-188-issue-219-generic-ios-build` | [`SP-188-issue-219-generic-ios-build`](./SP-188-issue-219-generic-ios-build/README.md) | v0.2.25 已发布／#215–220 已关闭 | #219：显式 generic iOS SDK-only build；51 + 5 focused tests 通过，未做真实 SDK 编译 |
 | `SP-189-issue-220-package-result-path` | [`SP-189-issue-220-package-result-path`](./SP-189-issue-220-package-result-path/README.md) | v0.2.25 已发布／#215–220 已关闭 | #220：package result 路径与 inline parser 一致；49 + 2 focused tests 通过，夹具贯通执行结果路径解析，非实际 Xcode test |
 | `SP-190-open-issues-integration` | [`SP-190-open-issues-integration`](./SP-190-open-issues-integration/README.md) | v0.2.25 已发布／#215–220 已关闭 | #214–#220 本地集成与统一验收；保留各项证据边界，#215～220 已关闭，#214 继续开放 |
+
+| `SP-191-default-xcode-deriveddata` | [`SP-191-default-xcode-deriveddata`](./SP-191-default-xcode-deriveddata/README.md) | 已完成（本地） | 默认使用 Xcode 全局 DerivedData；CLI/root tests、schema smoke 与 docs 门禁通过；`--derived-data-path` 仅显式隔离/恢复，可能造成高磁盘占用 |

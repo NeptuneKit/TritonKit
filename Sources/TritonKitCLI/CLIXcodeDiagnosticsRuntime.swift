@@ -36,7 +36,7 @@ enum XcodeBuildOutputDiagnosticsParser {
             message: "xcodebuild reported stale DerivedData files outside the allowed root paths.",
             matchCount: samples.count,
             samples: Array(samples.prefix(maximumSamples)),
-            recovery: "Use a fresh --derived-data-path for this checkout or remove the stale .triton/DerivedData directory before retrying.",
+            recovery: "This is legacy or explicitly overridden repo-local DerivedData. Keep the default Xcode-managed folder by omitting --derived-data-path; if isolation is required, pass a fresh explicit path and remember that it can consume substantial disk space.",
             nextAction: TKCLINextAction(
                 command: "xcode",
                 args: ["build", "--derived-data-path", "<fresh-derived-data-path>", "--jsonl"],
@@ -323,7 +323,7 @@ private func fileSize(atPath path: String) -> Int {
 
 func currentXcodeProcessStatus(workspace: String? = nil) throws -> XcodeProcessStatusOutput {
     let defaults = try? loadHostWorkspaceDefaults()
-    let derivedDataPath = defaults?.xcode?.derivedDataPath ?? defaultXcodeDerivedDataPath
+    let derivedDataPath = resolveXcodeDerivedDataOverride(explicit: nil, configured: defaults?.xcode?.derivedDataPath, package: nil) ?? defaultXcodeDerivedDataPath
     let latestLogs = latestXcodeArtifactLogStatus()
     let pgrep = TKHostCommand(
         executable: "pgrep",

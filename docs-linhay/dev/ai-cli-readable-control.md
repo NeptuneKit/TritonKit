@@ -524,7 +524,7 @@ Round 179 修复 platform-focused doctor / plan 对 Harmony 与 Android host-sid
 ## 2026-09 issue 合同补充
 
 - `xcode test --jsonl` 默认 compact；完整 raw 日志在 artifact，显式 `--progress full` 才转发。按子命令 schema 选参数，`xcode run` 不接受 `--progress`。
-- DerivedData 存在不证明 cache 命中。`reuseVerification=unknown`，`incrementalExpected=false` 仅表示没有验证过的预期；读取 `observedBuild.taskLogCounts/logCoverage`，不擅自称增量或全量。
+- 默认 Xcode 工作流不传 `-derivedDataPath`，交给 Xcode 使用用户级 DerivedData；`--derived-data-path` 必须显式传入，仅用于隔离或恢复，并可能造成高磁盘占用，非必要不要开启。DerivedData 存在不证明 cache 命中。`reuseVerification=unknown`，`incrementalExpected=false` 仅表示没有验证过的预期；读取 `observedBuild.taskLogCounts/logCoverage`，不擅自称增量或全量。
 - `debug attrs --oid` 支持 UIView/CALayer oid；UILabel 的有效字体/颜色与 UTF-16 run 有界输出，正文预览和 run 都要检查截断字段。
 - collection cell 激活尊重 allowsSelection/delegate，success 只证明公开 callback，必须验证业务后置条件。`act tap --duration` 不支持长按，提前 typed unsupported；embedded longPress 和非滚动手势也不伪造成功，使用 App 显式注册的 semantic DEBUG action 或检查实际 provider 能力。
 - Harmony ArkWeb bridge-call 需可达 DevTools socket 与页面 `window.__tritonBridge.methods` 自有函数白名单；函数接收 `(params, complete, reject)`，支持返回值/Promise/callback。明确选中 CDP page ID，stale/ambiguous 失败关闭；不把 CDP page ID 当导航 session 验证，清理失败也可能发生在页面方法已执行之后，重试前先验业务状态。
@@ -552,7 +552,7 @@ Temporary 查询可能创建客户端域，实际是否新建没有可靠后置�
 
 `triton sim swipe --simulator booted --start-x 360 --start-y 700 --end-x 80 --end-y 700 --duration 0.35 --json` 通过现有 Baguette host HID 适配器执行，不依赖 embedded server 或 Web 服务。默认坐标为 Simulator points；可成对传 `--width/--height` 表示源图坐标空间。duration 为有限正数且最多 10 秒。成功只证明 host submission，必须用同目标 `triton sim ax --device <udid> --json` / `triton sim screenshot` 检查 settled 后置条件。后端不可用时失败关闭，不自动落回 embedded runtime。
 
-DerivedData safety (#214): `xcode derived-data inspect` and `cleanup` are read-only usage/preview commands. Confirmed cleanup fails closed with `derived_data_cleanup_unavailable` before deletion; observed or unknown Xcode activity is rejected. Counts describe logical regular-file bytes and top-level directories, and timestamps describe modification, not last use. Exact root suffix components are required; external build/cache exclusivity and descriptor-relative race safety remain prerequisites for restoring deletion.
+DerivedData safety (#214): 默认 `xcode derived-data inspect` 和 `cleanup` 检查用户级 Xcode DerivedData；仓库内 `.triton/DerivedData` 只作为显式 legacy root。两者都是只读使用量/预览命令。显式 legacy cache 的 `derivedDataCache.guidance` 会提醒 agent：若磁盘占用过大，先询问用户是否清理，再执行任何删除。Confirmed cleanup fails closed with `derived_data_cleanup_unavailable` before deletion; observed or unknown Xcode activity is rejected. Counts describe logical regular-file bytes and top-level directories, and timestamps describe modification, not last use. Exact root suffix components are required; external build/cache exclusivity and descriptor-relative race safety remain prerequisites for restoring deletion.
 `triton xcode ... --package <Package.swift-or-directory>` 的相对 `--derived-data-path` 按 package 工作目录解析并在 invocation/cache 元数据中给出绝对路径；`xcode test --result-bundle <relative>` 同样按 package 工作目录规范化，执行命令、inline xcresult parser 和最终 `resultBundlePath` 共享该位置。绝对路径保持不变；非 package 工作流保留调用目录语义。
 ## iOS selected-device host HID compatibility
 

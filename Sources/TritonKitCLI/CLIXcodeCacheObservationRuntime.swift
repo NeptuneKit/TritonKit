@@ -1,6 +1,18 @@
 import Foundation
 import TritonKitShared
 
+func xcodeDerivedDataGuidance(path: String) -> String {
+    let pathComponents = path.split(separator: "/").map(String.init)
+    let isRepoLocalLegacy = zip(pathComponents, pathComponents.dropFirst()).contains { $0 == ".triton" && $1 == "DerivedData" }
+    if path == defaultXcodeDerivedDataPath {
+        return "Xcode default user-level DerivedData is active; Triton does not pass -derivedDataPath. Directory existence does not verify reuse; cleanup should preserve it by default. Use --derived-data-path only when isolation or recovery is explicitly required because it can consume substantial disk space."
+    }
+    if isRepoLocalLegacy {
+        return "Explicit legacy repo-local .triton/DerivedData is active. If this cache is using too much disk, ask the user whether it should be cleaned before any deletion; review it with `triton xcode derived-data inspect --root \(path) --json`. cleanup --confirm currently fails closed and deletes nothing."
+    }
+    return "Explicit DerivedData override \(path) is active; cleanup should not delete it by default. Directory existence does not verify reuse; incrementalExpected false means no verified expectation. If disk usage is high, ask the user before cleanup."
+}
+
 func makeXcodeDerivedDataCacheInfo(path: String?) -> TKXcodeDerivedDataCacheInfo {
     let resolvedPath = (path?.isEmpty == false ? path : nil) ?? defaultXcodeDerivedDataPath
     var isDirectory: ObjCBool = false
@@ -11,7 +23,7 @@ func makeXcodeDerivedDataCacheInfo(path: String?) -> TKXcodeDerivedDataCacheInfo
         cacheState: exists ? "directory-exists" : "missing-derived-data",
         incrementalExpected: false,
         cleanupPolicy: "preserve-by-default",
-        guidance: "Keep \(resolvedPath) to preserve potential Xcode cache; cleanup should not delete it by default. Directory existence does not verify reuse; incrementalExpected false means no verified expectation."
+        guidance: xcodeDerivedDataGuidance(path: resolvedPath)
     )
 }
 

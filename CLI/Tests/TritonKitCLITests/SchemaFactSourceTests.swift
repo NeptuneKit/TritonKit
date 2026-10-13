@@ -93,10 +93,12 @@ struct SchemaFactSourceTests {
         let xcode = try #require(schemas["xcode"])
         let derivedDataOption = try #require(xcode.options.first { $0.name == "--derived-data-path" })
 
-        #expect(derivedDataOption.defaultValue == ".triton/DerivedData")
+        #expect(derivedDataOption.defaultValue == nil)
         #expect(derivedDataOption.description.contains("incremental"))
-        #expect(derivedDataOption.description.contains("cleanup"))
+        #expect(derivedDataOption.description.lowercased().contains("cleanup"))
         #expect(derivedDataOption.description.contains("Swift macro"))
+        #expect(derivedDataOption.description.contains("substantial disk space"))
+        #expect(derivedDataOption.description.contains("only when isolation, Swift macro recovery, or another explicit recovery case requires it"))
 
         expectContract(xcode, selector: "xcode.final", fields: [
             "derivedDataPath",
@@ -322,6 +324,7 @@ struct SchemaFactSourceTests {
         let schemas = commandSchemaMap()
         let xcode = try #require(schemas["xcode"])
         let build = try #require(schemas["build"])
+        let buildDerivedDataOption = try #require(build.options.first { $0.name == "--derived-data-path" })
 
         #expect(xcode.options.map(\.name).contains("--device"))
         #expect(xcode.examples.contains("triton xcode build --device <ios-real-target> --sdk iphoneos --allow-provisioning-updates --jsonl"))
@@ -329,6 +332,9 @@ struct SchemaFactSourceTests {
         #expect(xcode.failureCodes.contains("device_not_ready"))
         #expect(xcode.failureCodes.contains("xcode_signing_failed"))
         #expect(xcode.failureCodes.contains("provisioning_profile_missing"))
+        #expect(buildDerivedDataOption.defaultValue == nil)
+        #expect(buildDerivedDataOption.description.contains("substantial disk space"))
+        #expect(buildDerivedDataOption.description.contains("only for isolation or recovery"))
         expectContract(xcode, selector: "xcode.final", fields: [
             "device",
         ])
