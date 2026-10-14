@@ -4,7 +4,7 @@
 
 | 触发条件 | 下次检查重点 | 权威链接 |
 | --- | --- | --- |
-| 构建、测试或交付结果声明 | 固定候选差异与实际二进制；代码冻结后重跑受影响检查；区分 fixture、真实运行与跳过，不累加重复测试 | [集成审计](../spaces/SP-190-open-issues-integration/plans/20261012-integration-review.md)、[缓存证据验证](../spaces/SP-175-issue-212-xcode-cache-evidence/README.md) |
+| 构建、测试或交付结果声明 | 固定候选差异与实际二进制；代码冻结后重跑受影响检查；区分 fixture、真实运行与跳过，不累加重复测试 | [集成审计](../spaces/SP-190-open-issues-integration/plans/20261012-integration-review.md)、[缓存证据验证](../spaces/SP-175-issue-212-xcode-cache-evidence/README.md)、[上游优化真实验收与失败边界](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-validation-report.md) |
 | CLI 错误、递归 schema、replay 或 smoke 改动 | 实际进程输出仅一个合法 envelope；保留底层错误码；检查嵌套模型到最终 JSON 和真实 argv | [CLI 信息契约](../dev/agent-facing-cli-information-architecture.md)、[runtime smoke 修复](../spaces/SP-178-issue-213-real-device-runtime/README.md) |
 | SwiftPM manifest、CLI 构建或依赖调整 | 根包不引入 CLI-only 依赖；从 CLI manifest 构建；跑现有 dependency-boundary 检查，核对 package identity | [SwiftPM 依赖边界](../dev/20260521-spm-ios-cli-dependency-boundary.md)、[CLI 修复沉淀流程](../../.agents/skills/tritonkit-ops-governance/SKILL.md) |
 | SDK 接入、runtime bootstrap 或 Debug/Release 配置 | App 文件级 DEBUG 与显式启用；Release 编译并 no-op；包内编译条件和 App 接入条件分别验证 | [Debug-only runtime](../dev/20260519-debug-only-pm-runtime.md)、[iOS 接入](../dev/20260519-ios-integration-guide.md) |

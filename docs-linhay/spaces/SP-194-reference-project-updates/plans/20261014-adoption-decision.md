@@ -46,3 +46,21 @@ Hybrid：从 simslim、sim-use、Loupe 选取三个兼容与正确性切片先�
 ## Executor
 
 后续授权实施时，主控负责集成和最终验收；独立实现space/worktree按文件责任拆分。此次单agent完成筛选，不创建实现任务、不提交或推送。
+
+## 追加可纳入的优化
+
+用户继续询问除第一批三项外的优化。2026-10-14再次只读核对源码，建议如下；仅推荐与验收设计，不实现。
+
+| 顺序 | 优化 | 已核对事实与借鉴来源 | 验收重点 |
+| --- | --- | --- | --- |
+| 高 | WebView受控表单输入与读回 | `TKRuntimeWebViewProvider.swift` 的form input直接`element.value = oldValue`，返回ok:true与长度；已派发input/change但未在该脚本验证目标值保持。Harness0.8.4给native prototype setter/blur/read-back场景 | React受控输入、datetime/number不支持selection API、select值/文案、只读/无变化、异步回退、secure只返回验证布尔和长度；精确postcondition不代替业务提交成功 |
+| 高 | 前景目标与可操作性一致 | Harness0.8.3与Loupe0.5.0：sheet/popover/menu限制、label provenance、gesture target | 模态出现后不选底层同名控件；AX可见不等于可点击；命中候选保持来源与歧义。先审计现有实现再补差距 |
+| 高 | helper/进程/流取消可靠性 | serve-sim shutdown等待in-flight、sim-use interruptible sink、device-hub-ios operation-owned process session | 阻塞消费者、断开pipe、SIGPIPE、取消/超时、重复stop、不能杀其他工程进程；诊断与stdout契约不被日志破坏 |
+| 中 | prepared test产物复用 | `runXcodeTest`目前调用普通test；Apple platform专门runner已有xctestrun，不能当通用xcode test reuse已覆盖 | 源码/SDK/toolchain/scheme/config/destination指纹失效，测试编译与执行分离，每次新xcresult，节省时间必须量测 |
+| 中 | 证据时间线与失败报告 | `CLITestRunRuntime.swift`已有before/after截图；workspace已有unknown/business checkpoint；Maestro2.7–2.11提示补时序和导出安全 | 审计视频真正开始时间与步骤对齐、失败仍保留截图/树、产物路径不得越界、dry-run/simulated/skipped不算真实执行；已实现部分不重做 |
+| 中 | 配置/skill更新治理 | Revylskill update与config migrate ledger；Tritonpublic skill已有版本包而非完整CLI updater证据 | dry-run、字节备份、原子替换、保留用户本地修改、冲突退出、版本及checksum、回滚；内部managed文件权限/符号链接边界独立验证 |
+| 中 | 网络证据与App Map完整性 | proxy已有header names-only脱敏；App Map已有evidenceRefs/coverage/health，不从零新造Atlas | 网络不扩采敏感body默认值；审计stream结束/截断/无法检查状态。App Map补build/device/runtime范围、完整性与证据回溯；未知不等于不存在 |
+
+建议在原第一批之后先做WebView输入可靠性和helper取消治理，再优化测试构建复用。前景命中与证据完整性可作为横向回归项持续补齐；配置/skill/App Map各自独立立项。不是把上游工具整体引入工程。
+
+来源：[Harness0.8.4](https://github.com/awizemann/harness/releases/tag/v0.8.4)、[Harness0.8.3](https://github.com/awizemann/harness/releases/tag/v0.8.3)、[Maestro2.11.0固定changelog](https://github.com/mobile-dev-inc/Maestro/blob/cli-2.11.0/CHANGELOG.md)、[Revyl内部文件约束](https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/docs/local-runtime-files.md)，其他固定来源见分组报告。Maestro网页读取timeout，但前轮官方contents API读取成功；本轮不据网页失败推断无变化。

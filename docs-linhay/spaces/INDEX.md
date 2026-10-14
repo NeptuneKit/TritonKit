@@ -220,7 +220,12 @@
 | `SP-192-ictrl-adoption-feasibility` | [`SP-192-ictrl-adoption-feasibility`](./SP-192-ictrl-adoption-feasibility/README.md) | 已合入本地 main | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12及真实只读AX/alias/OCR/settle通过；iOS115、Android52与完整APK通过，本地门禁复跑通过；源码已合入本地main，worktree已清理 |
 | `SP-193-ictrl-reference-tracking` | [`SP-193-ictrl-reference-tracking`](./SP-193-ictrl-reference-tracking/README.md) | 长期追踪已启用 | 正式参考档案、基线与本聊天每日 10:00 自动化已登记；有价值变化通知，采用另立项 |
 | `SP-194-reference-project-updates` | [`SP-194-reference-project-updates`](./SP-194-reference-project-updates/README.md) | 已归档 | 23主要仓库+9候选，上游版本/增量/限制与借鉴建议已汇总；docs门禁与来源校验通过 |
-| `SP-195-ios-runner-product` | [`SP-195-ios-runner-product`](./SP-195-ios-runner-product/README.md) | 已引入本地main | Runner统一CLI/HTTP/随包；CLI1297+36、完整门禁与真机/Simulator通过；主仓门禁exit0；参考文档与产品分别提交，未push/release；已完成worktree收口见SP195计划 |
-| `SP-196-upstream-optimization-delivery` | [`SP-196-upstream-optimization-delivery`](./SP-196-upstream-optimization-delivery/README.md) | 编号预留／开发中 | 并行上游优化任务；仅预留编号与边界，实施计划及源码另行集成 |
-| `SP-197-view-annotation` | [`SP-197-view-annotation`](./SP-197-view-annotation/README.md) | 已合入本地main | 可选UIKit高亮与条件还原；7b1a2f76集成实现、真实截图与skills，P1/跨端后置 |
+
+| `SP-195-ios-runner-product` | [`SP-195-ios-runner-product`](./SP-195-ios-runner-product/README.md) | 已引入本地main | Runner统一CLI/HTTP/随包；CLI1297+36、完整门禁与真机/Simulator通过；主仓门禁exit0；参考文档与产品分别提交，未push/release；已完成worktree收口见SP195计划；本地完成分支已清理/归档 |
+
+| `SP-196-upstream-optimization-delivery` | [`SP-196-upstream-optimization-delivery`](./SP-196-upstream-optimization-delivery/README.md) | 本地验证完成 | 11项优化；CLI41+1323、真实iOS56与总门禁通过；独立分支待集成，未提交/推送/发布 |
+
+
+| `SP-197-view-annotation` | [`SP-197-view-annotation`](./SP-197-view-annotation/README.md) | 已合入本地main | 可选UIKit高亮与条件恢复已验收；7b1a2f76集成实现、证据和skills，保留并行WIP |
+
 | `SP-198-agent-experience-loop` | [`SP-198-agent-experience-loop`](./SP-198-agent-experience-loop/README.md) | 本地提交归档 | Agent默认自动沉淀、主题索引与原权威资料修订退出；28隔离用例通过，远端CI未运行 |

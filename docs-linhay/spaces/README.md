@@ -22,9 +22,9 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 已合入本地main | [SP-197-view-annotation](./SP-197-view-annotation/README.md) | 可选UIKit真实高亮与条件还原；CLI/HTTP、截图与skills已验收 | 7b1a2f76完成集成；P1截图消费者与跨端另行实施 |
+| 已合入本地main | [SP-197-view-annotation](./SP-197-view-annotation/README.md) | 独立可选UIKit高亮与条件恢复；真实模拟器截图、CLI/HTTP与skills已验收 | 7b1a2f76完成集成；P1截图消费者与跨端另行实施 |
 | 本地提交归档 | [SP-198-agent-experience-loop](./SP-198-agent-experience-loop/README.md) | 按主题读取与默认自动沉淀已接线；28用例通过 | 后续任务按命中主题执行；CI配置已接入、远端未运行 |
-| 已引入本地main | [SP-195-ios-runner-product](./SP-195-ios-runner-product/README.md) | 产品与设备验收、主仓门禁通过 | 参考文档306dc42b与Runner分别提交；原worktree已清理；未push/release；已完成worktree收口见SP195计划 |
+| 本地验证完成 | [SP-196-upstream-optimization-delivery](./SP-196-upstream-optimization-delivery/README.md) | 11项优化；CLI41+1323、真实iOS56及总门禁通过 | 独立分支待集成；active Resize专项证明仍待补 |
 | 已归档 | [SP-194-reference-project-updates](./SP-194-reference-project-updates/README.md) | 23主要仓库+9候选更新报告与分组来源已完成；文档门禁与来源结构校验通过 | 按报告建议另立实施切片；不自动采用 |
 | 长期追踪 | [SP-193-ictrl-reference-tracking](./SP-193-ictrl-reference-tracking/README.md) | 正式列为长期参考；基线 main@99dbfec / v1.97.1；本聊天每日北京时间 10:00 追踪 | 有价值变化通知，增量归档后更新检查点；后续采用另立项 |
 | 已集成（本地 main） | [SP-192-ictrl-adoption-feasibility](./SP-192-ictrl-adoption-feasibility/README.md) | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12、iOS115、Android52与完整APK及真实只读AX/alias/OCR/settle通过 | `e308a2eb` / merge `da76a708`，main总门禁通过；真实设备与OCR输入坐标边界见限制收口计划；worktree已清理 |
@@ -126,15 +126,15 @@
 
 | Space | Branch | Worktree | 基线 | 当前状态与后续 |
 | --- | --- | --- | --- | --- |
-| `SP-192-ictrl-adoption-feasibility` | `feat/SP-192-ictrl-adoption-feasibility` | 已清理（2026-10-14） | `main@8aaf6c31` | 五机制及Android/iOS验证限制收口完成，本地门禁通过；`e308a2eb` / merge `da76a708` 已合入本地main，main总门禁通过；worktree已清理 |
+| `SP-192-ictrl-adoption-feasibility` | `feat/SP-192-ictrl-adoption-feasibility`（本地分支已删除） | 已清理（2026-10-14） | `main@8aaf6c31` | 五机制及Android/iOS验证限制收口完成，本地门禁通过；`e308a2eb` / merge `da76a708` 已合入本地main，main总门禁通过；worktree已清理 |
 | `SP-156-issue-176-xcode-compact-progress` | `feat/SP-156-issue-176-xcode-compact-progress`（已清理） | 已清理（历史由 PR #177 merge 可达） | `feat/SP-153-issue-173-xcode-run-target-binding@57ff4092` | #176 已合并并关闭；compact/full 合同与 focused 证据保留 |
-| `SP-157-open-issues-178-195-audit` | `feat/SP-157-open-issues-178-195-audit` | 已清理（2026-10-14） | `main@e77c72b7` | `ad1e55a9` 已由 merge `1564e7ed` 进入主线；#178–#194 已评论并关闭，worktree已清理，审计记录已归档 |
-| `SP-158-issue-196-xcode-archive-export` | `feat/SP-158-issue-196-xcode-archive-export` | 已清理（2026-10-14） | `main@e77c72b7` | `b3d0c27c` 已由 merge `424113b6` 进入主线；#196 已评论并关闭，真实签名风险保留；worktree已清理 |
-| `SP-159-issue-195-ios-ddi-recovery` | `feat/SP-159-issue-195-ios-ddi-recovery` | 已清理（2026-10-14） | `main@e77c72b7` | `45c3ebbd` 已由 merge `faa74638` 进入主线；#195 已评论并关闭，真实 DDI/tunnel 风险保留；worktree已清理 |
-| `SP-160-issue-197-harmony-wait-budget` | `feat/SP-160-issue-197-harmony-wait-budget` | 已清理（2026-10-14） | `main@e77c72b7` | `0ff8089e` 已由 merge `e77c72b7` 进入主线；#197 已评论并关闭，真实 Harmony smoke 风险保留；worktree已清理 |
-| `SP-161-issue-198-harmony-signed-hap` | `feat/SP-161-issue-198-harmony-signed-hap` | 已清理（2026-10-14） | `main@c55c5cab` | `ffc69a34` 已由 merge `574bbc9c` 进入本地 main；#198 待远端评论/关闭，worktree已清理，审计记录已归档 |
-| `SP-162-issue-199-ios-collection-cell-host-hid` | `feat/SP-162-issue-199-ios-collection-cell-host-hid` | 已清理（2026-10-14） | `main@c55c5cab` | `711db3f2` 已由 merge `38967558` 进入本地 main；#199 待远端评论/关闭，真实 Simulator/Baguette 风险保留；worktree已清理 |
-| `SP-163-issue-200-simulator-foreground-runtime` | `feat/SP-163-issue-200-simulator-foreground-runtime` | 已清理（2026-10-14） | `origin/main@adbfc92c` | 已完成（本地）：focused 20/20、release schema 与 local gate 通过；未操作真实 Simulator，#200 待远端处置；worktree已清理 |
+| `SP-157-open-issues-178-195-audit` | `feat/SP-157-open-issues-178-195-audit`（本地分支已删除） | 已清理（2026-10-14） | `main@e77c72b7` | `ad1e55a9` 已由 merge `1564e7ed` 进入主线；#178–#194 已评论并关闭，worktree已清理，审计记录已归档 |
+| `SP-158-issue-196-xcode-archive-export` | `feat/SP-158-issue-196-xcode-archive-export`（本地分支已删除） | 已清理（2026-10-14） | `main@e77c72b7` | `b3d0c27c` 已由 merge `424113b6` 进入主线；#196 已评论并关闭，真实签名风险保留；worktree已清理 |
+| `SP-159-issue-195-ios-ddi-recovery` | `feat/SP-159-issue-195-ios-ddi-recovery`（本地分支已删除） | 已清理（2026-10-14） | `main@e77c72b7` | `45c3ebbd` 已由 merge `faa74638` 进入主线；#195 已评论并关闭，真实 DDI/tunnel 风险保留；worktree已清理 |
+| `SP-160-issue-197-harmony-wait-budget` | `feat/SP-160-issue-197-harmony-wait-budget`（本地分支已删除） | 已清理（2026-10-14） | `main@e77c72b7` | `0ff8089e` 已由 merge `e77c72b7` 进入主线；#197 已评论并关闭，真实 Harmony smoke 风险保留；worktree已清理 |
+| `SP-161-issue-198-harmony-signed-hap` | `feat/SP-161-issue-198-harmony-signed-hap`（本地分支已删除） | 已清理（2026-10-14） | `main@c55c5cab` | `ffc69a34` 已由 merge `574bbc9c` 进入本地 main；#198 待远端评论/关闭，worktree已清理，审计记录已归档 |
+| `SP-162-issue-199-ios-collection-cell-host-hid` | `feat/SP-162-issue-199-ios-collection-cell-host-hid`（本地分支已删除） | 已清理（2026-10-14） | `main@c55c5cab` | `711db3f2` 已由 merge `38967558` 进入本地 main；#199 待远端评论/关闭，真实 Simulator/Baguette 风险保留；worktree已清理 |
+| `SP-163-issue-200-simulator-foreground-runtime` | `feat/SP-163-issue-200-simulator-foreground-runtime`（本地分支已删除） | 已清理（2026-10-14） | `origin/main@adbfc92c` | 已完成（本地）：focused 20/20、release schema 与 local gate 通过；未操作真实 Simulator，#200 待远端处置；worktree已清理 |
 | `SP-164-issue-201-harmony-act-find` | `feat/SP-164-issue-201-harmony-act-find`（已清理） | 已清理（merge `8469375a` 可达） | `origin/main@8cc72765` | #201 已合并并关闭；Harmony `act find` host adapter 11/11 |
 | `SP-165-issue-202-sim-tap-help-dimensions` | `feat/SP-165-issue-202-sim-tap-help-dimensions`（已清理） | 已清理（merge `07a11612` 可达） | `origin/main@8cc72765` | #202 已合并并关闭；sim tap point-space 62/62 |
 | `SP-166-issue-203-ios-text-query-consistency` | `feat/SP-166-issue-203-ios-text-query-consistency`（已清理） | 已清理（merge `e27e0de3` 可达） | `origin/main@8cc72765` | #203 已合并并关闭；共享文本归一化 245/245、4/4 |
@@ -306,8 +306,4 @@
 
 - [SP-191-default-xcode-deriveddata](./SP-191-default-xcode-deriveddata/README.md)：已发布（`v0.2.26`）；默认交给 Xcode 使用用户级 DerivedData，显式 `--derived-data-path` 仅用于隔离/恢复并提示高磁盘占用；CLI/root tests、schema smoke、docs 门禁与远端 CI 通过。
 
-
-## 2026-10-14 · 独立高亮集成
-
-- SP-197实现、技术方案、恢复契约、6张真实截图和skills已合入本地main；完整主线集成回归通过，详见对应space。
-- [SP-196-upstream-optimization-delivery](./SP-196-upstream-optimization-delivery/README.md)仅登记并行任务编号，完整实施计划和源码由原任务另行集成。
+| 已引入本地main | [SP-195-ios-runner-product](./SP-195-ios-runner-product/README.md) | 产品与设备验收、主仓门禁通过 | 参考文档306dc42b与Runner分别提交；原worktree已清理；未push/release；已完成worktree收口见SP195计划；本地完成分支已清理/归档 |

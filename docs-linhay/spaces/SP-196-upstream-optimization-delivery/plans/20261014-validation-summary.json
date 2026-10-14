@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-14",
+  "state": "implementation-validated-awaiting-integration",
+  "baseCommit": "306dc42b",
+  "branch": "feat/SP-196-upstream-optimization-delivery",
+  "cli": {
+    "xctest": {
+      "tests": 41,
+      "failures": 0
+    },
+    "swiftTesting": {
+      "reportedTests": 1323,
+      "suites": 128,
+      "defaultDisabledLiveTests": 1,
+      "failures": 0
+    },
+    "log": ".build/sp196-validation/cli-final-2.log"
+  },
+  "root": {
+    "sdkSwiftTesting": 77,
+    "sharedSwiftTesting": 274,
+    "sdkXCTest": 2,
+    "sharedXCTest": 5,
+    "failures": 0,
+    "log": ".build/sp196-validation/local-final.log"
+  },
+  "iOS": {
+    "tests": 56,
+    "passed": 56,
+    "failed": 0,
+    "skipped": 0,
+    "foregroundTests": 5,
+    "controlledInputTests": 5,
+    "platform": "iOS 27 Simulator / Xcode 27",
+    "privateEvidence": ".triton/sp196-validation/ios-hosted-final-summary.json",
+    "releaseSDKBuildVerified": true
+  },
+  "liveFramebuffer": {
+    "tests": 1,
+    "failures": 0,
+    "realJPEG": true,
+    "twoSubscriberLifetimeVerified": true,
+    "log": ".build/sp196-validation/framebuffer-live.log"
+  },
+  "prepared": {
+    "buildForTesting": true,
+    "testWithoutBuilding": true,
+    "passedTests": 1,
+    "freshResultBundlesDiffer": true,
+    "secondReusePassed": true,
+    "sourceDriftCode": "prepared_tests_identity_mismatch",
+    "sourceDriftStartedExecution": false
+  },
+  "resources": {
+    "plan": true,
+    "apply": true,
+    "verify": true,
+    "restore": true,
+    "beforeAfterDisabledLabelsEqual": true,
+    "profile": "photos-only",
+    "memoryBenefitMeasured": false
+  },
+  "prefs": {
+    "missingPresence": false,
+    "falseZeroEmptyPresent": true,
+    "allowlistedImport": true,
+    "diskWriteVerified": true,
+    "relaunch": "launched",
+    "runtimeConsumptionVerified": false,
+    "inactiveRelaunchFailureRecorded": true
+  },
+  "installer": {
+    "swiftTests": 5,
+    "pythonTests": 13,
+    "packageGate": true
+  },
+  "gates": {
+    "local": "passed; optional name-selected build replaced with explicit owned Debug tests and Release SDK build",
+    "ciDocs": "passed after final report; .build/sp196-validation/docs-final.log",
+    "diff": "passed after final report"
+  },
+  "limitations": [
+    "No active Resize session live proof; active touch/video fail closed, check-to-dispatch race remains.",
+    "Keyboard overlay exclusion is exact UIKit class/root/bundle identity verified on iOS 27.",
+    "AppMap limits response size, not full underlying read or a transaction snapshot.",
+    "Source root must cover project-external dependencies; excluded source paths not fingerprinted.",
+    "Private logs/result bundles stay local; no remote push, commit, merge or release."
+  ]
+}
