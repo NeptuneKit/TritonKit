@@ -283,3 +283,9 @@ CoreDevice `--timeout` 原生参数按整数秒解析；将正有限 CLI 秒数�
 ## 诊断归档真实验收分层
 
 `diagnose`原生采集成功与ZIP安全发布分开记录。默认256MiB预算可能拒绝实际约310–328MiB归档；在用户已授权继续诊断时，可对独立明确目标使用已支持的显式有界预算（本次512MiB），不改默认、不无限递增、不覆盖旧partial证据。验证0600文件/0700父目录、源/目标hash一致及已存在目标在新审计/采集前拒绝；不解包诊断内容，不把ZIP结构验证等同日志完整性。运行结果的verification应是稳定验证方法，不硬编码“实现任务尚未真机验收”等过期历史；实际结果由status与verified字段表达。
+
+## 可选 App 视图高亮（已实现）
+
+源码已具备独立 `triton highlight capabilities/apply/status/clear`：首个provider为Debug UIKit普通UIView/CALayer，以OID或唯一identifier定位，保存原始CGColor?/CGFloat后临时修改真实边框。agent截图汇报需要突出节点时，先按目标探测provider，apply并保存operation/runtime/session ID，使用既有截图命令拍摄，再clear自己创建的session并核对cleanupComplete、restorationVerified、residualState。使用流程见 [public highlight reference](../../../TritonKit.skills/tritonkit-emulator-cli-takeover/references/view-highlight.md)。
+
+高亮为可选能力；普通截图不增加SDK接入要求，缺可写provider只对高亮返回unsupported，不自动安装或注入。CLI退出/断连不结束App-owned会话；丢响应先按operation查询，不能盲重试。整组比较恢复保护业务新值；冲突保留残留事实，不force旧属性回写。TTL/主线程机会不能证明画面呈现或清理完成。Release不可写；截图自动组合、Android/Harmony provider和虚拟节点专用适配尚未实现。

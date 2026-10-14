@@ -329,6 +329,10 @@ public struct TKCLICommandRequest: Codable, Equatable {
 
     public var requestType: TKRequestType? {
         switch type.lowercased() {
+        case "highlightapply", "highlight.apply": .highlightApply
+        case "highlightstatus", "highlight.status": .highlightStatus
+        case "highlightclear", "highlight.clear": .highlightClear
+        case "highlightcapabilities", "highlight.capabilities": .highlightCapabilities
         case "ping": .ping
         case "appinfo": .appInfo
         case "runtimemanifest", "manifest": .runtimeManifest

@@ -14,6 +14,10 @@ enum TKRuntimeCapabilityGate {
         let error = runtimeCapabilityDisabledError(capability: capability, action: action)
 
         switch message.type {
+        case .highlightApply:
+            let failure = TKHighlightError(code: "highlight_unsupported", message: "The optional highlight feature is disabled; other runtime features remain available.")
+            let response = TKHighlightReceipt(ok: false, runtimeInstanceID: "unavailable", reason: "unsupported", error: failure, errors: [failure])
+            return TKMessage(id: message.id, type: message.type, payload: try? JSONEncoder().encode(response))
         case .input:
             let input = message.payload.flatMap { try? JSONDecoder().decode(TKInputRequest.self, from: $0) }
             let result = TKInputResult.failure(
@@ -51,6 +55,10 @@ enum TKRuntimeCapabilityGate {
 
     static func capability(for message: TKMessage) -> TKRuntimeCapabilityName? {
         switch message.type {
+        case .highlightApply:
+            return .highlight
+        case .highlightStatus, .highlightClear, .highlightCapabilities:
+            return nil
         case .appInfo:
             return .appInfo
         case .stateApp:
@@ -169,6 +177,8 @@ enum TKRuntimeCapabilityGate {
 extension TritonKit.Configuration {
     func isRuntimeCapabilityEnabled(_ capability: TKRuntimeCapabilityName) -> Bool {
         switch capability {
+        case .highlight:
+            return features.contains(.highlight)
         case .runtimeManifest, .ledger:
             return true
         case .appInfo, .stateApp, .stateScene, .stateRoute, .stateResponder:

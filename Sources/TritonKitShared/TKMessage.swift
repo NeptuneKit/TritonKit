@@ -6,6 +6,10 @@ public enum TKRequestType: String, Codable, CaseIterable {
     case ping
     case appInfo
     case runtimeManifest
+    case highlightApply
+    case highlightStatus
+    case highlightClear
+    case highlightCapabilities
     case stateApp
     case stateScene
     case stateRoute

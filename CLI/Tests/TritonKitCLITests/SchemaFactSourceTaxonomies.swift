@@ -190,6 +190,7 @@ func recoveryCommandRootTaxonomy() -> Set<String> {
         "focus",
         "geometry",
         "hierarchy",
+        "highlight",
         "hit",
         "input",
         "inspect",
@@ -274,6 +275,7 @@ func recoveryCommandRootCategoryMap() -> [String: String] {
         "focus": "act",
         "geometry": "observe",
         "hierarchy": "observe",
+        "highlight": "diagnose",
         "hit": "observe",
         "input": "act",
         "inspect": "discover",
@@ -326,6 +328,12 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "plan"]
     }
     switch failureCode {
+    case "highlight_unsupported", "highlight_busy", "highlight_operation_conflict", "highlight_capacity_exceeded", "highlight_receipt_expired":
+        return ["diagnose", "plan"]
+    case "highlight_target_ambiguous", "highlight_target_not_found", "highlight_identity_unverifiable", "highlight_identity_changed", "highlight_stale_runtime":
+        return ["diagnose", "observe", "plan"]
+    case "highlight_render_timeout", "highlight_restore_conflict", "highlight_restore_failed":
+        return ["diagnose", "observe"]
     case "ambiguous_target", "android_target_unauthorized", "device_not_ready", "simulator_not_booted", "simulator_not_found", "target_not_found", "target_platform_mismatch", "target_unavailable":
         return ["discover", "prepare-target", "diagnose"]
     case "ios_host_ax_unsupported_platform":

@@ -20,6 +20,9 @@ public class TritonKitRequestHandler: TritonKitDelegate {
 
     public func tritonKit(_ kit: TritonKit, didReceiveMessage message: TKMessage) async -> TKMessage? {
         guard TritonKit.isRuntimeEnabled else {
+            if [.highlightApply, .highlightStatus, .highlightClear, .highlightCapabilities].contains(message.type) {
+                return await handleHighlight(message)
+            }
             if message.type == .runtimeManifest {
                 return TKMessage(
                     id: message.id,
@@ -73,6 +76,8 @@ public class TritonKitRequestHandler: TritonKitDelegate {
             let request = msg.payload.flatMap { try? JSONDecoder().decode(TKRuntimeLedgerRequest.self, from: $0) } ?? TKRuntimeLedgerRequest()
             let response = runtimeLedgerStore.response(limit: request.limit)
             return TKMessage(id: msg.id, type: .runtimeLedger, payload: try? JSONEncoder().encode(response))
+        case .highlight:
+            return await handleHighlight(msg)
         case .legacyInspection:
             return await handleLegacyInspection(msg)
         case .unsupported:

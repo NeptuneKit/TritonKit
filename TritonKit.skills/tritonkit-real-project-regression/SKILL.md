@@ -113,3 +113,7 @@ Read [Device Hub acceptance](references/device-hub-acceptance.md) before metadat
 - Harmony ArkWeb bridge-call 需可达 DevTools socket 与页面 `window.__tritonBridge.methods` 自有函数白名单；函数接收 `(params, complete, reject)`，支持返回值/Promise/callback。明确选中 CDP page ID，stale/ambiguous 失败关闭；不把 CDP page ID 当导航 session 验证，清理失败也可能发生在页面方法已执行之后，重试前先验业务状态。
 
 `triton xcode ... --package <Package.swift-or-directory>` 的相对 `--derived-data-path` 按 package 工作目录解析并在 invocation/cache 元数据中给出绝对路径；`xcode test --result-bundle <relative>` 同样按 package 工作目录规范化，执行命令、inline xcresult parser 和最终 `resultBundlePath` 共享该位置。绝对路径保持不变；非 package 工作流保留调用目录语义。
+
+## Optional view-highlight acceptance
+
+`triton highlight capabilities/apply/status/clear` is optional; never require an embedded SDK for ordinary host screenshots. See [the highlight workflow](../tritonkit-emulator-cli-takeover/references/view-highlight.md). Validate real properties, before/during/after images, exact session cleanup, TTL, business-write conflicts and reconnect. Screenshot success is not restoration success; preserve operationID/sessionID and incomplete cleanup evidence. This slice supports Debug UIKit ordinary views only.

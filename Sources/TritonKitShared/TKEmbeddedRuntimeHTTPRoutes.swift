@@ -16,6 +16,14 @@ public struct TKEmbeddedRuntimeHTTPRoute: Codable, Equatable {
 
     public static func route(for requestType: TKRequestType) -> TKEmbeddedRuntimeHTTPRoute? {
         switch requestType {
+        case .highlightApply:
+            TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/highlight/apply")
+        case .highlightStatus:
+            TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/highlight/status")
+        case .highlightClear:
+            TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/highlight/clear")
+        case .highlightCapabilities:
+            TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/highlight/capabilities")
         case .runtimeManifest:
             TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/manifest")
         case .stateApp:

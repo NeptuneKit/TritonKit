@@ -14,6 +14,7 @@ Use this file to choose the smallest reference needed for an emulator CLI takeov
 | Update README, external integration guides, CLI/Harmony/iOS onboarding | `integration-guide-contract.md` |
 | Touch workspace run, model decisions, Atlas/app-map, replay, `.tritonplan`, or evidence archive | `workspace-runs.md` |
 | Plan host-side mutation, destructive action, or implementation sequence | `safety-rules.md`, then `implementation-workflow.md` |
+| Apply/restore optional real App view highlighting | [view-highlight.md](view-highlight.md) |
 | Choose verification commands or real emulator smoke checks | `validation.md` |
 
 If no row fits, inspect `SKILL.md` for the core boundary and add a focused reference instead of creating a monolithic catch-all file.

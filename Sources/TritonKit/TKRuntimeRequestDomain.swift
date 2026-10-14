@@ -9,11 +9,14 @@ enum TKRuntimeRequestDomain: Equatable {
     case webView
     case semantic
     case ledger
+    case highlight
     case legacyInspection
     case unsupported
 
     static func domain(for type: TKRequestType) -> TKRuntimeRequestDomain {
         switch type {
+        case .highlightApply, .highlightStatus, .highlightClear, .highlightCapabilities:
+            return .highlight
         case .ping, .runtimeManifest:
             return .control
         case .appInfo, .stateApp, .stateScene, .stateRoute, .stateResponder, .runtimeSnapshot, .hierarchy, .accessibility, .hitTest, .screenshot, .geometry:

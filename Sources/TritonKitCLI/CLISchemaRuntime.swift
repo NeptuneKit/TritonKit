@@ -21,6 +21,7 @@ func commandSchemas() -> [TKCommandSchema] {
         + vlmCommandSchemas()
         + debugCommandSchemas()
         + runtimeCommandSchemas()
+        + highlightCommandSchemas()
         + hostCommandSchemas()
         + observationCommandSchemas()
         + actionCommandSchemas()
