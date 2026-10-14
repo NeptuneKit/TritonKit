@@ -522,14 +522,14 @@ extension SchemaFactSourceTests {
     func schemaCommandInventoryRemainsStableForAgentDiscovery() {
         let commandNames = commandSchemas().map(\.name)
 
-        #expect(commandNames.count == 41)
+        #expect(commandNames.count == 42)
         #expect(Set(commandNames).count == commandNames.count)
         #expect(commandNames == [
             "version", "serve", "web", "status", "doctor", "plan", "capabilities", "schema",
             "test", "workspace", "testrec", "update",
             "target",
             "xcode", "xcresult", "xctrace", "coverage", "build",
-            "map", "vlm", "debug",
+            "map", "vlm", "debug", "highlight",
             "device", "camera", "sim", "app",
             "list", "inspect", "observe", "webview", "route", "node",
             "export", "evidence", "smoke", "verify", "record", "replay",
@@ -658,6 +658,7 @@ extension SchemaFactSourceTests {
         let pressBoundary = "Host-side HID is not available in the embedded runtime"
         let iosRealScreenshotBoundary = "iOS real-device screenshot is not supported by the current host adapter"
         let iosSimulatorTypeBoundary = "Host-side iOS Simulator text input is not supported by the current public simctl io contract; no stable keyboard type primitive is advertised"
+        let highlightBoundary = "Optional, target-specific support: use highlight capabilities --target <target> --json; ordinary screenshots do not require it"
         let knownUnsupportedReasons = Set([
             requiresRuntime,
             requiresWebViewProvider,
@@ -665,6 +666,7 @@ extension SchemaFactSourceTests {
             pressBoundary,
             iosRealScreenshotBoundary,
             iosSimulatorTypeBoundary,
+            highlightBoundary,
         ])
 
         var supportedWithReason: [String] = []
@@ -693,8 +695,10 @@ extension SchemaFactSourceTests {
                 }
 
                 if fixture.name == "runtime-connected" {
-                    if !["press", "harmony-clear-text", "ios-real-device-screenshot", "ios-simulator-host-type"].contains(capability.name) {
+                    if !["press", "harmony-clear-text", "ios-real-device-screenshot", "ios-simulator-host-type", "highlight"].contains(capability.name) {
                         connectedUnexpectedUnsupported.append("\(capability.name):\(reason)")
+                    } else if capability.name == "highlight", reason != highlightBoundary {
+                        connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
                     } else if capability.name == "press", reason != pressBoundary {
                         connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
                     } else if capability.name == "harmony-clear-text", reason != harmonyClearBoundary {
@@ -722,6 +726,15 @@ extension SchemaFactSourceTests {
                     "\(capabilityName):disconnected=\(disconnectedReason ?? "nil"):server-unreachable=\(unavailableServerReason ?? "nil")"
                 )
             }
+        }
+
+        for capabilities in [connected, disconnected, unavailableServer] {
+            let highlight = try #require(capabilities["highlight"])
+            #expect(!highlight.supported)
+            #expect(highlight.reason == highlightBoundary)
+            #expect(highlight.group == "runtime")
+            #expect(highlight.nextAction?.command == "highlight")
+            #expect(highlight.nextAction?.args == ["capabilities", "--target", "<target>", "--json"])
         }
 
         let connectedPress = try #require(connected["press"])

@@ -420,7 +420,7 @@ extension SchemaFactSourceTests {
         let allowedRootsByGroup: [String: Set<String>] = [
             "bootstrap": ["status", "doctor", "capabilities", "schema", "plan", "record", "replay", "serve", "web", "update"],
             "target": ["target"],
-            "runtime": ["debug", "act", "schema", "status", "serve"],
+            "runtime": ["debug", "act", "highlight", "schema", "status", "serve"],
             "host": ["debug", "device", "sim", "app", "schema"],
             "observe": ["debug", "act", "observe", "node", "list", "inspect", "export", "screenshot", "wait", "status", "serve"],
             "webview": ["webview"],

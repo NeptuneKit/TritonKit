@@ -223,6 +223,13 @@ private func resolveRuntimeCapabilitySupport(
     webViewProviderAvailable: Bool
 ) -> TKRuntimeCapabilityDetail {
     switch capability.name {
+    case TKRuntimeCapabilityName.highlight.rawValue:
+        #if canImport(UIKit)
+        return TKRuntimeCapabilityDetail(name: .highlight, supported: TritonKit.isRuntimeEnabled,
+            scope: .embedded, boundary: .appProcess)
+        #else
+        return capability
+        #endif
     case TKRuntimeCapabilityName.semanticState.rawValue,
          TKRuntimeCapabilityName.semanticActionProvider.rawValue:
         return TKRuntimeCapabilityDetail(

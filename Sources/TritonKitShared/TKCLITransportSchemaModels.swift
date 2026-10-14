@@ -166,6 +166,17 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
     }
 
     public static func recoveryCategories(forFailureCode failureCode: String) -> [String] {
+        // Highlight recovery observes an existing operation/session before replanning.
+        // It never suggests installing a provider, forcing restore, or replaying apply.
+        switch failureCode {
+        case "highlight_unsupported", "highlight_busy", "highlight_operation_conflict", "highlight_capacity_exceeded", "highlight_receipt_expired":
+            return ["diagnose", "plan"]
+        case "highlight_target_ambiguous", "highlight_target_not_found", "highlight_identity_unverifiable", "highlight_identity_changed", "highlight_stale_runtime":
+            return ["diagnose", "observe", "plan"]
+        case "highlight_render_timeout", "highlight_restore_conflict", "highlight_restore_failed":
+            return ["diagnose", "observe"]
+        default: break
+        }
         if let categories = residentRunnerRecoveryCategories(forFailureCode: failureCode) { return categories }
         if ["screenshot_deadline_exceeded", "insufficient_visual_samples", "visual_motion_timeout", "runtime_ui_timeout", "runtime_ui_busy", "runtime_ui_circuit_open"].contains(failureCode) {
             return ["diagnose", "observe", "plan"]
@@ -274,6 +285,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         "focus": "act",
         "geometry": "observe",
         "hierarchy": "observe",
+        "highlight": "diagnose",
         "hit": "observe",
         "input": "act",
         "inspect": "discover",

@@ -584,3 +584,9 @@ DerivedData safety (#214): 默认 `xcode derived-data inspect` 和 `cleanup` 检
 ## iOS selected-device host HID compatibility
 
 `triton device doctor --platform ios --device <simulator> --json` performs an independent host-HID compatibility probe for the selected Simulator. The probe checks the selected Xcode's SimulatorKit framework layout and the presence of `SimDeviceLegacyHIDClient`. Class presence is compatibility evidence only: `available=false`, `inputDispatchVerified=false`, and `verification=framework-compatibility-only`; the probe never submits input or proves a device client connection. It returns typed reasons such as `ios_host_hid_simulator_kit_unavailable`, `ios_host_hid_simulator_kit_load_failed`, `ios_host_hid_legacy_backend_unavailable`, and `ios_host_hid_modern_backend_unsupported`. Inventory, framebuffer, and layout readability remain separate facts and never establish touch readiness. The compatibility probe is diagnostic-only and isolated in a bounded child process; it never gates an already-authorized action. Actual Baguette bootstrap failures preserve typed compatibility reasons without retrying or switching backends.
+
+## SP-197 可选独立高亮
+
+新增 `highlight capabilities/apply/status/clear`，CLI与本地HTTP `/request` 同一回执；embedded direct HTTP 采用 `/v2/runtime/highlight/{apply,status,clear,capabilities}`。新能力必须按目标provider探测，全局连接状态不代表可写，默认恢复入口不被可选highlight抢占。普通查看/操作/截图不新增SDK要求，首个可选provider是Debug UIKit。
+
+spec支持OID或唯一identifier以及withinOID，保存borderColor/borderWidth原类型值；会话不依赖CLI连接。operationID只对已接纳/可能写入操作去重，预检零写拒绝不登记。dispatch后的不确定错误保留operation/runtime恢复键。clear保留业务新值，冲突返回非零及needs_attention/possible；status.ok只代表查询。详细流程和验收见[SP-197](../spaces/SP-197-view-annotation/README.md)。截图组合与其他端尚未开放。

@@ -142,6 +142,7 @@ public class TritonKit {
     public typealias Endpoint = TritonKitStartPayload
 
     public enum Feature: String, CaseIterable, Hashable {
+        case highlight
         case appInfo
         case hierarchy
         case accessibility
@@ -188,6 +189,7 @@ public class TritonKit {
 
     public struct Configuration: Equatable {
         public static let defaultFeatures: Set<Feature> = [
+            .highlight,
             .appInfo,
             .hierarchy,
             .accessibility,
@@ -274,6 +276,26 @@ public class TritonKit {
     private var reconnectWorkItem: DispatchWorkItem?
     private var pingTimer: Timer?
     private var defaultRequestHandler: TritonKitRequestHandler?
+    #if canImport(UIKit)
+    private let highlightManagerStorage = TKHighlightManagerStorage()
+    var highlightCleanupPending: Bool { highlightManagerStorage.cleanupPending }
+    var highlightGeneration: UInt64 { highlightManagerStorage.requestGeneration }
+
+    @MainActor func applyHighlight(_ request: TKHighlightApplyRequest, expectedGeneration: UInt64) async -> TKHighlightReceipt {
+        guard let manager = highlightManagerStorage.prepareApply(expectedGeneration: expectedGeneration, create: { TKHighlightSessionManager() }) else {
+            let error = TKHighlightError(code: "highlight_busy", message: "Runtime stop invalidated this request; retry after cleanup with a fresh request.")
+            return TKHighlightReceipt(ok: false, runtimeInstanceID: "unavailable", error: error, errors: [error])
+        }
+        return await manager.apply(request)
+    }
+
+    @MainActor func highlightSessionManager() -> TKHighlightSessionManager {
+        if let manager = highlightManagerStorage.get() { return manager }
+        let manager = TKHighlightSessionManager()
+        highlightManagerStorage.set(manager)
+        return manager
+    }
+    #endif
     private var isStarted = false
     private let observerLock = NSLock()
     private var stateObservers: [UUID: (ConnectionState) -> Void] = [:]
@@ -350,9 +372,36 @@ public class TritonKit {
     }
 
     public func stop() {
+        #if canImport(UIKit)
+        let (manager, generation) = highlightManagerStorage.beginCleanup()
+        let storage = highlightManagerStorage
+        stopTransport()
+        Task { @MainActor in
+            _ = storage.performCleanup(manager: manager, generation: generation)
+        }
+        #else
+        stopTransport()
+        #endif
+    }
+
+    private func stopTransport() {
         isStarted = false
         connectionLifecycle.stop()
         closeConnection()
+    }
+
+    /// Stops transport and returns the observed cleanup result for any optional highlight session.
+    /// Unresolved snapshots remain retained so a subsequent connection can inspect them.
+    public func stopAndRestoreHighlights() async -> TKHighlightReceipt? {
+        #if canImport(UIKit)
+        let (manager, generation) = highlightManagerStorage.beginCleanup()
+        stopTransport()
+        let receipt = await MainActor.run { self.highlightManagerStorage.performCleanup(manager: manager, generation: generation) }
+        #else
+        stopTransport()
+        let receipt: TKHighlightReceipt? = nil
+        #endif
+        return receipt
     }
 
     @discardableResult
@@ -626,13 +675,24 @@ public class TritonKit {
         @unknown default: return
         }
 
+        #if canImport(UIKit)
+        let expectedHighlightGeneration = highlightGeneration
+        #endif
         Task {
+            guard self.task === transport, self.connectionLifecycle.acceptsCallback(for: generation) else { return }
             do {
                 let msg = try JSONDecoder().decode(TKMessage.self, from: data)
                 if self.runtimeVerboseLogging {
                     NSLog("[TritonKit] <- \(msg.type.rawValue) [id:\(msg.id)]")
                 }
-                if let response = await delegate?.tritonKit(self, didReceiveMessage: msg) {
+                #if canImport(UIKit)
+                let response = await TKHighlightRequestContext.$generation.withValue(expectedHighlightGeneration) {
+                    await delegate?.tritonKit(self, didReceiveMessage: msg)
+                }
+                #else
+                let response = await delegate?.tritonKit(self, didReceiveMessage: msg)
+                #endif
+                if let response {
                     send(response, on: transport, generation: generation)
                 } else if self.runtimeVerboseLogging {
                     NSLog("[TritonKit] no response for \(msg.type.rawValue) [id:\(msg.id)]")

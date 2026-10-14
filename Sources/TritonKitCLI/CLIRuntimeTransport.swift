@@ -350,6 +350,10 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "clear", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "input", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "press", supported: false, reason: "Host-side HID is not available in the embedded runtime"),
+        // Optional diagnostics follow existing readiness entries, so adding this probe
+        // does not replace the ordinary workflow's default capability recovery route.
+        TKRuntimeCapability(name: "highlight", supported: false,
+            reason: "Optional, target-specific support: use highlight capabilities --target <target> --json; ordinary screenshots do not require it"),
     ]
     return capabilities.map { capability in
         enrichRuntimeCapability(capability, host: host, port: port, serverReachable: serverReachable, connected: connected)
@@ -377,6 +381,8 @@ func enrichRuntimeCapability(
 func runtimeCapabilityGroup(for name: String) -> String {
     if iosRunnerCapabilityNames.contains(name) { return "host" }
     switch name {
+    case "highlight":
+        return "runtime"
     case "version", "cli-update", "plan", "record", "replay-dry-run", "web-device-hub", "schema", "status", "doctor", "capabilities":
         return "bootstrap"
     case "test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-reliability-gate", "test-reliability-collection-preflight", "test-reliability-reserve", "test-reliability-sample", "test-create-from-session", "testrec-session-start", "testrec-event-ingest", "testrec-session-stop", "testrec-inspect", "testrec-compile", "testrec-proposals-inspect", "testrec-page-match", "testrec-replay-dry-run", "testrec-replay-local-simulated", "testrec-matrix":
@@ -415,6 +421,8 @@ func runtimeCapabilityGroup(for name: String) -> String {
 func runtimeCapabilityRequiredBy(for name: String) -> [String] {
     if iosRunnerCapabilityNames.contains(name) { return ["target", "action", "observe", "evidence"] }
     switch name {
+    case "highlight":
+        return ["runtime"]
     case "web-device-hub":
         return ["observe", "evidence"]
     case "cli-update":
@@ -463,6 +471,11 @@ func runtimeCapabilityNextAction(
     serverReachable: Bool,
     connected: Bool
 ) -> TKCLINextAction? {
+    if name == "highlight" {
+        // Availability is target/provider-specific; a connection never proves write support.
+        // This probe is optional and never an installation or SDK bootstrap instruction.
+        return TKCLINextAction(command: "highlight", args: ["capabilities", "--target", "<target>", "--json"])
+    }
     if iosRunnerCapabilityNames.contains(name) { return TKCLINextAction(command: "device", args: ["runner", "doctor", "--device", "<selector>", "--json"]) }
     if !serverReachable, runtimeCapabilityRequiresServer(name) {
         return TKCLINextAction(command: "serve", args: ["--host", host, "--port", String(port)], requiresLongRunningProcess: true)
@@ -955,6 +968,8 @@ func runtimeCapabilityRequiresServer(_ name: String) -> Bool {
 func runtimeCapabilityEvidence(for name: String) -> [String] {
     if iosRunnerCapabilityNames.contains(name) { return ["stdout-json", "command-schema", "status-json"] }
     switch name {
+    case "highlight":
+        return ["stdout-json", "command-schema"]
     case "version", "cli-update", "schema", "status", "doctor", "capabilities", "plan":
         return ["stdout-json", "command-schema"]
     case "test-import-compiled-contract":

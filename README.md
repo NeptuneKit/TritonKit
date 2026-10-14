@@ -367,6 +367,21 @@ Use the CLI guide independently when an agent only needs host-side simulator or 
 
 Host-side iOS Simulator setup should still prefer Triton commands before external fallback tools. `triton sim tap --simulator booted --x 200 --y 400 --json` is the agent-facing host HID coordinate tap entry: `--x/--y` are expressed in simulator points and the point-space dimensions are derived from the simulator layout metadata, so callers do not pass `--width/--height`. `triton sim swipe --simulator booted --start-x 360 --start-y 700 --end-x 80 --end-y 700 --duration 0.35 --json` is the offline host HID gesture entry. It resolves a booted local Simulator, derives point-space dimensions from host layout metadata, and submits a bounded down/move/up lifecycle without requiring the embedded server. The result is submission-only: verify the settled pager state with AX, `wait`, `verify`, or a screenshot. If the host adapter is unavailable, Triton fails closed with one error envelope. `triton sim type --simulator booted --text ascii --json` remains a reserved, failure-only entry: the current public `xcrun simctl io` contract exposes screenshot/video/screen configuration primitives only, not a stable keyboard type primitive, so ASCII input returns `unsupported_host_input` and non-ASCII input returns `unsupported_text_input`. `triton sim pasteboard set` only stages clipboard contents; it does not paste into a focused field. If an external keyboard/paste adapter or app-owned debug hook is used after focusing the field, verify focus/value through host AX or `observe` and verify the App's saved postcondition. Use embedded runtime semantic input, app-owned debug hooks, pasteboard staging, screenshots, app preferences, or evidence capture to prove business state; host-HID tap acknowledgement is submission-only and must be verified with `observe`/`wait`/`screenshot`.
 
+### Optional App View Highlight
+
+`triton highlight capabilities/apply/status/clear` independently locates nodes, saves typed original properties and temporarily changes App borders. It is optional: ordinary inspection, supported actions and host screenshots keep their existing access paths, without requiring an embedded SDK. The first writable provider is Debug UIKit; an App can instead supply an adapter implementing the same contract. No automatic SDK installation or provider injection is performed.
+
+```bash
+triton highlight capabilities --target <target> --json
+triton highlight apply --target <target> --spec highlights.json --operation-id <operation-id> --ttl 30 --json
+triton highlight status --target <target> --operation <operation-id> --json
+triton highlight clear --target <target> --session <session-id> --json
+```
+
+The UIKit provider supports ordinary UIView/CALayer by OID or unique identifier, optional ancestor scope, 1–10 nodes and TTL 1–300 seconds. Reusable cells without a content epoch, text/role selectors, Release and other platform providers are unsupported. CLI exit or reconnect does not discard the App-owned session. Clear compares the entire border group before restoring; business changes are preserved and conflicting cleanup exits nonzero. Keep the operation and session IDs, and read `cleanupComplete/restorationVerified/residualState` separately from request `ok`. Main-queue opportunity and TTL alone do not prove rendered pixels or completed restoration.
+
+Screenshots consume the independent session using existing commands; automatic `--highlight` composition is a later slice. See [the implemented workflow](TritonKit.skills/tritonkit-emulator-cli-takeover/references/view-highlight.md) and [Simulator acceptance](docs-linhay/spaces/SP-197-view-annotation/plans/20261014-p0-validation.md).
+
 ### 1. Install The CLI
 
 #### Homebrew

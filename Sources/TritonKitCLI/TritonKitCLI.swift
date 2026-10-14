@@ -129,6 +129,7 @@ struct TritonKitCLI: AsyncParsableCommand {
             Route.self,
             Export.self,
             Evidence.self,
+            Highlight.self,
             AppMap.self,
             VLM.self,
             Act.self,

@@ -21,6 +21,7 @@ enum FixtureScreen: String {
     case delayed
     case dynamicList
     case error
+    case highlight
 }
 
 @MainActor
@@ -28,7 +29,7 @@ final class FixtureModel: ObservableObject {
     @Published var screen: FixtureScreen = .login
     @Published var status = "Disconnected"
     @Published var host = Bundle.main.tritonKitDefaultHost
-    @Published var port = "19421"
+    @Published var port = ProcessInfo.processInfo.environment["TRITON_PORT"] ?? "19421"
     @Published var delayedLoaded = false
     @Published var alertPresented = false
 
@@ -111,7 +112,7 @@ final class FixtureModel: ObservableObject {
 
 private extension Bundle {
     var tritonKitDefaultHost: String {
-        let value = object(forInfoDictionaryKey: "TritonKitDefaultHost") as? String
+        let value = ProcessInfo.processInfo.environment["TRITON_HOST"] ?? object(forInfoDictionaryKey: "TritonKitDefaultHost") as? String
         let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if trimmed.isEmpty || trimmed == "$(TRITONKIT_DEFAULT_HOST)" {
             return "127.0.0.1"
@@ -143,6 +144,9 @@ struct FixtureUIKitPanel: UIViewRepresentable {
 }
 
 final class FixtureUIKitView: UIView, UITableViewDataSource, UITableViewDelegate {
+    private let highlightTarget = UILabel()
+    private let highlightNilTarget = UILabel()
+    private let highlightReadback = UILabel()
     private let statusLabel = UILabel()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
@@ -315,6 +319,52 @@ final class FixtureUIKitView: UIView, UITableViewDataSource, UITableViewDelegate
             subtitleID: "fixture.login.ready"
         )
         addButton("Go Home", identifier: "fixture.login.goHome", action: #selector(showHome))
+        addButton("Highlight Fixture", identifier: "fixture.login.highlight", action: #selector(showHighlight))
+    }
+
+    @objc private func showHighlight() {
+        screen = .highlight
+        reset(title: "Highlight Fixture", titleID: "fixture.highlight.title")
+        for (view, identifier) in [(highlightTarget, "fixture.highlight.target"), (highlightNilTarget, "fixture.highlight.nil")] {
+            view.text = "Highlight Target"
+            view.font = .systemFont(ofSize: 28, weight: .semibold)
+            view.textAlignment = .center
+            view.accessibilityIdentifier = identifier
+            view.isAccessibilityElement = true
+            view.widthAnchor.constraint(equalToConstant: 280).isActive = true
+            view.heightAnchor.constraint(equalToConstant: 56).isActive = true
+            stack.addArrangedSubview(view)
+        }
+        highlightReadback.font = .monospacedSystemFont(ofSize: 15, weight: .regular)
+        highlightReadback.numberOfLines = 0
+        highlightReadback.accessibilityIdentifier = "fixture.highlight.readback"
+        stack.addArrangedSubview(highlightReadback)
+        resetHighlightStyle()
+        addButton("Read Border Properties", identifier: "fixture.highlight.read", action: #selector(readHighlightStyle))
+        addButton("Business Changes Color", identifier: "fixture.highlight.change", action: #selector(changeHighlightColor))
+        addButton("Reset Business Style", identifier: "fixture.highlight.reset", action: #selector(resetHighlightStyle))
+        addButton("Back to Login", identifier: "fixture.highlight.back", action: #selector(showLogin))
+    }
+
+    @objc private func resetHighlightStyle() {
+        highlightTarget.layer.borderColor = UIColor.systemGray.cgColor
+        highlightTarget.layer.borderWidth = 1
+        highlightNilTarget.layer.borderColor = nil
+        highlightNilTarget.layer.borderWidth = 0
+        readHighlightStyle()
+    }
+
+    @objc private func changeHighlightColor() {
+        highlightTarget.layer.borderColor = UIColor.systemGreen.cgColor
+        readHighlightStyle()
+    }
+
+    @objc private func readHighlightStyle() {
+        let gray = highlightTarget.layer.borderColor == UIColor.systemGray.cgColor
+        let green = highlightTarget.layer.borderColor == UIColor.systemGreen.cgColor
+        let color = gray ? "gray" : green ? "green" : "changed"
+        highlightReadback.text = "Border: \(color)/\(highlightTarget.layer.borderWidth)\nNil target: \(highlightNilTarget.layer.borderColor == nil)/\(highlightNilTarget.layer.borderWidth)"
+        highlightReadback.accessibilityLabel = highlightReadback.text
     }
 
     @objc private func showHome() {

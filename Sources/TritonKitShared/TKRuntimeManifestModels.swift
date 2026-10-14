@@ -1,6 +1,7 @@
 import Foundation
 
 public enum TKRuntimeCapabilityName: String, Codable, CaseIterable {
+    case highlight
     case runtimeManifest = "runtime.manifest"
     case stateApp = "state.app"
     case stateScene = "state.scene"
@@ -234,6 +235,8 @@ public struct TKRuntimeManifestResponse: Codable, Equatable {
     }
 
     public static let defaultDebugCapabilities: [TKRuntimeCapabilityDetail] = [
+        TKRuntimeCapabilityDetail(name: .highlight, supported: false, scope: .embedded, boundary: .appProcess,
+            reason: "Optional highlight requires a writable provider; ordinary screenshots remain available"),
         TKRuntimeCapabilityDetail(name: .runtimeManifest, supported: true, scope: .embedded, boundary: .appProcess),
         TKRuntimeCapabilityDetail(name: .stateApp, supported: true, scope: .embedded, boundary: .appProcess),
         TKRuntimeCapabilityDetail(name: .stateScene, supported: true, scope: .embedded, boundary: .appProcess),

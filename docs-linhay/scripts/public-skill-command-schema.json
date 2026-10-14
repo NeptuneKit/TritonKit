@@ -1,6 +1,6 @@
 {
 "schemaVersion": 1,
-"validatedSubcommandGroups": ["act", "debug"],
+"validatedSubcommandGroups": ["act", "debug", "highlight"],
 "commands": {
   "act": ["clear", "find", "focus", "input", "paste", "press", "select-segment", "set-switch", "set-text", "swipe", "tap", "type"],
   "action": ["parse"],
@@ -14,6 +14,7 @@
   "doctor": [],
   "evidence": ["capture", "ingest", "inspect", "project-screens", "project-workspace", "redact", "summary"],
   "export": [],
+  "highlight": ["apply", "capabilities", "clear", "status"],
   "inspect": [],
   "list": [],
   "map": ["export-flow", "health", "inspect", "merge", "path", "paths", "screens", "suite", "transitions", "viewer", "vlm-health"],
