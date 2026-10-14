@@ -271,6 +271,7 @@ class AXPTranslatorAccessibility {
     }
 
     func press(query: String?, point: CGPoint?, index: Int?, within: TKRect?) throws -> TKAXNode {
+        try assertIOSSimulatorAXActivationAllowed(target: udid)
         if let index, index <= 0 {
             throw RuntimeError("--index must be greater than 0")
         }

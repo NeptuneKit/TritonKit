@@ -539,7 +539,7 @@ struct SingleDeviceWebPageTests {
                 height: 872,
                 duration: 0.35
             ),
-            udid: "SIM-1",
+            udid: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
             screen: WebIOSSimulatorScreenLayout(width: 400, height: 872),
             executable: "/fake/baguette"
         )
@@ -547,7 +547,7 @@ struct SingleDeviceWebPageTests {
             .joined(separator: "\n") + "\n"
 
         #expect(throws: (any Error).self) {
-            _ = try runWebIOSBaguetteLifecycle(lifecycle) { fakeLifecycle in
+            _ = try runWebIOSBaguetteLifecycle(lifecycle, resizeProbe: { _, _ in .inactive }) { fakeLifecycle in
                 HostProcessResult(
                     stdoutData: Data(missingTerminalAck.utf8),
                     stderrData: Data(),
@@ -593,12 +593,12 @@ struct SingleDeviceWebPageTests {
                 height: 872,
                 duration: 0.11
             ),
-            udid: "SIM-1",
+            udid: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
             screen: WebIOSSimulatorScreenLayout(width: 400, height: 872),
             executable: executable
         )
         let started = Date()
-        let result = try runWebIOSBaguetteLifecycle(lifecycle)
+        let result = try runWebIOSBaguetteLifecycle(lifecycle, resizeProbe: { _, _ in .inactive })
         let elapsed = Date().timeIntervalSince(started)
         let lines = try String(contentsOfFile: log, encoding: .utf8)
             .split(whereSeparator: \.isNewline)

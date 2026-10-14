@@ -430,7 +430,8 @@ func observeIOSHostAX(action: String, target: String, maxNodes: Int?) throws -> 
         throw HostSimulatorAXError.treeUnavailable(target)
     }
     return observeIOSHostAXOutput(action: action, target: target, root: tree, maxNodes: maxNodes,
-        collection: .init(visitedNodes: driver.lastCollectionSummary.visitedNodes, limitReasons: driver.lastCollectionSummary.limitReasons))
+        collection: .init(visitedNodes: driver.lastCollectionSummary.visitedNodes, limitReasons: driver.lastCollectionSummary.limitReasons),
+        resizeState: probeIOSSimulatorResize(target: target))
     #else
     throw HostSimulatorAXError.unsupportedPlatform
     #endif
@@ -442,7 +443,8 @@ func observeIOSHostAXOutput(
     root: TKAXNode,
     maxNodes: Int?,
     capturedAt: String = ISO8601DateFormatter().string(from: Date()),
-    collection: TKCollectionBudgetSummary? = nil
+    collection: TKCollectionBudgetSummary? = nil,
+    resizeState: IOSSimulatorResizeState? = nil
 ) -> ObserveOutput {
     var nodes = observeNodes(fromAX: [root], source: "host-layout", prefix: "ios-host")
     if let maxNodes {
@@ -470,6 +472,7 @@ func observeIOSHostAXOutput(
         ],
         nodes: nodes,
         collection: collection,
+        resizeAdvisory: resizeState.flatMap(iosSimulatorResizeAdvisory),
         artifacts: [],
         sourceCommands: sourceCommands,
         note: "iOS host observe uses the Simulator private-framework AX tree. Use embedded runtime AX when connected for runtime OIDs and app-internal state."
@@ -1018,6 +1021,7 @@ private func observeOutputWithNodeOutline(_ output: ObserveOutput, workspace: St
         outline: outline,
         aliasCache: ObserveAliasCacheOutput(path: path, aliasCount: outline.count),
         collection: output.collection,
+        resizeAdvisory: output.resizeAdvisory,
         artifacts: output.artifacts,
         sourceCommands: output.sourceCommands,
         note: output.note

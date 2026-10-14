@@ -38,7 +38,10 @@ struct SimAX: AsyncParsableCommand {
 
             switch outputFormat {
             case .json:
-                print(try encodeJSON(tree))
+                let resize = iosSimulatorResizeAdvisory(probeIOSSimulatorResize(target: resolvedUDID))
+                var object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(tree)) as! [String: Any]
+                if let resize { object["resizeAdvisory"] = try JSONSerialization.jsonObject(with: JSONEncoder().encode(resize)) }
+                print(String(decoding: try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]), as: UTF8.self))
             case .text:
                 printTree(tree, indent: "")
             }

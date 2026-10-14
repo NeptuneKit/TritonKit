@@ -141,6 +141,7 @@ struct ObserveOutput: Encodable {
     let outline: [ObserveNodeAliasOutput]?
     let aliasCache: ObserveAliasCacheOutput?
     let collection: TKCollectionBudgetSummary?
+    let resizeAdvisory: IOSSimulatorResizeAdvisory?
     let artifacts: [String]
     let sourceCommands: [String]
     let note: String
@@ -158,6 +159,7 @@ struct ObserveOutput: Encodable {
         outline: [ObserveNodeAliasOutput]? = nil,
         aliasCache: ObserveAliasCacheOutput? = nil,
         collection: TKCollectionBudgetSummary? = nil,
+        resizeAdvisory: IOSSimulatorResizeAdvisory? = nil,
         artifacts: [String],
         sourceCommands: [String],
         note: String
@@ -174,6 +176,7 @@ struct ObserveOutput: Encodable {
         self.outline = outline
         self.aliasCache = aliasCache
         self.collection = collection
+        self.resizeAdvisory = resizeAdvisory
         self.artifacts = artifacts
         self.sourceCommands = sourceCommands
         self.note = note

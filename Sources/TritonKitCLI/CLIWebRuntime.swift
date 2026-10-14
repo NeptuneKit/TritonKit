@@ -1054,6 +1054,13 @@ private func makeWebHostLogsBridgeResponse(tritonBin: String, platform: String, 
 }
 
 private func makePackagedWebIOSSimulatorMjpegResponse(_ streamRequest: PackagedWebIOSSimulatorMjpegRequest) -> Response {
+    do { try assertIOSSimulatorResizeCaptureAllowed(target: streamRequest.udid) }
+    catch let error as IOSSimulatorResizeCaptureError {
+        return jsonError(code: error.detail.code, message: error.detail.message, endpoint: "/web/ios-simulator/mjpeg", hint: error.detail.hint, status: .conflict)
+    } catch {
+        return jsonError(code: "ios_simulator_resize_capture_state_unknown", message: "Capture routing could not be verified.", endpoint: "/web/ios-simulator/mjpeg", status: .conflict)
+    }
+
     guard CLIHostSimulatorFramebufferService.shared.startStreaming(udid: streamRequest.udid) else {
         return jsonError(
             code: "web_ios_simulator_mjpeg_unavailable",
@@ -1108,6 +1115,13 @@ private func makePackagedWebIOSSimulatorMjpegResponse(_ streamRequest: PackagedW
 }
 
 private func makePackagedWebIOSSimulatorFrameResponse(_ streamRequest: PackagedWebIOSSimulatorMjpegRequest) async -> Response {
+    do { try assertIOSSimulatorResizeCaptureAllowed(target: streamRequest.udid) }
+    catch let error as IOSSimulatorResizeCaptureError {
+        return jsonError(code: error.detail.code, message: error.detail.message, endpoint: "/web/ios-simulator/frame", hint: error.detail.hint, status: .conflict)
+    } catch {
+        return jsonError(code: "ios_simulator_resize_capture_state_unknown", message: "Capture routing could not be verified.", endpoint: "/web/ios-simulator/frame", status: .conflict)
+    }
+
     guard CLIHostSimulatorFramebufferService.shared.startStreaming(udid: streamRequest.udid) else {
         return jsonError(
             code: "web_ios_simulator_frame_unavailable",

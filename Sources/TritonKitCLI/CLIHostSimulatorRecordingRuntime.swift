@@ -140,6 +140,7 @@ func runHostSimulatorRecordingCommand(
     outputFormat: ClientOutputFormat
 ) async throws {
     do {
+        try assertIOSSimulatorResizeCaptureAllowed(target: simulator, environment: command.environment)
         let result = try runHostCommand(command, interruptAfter: requestedDurationSeconds)
         let mediaDurations = try await simulatorRecordingMediaDurations(at: outputPath)
         let actualDurationSeconds = try simulatorRecordingActualDuration(

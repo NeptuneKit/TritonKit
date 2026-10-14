@@ -2069,8 +2069,9 @@ func makeNetworkProxyExportSession(
     let byteCount: Int
     let exportSummary: NetworkProxyCaptureExportSummary
     do {
-        exportSummary = try summarizeNetworkProxyCaptureArtifact(sourceURL: sourceURL)
-        byteCount = try exportNetworkProxyCaptureArtifact(sourceURL: sourceURL, outputURL: outputURL)
+        let exported = try exportNetworkProxyCaptureArtifactWithSummary(sourceURL: sourceURL, outputURL: outputURL)
+        exportSummary = exported.summary
+        byteCount = exported.bytes
     } catch {
         return makeNetworkProxyArtifactWriteFailedSession(
             platform: platform,

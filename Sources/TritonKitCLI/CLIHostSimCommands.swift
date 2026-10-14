@@ -471,9 +471,11 @@ struct SimScreenshot: AsyncParsableCommand {
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
+        let selected = try resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: simulator, platform: .ios, scope: .simulator, ready: true), hdc: "hdc")
+        let udid = selected.target.rawTarget
         try runHostSimulatorScreenshotCommand(
-            simulator: simulator,
-            command: TKSimctlCommand.screenshot(udid: simulator, output: output, display: display),
+            simulator: udid,
+            command: TKSimctlCommand.screenshot(udid: udid, output: output, display: display),
             outputPath: output,
             outputFormat: effectiveFormat(format, json: json)
         )
@@ -503,10 +505,12 @@ struct SimRecord: AsyncParsableCommand {
                 outputFormat: outputFormat
             )
         }
+        let selected = try resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: simulator, platform: .ios, scope: .simulator, ready: true), hdc: "hdc")
+        let udid = selected.target.rawTarget
         try await runHostSimulatorRecordingCommand(
-            simulator: simulator,
+            simulator: udid,
             command: TKSimctlCommand.recordVideo(
-                udid: simulator,
+                udid: udid,
                 output: output,
                 codec: codec?.rawValue,
                 display: display,

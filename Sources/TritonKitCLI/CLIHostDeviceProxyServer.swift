@@ -70,6 +70,15 @@ private struct NetworkProxyHARLog: Encodable {
     let version: String
     let creator: NetworkProxyHARCreator
     let entries: [NetworkProxyHAREntry]
+    let _triton: NetworkProxyHARIntegrity
+}
+
+private struct NetworkProxyHARIntegrity: Encodable {
+    let requestCount: Int
+    let eventCount: Int
+    let failureCount: Int
+    let redaction: String
+    let truncation: String
 }
 
 private struct NetworkProxyHARCreator: Encodable {
@@ -277,11 +286,11 @@ func runNetworkProxyCaptureServer(
                 error: String(describing: error)
             )
             try appendNetworkProxyCaptureEvent(event, captureURL: captureURL)
-            eventWriter?(event)
+            eventWriter?(try redactedNetworkCaptureEvent(event))
         }
     }
 
-    let captureSummary = summarizeNetworkProxyCaptureArtifactIfPresent(captureURL: captureURL)
+    let captureSummary = try summarizeNetworkProxyCaptureArtifact(sourceURL: captureURL)
     return NetworkProxyServeSummary(
         ok: true,
         surface: "host.device-proxy-serve",
@@ -297,26 +306,13 @@ func runNetworkProxyCaptureServer(
         limitations: [
             "proxy_capture_metadata_only:no_tls_decryption",
             "proxy_capture_redaction:headers_names_only",
+            "proxy_capture_integrity:\(captureSummary.truncation)",
             "proxy_capture_mode:\(mode)",
             throttleDelayMs.map { "proxy_throttle_delay_ms:\($0)" },
             mockRules == nil ? "proxy_mock_rules:none" : "proxy_mock_rules:loaded",
             policyRules == nil ? "proxy_policy_rules:none" : "proxy_policy_rules:loaded",
         ].compactMap { $0 }
     )
-}
-
-private func summarizeNetworkProxyCaptureArtifactIfPresent(captureURL: URL) -> NetworkProxyCaptureExportSummary {
-    guard FileManager.default.fileExists(atPath: captureURL.path),
-          let summary = try? summarizeNetworkProxyCaptureArtifact(sourceURL: captureURL) else {
-        return NetworkProxyCaptureExportSummary(
-            requestCount: 0,
-            eventCount: 0,
-            failureCount: 0,
-            redaction: "unknown",
-            truncation: "none"
-        )
-    }
-    return summary
 }
 
 private func normalizeNetworkProxyServeMode(_ mode: String) throws -> String {
@@ -351,90 +347,45 @@ func networkProxyServeCapturePath(outputDirectory: String) -> String {
 }
 
 func exportNetworkProxyCaptureArtifact(sourceURL: URL, outputURL: URL) throws -> Int {
-    try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try exportNetworkProxyCaptureArtifactWithSummary(sourceURL: sourceURL, outputURL: outputURL).bytes
+}
+
+func exportNetworkProxyCaptureArtifactWithSummary(sourceURL: URL, outputURL: URL) throws -> (bytes: Int, summary: NetworkProxyCaptureExportSummary) {
+    // Validate the entire bounded source before touching an existing destination.
+    let capture = try readValidatedNetworkCapture(sourceURL: sourceURL)
+    let data: Data
     if outputURL.pathExtension.lowercased() == "har" {
-        let har = try makeNetworkProxyHAR(sourceURL: sourceURL)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(har)
-        try data.write(to: outputURL)
-        return data.count
+        data = try encoder.encode(makeNetworkProxyHAR(capture: capture))
+    } else {
+        data = capture.data
     }
-    let data = try Data(contentsOf: sourceURL)
-    try data.write(to: outputURL)
-    return data.count
+    try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try data.write(to: outputURL, options: .atomic)
+    return (data.count, capture.summary)
 }
 
 func summarizeNetworkProxyCaptureArtifact(sourceURL: URL) throws -> NetworkProxyCaptureExportSummary {
-    let data = try Data(contentsOf: sourceURL)
-    let lines = String(data: data, encoding: .utf8)?
-        .split(whereSeparator: \.isNewline)
-        .map(String.init) ?? []
-    let decoder = JSONDecoder()
-    var eventCount = 0
-    var requestCount = 0
-    var failureCount = 0
-    var redactions: Set<String> = []
-
-    for line in lines {
-        guard let lineData = line.data(using: .utf8) else { continue }
-        if let event = try? decoder.decode(NetworkProxyServeEvent.self, from: lineData) {
-            eventCount += 1
-            redactions.insert(event.redaction)
-            if event.ok, event.event == "proxy.serve.request" {
-                requestCount += 1
-            }
-            if !event.ok || event.event == "proxy.serve.connection-failed" {
-                failureCount += 1
-            }
-            continue
-        }
-        if let payload = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any],
-           let redaction = payload["redaction"] as? String,
-           !redaction.isEmpty {
-            redactions.insert(redaction)
-            if let requestCountValue = payload["requestCount"] as? Int {
-                requestCount += requestCountValue
-            }
-            if let eventCountValue = payload["eventCount"] as? Int {
-                eventCount += eventCountValue
-            }
-            if let failureCountValue = payload["failureCount"] as? Int {
-                failureCount += failureCountValue
-            }
-        }
-    }
-
-    let redaction = redactions.sorted().joined(separator: ",")
-    return NetworkProxyCaptureExportSummary(
-        requestCount: requestCount,
-        eventCount: eventCount,
-        failureCount: failureCount,
-        redaction: redaction.isEmpty ? "unknown" : redaction,
-        truncation: "none"
-    )
+    try readValidatedNetworkCapture(sourceURL: sourceURL).summary
 }
 
-private func makeNetworkProxyHAR(sourceURL: URL) throws -> NetworkProxyHAREnvelope {
-    let data = try Data(contentsOf: sourceURL)
-    let lines = String(data: data, encoding: .utf8)?
-        .split(whereSeparator: \.isNewline)
-        .map(String.init) ?? []
-    let decoder = JSONDecoder()
-    let entries = lines.compactMap { line -> NetworkProxyHAREntry? in
-        guard let lineData = line.data(using: .utf8),
-              let event = try? decoder.decode(NetworkProxyServeEvent.self, from: lineData),
-              event.ok,
-              event.event == "proxy.serve.request",
-              let method = event.method else {
-            return nil
-        }
+private func makeNetworkProxyHAR(capture: ValidatedNetworkCapture) -> NetworkProxyHAREnvelope {
+    let entries = capture.events.compactMap { event -> NetworkProxyHAREntry? in
+        guard event.ok, event.event == "proxy.serve.request", let method = event.method else { return nil }
         return networkProxyHAREntry(from: event, method: method)
     }
     return NetworkProxyHAREnvelope(log: NetworkProxyHARLog(
         version: "1.2",
         creator: NetworkProxyHARCreator(name: "TritonKit device proxy serve", version: "0.1"),
-        entries: entries
+        entries: entries,
+        _triton: NetworkProxyHARIntegrity(
+            requestCount: capture.summary.requestCount,
+            eventCount: capture.summary.eventCount,
+            failureCount: capture.summary.failureCount,
+            redaction: capture.summary.redaction,
+            truncation: capture.summary.truncation
+        )
     ))
 }
 
@@ -585,7 +536,7 @@ private func handleNetworkProxyClient(
         throttleDelayMs: mode == "throttle" ? throttleDelayMs : nil
     )
     try appendNetworkProxyCaptureEvent(parsed.event, captureURL: captureURL)
-    eventWriter?(parsed.event)
+    eventWriter?(try redactedNetworkCaptureEvent(parsed.event))
 
     if parsed.event.policyAction == "blocked" {
         writeNetworkProxyBlockedResponse(clientFD: clientFD, response: parsed.syntheticResponse)
@@ -1054,17 +1005,29 @@ private func readNetworkProxyRequestHeader(clientFD: Int32) throws -> Data {
     throw RuntimeError("Proxy request header exceeded 64 KiB or ended before headers completed.")
 }
 
-private func appendNetworkProxyCaptureEvent(_ event: NetworkProxyServeEvent, captureURL: URL) throws {
+func appendNetworkProxyCaptureEvent(_ event: NetworkProxyServeEvent, captureURL: URL, maximumBytes: Int = networkCaptureMaximumBytes) throws {
     try FileManager.default.createDirectory(at: captureURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-    let line = try encodeCompactJSON(event) + "\n"
-    if FileManager.default.fileExists(atPath: captureURL.path) {
-        let handle = try FileHandle(forWritingTo: captureURL)
-        defer { try? handle.close() }
-        try handle.seekToEnd()
-        try handle.write(contentsOf: Data(line.utf8))
-    } else {
-        try Data(line.utf8).write(to: captureURL)
+    let line = try encodeCompactJSON(redactedNetworkCaptureEvent(event)) + "\n"
+    guard maximumBytes > 0, line.utf8.count <= networkCaptureMaximumLineBytes,
+          line.utf8.count <= maximumBytes else {
+        try markNetworkCaptureIncomplete(captureURL)
+        throw RuntimeError("network_capture_byte_limit")
     }
+    let fd = open(captureURL.path, O_WRONLY | O_CREAT | O_APPEND | O_NOFOLLOW | O_NONBLOCK, 0o600)
+    guard fd >= 0 else { throw RuntimeError("network_capture_unwritable_destination") }
+    defer { close(fd) }
+    var status = stat()
+    guard fstat(fd, &status) == 0, status.st_mode & S_IFMT == S_IFREG else {
+        throw RuntimeError("network_capture_nonregular_destination")
+    }
+    guard flock(fd, LOCK_EX) == 0 else { throw RuntimeError("network_capture_lock_failed") }
+    defer { _ = flock(fd, LOCK_UN) }
+    guard fstat(fd, &status) == 0, status.st_size <= maximumBytes - line.utf8.count else {
+        try markNetworkCaptureIncomplete(captureURL)
+        throw RuntimeError("network_capture_byte_limit")
+    }
+    let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: false)
+    try handle.write(contentsOf: Data(line.utf8))
 }
 
 private func networkProxyServeCaptureURL(outputDirectory: String) throws -> URL {
