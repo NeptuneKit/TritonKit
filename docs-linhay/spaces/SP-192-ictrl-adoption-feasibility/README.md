@@ -2,12 +2,12 @@
 
 ## 状态与范围
 
-- 状态：实现及 Android/iOS 验证限制已收口；用户授权整理、提交与合入本地 main，集成执行中。iOS 115 项、Android 52 项及本地总门禁通过。
+- 状态：实现及 Android/iOS 验证限制已收口；已提交并合入本地 main，集成后本地总门禁通过。iOS 115 项、Android 52 项及本地总门禁通过。
 - 用户请求：可行性核对后开始实现五项借鉴机制。
 - 系统解释：TritonKit 当前架构，以及当前 Mac / 已选 Xcode / 可发现的设备环境；不猜测其他私有业务工程。
 - 代码基线：`main@8aaf6c31d308194b489e10ed83362cee91f549d5`；参考 iCTRL `99dbfecdb39836ba26a0b2b0dcfde90f705a6835`。
 - 影响层：CLI、HTTP、shared contract、embedded runtime、host observation；Web/Wails 仅消费只读结果。
-- 实现分支：`feat/SP-192-ictrl-adoption-feasibility`；worktree：`../TritonKit-worktrees/SP-192-ictrl-adoption-feasibility/`。主工作区保留研究文档，源码在 worktree 隔离实现。
+- 实现分支：`feat/SP-192-ictrl-adoption-feasibility`；worktree：`../TritonKit-worktrees/SP-192-ictrl-adoption-feasibility/`。源码已由实现提交 `e308a2eb` 经合并提交 `da76a708` 进入本地 main；worktree 保留私有验收产物。
 
 ## 已实现机制与验收边界
 

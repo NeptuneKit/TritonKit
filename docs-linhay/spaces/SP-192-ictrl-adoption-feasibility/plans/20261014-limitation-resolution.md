@@ -1,6 +1,6 @@
 # SP-192 构建与 iOS 回归限制收口
 
-状态：完成。Android 完整构建、iOS 115 项回归及本地总门禁均通过。用户授权“你来处理限制”；沿用 SP-192 worktree，保留此前五机制实现，不提交、合并、发布或操作用户业务 App。
+状态：完成。Android 完整构建、iOS 115 项回归及本地总门禁均通过。本阶段用户授权“你来处理限制”；当时沿用 SP-192 worktree，保留此前五机制实现，不提交、合并、发布或操作用户业务 App。
 
 ## 影响层与验收
 
@@ -51,4 +51,4 @@
 - `docs-linhay/scripts/verify.sh --local` 复跑 exit 0：SwiftPM 依赖边界、iOS Debug 隔离、macOS root tests（59 runtime / 274 shared）、Release CLI build / smoke、Harmony与iOS runtime fixture smoke、真实 iOS Simulator build、docs 与 diff 检查通过。
 - worktree 与主工作区的 `verify.sh --ci-docs`、独立 `check-docs.sh`、`git diff --check` 均通过；仅同步本 space 文档、索引行、memory 与一项内部 skill 模式，保留其他任务内容。
 - CLI/共享实现未在本轮改变，沿用此前本次产物下完整 CLI 1250 项 / 117 suites 的通过结果；本轮改变的 UIKit 测试已在实际 iOS suite 完整执行。
-- 源码、修复和测试保留于 SP-192 独立 worktree；未提交、合并、推送、发布，也未操作用户业务 App。
+- 限制收口当时源码与测试保留于独立 worktree，未提交或合并；随后用户授权本地提交/main 集成，实际结果见[整理计划](./20261014-integration.md)。全程未推送、发布或操作用户业务 App。

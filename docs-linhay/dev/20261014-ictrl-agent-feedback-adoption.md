@@ -1,6 +1,6 @@
 # iCTRL 机制在 TritonKit 的接入实现与边界
 
-关联 space：[SP-192](../spaces/SP-192-ictrl-adoption-feasibility/README.md)。五项实现及本地总门禁完成，源码隔离于独立 worktree，未提交/集成/发布。CLI1250项全通过；用户授权继续处理后，iOS 115 项及 Android 完整 Gradle 52 项 / Debug APK 已通过，详见文末验收。
+关联 space：[SP-192](../spaces/SP-192-ictrl-adoption-feasibility/README.md)。五项实现及本地总门禁完成，源码已提交并合入本地 main（实现 `e308a2eb`，合并 `da76a708`），未发布。CLI1250项全通过；用户授权继续处理后，iOS 115 项及 Android 完整 Gradle 52 项 / Debug APK 已通过，详见文末验收。
 
 ## 已接入位置
 
@@ -46,7 +46,7 @@ runtime UI 默认 deadline 30 秒、连续超时阈值 3。超时返回 unknown 
 
 ## 验证与收口
 
-失败场景与最终门禁见 [实施计划](../spaces/SP-192-ictrl-adoption-feasibility/plans/20261014-implementation.md)，研究阶段的机器条件与支持矩阵见 [可行性报告](../spaces/SP-192-ictrl-adoption-feasibility/plans/20261014-feasibility.md)。完整 CLI/root tests、Android/JS fixtures、本地门禁与真实 iOS Simulator runtime tests 已执行；设备未覆盖项按实际边界报告。源码仍在独立 worktree，未发布。
+失败场景与最终门禁见 [实施计划](../spaces/SP-192-ictrl-adoption-feasibility/plans/20261014-implementation.md)，研究阶段的机器条件与支持矩阵见 [可行性报告](../spaces/SP-192-ictrl-adoption-feasibility/plans/20261014-feasibility.md)。完整 CLI/root tests、Android/JS fixtures、本地门禁与真实 iOS Simulator runtime tests 已执行；设备未覆盖项按实际边界报告。源码已合入本地 main，独立 worktree 保留审计产物，未发布。
 
 ## 2026-10-14 实现验收
 

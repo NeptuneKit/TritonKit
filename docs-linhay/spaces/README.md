@@ -22,7 +22,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 执行（main 集成） | [SP-192-ictrl-adoption-feasibility](./SP-192-ictrl-adoption-feasibility/README.md) | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12、iOS115、Android52与完整APK及真实只读AX/alias/OCR/settle通过 | 用户授权本地提交/集成，门禁通过；真实设备与OCR输入坐标边界见限制收口计划 |
+| 已集成（本地 main） | [SP-192-ictrl-adoption-feasibility](./SP-192-ictrl-adoption-feasibility/README.md) | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12、iOS115、Android52与完整APK及真实只读AX/alias/OCR/settle通过 | `e308a2eb` / merge `da76a708`，main总门禁通过；真实设备与OCR输入坐标边界见限制收口计划 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-190-open-issues-integration](./SP-190-open-issues-integration/README.md) | #214–#220 本地集成与统一验收；保留各项证据边界，#215～220 已关闭，#214 继续开放 | main CI / Release / Homebrew 通过，已回复关闭 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-189-issue-220-package-result-path](./SP-189-issue-220-package-result-path/README.md) | #220：package result 路径与 inline parser 一致；49 + 2 focused tests 通过，夹具贯通执行结果路径解析，非实际 Xcode test | main CI / Release / Homebrew 通过，已回复关闭 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-188-issue-219-generic-ios-build](./SP-188-issue-219-generic-ios-build/README.md) | #219：显式 generic iOS SDK-only build；51 + 5 focused tests 通过，未做真实 SDK 编译 | main CI / Release / Homebrew 通过，已回复关闭 |
@@ -121,7 +121,7 @@
 
 | Space | Branch | Worktree | 基线 | 当前状态与后续 |
 | --- | --- | --- | --- | --- |
-| `SP-192-ictrl-adoption-feasibility` | `feat/SP-192-ictrl-adoption-feasibility` | `../TritonKit-worktrees/SP-192-ictrl-adoption-feasibility/` | `main@8aaf6c31` | 五机制及Android/iOS验证限制收口完成，本地门禁通过；用户授权提交与集成，执行中 |
+| `SP-192-ictrl-adoption-feasibility` | `feat/SP-192-ictrl-adoption-feasibility` | `../TritonKit-worktrees/SP-192-ictrl-adoption-feasibility/` | `main@8aaf6c31` | 五机制及Android/iOS验证限制收口完成，本地门禁通过；`e308a2eb` / merge `da76a708` 已合入本地main，main总门禁通过 |
 | `SP-156-issue-176-xcode-compact-progress` | `feat/SP-156-issue-176-xcode-compact-progress`（已清理） | 已清理（历史由 PR #177 merge 可达） | `feat/SP-153-issue-173-xcode-run-target-binding@57ff4092` | #176 已合并并关闭；compact/full 合同与 focused 证据保留 |
 | `SP-157-open-issues-178-195-audit` | `feat/SP-157-open-issues-178-195-audit` | `../TritonKit-worktrees/SP-157-open-issues-178-195-audit/` | `main@e77c72b7` | `ad1e55a9` 已由 merge `1564e7ed` 进入主线；#178–#194 已评论并关闭，worktree 保留为审计记录 |
 | `SP-158-issue-196-xcode-archive-export` | `feat/SP-158-issue-196-xcode-archive-export` | `../TritonKit-worktrees/SP-158-issue-196-xcode-archive-export/` | `main@e77c72b7` | `b3d0c27c` 已由 merge `424113b6` 进入主线；#196 已评论并关闭，真实签名风险保留 |

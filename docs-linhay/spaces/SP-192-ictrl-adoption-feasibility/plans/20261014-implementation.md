@@ -1,6 +1,6 @@
 # SP-192 实施计划
 
-状态：五项实现与本地门禁完成，独立 worktree 待集成。基线：8aaf6c31。仅本机 CLI/HTTP、host 观察与 Debug runtime；独立 Runner/DDI 不在本期。此前 Android APK 依赖阻塞与四项 iOS 既有失败已在[限制收口](./20261014-limitation-resolution.md)解除：Android 52 项及完整 APK、iOS 115 项通过。真实输入/坐标校准边界保留如下。
+状态：五项实现与本地门禁完成，已提交并合入本地 main（`e308a2eb` → `da76a708`）。基线：8aaf6c31。仅本机 CLI/HTTP、host 观察与 Debug runtime；独立 Runner/DDI 不在本期。此前 Android APK 依赖阻塞与四项 iOS 既有失败已在[限制收口](./20261014-limitation-resolution.md)解除：Android 52 项及完整 APK、iOS 115 项通过。真实输入/坐标校准边界保留如下。
 
 ## 场景与合同
 
