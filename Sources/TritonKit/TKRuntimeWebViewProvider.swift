@@ -330,498 +330,6 @@ func runtimeWebViewTapScript(selector: String) throws -> String {
     """
 }
 
-func webViewFocusedTextInsertionScript(text: String) throws -> String {
-    let textData = try JSONEncoder().encode(text)
-    guard let textLiteral = String(data: textData, encoding: .utf8) else {
-        throw NSError(domain: "TritonKit.WebViewInput", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode text"])
-    }
-    return """
-    (function() {
-      var text = \(textLiteral);
-      var element = document.activeElement;
-      if (!element) {
-        return JSON.stringify({ ok: false, message: "No active DOM element" });
-      }
-      var tag = String(element.tagName || "").toLowerCase();
-      var editable = !!element.isContentEditable;
-      var supportsValue = tag === "input" || tag === "textarea";
-      if (!editable && !supportsValue) {
-        var candidates = Array.prototype.slice.call(document.querySelectorAll("input:not([type=hidden]):not([disabled]), textarea:not([disabled]), [contenteditable=true]"));
-        element = null;
-        for (var candidateIndex = 0; candidateIndex < candidates.length; candidateIndex += 1) {
-          var candidate = candidates[candidateIndex];
-          var rect = candidate.getBoundingClientRect ? candidate.getBoundingClientRect() : null;
-          var style = window.getComputedStyle ? window.getComputedStyle(candidate) : null;
-          if (rect && rect.width > 0 && rect.height > 0 && (!style || (style.visibility !== "hidden" && style.display !== "none"))) {
-            element = candidate;
-            break;
-          }
-        }
-        if (!element) {
-          return JSON.stringify({
-            ok: false,
-            message: "No editable DOM element is focused or visible",
-            tagName: tag || null
-          });
-        }
-        if (typeof element.focus === "function") { element.focus(); }
-        tag = String(element.tagName || "").toLowerCase();
-        editable = !!element.isContentEditable;
-        supportsValue = tag === "input" || tag === "textarea";
-      }
-      if (!editable && !supportsValue) {
-        return JSON.stringify({
-          ok: false,
-          message: "Active DOM element is not text editable",
-          tagName: tag || null
-        });
-      }
-      try {
-        if (supportsValue) {
-          var oldValue = String(element.value || "");
-          var start = typeof element.selectionStart === "number" ? element.selectionStart : oldValue.length;
-          var end = typeof element.selectionEnd === "number" ? element.selectionEnd : start;
-          var nextValue = oldValue.slice(0, start) + text + oldValue.slice(end);
-          element.value = nextValue;
-          var cursor = start + text.length;
-          if (typeof element.setSelectionRange === "function") {
-            element.setSelectionRange(cursor, cursor);
-          }
-          if (typeof InputEvent === "function") {
-            element.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
-          } else {
-            element.dispatchEvent(new Event("input", { bubbles: true }));
-          }
-          element.dispatchEvent(new Event("change", { bubbles: true }));
-          return JSON.stringify({ ok: true, tagName: tag, insertedLength: text.length });
-        }
-        if (document.execCommand && document.execCommand("insertText", false, text)) {
-          return JSON.stringify({ ok: true, tagName: tag || "contenteditable", insertedLength: text.length });
-        }
-        element.textContent = String(element.textContent || "") + text;
-        element.dispatchEvent(new Event("input", { bubbles: true }));
-        return JSON.stringify({ ok: true, tagName: tag || "contenteditable", insertedLength: text.length });
-      } catch (error) {
-        return JSON.stringify({
-          ok: false,
-          message: String(error && error.message ? error.message : error),
-          tagName: tag || null
-        });
-      }
-    })()
-    """
-}
-
-func webViewFocusedDeleteBackwardScript() -> String {
-    """
-    (function() {
-      var element = document.activeElement;
-      if (!element) {
-        return JSON.stringify({ ok: false, message: "No active DOM element" });
-      }
-      var tag = String(element.tagName || "").toLowerCase();
-      var editable = !!element.isContentEditable;
-      var supportsValue = tag === "input" || tag === "textarea";
-      if (!editable && !supportsValue) {
-        var candidates = Array.prototype.slice.call(document.querySelectorAll("input:not([type=hidden]):not([disabled]), textarea:not([disabled]), [contenteditable=true]"));
-        element = null;
-        for (var candidateIndex = 0; candidateIndex < candidates.length; candidateIndex += 1) {
-          var candidate = candidates[candidateIndex];
-          var rect = candidate.getBoundingClientRect ? candidate.getBoundingClientRect() : null;
-          var style = window.getComputedStyle ? window.getComputedStyle(candidate) : null;
-          if (rect && rect.width > 0 && rect.height > 0 && (!style || (style.visibility !== "hidden" && style.display !== "none"))) {
-            element = candidate;
-            break;
-          }
-        }
-        if (!element) {
-          return JSON.stringify({
-            ok: false,
-            message: "No editable DOM element is focused or visible",
-            tagName: tag || null
-          });
-        }
-        if (typeof element.focus === "function") { element.focus(); }
-        tag = String(element.tagName || "").toLowerCase();
-        editable = !!element.isContentEditable;
-        supportsValue = tag === "input" || tag === "textarea";
-      }
-      if (!editable && !supportsValue) {
-        return JSON.stringify({
-          ok: false,
-          message: "Active DOM element is not text editable",
-          tagName: tag || null
-        });
-      }
-      try {
-        if (supportsValue) {
-          var oldValue = String(element.value || "");
-          var start = typeof element.selectionStart === "number" ? element.selectionStart : oldValue.length;
-          var end = typeof element.selectionEnd === "number" ? element.selectionEnd : start;
-          var deletedLength = 0;
-          var nextValue = oldValue;
-          var cursor = start;
-          if (start !== end) {
-            deletedLength = Math.max(0, end - start);
-            nextValue = oldValue.slice(0, start) + oldValue.slice(end);
-          } else if (start > 0) {
-            deletedLength = 1;
-            cursor = start - 1;
-            nextValue = oldValue.slice(0, cursor) + oldValue.slice(end);
-          }
-          element.value = nextValue;
-          if (typeof element.setSelectionRange === "function") {
-            element.setSelectionRange(cursor, cursor);
-          }
-          if (typeof InputEvent === "function") {
-            element.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "deleteContentBackward", data: null }));
-          } else {
-            element.dispatchEvent(new Event("input", { bubbles: true }));
-          }
-          element.dispatchEvent(new Event("change", { bubbles: true }));
-          return JSON.stringify({ ok: true, tagName: tag, deletedLength: deletedLength });
-        }
-        if (document.execCommand && document.execCommand("delete", false, null)) {
-          return JSON.stringify({ ok: true, tagName: tag || "contenteditable", deletedLength: 1 });
-        }
-        var text = String(element.textContent || "");
-        if (!text) {
-          return JSON.stringify({ ok: true, tagName: tag || "contenteditable", deletedLength: 0 });
-        }
-        element.textContent = text.slice(0, -1);
-        element.dispatchEvent(new Event("input", { bubbles: true }));
-        return JSON.stringify({ ok: true, tagName: tag || "contenteditable", deletedLength: 1 });
-      } catch (error) {
-        return JSON.stringify({
-          ok: false,
-          message: String(error && error.message ? error.message : error),
-          tagName: tag || null
-        });
-      }
-    })()
-    """
-}
-
-/// Page opt-in marker required before Triton DOM form control (focus, type,
-/// set-text) may touch a page. The page opts in by exposing
-/// `document.documentElement[data-triton-form-input="1"]` or
-/// `window.__tritonFormInput === true`. Without opt-in, commands return the
-/// typed `webview_form_input_not_opted_in` error and document the host-HID
-/// fallback instead of silently touching DOM state.
-private let runtimeWebViewFormInputOptInExpression = """
-    (document.documentElement && document.documentElement.getAttribute("data-triton-form-input") === "1") || window.__tritonFormInput === true
-    """
-
-private let runtimeWebViewFormInputNotOptedInError = """
-    {
-      code: "webview_form_input_not_opted_in",
-      message: "The page has not opted into Triton DOM form control.",
-      hint: "Expose data-triton-form-input=\\"1\\" on <html> or set window.__tritonFormInput = true to opt in; otherwise use the host-HID fallback (tap the field, then `triton act type <text> --json`)."
-    }
-    """
-
-private let runtimeWebViewFormFieldHelpers = """
-      function clean(value) {
-        return String(value || "").replace(/\\s+/g, " ").trim();
-      }
-      function frameFor(element) {
-        try {
-          var rect = element.getBoundingClientRect();
-          return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-        } catch (_) {
-          return null;
-        }
-      }
-      function visible(element) {
-        var rect = frameFor(element);
-        if (!rect || rect.width <= 0 || rect.height <= 0) { return false; }
-        var style = window.getComputedStyle ? window.getComputedStyle(element) : null;
-        return !style || (style.visibility !== "hidden" && style.display !== "none" && style.opacity !== "0");
-      }
-      function optedIn() {
-        return \(runtimeWebViewFormInputOptInExpression);
-      }
-      function isFormField(element) {
-        if (!element) { return false; }
-        var tag = String(element.tagName || "").toLowerCase();
-        if (tag === "input" || tag === "textarea" || tag === "select") { return true; }
-        var attr = element.getAttribute("contenteditable");
-        return attr !== null && attr !== "false";
-      }
-      function formFieldElements() {
-        return Array.prototype.slice.call(document.querySelectorAll("input, textarea, select, [contenteditable]")).filter(isFormField);
-      }
-      function resolveFormSelector(selector) {
-        if (!selector || !clean(selector)) { return document.activeElement || null; }
-        if (selector.indexOf("#") === 0 && selector.indexOf(" ") < 0 && selector.indexOf("[") < 0) {
-          return document.getElementById(selector.slice(1));
-        }
-        if (selector.indexOf("[name=") === 0 && selector.lastIndexOf("]") === selector.length - 1) {
-          var nameValue = selector.slice(7, -1).replace(/^"|"$/g, "");
-          var named = Array.prototype.slice.call(document.querySelectorAll("[name]"));
-          for (var index = 0; index < named.length; index += 1) {
-            if (String(named[index].getAttribute("name") || "") === nameValue) { return named[index]; }
-          }
-          return null;
-        }
-        if (selector.indexOf("form-") === 0) {
-          var targetIndex = parseInt(selector.slice(5), 10);
-          var fields = formFieldElements();
-          if (!isNaN(targetIndex) && targetIndex >= 1 && targetIndex <= fields.length) { return fields[targetIndex - 1]; }
-          return null;
-        }
-        try {
-          return document.querySelector(selector);
-        } catch (_) {
-          return null;
-        }
-      }
-      function formKindFor(element) {
-        var tag = String(element.tagName || "").toLowerCase();
-        return (tag === "input" || tag === "textarea" || tag === "select") ? tag : "contenteditable";
-      }
-      function formValue(element, kind) {
-        return kind === "contenteditable" ? String(element.textContent || "") : String(element.value || "");
-      }
-      function dispatchInputAndChange(element, inputType, data) {
-        if (typeof InputEvent === "function") {
-          element.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: inputType, data: data }));
-        } else {
-          element.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-        element.dispatchEvent(new Event("change", { bubbles: true }));
-        return ["input", "change"];
-      }
-    """
-
-func runtimeWebViewFormFocusScript(selector: String) throws -> String {
-    let selectorData = try JSONEncoder().encode(selector)
-    guard let selectorLiteral = String(data: selectorData, encoding: .utf8) else {
-        throw NSError(domain: "TritonKit.WebViewFocus", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode WebView focus selector"])
-    }
-    return """
-    (function() {
-      var selector = \(selectorLiteral);
-      \(runtimeWebViewFormFieldHelpers)
-      if (!optedIn()) {
-        return JSON.stringify({
-          ok: false,
-          optedIn: false,
-          selector: selector || null,
-          error: \(runtimeWebViewFormInputNotOptedInError)
-        });
-      }
-      var element = resolveFormSelector(selector);
-      if (!element) {
-        return JSON.stringify({
-          ok: false,
-          selector: selector || null,
-          error: {
-            code: "webview_form_target_not_found",
-            message: "No DOM form target matched selector: " + (selector || "<active>"),
-            hint: "Run `triton webview snapshot --include metadata,text,dom,forms --json` and retry with a returned selector from the forms list."
-          }
-        });
-      }
-      if (!isFormField(element)) {
-        return JSON.stringify({
-          ok: false,
-          selector: selector || null,
-          tagName: String(element.tagName || "").toUpperCase(),
-          error: {
-            code: "webview_element_not_interactable",
-            message: "Matched DOM element is not a text-editable form field.",
-            hint: "Choose an input, textarea, select, or [contenteditable=true] target from the WebView snapshot forms list."
-          }
-        });
-      }
-      if (typeof element.scrollIntoView === "function") {
-        element.scrollIntoView({ block: "center", inline: "center", behavior: "instant" });
-      }
-      if (typeof element.focus === "function") { element.focus(); }
-      var kind = formKindFor(element);
-      var rawValue = formValue(element, kind);
-      return JSON.stringify({
-        ok: true,
-        focused: element === document.activeElement,
-        kind: kind,
-        tagName: String(element.tagName || "").toUpperCase(),
-        selector: selector || null,
-        nodeID: element.id || null,
-        valueLength: rawValue.length,
-        valueRedaction: "length-only"
-      });
-    })()
-    """
-}
-
-func runtimeWebViewFormInputScript(selector: String?, mode: TKWebViewFormInputMode, text: String) throws -> String {
-    let textData = try JSONEncoder().encode(text)
-    guard let textLiteral = String(data: textData, encoding: .utf8) else {
-        throw NSError(domain: "TritonKit.WebViewInput", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode text"])
-    }
-    let selectorLiteral: String
-    if let selector {
-        let selectorData = try JSONEncoder().encode(selector)
-        guard let encoded = String(data: selectorData, encoding: .utf8) else {
-            throw NSError(domain: "TritonKit.WebViewInput", code: 2, userInfo: [NSLocalizedDescriptionKey: "Unable to encode selector"])
-        }
-        selectorLiteral = encoded
-    } else {
-        selectorLiteral = "null"
-    }
-    let modeLiteral = mode == .setText ? "\"set\"" : "\"type\""
-    let inputTypeLiteral = mode == .setText ? "\"insertText\"" : "\"insertText\""
-    return """
-    (function() {
-      var selector = \(selectorLiteral);
-      var text = \(textLiteral);
-      var mode = \(modeLiteral);
-      \(runtimeWebViewFormFieldHelpers)
-      if (!optedIn()) {
-        return JSON.stringify({
-          ok: false,
-          optedIn: false,
-          selector: selector || null,
-          error: \(runtimeWebViewFormInputNotOptedInError)
-        });
-      }
-      var element = resolveFormSelector(selector);
-      if (!element) {
-        return JSON.stringify({
-          ok: false,
-          selector: selector || null,
-          error: {
-            code: "webview_form_target_not_found",
-            message: "No DOM form target matched selector: " + (selector || "<active>"),
-            hint: "Run `triton webview snapshot --include metadata,text,dom,forms --json` and retry with a returned selector from the forms list."
-          }
-        });
-      }
-      if (!isFormField(element)) {
-        return JSON.stringify({
-          ok: false,
-          selector: selector || null,
-          tagName: String(element.tagName || "").toUpperCase(),
-          error: {
-            code: "webview_element_not_interactable",
-            message: "Matched DOM element is not a text-editable form field.",
-            hint: "Choose an input, textarea, select, or [contenteditable=true] target from the WebView snapshot forms list."
-          }
-        });
-      }
-      try {
-        var kind = formKindFor(element);
-        var events = [];
-        if (kind !== "contenteditable") {
-          var oldValue = String(element.value || "");
-          var start = 0;
-          if (mode === "type") {
-            start = typeof element.selectionStart === "number" ? element.selectionStart : oldValue.length;
-            var end = typeof element.selectionEnd === "number" ? element.selectionEnd : start;
-            oldValue = oldValue.slice(0, start) + text + oldValue.slice(end);
-          } else {
-            oldValue = text;
-          }
-          element.value = oldValue;
-          var cursor = mode === "type" ? start + text.length : oldValue.length;
-          if (typeof element.setSelectionRange === "function") {
-            element.setSelectionRange(cursor, cursor);
-          }
-          events = dispatchInputAndChange(element, \(inputTypeLiteral), text);
-          return JSON.stringify({
-            ok: true,
-            focused: element === document.activeElement,
-            kind: kind,
-            tagName: String(element.tagName || "").toUpperCase(),
-            selector: selector || null,
-            nodeID: element.id || null,
-            insertedLength: text.length,
-            valueLength: String(element.value || "").length,
-            valueRedaction: "length-only",
-            eventsDispatched: events
-          });
-        }
-        if (typeof element.focus === "function") { element.focus(); }
-        if (mode === "set") {
-          var range = document.createRange ? document.createRange() : null;
-          if (range && document.getSelection) {
-            var selection = document.getSelection();
-            range.selectNodeContents(element);
-            selection.removeAllRanges();
-            selection.addRange(range);
-          }
-          var replaced = false;
-          if (document.execCommand && document.execCommand("insertText", false, text)) {
-            replaced = true;
-          }
-          if (!replaced) { element.textContent = text; }
-        } else {
-          var inserted = false;
-          if (document.execCommand && document.execCommand("insertText", false, text)) {
-            inserted = true;
-          }
-          if (!inserted) { element.textContent = String(element.textContent || "") + text; }
-        }
-        events = dispatchInputAndChange(element, "insertText", text);
-        return JSON.stringify({
-          ok: true,
-          focused: element === document.activeElement,
-          kind: kind,
-          tagName: String(element.tagName || "").toUpperCase(),
-          selector: selector || null,
-          nodeID: element.id || null,
-          insertedLength: text.length,
-          valueLength: String(element.textContent || "").length,
-          valueRedaction: "length-only",
-          eventsDispatched: events
-        });
-      } catch (error) {
-        return JSON.stringify({
-          ok: false,
-          selector: selector || null,
-          error: {
-            code: "javascript_error",
-            message: String(error && error.message ? error.message : error),
-            hint: "Retry with a stable form selector and verify the page has opted into Triton DOM form control."
-          }
-        });
-      }
-    })()
-    """
-}
-
-struct RuntimeWebViewFormTargetPayload: Decodable, Equatable {
-    let ok: Bool
-    let focused: Bool?
-    let kind: String?
-    let tagName: String?
-    let selector: String?
-    let nodeID: String?
-    let insertedLength: Int?
-    let valueLength: Int?
-    let valueRedaction: String?
-    let eventsDispatched: [String]?
-    let optedIn: Bool?
-    let error: TKWebViewError?
-}
-
-func decodeRuntimeWebViewFormTargetPayload(_ json: String) throws -> RuntimeWebViewFormTargetPayload {
-    try JSONDecoder().decode(RuntimeWebViewFormTargetPayload.self, from: Data(json.utf8))
-}
-
-struct WebViewFocusedTextInsertionPayload: Decodable, Equatable {
-    let ok: Bool
-    let message: String?
-    let tagName: String?
-    let insertedLength: Int?
-    let deletedLength: Int?
-}
-
-func decodeWebViewFocusedTextInsertionPayload(_ json: String) throws -> WebViewFocusedTextInsertionPayload {
-    try JSONDecoder().decode(WebViewFocusedTextInsertionPayload.self, from: Data(json.utf8))
-}
-
 #if canImport(UIKit) && canImport(WebKit)
 import UIKit
 import WebKit
@@ -860,6 +368,9 @@ func performFocusedWebViewTextInsertionIfAvailable(
             targetOID: oid(for: responder),
             targetClassName: className
         )
+    }
+    guard runtimeForegroundTargetFailure(for: pair.webView) == nil else {
+        return TKInputResult.failure(action: action, message: "Selected WebView is not in the current foreground interaction surface")
     }
     do {
         let script = try webViewFocusedTextInsertionScript(text: text)
@@ -923,6 +434,9 @@ func performFocusedWebViewDeleteBackwardIfAvailable(
             targetClassName: className
         )
     }
+    guard runtimeForegroundTargetFailure(for: pair.webView) == nil else {
+        return TKInputResult.failure(action: action, message: "Selected WebView is not in the current foreground interaction surface")
+    }
     do {
         let value = try await evaluateJavaScript(webViewFocusedDeleteBackwardScript(), in: pair.webView)
         let json = value as? String ?? "\(value)"
@@ -950,6 +464,18 @@ func performFocusedWebViewDeleteBackwardIfAvailable(
             targetOID: oid(for: responder),
             targetClassName: className
         )
+    }
+}
+
+/// Mutation-only gate. Lists and snapshots retain their observation scope.
+@MainActor
+func requireForegroundWebViewMutation(_ webView: WKWebView) throws {
+    guard runtimeForegroundTargetFailure(for: webView) == nil else {
+        throw TKWebViewSelectionError(detail: TKWebViewError(
+            code: .webViewElementNotInteractable,
+            message: "Selected WebView is not in the current foreground interaction surface.",
+            hint: "Observe the current foreground page before retrying the action."
+        ))
     }
 }
 
@@ -1054,6 +580,7 @@ func currentWebViewTapResponse(_ request: TKWebViewTapRequest) async -> TKWebVie
                 hint: "Run `triton webview current --json` again and retry."
             ))
         }
+        try requireForegroundWebViewMutation(pair.webView)
         if let requestedSession = request.pageSessionID,
            let actualSession = selected.pageSessionID,
            requestedSession != actualSession {
@@ -1144,6 +671,7 @@ func currentWebViewFocusResponse(_ request: TKWebViewFocusRequest) async -> TKWe
                 hint: "Run `triton webview current --json` again and retry."
             ))
         }
+        try requireForegroundWebViewMutation(pair.webView)
         if let requestedSession = request.pageSessionID,
            let actualSession = selected.pageSessionID,
            requestedSession != actualSession {
@@ -1225,6 +753,24 @@ func currentWebViewFocusResponse(_ request: TKWebViewFocusRequest) async -> TKWe
 }
 
 @MainActor
+func evaluateRuntimeWebViewFormInput(selector: String?, mode: TKWebViewFormInputMode, text: String, in webView: WKWebView) async throws -> RuntimeWebViewFormTargetPayload {
+    let verificationToken = "__tritonFormReadback_" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
+    let script = try runtimeWebViewFormInputScript(selector: selector, mode: mode, text: text, verificationToken: verificationToken)
+    let value = try await evaluateJavaScript(script, in: webView)
+    let json = value as? String ?? "\(value)"
+    var payload = try decodeRuntimeWebViewFormTargetPayload(json)
+    if payload.ok && payload.kind != "contenteditable" {
+        // Permit queued controlled-form renders to run before reading the
+        // postcondition. This observes a bounded settle window, not later
+        // application/business state. The one-shot closure expires on timeout.
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        let readback = try await evaluateJavaScript(try runtimeWebViewFormReadbackScript(verificationToken: verificationToken), in: webView)
+        payload = try decodeRuntimeWebViewFormTargetPayload(readback as? String ?? "\(readback)")
+    }
+    return payload
+}
+
+@MainActor
 func currentWebViewFormInputResponse(_ request: TKWebViewFormInputRequest) async -> TKWebViewFormInputResponse {
     let startedAt = Date()
     let pairs = currentWKWebViewsWithDescriptors()
@@ -1237,6 +783,7 @@ func currentWebViewFormInputResponse(_ request: TKWebViewFormInputRequest) async
                 hint: "Run `triton webview current --json` again and retry."
             ))
         }
+        try requireForegroundWebViewMutation(pair.webView)
         if let requestedSession = request.pageSessionID,
            let actualSession = selected.pageSessionID,
            requestedSession != actualSession {
@@ -1247,10 +794,7 @@ func currentWebViewFormInputResponse(_ request: TKWebViewFormInputRequest) async
                 webViewID: selected.webViewID
             ))
         }
-        let script = try runtimeWebViewFormInputScript(selector: request.selector, mode: request.mode, text: request.text)
-        let value = try await evaluateJavaScript(script, in: pair.webView)
-        let json = value as? String ?? "\(value)"
-        let payload = try decodeRuntimeWebViewFormTargetPayload(json)
+        let payload = try await evaluateRuntimeWebViewFormInput(selector: request.selector, mode: request.mode, text: request.text, in: pair.webView)
         let element = makeWebViewFormFieldSummary(from: payload, selector: request.selector)
         let secure = request.secure
         let sourceCommand = request.sourceCommand ?? "triton webViewFormInput request"
@@ -1265,6 +809,10 @@ func currentWebViewFormInputResponse(_ request: TKWebViewFormInputRequest) async
                 selector: request.selector,
                 mode: request.mode.rawValue,
                 focused: false,
+                insertedLength: payload.insertedLength,
+                valueLength: payload.valueLength,
+                valueRedaction: payload.valueRedaction,
+                eventsDispatched: payload.eventsDispatched ?? [],
                 element: element,
                 error: error,
                 elapsedMs: elapsedMilliseconds(since: startedAt),
@@ -1525,6 +1073,7 @@ func performWebViewBridgeCall(_ request: TKWebViewBridgeCallRequest) async -> TK
                 hint: "Run `triton webview current --json` again and retry."
             ))
         }
+        try requireForegroundWebViewMutation(pair.webView)
         installWebViewScriptBridgeIfNeeded(in: pair.webView, descriptor: selected)
         if let requestedSession = request.pageSessionID,
            let actualSession = selected.pageSessionID,

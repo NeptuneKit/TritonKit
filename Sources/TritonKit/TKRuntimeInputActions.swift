@@ -561,6 +561,7 @@ func tabBarContaining(_ control: UIControl, request: TKInputRequest) -> UITabBar
     for window in keyWindows() {
         for tabBar in allSubviews(of: window, matching: UITabBar.self) {
             if !tabBar.isHidden,
+               runtimeForegroundTargetFailure(for: tabBar) == nil,
                tabBar.alpha > 0.01,
                tabBar.convert(tabBar.bounds, to: nil).contains(point) {
                 return tabBar
@@ -728,7 +729,7 @@ func hostSimulatorTapSuggestedCommands(for request: TKInputRequest) -> [String] 
 func tableCellContaining(request: TKInputRequest) -> UITableViewCell? {
     guard let point = inputPoint(from: request) else { return nil }
     for window in keyWindows() {
-        for tableView in allSubviews(of: window, matching: UITableView.self) where isInteractable(tableView) {
+        for tableView in allSubviews(of: window, matching: UITableView.self) where isInteractable(tableView) && runtimeForegroundTargetFailure(for: tableView) == nil {
             let tablePoint = tableView.convert(point, from: nil)
             guard tableView.bounds.contains(tablePoint),
                   let indexPath = tableView.indexPathForRow(at: tablePoint) else {
@@ -848,6 +849,7 @@ func unsupportedPrimaryMenuItemActivation(
     for window in keyWindows() {
         for button in allSubviews(of: window, matching: UIButton.self) {
             guard button.window != nil,
+                  runtimeForegroundTargetFailure(for: button) == nil,
                   !button.isHidden,
                   button.alpha > 0.01,
                   button.showsMenuAsPrimaryAction,
@@ -1186,6 +1188,10 @@ func resolveTextInputResponder(_ request: TKInputRequest) -> (responder: UIRespo
         guard let responder = TKObjectRegistry.shared.object(for: targetOID) as? UIResponder else {
             return (nil, "Target oid is not a UIResponder: \(targetOID)")
         }
+        guard let view = responder as? UIView else {
+            return (nil, "stale_runtime_hierarchy: target responder is not bound to a visible UIView")
+        }
+        if let reason = runtimeForegroundTargetFailure(for: view) { return (nil, reason) }
         return (responder, "Resolved target oid")
     }
 
@@ -1195,22 +1201,29 @@ func resolveTextInputResponder(_ request: TKInputRequest) -> (responder: UIRespo
             return (nil, resolved.message)
         }
         if let textField = nearestSuperview(of: view, matching: UITextField.self) {
+            if let reason = runtimeForegroundTargetFailure(for: textField) { return (nil, reason) }
             textField.becomeFirstResponder()
             return (textField, "Focused text field")
         }
         if let textView = nearestSuperview(of: view, matching: UITextView.self) {
+            if let reason = runtimeForegroundTargetFailure(for: textView) { return (nil, reason) }
             textView.becomeFirstResponder()
             return (textView, "Focused text view")
         }
-        if let responder = nearestTextInputResponder(from: view) {
+        if let responder = nearestTextInputResponder(from: view), let responderView = responder as? UIView {
+            if let reason = runtimeForegroundTargetFailure(for: responderView) { return (nil, reason) }
             responder.becomeFirstResponder()
             return (responder, "Focused text input responder")
         }
         return (nil, "Hit view does not expose a UIKeyInput responder")
     }
 
-    guard let responder = keyWindows().compactMap({ findFirstResponder(in: $0) }).first else {
-        return (nil, "No target responder")
+    guard let window = keyWindows().first,
+          let root = runtimeForegroundActionRoot(in: window),
+          let responder = findFirstResponder(in: root),
+          let view = responder as? UIView,
+          runtimeForegroundTargetFailure(for: view) == nil else {
+        return (nil, "No foreground target responder")
     }
     return (responder, "Resolved first responder")
 }
@@ -1393,17 +1406,10 @@ func performSemanticAction(_ request: TKSemanticActionRequest) -> TKSemanticActi
 
 @MainActor
 func resolveControl<T: UIControl>(_ request: TKSemanticActionRequest, as type: T.Type) -> T? {
-    if let targetOID = request.targetOID {
-        if let direct = TKObjectRegistry.shared.object(for: targetOID) as? T {
-            return direct
-        }
-        if let view = TKObjectRegistry.shared.object(for: targetOID) as? UIView {
-            return nearestSuperview(of: view, matching: type)
-        }
-    }
     let resolved = resolveView(targetOID: request.targetOID, x: request.x, y: request.y)
     guard let view = resolved.view else { return nil }
-    return nearestSuperview(of: view, matching: type)
+    guard let control = nearestSuperview(of: view, matching: type), runtimeForegroundTargetFailure(for: control) == nil else { return nil }
+    return control
 }
 
 func semanticRedaction(secure: Bool, length: Int?) -> TKSemanticActionRedaction {
@@ -1420,59 +1426,6 @@ func notifyTextDidChange(for responder: UIResponder) {
     } else if let textView = responder as? UITextView {
         NotificationCenter.default.post(name: UITextView.textDidChangeNotification, object: textView)
     }
-}
-
-@MainActor
-func resolveView(targetOID: UInt?, x: Double?, y: Double?) -> (view: UIView?, message: String) {
-    if let targetOID {
-        guard let view = TKObjectRegistry.shared.object(for: targetOID) as? UIView else {
-            return (nil, "Target oid is not a UIView: \(targetOID)")
-        }
-        guard let window = view.window else {
-            return (nil, "stale_runtime_hierarchy: target oid \(targetOID) is no longer attached to a window")
-        }
-        guard keyWindows().contains(where: { $0 === window }) else {
-            return (nil, "stale_runtime_hierarchy: target oid \(targetOID) is attached to an inactive window")
-        }
-        return (view, "Resolved target oid")
-    }
-
-    guard let x, let y else {
-        return (nil, "Missing x/y or target oid")
-    }
-    guard let window = keyWindows().first else {
-        return (nil, "No key window")
-    }
-    let point = CGPoint(x: x, y: y)
-    guard window.bounds.contains(point) else {
-        return (nil, "Point is outside key window bounds")
-    }
-    guard let view = window.hitTest(point, with: nil) else {
-        return (nil, "No view hit at point")
-    }
-    return (view, "Hit-tested point")
-}
-
-@MainActor
-func keyWindows() -> [UIWindow] {
-    let sceneWindows = UIApplication.shared.connectedScenes
-        .compactMap { $0 as? UIWindowScene }
-        .flatMap(\.windows)
-        .filter { !$0.isHidden && $0.alpha > 0 }
-    let fallbackWindows = sceneWindows.isEmpty
-        ? UIApplication.shared.windows.filter { !$0.isHidden && $0.alpha > 0 }
-        : []
-    let registryWindows = sceneWindows.isEmpty && fallbackWindows.isEmpty
-        ? TKObjectRegistry.shared.objects(of: UIWindow.self).filter { !$0.isHidden && $0.alpha > 0 }
-        : []
-    let key = sceneWindows.filter(\.isKeyWindow)
-    if !key.isEmpty { return key }
-    let fallbackKey = fallbackWindows.filter(\.isKeyWindow)
-    if !fallbackKey.isEmpty { return fallbackKey }
-    let registryKey = registryWindows.filter(\.isKeyWindow)
-    if !registryKey.isEmpty { return registryKey }
-    if !sceneWindows.isEmpty { return sceneWindows }
-    return fallbackWindows.isEmpty ? registryWindows : fallbackWindows
 }
 
 func nearestTabBarController(from view: UIView) -> UITabBarController? {
