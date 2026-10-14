@@ -119,7 +119,8 @@ func runHostSimulatorScreenshotCommand(
     outputFormat: ClientOutputFormat
 ) throws {
     do {
-        let result = try runHostCommand(command)
+        let routed = try resizeAwareSimulatorScreenshotCommand(command, simulator: simulator)
+        let result = try runHostCommand(routed)
         let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
         let size = imagePixelSize(path: outputPath)
         let output = HostSimulatorScreenshotOutput(
@@ -251,38 +252,37 @@ private func value(after marker: String, before terminator: String, in line: Str
 }
 
 func loadHostWorkspaceDefaults() throws -> TKHostWorkspaceDefaults? {
-    let path = TKHostWorkspaceDefaults.filePath(workspace: FileManager.default.currentDirectoryPath)
-    guard FileManager.default.fileExists(atPath: path) else {
-        return nil
-    }
-    return try JSONDecoder().decode(TKHostWorkspaceDefaults.self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+    let workspace = FileManager.default.currentDirectoryPath
+    guard let store = try HostWorkspaceConfigStorage.existing(workspace: workspace),
+          let data = try store.read(name: "host-defaults.json") else { return nil }
+    return try JSONDecoder().decode(TKHostWorkspaceDefaults.self, from: data)
 }
 
 func saveHostWorkspaceDefaults(_ defaults: TKHostWorkspaceDefaults) throws -> String {
-    let path = TKHostWorkspaceDefaults.filePath(workspace: FileManager.default.currentDirectoryPath)
-    let url = URL(fileURLWithPath: path)
-    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-    let data = try JSONEncoder().encode(defaults)
-    try data.write(to: url, options: [.atomic])
-    return path
+    let workspace = FileManager.default.currentDirectoryPath
+    let store = try HostWorkspaceConfigStorage(workspace: workspace, create: true)
+    try store.save(name: "host-defaults.json", data: JSONEncoder().encode(defaults), validate: {
+        _ = try JSONDecoder().decode(TKHostWorkspaceDefaults.self, from: $0)
+    })
+    return TKHostWorkspaceDefaults.filePath(workspace: workspace)
 }
 
 func loadHostTargetAliasStore() throws -> HostTargetAliasStore {
-    let path = HostTargetAliasStore.filePath(workspace: FileManager.default.currentDirectoryPath)
-    guard FileManager.default.fileExists(atPath: path) else {
-        return .empty
-    }
-    return try JSONDecoder().decode(HostTargetAliasStore.self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+    let workspace = FileManager.default.currentDirectoryPath
+    guard let store = try HostWorkspaceConfigStorage.existing(workspace: workspace),
+          let data = try store.read(name: "host-targets.json") else { return .empty }
+    return try JSONDecoder().decode(HostTargetAliasStore.self, from: data)
 }
 
 func saveHostTargetAliasStore(_ store: HostTargetAliasStore) throws -> String {
-    let path = HostTargetAliasStore.filePath(workspace: FileManager.default.currentDirectoryPath)
-    let url = URL(fileURLWithPath: path)
-    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+    let workspace = FileManager.default.currentDirectoryPath
+    let storage = try HostWorkspaceConfigStorage(workspace: workspace, create: true)
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-    try encoder.encode(store).write(to: url, options: [.atomic])
-    return path
+    try storage.save(name: "host-targets.json", data: encoder.encode(store), validate: {
+        _ = try JSONDecoder().decode(HostTargetAliasStore.self, from: $0)
+    })
+    return HostTargetAliasStore.filePath(workspace: workspace)
 }
 
 func simulatorIsBooted(udid: String) throws -> Bool {
@@ -372,270 +372,6 @@ func probeHostTool(name: String, command: TKHostCommand) -> HostToolProbeOutput 
 func validateTCPPort(_ port: Int, name: String) throws {
     guard (1...65_535).contains(port) else {
         throw RuntimeError("\(name) must be between 1 and 65535")
-    }
-}
-
-func printPreferences(
-    simulator: String,
-    bundleID: String,
-    key: String?,
-    outputFormat: ClientOutputFormat
-) throws {
-    do {
-        let containerResult = try runHostCommand(TKSimctlCommand.appContainer(udid: simulator, bundleID: bundleID, kind: .data))
-        let container = containerResult.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
-        let plistPath = TKHostPreferencesSnapshot.plistPath(dataContainer: container, bundleID: bundleID)
-        guard FileManager.default.fileExists(atPath: plistPath) else {
-            throw HostCommandRunError.missingPreferences(path: plistPath)
-        }
-        let snapshot = try TKHostPreferencesSnapshot(bundleID: bundleID, plistPath: plistPath, data: Data(contentsOf: URL(fileURLWithPath: plistPath)))
-        let value = key.flatMap { snapshot.value(forKey: $0) }
-        if let key, value == nil {
-            throw HostCommandRunError.preferenceKeyNotFound(key)
-        }
-        let output = HostPreferencesOutput(
-            ok: true,
-            action: key == nil ? "app.prefs.dump" : "app.prefs.get",
-            simulatorUDID: simulator,
-            bundleID: bundleID,
-            plistPath: plistPath,
-            key: key,
-            value: value,
-            valuePlistType: value?.kind,
-            preferences: key == nil ? snapshot.preferences : nil,
-            preferencesPlistTypes: key == nil ? snapshot.preferences.mapValues(\.kind) : nil
-        )
-        switch outputFormat {
-        case .json:
-            print(try encodeJSON(output))
-        case .text:
-            if let key {
-                print("\(key)=\(value.map(renderPreferenceValue) ?? "")")
-            } else {
-                for (key, value) in snapshot.preferences.sorted(by: { $0.key < $1.key }) {
-                    print("\(key)=\(renderPreferenceValue(value))")
-                }
-            }
-        }
-    } catch {
-        try failHostCommand(error, outputFormat: outputFormat)
-    }
-}
-
-func setPreference(
-    simulator: String,
-    bundleID: String,
-    key: String,
-    value: String?,
-    type: HostPreferenceSetType = .json,
-    base64: String? = nil,
-    hex: String? = nil,
-    outputFormat: ClientOutputFormat
-) throws {
-    do {
-        let newValue = try parseHostPreferenceSetValue(type: type, value: value, base64: base64, hex: hex)
-        let containerResult = try runHostCommand(TKSimctlCommand.appContainer(udid: simulator, bundleID: bundleID, kind: .data))
-        let container = containerResult.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
-        let plistPath = TKHostPreferencesSnapshot.plistPath(dataContainer: container, bundleID: bundleID)
-        let existingData = FileManager.default.fileExists(atPath: plistPath) ? try Data(contentsOf: URL(fileURLWithPath: plistPath)) : nil
-        let update = try updatingPreferencePlistData(
-            existingData: existingData,
-            bundleID: bundleID,
-            plistPath: plistPath,
-            key: key,
-            newValue: newValue
-        )
-        try ensureParentDirectory(for: plistPath)
-        try update.data.write(to: URL(fileURLWithPath: plistPath), options: .atomic)
-        let output = HostPreferencesSetOutput(
-            ok: true,
-            action: "app.prefs.set",
-            simulatorUDID: simulator,
-            bundleID: bundleID,
-            plistPath: plistPath,
-            key: key,
-            previousValue: update.previousValue,
-            newValue: update.newValue,
-            previousPlistType: update.previousPlistType,
-            newPlistType: update.newPlistType,
-            restartAdvice: "Terminate and relaunch the app if it reads this preference only at startup."
-        )
-        switch outputFormat {
-        case .json:
-            print(try encodeJSON(output))
-        case .text:
-            print("\(key)=\(renderPreferenceValue(update.newValue))")
-        }
-    } catch {
-        try failHostCommand(error, outputFormat: outputFormat)
-    }
-}
-
-func parseHostPreferenceSetValue(
-    type: HostPreferenceSetType,
-    value: String?,
-    base64: String?,
-    hex: String?
-) throws -> TKHostPreferenceValue {
-    switch type {
-    case .json:
-        guard base64 == nil, hex == nil else {
-            throw RuntimeError("--base64 and --hex require --type data.")
-        }
-        guard let value else {
-            throw RuntimeError("prefs set requires a JSON value unless --type data is used.")
-        }
-        return try parseHostPreferenceJSONValue(value)
-    case .data:
-        guard value == nil else {
-            throw RuntimeError("--type data does not accept a positional JSON value; use --base64 or --hex.")
-        }
-        let payloads = [base64, hex].compactMap { $0 }
-        guard payloads.count == 1 else {
-            throw RuntimeError("--type data requires exactly one of --base64 or --hex.")
-        }
-        if let base64 {
-            guard let data = Data(base64Encoded: base64) else {
-                throw RuntimeError("Invalid base64 data preference value.")
-            }
-            return .data(data.base64EncodedString())
-        }
-        let data = try parseHexData(hex ?? "")
-        return .data(data.base64EncodedString())
-    }
-}
-
-func parseHostPreferenceJSONValue(_ value: String) throws -> TKHostPreferenceValue {
-    let data = Data(value.utf8)
-    let object = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
-    return try hostPreferenceValue(fromJSONObject: object)
-}
-
-func updatingPreferencePlistData(
-    existingData: Data?,
-    bundleID: String,
-    plistPath: String,
-    key: String,
-    newValue: TKHostPreferenceValue
-) throws -> HostPreferencePlistUpdateResult {
-    let dictionary: [String: Any]
-    if let existingData {
-        let object = try PropertyListSerialization.propertyList(from: existingData, options: [], format: nil)
-        guard let existing = object as? [String: Any] else {
-            throw TKHostPreferencesError.invalidRoot
-        }
-        dictionary = existing
-    } else {
-        dictionary = [:]
-    }
-
-    let snapshotData = try PropertyListSerialization.data(fromPropertyList: dictionary, format: .binary, options: 0)
-    let snapshot = try TKHostPreferencesSnapshot(bundleID: bundleID, plistPath: plistPath, data: snapshotData)
-    let previousValue = snapshot.value(forKey: key)
-    var updated = dictionary
-    updated[key] = try propertyListObject(fromPreferenceValue: newValue)
-    let data = try PropertyListSerialization.data(fromPropertyList: updated, format: .binary, options: 0)
-    return HostPreferencePlistUpdateResult(
-        data: data,
-        previousValue: previousValue,
-        newValue: newValue,
-        previousPlistType: previousValue?.kind,
-        newPlistType: newValue.kind
-    )
-}
-
-private func parseHexData(_ value: String) throws -> Data {
-    var hex = value.trimmingCharacters(in: .whitespacesAndNewlines)
-    if hex.hasPrefix("0x") || hex.hasPrefix("0X") {
-        hex.removeFirst(2)
-    }
-    hex.removeAll { $0.isWhitespace }
-    guard !hex.isEmpty, hex.count.isMultiple(of: 2) else {
-        throw RuntimeError("Invalid hex data preference value.")
-    }
-
-    var bytes = Data()
-    var index = hex.startIndex
-    while index < hex.endIndex {
-        let next = hex.index(index, offsetBy: 2)
-        let pair = String(hex[index..<next])
-        guard let byte = UInt8(pair, radix: 16) else {
-            throw RuntimeError("Invalid hex data preference value.")
-        }
-        bytes.append(byte)
-        index = next
-    }
-    return bytes
-}
-
-private func hostPreferenceValue(fromJSONObject object: Any) throws -> TKHostPreferenceValue {
-    switch object {
-    case let value as String:
-        return .string(value)
-    case let value as NSNumber:
-        if isBooleanNumber(value) {
-            return .bool(value.boolValue)
-        }
-        let doubleValue = value.doubleValue
-        if floor(doubleValue) == doubleValue {
-            return .int(value.intValue)
-        }
-        return .double(doubleValue)
-    case let value as Bool:
-        return .bool(value)
-    case let value as [Any]:
-        return .array(try value.map(hostPreferenceValue(fromJSONObject:)))
-    case let value as [String: Any]:
-        return .dictionary(try value.mapValues(hostPreferenceValue(fromJSONObject:)))
-    case _ as NSNull:
-        throw RuntimeError("Property list preferences do not support null. Use a string, number, bool, array, or object.")
-    default:
-        throw RuntimeError("Unsupported preference JSON value.")
-    }
-}
-
-private func isBooleanNumber(_ value: NSNumber) -> Bool {
-    CFGetTypeID(value) == CFBooleanGetTypeID() || String(cString: value.objCType) == "c" || String(cString: value.objCType) == "B"
-}
-
-private func propertyListObject(fromPreferenceValue value: TKHostPreferenceValue) throws -> Any {
-    switch value {
-    case .string(let value):
-        return value
-    case .bool(let value):
-        return value
-    case .int(let value):
-        return value
-    case .double(let value):
-        return value
-    case .array(let values):
-        return try values.map(propertyListObject(fromPreferenceValue:))
-    case .dictionary(let values):
-        return try values.mapValues(propertyListObject(fromPreferenceValue:))
-    case .data(let value):
-        guard let data = Data(base64Encoded: value) else {
-            throw RuntimeError("Invalid base64 data preference value.")
-        }
-        return data
-    }
-}
-
-func renderPreferenceValue(_ value: TKHostPreferenceValue) -> String {
-    switch value {
-    case .string(let value):
-        value
-    case .bool(let value):
-        value ? "true" : "false"
-    case .int(let value):
-        "\(value)"
-    case .double(let value):
-        "\(value)"
-    case .array(let values):
-        "[" + values.map(renderPreferenceValue).joined(separator: ",") + "]"
-    case .dictionary(let values):
-        "{" + values.keys.sorted().map { "\($0):\(renderPreferenceValue(values[$0]!))" }.joined(separator: ",") + "}"
-    case .data(let value):
-        value
     }
 }
 
