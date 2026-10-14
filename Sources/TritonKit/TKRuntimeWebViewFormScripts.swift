@@ -1,5 +1,7 @@
 import Foundation
+#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
+#endif
 
 /// Page opt-in marker required before Triton DOM form control (focus, type,
 /// set-text) may touch a page. The page opts in by exposing
