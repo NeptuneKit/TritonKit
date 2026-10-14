@@ -128,9 +128,20 @@ For iOS Simulator evidence, inspect `manifest.primaryArtifact.fidelity` before v
 
 ## Simulator resource profiles (simslim migration)
 
-Use the Triton-first resource surface for iOS Simulator daemon overrides:
-`triton sim resource profiles|features|status|doctor|plan|apply|verify|measure|restore --json`.
-`apply` emits a receipt containing exact managed labels; retain it and pass it to `restore` for lossless rollback. `measure` reports `phys_footprint` for the target `launchd_sim` process tree and must be treated as invalid when `partial=true`.
+Inspect the installed CLI's `triton schema --command sim.resource --json` and each selected subcommand before using `profiles`, `features`, `status`, `doctor`, `plan`, `apply`, `verify`, `measure`, or `restore`; choose only supported output options. These development contracts do not establish support in an older release.
+
+The catalog is pinned to simslim commit `6518ba7eab1123d7e1d7797b0e05f51043b42a5b`. Plan/apply/verify use the same managed-label resolution: `com.apple.sharingd`, `com.apple.assistantd`, and `com.apple.gamed` remain enabled, keeping widgets also keeps their `com.apple.navd` dependency, and unknown daemon overrides remain untouched. Verify the exact managed disabled set, including extra disables of protected or retained services.
+
+Retain the apply receipt and use it for target-bound, conservative delta restore. Restore changes only known managed labels whose current state still matches the recorded applied state; it preserves detected intervening overrides and never re-disables protected services. Legacy receipts without managed-label sets restore no inferred delta. This is not a lossless history of later user edits, including edits that reassert the same value. `measure` reports `phys_footprint` for the target `launchd_sim` process tree and is invalid when `partial=true`.
+
+## Resize, preferences, and capture acceptance
+
+Query the installed schema before selecting these capabilities; preserve unsupported/error facts when the installed release does not cover them.
+
+- Resize state must come from a fresh, target-bound selected-Xcode query for each complete action. Active or unknown state rejects host touch and video with the current adapters; never bypass the guard or treat an unsupported query as inactive. Active screenshots use the current boot's display UUID; unknown state refuses capture. Do not persist that UUID or infer touch/video routing from screenshot support.
+- `app prefs get` uses `present` to distinguish missing from `false`, `0`, or empty values. `app prefs import --input <file> --input-format json|plist --key <key> [--key <key> ...]` requires an explicit key allowlist and validates the entire input dictionary before writing; invalid unselected entries also reject the import. Only the bundle's app-data preferences plist is covered, not AppGroup or suite domains.
+- Preferences set/import defaults to no relaunch. Optional `--relaunch` performs terminate then launch after verified disk writing; a relaunch failure can return `ok:false` with `diskWriteVerified:true`. Even a successful launch leaves `runtimeConsumptionVerified:false`: verify the App's business state separately before claiming it consumed the preferences. Import receipts describe keys/types without echoing imported values.
+- Proxy capture export/evidence requires a complete validated capture: empty, malformed, unknown-schema, partial-line, over-limit, or `.incomplete`-marked sources fail closed without publishing a prefix as complete. Inspect counts, redaction, and `truncation`; `not-observed` proves no observed requests and `partial-source` preserves the limitation of mixed legacy placeholder input. URL userinfo/query/fragment removal and names-only headers do not make URL paths or target identities safe for public sharing.
 
 ## Offline Simulator swipe (#215)
 

@@ -23,6 +23,10 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "settings", type: "Subcommand", description: "Resolve app product path and bundle id from -showBuildSettings -json"),
                 TKCommandSchemaOption(name: "build", type: "Subcommand", description: "Run xcodebuild build"),
                 TKCommandSchemaOption(name: "test", type: "Subcommand", description: "Run xcodebuild test"),
+                TKCommandSchemaOption(name: "--for-testing", type: "Bool", defaultValue: "false", description: "xcode build: use build-for-testing and create an identity-bound prepared test manifest; requires --test-artifact, --source-root and --prepared-tests-manifest"),
+                TKCommandSchemaOption(name: "--prepared-tests-manifest", type: "Path", description: "xcode build creates a fresh manifest; xcode test verifies source/artifact/toolchain/destination identity and uses test-without-building with a fresh xcresult"),
+                TKCommandSchemaOption(name: "--test-artifact", type: "Path", description: "xcode build --for-testing: expected fresh .xctestrun or supported .xctestproducts output"),
+                TKCommandSchemaOption(name: "--source-root", type: "Path", description: "xcode build --for-testing: source tree containing the project/workspace/package; bounded fingerprint excludes build outputs and refuses symbolic links"),
                 TKCommandSchemaOption(name: "archive", type: "Subcommand", description: "Run xcodebuild archive for generic/platform=iOS and write an .xcarchive artifact"),
                 TKCommandSchemaOption(name: "export", type: "Subcommand", description: "Run xcodebuild -exportArchive with an explicit ExportOptions.plist and write IPA artifacts"),
                 TKCommandSchemaOption(name: "run", type: "Subcommand", description: "Run build, simulator install, and simulator launch"),
@@ -79,7 +83,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "triton xcode run --device <ios-real-target> --sdk iphoneos --jsonl",
             ],
             successShape: "discover/use/schemes/status/wait-idle/settings JSON envelopes or bounded JSONL progress plus final TKXcodeActionSummary with archive/export artifact paths",
-            failureShape: "{ ok:false, error:{ code: validation_failed|parameter_conflict|invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|xcode_run_target_unresolved|device_not_ready|device_not_trusted|developer_mode_required|ddi_missing|xcode_signing_failed|provisioning_profile_missing|export_options_plist_not_found|export_options_plist_invalid|xcode_archive_failed|xcode_export_failed|xcode_not_idle|xcode_schemes_timeout|xcodebuild_failed|xcodebuild_interrupted|orphaned_xcodebuild|swift_macro_plugin_malformed_response|app_path_unresolved|bundle_id_unresolved|target_not_found|ambiguous_target|target_platform_mismatch|derived_data_root_rejected|derived_data_root_missing|derived_data_cleanup_unavailable|host_action_failed, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+            failureShape: "{ ok:false, error:{ code: prepared_tests_identity_mismatch|prepared_tests_artifact_invalid|prepared_tests_manifest_invalid|prepared_tests_unsupported|prepared_tests_result_incomplete|artifact_output_rejected|validation_failed|parameter_conflict|invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|xcode_run_target_unresolved|device_not_ready|device_not_trusted|developer_mode_required|ddi_missing|xcode_signing_failed|provisioning_profile_missing|export_options_plist_not_found|export_options_plist_invalid|xcode_archive_failed|xcode_export_failed|xcode_not_idle|xcode_schemes_timeout|xcodebuild_failed|xcodebuild_interrupted|orphaned_xcodebuild|swift_macro_plugin_malformed_response|app_path_unresolved|bundle_id_unresolved|target_not_found|ambiguous_target|target_platform_mismatch|derived_data_root_rejected|derived_data_root_missing|derived_data_cleanup_unavailable|host_action_failed, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
             inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
             jsonlEvents: [
                 "xcode.<action>.invocation",
@@ -174,6 +178,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                         ("appPath", "String?", false, "Built app path"),
                         ("bundleID", "String?", false, "Resolved bundle id"),
                         ("resultBundlePath", "String?", false, "Result bundle path"),
+                        ("preparedTestsManifestPath", "String?", false, "Identity manifest created after successful build-for-testing"),
                         ("onlyTesting", "[String]?", false, "Focused XCTest identifiers for xcode.test; omitted when no --only-testing values are supplied"),
                         ("simulatorUDID", "String?", false, "Simulator UDID"),
                         ("durationMs", "Int", true, "Duration in milliseconds"),
@@ -203,6 +208,12 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 ),
             ],
             failureCodes: [
+                "prepared_tests_identity_mismatch",
+                "prepared_tests_artifact_invalid",
+                "prepared_tests_manifest_invalid",
+                "prepared_tests_unsupported",
+                "prepared_tests_result_incomplete",
+                "artifact_output_rejected",
                 "validation_failed",
                 "parameter_conflict",
                 "invalid_workspace_path",
@@ -310,7 +321,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "build",
                     summary: "Run xcodebuild build and emit bounded JSONL progress; generic/platform=iOS with --sdk iphoneos is an SDK-only build and never selects a physical device",
-                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--build-setting", "--timeout", "--progress", "--jsonl", "--format", "--json"],
+                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--build-setting", "--for-testing", "--prepared-tests-manifest", "--test-artifact", "--source-root", "--timeout", "--progress", "--jsonl", "--format", "--json"],
                     defaultProviders: ["triton xcode use", "triton sim use"],
                     inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
                     jsonlEvents: [
@@ -325,14 +336,14 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                     finalEventKind: "xcode.build.summary",
                     artifacts: ["stdout-log", "stderr-log"],
                     retryable: true,
-                    nextCommands: ["triton xcode run --jsonl", "triton xcode status --json", "triton xcode wait-idle --workspace <workspace> --timeout 120 --json", "triton status --json"],
+                    nextCommands: ["triton xcresult summary --path <result.xcresult> --json", "triton xcode run --jsonl", "triton xcode status --json", "triton xcode wait-idle --workspace <workspace> --timeout 120 --json", "triton status --json"],
                     outputSelectors: ["xcode.progress", "xcode.final"],
-                    failureCodes: ["validation_failed", "parameter_conflict", "invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "device_not_ready", "device_not_trusted", "developer_mode_required", "ddi_missing", "xcode_signing_failed", "provisioning_profile_missing", "xcodebuild_failed", "xcodebuild_interrupted", "orphaned_xcodebuild", "swift_macro_plugin_malformed_response", "target_not_found", "ambiguous_target", "target_platform_mismatch"]
+                    failureCodes: ["prepared_tests_identity_mismatch", "prepared_tests_artifact_invalid", "prepared_tests_manifest_invalid", "prepared_tests_unsupported", "prepared_tests_result_incomplete", "artifact_output_rejected", "validation_failed", "parameter_conflict", "invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "device_not_ready", "device_not_trusted", "developer_mode_required", "ddi_missing", "xcode_signing_failed", "provisioning_profile_missing", "xcodebuild_failed", "xcodebuild_interrupted", "orphaned_xcodebuild", "swift_macro_plugin_malformed_response", "target_not_found", "ambiguous_target", "target_platform_mismatch"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "test",
                     summary: "Run xcodebuild test, optionally write a result bundle, and emit bounded JSONL progress by default",
-                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--build-setting", "--result-bundle", "--only-testing", "--timeout", "--progress", "--jsonl", "--format", "--json"],
+                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--build-setting", "--result-bundle", "--prepared-tests-manifest", "--only-testing", "--timeout", "--progress", "--jsonl", "--format", "--json"],
                     defaultProviders: ["triton xcode use", "triton sim use"],
                     inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
                     jsonlEvents: [
@@ -352,7 +363,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                         "triton xcresult failures --path <result.xcresult> --json",
                     ],
                     outputSelectors: ["xcode.progress", "xcode.final"],
-                    failureCodes: ["validation_failed", "parameter_conflict", "invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "device_not_ready", "device_not_trusted", "developer_mode_required", "ddi_missing", "xcode_signing_failed", "provisioning_profile_missing", "xcodebuild_failed", "xcodebuild_interrupted", "orphaned_xcodebuild", "swift_macro_plugin_malformed_response", "target_not_found", "ambiguous_target", "target_platform_mismatch"]
+                    failureCodes: ["prepared_tests_identity_mismatch", "prepared_tests_artifact_invalid", "prepared_tests_manifest_invalid", "prepared_tests_unsupported", "prepared_tests_result_incomplete", "artifact_output_rejected", "validation_failed", "parameter_conflict", "invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "device_not_ready", "device_not_trusted", "developer_mode_required", "ddi_missing", "xcode_signing_failed", "provisioning_profile_missing", "xcodebuild_failed", "xcodebuild_interrupted", "orphaned_xcodebuild", "swift_macro_plugin_malformed_response", "target_not_found", "ambiguous_target", "target_platform_mismatch"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "archive",

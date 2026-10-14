@@ -95,6 +95,17 @@ Current boundaries:
 - Xcode 26.6 emits array-shaped summary `devicesAndConfigurations` / `testFailures` and may flatten a failed test into a `Test Case` with direct `Failure Message` children instead of a `Test Case Run`. Keep singleton compatibility and Triton's stable DTO shape, but cover both forms with compact sanitized fixtures plus a real local `.xcresult` smoke; never attach that raw bundle publicly.
 - `triton schema --command xcode|xcode.build|xcresult|xctrace|coverage --json` exposes structured agent-planning fields in addition to prose shapes: `requiredOptions`, `inheritsDefaultsFrom`, `jsonlEvents`, `finalEventKind`, `artifacts`, `retryable`, `nextCommands`, `outputContracts`, `failureCodes`, and `subcommands[]`. Dotted and space-separated nested selectors both narrow the parent envelope to one subcommand. Prefer `subcommands[]` for planning: it uses atomic `requiredOptions`, `oneOfRequiredOptions`, `optionalOptions`, `defaultProviders`, `outputSelectors`, and subcommand-level failure codes so agents do not parse human strings like `summary/failures:--path`. Treat these as planning/output-selection hints; concrete commands still validate their own arguments.
 
+## Prepared tests lifecycle (SP-196)
+
+Inspect the installed version and `triton schema --command xcode.build --json` / `triton schema --command xcode.test --json` before selecting prepared-test flags. Development implementation does not establish support in an older release, and fixture results do not substitute for a real build/test acceptance run.
+
+1. Build with the existing explicit container, scheme, configuration, and destination plus `--for-testing --test-artifact <fresh.xctestrun|fresh.xctestproducts> --source-root <root> --prepared-tests-manifest <fresh.json>`. A manifest is published only after successful build-for-testing and validation of the actual test artifact; source/toolchain drift during preparation refuses publication. `.xctestproducts` also requires the selected toolchain's advertised support.
+2. Test with `--prepared-tests-manifest <json>` and the same resolved container/scheme/configuration/destination. Verify source digest, artifact contents, selected Xcode developer directory/version, and build settings before `test-without-building`, then revalidate identity after execution. `prepared_tests_identity_mismatch` before execution means no test run was authorized by that manifest; regenerate from the current inputs rather than editing hashes or bypassing checks.
+3. Keep each result bundle fresh. Explicit existing paths or user-controlled symlink ancestors are rejected; omitted result paths allocate `.triton/prepared-tests/<UUID>.xcresult`. Bind `resultBundlePath`, `sourceCommand`, parsed results, and the manifest to this run rather than importing an older successful bundle.
+4. Exit zero alone is insufficient. Unparsed results, no tests, all skipped tests, or no passed tests produce `prepared_tests_result_incomplete` and `ok:false`; report that outcome rather than a pass.
+
+Choose `--source-root` deliberately: it must contain the selected container, and callers must account for project dependencies outside that tree. The digest excludes `.git`, `.build`, `.triton`, `DerivedData`, and `node_modules`; it neither discovers every external dependency nor proves those excluded inputs stayed unchanged. Do not claim globally reproducible cache reuse from a matching manifest, and keep real-toolchain validation separate from fixture coverage.
+
 ## Error Recovery
 
 Use this table before falling back to raw `xcodebuild`:
@@ -164,3 +175,10 @@ Use temporary or explicit output paths such as `/tmp` or `.triton/`; do not scat
 - DerivedData directory existence does not prove reusable incremental tasks. Inspect `derivedDataCache.reuseVerification` and `observedBuild` task-log counts/coverage; `incrementalExpected: false` means no verified expectation, not a prediction that Xcode must rebuild. Preserve logs and never infer warm reuse or a broad rebuild from directory existence alone.
 
 `triton xcode ... --package <Package.swift-or-directory>` 的相对 `--derived-data-path` 按 package 工作目录解析并在 invocation/cache 元数据中给出绝对路径；`xcode test --result-bundle <relative>` 同样按 package 工作目录规范化，执行命令、inline xcresult parser 和最终 `resultBundlePath` 共享该位置。绝对路径保持不变；非 package 工作流保留调用目录语义。
+
+
+### 真实 UIKit 宿主与产物隔离
+
+- 前景scene、modal、键盘与WKWebView动作验证必须使用有实际UIApplication/SceneDelegate及foregroundActive窗口的App-hosted iOS测试；hostless或macOS条件跳过不能证明这些场景。测试先断言真实窗口挂载及生产选择器一致，不为夹具放宽安全策略。
+- 本地SwiftPM包引用的验证宿主、DerivedData与xcresult放在包目录之外的独立同级目录。SP-196中包内宿主及构建产物在Resolve Package Graph阶段超时；移到包外后同一源码实际执行56项全过。具体超时机制未归因，不能据此断言所有嵌套宿主必然失败。
+- 每次使用fresh结果路径，解析实际passed/failed/skipped及终态；编译失败、取消、包解析超时、空结果与目录存在都不能算通过。重跑前核对所选Xcode、实际destination及只属于本任务的存活进程。证据见[SP-196验证报告](../../../docs-linhay/spaces/SP-196-upstream-optimization-delivery/plans/20261014-validation-report.md)。

@@ -25,7 +25,7 @@ func updateCommandSchemas() -> [TKCommandSchema] {
                 TKCommandUsageForm(form: "check", kind: "Task", description: "Check for a target or latest release and print the machine-readable plan"),
                 TKCommandUsageForm(form: "homebrew-update", kind: "Task", description: "Update a Homebrew-managed triton binary through brew update/upgrade"),
                 TKCommandUsageForm(form: "manual-update", kind: "Task", description: "Download, checksum, extract, and replace a manually installed triton binary"),
-                TKCommandUsageForm(form: "skills-update", kind: "Task", description: "Update public TritonKit.skills from the same release"),
+                TKCommandUsageForm(form: "skills-update", kind: "Task", description: "Verify release checksum and bundle structure, preserve local modifications, atomically install with backup"),
             ],
             examples: [
                 "triton update --check --json",
@@ -56,6 +56,9 @@ func updateCommandSchemas() -> [TKCommandSchema] {
                 "host_command_failed",
                 "extract_failed",
                 "update_failed",
+                "skills_bundle_invalid",
+                "skills_update_conflict",
+                "skills_update_busy",
             ],
             subcommands: [
                 TKCommandSubcommandSchema(

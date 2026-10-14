@@ -258,6 +258,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 runtimeManifestOutputContract(),
             ],
             failureCodes: applePlatformRunnerFailureCodes + [
+                "ios_simulator_resize_capture_state_unknown",
                 "device_file_domain_execution_uncertain",
                 "device_administration_policy_required",
                 "device_administration_result_invalid",
@@ -434,7 +435,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     requiredOptions: ["--output"],
                     optionalOptions: ["--platform", "--device", "--target", "--scope", "--name", "--runtime", "--state", "--ready", "--timeout", "--hdc", "--adb", "--format", "--json"],
                     outputSelectors: ["host.device-screenshot"],
-                    failureCodes: ["unsupported_scope", "device_not_ready", "host_command_timeout", "host_action_failed"]
+                    failureCodes: ["ios_simulator_resize_capture_state_unknown", "unsupported_scope", "device_not_ready", "host_command_timeout", "host_action_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "runtime-url",
@@ -505,7 +506,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             outputFormats: jsonText + ["jsonl"],
             options: [
                 TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List available simulators"),
-                TKCommandSchemaOption(name: "resource profiles|features|status|measure|doctor|plan|apply|verify|restore|watch", type: "Subcommand", description: "Inspect, plan, apply, verify, restore, or watch Simulator resource profiles"),
+                TKCommandSchemaOption(name: "resource profiles|features|status|measure|doctor|plan|apply|verify|restore|watch", type: "Subcommand", description: "Inspect, plan, apply, verify, restore, or watch Simulator resource profiles; catalogCommit pins upstream rules, desiredDisabledLabels resolves the actual profile, alwaysEnabledReasons explains assistantd/gamed and sharingd protection; widgets retains navd"),
                 TKCommandSchemaOption(name: "--profile", type: "Path", description: "Simulator resource profile JSON path"),
                 TKCommandSchemaOption(name: "--receipt", type: "Path", description: "Simulator resource receipt JSON path for restore"),
                 TKCommandSchemaOption(name: "--no-reboot", type: "Bool", defaultValue: "false", description: "Apply resource changes without rebooting"),
@@ -642,7 +643,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim personalization scan-and-personalize --json",
                 "triton sim media seed --manifest /tmp/gallery/manifest.json --simulator booted --json",
             ],
-            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:tap|swipe, source:host-hid, strategy, sourceCommands[], verification } or { ok, action:sim.record, artifacts[], requestedDurationSeconds, actualDurationSeconds, minimumAcceptedDurationSeconds, containerDurationSeconds, videoTrackDurationSeconds[], durationValidation } or { ok, action:sim.logs, artifact, sourceType:unified-log, sourcesCaptured:[unified-log] } or { ok, action:sim.app-console, bundleID, artifact, artifactBytes, observedBytes, artifactTruncated, maximumBytes, requestedDurationSeconds, elapsedDurationSeconds, captureEndedBy, sourcesCaptured:[process-stdout,process-stderr], streamLayout:merged-pty } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? }; sim.type is failure-only and returns unsupported_host_input after ASCII validation. JSONL { ok, action, state, ready, attempt, elapsedMs }",
+            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } (Resize Mode routes still images to the bound display; main-framebuffer video/stream and host touch reject active or unknown state) or { ok, action:tap|swipe, source:host-hid, strategy, sourceCommands[], verification } or { ok, action:sim.record, artifacts[], requestedDurationSeconds, actualDurationSeconds, minimumAcceptedDurationSeconds, containerDurationSeconds, videoTrackDurationSeconds[], durationValidation } or { ok, action:sim.logs, artifact, sourceType:unified-log, sourcesCaptured:[unified-log] } or { ok, action:sim.app-console, bundleID, artifact, artifactBytes, observedBytes, artifactTruncated, maximumBytes, requestedDurationSeconds, elapsedDurationSeconds, captureEndedBy, sourcesCaptured:[process-stdout,process-stderr], streamLayout:merged-pty } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? }; sim.type is failure-only and returns unsupported_host_input after ASCII validation. JSONL { ok, action, state, ready, attempt, elapsedMs }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
             outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim tap and sim swipe are explicit host HID recovery paths for embedded iOS input failures and report adapter/target evidence; tap --x/--y and swipe --start/--end coordinates are expressed in simulator points and the point-space dimensions are inferred from simulator layout metadata, swipe optionally accepts paired --width/--height to normalize source-image coordinates; host acknowledgement does not claim embedded business selection or settled pager state. sim record validates actual encoded video sample duration rather than the MOV container timeline and rejects materially truncated evidence. sim logs captures unified-log only and does not cover App stdout/stderr. sim app-console terminates and relaunches the selected App through console-pty, writes a duration/byte-bounded sensitive artifact, and never inlines console content in JSON. sim type is a reserved, failure-only host input entry and returns unsupported_host_input because the current public simctl io contract exposes no stable keyboard type primitive. sim pasteboard set only stages clipboard contents; it does not paste into a focused field or prove that an App accepted or saved the value. Use embedded semantic input, an app-owned debug hook, or an explicitly verified external keyboard/paste adapter, then verify focus/value through host AX or observe and the App postcondition.",
             artifacts: ["simulator-screenshot", "simulator-video", "simulator-logs", "simulator-app-process-console", "simulator-diagnostics"],
@@ -671,6 +672,11 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 hostSimulatorMediaSeedOutputContract(),
             ],
             failureCodes: [
+                "ios_simulator_resize_touch_unroutable",
+                "ios_simulator_resize_state_unknown",
+                "ios_simulator_resize_target_invalid",
+                "ios_simulator_resize_capture_unroutable",
+                "ios_simulator_resize_capture_state_unknown",
                 "ios_host_hid_legacy_backend_unavailable",
                 "ios_host_hid_simulator_kit_load_failed",
                 "target_not_found",
@@ -777,7 +783,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     optionalOptions: ["--simulator", "--display", "--format", "--json"],
                     nextCommands: ["triton evidence capture --case <case> --output <dir.tritonevidence> --json"],
                     outputSelectors: ["host.simulator-screenshot"],
-                    failureCodes: ["host_command_failed", "host_command_timeout", "simulator_not_found", "simulator_data_missing", "artifact_output_rejected", "validation_failed"]
+                    failureCodes: ["ios_simulator_resize_capture_state_unknown", "host_command_failed", "host_command_timeout", "simulator_not_found", "simulator_data_missing", "artifact_output_rejected", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "tap",
@@ -785,11 +791,12 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     requiredOptions: ["--x", "--y"],
                     optionalOptions: ["--simulator", "--format", "--json"],
                     nextCommands: [
+                        "triton device doctor --platform ios --scope simulator --json",
                         "triton sim screenshot --simulator <udid|booted> --output <new-path> --json",
                         "triton verify text-exists <expected> --json",
                     ],
                     outputSelectors: ["input.result"],
-                    failureCodes: ["simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "ios_host_hid_legacy_backend_unavailable", "ios_host_hid_simulator_kit_load_failed", "unsupported_host_input", "host_command_timeout", "validation_failed"]
+                    failureCodes: ["ios_simulator_resize_touch_unroutable", "ios_simulator_resize_state_unknown", "ios_simulator_resize_target_invalid", "simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "ios_host_hid_legacy_backend_unavailable", "ios_host_hid_simulator_kit_load_failed", "unsupported_host_input", "host_command_timeout", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "swipe",
@@ -797,11 +804,12 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     requiredOptions: ["--start-x", "--start-y", "--end-x", "--end-y"],
                     optionalOptions: ["--simulator", "--width", "--height", "--duration", "--format", "--json"],
                     nextCommands: [
+                        "triton device doctor --platform ios --scope simulator --json",
                         "triton sim screenshot --simulator <udid|booted> --output <new-path> --json",
                         "triton sim ax --device <udid|booted> --json",
                     ],
                     outputSelectors: ["input.result"],
-                    failureCodes: ["target_not_found", "ambiguous_target", "simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "ios_host_hid_legacy_backend_unavailable", "ios_host_hid_simulator_kit_load_failed", "unsupported_host_input", "host_command_timeout", "invalid_duration", "validation_failed"]
+                    failureCodes: ["ios_simulator_resize_touch_unroutable", "ios_simulator_resize_state_unknown", "ios_simulator_resize_target_invalid", "target_not_found", "ambiguous_target", "simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "ios_host_hid_legacy_backend_unavailable", "ios_host_hid_simulator_kit_load_failed", "unsupported_host_input", "host_command_timeout", "invalid_duration", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "type",
@@ -819,11 +827,12 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "record",
-                    summary: "Record a bounded simulator video",
+                    summary: "Record a bounded simulator video; active or unverified Resize Mode fails before capture starts",
                     requiredOptions: ["--output"],
                     optionalOptions: ["--simulator", "--duration", "--display", "--format", "--json"],
+                    nextCommands: ["triton device doctor --platform ios --scope simulator --json", "triton sim screenshot --simulator <udid|booted> --output <new-path.png> --json"],
                     outputSelectors: ["host.simulator-recording"],
-                    failureCodes: ["sim_record_failed", "sim_record_truncated", "sim_record_invalid_artifact", "invalid_duration", "host_command_timeout", "validation_failed"]
+                    failureCodes: ["ios_simulator_resize_capture_unroutable", "ios_simulator_resize_capture_state_unknown", "sim_record_failed", "sim_record_truncated", "sim_record_invalid_artifact", "invalid_duration", "host_command_timeout", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "logs",
@@ -1004,7 +1013,12 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "container --bundle-id <id>", type: "Subcommand", description: "Print app container path"),
                 TKCommandSchemaOption(name: "pull --source <path> --destination <path>", type: "Subcommand", description: "Copy a bounded artifact from an iOS real-device app data or app group container"),
                 TKCommandSchemaOption(name: "prefs dump --bundle-id <id>", type: "Subcommand", description: "Dump app preferences plist as JSON"),
-                TKCommandSchemaOption(name: "prefs get <key> --bundle-id <id>", type: "Subcommand", description: "Read one app preference"),
+                TKCommandSchemaOption(name: "prefs import --input <path> --key <key> --bundle-id <id>", type: "Subcommand", description: "Validate a complete JSON/plist dictionary then atomically merge only the repeatable selected key whitelist"),
+                TKCommandSchemaOption(name: "--input", type: "Path", description: "prefs import: bounded JSON/plist input dictionary"),
+                TKCommandSchemaOption(name: "--input-format", type: "json|plist", defaultValue: "json", description: "prefs import input format; all entries are validated before writing"),
+                TKCommandSchemaOption(name: "--key", type: "String[]", description: "prefs import: required repeatable key whitelist; unrelated keys are preserved"),
+                TKCommandSchemaOption(name: "--relaunch", type: "Bool", defaultValue: "false", description: "prefs set/import: explicitly terminate and launch after disk write; receipt reports partial failure and never claims runtime consumption"),
+                TKCommandSchemaOption(name: "prefs get <key> --bundle-id <id>", type: "Subcommand", description: "Read one app preference with explicit present flag; missing differs from false, zero and an empty value"),
                 TKCommandSchemaOption(name: "prefs set <key> <json-value> --bundle-id <id>", type: "Subcommand", description: "Set one simulator app preference from a property-list compatible JSON value"),
                 TKCommandSchemaOption(name: "prefs set <key> --type data --base64 <base64> --bundle-id <id>", type: "Subcommand", description: "Set one simulator app preference as plist Data from base64"),
                 TKCommandSchemaOption(name: "prefs set <key> --type data --hex <hex> --bundle-id <id>", type: "Subcommand", description: "Set one simulator app preference as plist Data from defaults-style hex bytes"),
@@ -1100,7 +1114,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 #"triton app prefs set DEBUG-mock true --device iphone15 --bundle-id com.example.app --json"#,
                 #"triton app prefs set SeedState --type data --base64 W3t9XQ== --device iphone15 --bundle-id com.example.app --json"#,
             ],
-            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? } where apps[]/app expose marketingVersion (CFBundleShortVersionString) and buildNumber (CFBundleVersion); legacy version maps to the build number on iOS, or app pull { ok, action:app.pull, target, selection, domain, domainIdentifier, source, destination, artifact:{ path,kind,bytes,entryCount }, artifacts, sourceCommand } or { ok, action, plistPath, value?, valuePlistType?, preferences?, preferencesPlistTypes? } or { ok, action:app.prefs.set, plistPath, key, previousValue?, previousPlistType?, newValue, newPlistType, restartAdvice } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
+            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? } where apps[]/app expose marketingVersion (CFBundleShortVersionString) and buildNumber (CFBundleVersion); legacy version maps to the build number on iOS, or app pull { ok, action:app.pull, target, selection, domain, domainIdentifier, source, destination, artifact:{ path,kind,bytes,entryCount }, artifacts, sourceCommand } or { ok, action, plistPath, present?, value?, valuePlistType?, preferences?, preferencesPlistTypes? } or { ok, action:app.prefs.set, plistPath, key, previousValue?, previousPlistType?, newValue, newPlistType, restartAdvice, diskWriteVerified, runtimeConsumptionVerified:false, relaunch } or { ok, action:app.prefs.import, importedKeys[], importedPlistTypes, diskWriteVerified, runtimeConsumptionVerified:false, relaunch, error? } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction?, leaseReason?, currentOwner?, currentLeaseID?, currentExpiresAt?, suggestedCommands? } }",
             outputSemantics: "Use app for host-side install, launch, terminate, open-url, container, pull, and preferences. An explicit ios-real:* selector triggers live real-device discovery even when --platform ios and --scope real are omitted, so install/info/launch share one selector-resolution path; unavailable devices return the devicectl readiness failure instead of a launch-only target_not_found. app pull is iOS real-device-only, stages the transfer before atomic publication, rejects overwrite/symlink by default, and bounds directory/byte acceptance. For iOS runtime readiness, prefer open-url with --wait-ready --snapshot; for Android host flows, verify business completion with wait/observe/screenshot or smoke evidence. Installed iOS app metadata (app list / app info) returns marketingVersion (CFBundleShortVersionString) and buildNumber (CFBundleVersion) as distinct structured fields; the legacy version field remains for compatibility and maps to the build number on iOS, so new consumers should read marketingVersion/buildNumber and treat version as deprecated. If `triton camera on` enabled the launched iOS Simulator bundle, app launch injects the configured camera hook environment. Parallel agent flows can pass `--lease <id>` on open-url/launch/terminate to enforce the opt-in target lease: a conflicting mutation returns the stable target_lease_conflict envelope with the current owner instead of silently changing another flow's foreground state; without `--lease`, behavior is unchanged.",
             artifacts: ["app-container", "host-artifacts", "app-preferences", "runtime-snapshot"],
@@ -1171,6 +1185,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "host_action_failed",
                 "target_lease_conflict",
                 "missing_preferences",
+                "preferences_relaunch_failed",
                 "plist_not_found",
                 "preference_key_not_found",
                 "destructive_action_requires_policy",
@@ -1263,8 +1278,10 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     name: "prefs",
                     summary: "Dump, read, or set simulator app preferences",
                     requiredOptions: ["--bundle-id"],
-                    optionalOptions: ["<key>", "<json-value>", "--device", "--scope", "--simulator", "--type", "--base64", "--hex", "--format", "--json"],
-                    outputSelectors: ["host.app-action"]
+                    optionalOptions: ["--input", "--input-format", "--key", "--relaunch", "<key>", "<json-value>", "--device", "--scope", "--simulator", "--type", "--base64", "--hex", "--format", "--json"],
+                    nextCommands: ["triton status --json", "triton observe tree --platform ios --device <udid|booted> --json"],
+                    outputSelectors: ["host.app-action"],
+                    failureCodes: ["missing_preferences", "plist_not_found", "preference_key_not_found", "preferences_relaunch_failed", "host_action_failed", "validation_failed"]
                 ),
             ],
             providedCapabilities: ["host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "ios-real-app", "ios-real-app-pull", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-install", "harmony-app-open-url", "harmony-app-info"]
