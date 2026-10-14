@@ -38,3 +38,7 @@
 ## 完成与发布状态
 
 产品实现、本地门禁、真机/Simulator及arm64随包验收已完成，仍保留Safari等明确限制。详见[验收记录](./plans/20261014-product-results.md)。产品已引入本地main并通过主仓local gate；参考文档独立提交306dc42b，Runner单独提交。未推送、未创建tag或远端Release。两架构Release/Homebrew/public skills流程已准备统一分发，本期原生执行验收为arm64，x86为资源契约校验。
+
+## Worktree收口
+
+2026-10-14用户要求已完成worktree合入后清理；本产品与早期研究worktree已清理，源码在main@2a8b793f，私有恢复归档留同级目录。历史完成项及仍在进行的两个工作区见[收口记录](./plans/20261014-worktree-closeout.md)。
