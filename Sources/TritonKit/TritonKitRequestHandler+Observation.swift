@@ -83,7 +83,8 @@ extension TritonKitRequestHandler {
 
         case .hierarchy:
             let uploader = kit?.uploader
-            var items = await TKHierarchyBuilder.buildHierarchy(includeScreenshots: uploader != nil)
+            let collected = await TKHierarchyBuilder.buildHierarchyWithBudget(includeScreenshots: uploader != nil)
+            var items = collected.nodes
             if let uploader {
                 items = await uploadHierarchyScreenshots(items, uploader: uploader)
             }
@@ -93,7 +94,7 @@ extension TritonKitRequestHandler {
             #else
             let controllerContext: TKHierarchyControllerContext? = nil
             #endif
-            let hierarchy = TKHierarchyInfo(displayItems: items, appInfo: appInfo, controllerContext: controllerContext)
+            let hierarchy = TKHierarchyInfo(displayItems: items, appInfo: appInfo, controllerContext: controllerContext, collection: collected.collection)
             do {
                 return TKMessage(id: message.id, type: .hierarchy, payload: try JSONEncoder().encode(hierarchy))
             } catch {
@@ -107,9 +108,7 @@ extension TritonKitRequestHandler {
             #if canImport(UIKit)
             let nodes = await MainActor.run {
                 var context = AXBuildContext()
-                return keyWindows().map { window in
-                    buildAXWindowNode(for: window, context: &context)
-                }
+                return buildBudgetedAXWindows(keyWindows(), context: &context)
             }
             return TKMessage(id: message.id, type: .accessibility, payload: try? JSONEncoder().encode(nodes))
             #else

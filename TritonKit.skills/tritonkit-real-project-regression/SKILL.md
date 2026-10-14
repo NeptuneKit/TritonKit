@@ -91,6 +91,13 @@ After a receipt-bound runner finishes, it must seal one private `reliability/ide
 
 For receipt-backed reports, read the additive `stage1` cohort contract rather than conflating the compatible top-level metrics: `stage1.stage1A` is only the 60 supported slots (3 flows × 20) and owns supported ECR/ORR plus strict per-flow completeness; `stage1.stage1B` is all 61 receipt/control slots and owns full receipt integrity plus FER across every terminal failed/blocked slot, including the expected negative control and any supported nonpass. Legacy `reliability --samples` has model value `stage1=nil` and omits that JSON field. For receipt-backed output `stage1.gate` must equal the top-level gate; an integrity-only Stage 1B blocker is not `stop_expansion`. Report only counts, rates, statuses, and blocker codes—never any private slot identity.
 
+## Observation and recovery boundaries
+
+- Refresh `observe tree --outline` aliases before `node resolve @N`: the 30-second window also requires a fresh matching whole-tree observation. Changed or partial trees cannot preserve alias validity. Hierarchy `collection` limits bound traversal; they cannot hard-cancel native IPC or prove absence from a partial tree.
+- `observe ocr --image <path>` / `--device <selector>` produces candidates without OIDs or action refs, in top-left raw-raster pixels. Only known explicit scale allows points; file mtime leaves `freshness=unknown`. Preserve confidence, capture source, and partial metadata; structure-unavailable policy requires an explicit reason.
+- `observe settle` and workspace opt-in `--visual-settle` (HTTP `/workspace/run` optional `visualSettle`) do not prove business readiness. Workspace visual waiting is off by default; `unknown/timeout` stops the chain. A settled screen still needs the flow's wait/assertion.
+- Capture `debug ui-health` and action `outcome`/`uiHealth` when diagnosing stalled UI. Legacy health is `unknown`; new SDK health is `ready|busy|timed_out|circuit_open`. An action with `outcome=unknown` may still finish: do not automatically replay or switch to HID. Stop and collect a fresh read-only observation before deciding the business result.
+
 ## Completion Gate
 
 - Requirement has machine-readable pass/fail evidence.

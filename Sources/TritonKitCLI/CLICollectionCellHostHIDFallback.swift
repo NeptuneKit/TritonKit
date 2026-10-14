@@ -34,7 +34,7 @@ func collectionCellHostHIDAXResolution(
 }
 
 func isUnsupportedCollectionCellResult(_ result: TKInputResult) -> Bool {
-    result.strategy == collectionCellEmbeddedUnsupportedStrategy
+    result.outcome != "unknown" && result.strategy == collectionCellEmbeddedUnsupportedStrategy
         && result.error?.code == "unsupported_capability"
 }
 
@@ -195,7 +195,7 @@ func collectionCellHostHIDFallbackResult(
             hint: "Verify the Simulator is booted and the host-HID adapter is available, then retry."
         ))
         return TKInputResult(
-            ok: hostResult.ok,
+            ok: hostResult.ok && hostResult.outcome != "unknown",
             action: embeddedResult.action,
             message: hostMessage,
             targetOID: embeddedResult.targetOID,
@@ -210,7 +210,9 @@ func collectionCellHostHIDFallbackResult(
             fallbackFromStrategy: collectionCellEmbeddedUnsupportedStrategy,
             verification: verification,
             sourceCommands: hostResult.sourceCommands,
-            error: hostError
+            error: hostError,
+            outcome: hostResult.outcome,
+            uiHealth: hostResult.uiHealth
         )
     } catch {
         let message = "The iOS Simulator host-HID fallback failed: \(error)"

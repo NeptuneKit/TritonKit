@@ -103,7 +103,7 @@ function hierarchyCaptureId(payload, target, nodeCount, dataUrlCount) {
   return Buffer.from([target, capturedAt, nodeCount, dataUrlCount].join("|")).toString("base64url").slice(0, 24);
 }
 
-async function mapLegacyIosHierarchyToHostResponse(payload, target, options = {}) {
+export async function mapLegacyIosHierarchyToHostResponse(payload, target, options = {}) {
   const viewport = resolveLegacyIosViewport(payload);
   const nodes = [];
   const rootItems = Array.isArray(payload?.displayItems) ? payload.displayItems : [];
@@ -127,8 +127,17 @@ async function mapLegacyIosHierarchyToHostResponse(payload, target, options = {}
       viewport,
       nodes,
       controllerContext: resolveLegacyIosControllerContext(payload?.controllerContext, nodes),
+      collection: knownCollectionMetadata(payload?.collection),
     },
   };
+}
+
+function knownCollectionMetadata(collection) {
+  if (!collection || !Number.isInteger(collection.visitedNodes) || collection.visitedNodes < 0 ||
+    !Array.isArray(collection.limitReasons) || !collection.limitReasons.every((reason) => typeof reason === "string")) {
+    return undefined;
+  }
+  return { visitedNodes: collection.visitedNodes, limitReasons: [...collection.limitReasons] };
 }
 
 function resolveLegacyIosControllerContext(context, nodes) {

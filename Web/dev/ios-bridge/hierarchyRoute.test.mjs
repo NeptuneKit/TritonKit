@@ -8,6 +8,19 @@ import {
   invokeMiddleware,
   pngBytes,
 } from "./testSupport.mjs";
+import { mapLegacyIosHierarchyToHostResponse } from "./hierarchy.mjs";
+
+test("legacy hierarchy normalization retains known collection metadata and accepts old payloads", async () => {
+  const fixture = {
+    displayItems: [{ frame: [[0, 0], [390, 844]], layerObject: { oid: 1, classChainList: ["UIWindow"] } }],
+    collection: { visitedNodes: 4, limitReasons: ["deadline", "max_nodes"], privateDebug: "must not propagate" },
+  };
+  const limited = await mapLegacyIosHierarchyToHostResponse(fixture, "fixture");
+  assert.deepEqual(limited.scene.collection, { visitedNodes: 4, limitReasons: ["deadline", "max_nodes"] });
+  assert.deepEqual(JSON.parse(JSON.stringify(limited)).scene.collection, limited.scene.collection);
+  const old = await mapLegacyIosHierarchyToHostResponse({ displayItems: fixture.displayItems }, "fixture");
+  assert.equal(old.scene.collection, undefined);
+});
 
 test("serves readonly Lookin-style hierarchy scenes for iOS Android and Harmony host targets", async () => {
   const cases = [

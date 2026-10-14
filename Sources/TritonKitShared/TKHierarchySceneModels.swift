@@ -324,19 +324,22 @@ public struct TKHierarchyScene: Codable, Equatable {
     public let viewport: TKHierarchyViewport
     public let nodes: [TKHierarchyLayerNode]
     public let controllerContext: TKHierarchyControllerContext?
+    public let collection: TKCollectionBudgetSummary?
 
     public init(
         platform: String,
         rootId: String,
         viewport: TKHierarchyViewport,
         nodes: [TKHierarchyLayerNode],
-        controllerContext: TKHierarchyControllerContext? = nil
+        controllerContext: TKHierarchyControllerContext? = nil,
+        collection: TKCollectionBudgetSummary? = nil
     ) {
         self.platform = platform
         self.rootId = rootId
         self.viewport = viewport
         self.nodes = nodes
         self.controllerContext = controllerContext
+        self.collection = collection
     }
 }
 

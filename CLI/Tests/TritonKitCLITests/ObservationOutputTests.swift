@@ -488,7 +488,7 @@ struct ObservationOutputTests {
     }
 
     @Test("node alias cache resolves matching target and rejects stale target")
-    func nodeAliasCacheResolvesAndRejectsStaleTarget() throws {
+    func nodeAliasCacheResolvesAndRejectsStaleTarget() async throws {
         let temp = FileManager.default.temporaryDirectory
             .appendingPathComponent("triton-node-alias-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: temp) }
@@ -513,15 +513,16 @@ struct ObservationOutputTests {
         let cache = makeNodeAliasCache(from: source, outline: makeObserveNodeOutline(from: source.nodes))
         let path = try saveNodeAliasCache(cache, workspace: temp.path)
 
-        let resolved = try resolveNodeAlias("@1", platform: "ios", target: "sim:ABC", workspace: temp.path)
+        let clock = ISO8601DateFormatter().date(from: source.capturedAt)!
+        let resolved = try await resolveNodeAlias("@1", platform: "ios", target: "sim:ABC", workspace: temp.path, now: { clock }) { source }
 
         #expect(path.hasSuffix(".triton/node-aliases.json"))
         #expect(resolved.ok)
         #expect(resolved.query == "@1")
         #expect(resolved.node.nodeID == "settings")
         #expect(resolved.sourceCommands == ["triton sim ax --device ABC --json"])
-        #expect(throws: NodeAliasResolutionError.self) {
-            _ = try resolveNodeAlias("@1", platform: "ios", target: "sim:DEF", workspace: temp.path)
+        await #expect(throws: NodeAliasResolutionError.self) {
+            _ = try await resolveNodeAlias("@1", platform: "ios", target: "sim:DEF", workspace: temp.path, now: { clock }) { source }
         }
     }
 }

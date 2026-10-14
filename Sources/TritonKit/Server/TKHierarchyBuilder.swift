@@ -1,5 +1,8 @@
 #if canImport(UIKit)
 import Foundation
+#if !TRITONKIT_COCOAPODS_SINGLE_POD
+import TritonKitShared
+#endif
 import UIKit
 
 public enum TKHierarchyBuilder {
@@ -13,33 +16,41 @@ public enum TKHierarchyBuilder {
         includeScreenshots: Bool = false,
         maxScreenshotItems: Int = defaultMaxScreenshotItems
     ) async -> [TKDisplayItem] {
-        guard TritonKit.isRuntimeEnabled else { return [] }
+        await buildHierarchyWithBudget(maxDepth: maxDepth, maxChildrenPerNode: maxChildrenPerNode,
+            includeScreenshots: includeScreenshots, maxScreenshotItems: maxScreenshotItems).nodes
+    }
 
-        // Collect all layer data in one MainActor hop (sync recursion)
-        let rootLayerData = await MainActor.run { () -> [LayerData] in
+    public static func buildHierarchyWithBudget(
+        maxDepth: Int = defaultMaxDepth,
+        maxChildrenPerNode: Int = defaultMaxChildrenPerNode,
+        includeScreenshots: Bool = false,
+        maxScreenshotItems: Int = defaultMaxScreenshotItems,
+        maxNodes: Int = 800,
+        timeoutMilliseconds: Double = 2_000
+    ) async -> TKBoundedNodeCollection<TKDisplayItem> {
+        guard TritonKit.isRuntimeEnabled else {
+            return .init(nodes: [], collection: .init(visitedNodes: 0, limitReasons: []))
+        }
+        let collected = await MainActor.run { () -> ([LayerData], TKCollectionBudgetSummary) in
+            var context = TKCollectionBudgetState(limits: .init(maxNodes: maxNodes,
+                maxDepth: max(0, maxDepth - 1), maxChildren: maxChildrenPerNode, timeoutMilliseconds: timeoutMilliseconds))
             var remainingScreenshotItems = max(0, maxScreenshotItems)
             let windows: [UIWindow]
             if #available(iOS 15.0, *) {
-                windows = UIApplication.shared.connectedScenes
-                    .compactMap { $0 as? UIWindowScene }
-                    .flatMap { $0.windows }
-            } else {
-                windows = UIApplication.shared.windows
+                windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap { $0.windows }
+            } else { windows = UIApplication.shared.windows }
+            var data: [LayerData] = []
+            let count = context.childCount(windows.count)
+            for window in windows.prefix(count) {
+                if context.isExhausted() { break }
+                if let item = collectLayerData(from: window.layer, depth: 0, context: &context,
+                    includeScreenshots: includeScreenshots, remainingScreenshotItems: &remainingScreenshotItems) {
+                    data.append(item)
+                }
             }
-            return windows.compactMap {
-                collectLayerData(
-                    from: $0.layer,
-                    depth: 0,
-                    maxDepth: maxDepth,
-                    maxChildrenPerNode: maxChildrenPerNode,
-                    includeScreenshots: includeScreenshots,
-                    remainingScreenshotItems: &remainingScreenshotItems
-                )
-            }
+            return (data, context.summary)
         }
-
-        // Build items from collected data (no MainActor needed)
-        return rootLayerData.compactMap { buildItem(from: $0) }
+        return .init(nodes: collected.0.map { buildItem(from: $0) }, collection: collected.1)
     }
 
     // MARK: - Data Collection (sync, on MainActor)
@@ -82,25 +93,19 @@ public enum TKHierarchyBuilder {
     private static func collectLayerData(
         from layer: CALayer,
         depth: Int,
-        maxDepth: Int,
-        maxChildrenPerNode: Int,
+        context: inout TKCollectionBudgetState,
         includeScreenshots: Bool,
         remainingScreenshotItems: inout Int
     ) -> LayerData? {
-        guard depth < maxDepth else { return nil }
+        guard context.admit(depth: depth) else { return nil }
         guard let view = layer.tk_hostView else { return nil }
-
         let rawChildren = layer.sublayers ?? []
-        let limitedChildren = rawChildren.prefix(maxChildrenPerNode)
-        let children = limitedChildren.compactMap {
-            collectLayerData(
-                from: $0,
-                depth: depth + 1,
-                maxDepth: maxDepth,
-                maxChildrenPerNode: maxChildrenPerNode,
-                includeScreenshots: includeScreenshots,
-                remainingScreenshotItems: &remainingScreenshotItems
-            )
+        let count = context.childCount(rawChildren.count)
+        var children: [LayerData] = []
+        for child in rawChildren.prefix(count) {
+            if context.isExhausted() { break }
+            if let data = collectLayerData(from: child, depth: depth + 1, context: &context,
+                includeScreenshots: includeScreenshots, remainingScreenshotItems: &remainingScreenshotItems) { children.append(data) }
         }
 
         let hostViewController = view.tk_hostViewController
@@ -117,7 +122,7 @@ public enum TKHierarchyBuilder {
 
         let absoluteFrame = view.superview?.convert(layer.frame, to: nil) ?? layer.frame
         let screenshot: Data?
-        if shouldCaptureScreenshot(
+        if !context.isExhausted(), shouldCaptureScreenshot(
             includeScreenshots: includeScreenshots,
             remaining: remainingScreenshotItems,
             view: view,
@@ -283,6 +288,10 @@ public enum TKHierarchyBuilder {
     }
 }
 #else
+import Foundation
+#if !TRITONKIT_COCOAPODS_SINGLE_POD
+import TritonKitShared
+#endif
 public enum TKHierarchyBuilder {
     public static let defaultMaxDepth = 64
     public static let defaultMaxChildrenPerNode = 200
@@ -295,5 +304,13 @@ public enum TKHierarchyBuilder {
     ) async -> [TKDisplayItem] {
         []
     }
+    public static func buildHierarchyWithBudget(
+        maxDepth: Int = defaultMaxDepth, maxChildrenPerNode: Int = defaultMaxChildrenPerNode,
+        includeScreenshots: Bool = false, maxScreenshotItems: Int = 0,
+        maxNodes: Int = 800, timeoutMilliseconds: Double = 2_000
+    ) async -> TKBoundedNodeCollection<TKDisplayItem> {
+        .init(nodes: [], collection: .init(visitedNodes: 0, limitReasons: []))
+    }
+
 }
 #endif

@@ -11,7 +11,9 @@ import java.net.ServerSocket
 import java.net.Socket
 import java.net.URLDecoder
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -25,30 +27,36 @@ import java.util.concurrent.atomic.AtomicInteger
  * (for `/gesture`'s `strokes` array) both flow into a single `params`
  * map that the router consumes.
  *
- * Concurrency model lifted from csat:
+ * Concurrency model:
  *   - One accept-loop thread, never blocked by handlers.
- *   - Fixed handler pool of 4 — the AccessibilityService Binder path
- *     is the real bottleneck, so wider parallelism doesn't help.
- *   - `soTimeout` on the socket so a stuck handler can't pin its
- *     connection indefinitely.
+ *   - Bounded ingress readers dispatch to separate UI and diagnostic pools.
+ *   - Saturated UI work is rejected before execution; diagnostic ping stays available.
+ *   - `soTimeout` bounds socket reads; Binder calls may still ignore interruption.
  */
 class HttpServer(
     private val port: Int,
     private val router: ActionRouter,
 ) {
-    private var serverSocket: ServerSocket? = null
+    @Volatile private var serverSocket: ServerSocket? = null
     private val running = AtomicBoolean(false)
     private var executor: ExecutorService? = null
     private var acceptThread: Thread? = null
+    private var dispatcher: BridgeRequestDispatcher? = null
     private val activeHandlers = AtomicInteger(0)
     private val totalRequests = AtomicInteger(0)
 
     val isRunning: Boolean get() = running.get()
+    internal val listeningPort: Int? get() = serverSocket?.localPort
 
     fun start() {
         if (running.getAndSet(true)) return
 
-        val pool = Executors.newFixedThreadPool(HANDLER_POOL_SIZE)
+        val pool = ThreadPoolExecutor(
+            HANDLER_POOL_SIZE, HANDLER_POOL_SIZE, 0L, TimeUnit.MILLISECONDS,
+            ArrayBlockingQueue(INGRESS_QUEUE_SIZE), ThreadPoolExecutor.AbortPolicy(),
+        )
+        val requestDispatcher = BridgeRequestDispatcher(HANDLER_POOL_SIZE)
+        dispatcher = requestDispatcher
         executor = pool
 
         acceptThread = Thread({
@@ -66,7 +74,11 @@ class HttpServer(
                 while (running.get()) {
                     try {
                         val socket = ss.accept()
-                        pool.execute { handleConnection(socket) }
+                        try { pool.execute { handleConnection(socket, requestDispatcher) } }
+                        catch (_: RejectedExecutionException) {
+                            // No request has been executed. Never replay an overloaded write.
+                            socket.use { writeResponse(it, busyResponse()) }
+                        }
                     } catch (e: Exception) {
                         if (running.get()) Log.w(TAG, "Accept error: ${e.message}")
                     }
@@ -104,37 +116,43 @@ class HttpServer(
             }
         }
         executor = null
+        dispatcher?.close()
+        dispatcher = null
     }
 
-    private fun handleConnection(socket: Socket) {
+    private fun handleConnection(socket: Socket, requestDispatcher: BridgeRequestDispatcher) {
         val reqNum = totalRequests.incrementAndGet()
-        val active = activeHandlers.incrementAndGet()
         try {
-            socket.use { s ->
-                s.soTimeout = SOCKET_TIMEOUT_MS
-                val request = parseRequest(BufferedInputStream(s.getInputStream())) ?: return
-                if (active >= HANDLER_POOL_SIZE) {
-                    Log.w(TAG, "Handler pool saturated: active=$active/$HANDLER_POOL_SIZE for ${request.method} ${request.path} (#$reqNum)")
-                }
-                val response = router.route(
-                    method = request.method,
-                    path = request.path,
-                    params = request.params,
-                    headers = request.headers,
-                )
-                writeResponse(s, response)
-            }
+            socket.soTimeout = SOCKET_TIMEOUT_MS
+            val request = parseRequest(BufferedInputStream(socket.getInputStream()))
+            if (request == null) { socket.close(); return }
+            val diagnostic = request.method == "GET" && request.path == "/ping"
+            requestDispatcher.submit(diagnostic, {
+                val active = activeHandlers.incrementAndGet()
+                try {
+                    socket.use { s ->
+                        val response = router.route(request.method, request.path, request.params, request.headers)
+                        writeResponse(s, response)
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Connection error (req #$reqNum, active=$active): ${e.message}")
+                    try { socket.close() } catch (_: Exception) {}
+                } finally { activeHandlers.decrementAndGet() }
+            }, {
+                try { socket.use { writeResponse(it, busyResponse()) } } catch (_: Exception) {}
+            })
         } catch (e: BadRequestException) {
-            Log.w(TAG, "Bad request (req #$reqNum): ${e.message}")
-            try {
-                writeResponse(socket, HttpResponse(e.statusCode, """{"status":"error","error":"${e.message}"}"""))
-            } catch (_: Exception) {}
+            try { socket.use { writeResponse(it, HttpResponse(e.statusCode,
+                org.json.JSONObject().put("status", "error").put("code", "bad_request").put("message", e.message).toString())) } }
+            catch (_: Exception) {}
         } catch (e: Exception) {
-            Log.w(TAG, "Connection error (req #$reqNum, active=$active): ${e.message}")
-        } finally {
-            activeHandlers.decrementAndGet()
+            Log.w(TAG, "Request read error (req #$reqNum): ${e.message}")
+            try { socket.close() } catch (_: Exception) {}
         }
     }
+
+    private fun busyResponse() = HttpResponse(503,
+        """{"status":"error","code":"ui_busy","execution":"not_started","retryable":true}""")
 
     // ── HTTP parsing ────────────────────────────────────────────
 
@@ -303,6 +321,7 @@ class HttpServer(
         private const val TAG = "TritonKitHttpServer"
         private const val SOCKET_TIMEOUT_MS = 8_000
         private const val HANDLER_POOL_SIZE = 4
+        private const val INGRESS_QUEUE_SIZE = 16
         private const val SHUTDOWN_GRACE_MS = 2_000L
 
         // 8 KiB is generous for a real HTTP request line + header

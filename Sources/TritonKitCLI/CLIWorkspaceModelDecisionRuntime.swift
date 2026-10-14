@@ -498,7 +498,7 @@ func writeWorkspaceModelDecisionArtifacts(
     let suffix = workspaceArtifactSuffix(artifactIndex)
     let graphSuffix = workspaceGraphSuffix(artifactIndex)
     let transitionID = "transition_\(graphSuffix)"
-    let resolvedToScreenID = toScreenID ?? (postActionObservation == nil ? fromScreenID : "screen_0001")
+    let resolvedToScreenID = toScreenID ?? (workspaceHasCapturedPostActionObservation(postActionObservation) ? "screen_0001" : fromScreenID)
     let actionCandidate = modelDecision.candidate
     let command = actionCandidate.command
     try writeWorkspaceJSONArtifact(
@@ -679,6 +679,24 @@ func writeWorkspaceModelDecisionArtifacts(
             ),
             to: runDir.appendingPathComponent("evidence/model/recovery-\(suffix).json")
         )
+    } else if let feedback = postActionObservation?.visualFeedback, feedback.state != .settled {
+        let phase = "visual_" + feedback.state.rawValue
+        let visualRef = "evidence/visual-settle/\(String(format: "%04d", artifactIndex + 1)).json"
+        try writeWorkspaceJSONArtifact([
+            "status": "unknown",
+            "reason": "Visual stability is uncertain; business verification was not attempted.",
+            "phase": phase,
+            "visualFeedbackRef": visualRef,
+            "businessVerified": false,
+        ], to: runDir.appendingPathComponent("evidence/model/verify-\(suffix).json"))
+        try writeWorkspaceJSONArtifact(workspaceRecoveryProposalArtifact(
+            failureCode: phase, diagnosisType: "post_action_unverified", trigger: phase,
+            legacyKind: "post_action_unverified", phase: phase, stepIndex: artifactIndex + 1, confidence: 0,
+            evidenceRefs: [visualRef, "evidence/actions/action-\(suffix).json", "evidence/model/verify-\(suffix).json"],
+            proposalAction: "stop", proposalReason: "Visual feedback does not prove a safe next action; inspect evidence before recovery.",
+            policyDecision: "requires_review", command: ["stop"],
+            nextActions: [["code": "inspect_visual_feedback", "message": "Inspect visual feedback and current UI state; do not automatically replay the action."]]
+        ), to: runDir.appendingPathComponent("evidence/model/recovery-\(suffix).json"))
     } else if let businessCheckpoint, businessCheckpoint.stage == .postAction {
         try writeWorkspaceJSONArtifact([
             "status": businessCheckpoint.readiness.status,

@@ -48,6 +48,7 @@ let schemaNodeFailureCodes = schemaHierarchyFailureCodes + [
     "host_command_failed",
 ] + schemaIOSHostAXFailureCodes
 let schemaSemanticActionFailureCodes = schemaRuntimeTargetFailureCodes + [
+    "runtime_ui_timeout", "runtime_ui_busy", "runtime_ui_circuit_open",
     "ambiguous_target",
     "text_not_found",
     "semantic_action_failed",
@@ -56,6 +57,7 @@ let schemaSemanticActionFailureCodes = schemaRuntimeTargetFailureCodes + [
 ]
 
 let schemaInputCommandFailureCodes = [
+    "runtime_ui_timeout", "runtime_ui_busy", "runtime_ui_circuit_open",
     "unsupported_capability",
     "validation_failed",
     "server_unavailable",

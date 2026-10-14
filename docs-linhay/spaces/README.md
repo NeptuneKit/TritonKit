@@ -2,9 +2,9 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（191/191 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（192/192 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-13（SP-191 默认使用 Xcode 全局 DerivedData，已随 v0.2.26 发布；#215～220 关闭，#214 安全能力待完成）
+> 最近审计：2026-10-14（SP-192 五机制及 Android/iOS 限制收口通过；SP-191 已随 v0.2.26 发布）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -22,6 +22,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 执行（main 集成） | [SP-192-ictrl-adoption-feasibility](./SP-192-ictrl-adoption-feasibility/README.md) | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12、iOS115、Android52与完整APK及真实只读AX/alias/OCR/settle通过 | 用户授权本地提交/集成，门禁通过；真实设备与OCR输入坐标边界见限制收口计划 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-190-open-issues-integration](./SP-190-open-issues-integration/README.md) | #214–#220 本地集成与统一验收；保留各项证据边界，#215～220 已关闭，#214 继续开放 | main CI / Release / Homebrew 通过，已回复关闭 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-189-issue-220-package-result-path](./SP-189-issue-220-package-result-path/README.md) | #220：package result 路径与 inline parser 一致；49 + 2 focused tests 通过，夹具贯通执行结果路径解析，非实际 Xcode test | main CI / Release / Homebrew 通过，已回复关闭 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-188-issue-219-generic-ios-build](./SP-188-issue-219-generic-ios-build/README.md) | #219：显式 generic iOS SDK-only build；51 + 5 focused tests 通过，未做真实 SDK 编译 | main CI / Release / Homebrew 通过，已回复关闭 |
@@ -120,6 +121,7 @@
 
 | Space | Branch | Worktree | 基线 | 当前状态与后续 |
 | --- | --- | --- | --- | --- |
+| `SP-192-ictrl-adoption-feasibility` | `feat/SP-192-ictrl-adoption-feasibility` | `../TritonKit-worktrees/SP-192-ictrl-adoption-feasibility/` | `main@8aaf6c31` | 五机制及Android/iOS验证限制收口完成，本地门禁通过；用户授权提交与集成，执行中 |
 | `SP-156-issue-176-xcode-compact-progress` | `feat/SP-156-issue-176-xcode-compact-progress`（已清理） | 已清理（历史由 PR #177 merge 可达） | `feat/SP-153-issue-173-xcode-run-target-binding@57ff4092` | #176 已合并并关闭；compact/full 合同与 focused 证据保留 |
 | `SP-157-open-issues-178-195-audit` | `feat/SP-157-open-issues-178-195-audit` | `../TritonKit-worktrees/SP-157-open-issues-178-195-audit/` | `main@e77c72b7` | `ad1e55a9` 已由 merge `1564e7ed` 进入主线；#178–#194 已评论并关闭，worktree 保留为审计记录 |
 | `SP-158-issue-196-xcode-archive-export` | `feat/SP-158-issue-196-xcode-archive-export` | `../TritonKit-worktrees/SP-158-issue-196-xcode-archive-export/` | `main@e77c72b7` | `b3d0c27c` 已由 merge `424113b6` 进入主线；#196 已评论并关闭，真实签名风险保留 |

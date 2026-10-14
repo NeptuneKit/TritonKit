@@ -1,273 +1,6 @@
 import Foundation
 import TritonKitShared
 
-struct TKWorkspaceRunRequest {
-    let runsDirectory: String
-    let runID: String?
-    let target: String
-    let platform: String?
-    let scope: String?
-    let app: String
-    let goal: String
-    let actionPolicy: String
-    let appMode: String
-    let bundleID: String?
-    let packageName: String?
-    let activity: String?
-    let bundle: String?
-    let ability: String?
-    let adb: String
-    let dryModelFixture: Bool
-    let llmProvider: String?
-    let llmBaseURL: String?
-    let llmModel: String?
-    let llmAPIKeyEnv: String?
-    let allowRemoteLLM: Bool
-    let vlmProvider: String?
-    let vlmBaseURL: String?
-    let vlmModel: String?
-    let vlmModelPath: String?
-    let vlmHelper: String?
-    let vlmAllowModelDownload: Bool
-    let vlmAPIKeyEnv: String?
-    let allowRemoteVLM: Bool
-    let maxSteps: Int?
-    let allowedActions: [String]
-    let stopConditions: [String]
-    let observationFixture: String?
-    let observeLive: Bool
-    let observeKind: String
-    let observeMaxNodes: Int?
-    let observeOutput: String?
-    let observeRuntimeBaseURL: String?
-    let observeHost: String
-    let observePort: Int
-    let hdc: String
-    let businessReadyText: String?
-    let businessReadyLiveWait: Bool
-    let businessReadyAssert: Bool
-    let businessReadyTimeout: Double
-    let businessReadyInterval: Double
-    let resolveTarget: Bool
-    let executeActions: Bool
-
-    init(
-        runsDirectory: String,
-        runID: String?,
-        target: String,
-        platform: String? = nil,
-        scope: String? = nil,
-        app: String,
-        goal: String,
-        actionPolicy: String,
-        appMode: String = "dry",
-        bundleID: String? = nil,
-        packageName: String? = nil,
-        activity: String? = nil,
-        bundle: String? = nil,
-        ability: String? = nil,
-        adb: String = "adb",
-        dryModelFixture: Bool = false,
-        llmProvider: String? = nil,
-        llmBaseURL: String? = nil,
-        llmModel: String? = nil,
-        llmAPIKeyEnv: String? = nil,
-        allowRemoteLLM: Bool = false,
-        vlmProvider: String? = nil,
-        vlmBaseURL: String? = nil,
-        vlmModel: String? = nil,
-        vlmModelPath: String? = nil,
-        vlmHelper: String? = nil,
-        vlmAllowModelDownload: Bool = false,
-        vlmAPIKeyEnv: String? = nil,
-        allowRemoteVLM: Bool = false,
-        maxSteps: Int? = nil,
-        allowedActions: [String] = [],
-        stopConditions: [String] = [],
-        observationFixture: String? = nil,
-        observeLive: Bool = false,
-        observeKind: String = "tree",
-        observeMaxNodes: Int? = nil,
-        observeOutput: String? = nil,
-        observeRuntimeBaseURL: String? = nil,
-        observeHost: String = "127.0.0.1",
-        observePort: Int = 19421,
-        hdc: String = "hdc",
-        businessReadyText: String? = nil,
-        businessReadyLiveWait: Bool = false,
-        businessReadyAssert: Bool = false,
-        businessReadyTimeout: Double = 10,
-        businessReadyInterval: Double = 0.5,
-        resolveTarget: Bool = false,
-        executeActions: Bool = false
-    ) {
-        self.runsDirectory = runsDirectory
-        self.runID = runID
-        self.target = target
-        self.platform = platform
-        self.scope = scope
-        self.app = app
-        self.goal = goal
-        self.actionPolicy = actionPolicy
-        self.appMode = appMode
-        self.bundleID = bundleID
-        self.packageName = packageName
-        self.activity = activity
-        self.bundle = bundle
-        self.ability = ability
-        self.adb = adb
-        self.dryModelFixture = dryModelFixture
-        self.llmProvider = llmProvider
-        self.llmBaseURL = llmBaseURL
-        self.llmModel = llmModel
-        self.llmAPIKeyEnv = llmAPIKeyEnv
-        self.allowRemoteLLM = allowRemoteLLM
-        self.vlmProvider = vlmProvider
-        self.vlmBaseURL = vlmBaseURL
-        self.vlmModel = vlmModel
-        self.vlmModelPath = vlmModelPath
-        self.vlmHelper = vlmHelper
-        self.vlmAllowModelDownload = vlmAllowModelDownload
-        self.vlmAPIKeyEnv = vlmAPIKeyEnv
-        self.allowRemoteVLM = allowRemoteVLM
-        self.maxSteps = maxSteps
-        self.allowedActions = allowedActions
-        self.stopConditions = stopConditions
-        self.observationFixture = observationFixture
-        self.observeLive = observeLive
-        self.observeKind = observeKind
-        self.observeMaxNodes = observeMaxNodes
-        self.observeOutput = observeOutput
-        self.observeRuntimeBaseURL = observeRuntimeBaseURL
-        self.observeHost = observeHost
-        self.observePort = observePort
-        self.hdc = hdc
-        self.businessReadyText = businessReadyText
-        self.businessReadyLiveWait = businessReadyLiveWait
-        self.businessReadyAssert = businessReadyAssert
-        self.businessReadyTimeout = businessReadyTimeout
-        self.businessReadyInterval = businessReadyInterval
-        self.resolveTarget = resolveTarget
-        self.executeActions = executeActions
-    }
-
-    func resolvingRunID() throws -> TKWorkspaceRunRequest {
-        let resolvedRunID = try normalizedWorkspaceRunID(runID ?? defaultWorkspaceRunID())
-        if runID == resolvedRunID {
-            return self
-        }
-        return TKWorkspaceRunRequest(
-            runsDirectory: runsDirectory,
-            runID: resolvedRunID,
-            target: target,
-            platform: platform,
-            scope: scope,
-            app: app,
-            goal: goal,
-            actionPolicy: actionPolicy,
-            appMode: appMode,
-            bundleID: bundleID,
-            packageName: packageName,
-            activity: activity,
-            bundle: bundle,
-            ability: ability,
-            adb: adb,
-            dryModelFixture: dryModelFixture,
-            llmProvider: llmProvider,
-            llmBaseURL: llmBaseURL,
-            llmModel: llmModel,
-            llmAPIKeyEnv: llmAPIKeyEnv,
-            allowRemoteLLM: allowRemoteLLM,
-            vlmProvider: vlmProvider,
-            vlmBaseURL: vlmBaseURL,
-            vlmModel: vlmModel,
-            vlmModelPath: vlmModelPath,
-            vlmHelper: vlmHelper,
-            vlmAllowModelDownload: vlmAllowModelDownload,
-            vlmAPIKeyEnv: vlmAPIKeyEnv,
-            allowRemoteVLM: allowRemoteVLM,
-            maxSteps: maxSteps,
-            allowedActions: allowedActions,
-            stopConditions: stopConditions,
-            observationFixture: observationFixture,
-            observeLive: observeLive,
-            observeKind: observeKind,
-            observeMaxNodes: observeMaxNodes,
-            observeOutput: observeOutput,
-            observeRuntimeBaseURL: observeRuntimeBaseURL,
-            observeHost: observeHost,
-            observePort: observePort,
-            hdc: hdc,
-            businessReadyText: businessReadyText,
-            businessReadyLiveWait: businessReadyLiveWait,
-            businessReadyAssert: businessReadyAssert,
-            businessReadyTimeout: businessReadyTimeout,
-            businessReadyInterval: businessReadyInterval,
-            resolveTarget: resolveTarget,
-            executeActions: executeActions
-        )
-    }
-
-}
-
-struct TKWorkspaceRunResponse: Codable, Equatable {
-    let schemaVersion: Int
-    let kind: String
-    let runID: String
-    let goal: String
-    let status: String
-    let target: TKWorkspaceRunTarget
-    let app: String
-    let ai: TKWorkspaceRunAI
-    let runner: TKWorkspaceRunRunner?
-    let business: TKWorkspaceBusinessReadiness?
-    let paths: TKWorkspaceRunPaths
-    let nextActions: [TKWorkspaceNextAction]
-
-    init(
-        schemaVersion: Int = 1,
-        kind: String = "triton.workspace.run",
-        runID: String,
-        goal: String,
-        status: String,
-        target: TKWorkspaceRunTarget,
-        app: String,
-        ai: TKWorkspaceRunAI,
-        runner: TKWorkspaceRunRunner? = nil,
-        business: TKWorkspaceBusinessReadiness? = nil,
-        paths: TKWorkspaceRunPaths,
-        nextActions: [TKWorkspaceNextAction]
-    ) {
-        self.schemaVersion = schemaVersion
-        self.kind = kind
-        self.runID = runID
-        self.goal = goal
-        self.status = status
-        self.target = target
-        self.app = app
-        self.ai = ai
-        self.runner = runner
-        self.business = business
-        self.paths = paths
-        self.nextActions = nextActions
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case schemaVersion
-        case kind
-        case runID = "runId"
-        case goal
-        case status
-        case target
-        case app
-        case ai
-        case runner
-        case business
-        case paths
-        case nextActions
-    }
-}
-
 struct TKWorkspaceRunTarget: Codable, Equatable {
     let id: String
     let platform: String
@@ -518,6 +251,9 @@ func runWorkspaceRun(
     targetResolver: TKWorkspaceTargetResolverProvider = workspaceDefaultTargetResolverProvider
 ) throws -> TKWorkspaceRunResponse {
     let request = try request.resolvingRunID()
+    if request.visualSettle != nil {
+        throw RuntimeError("Workspace visual feedback requires the async workspace runtime.")
+    }
     if request.businessReadyLiveWait {
         throw RuntimeError("Workspace business live wait requires the async workspace runtime.")
     }
@@ -548,8 +284,10 @@ func runWorkspaceRunAsync(
     businessAssertProvider: TKWorkspaceBusinessAssertProvider = workspaceDefaultBusinessAssertProvider,
     modelDecisionProvider: TKWorkspaceModelDecisionProvider = workspaceDefaultModelDecisionProvider,
     vlmGroundingProvider: TKWorkspaceVLMGroundingProvider = workspaceDefaultVLMGroundingProvider,
-    actionExecutionProvider: TKWorkspaceActionExecutionProvider = workspaceDefaultActionExecutionProvider
+    actionExecutionProvider: TKWorkspaceActionExecutionProvider = workspaceDefaultActionExecutionProvider,
+    visualFeedbackProvider: TKWorkspaceVisualFeedbackProvider = workspaceDefaultVisualFeedbackProvider
 ) async throws -> TKWorkspaceRunResponse {
+    try validateWorkspaceVisualFeedback(request)
     let request = try request.resolvingRunID()
     let targetResolution = try targetResolver(workspaceTargetResolveRequest(for: request))
     let resolvedRequest = workspaceRunRequest(request, applying: targetResolution)
@@ -587,7 +325,8 @@ func runWorkspaceRunAsync(
             businessAssertProvider: businessAssertProvider,
             modelDecisionProvider: modelDecisionProvider,
             vlmGroundingProvider: vlmGroundingProvider,
-            actionExecutionProvider: actionExecutionProvider
+            actionExecutionProvider: actionExecutionProvider,
+            visualFeedbackProvider: visualFeedbackProvider
         )
     }
     let modelDecision = modelLoopEnabled
@@ -639,13 +378,16 @@ func runWorkspaceRunAsync(
     }
     let postActionObservation: TKWorkspaceObservationSeed?
     if actionExecution?.ok == true {
-        postActionObservation = try await workspacePostActionObservationSeed(for: resolvedRequest, observeProvider: observeProvider)
+        postActionObservation = try await workspacePostActionObservationSeed(for: resolvedRequest, observeProvider: observeProvider, visualFeedbackProvider: visualFeedbackProvider)
     } else {
         postActionObservation = nil
     }
     let businessWaitResult: TKWaitResult?
     let businessCheckpoint: TKWorkspaceBusinessCheckpoint?
-    if resolvedRequest.businessReadyLiveWait, initialBusinessCheckpoint?.ready == true {
+    if actionExecution?.inputResult?.outcome == "unknown" || actionExecution?.inputResult?.outcome == "not_started" || !workspaceVisualFeedbackAllowsContinuation(postActionObservation?.visualFeedback) {
+        businessWaitResult = nil
+        businessCheckpoint = nil
+    } else if resolvedRequest.businessReadyLiveWait, initialBusinessCheckpoint?.ready == true {
         businessWaitResult = nil
         businessCheckpoint = initialBusinessCheckpoint
     } else if resolvedRequest.businessReadyLiveWait, actionExecution?.ok == true {
@@ -773,7 +515,8 @@ private func runWorkspaceRun(
         modelLoopEnabled: modelLoopEnabled,
         modelDecisionAllowed: modelDecisionAllowed,
         businessCheckpoint: businessCheckpoint,
-        actionExecution: actionExecution
+        actionExecution: actionExecution,
+        visualFeedback: postActionObservation?.visualFeedback
     )
     let response = TKWorkspaceRunResponse(
         runID: runID,
@@ -794,6 +537,7 @@ private func runWorkspaceRun(
         ),
         runner: runner,
         business: businessReady,
+        visualFeedback: postActionObservation?.visualFeedback,
         paths: paths,
         nextActions: workspaceRunNextActions(
             providerNextActions: providerPreflight.nextActions,
@@ -900,8 +644,15 @@ func workspaceRunFinalState(
     modelLoopEnabled: Bool,
     modelDecisionAllowed: Bool,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
-    actionExecution: TKWorkspaceActionExecutionResult?
+    actionExecution: TKWorkspaceActionExecutionResult?,
+    visualFeedback: VisualSettleOutput? = nil
 ) -> TKWorkspaceRunFinalState {
+    if actionExecution?.inputResult?.outcome == "unknown" {
+        return TKWorkspaceRunFinalState(runStatus: "paused", eventType: .runPaused, eventStatus: .paused, phase: "action_outcome_unknown")
+    }
+    if !workspaceVisualFeedbackAllowsContinuation(visualFeedback) {
+        return TKWorkspaceRunFinalState(runStatus: "paused", eventType: .runPaused, eventStatus: .paused, phase: "visual_" + (visualFeedback?.state.rawValue ?? "unknown"))
+    }
     if businessCheckpoint?.ready == true {
         return TKWorkspaceRunFinalState(
             runStatus: "passed",
@@ -964,6 +715,14 @@ func workspaceRunNextActions(
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     actionExecution: TKWorkspaceActionExecutionResult?
 ) -> [TKWorkspaceNextAction] {
+    if let actionExecution, actionExecution.inputResult?.outcome == "unknown" {
+        return [TKWorkspaceNextAction(code: "inspect_unknown_action",
+                                      message: "The action outcome is unknown. Inspect action evidence and current UI health before recovery; do not automatically replay the action.")] + providerNextActions
+    }
+    if let phase = finalState.phase, phase == "visual_unknown" || phase == "visual_timeout" {
+        return [TKWorkspaceNextAction(code: "inspect_visual_feedback",
+                                      message: "Visual stability could not be established. Inspect evidence/visual-settle before resuming; do not automatically replay the action.")] + providerNextActions
+    }
     if let actionExecution, !actionExecution.ok {
         if actionExecution.failure?.kind == "vlm_grounding_failed" {
             return [
@@ -1075,6 +834,7 @@ func stopWorkspaceRun(runID: String, runsDirectory: String) throws -> TKWorkspac
         ai: run.ai,
         runner: run.runner,
         business: run.business,
+        visualFeedback: run.visualFeedback,
         paths: run.paths,
         nextActions: run.nextActions
     ), to: runURL)
@@ -1534,6 +1294,7 @@ private func workspaceAtlasDocument(
     actionExecution: TKWorkspaceActionExecutionResult?,
     actionCandidate: TKWorkspaceActionCandidate
 ) -> [String: Any] {
+    let postActionObservation = workspaceHasCapturedPostActionObservation(postActionObservation) ? postActionObservation : nil
     let initialObservationRefs = workspaceAtlasObservationRefs(
         observation,
         eventRef: "events.jsonl#observation.captured",
@@ -1673,7 +1434,7 @@ func workspaceRunDirectory(runID: String, runsDirectory: String) -> URL {
         .appendingPathComponent(runID, isDirectory: true)
 }
 
-private func normalizedWorkspaceRunID(_ raw: String) throws -> String {
+func normalizedWorkspaceRunID(_ raw: String) throws -> String {
     let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !value.isEmpty,
           value.range(of: #"^[A-Za-z0-9_.-]+$"#, options: .regularExpression) != nil,
@@ -1684,7 +1445,7 @@ private func normalizedWorkspaceRunID(_ raw: String) throws -> String {
     return value
 }
 
-private func defaultWorkspaceRunID() -> String {
+func defaultWorkspaceRunID() -> String {
     "run_\(Int(Date().timeIntervalSince1970))_\(UUID().uuidString.prefix(8))"
 }
 
