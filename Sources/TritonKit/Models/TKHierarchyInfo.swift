@@ -10,12 +10,14 @@ public struct TKHierarchyInfo: Codable {
     public let colorAlias: [String: String]
     public let collapsedClassList: [String]
     public let controllerContext: TKHierarchyControllerContext?
+    public let collection: TKCollectionBudgetSummary?
 
     public init(
         displayItems: [TKDisplayItem],
         appInfo: TKAppInfo = TKAppInfo(),
         serverVersion: Int = 7,
-        controllerContext: TKHierarchyControllerContext? = nil
+        controllerContext: TKHierarchyControllerContext? = nil,
+        collection: TKCollectionBudgetSummary? = nil
     ) {
         self.displayItems = displayItems
         self.appInfo = appInfo
@@ -23,5 +25,6 @@ public struct TKHierarchyInfo: Codable {
         self.colorAlias = [:]
         self.collapsedClassList = []
         self.controllerContext = controllerContext
+        self.collection = collection
     }
 }

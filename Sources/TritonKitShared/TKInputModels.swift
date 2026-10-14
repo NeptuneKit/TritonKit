@@ -223,6 +223,9 @@ public struct TKInputResult: Codable, Equatable {
     public let insertedLength: Int?
     public let deletedLength: Int?
     public let error: TKCLIErrorDetail?
+    /// `unknown` forbids automatic replay; `not_started` means admission refused dispatch.
+    public let outcome: String?
+    public let uiHealth: TKRuntimeUIHealthSnapshot?
 
     public init(
         ok: Bool,
@@ -244,7 +247,9 @@ public struct TKInputResult: Codable, Equatable {
         redacted: Bool? = nil,
         insertedLength: Int? = nil,
         deletedLength: Int? = nil,
-        error: TKCLIErrorDetail? = nil
+        error: TKCLIErrorDetail? = nil,
+        outcome: String? = nil,
+        uiHealth: TKRuntimeUIHealthSnapshot? = nil
     ) {
         self.ok = ok
         self.action = action
@@ -266,6 +271,8 @@ public struct TKInputResult: Codable, Equatable {
         self.insertedLength = insertedLength
         self.deletedLength = deletedLength
         self.error = error
+        self.outcome = outcome
+        self.uiHealth = uiHealth
     }
 
     public static func success(
@@ -287,7 +294,9 @@ public struct TKInputResult: Codable, Equatable {
         redacted: Bool? = nil,
         insertedLength: Int? = nil,
         deletedLength: Int? = nil,
-        error: TKCLIErrorDetail? = nil
+        error: TKCLIErrorDetail? = nil,
+        outcome: String? = nil,
+        uiHealth: TKRuntimeUIHealthSnapshot? = nil
     ) -> TKInputResult {
         TKInputResult(
             ok: true,
@@ -309,7 +318,9 @@ public struct TKInputResult: Codable, Equatable {
             redacted: redacted,
             insertedLength: insertedLength,
             deletedLength: deletedLength,
-            error: error
+            error: error,
+            outcome: outcome,
+            uiHealth: uiHealth
         )
     }
 
@@ -328,7 +339,9 @@ public struct TKInputResult: Codable, Equatable {
         fallbackFromStrategy: String? = nil,
         verification: TKInputVerificationBoundary? = nil,
         sourceCommands: [String]? = nil,
-        error: TKCLIErrorDetail? = nil
+        error: TKCLIErrorDetail? = nil,
+        outcome: String? = nil,
+        uiHealth: TKRuntimeUIHealthSnapshot? = nil
     ) -> TKInputResult {
         TKInputResult(
             ok: false,
@@ -346,7 +359,9 @@ public struct TKInputResult: Codable, Equatable {
             fallbackFromStrategy: fallbackFromStrategy,
             verification: verification,
             sourceCommands: sourceCommands,
-            error: error
+            error: error,
+            outcome: outcome,
+            uiHealth: uiHealth
         )
     }
 
@@ -363,7 +378,9 @@ public struct TKInputResult: Codable, Equatable {
         geometry: TKRect? = nil,
         fallbackFromStrategy: String? = nil,
         verification: TKInputVerificationBoundary? = nil,
-        sourceCommands: [String]? = nil
+        sourceCommands: [String]? = nil,
+        outcome: String? = nil,
+        uiHealth: TKRuntimeUIHealthSnapshot? = nil
     ) -> TKInputResult {
         failure(
             action: action,
@@ -380,7 +397,9 @@ public struct TKInputResult: Codable, Equatable {
             fallbackFromStrategy: fallbackFromStrategy,
             verification: verification,
             sourceCommands: sourceCommands,
-            error: error
+            error: error,
+            outcome: outcome,
+            uiHealth: uiHealth
         )
     }
 }

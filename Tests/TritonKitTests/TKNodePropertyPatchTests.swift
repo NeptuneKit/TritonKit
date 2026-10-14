@@ -51,7 +51,9 @@ struct TKNodePropertyPatchTests {
         #expect(result.applied.contains("style.text"))
         #expect(view.frame == CGRect(x: 12, y: 22, width: 130, height: 50))
         #expect(view.isHidden)
-        #expect(view.alpha == 0.4)
+        // Patches apply view fields before layer fields. UIView alpha and its
+        // backing layer opacity are coupled; the later Float opacity wins.
+        #expect(view.alpha == CGFloat(Float(0.6)))
         #expect(view.isUserInteractionEnabled)
         #expect(view.accessibilityIdentifier == "new-id")
         #expect(view.accessibilityLabel == "New Label")
@@ -61,6 +63,41 @@ struct TKNodePropertyPatchTests {
         #expect(view.layer.cornerRadius == 8)
         #expect(view.layer.zPosition == 3)
         #expect(view.text == "After")
+        let viewAlphaIndex = try #require(result.applied.firstIndex(of: "view.alpha"))
+        let layerOpacityIndex = try #require(result.applied.firstIndex(of: "layer.opacity"))
+        #expect(viewAlphaIndex < layerOpacityIndex)
+    }
+
+    @Test("view alpha patch alone updates UIKit's backing layer opacity")
+    func viewAlphaPatchUpdatesBackingLayerOpacity() async throws {
+        let view = UIView()
+        let result = try await patch(view, changes: .init(view: .init(alpha: 0.5)))
+
+        #expect(result.ok)
+        #expect(result.applied == ["view.alpha"])
+        #expect(result.skipped.isEmpty)
+        #expect(view.alpha == 0.5)
+        #expect(view.layer.opacity == 0.5)
+    }
+
+    @Test("layer opacity patch alone updates the hosting UIView alpha")
+    func layerOpacityPatchUpdatesHostingViewAlpha() async throws {
+        let view = UIView()
+        let result = try await patch(view.layer, changes: .init(layer: .init(opacity: 0.25)))
+
+        #expect(result.ok)
+        #expect(result.applied == ["layer.opacity"])
+        #expect(result.skipped.isEmpty)
+        #expect(view.layer.opacity == 0.25)
+        #expect(view.alpha == 0.25)
+    }
+
+    private func patch(_ object: AnyObject, changes: TKNodePropertyChanges) async throws -> TKNodePropertyPatchResponse {
+        let request = TKNodePropertyPatchRequest(oid: TKObjectRegistry.shared.register(object), changes: changes)
+        let message = TKMessage(id: 1, type: .modifyAttribute, payload: try JSONEncoder().encode(request))
+        let response = try #require(await TritonKitRequestHandler().handleModifyAttribute(message))
+        let payload = try #require(response.payload)
+        return try JSONDecoder().decode(TKNodePropertyPatchResponse.self, from: payload)
     }
 }
 #endif

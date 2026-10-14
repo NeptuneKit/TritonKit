@@ -169,4 +169,42 @@ class ActionRouterTest {
         assertEquals("error", json.getString("status"))
         assertTrue("code present", json.has("code"))
     }
+
+    @Test
+    fun timedOutRootKeepsAdmissionAndLateNodeIsRecycled() {
+        val service = mockk<AccessibilityService>()
+        val lateRoot = mockk<android.view.accessibility.AccessibilityNodeInfo>(relaxed = true)
+        val entered = java.util.concurrent.CountDownLatch(1)
+        val release = java.util.concurrent.CountDownLatch(1)
+        val finished = java.util.concurrent.CountDownLatch(1)
+        val calls = java.util.concurrent.atomic.AtomicInteger()
+        every { service.rootInActiveWindow } answers {
+            calls.incrementAndGet()
+            entered.countDown()
+            while (release.count > 0) {
+                try { release.await() } catch (_: InterruptedException) {}
+            }
+            lateRoot
+        }
+        @Suppress("DEPRECATION")
+        every { lateRoot.recycle() } answers { finished.countDown(); Unit }
+        val isolated = ActionRouter({ service }, authManager, rootWindowTimeoutMillis = 50, rootWindowWaitMillis = 10)
+        try {
+            assertEquals(504, isolated.route("GET", "/a11y_tree_full", emptyMap(), authed()).statusCode)
+            assertTrue(entered.await(1, java.util.concurrent.TimeUnit.SECONDS))
+            assertEquals(504, isolated.route("GET", "/a11y_tree_full", emptyMap(), authed()).statusCode)
+            assertEquals(1, calls.get())
+            val ping = JSONObject(isolated.route("GET", "/ping", emptyMap(), unauthed()).body)
+            assertEquals(1, ping.getJSONObject("ui_health").getInt("active_root_calls"))
+            release.countDown()
+            assertTrue(finished.await(1, java.util.concurrent.TimeUnit.SECONDS))
+        } finally { release.countDown(); isolated.close() }
+    }
+
+    @Test
+    fun malformedCollectionBudgetIsRejectedBeforeServiceAccess() {
+        val response = router.route("GET", "/a11y_tree_full", mapOf("max_nodes" to "0"), authed())
+        assertEquals(400, response.statusCode)
+        assertEquals("invalid_max_nodes", JSONObject(response.body).getString("code"))
+    }
 }

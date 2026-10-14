@@ -530,6 +530,7 @@ func runWebViewCall(
             }
             data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewBridgeCall, body: payload)
         }
+        try failIfWebViewRuntimeError(data, outputFormat: outputFormat)
         let response = try JSONDecoder().decode(TKWebViewBridgeCallResponse.self, from: data)
         switch outputFormat {
         case .json:
@@ -693,6 +694,7 @@ private func runIOSWebViewBridgeCall(
             let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
             data = try await client.request(type: "webViewBridgeCall", payload: payload)
         }
+        try failIfWebViewRuntimeError(data, outputFormat: outputFormat)
         let response = try JSONDecoder().decode(TKWebViewBridgeCallResponse.self, from: data)
         let summary = WebViewBridgeCallSummary(
             ok: response.ok,
@@ -805,6 +807,7 @@ func runWebViewEvents(
             }
             data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewEvents, queryItems: queryItems)
         }
+        try failIfWebViewRuntimeError(data, outputFormat: outputFormat)
         let response = try JSONDecoder().decode(TKWebViewEventsResponse.self, from: data)
         switch outputFormat {
         case .json:
@@ -825,6 +828,22 @@ func runWebViewEvents(
         }
         try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
     }
+}
+
+/// Generic runtime refusal/timeout envelopes have no provider capture timestamp.
+/// Keep provider-specific failed responses in their existing decoding path.
+func failIfWebViewRuntimeError(_ data: Data, outputFormat: ClientOutputFormat) throws {
+    guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+          object["capturedAt"] == nil,
+          let response = try? JSONDecoder().decode(TKWebViewErrorResponse.self, from: data),
+          !response.ok else { return }
+    switch outputFormat {
+    case .json:
+        print(try encodeJSON(response))
+    case .text:
+        print("\(response.error.code): \(response.error.message)")
+    }
+    throw ExitCode.failure
 }
 
 func makeWebViewFocusRequest(

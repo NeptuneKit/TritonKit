@@ -100,6 +100,13 @@ triton evidence redact <dir.tritonevidence> --profile ios-private --output <reda
 
 For iOS Simulator evidence, inspect `manifest.primaryArtifact.fidelity` before visual acceptance. A successful host-composited capture uses `kind=screenshot`, `scope=host-simulator`, `source=simctl-framebuffer`, and `fidelity=full-screen`; the embedded App-layer image remains `kind=screenshot.runtime`, `scope=runtime-app-layer`, and `fidelity=app-layer`. If the host framebuffer cannot be captured, expect `ok=false`, `partial=true`, `skipped[].kind=screenshot.host`, `error.code=host_screenshot_unavailable`, and a structured `triton sim screenshot` fallback. Never treat a runtime-only App-layer screenshot as proof that system sheets or compositor UI are visible.
 
+## Bounded observation and UI recovery
+
+- `observe tree --outline` aliases are valid for 30 seconds and `node resolve @N` validates a fresh whole-tree observation for the same target/platform. Refresh on stale, changed, or incomplete trees; an alias is not an executable OID. Inspect hierarchy `collection.visitedNodes` and `collection.limitReasons` (nonempty reasons mean incomplete collection): traversal deadlines cannot forcibly cancel native IPC already in progress.
+- Use `observe ocr --image <path>` or `observe ocr --platform <platform> --device <selector> --json` explicitly for text candidates. Candidates have no OID/action reference; coordinates are top-left raw-raster pixels, with points only for a known explicit scale. File mtime does not prove screenshot freshness (`freshness=unknown`). `--policy structure-unavailable` requires `--structure-unavailable-reason`.
+- `observe settle --device <selector> --json` reports visual stability with `businessVerified=false`. Workspace `--visual-settle` (HTTP `/workspace/run` optional `visualSettle`) is off by default; visual `unknown` or `timeout` stops the action chain. Continue with a business wait/assertion after a settled result.
+- `debug ui-health --target <runtime-id> --json` uses the existing ping request: legacy SDK health is `unknown`; new SDK states are `ready|busy|timed_out|circuit_open`. Preserve action `outcome`/`uiHealth`. An action timeout with `outcome=unknown` may complete later: stop, probe health and re-observe read-only; never automatically replay or substitute a HID action.
+
 ## Safety Rules
 
 - Destructive or state-changing host actions require explicit flags or policy.

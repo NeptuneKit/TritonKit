@@ -162,7 +162,8 @@ extension TKWorkspaceRunRequest {
             businessReadyTimeout: businessReadyTimeout,
             businessReadyInterval: businessReadyInterval,
             resolveTarget: resolveTarget,
-            executeActions: executeActions
+            executeActions: executeActions,
+            visualSettle: visualSettle
         )
     }
 }

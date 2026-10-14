@@ -97,15 +97,18 @@ struct NodeAliasCache: Codable, Equatable {
     let primarySourceName: String?
     let sourceCommands: [String]
     let aliases: [ObserveNodeAliasOutput]
+    /// Geometry-independent identity of the observed UI; absent on legacy caches.
+    let observationFingerprint: String?
 
     init(
-        schemaVersion: Int = 1,
+        schemaVersion: Int = 2,
         platform: String,
         target: String,
         capturedAt: String,
         primarySourceName: String?,
         sourceCommands: [String],
-        aliases: [ObserveNodeAliasOutput]
+        aliases: [ObserveNodeAliasOutput],
+        observationFingerprint: String? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.platform = platform
@@ -114,6 +117,7 @@ struct NodeAliasCache: Codable, Equatable {
         self.primarySourceName = primarySourceName
         self.sourceCommands = sourceCommands
         self.aliases = aliases
+        self.observationFingerprint = observationFingerprint
     }
 
     static func filePath(workspace: String) -> String {
@@ -136,6 +140,7 @@ struct ObserveOutput: Encodable {
     let nodes: [ObserveNodeOutput]
     let outline: [ObserveNodeAliasOutput]?
     let aliasCache: ObserveAliasCacheOutput?
+    let collection: TKCollectionBudgetSummary?
     let artifacts: [String]
     let sourceCommands: [String]
     let note: String
@@ -152,6 +157,7 @@ struct ObserveOutput: Encodable {
         nodes: [ObserveNodeOutput],
         outline: [ObserveNodeAliasOutput]? = nil,
         aliasCache: ObserveAliasCacheOutput? = nil,
+        collection: TKCollectionBudgetSummary? = nil,
         artifacts: [String],
         sourceCommands: [String],
         note: String
@@ -167,6 +173,7 @@ struct ObserveOutput: Encodable {
         self.nodes = nodes
         self.outline = outline
         self.aliasCache = aliasCache
+        self.collection = collection
         self.artifacts = artifacts
         self.sourceCommands = sourceCommands
         self.note = note
@@ -202,6 +209,7 @@ enum NodeAliasResolutionError: Error, Equatable {
     case invalidAlias(String)
     case aliasNotFound(alias: String, path: String, platform: String, target: String, availableAliases: [String])
     case staleAlias(alias: String, expectedPlatform: String, expectedTarget: String, cachedPlatform: String, cachedTarget: String)
+    case freshnessRejected(alias: String, platform: String, target: String, reason: String)
 
     var code: String {
         switch self {
@@ -209,7 +217,7 @@ enum NodeAliasResolutionError: Error, Equatable {
             "node_alias_not_found"
         case .invalidAlias:
             "validation_failed"
-        case .staleAlias:
+        case .staleAlias, .freshnessRejected:
             "stale_node_alias"
         }
     }
@@ -224,6 +232,8 @@ enum NodeAliasResolutionError: Error, Equatable {
             "Node alias \(alias) was not found in \(path). Available aliases: \(availableAliases.joined(separator: ", "))."
         case .staleAlias(let alias, let expectedPlatform, let expectedTarget, let cachedPlatform, let cachedTarget):
             "Node alias \(alias) was captured for \(cachedPlatform) \(cachedTarget), not \(expectedPlatform) \(expectedTarget)."
+        case .freshnessRejected(let alias, _, _, let reason):
+            "Node alias \(alias) requires a fresh observation: \(reason)."
         }
     }
 
@@ -234,6 +244,8 @@ enum NodeAliasResolutionError: Error, Equatable {
             (platform, target)
         case .staleAlias(_, let expectedPlatform, let expectedTarget, _, _):
             (expectedPlatform, expectedTarget)
+        case .freshnessRejected(_, let platform, let target, _):
+            (platform, target)
         case .invalidAlias:
             nil
         }
@@ -241,15 +253,20 @@ enum NodeAliasResolutionError: Error, Equatable {
 
     func detail(endpoint: String? = nil) -> TKCLIErrorDetail {
         let recovery = recoveryPlatformAndTarget
+        let nextArgs = recovery.map { value -> [String] in
+            let selector: String
+            if value.platform == "ios", value.target.hasPrefix("http://") || value.target.hasPrefix("https://") { selector = "--runtime-base-url" }
+            else if value.platform == "ios", value.target.hasPrefix("triton:") || value.target == "local" { selector = "--target" }
+            else { selector = "--device" }
+            return ["tree", "--platform", value.platform, selector, value.target, "--outline", "--json"]
+        }
         return TKCLIErrorDetail(
             code: code,
             message: message,
             endpoint: endpoint,
-            hint: recovery.map { "Run `triton observe tree --platform \($0.platform) --device \($0.target) --outline --json` to refresh node aliases." }
+            hint: nextArgs.map { "Run `triton observe \($0.joined(separator: " "))` to refresh node aliases." }
                 ?? "Use a node alias such as @1 from `triton observe tree --outline --json`.",
-            nextAction: recovery.map {
-                TKCLINextAction(command: "observe", args: ["tree", "--platform", $0.platform, "--device", $0.target, "--outline", "--json"])
-            }
+            nextAction: nextArgs.map { TKCLINextAction(command: "observe", args: $0) }
         )
     }
 }

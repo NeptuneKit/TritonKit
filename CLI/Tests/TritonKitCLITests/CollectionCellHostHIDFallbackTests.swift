@@ -31,6 +31,20 @@ struct CollectionCellHostHIDFallbackTests {
         #expect(!isUnsupportedCollectionCellResult(otherCode))
     }
 
+    @Test("unknown execution never triggers host replay, even with an unsupported strategy")
+    func unknownResultDoesNotReplay() {
+        let unknown = TKInputResult.failure(action: "tap", message: "unknown delivery",
+            strategy: collectionCellEmbeddedUnsupportedStrategy,
+            error: TKCLIErrorDetail(code: "unsupported_capability", message: "unknown"), outcome: "unknown")
+        var writes = 0
+        let result = collectionCellHostHIDFallbackResult(embeddedResult: unknown,
+            resolution: makeResolution(frame: TKRect(x: 40, y: 100, width: 200, height: 80)),
+            runtimeTarget: makeRuntimeTarget(), screenGeometry: nil,
+            hostInput: { _, _ in writes += 1; return .success(action: "tap") })
+        #expect(writes == 0)
+        #expect(result == unknown)
+    }
+
     @Test("fallback helper does not bypass a non-collection embedded result")
     func fallbackHelperPreservesNonCollectionResult() {
         let embedded = TKInputResult.failure(

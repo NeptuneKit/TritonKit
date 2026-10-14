@@ -91,11 +91,25 @@ func captureCurrentScreenshotData() -> ScreenshotCapture {
 struct AXBuildContext {
     var remaining: Int
     let maxDepth: Int
+    var collection: TKCollectionBudgetState
 
-    init(maxNodes: Int = 800, maxDepth: Int = 32) {
-        self.remaining = maxNodes
-        self.maxDepth = maxDepth
+    init(maxNodes: Int = 800, maxDepth: Int = 32, maxChildren: Int = 200, timeoutMilliseconds: Double = 2_000) {
+        let limits = TKCollectionBudgetLimits(maxNodes: maxNodes, maxDepth: maxDepth, maxChildren: maxChildren, timeoutMilliseconds: timeoutMilliseconds)
+        self.remaining = limits.maxNodes
+        self.maxDepth = limits.maxDepth
+        self.collection = TKCollectionBudgetState(limits: limits)
     }
+}
+
+@MainActor
+func buildBudgetedAXWindows(_ windows: [UIWindow], context: inout AXBuildContext) -> [TKAXNode] {
+    let count = context.collection.childCount(windows.count)
+    var nodes: [TKAXNode] = []
+    for window in windows.prefix(count) {
+        if context.collection.isExhausted() { break }
+        nodes.append(buildAXWindowNode(for: window, context: &context))
+    }
+    return nodes
 }
 
 @MainActor
@@ -126,19 +140,21 @@ func collectAXLeafNodes(
     context: inout AXBuildContext,
     depth: Int = 0
 ) -> [TKAXNode] {
-    guard isAXVisible(view), context.remaining > 0, depth <= context.maxDepth else { return [] }
+    guard context.remaining > 0, context.collection.admit(depth: depth), isAXVisible(view) else { return [] }
 
     let children: [TKAXNode]
     if shouldCollectAXChildren(from: view), depth < context.maxDepth {
         var collected: [TKAXNode] = []
-        for subview in view.subviews {
+        let childCount = context.collection.childCount(view.subviews.count)
+        for subview in view.subviews.prefix(childCount) {
             collected.append(contentsOf: collectAXLeafNodes(from: subview, in: window, context: &context, depth: depth + 1))
-            if context.remaining <= 0 {
+            if context.remaining <= 0 || context.collection.isExhausted() {
                 break
             }
         }
         children = collected
     } else {
+        if !view.subviews.isEmpty, depth >= context.maxDepth { context.collection.recordLimit("max_depth") }
         children = []
     }
 

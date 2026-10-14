@@ -203,8 +203,17 @@ public enum TKHarmonyLayoutParser {
     }
 
     public static func nodeSummaries(in data: Data) throws -> [TKHarmonyLayoutNodeSummary] {
+        try nodeSummaries(in: data, budget: .init()).nodes
+    }
+
+    /// Limits local decoding/traversal, not the HDC device-side dump.
+    public static func nodeSummaries(in data: Data, budget: TKCollectionBudgetLimits) throws -> TKBoundedNodeCollection<TKHarmonyLayoutNodeSummary> {
+        guard data.count <= 10 * 1_024 * 1_024 else { throw TKCollectionInputError.inputTooLarge }
+        var context = TKCollectionBudgetState(limits: budget)
         let json = try JSONSerialization.jsonObject(with: data)
-        return nodeSummaries(in: json, depth: 0, fallbackPath: "0")
+        var nodes: [TKHarmonyLayoutNodeSummary] = []
+        nodeSummaries(in: json, depth: 0, fallbackPath: "0", context: &context, result: &nodes)
+        return TKBoundedNodeCollection(nodes: nodes, collection: context.summary)
     }
 
     public static func bounds(from rawBounds: String) -> TKRect? {
@@ -232,9 +241,11 @@ public enum TKHarmonyLayoutParser {
         return TKRect(x: min(x1, x2), y: min(y1, y2), width: abs(x2 - x1), height: abs(y2 - y1))
     }
 
-    private static func nodeSummaries(in value: Any, depth: Int, fallbackPath: String) -> [TKHarmonyLayoutNodeSummary] {
+    private static func nodeSummaries(in value: Any, depth: Int, fallbackPath: String, context: inout TKCollectionBudgetState, result: inout [TKHarmonyLayoutNodeSummary]) {
+        guard !context.isExhausted() else { return }
+        guard depth <= context.limits.maxDepth else { context.recordLimit("max_depth"); return }
         if let dictionary = value as? [String: Any] {
-            var result: [TKHarmonyLayoutNodeSummary] = []
+            guard context.admit(depth: depth) else { return }
             let children = dictionary["children"] as? [Any] ?? []
             if let attributes = dictionary["attributes"] as? [String: Any] {
                 let hierarchy = cleanString(attributes["hierarchy"])
@@ -259,16 +270,18 @@ public enum TKHarmonyLayoutParser {
                     childCount: children.count
                 ))
             }
-            for (index, child) in children.enumerated() {
-                result.append(contentsOf: nodeSummaries(in: child, depth: depth + 1, fallbackPath: "\(fallbackPath).\(index)"))
+            let childCount = context.childCount(children.count)
+            for index in 0..<childCount {
+                if context.isExhausted() { break }
+                nodeSummaries(in: children[index], depth: depth + 1, fallbackPath: "\(fallbackPath).\(index)", context: &context, result: &result)
             }
-            return result
         } else if let array = value as? [Any] {
-            return array.enumerated().flatMap { index, item in
-                nodeSummaries(in: item, depth: depth, fallbackPath: "\(fallbackPath).\(index)")
+            let childCount = context.childCount(array.count)
+            for index in 0..<childCount {
+                if context.isExhausted() { break }
+                nodeSummaries(in: array[index], depth: depth + 1, fallbackPath: "\(fallbackPath).\(index)", context: &context, result: &result)
             }
         }
-        return []
     }
 
     private static func cleanString(_ value: Any?) -> String? {

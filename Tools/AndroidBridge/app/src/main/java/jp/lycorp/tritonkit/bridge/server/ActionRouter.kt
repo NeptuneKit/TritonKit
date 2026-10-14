@@ -16,6 +16,8 @@ import jp.lycorp.tritonkit.bridge.handler.InputHandler
 import jp.lycorp.tritonkit.bridge.handler.KeyboardStateHandler
 import jp.lycorp.tritonkit.bridge.handler.PasteHandler
 import jp.lycorp.tritonkit.bridge.handler.TreeHandler
+import jp.lycorp.tritonkit.bridge.handler.TreeCollectionBudget
+import jp.lycorp.tritonkit.bridge.handler.TreeCollectionLimits
 import jp.lycorp.tritonkit.bridge.model.ElementNode
 import android.graphics.Rect
 import org.json.JSONArray
@@ -46,6 +48,8 @@ import java.util.concurrent.atomic.AtomicInteger
 class ActionRouter(
     private val serviceProvider: () -> AccessibilityService?,
     private val authManager: AuthManager,
+    private val rootWindowTimeoutMillis: Long = ROOT_WINDOW_TIMEOUT_SECONDS * 1_000L,
+    private val rootWindowWaitMillis: Long = ROOT_WINDOW_WAIT_SECONDS * 1_000L,
 ) {
     private val treeHandler = TreeHandler()
     private val captureHandler = CaptureHandler()
@@ -54,10 +58,8 @@ class ActionRouter(
     private val keyboardStateHandler = KeyboardStateHandler()
     private val pasteHandler = PasteHandler()
 
-    // Borrowed verbatim from csat's deadlock-prevention design.
-    // CachedThreadPool is safe because callers are bounded by HttpServer's
-    // FixedThreadPool(4) and every task must complete within
-    // ROOT_WINDOW_TIMEOUT_SECONDS.
+    // Admission remains held until the actual Binder worker finishes, even if its
+    // caller timed out. Interrupting a thread cannot guarantee Binder cancellation.
     private val rootWindowExecutor = Executors.newCachedThreadPool()
     // Concurrent rootInActiveWindow calls can deadlock the Binder IPC
     // path (csat confirmed on Samsung Galaxy + Gallery viewer). One in
@@ -66,6 +68,7 @@ class ActionRouter(
     private val activeRootCalls = AtomicInteger(0)
     private val timeoutCount = AtomicInteger(0)
     private val totalRootCalls = AtomicInteger(0)
+    private val activeUiRequests = AtomicInteger(0)
 
     fun route(
         method: String,
@@ -76,11 +79,15 @@ class ActionRouter(
         if (path != "/ping" && !isAuthorized(headers)) {
             return HttpResponse(401, errorJson("unauthorized"))
         }
+        val uiRequest = !(method == "GET" && path == "/ping")
+        if (uiRequest) activeUiRequests.incrementAndGet()
         return try {
             dispatch(method, path, params)
         } catch (e: Exception) {
             Log.e(TAG, "Handler error for $method $path", e)
             HttpResponse(500, errorJson("internal_error", e.message))
+        } finally {
+            if (uiRequest) activeUiRequests.decrementAndGet()
         }
     }
 
@@ -110,6 +117,13 @@ class ActionRouter(
             put("result", "pong")
             put("protocol_version", BuildConfig.PROTOCOL_VERSION)
             put("bridge_version", BuildConfig.VERSION_NAME)
+            put("ui_health", JSONObject().apply {
+                put("state", if (activeUiRequests.get() > 0 || activeRootCalls.get() > 0) "busy" else if (timeoutCount.get() > 0) "degraded" else "ready")
+                put("active_requests", activeUiRequests.get())
+                put("active_root_calls", activeRootCalls.get())
+                put("root_timeouts", timeoutCount.get())
+                put("hard_timeout_cancellable", false)
+            })
         }
         return HttpResponse(200, payload.toString())
     }
@@ -122,10 +136,14 @@ class ActionRouter(
     }
 
     private fun handleTree(params: Map<String, String>): HttpResponse {
+        val limits = try { TreeCollectionLimits.fromParams(params) }
+        catch (e: IllegalArgumentException) { return badRequest(e.message ?: "invalid_collection_budget") }
         val service = requireService() ?: return serviceUnavailable()
         val activeRoot = getRootWithTimeout(service) ?: return rootWindowTimeout()
+        val activeWindowId = activeRoot.windowId
+        val budget = TreeCollectionBudget(limits)
         val filter = params["filter"]?.lowercase() == "true"
-        val activeTree = treeHandler.buildTree(activeRoot, filter)
+        val activeTree = treeHandler.buildTree(activeRoot, filter, budget)
             ?: return HttpResponse(500, errorJson("tree_build_failed"))
 
         // Merge in any same-task secondary windows (PopupWindow-style
@@ -137,7 +155,7 @@ class ActionRouter(
         // filter rationale.
         val display = computeDisplay(service)
         val displayBounds = Rect(0, 0, display.optInt("width"), display.optInt("height"))
-        val secondaries = collectSecondaryAppWindowTrees(service, activeRoot, filter)
+        val secondaries = collectSecondaryAppWindowTrees(service, activeWindowId, filter, budget)
 
         val resultTree = if (secondaries.isEmpty()) {
             activeTree
@@ -155,6 +173,16 @@ class ActionRouter(
             put("status", "success")
             put("result", resultTree.toJson())
             put("display", display)
+            put("collection", JSONObject().apply {
+                put("max_nodes", limits.maxNodes)
+                put("max_depth", limits.maxDepth)
+                put("max_children", limits.maxChildren)
+                put("timeout_ms", limits.timeoutMs)
+                put("visited_nodes", budget.visitedNodes)
+                put("elapsed_ms", budget.elapsedMs)
+                put("truncated", budget.truncated)
+                put("reasons", JSONArray(budget.reasons.toList()))
+            })
         }
         return HttpResponse(200, payload.toString())
     }
@@ -186,28 +214,32 @@ class ActionRouter(
      */
     private fun collectSecondaryAppWindowTrees(
         service: AccessibilityService,
-        activeRoot: AccessibilityNodeInfo,
+        activeWindowId: Int,
         filter: Boolean,
+        budget: TreeCollectionBudget,
     ): List<ElementNode> {
+        if (!budget.available()) return emptyList()
         val windows = service.windows ?: return emptyList()
         try {
-            val activeWindowId = activeRoot.windowId
-            // Sort by layer ascending so the bottom-most popup (closest
-            // to active) appears first in the outline. Agent-side this
-            // matches the visual stacking when there's more than one
-            // overlay (rare but possible: AlertDialog over Spinner).
-            return windows
-                .filter { w ->
-                    w.id != activeWindowId && isDescendantOf(w, activeWindowId)
+            val selected = mutableListOf<AccessibilityWindowInfo>()
+            val limit = (budget.limits.maxChildren - 1).coerceAtLeast(0)
+            for ((index, window) in windows.withIndex()) {
+                if (!budget.available()) break
+                if (index >= budget.limits.maxChildren) { budget.reasons.add("max_children"); break }
+                if (window.id != activeWindowId && isDescendantOf(window, activeWindowId, budget)) {
+                    if (selected.size >= limit) { budget.reasons.add("max_children"); break }
+                    selected.add(window)
                 }
-                .sortedBy { it.layer }
-                .mapNotNull { window ->
-                    val root = window.root ?: return@mapNotNull null
-                    treeHandler.buildTree(root, filter)
-                }
-        } finally {
-            recycleWindows(windows)
-        }
+            }
+            if (selected.isEmpty()) return emptyList()
+            // Reserve the synthetic root before collecting secondary nodes.
+            if (!budget.enter()) return emptyList()
+            return selected.sortedBy { it.layer }.mapNotNull { window ->
+                if (!budget.available()) return@mapNotNull null
+                val root = window.root ?: return@mapNotNull null
+                treeHandler.buildTree(root, filter, budget)
+            }
+        } finally { recycleWindows(windows) }
     }
 
     /**
@@ -219,14 +251,17 @@ class ActionRouter(
      * spin forever.
      */
     @Suppress("DEPRECATION")
-    private fun isDescendantOf(window: AccessibilityWindowInfo, ancestorId: Int): Boolean {
+    private fun isDescendantOf(window: AccessibilityWindowInfo, ancestorId: Int, budget: TreeCollectionBudget): Boolean {
         var cur: AccessibilityWindowInfo? = window.parent
         var depth = 0
-        while (cur != null && depth < MAX_PARENT_DEPTH) {
+        while (cur != null && depth < MAX_PARENT_DEPTH && budget.available()) {
             val parentId = cur.id
+            if (parentId == ancestorId) {
+                try { cur.recycle() } catch (_: Exception) {}
+                return true
+            }
             val next = cur.parent
             try { cur.recycle() } catch (_: Exception) {}
-            if (parentId == ancestorId) return true
             cur = next
             depth++
         }
@@ -427,48 +462,51 @@ class ActionRouter(
 
     private fun getRootWithTimeout(service: AccessibilityService): AccessibilityNodeInfo? {
         val callNum = totalRootCalls.incrementAndGet()
-        if (!rootWindowSemaphore.tryAcquire(ROOT_WINDOW_WAIT_SECONDS, TimeUnit.SECONDS)) {
-            Log.w(TAG, "rootInActiveWindow #$callNum skipped — another call in progress (active=${activeRootCalls.get()}, timeouts=${timeoutCount.get()})")
+        if (!rootWindowSemaphore.tryAcquire(rootWindowWaitMillis, TimeUnit.MILLISECONDS)) {
+            Log.w(TAG, "rootInActiveWindow #$callNum skipped: another call is still executing")
             return null
         }
-        @Suppress("UNUSED_VARIABLE")
-        val active = activeRootCalls.incrementAndGet()
-        val future = rootWindowExecutor.submit<AccessibilityNodeInfo?> {
-            // `rootInActiveWindow` can return null when the framework
-            // briefly has no "active" window — e.g. during transient
-            // popup transitions, FTUE overlays, or right after a
-            // fragment swap. Fall back to walking `service.windows`
-            // and picking the highest-layer user-facing app/system
-            // window (droidrun-portal pattern, commit 83afd440d). This
-            // does NOT fix the separate "non-null but stale" case
-            // (which the `typeWindowContentChanged` subscription bump
-            // addresses) — but it makes the null path resilient where
-            // before we returned a 504.
-            service.rootInActiveWindow ?: pickFallbackRoot(service)
-        }
-        return try {
-            future.get(ROOT_WINDOW_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-        } catch (e: TimeoutException) {
-            // Cancel the in-flight Binder call when we give up
-            // waiting. Without `future.cancel(true)` the
-            // `rootInActiveWindow` task keeps running on its worker
-            // thread, holds the executor slot, and — worst case —
-            // eventually returns a `AccessibilityNodeInfo` that is
-            // never recycled because the original caller already
-            // bailed. Cancel + best-effort recycle of any late
-            // result closes the leak window.
-            future.cancel(true)
-            val total = timeoutCount.incrementAndGet()
-            Log.w(TAG, "rootInActiveWindow #$callNum TIMEOUT after ${ROOT_WINDOW_TIMEOUT_SECONDS}s (total_timeouts=$total), future cancelled")
-            null
+        activeRootCalls.incrementAndGet()
+        val lock = Any()
+        var abandoned = false
+        var returnedRoot: AccessibilityNodeInfo? = null
+        val future = try {
+            rootWindowExecutor.submit {
+                try {
+                    val root = service.rootInActiveWindow ?: pickFallbackRoot(service)
+                    synchronized(lock) {
+                        if (abandoned) recycleNode(root) else returnedRoot = root
+                    }
+                } finally {
+                    activeRootCalls.decrementAndGet()
+                    rootWindowSemaphore.release()
+                }
+            }
         } catch (e: Exception) {
-            future.cancel(true)
-            Log.w(TAG, "rootInActiveWindow #$callNum failed: ${e.message}")
-            null
-        } finally {
             activeRootCalls.decrementAndGet()
             rootWindowSemaphore.release()
+            throw e
         }
+        return try {
+            future.get(rootWindowTimeoutMillis, TimeUnit.MILLISECONDS)
+            synchronized(lock) { returnedRoot.also { returnedRoot = null } }
+        } catch (e: Exception) {
+            synchronized(lock) {
+                abandoned = true
+                recycleNode(returnedRoot)
+                returnedRoot = null
+            }
+            // A Binder call is not hard-cancellable. Retain admission until it actually finishes;
+            // never dispatch a replacement while the original root query may still be running.
+            if (e is TimeoutException) timeoutCount.incrementAndGet()
+            Log.w(TAG, "rootInActiveWindow #$callNum unavailable: ${e.message}")
+            null
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun recycleNode(node: AccessibilityNodeInfo?) {
+        try { node?.recycle() } catch (_: Exception) {}
     }
 
     /**

@@ -857,18 +857,28 @@ public struct TKAndroidUIAutomatorNodeSummary: Equatable {
 
 public enum TKAndroidUIAutomatorXMLParser {
     public static func nodeSummaries(in data: Data) throws -> [TKAndroidUIAutomatorNodeSummary] {
-        let delegate = AndroidUIAutomatorXMLDelegate()
+        try nodeSummaries(in: data, budget: .init()).nodes
+    }
+
+    public static func nodeSummaries(in data: Data, budget: TKCollectionBudgetLimits) throws -> TKBoundedNodeCollection<TKAndroidUIAutomatorNodeSummary> {
+        guard data.count <= 10 * 1_024 * 1_024 else { throw TKCollectionInputError.inputTooLarge }
+        let delegate = AndroidUIAutomatorXMLDelegate(budget: budget)
         let parser = XMLParser(data: data)
         parser.delegate = delegate
-        guard parser.parse() else {
+        guard parser.parse() || delegate.stoppedForBudget else {
             throw parser.parserError ?? TKAndroidADBParserError.invalidUIAutomatorXML
         }
-        return delegate.nodes
+        return TKBoundedNodeCollection(nodes: delegate.nodes, collection: delegate.context.summary)
     }
 }
 
 private final class AndroidUIAutomatorXMLDelegate: NSObject, XMLParserDelegate {
     var nodes: [TKAndroidUIAutomatorNodeSummary] = []
+    var context: TKCollectionBudgetState
+    var stoppedForBudget = false
+    private var childrenCounts: [Int] = []
+
+    init(budget: TKCollectionBudgetLimits) { context = TKCollectionBudgetState(limits: budget) }
 
     func parser(
         _ parser: XMLParser,
@@ -877,7 +887,19 @@ private final class AndroidUIAutomatorXMLDelegate: NSObject, XMLParserDelegate {
         qualifiedName qName: String?,
         attributes attributeDict: [String: String] = [:]
     ) {
+        if context.isExhausted() { stoppedForBudget = true; parser.abortParsing(); return }
         guard elementName == "node" else { return }
+        if !childrenCounts.isEmpty {
+            childrenCounts[childrenCounts.count - 1] += 1
+            if childrenCounts.last! > context.limits.maxChildren {
+                context.recordLimit("max_children")
+                stoppedForBudget = true; parser.abortParsing(); return
+            }
+        }
+        guard context.admit(depth: childrenCounts.count) else {
+            stoppedForBudget = true; parser.abortParsing(); return
+        }
+        childrenCounts.append(0)
         nodes.append(TKAndroidUIAutomatorNodeSummary(
             text: emptyToNil(attributeDict["text"]),
             resourceID: emptyToNil(attributeDict["resource-id"]),
@@ -887,6 +909,10 @@ private final class AndroidUIAutomatorXMLDelegate: NSObject, XMLParserDelegate {
             enabled: attributeDict["enabled"] != "false",
             bounds: parseAndroidBounds(attributeDict["bounds"])
         ))
+    }
+
+    func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
+        if elementName == "node", !childrenCounts.isEmpty { childrenCounts.removeLast() }
     }
 }
 

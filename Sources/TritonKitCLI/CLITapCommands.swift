@@ -584,7 +584,7 @@ struct Tap: AsyncParsableCommand {
                     print("recovery: \(recovery)")
                 }
             }
-            if response.status == .failed {
+            if !response.ok || response.status == .failed {
                 throw ExitCode.failure
             }
         } catch {
@@ -594,7 +594,7 @@ struct Tap: AsyncParsableCommand {
     }
 }
 
-private func decodeWebViewTapRuntimeResult(_ data: Data) throws -> TKWebViewTapResponse {
+func decodeWebViewTapRuntimeResult(_ data: Data) throws -> TKWebViewTapResponse {
     let decoder = JSONDecoder()
     if let response = try? decoder.decode(TKWebViewTapResponse.self, from: data) {
         return response
@@ -609,7 +609,10 @@ private func decodeWebViewTapRuntimeResult(_ data: Data) throws -> TKWebViewTapR
             dispatched: false,
             trusted: false,
             error: TKWebViewError(code: TKWebViewErrorCode(rawValue: error.error.code) ?? .javascriptError, message: error.error.message, hint: error.error.hint),
-            elapsedMs: 0
+            elapsedMs: error.outcome == "unknown" ? (error.uiHealth?.timeoutMilliseconds ?? 0) : 0,
+            note: error.outcome == "unknown" ? "WebView tap execution outcome is unknown; dispatch is not confirmed. Do not automatically replay the action." : nil,
+            outcome: error.outcome,
+            uiHealth: error.uiHealth
         )
     }
     return try decoder.decode(TKWebViewTapResponse.self, from: data)

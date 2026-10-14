@@ -70,7 +70,7 @@ func usesIOSHostSimulatorAX(_ target: HostDeviceTarget?) -> Bool {
 struct Observe: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "Observe the current app surface from host and runtime sources",
-        subcommands: [ObserveCurrent.self, ObserveTree.self]
+        subcommands: [ObserveCurrent.self, ObserveTree.self, ObserveOCR.self, ObserveSettle.self]
     )
 }
 
@@ -92,7 +92,7 @@ struct ObserveCurrent: AsyncParsableCommand {
     @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
     @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421
     @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767") var runtimeBaseURL: String?
-    @Option(help: "Maximum nodes to return") var maxNodes: Int?
+    @Option(help: "Maximum visited/returned nodes (1...10000; backend budgets also apply)") var maxNodes: Int?
     @Option(help: "Write host layout artifact to a file for Android or Harmony") var output: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
@@ -132,7 +132,7 @@ struct ObserveTree: AsyncParsableCommand {
     @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
     @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421
     @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767") var runtimeBaseURL: String?
-    @Option(help: "Maximum nodes to return") var maxNodes: Int?
+    @Option(help: "Maximum visited/returned nodes (1...10000; backend budgets also apply)") var maxNodes: Int?
     @Option(help: "Write host layout artifact to a file for Android or Harmony") var output: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
