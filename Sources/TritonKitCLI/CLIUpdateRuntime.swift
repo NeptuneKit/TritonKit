@@ -132,7 +132,7 @@ func makeCLIUpdatePlan(
         actions.append(CLIUpdateAction(
             id: "install-skills-bundle",
             kind: .installSkillsBundle,
-            description: "Replace TritonKit.skills in the configured agent skills directory",
+            description: "Verify checksum and bundle, refuse local modifications, atomically update TritonKit.skills with a backup",
             command: nil,
             args: [],
             path: skillsDirectory,
@@ -412,15 +412,18 @@ private func installSkillsBundle(repository: String, tag: String, skillsDirector
     let archive = temp.appendingPathComponent("tritonkit-skills.tar.gz")
     let url = URL(string: "https://github.com/\(repository)/releases/download/\(tag)/tritonkit-skills.tar.gz")!
     try await downloadFile(url, to: archive)
-    try runProcess("/usr/bin/tar", ["-xzf", archive.path, "-C", temp.path])
-    let source = temp.appendingPathComponent("TritonKit.skills", isDirectory: true)
-    let destinationRoot = URL(fileURLWithPath: skillsDirectory, isDirectory: true)
-    let destination = destinationRoot.appendingPathComponent("TritonKit.skills", isDirectory: true)
-    if FileManager.default.fileExists(atPath: destination.path) {
-        try FileManager.default.removeItem(at: destination)
+    let checksumsURL = URL(string: "https://github.com/\(repository)/releases/download/\(tag)/tritonkit_checksums.txt")!
+    let checksums = temp.appendingPathComponent("tritonkit_checksums.txt")
+    try await downloadFile(checksumsURL, to: checksums)
+    guard let expected = try parseTritonReleaseChecksums(String(contentsOf: checksums, encoding: .utf8))["tritonkit-skills.tar.gz"] else {
+        throw CLIUpdateErrorDetail(code: "checksum_missing", message: "Release checksum manifest is missing the skills bundle.", hint: nil)
     }
-    try FileManager.default.createDirectory(at: destinationRoot, withIntermediateDirectories: true)
-    try FileManager.default.copyItem(at: source, to: destination)
+    guard try sha256(path: archive.path) == expected else {
+        throw CLIUpdateErrorDetail(code: "checksum_mismatch", message: "Skills bundle checksum mismatch.", hint: nil)
+    }
+    let source = try extractValidatedPublicSkillArchive(archive: archive, into: temp)
+    try installValidatedPublicSkillDirectory(source: source, destinationRoot: URL(fileURLWithPath: skillsDirectory, isDirectory: true))
+
 }
 
 private func downloadFile(_ url: URL, to destination: URL) async throws {
