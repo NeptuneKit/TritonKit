@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-14",
+  "scope": "isolated-cross-app-research-not-production",
+  "toolchain": {
+    "xcode": "27.1",
+    "triton": "0.2.26"
+  },
+  "physical": {
+    "model": "iPhone 13 Pro Max",
+    "os": "iOS 26.6.2",
+    "transport": "exact-device-usbmux-loopback",
+    "launchMode": "standard-xcode-test"
+  },
+  "unitTests": {
+    "swiftProtocol": 9,
+    "hostClientAndUSB": 38,
+    "experiments": 5,
+    "total": 52,
+    "passed": true
+  },
+  "signedDeviceBuildExitCodes": [
+    0,
+    0,
+    0
+  ],
+  "scenes": [
+    {
+      "app": "fixture",
+      "scenario": "counter-tap",
+      "verified": true,
+      "before": 0,
+      "after": 1
+    },
+    {
+      "app": "calculator",
+      "scenario": "activation-and-fixture-background",
+      "verified": true,
+      "calculatorState": 4,
+      "fixtureState": 3
+    },
+    {
+      "app": "calculator",
+      "scenario": "7+8",
+      "verified": true,
+      "result": "15",
+      "evidence": [
+        "public-AX",
+        "private-PNG-visual-review"
+      ],
+      "session": "device-cross-02"
+    },
+    {
+      "app": "calculator",
+      "scenario": "duplicate-request-id-Equals",
+      "verified": true,
+      "result": "15",
+      "session": "device-cross-02"
+    },
+    {
+      "app": "settings",
+      "scenario": "not-hittable-rejection-then-scroll-General",
+      "verified": true,
+      "initialError": "cross_app_not_hittable",
+      "session": "device-cross-02"
+    },
+    {
+      "app": "settings",
+      "scenario": "back-to-root-General",
+      "verified": true,
+      "session": "device-cross-03"
+    },
+    {
+      "app": "safari",
+      "scenario": "activation-and-AX",
+      "verified": true
+    },
+    {
+      "app": "safari",
+      "scenario": "example-navigation-and-input",
+      "verified": false,
+      "error": "cross_app_focus",
+      "addressBarTapped": true,
+      "urlCleared": false,
+      "urlTyped": false,
+      "webpageVerified": false
+    },
+    {
+      "app": "fixture",
+      "scenario": "counter-preserved-after-multiple-app-switches",
+      "verified": true,
+      "counter": "1",
+      "evidence": "public-AX",
+      "session": "device-cross-03"
+    },
+    {
+      "app": "fixture",
+      "scenario": "final-screen-capture-app-attribution",
+      "verified": false,
+      "captureSucceeded": true,
+      "reportedState": 4,
+      "visuallyObserved": "app-switcher-with-calculator",
+      "scope": "XCUIScreen.main"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "sim-cross-01",
+      "testPassed": false,
+      "testSeconds": 110.868,
+      "hostExitCode": 65
+    },
+    {
+      "id": "device-cross-01",
+      "testPassed": false,
+      "testSeconds": 235.11,
+      "hostExitCode": -15,
+      "hostTermination": "owned-process-group-after-test-failure"
+    },
+    {
+      "id": "device-cross-02",
+      "testPassed": false,
+      "testSeconds": 233.437,
+      "hostExitCode": -15,
+      "hostTermination": "owned-process-group-after-test-failure"
+    },
+    {
+      "id": "device-cross-03",
+      "testPassed": true,
+      "testSeconds": 179.109,
+      "testFailures": 0,
+      "hostExitCode": 0,
+      "stopAcknowledged": true
+    }
+  ],
+  "limits": [
+    "not-all-scenes-passed",
+    "fixed-app-whitelist-only",
+    "simulator-fixed-version-not-rerun",
+    "AX-nonatomic-and-cost-not-bounded",
+    "unknown-transport-result-is-not-business-failure",
+    "screen-capture-not-app-scoped",
+    "Safari-focus-root-cause-undetermined",
+    "not-permanent-residency"
+  ],
+  "cleanup": {
+    "ownedTestProcessesExited": true,
+    "ownedForwarderStopped": true,
+    "ownedSimulatorShutdown": true,
+    "researchAppsRemainInstalled": true,
+    "newPublicScreenshots": 0
+  },
+  "productionIntegration": false,
+  "gates": {
+    "local": true,
+    "ciDocs": true,
+    "docsStructure": true,
+    "diffWhitespace": true,
+    "exactPrivateValueScan": {
+      "leakCount": 0,
+      "checkedValues": 16,
+      "checkedFiles": 29
+    },
+    "rootSwiftTests": 264,
+    "rootSwiftSuites": 34
+  }
+}

@@ -10,7 +10,7 @@
   "capabilities": [],
   "coverage": ["report"],
   "debug": ["attrs", "ax", "geometry", "hierarchy", "hit", "ledger", "node", "nodes", "object", "patch-node", "runtime", "snapshot", "state", "ui-health"],
-  "device": ["alias", "bridge", "containers", "current", "diagnose", "doctor", "files", "list", "mountpoint", "pair", "platform-control", "platforms", "proxy", "resolve", "runtime-url", "screenshot", "start", "stop", "unpair", "use", "wait-ready"],
+  "device": ["alias", "bridge", "containers", "current", "diagnose", "doctor", "files", "list", "mountpoint", "pair", "platform-control", "platforms", "proxy", "resolve", "runner", "runtime-url", "screenshot", "start", "stop", "unpair", "use", "wait-ready"],
   "doctor": [],
   "evidence": ["capture", "ingest", "inspect", "project-screens", "project-workspace", "redact", "summary"],
   "export": [],

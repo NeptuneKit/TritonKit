@@ -235,6 +235,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton app launch --device <selector> --json",
             ],
             outputContracts: [
+                iosRunnerOutputContract(),
                 hostDeviceListOutputContract(),
                 hostDeviceListOutputContract(selector: "host.android-device"),
                 hostDeviceSelectionOutputContract(),
@@ -257,7 +258,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 hostHarmonyRuntimeURLOutputContract(),
                 runtimeManifestOutputContract(),
             ],
-            failureCodes: applePlatformRunnerFailureCodes + [
+            failureCodes: Array(Set(applePlatformRunnerFailureCodes + iosRunnerFailureCodes + [
                 "device_file_domain_execution_uncertain",
                 "device_administration_policy_required",
                 "device_administration_result_invalid",
@@ -367,8 +368,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "harmony_ability_launch_failed",
                 "harmony_screenshot_failed",
                 "validation_failed",
-            ],
+            ])).sorted(),
             subcommands: [
+                iosRunnerSubcommandSchema(),
                 TKCommandSubcommandSchema(name: "containers", summary: "SDK bundle/group binding and optional native Simulator shallow metadata", requiredOptions: ["--bundle-id"], optionalOptions: ["--group-id", "--list", "--platform", "--device", "--scope", "--timeout", "--max-json-bytes", "--max-entries", "--format", "--json"], outputSelectors: ["host.app-container-binding"]),
                 TKCommandSubcommandSchema(name: "platforms", summary: "Apple integration catalog and opt-in hardware inventory", requiredOptions: [], optionalOptions: ["--apple-platform", "--inventory", "--include-real-devices", "--device", "--format", "--json"], outputSelectors: ["host.apple-platform-report"]),
                 TKCommandSubcommandSchema(name: "platform-control", summary: "Fixture-only public XCTest vocabulary or explicitly audited XCTest runner execution", optionOverrides: [TKCommandSchemaOption(name: "--platform", type: "watchos|tvos|visionos|macos", required: true, description: "Apple family for the control contract"), TKCommandSchemaOption(name: "--action", type: "crown-rotate|action-button|remote-up|remote-down|remote-left|remote-right|remote-select|remote-menu|focus|side-button|gaze|pinch|scene", required: true, description: "Public XCTest vocabulary or explicit unsupported action"), TKCommandSchemaOption(name: "--delta", type: "Double", description: "Finite non-zero watchOS Crown delta; only crown-rotate accepts it"), TKCommandSchemaOption(name: "--device", type: "ExactSimulatorUDID", description: "No booted/current/name/physical selector"), TKCommandSchemaOption(name: "--xctestrun", type: "Path", description: "Private specialized runner bundle"), TKCommandSchemaOption(name: "--test-identifier", type: "String", description: "Exactly one XCTest Target/Class/testMethod; no retries or parallel clones"), TKCommandSchemaOption(name: "--result-bundle", type: "Path", description: "Fresh private result bundle"), TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "120", description: "Bounded runner timeout"), TKCommandSchemaOption(name: "--audit-record", type: "String", description: "Opaque audit record"), TKCommandSchemaOption(name: "--execute-runner", type: "Bool", description: "Explicitly allow one runner invocation"), TKCommandSchemaOption(name: "--confirm", type: "Bool", description: "Confirm input delivery")], requiredOptions: ["--platform", "--action"], optionalOptions: ["--delta", "--device", "--xctestrun", "--test-identifier", "--result-bundle", "--timeout", "--audit-record", "--execute-runner", "--confirm", "--format", "--json"], outputSelectors: ["host.apple-platform-control"], failureCodes: applePlatformRunnerFailureCodes),
@@ -451,7 +453,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     summary: "Stop a selected Android or Harmony emulator"
                 ),
             ],
-            providedCapabilities: ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "ios-device", "ios-simulator-screenshot", "ios-host-ax", "ios-host-hid", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "harmony-device", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
+            providedCapabilities: iosRunnerCapabilityNames + ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "ios-device", "ios-simulator-screenshot", "ios-host-ax", "ios-host-hid", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "harmony-device", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
         ),
         TKCommandSchema(
             name: "camera",

@@ -327,6 +327,7 @@ func recoveryCommandRootCategoryMap() -> [String: String] {
 }
 
 func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
+    if let categories = TKCommandRecoveryCommand.residentRunnerRecoveryCategories(forFailureCode: failureCode) { return Set(categories) }
     if ["screenshot_deadline_exceeded", "insufficient_visual_samples", "visual_motion_timeout", "runtime_ui_timeout", "runtime_ui_busy", "runtime_ui_circuit_open"].contains(failureCode) {
         return ["diagnose", "observe", "plan"]
     }

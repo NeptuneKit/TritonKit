@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-14",
+  "scope": "isolated-research-not-production",
+  "baseline": "8aaf6c31d308194b489e10ed83362cee91f549d5",
+  "toolchain": {
+    "xcode": "27.1",
+    "xcodeBuild": "27A9275",
+    "triton": "0.2.26"
+  },
+  "unitTests": {
+    "swiftProtocol": 6,
+    "hostClientAndUSB": 32,
+    "sessionPreparation": 3,
+    "total": 41,
+    "passed": true
+  },
+  "simulator": {
+    "os": "iOS 27.1",
+    "launchMode": "standard-xcode-test",
+    "testSeconds": 231.804,
+    "testExitCode": 0,
+    "healthSamples": 13,
+    "healthSuccesses": 13,
+    "healthWindowSeconds": 60,
+    "runnerApplicationState": 2,
+    "fixtureApplicationState": 4,
+    "tapBefore": 0,
+    "tapAfter": 1,
+    "duplicateTapCounter": 1,
+    "screenshotPNGBytes": 99700,
+    "homePostconditionVerified": false,
+    "ordinaryAppColdLaunchExitCode": 1,
+    "ordinaryColdLaunchHealthSuccesses": 0,
+    "ordinaryColdLaunchHealthSamples": 16
+  },
+  "physical": {
+    "model": "iPhone 13 Pro Max",
+    "os": "iOS 26.6.2",
+    "osBuild": "23G90",
+    "transport": "exact-device-usbmux-loopback",
+    "launchMode": "standard-xcode-test",
+    "signedBuildExitCode": 0,
+    "firstSession": {
+      "exitCode": 65,
+      "stage": "automation-initialization",
+      "error": "Timed out while enabling automation mode",
+      "testMethodEntered": false
+    },
+    "secondSession": {
+      "testSeconds": 195.316,
+      "testExitCode": 0,
+      "healthSamples": 25,
+      "healthSuccesses": 25,
+      "healthWindowSeconds": 120.306,
+      "runnerApplicationState": 2,
+      "fixtureApplicationState": 4,
+      "automationReady": true,
+      "tapBefore": 0,
+      "tapAfter": 1,
+      "duplicateTapCounter": 1,
+      "receiptFound": true,
+      "cleanScreenshotPNGBytes": 67184,
+      "homePostconditionVerified": false,
+      "stopAcknowledged": true
+    },
+    "ordinaryColdLaunch": {
+      "hostActionExitCode": 0,
+      "hostActionBusinessReady": false,
+      "healthSuccesses": 0,
+      "healthSamples": 16,
+      "probeWindowSeconds": 30,
+      "runnerProcessObservedAfterLaunch": false
+    }
+  },
+  "notVerified": [
+    "generic-ax-tree",
+    "arbitrary-app-controls",
+    "home-postcondition",
+    "locked-device-serving",
+    "30-minute-resource-profile",
+    "USB-detach-and-reconnect",
+    "device-reboot",
+    "preinstalled-RemoteXPC-bootstrap",
+    "host-independent-running",
+    "permanent-residency"
+  ],
+  "cleanup": {
+    "ownedTestProcessesExited": true,
+    "ownedForwarderStopped": true,
+    "ownedSimulatorShutdown": true,
+    "coldLaunchRunnerTerminate": "not-submitted-pid-resolution-unavailable",
+    "researchAppsRemainInstalled": true
+  },
+  "productionIntegration": false,
+  "gates": {
+    "local": true,
+    "rootSwiftTests": 264,
+    "rootSwiftSuites": 34,
+    "ciDocs": true,
+    "docsStructure": true,
+    "diffWhitespace": true,
+    "exactPrivateValueScanLeaks": 0
+  }
+}

@@ -135,6 +135,14 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "semantic-action", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "ledger", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "host-device", supported: true),
+        TKRuntimeCapability(name: "ios-resident-runner", supported: true),
+        TKRuntimeCapability(name: "ios-resident-runner-prepare", supported: true),
+        TKRuntimeCapability(name: "ios-resident-runner-start", supported: true),
+        TKRuntimeCapability(name: "ios-resident-runner-status", supported: true),
+        TKRuntimeCapability(name: "ios-resident-runner-stop", supported: true),
+        TKRuntimeCapability(name: "ios-resident-runner-request", supported: true),
+        TKRuntimeCapability(name: "ios-resident-runner-receipt", supported: true),
+
         TKRuntimeCapability(name: "host-device-selector", supported: true),
         TKRuntimeCapability(name: "device-alias", supported: true),
         TKRuntimeCapability(name: "device-list", supported: true),
@@ -371,6 +379,7 @@ func enrichRuntimeCapability(
 }
 
 func runtimeCapabilityGroup(for name: String) -> String {
+    if iosRunnerCapabilityNames.contains(name) { return "host" }
     switch name {
     case "highlight":
         return "runtime"
@@ -410,6 +419,7 @@ func runtimeCapabilityGroup(for name: String) -> String {
 }
 
 func runtimeCapabilityRequiredBy(for name: String) -> [String] {
+    if iosRunnerCapabilityNames.contains(name) { return ["target", "action", "observe", "evidence"] }
     switch name {
     case "highlight":
         return ["runtime"]
@@ -466,6 +476,7 @@ func runtimeCapabilityNextAction(
         // This probe is optional and never an installation or SDK bootstrap instruction.
         return TKCLINextAction(command: "highlight", args: ["capabilities", "--target", "<target>", "--json"])
     }
+    if iosRunnerCapabilityNames.contains(name) { return TKCLINextAction(command: "device", args: ["runner", "doctor", "--device", "<selector>", "--json"]) }
     if !serverReachable, runtimeCapabilityRequiresServer(name) {
         return TKCLINextAction(command: "serve", args: ["--host", host, "--port", String(port)], requiresLongRunningProcess: true)
     }
@@ -955,6 +966,7 @@ func runtimeCapabilityRequiresServer(_ name: String) -> Bool {
 }
 
 func runtimeCapabilityEvidence(for name: String) -> [String] {
+    if iosRunnerCapabilityNames.contains(name) { return ["stdout-json", "command-schema", "status-json"] }
     switch name {
     case "highlight":
         return ["stdout-json", "command-schema"]

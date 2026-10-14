@@ -29,7 +29,7 @@ For old/new Xcode checks, preserve scoped `triton device doctor --platform ios -
    ```bash
    triton version --json
    ```
-4. Start the local server explicitly when embedded runtime is needed:
+4. Choose the provider before starting a session. Use the bundled iOS Runner below for allowed app UI without an app SDK; start the local server explicitly when embedded runtime is needed:
    ```bash
    triton serve --host 127.0.0.1 --port 19421
    ```
@@ -47,6 +47,40 @@ For old/new Xcode checks, preserve scoped `triton device doctor --platform ios -
 ## Reference Routing
 
 Start with [references/feature-index.md](references/feature-index.md) to map the requested feature to the smallest reference file. Then read only the matched reference(s).
+
+## Bundled iOS Runner regression
+
+For iOS UI regression without modifying the target app, use `triton device runner`. The complete CLI package includes the XCTest project and native USB transport; the target app needs no embedded TritonKit SDK. The runtime workflow does not require Appium, WebDriverAgent, Python, or `iproxy`. Keep the packaged `ios-runner` resources and their manifest matched to the CLI version. Xcode and a compatible iOS SDK remain required; physical devices also need pairing/trust, Developer Mode, an Apple Development signing identity, unlock, and any system UI Automation authorization. Do not change lock settings or authorization on the user's behalf.
+
+Preserve discovery and the exact command schema, then use one explicit `ios-real:<device-id>` or booted `sim:<UDID>` target. Only `prepare` takes signing options: supply `--team` if no unique valid team is available and use `--allow-provisioning-updates` only when provisioning changes are authorized.
+
+```bash
+triton device list --platform ios --scope real --json
+triton schema --command device.runner --json
+triton device runner doctor --device 'ios-real:<device-id>' --json
+triton device runner prepare --device 'ios-real:<device-id>' --timeout 600 --json
+triton device runner start --device 'ios-real:<device-id>' --allow-bundle '<bundle-id>' --ttl 600 --json
+triton device runner activate --device 'ios-real:<device-id>' --bundle-id '<bundle-id>' --json
+triton device runner inspect --device 'ios-real:<device-id>' --bundle-id '<bundle-id>' --limit 40 --json
+triton device runner tap --device 'ios-real:<device-id>' --bundle-id '<bundle-id>' --identifier '<observed-identifier>' --request-id action-001 --json
+triton device runner inspect --device 'ios-real:<device-id>' --bundle-id '<bundle-id>' --json
+triton device runner status --device 'ios-real:<device-id>' --json
+triton device runner stop --device 'ios-real:<device-id>' --json
+```
+
+Repeat `--allow-bundle` at `start` for each authorized app; the fixture is always allowed. Do not broaden the app list after an action fails. Use identifiers or unique labels from the latest inspect only; selectors expire after 30 seconds, and actions clear the observation. `scroll --direction up|down|left|right` and `type --identifier '<observed-identifier>' --text-file '<private-text-file>'` retain the same device/bundle binding. Type requires verified focus. Safari address input and navigation remain unverified in the live validation; do not count an available command or an activated Safari app as a passed navigation flow.
+
+Assign a request ID before actions. Delivery `unknown` does not authorize an automatic retry or backend switch: query the original ID, distinguish pending/absent/complete, and verify actual business state. The session's idempotency cache is bounded and does not survive a new Runner session.
+
+```bash
+triton device runner receipt --device 'ios-real:<device-id>' --request-id action-001 --json
+triton device runner screenshot --device 'ios-real:<device-id>' --bundle-id '<bundle-id>' --request-id capture-001 --output '<fresh-private.png>' --json
+triton device runner receipt --device 'ios-real:<device-id>' --request-id capture-001 --output '<fresh-recovered.png>' --json
+```
+
+A screenshot is a sensitive device-screen frame, which may show system UI or the app switcher; bundle metadata does not prove frame ownership. A tap/scroll/type acknowledgment proves submission only. Accept a regression result only after a fresh inspection or screenshot establishes the flow's business postcondition. `status` separates health/process ownership from historical automation readiness: `automationPreviouslyVerified` is historical and `automationReady: null` is not a current UI-readiness verdict.
+
+CLI commands do not require `triton serve`. HTTP clients use the same service through `/v1/device/runner/doctor|prepare|start|status|stop|request|receipt` on the local `127.0.0.1:19421` server. Existing `act`, `observe`, `device screenshot`, embedded `/request` and `/input` retain their provider contracts; do not claim those surfaces automatically route through the Runner. The TTL is a bounded Mac-managed XCTest session, not permanent background operation or proof of lock/reboot survival or standalone execution without the Mac. Stop the owned session when finished and redact all screenshots, bundle/target identities, signing metadata, private paths and logs before public handoff.
 
 ## Common Commands
 

@@ -26,12 +26,20 @@ class Triton < Formula
     web_dir = Dir["triton-macos-*/web"].first || Dir["web"].first
     odie "bundled web assets not found in release archive" if web_dir.nil?
 
+    runner_dir = Dir["triton-macos-*/resources/ios-runner"].first || Dir["resources/ios-runner"].first
+    odie "bundled iOS Runner project not found in release archive" if runner_dir.nil?
+
     bin.install binary => "triton"
     pkgshare.install web_dir => "web"
+    pkgshare.install runner_dir => "ios-runner"
+    resource_bundles = Dir["triton-macos-*/*.bundle"] + Dir["*.bundle"]
+    odie "SwiftPM resource bundle not found in release archive" if resource_bundles.empty?
+    bin.install resource_bundles
   end
 
   test do
     require "json"
+    require "digest"
 
     assert_match version.to_s, shell_output("#{bin}/triton version")
 
@@ -40,6 +48,15 @@ class Triton < Formula
     assert_equal version.to_s, version_json["version"]
 
     assert_path_exists pkgshare/"web/index.html"
+    assert_path_exists pkgshare/"ios-runner/RUNNER_MANIFEST.json"
+    assert_path_exists pkgshare/"ios-runner/TritonIOSRunner.xcodeproj/project.pbxproj"
+    runner_manifest = JSON.parse((pkgshare/"ios-runner/RUNNER_MANIFEST.json").read)
+    assert_equal version.to_s, runner_manifest["sourceVersion"]
+    runner_manifest.fetch("files").each do |entry|
+      runner_file = pkgshare/"ios-runner"/entry.fetch("path")
+      assert_path_exists runner_file
+      assert_equal entry.fetch("sha256"), Digest::SHA256.file(runner_file).hexdigest
+    end
 
     web_plan = JSON.parse(shell_output("#{bin}/triton web --print-command --json"))
     assert_equal true, web_plan["ok"]

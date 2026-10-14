@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-14",
+  "implementation": "product-cli-from-outside-checkout",
+  "phone": {
+    "calculator15": true,
+    "duplicateStill15": true,
+    "receipt": true,
+    "fixtureCounter1": true,
+    "fixturePreserved": true,
+    "settingsGeneral": true,
+    "settingsBackSubmitted": true,
+    "settingsRoot": true,
+    "safariActivate": true,
+    "safariInspect": false,
+    "safariTypeTested": false,
+    "fixtureStill1": true,
+    "screenshot": true,
+    "screenshotScope": "device-screen",
+    "screenshotRecovery": true,
+    "recoveredSamePNG": true,
+    "statusHealth": true,
+    "statusUIUnknown": true,
+    "stopVerified": true,
+    "stopAcknowledged": true
+  },
+  "native": {
+    "testPassed": true,
+    "testSucceeded": true,
+    "sessionState": "stopped",
+    "ttlBounded": true
+  },
+  "simulator": {
+    "start": true,
+    "counter1": true,
+    "stop": true,
+    "nativeExited": true
+  },
+  "releasePublished": false,
+  "homebrewUpgradeTested": false,
+  "tests": {
+    "cliSwiftTesting": 1297,
+    "cliXCTest": 36,
+    "newRunnerHostTests": 57,
+    "runnerProtocolTests": 14,
+    "packagingFixtureTests": 9,
+    "rootAndLocalGate": "passed",
+    "rootSwiftTesting": 274,
+    "sharedSwiftTesting": 59,
+    "rootXCTest": 7,
+    "docsGate": "passed",
+    "releaseAutomation": "passed",
+    "homebrewFormulaContract": "passed",
+    "publicSkillsPackage": "passed"
+  },
+  "releasePackage": {
+    "archiveResourceValidation": true,
+    "architecture": "arm64",
+    "nativeX86ExecutableTested": false,
+    "resourceCount": 8,
+    "sha256": "491ca44ad85d27d78f0989449ed35f9dc63d11307011ce60d173b017cdec5a5a",
+    "containsSwiftPMResourceBundle": true,
+    "version": true,
+    "schema": true,
+    "doctor": true,
+    "installedResourcesReady": true,
+    "status": true,
+    "phoneFinalState": "stopped",
+    "missingResourcesDetected": true,
+    "tamperedResourcesDetected": true,
+    "finalBinary": true,
+    "stoppedStatePreserved": true
+  },
+  "cleanup": [
+    {
+      "scope": "real",
+      "recordedState": "stopped",
+      "nativeProcessAbsent": true
+    },
+    {
+      "scope": "simulator",
+      "recordedState": "stopped",
+      "nativeProcessAbsent": true
+    }
+  ],
+  "delivery": {
+    "branch": "feat/SP-195-ios-runner-product",
+    "committed": true,
+    "integratedMain": true,
+    "published": false,
+    "referenceDocsCommit": "306dc42b",
+    "mainLocalGate": "passed"
+  }
+}
