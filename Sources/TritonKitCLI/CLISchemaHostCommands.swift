@@ -121,6 +121,31 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--ready", type: "Bool", defaultValue: "false", description: "Only match ready host targets"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path"),
                 TKCommandSchemaOption(name: "--adb", type: "Path", defaultValue: "adb", description: "ADB executable path"),
+                TKCommandSchemaOption(name: "--session-root", type: "Path", description: "Private iOS Runner session root"),
+                TKCommandSchemaOption(name: "--angle", type: "Double", description: "Fold hinge angle in degrees"),
+                TKCommandSchemaOption(name: "--maximum-duration", type: "Double", defaultValue: "180", description: "Recording duration bound"),
+                TKCommandSchemaOption(name: "--last-seconds", type: "Double", defaultValue: "60", description: "Bounded log window"),
+                TKCommandSchemaOption(name: "--maximum-bytes", type: "Int", defaultValue: "1048576", description: "Bounded artifact bytes"),
+                TKCommandSchemaOption(name: "--max-bytes", type: "Int", defaultValue: "16777216", description: "Mirror byte budget"),
+                TKCommandSchemaOption(name: "--maximum-entries", type: "Int", defaultValue: "1000", description: "Bounded diagnostic entries"),
+                TKCommandSchemaOption(name: "--include-content", type: "Bool", defaultValue: "false", description: "Explicitly fetch bounded diagnostic content"),
+                TKCommandSchemaOption(name: "--protocol", type: "auto|kitty|iterm2", defaultValue: "auto", description: "Terminal mirror image protocol"),
+                TKCommandSchemaOption(name: "--fps", type: "Double", defaultValue: "1", description: "Mirror refresh rate"),
+                TKCommandSchemaOption(name: "--frames", type: "Int", description: "Bounded mirror frame count"),
+                TKCommandSchemaOption(name: "--max-size", type: "Int", defaultValue: "1600", description: "Mirror image dimension bound"),
+                TKCommandSchemaOption(name: "--read-only", type: "Bool", defaultValue: "false", description: "Disable mirror input"),
+                TKCommandSchemaOption(name: "--observation-id", type: "String", description: "Fresh observation identity for coordinate actions"),
+                TKCommandSchemaOption(name: "--request-id", type: "String", description: "Idempotency request identity"),
+                TKCommandSchemaOption(name: "--end-x", type: "Double", description: "Swipe end X coordinate"),
+                TKCommandSchemaOption(name: "--end-y", type: "Double", description: "Swipe end Y coordinate"),
+                TKCommandSchemaOption(name: "--x", type: "Double", description: "Observed coordinate X"),
+                TKCommandSchemaOption(name: "--y", type: "Double", description: "Observed coordinate Y"),
+                TKCommandSchemaOption(name: "--width", type: "Double", description: "Observed geometry width"),
+                TKCommandSchemaOption(name: "--height", type: "Double", description: "Observed geometry height"),
+                TKCommandSchemaOption(name: "--orientation", type: "String", description: "Observed screen orientation"),
+                TKCommandSchemaOption(name: "--duration", type: "Double", description: "Swipe duration"),
+                TKCommandSchemaOption(name: "--button", type: "String", description: "Whitelisted device button"),
+                TKCommandSchemaOption(name: "--text-file", type: "Path", description: "Private bounded UTF-8 input file"),
                 TKCommandSchemaOption(name: "--target", type: "String", description: "Compatibility target option: simulator UDID or Harmony target, for example 127.0.0.1:10100"),
                 TKCommandSchemaOption(name: "--avd", type: "String", description: "Android AVD name for device start"),
                 TKCommandSchemaOption(name: "--hvd", type: "String", description: "Harmony HVD name for device stop"),
@@ -156,6 +181,11 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             argumentForms: [
                 TKCommandArgumentForm(name: "<selector>", type: "String", required: false, description: "Host target selector accepted by device use or resolve"),
+                TKCommandArgumentForm(name: "<orientation>", type: "String", required: false, description: "portrait, landscape-left, landscape-right, or portrait-upside-down"),
+                TKCommandArgumentForm(name: "<posture>", type: "String", required: false, description: "folded, half-open, or open"),
+                TKCommandArgumentForm(name: "<latitude,longitude>", type: "String", required: false, description: "Finite coordinate pair"),
+                TKCommandArgumentForm(name: "<text>", type: "String", required: false, description: "Bounded clipboard text"),
+                TKCommandArgumentForm(name: "<name>", type: "String", required: false, description: "Exact crash report name"),
             ],
             examples: [
                 "triton device doctor --platform ios --json",
@@ -256,9 +286,18 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 hostApplePlatformReportOutputContract(),
                 hostApplePlatformControlOutputContract(),
                 hostHarmonyRuntimeURLOutputContract(),
+                deviceDiagnosticsOutputContracts()[0],
+                deviceMirrorOutputContract(),
+                deviceRecordingOutputContract(),
+                deviceEnvironmentOutputContract(),
+                deviceActionOutputContract(),
                 runtimeManifestOutputContract(),
             ],
             failureCodes: Array(Set(applePlatformRunnerFailureCodes + iosRunnerFailureCodes + [
+                "invalid_device_orientation", "invalid_device_fold", "invalid_clipboard_text", "unsupported_device_environment", "device_environment_not_verified", "device_environment_backend_failed", "clipboard_resource_missing", "clipboard_invalid_response", "device_location_failed", "device_foreground_unavailable",
+                "device_action_invalid", "device_action_failed", "device_action_geometry_invalid", "device_action_observation_stale", "device_action_unsupported",
+                "device_diagnostics_invalid_request", "device_diagnostics_unavailable", "device_diagnostics_timeout", "device_diagnostics_artifact_unsafe", "device_crash_list_failed", "device_crash_partial", "device_crash_not_found", "device_crash_receipt_invalid",
+                "device_mirror_failed", "unsupported_terminal_protocol", "recording_invalid_duration", "recording_invalid_session", "recording_invalid_output", "recording_failed",
                 "ios_simulator_resize_capture_state_unknown",
                 "device_file_domain_execution_uncertain",
                 "device_administration_policy_required",
@@ -372,6 +411,36 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ])).sorted(),
             subcommands: [
                 iosRunnerSubcommandSchema(),
+                TKCommandSubcommandSchema(name: "orientation", summary: "Read or set target orientation", outputSelectors: ["device.environment"], subcommands: [
+                    TKCommandSubcommandSchema(name: "get", summary: "Read current target orientation", optionalOptions: ["--device", "--platform", "--scope", "--adb", "--hdc", "--session-root", "--timeout", "--format", "--json"], outputSelectors: ["device.environment"]),
+                    TKCommandSubcommandSchema(name: "set", summary: "Set target orientation", requiredOptions: ["<orientation>", "--device"], optionalOptions: ["--platform", "--scope", "--adb", "--hdc", "--session-root", "--timeout", "--format", "--json"], outputSelectors: ["device.environment"], failureCodes: ["invalid_device_orientation", "unsupported_device_environment", "device_environment_not_verified"])
+                ]),
+                TKCommandSubcommandSchema(name: "fold", summary: "Set Android Emulator fold posture and hinge angle", requiredOptions: ["<posture>", "--device"], optionalOptions: ["--angle", "--platform", "--scope", "--adb", "--hdc", "--timeout", "--format", "--json"], outputSelectors: ["device.environment"], failureCodes: ["unsupported_device_environment", "device_environment_not_verified"]),
+                TKCommandSubcommandSchema(name: "location", summary: "Set or clear target simulated GPS", outputSelectors: ["device.environment"], subcommands: [
+                    TKCommandSubcommandSchema(name: "set", summary: "Set coordinate", requiredOptions: ["<latitude,longitude>", "--device"], optionalOptions: ["--platform", "--scope", "--adb", "--hdc", "--timeout", "--format", "--json"], outputSelectors: ["device.environment"]),
+                    TKCommandSubcommandSchema(name: "clear", summary: "Clear Triton-owned coordinate override", requiredOptions: ["--device"], optionalOptions: ["--platform", "--scope", "--adb", "--hdc", "--timeout", "--format", "--json"], outputSelectors: ["device.environment"])
+                ]),
+                TKCommandSubcommandSchema(name: "clipboard", summary: "Read or stage system clipboard", outputSelectors: ["device.environment"], subcommands: [
+                    TKCommandSubcommandSchema(name: "get", summary: "Read clipboard", requiredOptions: ["--device"], optionalOptions: ["--platform", "--scope", "--adb", "--hdc", "--timeout", "--format", "--json"], outputSelectors: ["device.environment"]),
+                    TKCommandSubcommandSchema(name: "set", summary: "Stage clipboard text", requiredOptions: ["<text>", "--device"], optionalOptions: ["--platform", "--scope", "--adb", "--hdc", "--timeout", "--format", "--json"], outputSelectors: ["device.environment"])
+                ]),
+                TKCommandSubcommandSchema(name: "foreground", summary: "Observe current foreground App identity", requiredOptions: ["--device"], optionalOptions: ["--platform", "--scope", "--adb", "--hdc", "--session-root", "--timeout", "--format", "--json"], outputSelectors: ["device.environment"]),
+                TKCommandSubcommandSchema(name: "recording", summary: "Own a cross-invocation screen recording session", outputSelectors: ["device.recording"], subcommands: [
+                    TKCommandSubcommandSchema(name: "start", summary: "Start recording", requiredOptions: ["--device", "--output"], optionalOptions: ["--maximum-duration", "--adb", "--hdc", "--format", "--json"], outputSelectors: ["device.recording"]),
+                    TKCommandSubcommandSchema(name: "status", summary: "Inspect recording", requiredOptions: ["--session"], optionalOptions: ["--device", "--format", "--json"], outputSelectors: ["device.recording"]),
+                    TKCommandSubcommandSchema(name: "stop", summary: "Finalize recording", requiredOptions: ["--session"], optionalOptions: ["--device", "--format", "--json"], outputSelectors: ["device.recording"])
+                ]),
+                TKCommandSubcommandSchema(name: "logs", summary: "Capture bounded target logs", requiredOptions: [], optionalOptions: ["--device", "--platform", "--scope", "--last-seconds", "--maximum-bytes", "--maximum-entries", "--include-content", "--timeout", "--format", "--json"], outputSelectors: ["device.diagnostics"]),
+                TKCommandSubcommandSchema(name: "crashes", summary: "List or fetch target crash reports", outputSelectors: ["device.diagnostics"], subcommands: [
+                    TKCommandSubcommandSchema(name: "list", summary: "List crash metadata", optionalOptions: ["--device", "--platform", "--scope", "--maximum-bytes", "--maximum-entries", "--timeout", "--format", "--json"], outputSelectors: ["device.diagnostics"]),
+                    TKCommandSubcommandSchema(name: "get", summary: "Fetch one crash body", requiredOptions: ["<name>"], optionalOptions: ["--device", "--platform", "--scope", "--maximum-bytes", "--maximum-entries", "--timeout", "--format", "--json"], outputSelectors: ["device.diagnostics"])
+                ]),
+                TKCommandSubcommandSchema(name: "mirror", summary: "Mirror bounded screenshots to terminal or PNG files", requiredOptions: ["--device"], optionalOptions: ["--platform", "--scope", "--protocol", "--fps", "--timeout", "--frames", "--output", "--max-size", "--max-bytes", "--read-only", "--format", "--json"], outputSelectors: ["host.device-mirror"]),
+                TKCommandSubcommandSchema(name: "tap", summary: "Tap observed coordinates", requiredOptions: ["--device", "--platform", "--x", "--y", "--observation-id", "--width", "--height", "--orientation"], optionalOptions: ["--bundle-id", "--request-id", "--format", "--json"], outputSelectors: ["device.action"]),
+                TKCommandSubcommandSchema(name: "double-tap", summary: "Double tap observed coordinates", requiredOptions: ["--device", "--platform", "--x", "--y", "--observation-id", "--width", "--height", "--orientation"], optionalOptions: ["--bundle-id", "--request-id", "--format", "--json"], outputSelectors: ["device.action"]),
+                TKCommandSubcommandSchema(name: "swipe", summary: "Swipe observed coordinates", requiredOptions: ["--device", "--platform", "--x", "--y", "--end-x", "--end-y", "--duration", "--observation-id", "--width", "--height", "--orientation"], optionalOptions: ["--bundle-id", "--request-id", "--format", "--json"], outputSelectors: ["device.action"]),
+                TKCommandSubcommandSchema(name: "press", summary: "Press a supported device button", requiredOptions: ["--device", "--platform", "--button"], optionalOptions: ["--bundle-id", "--request-id", "--format", "--json"], outputSelectors: ["device.action"]),
+                TKCommandSubcommandSchema(name: "type", summary: "Type text from a bounded private UTF-8 file", requiredOptions: ["--device", "--platform", "--text-file"], optionalOptions: ["--bundle-id", "--request-id", "--format", "--json"], outputSelectors: ["device.action"]),
                 TKCommandSubcommandSchema(name: "containers", summary: "SDK bundle/group binding and optional native Simulator shallow metadata", requiredOptions: ["--bundle-id"], optionalOptions: ["--group-id", "--list", "--platform", "--device", "--scope", "--timeout", "--max-json-bytes", "--max-entries", "--format", "--json"], outputSelectors: ["host.app-container-binding"]),
                 TKCommandSubcommandSchema(name: "platforms", summary: "Apple integration catalog and opt-in hardware inventory", requiredOptions: [], optionalOptions: ["--apple-platform", "--inventory", "--include-real-devices", "--device", "--format", "--json"], outputSelectors: ["host.apple-platform-report"]),
                 TKCommandSubcommandSchema(name: "platform-control", summary: "Fixture-only public XCTest vocabulary or explicitly audited XCTest runner execution", optionOverrides: [TKCommandSchemaOption(name: "--platform", type: "watchos|tvos|visionos|macos", required: true, description: "Apple family for the control contract"), TKCommandSchemaOption(name: "--action", type: "crown-rotate|action-button|remote-up|remote-down|remote-left|remote-right|remote-select|remote-menu|focus|side-button|gaze|pinch|scene", required: true, description: "Public XCTest vocabulary or explicit unsupported action"), TKCommandSchemaOption(name: "--delta", type: "Double", description: "Finite non-zero watchOS Crown delta; only crown-rotate accepts it"), TKCommandSchemaOption(name: "--device", type: "ExactSimulatorUDID", description: "No booted/current/name/physical selector"), TKCommandSchemaOption(name: "--xctestrun", type: "Path", description: "Private specialized runner bundle"), TKCommandSchemaOption(name: "--test-identifier", type: "String", description: "Exactly one XCTest Target/Class/testMethod; no retries or parallel clones"), TKCommandSchemaOption(name: "--result-bundle", type: "Path", description: "Fresh private result bundle"), TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "120", description: "Bounded runner timeout"), TKCommandSchemaOption(name: "--audit-record", type: "String", description: "Opaque audit record"), TKCommandSchemaOption(name: "--execute-runner", type: "Bool", description: "Explicitly allow one runner invocation"), TKCommandSchemaOption(name: "--confirm", type: "Bool", description: "Confirm input delivery")], requiredOptions: ["--platform", "--action"], optionalOptions: ["--delta", "--device", "--xctestrun", "--test-identifier", "--result-bundle", "--timeout", "--audit-record", "--execute-runner", "--confirm", "--format", "--json"], outputSelectors: ["host.apple-platform-control"], failureCodes: applePlatformRunnerFailureCodes),
@@ -454,7 +523,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     summary: "Stop a selected Android or Harmony emulator"
                 ),
             ],
-            providedCapabilities: iosRunnerCapabilityNames + ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "ios-device", "ios-simulator-screenshot", "ios-host-ax", "ios-host-hid", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "harmony-device", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
+            providedCapabilities: iosRunnerCapabilityNames + ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "device-environment", "device-recording", "device-diagnostics", "device-crashes", "device-mirror", "device-actions", "ios-device", "ios-simulator-screenshot", "ios-host-ax", "ios-host-hid", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "harmony-device", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
         ),
         TKCommandSchema(
             name: "camera",

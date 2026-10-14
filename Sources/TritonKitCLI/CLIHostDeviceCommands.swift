@@ -9,7 +9,7 @@ struct Device: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "device",
         abstract: "Discover and inspect host-side devices and emulators",
-        subcommands: [DeviceRunner.self, DevicePlatforms.self, DevicePlatformControl.self, DeviceContainers.self, DeviceDoctor.self, DeviceHIDBootstrap.self, DeviceInfo.self, DeviceFiles.self, DeviceMountpoint.self, DeviceFS.self, DevicePair.self, DeviceUnpair.self, DeviceDiagnose.self, DeviceBridge.self, DeviceProxy.self, DeviceList.self, DeviceAlias.self, DeviceUse.self, DeviceCurrent.self, DeviceResolve.self, DeviceWaitReady.self, DeviceScreenshot.self, DeviceRuntimeURL.self, DeviceStart.self, DeviceStop.self]
+        subcommands: [DeviceRunner.self, DevicePlatforms.self, DevicePlatformControl.self, DeviceContainers.self, DeviceDoctor.self, DeviceHIDBootstrap.self, DeviceInfo.self, DeviceFiles.self, DeviceMountpoint.self, DeviceFS.self, DevicePair.self, DeviceUnpair.self, DeviceDiagnose.self, DeviceBridge.self, DeviceProxy.self, DeviceList.self, DeviceAlias.self, DeviceUse.self, DeviceCurrent.self, DeviceResolve.self, DeviceWaitReady.self, DeviceScreenshot.self, DeviceRuntimeURL.self, DeviceStart.self, DeviceStop.self, DeviceOrientation.self, DeviceFold.self, DeviceLocation.self, DeviceClipboard.self, DeviceForeground.self, DeviceRecording.self, DeviceLogs.self, DeviceCrashes.self, DeviceMirror.self, DeviceTap.self, DeviceDoubleTap.self, DeviceSwipe.self, DevicePress.self, DeviceType.self]
     )
 }
 

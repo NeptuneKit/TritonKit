@@ -1,8 +1,8 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-14（新增 SP-199 Mobile MCP 参考登记；既有任务状态见原记录）
-> 覆盖范围：199/199 个已存在 space
+> 最近同步：2026-10-15（SP-200 Mobile 设备能力补齐已完成本地验证，待合并发布）
+> 覆盖范围：200/200 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 199/199 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 199/199 | 每条记录链接到现有 space README |
+| 编号登记 | 200/200 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 200/200 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -231,3 +231,5 @@
 | `SP-198-agent-experience-loop` | [`SP-198-agent-experience-loop`](./SP-198-agent-experience-loop/README.md) | 本地提交归档 | Agent默认自动沉淀、主题索引与原权威资料修订退出；28隔离用例通过，远端CI未运行 |
 
 | `SP-199-mobile-mcp-reference` | [`SP-199-mobile-mcp-reference`](./SP-199-mobile-mcp-reference/README.md) | 已归档 | 参考档案与当前源码差距完成；199 space docs门禁通过，不采用功能或启用自动追踪 |
+
+| `SP-200-mobile-device-parity` | [`SP-200-mobile-device-parity`](./SP-200-mobile-device-parity/README.md) | 实施中 | 除云预订/MCP外全部差距补齐；独立worktree，授权实现验证提交合并上线 |

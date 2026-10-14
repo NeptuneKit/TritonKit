@@ -44,6 +44,8 @@ final class IOSRunnerServer {
     private var uiBusy = false
     private var observedApp: String?
     private var observedAt: Date?
+    private var observedID: String?
+    private var observedGeometry: RunnerGeometry?
     private var observedElements: [[String: String]] = []
     private let started = Date()
     var stopped: Bool { lock.lock(); defer { lock.unlock() }; return stopRequested }
@@ -112,6 +114,7 @@ final class IOSRunnerServer {
             try request.validate(token: config.token, session: config.session)
             let body = try request.jsonBody()
             if request.path == "/crossApp" { _ = try CrossAppRequest(body: body, allowedBundles: config.allowedBundles) }
+            if request.path == "/environment" { _ = try RunnerEnvironmentRequest(body: body) }
             if request.path == "/health" {
                 send(envelope(ok: true, requestID: request.requestID, result: ["listenerReady": true, "networkReady": true, "automationReady": false, "uptimeSeconds": Date().timeIntervalSince(started), "ttlSeconds": config.ttl, "backend": "public-xctest-runner"]), connection: connection)
                 return
@@ -125,7 +128,7 @@ final class IOSRunnerServer {
                 send(envelope(ok: true, requestID: request.requestID, result: ["stopping": true]), connection: connection, after: { [weak self] in self?.stop() })
                 return
             }
-            let isAction = ["/probe", "/snapshot", "/screenshot", "/tap", "/home", "/activateFixture", "/crossApp"].contains(request.path)
+            let isAction = ["/probe", "/snapshot", "/screenshot", "/tap", "/home", "/activateFixture", "/crossApp", "/environment"].contains(request.path)
             if isAction, let existing = try ledger.claim(request) {
                 let value = existing["status"] as? String == "pending" ? envelope(ok: false, requestID: request.requestID, result: ["status": "pending"], error: ["code": "request_pending", "message": "Original action has not completed"]) : existing
                 send(value, status: existing["status"] as? String == "pending" ? 202 : 200, connection: connection)
@@ -159,7 +162,7 @@ final class IOSRunnerServer {
                     result = self.failure(error, requestID: request.requestID)
                     status = (error as? ProtocolFailure)?.status ?? 500
                 }
-                if ["/probe", "/snapshot", "/screenshot", "/tap", "/home", "/activateFixture", "/crossApp"].contains(request.path) {
+                if ["/probe", "/snapshot", "/screenshot", "/tap", "/home", "/activateFixture", "/crossApp", "/environment"].contains(request.path) {
                     self.ledger.complete(requestID: request.requestID, envelope: result)
                 }
                 let delivered = self.ledger.receipt(request.requestID) ?? result
@@ -171,6 +174,7 @@ final class IOSRunnerServer {
             }
     }
     private func perform(_ path: String, body: [String: Any]) throws -> [String: Any] {
+        if path == "/environment" { return try performEnvironment(RunnerEnvironmentRequest(body: body)) }
         if path == "/crossApp" { return try performCrossApp(CrossAppRequest(body: body, allowedBundles: config.allowedBundles)) }
         if path == "/home" { XCUIDevice.shared.press(.home); return ["submitted": true] }
         if path == "/activateFixture" { fixture.activate(); return ["state": fixture.state.rawValue] }
@@ -207,7 +211,61 @@ final class IOSRunnerServer {
         throw ProtocolFailure("route_rejected", "Unsupported route")
     }
     private func clearObserved() {
-        observedApp = nil; observedAt = nil; observedElements = []
+        observedApp = nil; observedAt = nil; observedID = nil; observedGeometry = nil; observedElements = []
+    }
+    private func orientationName(_ value: UIDeviceOrientation) -> String {
+        switch value {
+        case .portrait: return "portrait"
+        case .portraitUpsideDown: return "portrait-upside-down"
+        case .landscapeLeft: return "landscape-left"
+        case .landscapeRight: return "landscape-right"
+        default: return "unknown"
+        }
+    }
+    private func foregroundBundle() throws -> String? {
+        let foreground = config.allowedBundles.sorted().filter {
+            ($0 == "dev.tritonkit.runnerfixture" ? fixture : XCUIApplication(bundleIdentifier: $0)).state == .runningForeground
+        }
+        guard foreground.count <= 1 else { throw ProtocolFailure("foreground_ambiguous", "Multiple allowlisted apps report foreground", status: 409) }
+        return foreground.first
+    }
+    private func performEnvironment(_ request: RunnerEnvironmentRequest) throws -> [String: Any] {
+        if request.operation == "orientation" {
+            let previous = orientationName(XCUIDevice.shared.orientation)
+            if let orientation = request.orientation {
+                clearObserved()
+                switch orientation {
+                case "portrait": XCUIDevice.shared.orientation = .portrait
+                case "portrait-upside-down": XCUIDevice.shared.orientation = .portraitUpsideDown
+                case "landscape-left": XCUIDevice.shared.orientation = .landscapeLeft
+                case "landscape-right": XCUIDevice.shared.orientation = .landscapeRight
+                default: throw ProtocolFailure("environment_orientation", "Unsupported orientation")
+                }
+            }
+            let current = orientationName(XCUIDevice.shared.orientation)
+            return ["operation": "orientation", "orientation": current, "previousOrientation": previous,
+                    "submitted": request.orientation != nil, "verified": request.orientation.map { $0 == current } ?? (current != "unknown"),
+                    "source": "public-xctest-runner", "verification": "device-orientation-readback-not-app-layout"]
+        }
+        let foreground = try foregroundBundle()
+        var result: [String: Any] = ["operation": request.operation, "bundleID": foreground as Any? ?? NSNull(),
+                                    "observed": foreground != nil, "scope": "session-allowlist", "source": "public-xctest-runner"]
+        if request.operation == "screen" {
+            let data = XCUIScreen.main.screenshot().pngRepresentation
+            guard data.count <= 8 * 1024 * 1024 else { throw ProtocolFailure("screenshot_budget", "PNG exceeds 8 MiB", status: 413) }
+            result["pngBase64"] = data.base64EncodedString(); result["byteCount"] = data.count
+            result["captureScope"] = "device-screen"; result["postconditionVerified"] = false
+        }
+        return result
+    }
+    private func liveGeometry(_ app: XCUIApplication) throws -> RunnerGeometry {
+        let frame = app.frame
+        return try RunnerGeometry(body: ["width": Double(frame.width), "height": Double(frame.height), "orientation": orientationName(XCUIDevice.shared.orientation)])
+    }
+    private func observeGeometry(_ app: XCUIApplication, bundleID: String) throws -> [String: Any] {
+        let geometry = try liveGeometry(app)
+        observedApp = bundleID; observedAt = Date(); observedID = UUID().uuidString; observedGeometry = geometry
+        return ["observationID": observedID!, "geometry": geometry.json, "coordinateSpace": "app-frame-points", "expiresAfterSeconds": 30]
     }
     private func performCrossApp(_ request: CrossAppRequest) throws -> [String: Any] {
         let app = request.bundleID == "dev.tritonkit.runnerfixture" ? fixture : XCUIApplication(bundleIdentifier: request.bundleID)
@@ -256,7 +314,7 @@ final class IOSRunnerServer {
                     elements.append(["type": String(describing: type), "identifier": String(element.identifier.prefix(160)), "label": String(element.label.prefix(160))])
                 }
             }
-            observedApp = request.bundleID; observedAt = Date(); observedElements = elements
+            result.merge(try observeGeometry(app, bundleID: request.bundleID)) { _, value in value }; observedElements = elements
             result["scope"] = "bounded-return-not-bounded-XCTest-snapshot"
             result["elements"] = elements; result["returnedCount"] = elements.count
             result["limit"] = request.limit; result["truncated"] = totalUnknown || total > elements.count
@@ -269,6 +327,34 @@ final class IOSRunnerServer {
             guard data.count <= 8 * 1024 * 1024 else { throw ProtocolFailure("screenshot_budget", "PNG exceeds 8 MiB after encoding", status: 413) }
             result["pngBase64"] = data.base64EncodedString(); result["byteCount"] = data.count
             result["captureScope"] = "device-screen"; result["postconditionVerified"] = false
+            clearObserved(); result.merge(try observeGeometry(app, bundleID: request.bundleID)) { _, value in value }
+            return result
+        }
+        if let coordinate = request.coordinate {
+            guard observedApp == request.bundleID else { throw ProtocolFailure("coordinate_stale", "Inspect this allowlisted app before coordinates", status: 409) }
+            try coordinate.validate(observationID: observedID, observedAt: observedAt, now: Date(), geometry: liveGeometry(app))
+            // Consume the observation before submission. An unknown outcome cannot reuse it.
+            clearObserved()
+            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0)).withOffset(CGVector(dx: coordinate.x, dy: coordinate.y))
+            if request.operation == "coordinateSwipe" {
+                let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0)).withOffset(CGVector(dx: coordinate.endX!, dy: coordinate.endY!))
+                start.press(forDuration: 0.05, thenDragTo: end, withVelocity: XCUIGestureVelocity(rawValue: hypot(coordinate.endX! - coordinate.x, coordinate.endY! - coordinate.y) / coordinate.duration), thenHoldForDuration: 0)
+            } else if request.operation == "coordinateDoubleTap" { start.doubleTap() }
+            else { start.tap() }
+            result["submitted"] = true; result["postconditionVerified"] = false
+            result["gestureSemantics"] = request.operation == "coordinateDoubleTap" ? "public-XCUICoordinate-doubleTap" : "public-XCUICoordinate"
+            return result
+        }
+        if request.operation == "press" {
+            clearObserved()
+            switch request.button {
+            case "home": XCUIDevice.shared.press(.home)
+            case "volume-up": XCUIDevice.shared.press(.volumeUp)
+            case "volume-down": XCUIDevice.shared.press(.volumeDown)
+            default: throw ProtocolFailure("cross_app_button", "Unsupported public XCTest button")
+            }
+            result["submitted"] = true; result["postconditionVerified"] = false; result["button"] = request.button
+            result["stateAfter"] = app.state.rawValue
             return result
         }
         if request.operation == "home" {
@@ -333,7 +419,8 @@ final class IOSRunnerServer {
                 result["focusEvidenceAfterClear"] = clearedFocusEvidence
                 clearedField.typeText("https://example.com\n")
             } else { editable.typeText(request.text!) }
-        } else { element.tap() }
+        } else if request.operation == "doubleTap" { element.doubleTap(); result["gestureSemantics"] = "public-XCUIElement-doubleTap" }
+        else { element.tap() }
         result["submitted"] = true; result["postconditionVerified"] = false
         result["stateAfter"] = app.state.rawValue
         return result

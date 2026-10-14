@@ -781,6 +781,14 @@ func failHostCommand(
         detail = httpError.response!.error
     case _ as ValidationError:
         detail = hostValidationErrorDetail(error)
+    case let error as AppArchiveError:
+        detail = appArchiveErrorDetail(error)
+    case let error as DeviceDiagnosticsError:
+        detail = deviceDiagnosticsErrorDetail(error)
+    case let error as DeviceRecordingFailure:
+        detail = TKCLIErrorDetail(code: error.code, message: error.description, hint: "Inspect the owned recording session and target-bound artifact; no unrelated process is signalled.")
+    case let error as DeviceEnvironmentFailure:
+        detail = TKCLIErrorDetail(code: error.code, message: error.message, hint: "Inspect target readiness and the returned sourceCommands; App/business acceptance remains separate.")
     case let error as HostApplePlatformInventoryFailure:
         detail = error.detail
     case let error as HostDeviceAdministrationDiscoveryFailure:

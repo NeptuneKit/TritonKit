@@ -129,7 +129,7 @@ struct IOSRunnerRequest: AsyncParsableCommand {
     @Option(help: "Runner route: /crossApp|/probe|/snapshot|/tap|/screenshot|/home|/activateFixture") var route: String = "/crossApp"
     @Option(name: .customLong("request-id"), help: "Idempotency identifier; uncertain outcomes require receipt lookup") var requestID: String?
     mutating func validate() throws {
-        guard ["/crossApp", "/probe", "/snapshot", "/tap", "/screenshot", "/home", "/activateFixture"].contains(route) else { throw ValidationError("Unsupported Runner --route") }
+        guard ["/crossApp", "/probe", "/snapshot", "/tap", "/screenshot", "/home", "/activateFixture", "/environment"].contains(route) else { throw ValidationError("Unsupported Runner --route") }
         if let timeout = options.timeout { guard timeout <= 120 else { throw ValidationError("Runner request --timeout must not exceed 120 seconds") } }
     }
     func payload() throws -> [String: Any] {

@@ -373,6 +373,10 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["archive", "plan", "diagnose"]
     case "action_failed", "step_failed":
         return ["act", "observe", "verify", "archive"]
+    case "device_environment_not_verified", "clipboard_invalid_response", "device_crash_partial", "device_action_observation_stale":
+        return ["diagnose", "observe", "verify"]
+    case "device_diagnostics_invalid_request", "device_diagnostics_artifact_unsafe", "recording_invalid_duration", "recording_invalid_output", "recording_invalid_session":
+        return ["diagnose", "plan"]
     case "confirmation_required", "destructive_action_requires_policy":
         return ["diagnose", "plan", "act"]
     case "javascript_error", "webview_element_not_interactable", "webview_form_input_not_opted_in", "webview_form_target_not_found":

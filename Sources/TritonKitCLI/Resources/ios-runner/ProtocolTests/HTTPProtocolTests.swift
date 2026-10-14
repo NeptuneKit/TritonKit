@@ -84,7 +84,9 @@ final class HTTPProtocolTests: XCTestCase {
         let one = try XCTUnwrap(BoundedHTTPParser().append(raw("POST", "/crossApp", body: "{\"operation\":\"screenshot\"}", requestID: "s1")))
         let two = try XCTUnwrap(BoundedHTTPParser().append(raw("POST", "/screenshot", requestID: "s2")))
         let three = try XCTUnwrap(BoundedHTTPParser().append(raw("POST", "/screenshot", requestID: "s3")))
+        let screen = try XCTUnwrap(BoundedHTTPParser().append(raw("POST", "/environment", body: "{\"operation\":\"screen\"}", requestID: "s4")))
         XCTAssertNil(try ledger.claim(one)); XCTAssertNil(try ledger.claim(two))
+        XCTAssertThrowsError(try ledger.claim(screen)) { XCTAssertEqual(($0 as? ProtocolFailure)?.code, "receipt_byte_budget") }
         XCTAssertThrowsError(try ledger.claim(three)) { XCTAssertEqual(($0 as? ProtocolFailure)?.code, "receipt_byte_budget") }
         XCTAssertNotNil(try ledger.claim(one))
         XCTAssertLessThanOrEqual(ledger.cachedByteBudgetUsed, RequestLedger.maxCachedBytes)
@@ -104,6 +106,38 @@ final class HTTPProtocolTests: XCTestCase {
         XCTAssertThrowsError(try ledger.claim(extra))
         let first = try XCTUnwrap(BoundedHTTPParser().append(raw("POST", "/tap", requestID: "r0")))
         XCTAssertNotNil(try ledger.claim(first))
+    }
+    func testCoordinatePayloadRequiresFiniteBoundsAndObservedGeometry() throws {
+        let base: [String: Any] = ["app": "target", "expectedBundle": "com.example.app", "operation": "coordinateTap", "observationID": "obs-1", "geometry": ["width": 390, "height": 844, "orientation": "portrait"], "x": 10, "y": 20]
+        let value = try CrossAppRequest(body: base, allowedBundles: ["com.example.app"])
+        XCTAssertEqual(value.coordinate?.x, 10)
+        for (key, bad): (String, Any) in [("x", -1), ("x", 390), ("x", true), ("y", Double.infinity), ("observationID", "")] {
+            var body = base; body[key] = bad
+            XCTAssertThrowsError(try CrossAppRequest(body: body, allowedBundles: ["com.example.app"]))
+        }
+        var swipe = base; swipe["operation"] = "coordinateSwipe"; swipe["endX"] = 100; swipe["endY"] = 100; swipe["duration"] = 0.5
+        XCTAssertNoThrow(try CrossAppRequest(body: swipe, allowedBundles: ["com.example.app"]))
+        swipe["duration"] = 0
+        XCTAssertThrowsError(try CrossAppRequest(body: swipe, allowedBundles: ["com.example.app"]))
+    }
+    func testCoordinateFreshnessAndGeometryFailClosed() throws {
+        let geometry = try RunnerGeometry(body: ["width": 390, "height": 844, "orientation": "portrait"])
+        let request = try RunnerCoordinateRequest(body: ["observationID": "obs", "geometry": geometry.json, "x": 10, "y": 20], swipe: false)
+        let now = Date()
+        XCTAssertNoThrow(try request.validate(observationID: "obs", observedAt: now.addingTimeInterval(-1), now: now, geometry: geometry))
+        for elapsed in [-1.0, 31.0] {
+            XCTAssertThrowsError(try request.validate(observationID: "obs", observedAt: now.addingTimeInterval(-elapsed), now: now, geometry: geometry))
+        }
+        XCTAssertThrowsError(try request.validate(observationID: "other", observedAt: now, now: now, geometry: geometry))
+        let rotated = try RunnerGeometry(body: ["width": 844, "height": 390, "orientation": "landscape-left"])
+        XCTAssertThrowsError(try request.validate(observationID: "obs", observedAt: now, now: now, geometry: rotated))
+    }
+    func testEnvironmentRequestWhitelistAndOrientationValues() throws {
+        XCTAssertNoThrow(try RunnerEnvironmentRequest(body: ["operation": "foreground"]))
+        XCTAssertNoThrow(try RunnerEnvironmentRequest(body: ["operation": "orientation", "orientation": "landscape-left"]))
+        for body: [String: Any] in [["operation": "delete"], ["operation": "foreground", "orientation": "portrait"], ["operation": "orientation", "orientation": "face-up"]] {
+            XCTAssertThrowsError(try RunnerEnvironmentRequest(body: body))
+        }
     }
     private let token = "unit-secret"
     private let session = "unit-session"

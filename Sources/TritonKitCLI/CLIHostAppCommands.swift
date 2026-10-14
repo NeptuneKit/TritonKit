@@ -780,7 +780,7 @@ struct HostAppInstall: AsyncParsableCommand {
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?
     @Flag(help: "Only match ready targets") var ready = false
-    @Option(help: "Path to iOS .app bundle or Harmony signed .app archive") var app: String?
+    @Option(help: "Path to iOS .app/.zip/.ipa or Harmony signed .app archive") var app: String?
     @Option(help: "Path to Android .apk package") var apk: String?
     @Option(help: "Path to Harmony .hap package") var hap: String?
     @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
@@ -807,7 +807,12 @@ struct HostAppInstall: AsyncParsableCommand {
                 ready: ready,
                 hdc: hdc
             )
-            let plan = try planHostAppInstall(selection: selection, app: app, apk: apk, hap: hap, adb: adb, hdc: hdc, devicectlArtifacts: nil)
+            let prepared: PreparedHostIOSAppArchive?
+            if selection.platform == .ios, let app {
+                prepared = try prepareHostIOSAppArchive(path: app, scope: selection.target.scope ?? "simulator")
+            } else { prepared = nil }
+            defer { prepared?.cleanup() }
+            let plan = try planHostAppInstall(selection: selection, app: prepared?.appPath ?? app, apk: apk, hap: hap, adb: adb, hdc: hdc, devicectlArtifacts: nil)
             try runSimpleHostCommand(
                 action: plan.action,
                 runtimeScope: plan.runtimeScope,

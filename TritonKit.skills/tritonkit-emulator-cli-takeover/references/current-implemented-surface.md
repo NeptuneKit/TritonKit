@@ -214,3 +214,21 @@ Android Emulator host-side support is now part of the implemented local CLI take
 ## Reserved iOS host text input
 
 `triton sim type --help` describes a failure-only reserved command; `ios-simulator-host-type` is unsupported even with a connected embedded runtime. Inspect `triton schema --command "sim type" --json` before attempting host text entry. `triton sim pasteboard set <text> --simulator <udid> --json` only stages the Simulator clipboard. Confirm the explicit Simulator, foreground App and field focus first. Actual paste requires a separately verified external keyboard/paste adapter or App debug hook. Re-read host AX/observe field value where available, then verify the App saved/business postcondition; clipboard contents and input acknowledgements alone prove neither. Preserve unsupported evidence and record the external fallback instead of attributing it to Triton.
+
+Mobile MCP parity additions (local emulator scope):
+
+```bash
+triton device orientation get|set <portrait|landscape-left|landscape-right|portrait-upside-down> --device <selector> --json
+triton device fold <folded|half-open|open> --device <selector> --json
+triton device location set <lat,lon> --device <selector> --json
+triton device location clear --device <selector> --json
+triton device clipboard get|set <text> --device <selector> --json
+triton device foreground --device <selector> --json
+triton device recording start|status|stop --device <selector> --json
+triton device logs --device <selector> --json
+triton device crashes list|get --device <selector> --json
+triton device mirror --device <selector> --frames 1 --output /tmp/frame-dir --json
+triton device tap|double-tap|swipe|press|type ... --platform <ios|android|harmony> --device <selector>
+```
+
+These commands are local CLI/HTTP contracts. Cloud-device reservation/release and standard MCP server transport remain intentionally outside TritonKit's scope.

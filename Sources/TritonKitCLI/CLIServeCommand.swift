@@ -27,6 +27,7 @@ struct Serve: AsyncParsableCommand {
 
         registerTargetLeaseRoutes(on: router, store: leaseStore)
         registerIOSRunnerRoutes(on: router)
+        registerDeviceParityRoutes(on: router)
 
         // ---- HTTP Data Endpoints ----
 

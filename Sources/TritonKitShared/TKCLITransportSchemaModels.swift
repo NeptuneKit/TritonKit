@@ -181,6 +181,12 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if ["screenshot_deadline_exceeded", "insufficient_visual_samples", "visual_motion_timeout", "runtime_ui_timeout", "runtime_ui_busy", "runtime_ui_circuit_open"].contains(failureCode) {
             return ["diagnose", "observe", "plan"]
         }
+        if ["device_environment_not_verified", "clipboard_invalid_response", "device_action_observation_stale", "device_crash_partial"].contains(failureCode) {
+            return ["diagnose", "observe", "verify"]
+        }
+        if ["device_diagnostics_invalid_request", "device_diagnostics_artifact_unsafe", "recording_invalid_duration", "recording_invalid_output", "recording_invalid_session"].contains(failureCode) {
+            return ["diagnose", "plan"]
+        }
         // Runner failures may follow delivered input. Inspect evidence before replanning; never suggest replay.
         if failureCode.hasPrefix("runner_") || failureCode.hasPrefix("invalid_runner_") || failureCode == "unsupported_runner_action" {
             return ["diagnose", "plan"]

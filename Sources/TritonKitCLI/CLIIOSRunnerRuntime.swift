@@ -194,7 +194,7 @@ final class IOSRunnerService: @unchecked Sendable {
             route = "/receipt"; body = ["actionRequestID": actionRequestID]
         } else {
             route = "/" + (payload["route"] as? String ?? "crossApp").trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-            guard ["/crossApp", "/probe", "/snapshot", "/tap", "/screenshot", "/home", "/activateFixture"].contains(route) else { throw IOSRunnerFailure("ios_runner_invalid_route", "Use a supported Runner action route.") }
+            guard ["/crossApp", "/probe", "/snapshot", "/tap", "/screenshot", "/home", "/activateFixture", "/environment"].contains(route) else { throw IOSRunnerFailure("ios_runner_invalid_route", "Use a supported Runner action route.") }
             guard payload["body"] == nil || payload["body"] is [String: Any] else { throw IOSRunnerFailure("ios_runner_invalid_payload", "Action body must be a JSON object.") }
             body = payload["body"] as? [String: Any] ?? [:]
             if route == "/crossApp" {

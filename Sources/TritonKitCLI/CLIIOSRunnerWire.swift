@@ -69,7 +69,7 @@ enum IOSRunnerWire {
 
     static func request(connection: IOSRunnerConnection, route: String, body: Data?, requestID: String) throws -> Data {
         let normalized = route.hasPrefix("/") ? String(route.dropFirst()) : route
-        let routes: Set<String> = ["health", "probe", "snapshot", "screenshot", "tap", "receipt", "stop", "home", "activateFixture", "crossApp"]
+        let routes: Set<String> = ["health", "probe", "snapshot", "screenshot", "tap", "receipt", "stop", "home", "activateFixture", "crossApp", "environment"]
         guard routes.contains(normalized), connection.port > 0,
               ["real", "simulator"].contains(connection.scope),
               (connection.scope != "simulator" || connection.targetAddress == "127.0.0.1"),
