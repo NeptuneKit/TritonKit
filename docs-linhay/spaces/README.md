@@ -2,9 +2,9 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（195/195 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（197/197 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-14（SP-195 Runner引入main，主仓门禁通过）
+> 最近审计：2026-10-14（SP-197高亮已合入本地main；SP-196仅编号预留）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -22,6 +22,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 已合入本地main | [SP-197-view-annotation](./SP-197-view-annotation/README.md) | 可选UIKit真实高亮与条件还原；CLI/HTTP、截图与skills已验收 | 7b1a2f76完成集成；P1截图消费者与跨端另行实施 |
 | 已引入本地main | [SP-195-ios-runner-product](./SP-195-ios-runner-product/README.md) | 产品与设备验收、主仓门禁通过 | 参考文档306dc42b与Runner分别提交；原worktree已清理；未push/release；已完成worktree收口见SP195计划 |
 | 已归档 | [SP-194-reference-project-updates](./SP-194-reference-project-updates/README.md) | 23主要仓库+9候选更新报告与分组来源已完成；文档门禁与来源结构校验通过 | 按报告建议另立实施切片；不自动采用 |
 | 长期追踪 | [SP-193-ictrl-reference-tracking](./SP-193-ictrl-reference-tracking/README.md) | 正式列为长期参考；基线 main@99dbfec / v1.97.1；本聊天每日北京时间 10:00 追踪 | 有价值变化通知，增量归档后更新检查点；后续采用另立项 |
@@ -303,3 +304,9 @@
 ## 2026-10-13 · 默认 DerivedData 路径调整
 
 - [SP-191-default-xcode-deriveddata](./SP-191-default-xcode-deriveddata/README.md)：已发布（`v0.2.26`）；默认交给 Xcode 使用用户级 DerivedData，显式 `--derived-data-path` 仅用于隔离/恢复并提示高磁盘占用；CLI/root tests、schema smoke、docs 门禁与远端 CI 通过。
+
+
+## 2026-10-14 · 独立高亮集成
+
+- SP-197实现、技术方案、恢复契约、6张真实截图和skills已合入本地main；完整主线集成回归通过，详见对应space。
+- [SP-196-upstream-optimization-delivery](./SP-196-upstream-optimization-delivery/README.md)仅登记并行任务编号，完整实施计划和源码由原任务另行集成。

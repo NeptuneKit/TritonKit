@@ -1,8 +1,8 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-14（SP-195：Runner引入main，主仓门禁通过）
-> 覆盖范围：195/195 个已存在 space
+> 最近同步：2026-10-14（SP-197高亮已合入本地main；SP-196编号预留、实施另行集成）
+> 覆盖范围：197/197 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 195/195 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 195/195 | 每条记录链接到现有 space README |
+| 编号登记 | 197/197 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 197/197 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -221,3 +221,5 @@
 | `SP-193-ictrl-reference-tracking` | [`SP-193-ictrl-reference-tracking`](./SP-193-ictrl-reference-tracking/README.md) | 长期追踪已启用 | 正式参考档案、基线与本聊天每日 10:00 自动化已登记；有价值变化通知，采用另立项 |
 | `SP-194-reference-project-updates` | [`SP-194-reference-project-updates`](./SP-194-reference-project-updates/README.md) | 已归档 | 23主要仓库+9候选，上游版本/增量/限制与借鉴建议已汇总；docs门禁与来源校验通过 |
 | `SP-195-ios-runner-product` | [`SP-195-ios-runner-product`](./SP-195-ios-runner-product/README.md) | 已引入本地main | Runner统一CLI/HTTP/随包；CLI1297+36、完整门禁与真机/Simulator通过；主仓门禁exit0；参考文档与产品分别提交，未push/release；已完成worktree收口见SP195计划 |
+| `SP-196-upstream-optimization-delivery` | [`SP-196-upstream-optimization-delivery`](./SP-196-upstream-optimization-delivery/README.md) | 编号预留／开发中 | 并行上游优化任务；仅预留编号与边界，实施计划及源码另行集成 |
+| `SP-197-view-annotation` | [`SP-197-view-annotation`](./SP-197-view-annotation/README.md) | 已合入本地main | 可选UIKit高亮与条件还原；7b1a2f76集成实现、真实截图与skills，P1/跨端后置 |

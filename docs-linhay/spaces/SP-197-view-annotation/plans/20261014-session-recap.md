@@ -70,3 +70,10 @@
 - 模拟器截图需看实际画面；默认display成功写黑图不能计视觉通过，显式display与App层截图证据分开。
 - Release测试ENABLE_TESTABILITY只是@testable编译配置，不启用运行时功能；SwiftPM/macOS通过不能代替真实UIKit测试。
 - 三个public skills与host-simulator内部skill已声明能力和可选接入边界；保持CLI/HTTP入口，不新增Web控制面。
+
+
+## 本地main集成收口
+
+用户授权整理、沉淀并合入main。实现`ee9a9ab7`经主线observation与SP-195 Runner集成后，由`7b1a2f76`合入本地main；最终CLI1321项+36项XCTest、SDK63项/shared287项通过。新增UIHealth忙状态下独立高亮capabilities/status/clear强类型路由回归。三个public skills、内部host skill、技术方案和6张真实截图均已进入main。并行任务的WIP按文件/段落保留，SP-196仅提交编号预留；未push/release。
+
+main最终local gate exit 0；Release CLI、Simulator编译、observe/host smoke、结构与差异检查通过。CI-docs及独立check-docs通过；另行校验暂存快照197个space编号连续且链接完整，不把并行SP-198的未提交门禁配置当本次提交。

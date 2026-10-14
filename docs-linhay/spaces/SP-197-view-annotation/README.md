@@ -2,12 +2,12 @@
 
 ## 状态与边界
 
-- 状态：P0独立iOS高亮已实现并验收通过；独立worktree集成中。用户明确方向：agent 主动临时改变 App 视图属性；“定位节点 → 保存原属性 → 应用高亮”是独立、通用功能，截图汇报是调用方。
+- 状态：P0独立iOS高亮已实现、验收通过并合入本地main（`7b1a2f76`）。用户明确方向：agent 主动临时改变 App 视图属性；“定位节点 → 保存原属性 → 应用高亮”是独立、通用功能，截图汇报是调用方。
 - 核心流程：定位节点 → 保存属性 → 临时修改真实 UIView/CALayer 外观 → 返回高亮会话。独立提供 status/clear；截图、现场观察和调试均可消费该会话。
 - 影响层：embedded runtime、shared 契约、CLI、现有本地 HTTP 请求转发和 evidence。Web/Wails 无新增控制面。
 - 首期原型验证范围（非产品接入要求）：自愿启用 Debug TritonKit runtime 的 iOS App、UIKit 可映射视图；包括能映射到真实 UIView/CALayer 的 SwiftUI 宿主，不能把任意 SwiftUI 虚拟节点视为可写视图。首期验收使用 iOS Simulator；其他平台另行适配，只有 host AX/OCR 的目标不能改 App 属性。
 - 基线 `main@8aaf6c31`；分支 `feat/SP-194-view-annotation`；worktree `../TritonKit-worktrees/SP-194-view-annotation/`。
-- 本轮已实现shared/runtime/CLI/HTTP并在专用Simulator验证，本轮获准整理、提交并合入本地main；不推送或发布。SP-192/SP-193旧文档快照不混入本功能提交。
+- 本轮shared/runtime/CLI/HTTP与专用Simulator验收已完成；实现、技术方案、6张截图和skills已提交并合入本地main；未推送或发布。SP-192/SP-193旧文档快照不混入本功能提交。
 
 编号说明：规划/实现阶段使用SP-194；合并时发现主线SP-194已用于参考更新、SP-195用于Runner，SP-196被上游优化并行任务使用，现规范登记为SP-197。原分支、worktree、测试设备名及gitignored证据目录保留历史名称，避免断开验收链路。
 
@@ -70,7 +70,7 @@
 
 ## 验证
 
-本轮P0验收见[实现与模拟器报告](./plans/20261014-p0-validation.md)：19项真实UIKit、37步App端到端、断连重连、无SDK设置截图及local gate通过。完整CLI1219项、根包53+277项、iOS Release3项与文档门禁通过；挂起/卡死、同值ABA、跨端与自动截图组合未验证。以下保留先前文档阶段历史。
+本轮P0验收见[实现与模拟器报告](./plans/20261014-p0-validation.md)：19项真实UIKit、37步App端到端、断连重连、无SDK设置截图及local gate通过。原P0完整CLI1219项、根包53+277项、iOS Release3项与文档门禁通过；与最新observation/Runner主线集成后CLI1321项+36项XCTest、根包63+287项及main最终local gate通过；挂起/卡死、同值ABA、跨端与自动截图组合未验证。以下保留先前文档阶段历史。
 
 - 修订后文档验证：`verify.sh --ci-docs`、独立 `check-docs.sh`、`git diff --check` 与本期相对链接检查均通过（194 spaces）。仅文档通过，不代表高亮或恢复已实现。
 

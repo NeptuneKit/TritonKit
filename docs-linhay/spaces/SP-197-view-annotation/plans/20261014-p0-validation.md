@@ -67,4 +67,10 @@ P0范围不包含截图自动finally组合、prefer/required capture参数、And
 
 ## 主线集成验收
 
-实现提交 `ee9a9ab7`；当前主线 observation/visual feedback 已由 `e116a4a9` 合入本分支。自动合并曾漏掉新增 request domain 的外层switch分发，已按先失败后修复补 `.highlight` 路由和独立集成测试，保证观察请求忙时高亮capabilities/status/clear仍保留原强类型回执，不受新UI admission阻断。最终集成测试与main门禁完成后在本节补录。编号为SP-197；原SP-194为规划阶段历史名称，SP-196并行登记冲突未作为最终索引。
+实现提交 `ee9a9ab7`；当前主线 observation/visual feedback 已由 `e116a4a9` 合入本分支。自动合并曾漏掉新增 request domain 的外层switch分发，已按先失败后修复补 `.highlight` 路由和独立集成测试，保证观察请求忙时高亮capabilities/status/clear仍保留原强类型回执，不受新UI admission阻断。独立UIHealth集成测试通过；最终CLI1321项/124 suites及36项XCTest通过，SDK63项/14 suites与shared287项/39 suites通过。编号为SP-197；原SP-194为规划阶段历史名称，SP-196并行登记冲突未作为最终索引。
+
+
+- 最终集成：`f83f2ee4`接入SP-195 Runner，`cbb36000`保留最新主线文档；`7b1a2f76`将本功能合入本地main。高亮恢复入口与Runner恢复入口分别保留，未覆盖其他任务的未提交README、skills、脚本或经验文档。
+- 全局编号保持连续：只将SP-196的名称/开发中预留登记纳入治理收口；其完整实施计划及源码仍由原任务维护，不混入高亮提交。SP-198经验闭环未提交改动保留。
+
+- main最终`verify.sh --local`通过：根包63+287项、Release CLI构建与smoke、Harmony host smoke、iOS runtime observe smoke、iPhone 17 Simulator编译、文档结构及diff检查均exit 0。原高亮UIKit19项/37步设备验收来自P0专用Simulator，本次main门禁不把编译当新UIKit执行。`--ci-docs`与独立`check-docs.sh`通过；并行SP-198校验器更新中一次规则暂未接线的失败已协调原任务修复，复查28项经验门禁通过。

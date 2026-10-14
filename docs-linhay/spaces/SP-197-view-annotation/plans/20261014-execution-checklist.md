@@ -1,6 +1,6 @@
 # SP-197 执行清单
 
-> 状态：S0–S3已实现并验收通过；P1/跨端未实现，worktree待集成。2026-10-14 整理。本文件是执行队列；产品边界见 [space](../README.md)，身份/恢复语义以[契约](./20261014-mark-restore-contract.md)为准，平台证据见[调研](./20261014-cross-platform-research.md)，模块架构见[技术设计](../../../dev/20261014-view-annotation-design.md)。
+> 状态：S0–S3已实现并验收通过；P1/跨端未实现；已合入本地main（`7b1a2f76`）。2026-10-14 整理。本文件是执行队列；产品边界见 [space](../README.md)，身份/恢复语义以[契约](./20261014-mark-restore-contract.md)为准，平台证据见[调研](./20261014-cross-platform-research.md)，模块架构见[技术设计](../../../dev/20261014-view-annotation-design.md)。
 
 ## 已确定的实施边界
 
@@ -76,4 +76,4 @@ prefer无写入跳过应在manifest保留skipped原因；P1需用兼容测试固
 - [ ] S4：可选截图消费者。
 - [ ] S5：Android/Harmony按实验结果启用，不做平台支持占位成功。
 
-本轮完成S0–S2与S3核心模拟器验收，详见[验收记录](./20261014-p0-validation.md)。最终完整CLI、根包、iOS Release及文档门禁通过，S3完成；S4/S5明确后置，独立worktree未集成。
+本轮完成S0–S2与S3核心模拟器验收，详见[验收记录](./20261014-p0-validation.md)。最终完整CLI、根包、iOS Release及文档门禁通过，S3完成；S4/S5明确后置；本轮实现、skills与证据已提交并由`7b1a2f76`合入本地main。
