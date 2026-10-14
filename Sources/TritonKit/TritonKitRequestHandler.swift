@@ -62,7 +62,8 @@ public class TritonKitRequestHandler: TritonKitDelegate {
                     if let uiMessageHandler { return await uiMessageHandler(request) }
                     return await handle(request)
                 }
-            case .control, .ledger, .unsupported:
+            case .control, .ledger, .highlight, .unsupported:
+                // Highlight owns its admission and cleanup; observation busy must not block recovery.
                 response = await handle(message)
             }
         }

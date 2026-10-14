@@ -1,4 +1,4 @@
-# SP-196 — 独立 App 视图临时高亮能力
+# SP-197 — 独立 App 视图临时高亮能力
 
 ## 状态与边界
 
@@ -9,7 +9,7 @@
 - 基线 `main@8aaf6c31`；分支 `feat/SP-194-view-annotation`；worktree `../TritonKit-worktrees/SP-194-view-annotation/`。
 - 本轮已实现shared/runtime/CLI/HTTP并在专用Simulator验证，本轮获准整理、提交并合入本地main；不推送或发布。SP-192/SP-193旧文档快照不混入本功能提交。
 
-编号说明：规划/实现阶段使用SP-194；合并时发现主线SP-194已用于参考更新、SP-195用于Runner，现规范登记为SP-196。原分支、worktree、测试设备名及gitignored证据目录保留历史名称，避免断开验收链路。
+编号说明：规划/实现阶段使用SP-194；合并时发现主线SP-194已用于参考更新、SP-195用于Runner，SP-196被上游优化并行任务使用，现规范登记为SP-197。原分支、worktree、测试设备名及gitignored证据目录保留历史名称，避免断开验收链路。
 
 ## 可选能力原则
 
@@ -76,6 +76,6 @@
 
 - 标记/还原契约v1补充后，上述文档门禁与链接检查再次通过；对象复用、属性组冲突和TTL仍是待实现验收项。
 
-- 跨端调研交付检查：`verify.sh --ci-docs`、独立 `check-docs.sh`、`git diff --check` 及SP-196相对链接检查通过（194 spaces）。仅文档验证，不代表各端原型运行通过。
+- 跨端调研交付检查：`verify.sh --ci-docs`、独立 `check-docs.sh`、`git diff --check` 及SP-197相对链接检查通过（194 spaces）。仅文档验证，不代表各端原型运行通过。
 
-- 执行前整理验证：docs-only门禁、独立结构检查、SP-196相对链接及差异检查通过（194 spaces）；源码/设备验收尚未开始。
+- 执行前整理验证：docs-only门禁、独立结构检查、SP-197相对链接及差异检查通过（194 spaces）；源码/设备验收尚未开始。

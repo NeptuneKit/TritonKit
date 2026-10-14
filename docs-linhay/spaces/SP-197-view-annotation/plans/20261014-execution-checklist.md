@@ -1,4 +1,4 @@
-# SP-196 执行清单
+# SP-197 执行清单
 
 > 状态：S0–S3已实现并验收通过；P1/跨端未实现，worktree待集成。2026-10-14 整理。本文件是执行队列；产品边界见 [space](../README.md)，身份/恢复语义以[契约](./20261014-mark-restore-contract.md)为准，平台证据见[调研](./20261014-cross-platform-research.md)，模块架构见[技术设计](../../../dev/20261014-view-annotation-design.md)。
 
@@ -14,7 +14,7 @@
 ## 执行前置与分支边界
 
 - 在现有同级worktree `../TritonKit-worktrees/SP-194-view-annotation/`、分支 `feat/SP-194-view-annotation` 继续；当前基线 `8aaf6c31`。开始实现时先核查主线变化和本分支diff，避免覆盖并行工作，不自动重置或合并dirty主仓。
-- SP-192/SP-193目录及其dev文档是本worktree的文档快照，不能算实现依赖已集成，也不混入SP-196提交。每日memory为共享内容，后续提交/集成须逐段裁决。
+- SP-192/SP-193目录及其dev文档是本worktree的文档快照，不能算实现依赖已集成，也不混入SP-197提交。每日memory为共享内容，后续提交/集成须逐段裁决。
 - P0 selector先使用已有registry nodeRef/OID或当前runtime唯一解析；SP-192 alias为可选增强，不以未集成alias阻塞独立高亮。无新鲜度证据的alias明确拒绝。
 - 本轮没有提交授权；进入编码不等于获准push、PR、merge或release。
 

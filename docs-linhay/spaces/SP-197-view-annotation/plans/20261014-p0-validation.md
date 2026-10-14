@@ -1,6 +1,6 @@
-# SP-196 P0 实现与模拟器验收
+# SP-197 P0 实现与模拟器验收
 
-日期：2026-10-14。源码位于 `feat/SP-194-view-annotation` 独立同级worktree，基线 `8aaf6c31`，本次源码尚未提交、合并或发布。主工作区和原默认服务保持原有状态。验证设备是本次新建的 Triton-SP194-Highlight / iPhone-Duo / iOS 27.1 Simulator（arm64），仅测试fixture，不操作用户App。
+日期：2026-10-14。源码位于 `feat/SP-194-view-annotation` 独立同级worktree，基线 `8aaf6c31`，验收时源码尚未提交；本轮已获准提交并集成本地main，不推送或发布。主工作区和原默认服务保持原有状态。验证设备是本次新建的 Triton-SP194-Highlight / iPhone-Duo / iOS 27.1 Simulator（arm64），仅测试fixture，不操作用户App。
 
 ## 实现范围
 
@@ -64,3 +64,7 @@ P0范围不包含截图自动finally组合、prefer/required capture参数、And
 - Release：macOS Release 3项availability通过；真实iOS Release最终3项通过（AvailabilityTests）；Release测试只显式ENABLE_TESTABILITY=YES使@testable可用，未定义TRITONKIT_RUNTIME_ENABLED；保持no-op。
 - 最终release CLI实际复跑fixture：37步全部通过，原值/布局/交互/截图/TTL/冲突和显式清理同一provider链路。
 - verify.sh --local、verify.sh --ci-docs、独立check-docs.sh、相对链接与git diff --check通过；最终只增测试/文档后按对应focused与docs门禁重新检查。
+
+## 主线集成验收
+
+实现提交 `ee9a9ab7`；当前主线 observation/visual feedback 已由 `e116a4a9` 合入本分支。自动合并曾漏掉新增 request domain 的外层switch分发，已按先失败后修复补 `.highlight` 路由和独立集成测试，保证观察请求忙时高亮capabilities/status/clear仍保留原强类型回执，不受新UI admission阻断。最终集成测试与main门禁完成后在本节补录。编号为SP-197；原SP-194为规划阶段历史名称，SP-196并行登记冲突未作为最终索引。

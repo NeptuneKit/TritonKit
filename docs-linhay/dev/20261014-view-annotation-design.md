@@ -1,8 +1,8 @@
 # 独立 App 高亮会话与临时属性恢复
 
-关联：[SP-196](../spaces/SP-196-view-annotation/README.md)。本设计按用户明确的独立高亮能力修订：定位/保存/应用独立交付，截图只是消费者。P0独立UIKit能力已实现，验收见[报告](../spaces/SP-196-view-annotation/plans/20261014-p0-validation.md)；截图组合/跨端仍未实现。执行顺序见[执行清单](../spaces/SP-196-view-annotation/plans/20261014-execution-checklist.md)。
+关联：[SP-197](../spaces/SP-197-view-annotation/README.md)。本设计按用户明确的独立高亮能力修订：定位/保存/应用独立交付，截图只是消费者。P0独立UIKit能力已实现，验收见[报告](../spaces/SP-197-view-annotation/plans/20261014-p0-validation.md)；截图组合/跨端仍未实现。执行顺序见[执行清单](../spaces/SP-197-view-annotation/plans/20261014-execution-checklist.md)。
 
-详细约束以 [高亮标记与还原契约 v1](../spaces/SP-196-view-annotation/plans/20261014-mark-restore-contract.md) 为准，尤其是属性组恢复、内容复用、幂等记录与部分清理。
+详细约束以 [高亮标记与还原契约 v1](../spaces/SP-197-view-annotation/plans/20261014-mark-restore-contract.md) 为准，尤其是属性组恢复、内容复用、幂等记录与部分清理。
 
 ## 已有基础
 
@@ -72,7 +72,7 @@ apply/clear 的短临界区串行；活动会话保护覆盖属性组，不长�
 
 ## 跨端调研补充
 
-[跨平台技术调研与裁决](../spaces/SP-196-view-annotation/plans/20261014-cross-platform-research.md)固定共用会话、独立provider路线。以上直接快照流程限定iOS P0；Android需要App内Debug provider并先验证空foreground替换，现有无障碍桥不具备目标View写权限。Harmony采用注册响应式AttributeModifier控制真实outline，不能仅凭FrameNode UniqueID写任意声明式节点。
+[跨平台技术调研与裁决](../spaces/SP-197-view-annotation/plans/20261014-cross-platform-research.md)固定共用会话、独立provider路线。以上直接快照流程限定iOS P0；Android需要App内Debug provider并先验证空foreground替换，现有无障碍桥不具备目标View写权限。Harmony采用注册响应式AttributeModifier控制真实outline，不能仅凭FrameNode UniqueID写任意声明式节点。
 
 恢复模式分snapshot_compare_restore与managed_override：前者条件写回历史原值；后者撤销本次覆盖并应用当前业务基础样式。必须在receipt披露restorationMode、baselineVersionAtApply/current及restoredTo；具体规范以契约第12节为准。SDK stop现同步安排清理，stopAndRestoreHighlights等待本批回执；清理generation、TaskLocal接纳epoch阻断旧排队请求/旧清理污染新会话；CATransaction completion不单独作为帧已显示证明。
 

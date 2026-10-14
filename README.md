@@ -333,7 +333,7 @@ triton highlight clear --target <target> --session <session-id> --json
 
 The UIKit provider supports ordinary UIView/CALayer by OID or unique identifier, optional ancestor scope, 1–10 nodes and TTL 1–300 seconds. Reusable cells without a content epoch, text/role selectors, Release and other platform providers are unsupported. CLI exit or reconnect does not discard the App-owned session. Clear compares the entire border group before restoring; business changes are preserved and conflicting cleanup exits nonzero. Keep the operation and session IDs, and read `cleanupComplete/restorationVerified/residualState` separately from request `ok`. Main-queue opportunity and TTL alone do not prove rendered pixels or completed restoration.
 
-Screenshots consume the independent session using existing commands; automatic `--highlight` composition is a later slice. See [the implemented workflow](TritonKit.skills/tritonkit-emulator-cli-takeover/references/view-highlight.md) and [Simulator acceptance](docs-linhay/spaces/SP-196-view-annotation/plans/20261014-p0-validation.md).
+Screenshots consume the independent session using existing commands; automatic `--highlight` composition is a later slice. See [the implemented workflow](TritonKit.skills/tritonkit-emulator-cli-takeover/references/view-highlight.md) and [Simulator acceptance](docs-linhay/spaces/SP-197-view-annotation/plans/20261014-p0-validation.md).
 
 ### 1. Install The CLI
 
