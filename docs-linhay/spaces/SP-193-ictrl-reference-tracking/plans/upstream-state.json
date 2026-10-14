@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "repository": "OpenMinis/iCTRL",
+  "repository_url": "https://github.com/OpenMinis/iCTRL",
+  "last_successful_check_at": "2026-10-14T09:33:32Z",
+  "default_branch": "main",
+  "head_sha": "99dbfecdb39836ba26a0b2b0dcfde90f705a6835",
+  "head_committed_at": "2026-10-13T11:32:57Z",
+  "latest_release": {
+    "tag": "v1.97.1",
+    "published_at": "2026-10-13T11:33:32Z",
+    "url": "https://github.com/OpenMinis/iCTRL/releases/tag/v1.97.1",
+    "prerelease": false
+  },
+  "license_spdx": "Apache-2.0",
+  "archived": false,
+  "automation_id": "ictrl",
+  "schedule_timezone": "Asia/Shanghai",
+  "schedule_local_time": "10:00",
+  "schedule_frequency": "daily",
+  "last_error": null,
+  "baseline_summary": "v1.97.1 修复 host app 配对文件选择器；Runner 无功能变化。与 SP-192 参考 SHA 一致。"
+}
