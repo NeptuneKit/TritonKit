@@ -14,7 +14,8 @@ func buildTritonTestReport(input: String) throws -> TKTestReportResponse {
     let runMetadata = try readTestRunMetadata(from: root)
     let artifacts = collectReportArtifacts(from: parsed.events)
     let steps = buildReportSteps(from: parsed.events)
-    let failure = parsed.events.first { $0.type == .failureRecorded }?.failure
+    let failure = parsed.events.last { $0.type == .runFinished }?.failure
+        ?? parsed.events.first { $0.type == .failureRecorded }?.failure
     let summary = TKTestReportSummary(
         status: parsed.summary.status ?? runMetadata?.status,
         eventCount: parsed.summary.eventCount,

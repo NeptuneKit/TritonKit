@@ -63,13 +63,15 @@ struct AppMap: AsyncParsableCommand {
         static let configuration = CommandConfiguration(abstract: "List replayable paths in a .tritonmap directory")
 
         @Argument(help: "Input .tritonmap directory") var map: String
+        @Option(help: "Zero-based offset in stable identifier order") var offset = 0
+        @Option(help: "Maximum returned items (1...1000)") var limit = 100
         @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
         @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
         func run() async throws {
             let outputFormat = effectiveFormat(format, json: json)
             do {
-                let response = try listTritonAppMapPaths(mapPath: map)
+                let response = try listTritonAppMapPaths(mapPath: map, offset: offset, limit: limit)
                 try printAppMapPaths(response, format: outputFormat)
             } catch {
                 try failAppMap(error, outputFormat: outputFormat)
@@ -81,13 +83,15 @@ struct AppMap: AsyncParsableCommand {
         static let configuration = CommandConfiguration(abstract: "List screens in a .tritonmap directory")
 
         @Argument(help: "Input .tritonmap directory") var map: String
+        @Option(help: "Zero-based offset in stable identifier order") var offset = 0
+        @Option(help: "Maximum returned items (1...1000)") var limit = 100
         @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
         @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
         func run() async throws {
             let outputFormat = effectiveFormat(format, json: json)
             do {
-                let response = try listTritonAppMapScreens(mapPath: map)
+                let response = try listTritonAppMapScreens(mapPath: map, offset: offset, limit: limit)
                 try printAppMapScreens(response, format: outputFormat)
             } catch {
                 try failAppMap(error, outputFormat: outputFormat)
@@ -99,13 +103,15 @@ struct AppMap: AsyncParsableCommand {
         static let configuration = CommandConfiguration(abstract: "List transitions in a .tritonmap directory")
 
         @Argument(help: "Input .tritonmap directory") var map: String
+        @Option(help: "Zero-based offset in stable identifier order") var offset = 0
+        @Option(help: "Maximum returned items (1...1000)") var limit = 100
         @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
         @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
         func run() async throws {
             let outputFormat = effectiveFormat(format, json: json)
             do {
-                let response = try listTritonAppMapTransitions(mapPath: map)
+                let response = try listTritonAppMapTransitions(mapPath: map, offset: offset, limit: limit)
                 try printAppMapTransitions(response, format: outputFormat)
             } catch {
                 try failAppMap(error, outputFormat: outputFormat)
@@ -387,6 +393,10 @@ func failAppMap(_ error: Error, outputFormat: ClientOutputFormat) throws -> Neve
 
 func appMapFailureCode(_ error: Error) -> String {
     switch error {
+    case TKAppMapError.invalidPage:
+        return "invalid_app_map_page"
+    case TKAppMapError.emptySuite:
+        return "empty_app_map_suite"
     case TKAppMapError.unconfirmedPath(_):
         return "unconfirmed_path"
     case TKAppMapError.nonReplayablePath(_):
@@ -429,6 +439,9 @@ func printAppMapPaths(_ response: TKAppMapPathsResponse, format: ClientOutputFor
         print(try encodeJSON(response))
     case .text:
         print("ok: \(response.ok)")
+        print("returned: \(response.returnedCount)/\(response.totalCount)")
+        print("truncated: \(response.truncated)")
+        if let nextOffset = response.nextOffset { print("nextOffset: \(nextOffset)") }
         for path in response.paths {
             print("- \(path.pathID): \(path.name)")
         }
@@ -441,6 +454,9 @@ func printAppMapScreens(_ response: TKAppMapScreensResponse, format: ClientOutpu
         print(try encodeJSON(response))
     case .text:
         print("ok: \(response.ok)")
+        print("returned: \(response.returnedCount)/\(response.totalCount)")
+        print("truncated: \(response.truncated)")
+        if let nextOffset = response.nextOffset { print("nextOffset: \(nextOffset)") }
         for screen in response.screens {
             print("- \(screen.screenID): \(screen.primaryText ?? "")")
         }
@@ -453,6 +469,9 @@ func printAppMapTransitions(_ response: TKAppMapTransitionsResponse, format: Cli
         print(try encodeJSON(response))
     case .text:
         print("ok: \(response.ok)")
+        print("returned: \(response.returnedCount)/\(response.totalCount)")
+        print("truncated: \(response.truncated)")
+        if let nextOffset = response.nextOffset { print("nextOffset: \(nextOffset)") }
         for transition in response.transitions {
             print("- \(transition.transitionID): \(transition.fromScreenID) -> \(transition.toScreenID)")
         }
