@@ -26,6 +26,7 @@ struct Serve: AsyncParsableCommand {
         let webSocketRouter = Router(context: BasicWebSocketRequestContext.self)
 
         registerTargetLeaseRoutes(on: router, store: leaseStore)
+        registerIOSRunnerRoutes(on: router)
 
         // ---- HTTP Data Endpoints ----
 

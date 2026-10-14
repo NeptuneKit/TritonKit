@@ -200,4 +200,20 @@ RUBY
 grep -Fq 'completed successfully before arm64 release assets were created' "${release_script}" \
   || fail "release script must fail if a tag run succeeds without creating release assets"
 
+# The unsigned Runner source must be present in both architecture archives and
+# validated after extraction; a source checkout is not a packaged runtime fallback.
+runner_package_script="${root}/docs-linhay/scripts/package-ios-runner-resources.py"
+runner_verify_script="${root}/docs-linhay/scripts/verify-ios-runner-package.py"
+test -x "${runner_package_script}" || fail "missing iOS Runner packager"
+test -x "${runner_verify_script}" || fail "missing iOS Runner package verifier"
+runner_copy_count="$(grep -Fc 'docs-linhay/scripts/package-ios-runner-resources.py' "${release_workflow}" || true)"
+(( runner_copy_count >= 4 )) || fail "both release architectures must stamp and package iOS Runner resources"
+grep -Fq -- '--archive dist/triton-macos-arm64.tar.gz' "${release_workflow}" || fail "arm64 release asset must verify Runner integrity"
+grep -Fq -- '--archive triton-macos-x86_64.tar.gz' "${release_workflow}" || fail "x86_64 release asset must verify Runner integrity"
+grep -Fq 'pkgshare.install runner_dir => "ios-runner"' "${root}/.github/homebrew/triton.rb.template" || fail "Homebrew must install the Runner project"
+grep -Fq 'RUNNER_MANIFEST.json' "${root}/.github/homebrew/triton.rb.template" || fail "Homebrew test must verify the Runner manifest exists"
+grep -Fq 'Validate bundled iOS Runner package' "${ci_workflow}" || fail "CI must validate offline Runner packaging contracts"
+"${runner_verify_script}" --self-test
+"${runner_verify_script}" --root "${root}/CLI/Sources/TritonKitCLI/Resources/ios-runner"
+
 echo "release automation verification passed"

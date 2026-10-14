@@ -29,6 +29,8 @@ jobs:
           docs-linhay/scripts/verify-homebrew-formula.sh
           docs-linhay/scripts/verify-version-stamping.sh
           docs-linhay/scripts/verify-release-automation.sh
+          docs-linhay/scripts/verify-ios-runner-package.py --self-test
+          docs-linhay/scripts/verify-ios-runner-package.py --root CLI/Sources/TritonKitCLI/Resources/ios-runner
 
   build-cli-arm64:
     name: Build CLI (arm64)
@@ -67,6 +69,9 @@ jobs:
           docs-linhay/scripts/write-cli-version.sh "${version}" Sources/TritonKitCLI/CLIBuildInfo.swift
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
+      - name: Stamp bundled iOS Runner resources
+        run: docs-linhay/scripts/package-ios-runner-resources.py --source CLI/Sources/TritonKitCLI/Resources/ios-runner --output CLI/Sources/TritonKitCLI/Resources/ios-runner --version "${{ steps.version.outputs.version }}"
+
       - name: Build CLI
         run: swift build --package-path CLI --scratch-path .build/cli -c release --product triton
 
@@ -86,6 +91,18 @@ jobs:
           cp .build/cli/release/triton "${package_dir}/triton"
           chmod +x "${package_dir}/triton"
           cp -R Web/dist/. "${package_dir}/web/"
+          docs-linhay/scripts/package-ios-runner-resources.py \
+            --output "${package_dir}/resources/ios-runner" \
+            --version "${{ steps.version.outputs.version }}"
+          docs-linhay/scripts/verify-ios-runner-package.py \
+            --root "${package_dir}/resources/ios-runner" \
+            --version "${{ steps.version.outputs.version }}"
+          # Keep the existing SwiftPM camera resources in portable archives too.
+          shopt -s nullglob
+          resource_bundles=(.build/cli/release/*.bundle)
+          (( ${#resource_bundles[@]} > 0 ))
+          cp -R "${resource_bundles[@]}" "${package_dir}/"
+
           cat > "${package_dir}/README.txt" <<README
           TritonKit CLI
 
@@ -96,12 +113,19 @@ jobs:
             cp triton /usr/local/bin/triton
             mkdir -p /usr/local/share/triton/web
             cp -R web/. /usr/local/share/triton/web/
+            mkdir -p /usr/local/share/triton/ios-runner
+            cp -R resources/ios-runner/. /usr/local/share/triton/ios-runner/
+            cp -R *.bundle /usr/local/bin/
 
           Homebrew:
             brew install NeptuneKit/tap/triton
 
           Verify:
             triton version --json
+
+          Bundled iOS Runner:
+            Unsigned project source is included in resources/ios-runner.
+            triton device runner prepare --device <selector> builds and signs it with your Xcode team.
 
           Bundled Web:
             triton web starts the bundled Web Device Hub from ./web.
@@ -152,6 +176,9 @@ jobs:
           docs-linhay/scripts/write-cli-version.sh "${version}" Sources/TritonKitCLI/CLIBuildInfo.swift
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
+      - name: Stamp bundled iOS Runner resources
+        run: docs-linhay/scripts/package-ios-runner-resources.py --source CLI/Sources/TritonKitCLI/Resources/ios-runner --output CLI/Sources/TritonKitCLI/Resources/ios-runner --version "${{ steps.version.outputs.version }}"
+
       - name: Build CLI
         run: swift build --package-path CLI --scratch-path .build/cli-x86 -c release --product triton --triple x86_64-apple-macosx14.0
 
@@ -172,6 +199,18 @@ jobs:
           chmod +x "${package_dir}/triton"
           file "${package_dir}/triton" | grep -q 'Mach-O 64-bit executable x86_64'
           cp -R Web/dist/. "${package_dir}/web/"
+          docs-linhay/scripts/package-ios-runner-resources.py \
+            --output "${package_dir}/resources/ios-runner" \
+            --version "${{ steps.version.outputs.version }}"
+          docs-linhay/scripts/verify-ios-runner-package.py \
+            --root "${package_dir}/resources/ios-runner" \
+            --version "${{ steps.version.outputs.version }}"
+          # Keep the existing SwiftPM camera resources in portable archives too.
+          shopt -s nullglob
+          resource_bundles=(.build/cli-x86/x86_64-apple-macosx/release/*.bundle)
+          (( ${#resource_bundles[@]} > 0 ))
+          cp -R "${resource_bundles[@]}" "${package_dir}/"
+
           cat > "${package_dir}/README.txt" <<README
           TritonKit CLI
 
@@ -182,12 +221,19 @@ jobs:
             cp triton /usr/local/bin/triton
             mkdir -p /usr/local/share/triton/web
             cp -R web/. /usr/local/share/triton/web/
+            mkdir -p /usr/local/share/triton/ios-runner
+            cp -R resources/ios-runner/. /usr/local/share/triton/ios-runner/
+            cp -R *.bundle /usr/local/bin/
 
           Homebrew:
             brew install NeptuneKit/tap/triton
 
           Verify:
             triton version --json
+
+          Bundled iOS Runner:
+            Unsigned project source is included in resources/ios-runner.
+            triton device runner prepare --device <selector> builds and signs it with your Xcode team.
 
           Bundled Web:
             triton web starts the bundled Web Device Hub from ./web.
@@ -244,6 +290,7 @@ jobs:
           arm64_contents="$(mktemp)"
           tar -tf dist/triton-macos-arm64.tar.gz > "${arm64_contents}"
           grep -Eq '^triton-macos-arm64/web/index[.]html$' "${arm64_contents}"
+          docs-linhay/scripts/verify-ios-runner-package.py --archive dist/triton-macos-arm64.tar.gz --version "${{ steps.version.outputs.version }}"
           arm64_readme="$(mktemp)"
           tar -xOf dist/triton-macos-arm64.tar.gz triton-macos-arm64/README.txt > "${arm64_readme}"
           grep -Fq 'triton web starts the bundled Web Device Hub from ./web.' "${arm64_readme}"
@@ -302,6 +349,7 @@ jobs:
             x86_contents="$(mktemp)"
             tar -tf triton-macos-x86_64.tar.gz > "${x86_contents}"
             grep -Eq '^triton-macos-x86_64/web/index[.]html$' "${x86_contents}"
+            "${GITHUB_WORKSPACE}/docs-linhay/scripts/verify-ios-runner-package.py" --archive triton-macos-x86_64.tar.gz --version "${GITHUB_REF_NAME#v}"
             x86_readme="$(mktemp)"
             tar -xOf triton-macos-x86_64.tar.gz triton-macos-x86_64/README.txt > "${x86_readme}"
             grep -Fq 'triton web starts the bundled Web Device Hub from ./web.' "${x86_readme}"

@@ -1,0 +1,481 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3BA115C922128BAD462B381C /* HTTPProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B69771C3B7D65FB12852F710 /* HTTPProtocolTests.swift */; };
+		4DDCB44BD58E98AF5B116CB6 /* TritonIOSRunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4826B750A7716B10E34D524 /* TritonIOSRunnerTests.swift */; };
+		75D8D7EB75DE1FCAE31A0AE9 /* RunnerFixtureApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3910DF07DCFD4F3ECD158D2E /* RunnerFixtureApp.swift */; };
+		958508B4F0CBD66E44F0975E /* HTTPProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBC8460C1C549387845CA459 /* HTTPProtocol.swift */; };
+		A4B780BCBD7DD724E1D9C414 /* HTTPProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBC8460C1C549387845CA459 /* HTTPProtocol.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7863EB42CA2A5AE0D749D75E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8E32B5A187D78860BC6B816B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 73C7E20BB37293706E7E442F;
+			remoteInfo = RunnerFixture;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		2D3EF0CA099E7C1AED0A7C8E /* RunnerFixture.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RunnerFixture.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3910DF07DCFD4F3ECD158D2E /* RunnerFixtureApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerFixtureApp.swift; sourceTree = "<group>"; };
+		5A8121079AE337CFBFA8C0C2 /* TritonIOSRunnerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TritonIOSRunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8971F886F46FF0920A712DA1 /* RunnerProtocolTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RunnerProtocolTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B69771C3B7D65FB12852F710 /* HTTPProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPProtocolTests.swift; sourceTree = "<group>"; };
+		EBC8460C1C549387845CA459 /* HTTPProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPProtocol.swift; sourceTree = "<group>"; };
+		F4826B750A7716B10E34D524 /* TritonIOSRunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TritonIOSRunnerTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		32E51DDC3DAF425D3621E8EC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5A8121079AE337CFBFA8C0C2 /* TritonIOSRunnerTests.xctest */,
+				2D3EF0CA099E7C1AED0A7C8E /* RunnerFixture.app */,
+				8971F886F46FF0920A712DA1 /* RunnerProtocolTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9003A2B5780714E63FFA615E /* RunnerTests */ = {
+			isa = PBXGroup;
+			children = (
+				EBC8460C1C549387845CA459 /* HTTPProtocol.swift */,
+				F4826B750A7716B10E34D524 /* TritonIOSRunnerTests.swift */,
+			);
+			path = RunnerTests;
+			sourceTree = "<group>";
+		};
+		904C05462C5451C2D0409E27 = {
+			isa = PBXGroup;
+			children = (
+				FCF427682E200ADF8B547AC1 /* FixtureApp */,
+				D03525A607AB81D12E6A98DE /* ProtocolTests */,
+				9003A2B5780714E63FFA615E /* RunnerTests */,
+				32E51DDC3DAF425D3621E8EC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D03525A607AB81D12E6A98DE /* ProtocolTests */ = {
+			isa = PBXGroup;
+			children = (
+				B69771C3B7D65FB12852F710 /* HTTPProtocolTests.swift */,
+			);
+			path = ProtocolTests;
+			sourceTree = "<group>";
+		};
+		FCF427682E200ADF8B547AC1 /* FixtureApp */ = {
+			isa = PBXGroup;
+			children = (
+				3910DF07DCFD4F3ECD158D2E /* RunnerFixtureApp.swift */,
+			);
+			path = FixtureApp;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4472A9B0A61A5CC304FD587B /* TritonIOSRunnerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 07A81F173FEC0ADBD9F3D2DE /* Build configuration list for PBXNativeTarget "TritonIOSRunnerTests" */;
+			buildPhases = (
+				88390467D3698F3F25E21522 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				ADABD4431B436594D412B70D /* PBXTargetDependency */,
+			);
+			name = TritonIOSRunnerTests;
+			packageProductDependencies = (
+			);
+			productName = TritonIOSRunnerTests;
+			productReference = 5A8121079AE337CFBFA8C0C2 /* TritonIOSRunnerTests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		73C7E20BB37293706E7E442F /* RunnerFixture */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F550B4BB6FCEE633B42A5ACC /* Build configuration list for PBXNativeTarget "RunnerFixture" */;
+			buildPhases = (
+				35E5072A15244DF672780930 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RunnerFixture;
+			packageProductDependencies = (
+			);
+			productName = RunnerFixture;
+			productReference = 2D3EF0CA099E7C1AED0A7C8E /* RunnerFixture.app */;
+			productType = "com.apple.product-type.application";
+		};
+		8D5CE505A095C69B32DF99B0 /* RunnerProtocolTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6BB862168B22A352F0AA9013 /* Build configuration list for PBXNativeTarget "RunnerProtocolTests" */;
+			buildPhases = (
+				451FEF981C2FF9D429C0D28C /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RunnerProtocolTests;
+			packageProductDependencies = (
+			);
+			productName = RunnerProtocolTests;
+			productReference = 8971F886F46FF0920A712DA1 /* RunnerProtocolTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		8E32B5A187D78860BC6B816B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					4472A9B0A61A5CC304FD587B = {
+						ProvisioningStyle = Automatic;
+						TestTargetID = 73C7E20BB37293706E7E442F;
+					};
+					73C7E20BB37293706E7E442F = {
+						ProvisioningStyle = Automatic;
+					};
+					8D5CE505A095C69B32DF99B0 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = A91FD496A66CA731FCFED70A /* Build configuration list for PBXProject "TritonIOSRunner" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 904C05462C5451C2D0409E27;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 32E51DDC3DAF425D3621E8EC /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				73C7E20BB37293706E7E442F /* RunnerFixture */,
+				4472A9B0A61A5CC304FD587B /* TritonIOSRunnerTests */,
+				8D5CE505A095C69B32DF99B0 /* RunnerProtocolTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		35E5072A15244DF672780930 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				75D8D7EB75DE1FCAE31A0AE9 /* RunnerFixtureApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		451FEF981C2FF9D429C0D28C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				958508B4F0CBD66E44F0975E /* HTTPProtocol.swift in Sources */,
+				3BA115C922128BAD462B381C /* HTTPProtocolTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		88390467D3698F3F25E21522 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A4B780BCBD7DD724E1D9C414 /* HTTPProtocol.swift in Sources */,
+				4DDCB44BD58E98AF5B116CB6 /* TritonIOSRunnerTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		ADABD4431B436594D412B70D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 73C7E20BB37293706E7E442F /* RunnerFixture */;
+			targetProxy = 7863EB42CA2A5AE0D749D75E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0FC0BE0EA2A2D7D4B5794A42 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		5D9BBBB92CE73E653955E3FF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.tritonkit.runnerfixture;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5F2BA0282DF19EC1A20950E2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		69DD0D3620DDAAF8BF49C89F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.tritonkit.iosrunner.protocoltests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		733DB05E11EC36C317986A50 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.tritonkit.iosrunner.protocoltests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7BF6B626B37D85BCE30C914B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "TritonKit Runner HTTP on the local device.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.tritonkit.iosrunner.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = RunnerFixture;
+			};
+			name = Release;
+		};
+		E22E694571725A67047F4FA8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.tritonkit.runnerfixture;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E26E8C98EEA7BDE93F812529 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "TritonKit Runner HTTP on the local device.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.tritonkit.iosrunner.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = RunnerFixture;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		07A81F173FEC0ADBD9F3D2DE /* Build configuration list for PBXNativeTarget "TritonIOSRunnerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E26E8C98EEA7BDE93F812529 /* Debug */,
+				7BF6B626B37D85BCE30C914B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6BB862168B22A352F0AA9013 /* Build configuration list for PBXNativeTarget "RunnerProtocolTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				733DB05E11EC36C317986A50 /* Debug */,
+				69DD0D3620DDAAF8BF49C89F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A91FD496A66CA731FCFED70A /* Build configuration list for PBXProject "TritonIOSRunner" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5F2BA0282DF19EC1A20950E2 /* Debug */,
+				0FC0BE0EA2A2D7D4B5794A42 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F550B4BB6FCEE633B42A5ACC /* Build configuration list for PBXNativeTarget "RunnerFixture" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5D9BBBB92CE73E653955E3FF /* Debug */,
+				E22E694571725A67047F4FA8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 8E32B5A187D78860BC6B816B /* Project object */;
+}

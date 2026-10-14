@@ -26,7 +26,8 @@ let package = Package(
                 .product(name: "Yams", package: "Yams"),
             ],
             resources: [
-                .process("Resources"),
+                .process("Resources/sim-camera"),
+                .copy("Resources/ios-runner"),
             ]
         ),
         .testTarget(

@@ -147,7 +147,26 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         Set(recoveryCommandRootCategoryMap.keys)
     }
 
+    /// Specific resident XCTest failure families. Unknown codes remain unclassified.
+    /// Delivered or uncertain actions recover through observation and receipts, never automatic replay.
+    public static func residentRunnerRecoveryCategories(forFailureCode failureCode: String) -> [String]? {
+        switch failureCode {
+        case "ios_runner_transport_unknown", "ios_runner_stop_unknown", "outcome_unknown", "unauthorized", "ios_runner_invalid_response", "extra_bytes", "request_complete", "ios_runner_internal", "ios_runner_operation_failed", "ios_runner_command_timeout", "listener_failed":
+            return ["diagnose", "observe", "archive", "plan"]
+        case "ios_runner_already_running", "ios_runner_busy", "ios_runner_owner_unknown", "ios_runner_owner_missing", "ios_runner_session_not_ready", "ios_runner_start_not_ready", "ios_runner_session_missing", "ios_runner_session_target_mismatch", "ios_runner_prepare_required", "ios_runner_lock_failed", "session_stopping", "fixture_not_foreground":
+            return ["diagnose", "prepare-target", "plan"]
+        case "cross_app_activation", "cross_app_address", "cross_app_ambiguous", "cross_app_binding", "cross_app_direction", "cross_app_focus", "cross_app_limit", "cross_app_navigation", "cross_app_not_foreground", "cross_app_not_hittable", "cross_app_operation", "cross_app_selector", "cross_app_text", "cross_app_unobserved", "ios_runner_bundle_not_allowed":
+            return ["diagnose", "observe", "plan"]
+        case "ios_runner_action_request_id_required", "ios_runner_build_artifact_ambiguous", "ios_runner_build_failed", "ios_runner_entropy_failed", "ios_runner_explicit_device_required", "ios_runner_identity_unavailable", "ios_runner_invalid_allow_bundles", "ios_runner_invalid_operation", "ios_runner_invalid_payload", "ios_runner_invalid_request_id", "ios_runner_invalid_route", "ios_runner_invalid_team", "ios_runner_invalid_timeout", "ios_runner_invalid_ttl", "ios_runner_resource_invalid", "ios_runner_resource_missing", "ios_runner_team_required", "ios_runner_test_configuration_invalid", "ios_runner_unsafe_store", "ios_runner_unsupported_target":
+            return ["diagnose", "project", "plan"]
+        case "ios_runner_artifact_exists", "ios_runner_artifact_unwritable", "ios_runner_body_too_large", "ios_runner_payload_too_large", "ios_runner_receipt_image_unverified", "ios_runner_receipt_save_failed", "ios_runner_screenshot_export_failed", "ios_runner_store_failed", "receipt_budget", "receipt_byte_budget", "receipt_size_budget", "screenshot_budget", "screenshot_dimension_budget", "screenshot_invalid", "ui_queue_budget":
+            return ["diagnose", "archive", "plan"]
+        default: return nil
+        }
+    }
+
     public static func recoveryCategories(forFailureCode failureCode: String) -> [String] {
+        if let categories = residentRunnerRecoveryCategories(forFailureCode: failureCode) { return categories }
         if ["screenshot_deadline_exceeded", "insufficient_visual_samples", "visual_motion_timeout", "runtime_ui_timeout", "runtime_ui_busy", "runtime_ui_circuit_open"].contains(failureCode) {
             return ["diagnose", "observe", "plan"]
         }

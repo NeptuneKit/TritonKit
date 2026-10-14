@@ -1,6 +1,6 @@
 # TritonKit
 
-TritonKit provides a DEBUG-only embedded iOS runtime, Harmony / DevEco Emulator host-side contracts, Harmony embedded runtime alignment notes, and a macOS `triton` CLI for inspecting and controlling apps during development. It is designed for AI agents and automation scripts that need machine-readable access to app hierarchy, accessibility nodes, geometry, screenshots, and supported in-app controls.
+TritonKit provides a DEBUG-only embedded iOS runtime, a bundled iOS XCTest Runner for UI control without an app SDK, Harmony / DevEco Emulator host-side contracts, Harmony embedded runtime alignment notes, and a macOS `triton` CLI for inspecting and controlling apps during development. It is designed for AI agents and automation scripts that need machine-readable access to app hierarchy, accessibility nodes, geometry, screenshots, and supported in-app controls.
 
 TritonKit is in active development. If you hit a missing capability, unclear behavior, integration issue, or documentation gap, open an issue in `NeptuneKit/TritonKit`; AI agents using this repository should collect evidence and file the issue directly when they have GitHub access.
 
@@ -12,6 +12,7 @@ Before filing a public issue, redact private project and personal information. D
 | --- | --- | --- |
 | Add in-app runtime to an iOS app | [iOS Embedded Runtime Integration Guide](#ios-embedded-runtime-integration-guide) | SwiftPM or CocoaPods, always visibly Debug-only in app source. |
 | Install or update the macOS agent CLI | [CLI Integration Guide](#cli-integration-guide) | Homebrew for released builds, local source build only for unreleased validation. |
+| Control iOS apps without adding an app SDK | [iOS Resident XCTest Runner](#ios-resident-xctest-runner) | The CLI bundles the Runner; Xcode builds and signs a bounded UI-test session. |
 | Build, test, run, and diagnose an unknown Apple repo | [CLI Integration Guide](#cli-integration-guide) | Use `triton xcode`, `triton xcresult`, and artifact commands before raw `xcodebuild`. |
 | Prepare a HarmonyOS / DevEco Emulator | [Harmony App Integration Guide](#harmony-app-integration-guide) | Host-side HDC adapter works without embedded runtime. |
 | Validate a Harmony embedded runtime | [Harmony App Integration Guide](#harmony-app-integration-guide) | Use package id / import path `tritonkit` and `--runtime-base-url` direct checks while the SDK is standalone. |
@@ -60,6 +61,52 @@ docs-linhay/scripts/install-public-skills.sh "$AGENT_SKILLS_DIR" --from-tar trit
 ```
 
 Restart the Codex / agent session after installation so the new skills are discovered.
+
+## iOS Resident XCTest Runner
+
+`triton device runner` manages a bundled XCTest Runner for an explicit iOS Simulator or paired USB iPhone/iPad. Target apps do not need the embedded TritonKit SDK or source changes. The CLI handles the Runner project, build, session credentials, and native USB transport; running this workflow does not require Appium, WebDriverAgent, Python, or `iproxy`.
+
+Install the [complete CLI package](#cli-integration-guide), including its version-matched `ios-runner` resources. A Mac with Xcode and an SDK compatible with the device is still required. For a physical device, complete pairing/trust, enable Developer Mode, provide an Apple Development signing identity, unlock the device, and complete any system UI Automation authorization. `prepare` can select one unambiguous signing team; otherwise supply `--team`. Provisioning updates are opt-in through `--allow-provisioning-updates` on `prepare`.
+
+Discover a target and preserve its explicit selector. Runner commands accept `ios-real:<device-id>` or `sim:<UDID>`; they do not select a device implicitly. For a Simulator, boot the selected target through `triton sim boot` before preparing it.
+
+```bash
+triton version --json
+triton device list --platform ios --scope real --json
+triton schema --command device.runner --json
+triton device runner doctor --device 'ios-real:<device-id>' --json
+triton device runner prepare --device 'ios-real:<device-id>' --timeout 600 --json
+triton device runner start --device 'ios-real:<device-id>' --allow-bundle com.apple.calculator --ttl 600 --json
+triton device runner status --device 'ios-real:<device-id>' --json
+```
+
+`prepare` builds the bundled project in an owned private workspace. `start` requires that prepared build and starts one XCTest session; its success requires both an authenticated health response and a fixture UI probe. Add each target app explicitly with repeatable `--allow-bundle` at session start. The fixture is always included. `status` reports current transport health and process ownership separately from historical UI readiness: `automationPreviouslyVerified` is a prior observation, while `automationReady: null` does not prove that a currently locked or stalled device can execute an action.
+
+Activate and inspect an allowed app, then use a selector from the latest inspection. Replace the identifier below with an identifier actually returned by that inspection; use `--label` instead when only a unique label is available.
+
+```bash
+triton device runner activate --device 'ios-real:<device-id>' --bundle-id com.apple.calculator --json
+triton device runner inspect --device 'ios-real:<device-id>' --bundle-id com.apple.calculator --limit 40 --json
+triton device runner tap --device 'ios-real:<device-id>' --bundle-id com.apple.calculator --identifier '<observed-identifier>' --request-id action-001 --json
+triton device runner inspect --device 'ios-real:<device-id>' --bundle-id com.apple.calculator --json
+triton device runner screenshot --device 'ios-real:<device-id>' --bundle-id com.apple.calculator --output '<fresh-private.png>' --request-id capture-001 --json
+triton device runner stop --device 'ios-real:<device-id>' --json
+```
+
+Selectors expire after 30 seconds and require a fresh inspection after an action. App transitions can replace elements, so the Runner resolves the live element again and rejects stale, ambiguous, or non-hittable selectors. `scroll --direction up|down|left|right` uses the same explicit device and bundle binding. `type --identifier '<observed-identifier>' --text-file '<private-text-file>'` accepts bounded UTF-8 text without putting its contents in command arguments; focus still has to be verified. Safari address entry and webpage navigation have not passed the live validation, so command availability is not evidence of a working Safari flow.
+
+An acknowledged action proves submission, not its business result. Inspect the resulting UI and assert the expected state separately. Screenshots are sensitive device-screen captures; the actual frame may show system UI or the app switcher even when a target bundle is attached to the request.
+
+When a request times out or returns delivery `unknown`, query its original request ID before deciding the outcome. Do not automatically send another action. A receipt may be pending or absent; neither proves that nothing happened. A cached successful screenshot can be recovered to a new private path:
+
+```bash
+triton device runner receipt --device 'ios-real:<device-id>' --request-id action-001 --json
+triton device runner receipt --device 'ios-real:<device-id>' --request-id capture-001 --output '<fresh-recovered.png>' --json
+```
+
+The lower-level `request --route /crossApp --body-file '<private-request.json>' --request-id '<unique-id>'` uses the same session and allowlist. HTTP callers can use `/v1/device/runner/doctor|prepare|start|status|stop|request|receipt` through `triton serve` on `127.0.0.1:19421`; CLI commands use the same service without requiring that server. These Runner endpoints are separate from embedded `/request` and `/input`, and the existing `act`, `observe`, and `device screenshot` commands retain their documented provider boundaries.
+
+The TTL bounds a Mac-managed XCTest session. It is not permanent background service, does not establish survival across lock/reboot, and does not establish standalone operation without the Mac. Stop the owned session when the flow is complete. Sharing results requires redacting app identity, visible content, signing details, private paths, and screenshots.
 
 ## iOS Embedded Runtime Integration Guide
 
@@ -405,13 +452,13 @@ After a versioned release is published, GitHub Releases provide architecture-spe
 - `triton-macos-arm64.tar.gz`
 - `triton-macos-x86_64.tar.gz`
 
-Download the archive for your Mac, then copy `triton` into a directory on `PATH`. To keep `triton web` available outside a source checkout, also copy the archive's `web/` directory to `share/triton/web` next to that install prefix, for example `/usr/local/share/triton/web`.
+Download the archive for your Mac, then copy `triton` into a directory on `PATH`. To keep `triton web` available outside a source checkout, also copy the archive's `web/` directory to `share/triton/web` next to that install prefix, for example `/usr/local/share/triton/web`. For `device runner`, copy the complete archive directory `resources/ios-runner/` to the same prefix's `share/triton/ios-runner/`, including `RUNNER_MANIFEST.json` and the Xcode project. Keep these resources matched to the CLI version; Homebrew installs them automatically. Copying only the executable does not install the Runner.
 
 When replacing an existing `triton` executable manually, use the same temporary-file plus `mv` pattern above, or stop `triton serve` before copying over the active path.
 
 ### 2. Run The CLI
 
-Start the macOS-side server before launching the app:
+For the embedded runtime workflow, start the macOS-side server before launching the app. The [bundled Runner workflow](#ios-resident-xctest-runner) manages its own session and USB connection:
 
 ```bash
 triton serve --host 127.0.0.1 --port 19421
@@ -700,7 +747,7 @@ triton device list --platform ios --json
 triton device screenshot --platform ios --target 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --output /tmp/sim.png --json
 ```
 
-iOS host screenshot capture is Simulator-only. An explicit ready `ios-real:*` selector is resolved as `scope=real` and then returns `error.code=unsupported_scope` with a schema `nextAction` before Triton invokes `simctl`; it is never reinterpreted as a Simulator UDID. `triton device doctor --platform ios --scope real --json` therefore omits `device.screenshot`, while `triton capabilities --json` exposes `ios-simulator-screenshot` as supported and `ios-real-device-screenshot` as unsupported. For a physical DEBUG device, prefer a connected embedded TritonKit runtime screenshot when available; otherwise keep the `unsupported_scope` envelope and record an external manual-capture fallback as evidence.
+The existing `device screenshot` iOS host adapter is Simulator-only. An explicit ready `ios-real:*` selector is resolved as `scope=real` and then returns `error.code=unsupported_scope` with a schema `nextAction` before Triton invokes `simctl`; it is never reinterpreted as a Simulator UDID. `triton device doctor --platform ios --scope real --json` therefore omits `device.screenshot`, while `triton capabilities --json` exposes `ios-simulator-screenshot` as supported and `ios-real-device-screenshot` as unsupported. For a physical device without an app SDK, use [the active Runner session's screenshot command](#ios-resident-xctest-runner). A connected embedded TritonKit runtime can also provide its own screenshot; otherwise keep the unsupported envelope and record any manual-capture fallback as evidence.
 
 Android Emulator host-side discovery and smoke do not require an embedded TritonKit runtime:
 

@@ -1,0 +1,48 @@
+{
+  "files": [
+    {
+      "path": "FixtureApp/RunnerFixtureApp.swift",
+      "sha256": "abc5727472f1cfbd46db2e0bf824f07078f0f74d934bbc9848c4a0834503a5fb",
+      "size": 577
+    },
+    {
+      "path": "Package.swift",
+      "sha256": "07e4adfa03da74aac3c3d8ca7d32c0eb7c99e2cb85b6f6ee08a261f23d25c82f",
+      "size": 491
+    },
+    {
+      "path": "ProtocolTests/HTTPProtocolTests.swift",
+      "sha256": "cba899d6738c264c47e3715db01244ec3561922b5fb9502819253e2b08651891",
+      "size": 10578
+    },
+    {
+      "path": "README.md",
+      "sha256": "ab97d31fe4ba2284283ff6760162350256eef0fa800f382f499327208ded78f1",
+      "size": 3798
+    },
+    {
+      "path": "RunnerTests/HTTPProtocol.swift",
+      "sha256": "5fd087be633a48ba0c8c265eefb030a4ddad82ae562242b93733856e853b7ef9",
+      "size": 13369
+    },
+    {
+      "path": "RunnerTests/TritonIOSRunnerTests.swift",
+      "sha256": "d88cd5c94cbca91878bbd7c0833ee40327c98b82a99b7fa445fe9f03514f78e8",
+      "size": 25203
+    },
+    {
+      "path": "TritonIOSRunner.xcodeproj/project.pbxproj",
+      "sha256": "07b60af689385a6bf299cecfef2c5c1a1c64c99b70d84ea52e8158af7b700bdc",
+      "size": 17433
+    },
+    {
+      "path": "TritonIOSRunner.xcodeproj/xcshareddata/xcschemes/TritonIOSRunner.xcscheme",
+      "sha256": "abffa54f6a5fdd8d2a74a501a55d149cad444b77b28318a7ba0b1896b9298d3a",
+      "size": 5912
+    }
+  ],
+  "project": "TritonIOSRunner.xcodeproj",
+  "schemaVersion": 1,
+  "scheme": "TritonIOSRunner",
+  "sourceVersion": "0.1.0-dev"
+}

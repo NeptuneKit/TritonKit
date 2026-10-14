@@ -24,6 +24,10 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 
 ## CLI 命令
 
+### 内置 iOS XCTest Runner
+
+`triton device runner` 为无SDK接入的iOS UI控制提供独立产品入口，随包unsigned源项目由prepare在本机Xcode构建签名；start/stop、应用白名单、inspect后动作及receipt恢复使用同一Swift service。HTTP `/v1/device/runner/`复用该service，不要求embedded runtime在线。网络health与当前UI自动化能力分开表达，unknown不自动重发动作。安装资源、系统前提、命令例子与产品验收见[Runner产品说明](./ios-runner-product.md)。
+
 ### CLI 能力进入原则
 
 后续从 ai-phone、Harness、XcodeBuildMCP 等参考项目吸收能力时，默认按以下标准决定是否进入 `triton` CLI：

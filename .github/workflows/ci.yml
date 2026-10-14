@@ -129,6 +129,11 @@ jobs:
       - name: Validate release automation contract
         run: docs-linhay/scripts/verify-release-automation.sh
 
+      - name: Validate bundled iOS Runner package
+        run: |
+          docs-linhay/scripts/verify-ios-runner-package.py --self-test
+          docs-linhay/scripts/verify-ios-runner-package.py --root CLI/Sources/TritonKitCLI/Resources/ios-runner
+
   validate:
     name: Validate
     needs:
