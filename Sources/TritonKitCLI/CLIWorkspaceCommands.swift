@@ -101,8 +101,32 @@ struct Workspace: AsyncParsableCommand {
         var dryModelFixture = false
         @Flag(name: .customLong("execute-actions"), help: "Execute model-selected candidate actions through the runtime action provider")
         var executeActions = false
+        @Flag(name: .customLong("visual-settle"), help: "Wait for stable screenshot frames after each action; business verification remains separate")
+        var visualSettle = false
+        @Option(name: .customLong("visual-settle-timeout"), help: "Visual settle deadline in seconds (0.05...60)")
+        var visualSettleTimeout: Double = 5
+        @Option(name: .customLong("visual-settle-stable-window"), help: "Required stable screenshot window in seconds (0.05...30)")
+        var visualSettleStableWindow: Double = 0.5
+        @Option(name: .customLong("visual-settle-threshold"), help: "Maximum changed pixel area fraction (0...1)")
+        var visualSettleThreshold: Double = 0.01
+        @Option(name: .customLong("visual-settle-interval"), help: "Screenshot sampling interval in seconds (0.02...5)")
+        var visualSettleInterval: Double = 0.1
         @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
         @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+        func workspaceVisualSettleConfiguration() throws -> VisualSettleConfiguration? {
+            guard visualSettle else {
+                guard visualSettleTimeout == 5, visualSettleStableWindow == 0.5,
+                      visualSettleThreshold == 0.01, visualSettleInterval == 0.1 else {
+                    throw RuntimeError("Visual settle options require --visual-settle.")
+                }
+                return nil
+            }
+            return try VisualSettleConfiguration(changeThreshold: visualSettleThreshold,
+                                                  stableWindow: visualSettleStableWindow,
+                                                  interval: visualSettleInterval,
+                                                  timeout: visualSettleTimeout)
+        }
 
         func run() async throws {
             let outputFormat = effectiveFormat(format, json: json)
@@ -155,7 +179,8 @@ struct Workspace: AsyncParsableCommand {
                     businessReadyTimeout: businessReadyTimeout,
                     businessReadyInterval: businessReadyInterval,
                     resolveTarget: resolveTarget,
-                    executeActions: executeActions
+                    executeActions: executeActions,
+                    visualSettle: try workspaceVisualSettleConfiguration()
                 ))
                 try printWorkspaceRun(response, format: outputFormat)
             } catch {

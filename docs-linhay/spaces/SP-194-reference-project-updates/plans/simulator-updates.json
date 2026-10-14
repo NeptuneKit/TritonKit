@@ -1,0 +1,1611 @@
+{
+  "checked_at": "2026-10-14 Asia/Shanghai",
+  "method": "GitHub REST API via gh; repository webpages via web; no clone/build/device actions",
+  "bounds": "20 most recent default-branch commits and 3 most recent releases per repo; compare commit list caps at 250 and file list at 300; no exhaustive source audit",
+  "repositories": [
+    {
+      "repository": "tddworks/baguette",
+      "url": "https://github.com/tddworks/baguette",
+      "default_branch": "main",
+      "archived": false,
+      "license": "Apache-2.0",
+      "pushed_at_utc": "2026-10-13T09:44:08Z",
+      "baseline": "fb7cc51aec69e3fbb5a71f31b4fb1cc1191d7a2c",
+      "head": "8930ac601e38e04540cb3cad9547347c160882e4",
+      "head_date_utc": "2026-10-13T09:44:06Z",
+      "compare": {
+        "url": "https://github.com/tddworks/baguette/compare/fb7cc51aec69e3fbb5a71f31b4fb1cc1191d7a2c...8930ac601e38e04540cb3cad9547347c160882e4",
+        "status": "ahead",
+        "ahead_by": 542,
+        "behind_by": 0,
+        "total_commits": 542,
+        "commits_returned": 250,
+        "files_returned": 300,
+        "truncated": true
+      },
+      "commits": [
+        {
+          "sha": "8930ac601e38e04540cb3cad9547347c160882e4",
+          "date_utc": "2026-10-13T09:44:06Z",
+          "subject": "chore(changelog): promote [Unreleased] to v0.2.6",
+          "url": "https://github.com/tddworks/baguette/commit/8930ac601e38e04540cb3cad9547347c160882e4"
+        },
+        {
+          "sha": "568312e7a990f4a818094f5131a462aa5264e249",
+          "date_utc": "2026-10-12T12:16:25Z",
+          "subject": "test: stop two timing tests failing on loaded CI runners",
+          "url": "https://github.com/tddworks/baguette/commit/568312e7a990f4a818094f5131a462aa5264e249"
+        },
+        {
+          "sha": "2e8c5f98fb6c8f3d34d62f344beb30955c52e38c",
+          "date_utc": "2026-10-12T11:38:52Z",
+          "subject": "Merge pull request #115 from tddworks/feat/defaults",
+          "url": "https://github.com/tddworks/baguette/commit/2e8c5f98fb6c8f3d34d62f344beb30955c52e38c"
+        },
+        {
+          "sha": "661114aed18a2d13b5f44b68f87d35ea4f181bb6",
+          "date_utc": "2026-10-12T10:37:16Z",
+          "subject": "docs(defaults): add the Defaults card mockup",
+          "url": "https://github.com/tddworks/baguette/commit/661114aed18a2d13b5f44b68f87d35ea4f181bb6"
+        },
+        {
+          "sha": "37337a50c9a2a30335dc91f79478fe98001faf2d",
+          "date_utc": "2026-10-12T10:36:45Z",
+          "subject": "feat(serve): Defaults card on the focus page",
+          "url": "https://github.com/tddworks/baguette/commit/37337a50c9a2a30335dc91f79478fe98001faf2d"
+        },
+        {
+          "sha": "87fc124d1c869298cf2ef0836c300a6751e7eaf5",
+          "date_utc": "2026-10-12T09:29:26Z",
+          "subject": "feat(defaults): export and import typed preferences for repeatable setup",
+          "url": "https://github.com/tddworks/baguette/commit/87fc124d1c869298cf2ef0836c300a6751e7eaf5"
+        },
+        {
+          "sha": "dec581fdd4cb07661c4d268752877306c8e5cf98",
+          "date_utc": "2026-10-12T09:25:21Z",
+          "subject": "refactor(defaults): PreferenceDomain → PreferenceSuite",
+          "url": "https://github.com/tddworks/baguette/commit/dec581fdd4cb07661c4d268752877306c8e5cf98"
+        },
+        {
+          "sha": "9ae94a7f667dd0e6423446b68e6fe61c3292f176",
+          "date_utc": "2026-10-12T09:23:09Z",
+          "subject": "feat(defaults): suites that aren't App Groups live in the app's data container",
+          "url": "https://github.com/tddworks/baguette/commit/9ae94a7f667dd0e6423446b68e6fe61c3292f176"
+        },
+        {
+          "sha": "63a35cb76ad6d7ada0aceee492e774a48d882649",
+          "date_utc": "2026-10-12T09:18:36Z",
+          "subject": "chore(changelog): link the defaults PR",
+          "url": "https://github.com/tddworks/baguette/commit/63a35cb76ad6d7ada0aceee492e774a48d882649"
+        },
+        {
+          "sha": "4eba4b59a70fb10a4f1dec59c6314cf652151ed5",
+          "date_utc": "2026-10-12T09:18:12Z",
+          "subject": "feat(defaults): read and edit typed UserDefaults, including App Group suites",
+          "url": "https://github.com/tddworks/baguette/commit/4eba4b59a70fb10a4f1dec59c6314cf652151ed5"
+        },
+        {
+          "sha": "a589753b4d8faf33b1a3cdf6de78d46808aa8289",
+          "date_utc": "2026-10-12T07:22:20Z",
+          "subject": "chore(changelog): promote [Unreleased] to v0.2.5",
+          "url": "https://github.com/tddworks/baguette/commit/a589753b4d8faf33b1a3cdf6de78d46808aa8289"
+        },
+        {
+          "sha": "37ee9323cdc8c34363077c9ac43dd918b8f9c376",
+          "date_utc": "2026-10-12T06:44:40Z",
+          "subject": "Merge pull request #114 from tddworks/feat/handheld-mode",
+          "url": "https://github.com/tddworks/baguette/commit/37ee9323cdc8c34363077c9ac43dd918b8f9c376"
+        },
+        {
+          "sha": "5aea0eb6eb028f81f7c893c8861673a1777dfe32",
+          "date_utc": "2026-10-12T06:39:21Z",
+          "subject": "feat(serve): floating button for handheld controls",
+          "url": "https://github.com/tddworks/baguette/commit/5aea0eb6eb028f81f7c893c8861673a1777dfe32"
+        },
+        {
+          "sha": "aa784288c6d2e1657ccbc42d9103baeb3b71603a",
+          "date_utc": "2026-10-12T06:35:47Z",
+          "subject": "feat(serve): handheld mode — the live screen fills a phone",
+          "url": "https://github.com/tddworks/baguette/commit/aa784288c6d2e1657ccbc42d9103baeb3b71603a"
+        },
+        {
+          "sha": "1b32df9ddca9988996deaf97b8106a1c30237f24",
+          "date_utc": "2026-10-07T11:48:55Z",
+          "subject": "chore(changelog): promote [Unreleased] to v0.2.4",
+          "url": "https://github.com/tddworks/baguette/commit/1b32df9ddca9988996deaf97b8106a1c30237f24"
+        },
+        {
+          "sha": "90eac43d6011649bc8e4e4392fb3b0af3469709c",
+          "date_utc": "2026-10-07T08:23:21Z",
+          "subject": "docs: add design document for CoreDevice spike exploration",
+          "url": "https://github.com/tddworks/baguette/commit/90eac43d6011649bc8e4e4392fb3b0af3469709c"
+        },
+        {
+          "sha": "de5ff5cd4fd127a2c2653d76c339cd6fa3be3ce2",
+          "date_utc": "2026-10-07T05:17:35Z",
+          "subject": "Merge pull request #113 from tddworks/refactor/test-names-should",
+          "url": "https://github.com/tddworks/baguette/commit/de5ff5cd4fd127a2c2653d76c339cd6fa3be3ce2"
+        },
+        {
+          "sha": "331db9c01e2f536919aed2ea191b27d3bc555d39",
+          "date_utc": "2026-10-07T05:16:46Z",
+          "subject": "Merge remote-tracking branch 'origin/main' into refactor/test-names-should",
+          "url": "https://github.com/tddworks/baguette/commit/331db9c01e2f536919aed2ea191b27d3bc555d39"
+        },
+        {
+          "sha": "f3e4debb604a1bdecbf2c57421201ec8eab150bb",
+          "date_utc": "2026-10-07T04:27:03Z",
+          "subject": "test: name every Swift test as a `should …` behaviour in domain language",
+          "url": "https://github.com/tddworks/baguette/commit/f3e4debb604a1bdecbf2c57421201ec8eab150bb"
+        },
+        {
+          "sha": "0a94a0790a21990668a4dec7924b6cd4f307302f",
+          "date_utc": "2026-10-07T04:21:39Z",
+          "subject": "Merge pull request #112 from tddworks/fix/3d-stream-frame-rate",
+          "url": "https://github.com/tddworks/baguette/commit/0a94a0790a21990668a4dec7924b6cd4f307302f"
+        }
+      ],
+      "releases": [
+        {
+          "tag": "v0.2.6",
+          "published_at_utc": "2026-10-13T09:44:05Z",
+          "prerelease": false,
+          "url": "https://github.com/tddworks/baguette/releases/tag/v0.2.6",
+          "notes": "\n### Added\n- `baguette defaults read|write|delete|export|import` reads, edits and restores an app's persisted UserDefaults or an App Group suite, typed; `--relaunch` quits and relaunches the app so it sees the change. Also a Defaults card in `serve`. → [docs](docs/features/defaults/README.md) ([#115](https://github.com/tddworks/baguette/pull/115))\n\n## What's Changed\n* feat(defaults): read and edit typed UserDefaults, including App Group suites by @hanrw in https://github.com/tddworks/baguette/pull/115\n\n\n**Full Changelog**: https://github.com/tddworks/baguette/compare/v0.2.5...v0.2.6\n"
+        },
+        {
+          "tag": "v0.2.5",
+          "published_at_utc": "2026-10-12T07:22:20Z",
+          "prerelease": false,
+          "url": "https://github.com/tddworks/baguette/releases/tag/v0.2.5",
+          "notes": "\n### Added\n- `serve`'s ⛶ Handheld button (or `?handheld=1`) gives a phone the whole live screen — no bezel or toolbar, screen kept awake, a floating button for Home / Rotate / Exit; fullscreen on Android, via Add to Home Screen on iPhone. → [docs](docs/features/handheld/README.md) ([#114](https://github.com/tddworks/baguette/pull/114))\n\n## What's Changed\n* feat(serve): handheld mode — the live screen fills a phone by @hanrw in https://github.com/tddworks/baguette/pull/114\n\n\n**Full Changelog**: https://github.com/tddworks/baguette/compare/v0.2.4...v0.2.5\n"
+        },
+        {
+          "tag": "v0.2.4",
+          "published_at_utc": "2026-10-07T11:48:54Z",
+          "prerelease": false,
+          "url": "https://github.com/tddworks/baguette/releases/tag/v0.2.4",
+          "notes": "\n### Fixed\n- The live 3D view (`stream.3d.mjpeg` / `stream.3d.avcc`) runs at up to 60 fps again, as smooth as the flat stream; 0.2.3's frame pacing had turned its old 20 fps setting into a hard cap. → [docs](docs/features/3d-rendering/frames.md)\n\n## What's Changed\n* fix(3d): stream the live 3D view at 60 fps, not a 20 fps cap by @hanrw in https://github.com/tddworks/baguette/pull/112\n* test: name every Swift test as a `should …` behaviour by @hanrw in https://github.com/tddworks/baguette/pull/113\n\n\n**Full Changelog**: https://github.com/tddworks/baguette/compare/v0.2.3...v0.2.4\n"
+        }
+      ],
+      "changed_files": [
+        {
+          "path": "CHANGELOG.md",
+          "status": "modified",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/CHANGELOG.md"
+        },
+        {
+          "path": "README.md",
+          "status": "modified",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/README.md"
+        },
+        {
+          "path": "Sources/Baguette/App/BakeryInstall.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/BakeryInstall.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/AddFileCommands.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/AddFileCommands.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/BakeryCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/BakeryCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/BootCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/BootCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/ChromeCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/ChromeCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/ClipboardCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/ClipboardCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/DeepLinkCommands.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/DeepLinkCommands.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/DefaultsCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/DefaultsCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/DiagDigitizerTrackpadCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/DiagDigitizerTrackpadCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/GestureCommands.swift",
+          "status": "modified",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/GestureCommands.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/HealCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/HealCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/HingeCLICommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/HingeCLICommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/InputCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/InputCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/InterfaceCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/InterfaceCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/LifetimeCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/LifetimeCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/LocationCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/LocationCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/LogsCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/LogsCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/MotionCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/MotionCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/NetworkCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/NetworkCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/OrientationCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/OrientationCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/PasteCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/PasteCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/PluginsCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/PluginsCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/PoseDeliveryExitStatus.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/PoseDeliveryExitStatus.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/RecordCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/RecordCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/Render3DCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/Render3DCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/ScreenshotCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/ScreenshotCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/ServeCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/ServeCommand.swift"
+        },
+        {
+          "path": "Sources/Baguette/App/Commands/ShakeCommand.swift",
+          "status": "added",
+          "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/Sources/Baguette/App/Commands/ShakeCommand.swift"
+        }
+      ],
+      "selected_files_only": true
+    },
+    {
+      "repository": "EvanBacon/serve-sim",
+      "url": "https://github.com/EvanBacon/serve-sim",
+      "default_branch": "main",
+      "archived": false,
+      "license": "Apache-2.0",
+      "pushed_at_utc": "2026-10-12T19:07:37Z",
+      "baseline": "f94d57c3f05031d93538660fc0d232179b1d8a50",
+      "head": "6d009686ed08f7d8bd19bca9f9f67a9237931f44",
+      "head_date_utc": "2026-10-11T18:23:56Z",
+      "compare": {
+        "url": "https://github.com/EvanBacon/serve-sim/compare/f94d57c3f05031d93538660fc0d232179b1d8a50...6d009686ed08f7d8bd19bca9f9f67a9237931f44",
+        "status": "ahead",
+        "ahead_by": 23,
+        "behind_by": 0,
+        "total_commits": 23,
+        "commits_returned": 23,
+        "files_returned": 169,
+        "truncated": false
+      },
+      "commits": [
+        {
+          "sha": "6d009686ed08f7d8bd19bca9f9f67a9237931f44",
+          "date_utc": "2026-10-11T18:23:56Z",
+          "subject": "Fix iPhone Duo 3D preview crash: create RealityKit engine on main actor (#165)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/6d009686ed08f7d8bd19bca9f9f67a9237931f44"
+        },
+        {
+          "sha": "c60d583747b88a15616eeecec56f287ef5759769",
+          "date_utc": "2026-10-02T15:31:09Z",
+          "subject": "test(serve-sim): add in-flight camera helper shutdown cycles (#148)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/c60d583747b88a15616eeecec56f287ef5759769"
+        },
+        {
+          "sha": "1930e6c21c2b5cb11943f52cfb0b58acad4c7663",
+          "date_utc": "2026-09-23T18:35:20Z",
+          "subject": "fix(serve-sim): lean Duo preview with a one-shot 1500 sharpen (#160)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/1930e6c21c2b5cb11943f52cfb0b58acad4c7663"
+        },
+        {
+          "sha": "516cdbf4c743f7c45027cb418d2f6fb5bd12fa8b",
+          "date_utc": "2026-09-23T18:21:58Z",
+          "subject": "fix(serve-sim): exit 0 when the camera helper shuts down (#161)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/516cdbf4c743f7c45027cb418d2f6fb5bd12fa8b"
+        },
+        {
+          "sha": "0a8ef1413da4f9a29a5897638f1b06cd08353c76",
+          "date_utc": "2026-09-23T08:16:13Z",
+          "subject": "fix(serve-sim): restore chrome on plain Sonner toasts (#159)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/0a8ef1413da4f9a29a5897638f1b06cd08353c76"
+        },
+        {
+          "sha": "6f71db01c295b18c37a5447e02734978d5ef78f8",
+          "date_utc": "2026-09-22T18:25:41Z",
+          "subject": "feat(serve-sim): float the devices sidebar like the tools sidebar (#158)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/6f71db01c295b18c37a5447e02734978d5ef78f8"
+        },
+        {
+          "sha": "0eac9ed32a6df06384dd3967fe89868ec9bf6da9",
+          "date_utc": "2026-09-22T16:34:43Z",
+          "subject": "feat(serve-sim): preview iPhone Duo as an interactive 3D device (#156)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/0eac9ed32a6df06384dd3967fe89868ec9bf6da9"
+        },
+        {
+          "sha": "7e44584b696d6268954b7a83def3e3e63db5dc04",
+          "date_utc": "2026-09-12T19:17:42Z",
+          "subject": "fix(serve-sim): exit detached helpers after simulator shutdown (#152)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/7e44584b696d6268954b7a83def3e3e63db5dc04"
+        },
+        {
+          "sha": "bfa54734ee62b37783edd44beb2c1a2fa974e16c",
+          "date_utc": "2026-09-12T16:13:49Z",
+          "subject": "fix(serve-sim): stop Connecting… flash when toggling device frame (#151)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/bfa54734ee62b37783edd44beb2c1a2fa974e16c"
+        },
+        {
+          "sha": "48bd79591f6a3b5cacaa1a697e5dfecc038d1ff8",
+          "date_utc": "2026-09-12T15:29:16Z",
+          "subject": "Allow hiding the device frame/bezel in the preview UI (#149)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/48bd79591f6a3b5cacaa1a697e5dfecc038d1ff8"
+        },
+        {
+          "sha": "3bf95db12f9b6e1fa6a270e92f7558fbab62b357",
+          "date_utc": "2026-09-11T21:05:27Z",
+          "subject": "ci: speed up serve-sim on a single macOS runner (#150)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/3bf95db12f9b6e1fa6a270e92f7558fbab62b357"
+        },
+        {
+          "sha": "0ee6fbde40a6b5840d0c6e0379f544feb9fa246b",
+          "date_utc": "2026-08-29T19:10:01Z",
+          "subject": "Fix VisionCamera v5 synthetic photo capture (#145)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/0ee6fbde40a6b5840d0c6e0379f544feb9fa246b"
+        },
+        {
+          "sha": "f08998f98e342ab06bb69cdbf358e9dbc77fe34c",
+          "date_utc": "2026-08-29T19:01:45Z",
+          "subject": "Update package.json",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/f08998f98e342ab06bb69cdbf358e9dbc77fe34c"
+        },
+        {
+          "sha": "39958d059f39fa0080e910b8326a95cf159de33e",
+          "date_utc": "2026-08-21T14:19:26Z",
+          "subject": "fix(serve-sim): restore Xcode 27 Device Hub streaming and input (#140)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/39958d059f39fa0080e910b8326a95cf159de33e"
+        },
+        {
+          "sha": "14ad57ff922551bf7be81e907ddfcfa6191e64f2",
+          "date_utc": "2026-07-17T19:29:49Z",
+          "subject": "Harden helper shutdown and HID log timing",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/14ad57ff922551bf7be81e907ddfcfa6191e64f2"
+        },
+        {
+          "sha": "7f109fb027fc2aacda53c02a11cbebb7937964c5",
+          "date_utc": "2026-07-16T23:35:45Z",
+          "subject": "ci: pin bun version via .bun-version file (#133)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/7f109fb027fc2aacda53c02a11cbebb7937964c5"
+        },
+        {
+          "sha": "8e0cdd9d46b0202cb99c9ee03d8649bd991815ac",
+          "date_utc": "2026-07-16T20:18:07Z",
+          "subject": "feat: add preview launch configuration (#129)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/8e0cdd9d46b0202cb99c9ee03d8649bd991815ac"
+        },
+        {
+          "sha": "c8206925f3e6747236714d781ef2b6244c7a36f5",
+          "date_utc": "2026-07-14T16:09:06Z",
+          "subject": "fix(serve-sim): send plain R to reload RN/Expo bundle (#126)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/c8206925f3e6747236714d781ef2b6244c7a36f5"
+        },
+        {
+          "sha": "1ae0787aa159c9e8d37dda4fd3251d4a9ee4321d",
+          "date_utc": "2026-07-14T16:06:55Z",
+          "subject": "Avoid subprocess polling for camera status (#131)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/1ae0787aa159c9e8d37dda4fd3251d4a9ee4321d"
+        },
+        {
+          "sha": "af681b8c3b0453f31dcb8e98a3389f23b7cfc6b0",
+          "date_utc": "2026-07-08T16:41:19Z",
+          "subject": "feat: add event log (#124)",
+          "url": "https://github.com/EvanBacon/serve-sim/commit/af681b8c3b0453f31dcb8e98a3389f23b7cfc6b0"
+        }
+      ],
+      "releases": [],
+      "changed_files": [
+        {
+          "path": "packages/serve-sim/Sources/SimAXSettings/build.sh",
+          "status": "modified",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimAXSettings/build.sh"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimCameraHelper/build.sh",
+          "status": "modified",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimCameraHelper/build.sh"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimCameraHelper/main.m",
+          "status": "modified",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimCameraHelper/main.m"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimCameraInjector/SimCamFakes.h",
+          "status": "modified",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimCameraInjector/SimCamFakes.h"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimCameraInjector/SimCamFakes.m",
+          "status": "modified",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimCameraInjector/SimCamFakes.m"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimCameraInjector/SimCamSwizzles.m",
+          "status": "modified",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimCameraInjector/SimCamSwizzles.m"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimCameraInjector/build.sh",
+          "status": "modified",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimCameraInjector/build.sh"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimDuoHID/build.sh",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimDuoHID/build.sh"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimDuoHID/main.m",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimDuoHID/main.m"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimDuoRenderer/DuoHardwareProjection.swift",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimDuoRenderer/DuoHardwareProjection.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimDuoRenderer/DuoRenderer.swift",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimDuoRenderer/DuoRenderer.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimDuoRenderer/DuoScreenProjection.swift",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimDuoRenderer/DuoScreenProjection.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimDuoRenderer/DuoShellMaterials.swift",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimDuoRenderer/DuoShellMaterials.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimDuoRenderer/FastPNG.swift",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimDuoRenderer/FastPNG.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimDuoRenderer/Tests/FastPNGTests.swift",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimDuoRenderer/Tests/FastPNGTests.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimDuoRenderer/build.sh",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimDuoRenderer/build.sh"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimDuoRenderer/main.swift",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimDuoRenderer/main.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimNative/CaptureEngine.swift",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimNative/CaptureEngine.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimNative/DeviceHubKeyboardBridge.swift",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimNative/DeviceHubKeyboardBridge.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimNative/DuoHIDBridge.swift",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimNative/DuoHIDBridge.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimNative/FrameCapture.swift",
+          "status": "modified",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimNative/FrameCapture.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimNative/H264Encoder.swift",
+          "status": "modified",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimNative/H264Encoder.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimNative/HIDInjector.swift",
+          "status": "modified",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimNative/HIDInjector.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimNative/PixelBufferUtils.swift",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimNative/PixelBufferUtils.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimNative/VideoEncoder.swift",
+          "status": "modified",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimNative/VideoEncoder.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimNative/build.sh",
+          "status": "modified",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimNative/build.sh"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimNative/sim-capture.swift",
+          "status": "removed",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimNative/sim-capture.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimNative/sim-module.swift",
+          "status": "modified",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimNative/sim-module.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimNativeSupport/DeviceDisplaySizes.swift",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimNativeSupport/DeviceDisplaySizes.swift"
+        },
+        {
+          "path": "packages/serve-sim/Sources/SimNativeSupport/DeviceHubKeyboardRouting.swift",
+          "status": "added",
+          "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/Sources/SimNativeSupport/DeviceHubKeyboardRouting.swift"
+        }
+      ],
+      "selected_files_only": true,
+      "source_package_version": "0.1.46",
+      "source_package_url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/packages/serve-sim/package.json"
+    },
+    {
+      "repository": "lycorp-jp/sim-use",
+      "url": "https://github.com/lycorp-jp/sim-use",
+      "default_branch": "main",
+      "archived": false,
+      "license": "Apache-2.0",
+      "pushed_at_utc": "2026-10-14T07:39:25Z",
+      "baseline": "b809ea84b42ebdb1b766300f33432c52dac0f01a",
+      "head": "ca90b0540aaa58f9edff71be50313dfb5fd740f5",
+      "head_date_utc": "2026-10-14T06:39:42Z",
+      "compare": {
+        "url": "https://github.com/lycorp-jp/sim-use/compare/b809ea84b42ebdb1b766300f33432c52dac0f01a...ca90b0540aaa58f9edff71be50313dfb5fd740f5",
+        "status": "ahead",
+        "ahead_by": 360,
+        "behind_by": 0,
+        "total_commits": 360,
+        "commits_returned": 250,
+        "files_returned": 300,
+        "truncated": true
+      },
+      "commits": [
+        {
+          "sha": "ca90b0540aaa58f9edff71be50313dfb5fd740f5",
+          "date_utc": "2026-10-14T06:39:42Z",
+          "subject": "chore(release): v0.15.0",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/ca90b0540aaa58f9edff71be50313dfb5fd740f5"
+        },
+        {
+          "sha": "4e4edb0a5b9d27a314773de1678fd442fd097868",
+          "date_utc": "2026-10-14T05:50:27Z",
+          "subject": "Merge pull request #154 from lycorp-jp/fix/route-caller-input-through-daemon",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/4e4edb0a5b9d27a314773de1678fd442fd097868"
+        },
+        {
+          "sha": "77e762eb5c9f7644b0995acb01e5206d1a8f2a02",
+          "date_utc": "2026-10-14T04:24:05Z",
+          "subject": "docs: link the daemon input-forwarding CHANGELOG entry to its PR",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/77e762eb5c9f7644b0995acb01e5206d1a8f2a02"
+        },
+        {
+          "sha": "8ac6b106ef95a4d725c767d72e555bf71cd57de0",
+          "date_utc": "2026-10-14T04:23:41Z",
+          "subject": "fix: forward caller-side stdin and file input to the daemon inline",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/8ac6b106ef95a4d725c767d72e555bf71cd57de0"
+        },
+        {
+          "sha": "393fecf7a554d868ec85d4627f77412ce651f345",
+          "date_utc": "2026-10-14T04:09:57Z",
+          "subject": "docs: backlink the unreleased CHANGELOG entries and credit contributors",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/393fecf7a554d868ec85d4627f77412ce651f345"
+        },
+        {
+          "sha": "2d8f7718e940f6ec8200389625e22439e0678329",
+          "date_utc": "2026-10-14T04:05:26Z",
+          "subject": "Merge pull request #152 from lycorp-jp/fix/release-gate-test-flakes",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/2d8f7718e940f6ec8200389625e22439e0678329"
+        },
+        {
+          "sha": "6b33c020527932dbf85ff6914eda7a4ef509b0fe",
+          "date_utc": "2026-10-14T03:48:52Z",
+          "subject": "test(evals): re-baseline crash detection after the playground reset",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/6b33c020527932dbf85ff6914eda7a4ef509b0fe"
+        },
+        {
+          "sha": "db30214c4fd847f1e70d083b3b8571ecad512fa8",
+          "date_utc": "2026-10-14T03:48:52Z",
+          "subject": "fix(playground): let taps pass through the tap indicators",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/db30214c4fd847f1e70d083b3b8571ecad512fa8"
+        },
+        {
+          "sha": "092d5a22158823385e67708da667c1dac74946b4",
+          "date_utc": "2026-10-14T03:48:51Z",
+          "subject": "test: poll for the resize session's exit instead of waitUntilExit",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/092d5a22158823385e67708da667c1dac74946b4"
+        },
+        {
+          "sha": "5958de4a419af34b13d2af22529289a5c04c7fd4",
+          "date_utc": "2026-10-14T01:14:09Z",
+          "subject": "Merge pull request #148 from lycorp-jp/dependabot/npm_and_yarn/Tools/Viewer/source-map-js-1.2.2",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/5958de4a419af34b13d2af22529289a5c04c7fd4"
+        },
+        {
+          "sha": "30274bae1ea5318b4045ad63859748cc433782ba",
+          "date_utc": "2026-10-09T06:15:00Z",
+          "subject": "Merge pull request #151 from lycorp-jp/fix/deterministic-cancellable-sleep-test",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/30274bae1ea5318b4045ad63859748cc433782ba"
+        },
+        {
+          "sha": "463a93062504e3fd5f7cfd5d3fca7ab17556326f",
+          "date_utc": "2026-10-09T04:40:39Z",
+          "subject": "test: fail cancellableSleep regressions at once instead of at the time limit",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/463a93062504e3fd5f7cfd5d3fca7ab17556326f"
+        },
+        {
+          "sha": "26d06eb9718b2a79fba3c9c32d041958da259a0c",
+          "date_utc": "2026-10-09T04:23:07Z",
+          "subject": "test: make the cancellableSleep tests deterministic with a manual clock",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/26d06eb9718b2a79fba3c9c32d041958da259a0c"
+        },
+        {
+          "sha": "25532c08841e7c54be6ede0be41c49be1377ee74",
+          "date_utc": "2026-10-09T04:04:24Z",
+          "subject": "Merge pull request #149 from lycorp-jp/dependabot/npm_and_yarn/Tools/Viewer/shell-quote-1.12.0",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/25532c08841e7c54be6ede0be41c49be1377ee74"
+        },
+        {
+          "sha": "79be64437d669185efae7eab45b15af8104c0243",
+          "date_utc": "2026-10-09T04:04:05Z",
+          "subject": "Merge pull request #150 from lycorp-jp/fix/resize-mode-guard",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/79be64437d669185efae7eab45b15af8104c0243"
+        },
+        {
+          "sha": "53392f16727a630395fbdced9de929cd49efa4c5",
+          "date_utc": "2026-10-09T03:35:08Z",
+          "subject": "fix: compile on Xcode 26 and close the round-2 resize-session gaps",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/53392f16727a630395fbdced9de929cd49efa4c5"
+        },
+        {
+          "sha": "3454691f7993b068f19d20baf1a88b346a696717",
+          "date_utc": "2026-10-09T03:08:13Z",
+          "subject": "fix: close the resize-session guard gaps found in review",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/3454691f7993b068f19d20baf1a88b346a696717"
+        },
+        {
+          "sha": "f62a17e78f844332353aa737541fb1d9e4ff5705",
+          "date_utc": "2026-10-09T02:29:00Z",
+          "subject": "fix: detect Xcode 27 resizable app sessions and refuse undeliverable touch input",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/f62a17e78f844332353aa737541fb1d9e4ff5705"
+        },
+        {
+          "sha": "ae0f418aaedef2a31d8203e9a0fd266ebecbcdb2",
+          "date_utc": "2026-10-08T03:14:49Z",
+          "subject": "build(deps-dev): bump shell-quote from 1.10.0 to 1.12.0 in /Tools/Viewer",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/ae0f418aaedef2a31d8203e9a0fd266ebecbcdb2"
+        },
+        {
+          "sha": "08f086297d638ed3ad5373be3a0941ef4c81af70",
+          "date_utc": "2026-10-08T03:14:37Z",
+          "subject": "build(deps): bump source-map-js from 1.2.1 to 1.2.2 in /Tools/Viewer",
+          "url": "https://github.com/lycorp-jp/sim-use/commit/08f086297d638ed3ad5373be3a0941ef4c81af70"
+        }
+      ],
+      "releases": [
+        {
+          "tag": "v0.15.0",
+          "published_at_utc": "2026-10-14T06:42:12Z",
+          "prerelease": false,
+          "url": "https://github.com/lycorp-jp/sim-use/releases/tag/v0.15.0",
+          "notes": "### Added\n\n- iOS: Xcode 27 **Resize Mode** (a \"resizable app session\", started from Device Hub or `xcrun devicectl device appResize start`) is now detected, and every affected verb is honest about it instead of pretending to work. During a session the frontmost app renders on a virtual `Resizable` display while the main display shows only the wallpaper; every simulator primitive sim-use drives — HID touch, the framebuffer, the accessibility point hit-test — is bound to the main display. `ui` now carries a `resizable_app_session` advisory (`[i] …` in text, top-level `advisory` in `--json`) naming the scene size and the device size; `screenshot` captures the `Resizable` display (the app, at the scene's size) and says so in the same advisory; `tap`, `long-press`, `swipe`, `touch`, `gesture`, `multi-touch`, `paste --via-menu` (a long-press plus menu taps) and a `batch` containing a touch step **fail** with an explanation and a hint instead of reporting a tap that was never delivered; a `batch` re-checks before every touch step, so a session that begins mid-batch, or inside the cache window, stops the batch at its first touch step with nothing sent. `record-video` and `stream-video` fail the same way, before creating a file or emitting a byte — both capture only the main display, and the hint gives the `xcrun simctl io <udid> recordVideo --display=<uuid>` form that records the `Resizable` one. `type`, Cmd+V `paste` and the key verbs are untouched — keyboard HID does reach the resized app. The check is one `xcrun devicectl device info appResize` per device per 5 s (~0.3 s, cached in the daemon) — re-run early when `ui` or a selector tap sees a scene size that is neither the device's own size nor its landscape swap and that it has not probed before, so a session that just started is caught at once while a display whose accessibility size never matches its framebuffer (iPhone mini) pays no more than anyone else; only a scene at exactly the device's own size, and standalone raw `-x/-y` taps, wait out the window. The check runs on every toolchain whose `devicectl` knows the query (Xcode 26.6 does), since another Xcode or Device Hub may own the session; `SIM_USE_RESIZE_SESSION_CHECK=0` disables it (the per-device daemon reads it at spawn). The bundled skill's preflight now requires sim-use 0.15.0 or newer, because its Resize Mode guidance relies on this detection. Real touch routing to the `Resizable` display is a separate, larger piece of work (upstream idb's multi-display plumbing plus the scene geometry) — see `docs/ai/xxxx-resizable-app-session/README.md`. (#143, #150 — thanks @iXerol!)\n- Linux build, Android only: `Package.swift` now declares an `#if os(Linux)` target graph (`SimUseCore`, `AndroidBackend`, and a new `SimUseLinux` executable) that builds with a Swift 6 toolchain and drives Android devices exactly as the macOS build does — `ui`, `tap`, `long-press`, `type`, `swipe`, `screenshot`, `app-state`, the `android` namespace and the per-device daemon. `long-press` and `app-state` share their Android implementation with the macOS commands, so flags and JSON match. iOS verbs, video capture, the Viewer and `init` stay macOS-only; on Linux, invoking one prints an error naming the verb instead of a misleading parse error. The macOS manifest is unchanged. `scripts/install-linux.sh` builds and installs it; see `docs/linux.md`. (#141, #147 — thanks @iopass4!)\n- Remote adb servers: when `ADB_SERVER_SOCKET` points at another machine (`tcp:<host>:<port>`, e.g. WSL using the Windows host's adb), or `ANDROID_ADB_SERVER_ADDRESS` does when no socket is set, the bridge is reached on that host — where `adb forward` actually listens — instead of `127.0.0.1`. `SIM_USE_BRIDGE_HOST` overrides the host. The cached forward and bridge token are scoped to that connection: switching adb servers restarts the device's daemon and re-creates them, and a session restored from disk is reused only while `adb forward --list` still lists its forward, so a restored token is not sent to another host or to an unrelated listener on the old port. A session that a running daemon already holds is not rechecked before each request, so a forward that another tool changes under it goes unnoticed until a request fails. Each daemon request also carries the client's connection, and a daemon started for another connection refuses the request without running it; this covers a daemon that is too busy with another client's command to answer the restart check in time. This covers every adb serial, including wireless-debugging serials too long for the Android UDID heuristic, and a failed `adb forward --list` is reported instead of opening another forward and leaving the old one registered. Equivalent spellings of the default server (no variables, `ANDROID_ADB_SERVER_PORT=5037`, `tcp:localhost:5037`) count as one connection, so switching between them neither restarts the daemon nor leaves a forward behind; when only the bridge host changes, the old forward is removed before a new one is opened. A forward on a different adb server is left in place (see `docs/linux.md`). `android init` reports the host it reached the bridge on as `http_endpoint` (and `bridgeHost` in `--json`) instead of always printing `localhost`. (#141, #147 — thanks @iopass4!)\n- `sim-use android describe-ui` accepts `ui`, matching the top-level verb. (#141, #147 — thanks @iopass4!)\n- `tap` accepts `--coordinate-space` for explicit `-x/-y` / `--point` coordinates, matching `swipe` and `touch`. `ui` transforms outline (visual-space) coordinates through the same orientation calibration selector taps already ride, so a coordinate read off `describe-ui` lands where it was read on a rotated device; `native` (device-native portrait, the default) is unchanged and stays zero-cost. Aliases and selectors are already resolved in ui space and reject the flag rather than silently ignoring it. Batch `tap` steps ride the batch-wide calibration, and `android tap` accepts the flag for parity and ignores it. The bundled skill's Act table and pitfalls row now name `tap` alongside `swipe`/`touch`. (#142, #144 — thanks @iXerol!)\n- `stream-video --format h264` now works on iOS, not just Android: a native `FBVideoStream` H.264 stream, carried in MPEG-TS, copied straight to stdout with no host-side codec pass. On a booted iPhone 17 Pro this delivers ~24 fps at ~1.3 MB per 6 s, against the screenshot loop's ~4.1 fps at ~11 MB — roughly 5.9x the frame rate for an eighth of the bytes. Preview it with `sim-use stream-video --format h264 --device $UDID | ffplay -f mpegts -probesize 32768 -i -`. It streams at a constant `--fps`, default 30 (the screenshot formats keep their default of 10). MPEG-TS rather than the Android leg's bare Annex B on purpose: Annex B carries no presentation timestamps, so a player paces on a guessed frame rate (ffprobe reads a bare stream as 25 fps regardless of `--fps`) and a 30 fps capture drifts ~5 frames further behind every second, unbounded — minutes of lag within a few minutes of viewing. MPEG-TS carries PTS/DTS, and the player's queue measured empty across a 60 s run. The top-level `stream-video` no longer rejects `h264` for iOS targets, so the only platform-exclusive format left is the experimental iOS-only `bgra`. (#132, #133)\n\n### Changed\n\n- iOS `stream-video --format mjpeg` / `raw` / `ffmpeg` are deprecated and now warn once on stderr, pointing at `--format h264`. On a simulator the screenshot loop has no remaining advantage — `h264` measured 144 frames in 1.33 MB against `mjpeg`'s 24 in 11.2 MB over the same 6 s — and it is available on every booted simulator, so these will be removed in a later release. **Android keeps its equivalents and does not warn**: `adb screenrecord` is unavailable on some devices, and there the `screencap` loop is the only way to stream at all. `bgra` is unaffected (raw unencoded pixels are not something H.264 substitutes for). (#134, #138)\n\n- Android `stream-video --format h264` is now carried in MPEG-TS instead of the bare Annex B `screenrecord` produces, matching the iOS surface — one `ffplay -f mpegts -probesize 32768 -i -` works on both platforms. An elementary stream carries no presentation timestamps, so a player guesses the frame rate (ffprobe reads it as 25 fps regardless of the real rate) and, when the device encodes faster, drains slower than sim-use fills: the lag grew without bound instead of settling, measured at 578 KB of queued video after 20 s and 1376 KB after 30 s of interaction, and observed in practice as a picture minutes behind the device. Frames are re-containered, never re-encoded — a new `MPEGTSMuxer` wraps them with a PTS taken from host arrival time (`screenrecord` is genuinely variable-frame-rate, so wall-clock arrival is the honest timeline). The player's queue now measures empty across a 30 s run. Program tables are emitted up front and re-announced every 100 ms, so a consumer attaching mid-stream can start decoding and a closed pipe is noticed even on a still screen; each picture carries its own clock reference, and a picture resuming after an idle stretch declares a transport discontinuity, since the timeline skipped real elapsed time rather than advancing through it; `--format h264` now reports a frame count in its summary because re-containering parses the stream. End-to-end latency measures ~0.6 s on an emulator, essentially all of it `screenrecord`'s own encode delay (0.58 s measured with sim-use out of the path).\n\n  The stream's timeline advances by the real inter-frame gap but never by more than 0.2 s, which deliberately makes it *not* a reproduction of the wall clock. Capture is variable-frame-rate, so a still screen produces no frames; stamping the next picture with its true arrival time would open a hole in the timeline as long as the pause, and a player has to play through that hole before reaching the new picture — seen as a preview running minutes behind after the screen had been idle. Measured after the fix, time for the picture to catch up once interaction resumes: 0.45 s after 10 s idle, 0.51 s after 30 s, 1.20 s after 60 s; previously this tracked the idle duration. Reproducing the wall clock remains `record-video`'s job, and it keeps real arrival times for exactly that reason. (#135, #136)\n\n- `--format h264`'s documented preview command is `ffplay -f mpegts -probesize 32768 -i -`. The previous `-probesize 32 -fflags nobuffer` never opened an Android stream: 32 bytes cannot identify the codec, and `-fflags nobuffer` starves the probe. `-probesize 32768` bounds the open by bytes, which is what matters on a variable-frame-rate source whose still screen sends only program tables — ffplay's default budget is measured in seconds of *media* and can take arbitrarily long in wall-clock terms to fill. `-analyzeduration 0` is deliberately not part of the command: zero selects ffmpeg's default analysis window rather than disabling it, and the open measured identically with and without it. A still Android screen produces no pictures at all, so the player opens once the device moves; iOS is constant-frame-rate and opens at once. (#136)\n\n- iOS `record-video` and `stream-video` now share one set of H.264 encoder settings, built by `FBVideoStreamConfiguration.h264Capture(fps:quality:scale:transport:)`, so the two verbs cannot drift apart on how the picture is encoded. They still differ downstream in transport and sink — `record-video` into the shared `H264MuxingPipeline` → MP4 (the muxer Android has always used, and which was written for both), `stream-video` into stdout. Recording no longer goes through idb's separate in-process file writer. Output is equivalent: the MP4 stays a regular non-fragmented file that QuickTime, Finder and `GIFTranscoder` all read, `--fps` is still honoured as a constant rate, and the finalize path still survives a 100 ms-grace SIGTERM across repeated runs. Frame timestamps now come from host arrival time rather than the encoder's sample clock, which measures as ~6 ms of inter-frame jitter against the previous ~3 ms — both far inside a 33 ms frame at 30 fps. (#132, #133)\n\n### Fixed\n\n- iOS: with Device Hub open (Xcode 27), `batch --stdin`, `batch --file`, `type --stdin` and `paste --stdin` reported success but delivered nothing. These modes ran the command in the CLI process instead of the per-device daemon, because the daemon cannot read the caller's stdin. With Device Hub open, HID input goes through CoreDevice's `dtuhidd`, which takes about 0.4 s to set up each new connection before it reads any event. The CLI process exited first, and `dtuhidd` dropped the queued taps and keys. The client now reads the input and forwards it to the daemon inline, as `--step` arguments or as the text, so every event comes from the daemon's long-lived connection. For `type --file` and `paste --file`, a relative path now resolves against the caller's directory. Before, the path went to the daemon, which resolved it against its own directory. `SIM_USE_NO_DAEMON=1` still runs in-process and can drop input with Device Hub open. (#154)\n- iOS: during an Xcode 27 resizable app session, `ui` no longer splices SpringBoard elements (home-screen widgets, the Dynamic Island, a 402x874 `Group`) into the app's tree, and no longer reports `Screen orientation could not be confirmed …` — or a confident `(landscape-right)` on an upright device — for a scene whose size merely differs from the device's. Both came from the accessibility point hit-test resolving on the main display, where SpringBoard is frontmost, while the tree fetch follows the app: the collapsed-children recovery walk adopted those hits as children, and the orientation calibrator read them as probe evidence. Under a session the tree is now returned as fetched, in identity calibration, with the `resizable_app_session` advisory explaining why. `ui --point` carries the same advisory, since its answer describes SpringBoard rather than the app. (#143, #150 — thanks @iXerol!)\n- Android: a command that cannot reach the bridge even after reconnecting (wrong `SIM_USE_BRIDGE_HOST`, a firewall, an un-initialised device) now removes the forward it opened before reporting the error. No session had been saved for that forward, so nothing ever removed it and each failing attempt left one more forward on the adb server. (#147)\n- Android: dropping a stale bridge forward now names the device (`adb -s <serial> forward --remove`). With more than one device on the adb server, the old command was rejected with \"more than one device/emulator\" and the error was swallowed, so every reconnect left another forward behind. (#147)\n- iOS `stream-video --format h264` / `bgra`: a consumer that stops reading (ffplay paused, a wedged downstream tool) no longer makes Ctrl-C hang. The native stream went through idb's blocking file writer, which sat in `write(2)` on the encoder thread with `stopStreaming()` waiting behind it, so the command could not end short of SIGKILL. It now writes through the same interruptible stdout sink as Android — one that waits for room and checks cancellation between waits, and leaves the descriptor's flags untouched so the terminal (or stderr under `2>&1`) is never switched into non-blocking mode. A consumer that closes the pipe now ends the stream in an orderly way (stop messages, exit 0) instead of the process dying of SIGPIPE. (#138)\n- The bundled skill preflight now reports a content warning instead of an unqualified pass when `ui` succeeds with a `remote_content_recovery` advisory or with an empty outline on a simulator, emulator or Android device. These reads still exit successfully. The warning points at a new *Missing app controls in the outline* pitfall, which covers the iOS simulator `ApplicationAccessibilityEnabled` launch-time setting. (#139, #145 — thanks @SunsetWan!)\n- The bundled skill preflight now rejects an older `sim-use` CLI before device discovery and prints the Homebrew upgrade command, instead of misdiagnosing newly documented device types as disconnected. (#127 — thanks @BoWuGit!)\n- iOS simulator selector-ambiguity errors now give advice an agent can act on. The `multipleMatches` hint de-duplicated labels, so three matches that share one label were reported as `matches (1)`; it now lists one `'label' [Type] #id` entry per match — the shape the physical-device backend already uses — and the count is the real number of matches, also past the 10-entry display cap. An ambiguous `--id` no longer recommends `--id`, and every ambiguity message now names `--element-type` / `--frame` to narrow the match. The `describe-ui` recovery tip and the missing outline-cache error recommend `--device` instead of the deprecated `--udid`. (#146)\n"
+        },
+        {
+          "tag": "v0.14.0",
+          "published_at_utc": "2026-08-27T10:20:22Z",
+          "prerelease": false,
+          "url": "https://github.com/lycorp-jp/sim-use/releases/tag/v0.14.0",
+          "notes": "### Added\n\n- Physical iPhones and iPads are now first-class targets of the top-level verbs: `sim-use ui`, `sim-use tap` (`#<id>` / `--id` / `--label` / `--label-contains` / `--element-type` forms) and `sim-use screenshot` route a physical UDID to the audit/CoreDevice backends automatically, instead of rejecting it with a pointer at the `ios-device` namespace. Every other verb and form (coordinates, `@N`/`#N` aliases, swipe/gesture/touch/multi-touch/long-press, type/paste, button, keyboard-state, app-state, recording, `--value`/`--label-regex`/`--frame`/`--duration`/`--wait-timeout`) rejects per verb with a `TargetCapabilityError` stating why the channel cannot carry it and the nearest alternative (the `hint` in `--json`) — `Platform.iOSDevice` joins `PlatformRouter`, so the compiler enumerates every top-level capability decision — 15 device-scoped verbs in all (3 routed, 12 rejected). Routed physical results state their restricted shape explicitly: `describe-ui` carries `\"kind\":\"physical\"` with no `raw`/`entries`/`lists`/`screen` (the outline text, `#id`s included, is the payload), and `tap` carries `\"kind\":\"physical\"` with the matched element instead of `x`/`y`. Physical targets always run in-process — no per-UDID daemon is spawned for them (daemon session persistence is tracked separately). The `ios-device` namespace stays as the physical-only peer of `ios`/`android` (ECID addressing, tree-tuning flags); `sim-use ios <verb>` remains simulator-only and still fast-fails on a physical UDID, now pointing at the routed top-level verbs. The docs gained an explicit verb × target capability matrix. (#126)\n\n- `sim-use devices` now covers every target: USB-attached physical iPhones/iPads are listed alongside simulators and Android devices (FBDeviceControl discovery, ~0.4 s with a device attached / ~1 s with none, run in parallel with the simctl and adb listers), and every row carries a new `kind` — `simulator` / `emulator` / `physical` — orthogonal to `platform`, as a `KIND` table column and an additive `kind` key in `--json` (older payloads without the key decode with an inferred kind). Android's emulator-vs-physical distinction is now stated instead of being inferable only from the serial shape. A freshly attached iPhone may be listed by ECID until a session opens; the `ios-device` verbs accept either identifier. `--no-physical-ios` opts out of the FBDeviceControl side entirely; the Viewer passes it (its `/api/devices` also forwards `kind` now), since its UI is built on coordinate taps, frames and video streaming — capabilities the physical channel doesn't carry (the routed `ui`/`tap`/`screenshot` subset isn't enough to drive the SPA). (#122)\n- `sim-use ios-device` (experimental): drive a development-signed app on a physical iPhone or iPad. `devices` lists attached devices, `ui` prints the foreground app's accessibility tree, and `tap --label` / `--label-contains` sends Activate to one unambiguous match. sim-use installs and signs no runner and needs no Developer Disk Image; the device must be unlocked and the target app must have `get-task-allow=true`. This channel intentionally omits coordinate tap, swipe and gesture because the daemon exposes no element geometry. (#93, #99 — thanks @subdiox!)\n- `sim-use ios-device ui` now renders each element's accessibility identifier as `#id`, and `sim-use ios-device tap` accepts it as a positional `#<id>` or `--id` (mirroring the simulator tap). This is a stable handle to prefer when a label is dynamic — a navigation-bar back button is labelled with the previous screen's title but keeps `#BackButton`. The `@N` alias and coordinate forms remain unavailable on this channel (handles expire between processes; the daemon exposes no geometry). Label and identifier matching go through the same case-sensitive `SelectorTextMatcher` policy the simulator and Android surfaces already use, so a selector behaves identically across all three. (#114)\n- `sim-use ios-device` verbs now support `--json`, emitting the same `{ok, data}` envelope as the simulator and Android surfaces so the agent-side parser stays shared: `devices` returns unified device rows (the `deviceId` / `kind` / `runtime` schema of top-level `sim-use devices --json`), `ui` returns the outline text plus structured rows (`depth` / `role` / `label` / optional `identifier`) with element/node counts and timing, `tap` returns the matched element (`action` / `role` / `label` / optional `identifier`, the id trimmed exactly as the outline shows it), and `screenshot` returns the saved path. The `ui` schema deliberately carries no `@N` aliases — element handles expire between processes. Structurally the four verbs adopted `SimUseExecutableCommand` (the shared `execute()`/`format()` split); they still run fully in-process — daemon session persistence is tracked separately (#120). Error output moved its recovery advice to the shared hint channel: the `--json` failure envelope carries a machine-readable `hint` field, and the text path prints the same advice as a `Hint:` line after the error instead of embedding it in the message. (#123)\n- `sim-use ios-device screenshot`: capture a PNG of a connected iPhone or iPad display. Capture runs over CoreDevice (`xcrun devicectl device capture screenshot`) rather than the accessibility audit channel, so — unlike `ui` and `tap` — it is not limited to development-signed foreground apps: whatever is on screen is captured, SpringBoard and system apps included. Device selection matches the other `ios-device` verbs (`--device` optional with exactly one attached), and `--output` follows the shared path semantics with a `Device Screenshot - <device name> - <timestamp>.png` default. A rejected path or a capture that fails mid-flight never removes an existing file at `--output`: the image lands in a temporary sibling and replaces the target only on success. The `--output` path resolution shared by the simulator screenshot and the video verbs is now factored into one `OutputFilePath` helper instead of two per-target copies. (#118)\n\n### Fixed\n\n- `screenshot` / `ios screenshot`: a simulator name containing path separators (simctl accepts any free text, e.g. `My iPhone/Work`) no longer turns the default output filename into a directory hierarchy — the name is collapsed into a single path component, matching `ios-device screenshot`. The Android default filename embeds the adb serial, whose accepted charset already excludes separators; it is now sanitised too as defence in depth. Video default filenames embed no user-controlled text and were already safe. (#119)\n- `sim-use ios-device ui` no longer drops the navigation-bar back button (and any other element whose token the daemon aliases with the root). On a pushed screen `deviceFetchSpecialElement: 0` returns the back button as the root, so seeding the walk's visited set with the raw root token silently discarded it; the walk now dedups on `(token, summary, role)`, so the back button appears in the outline and is tappable with the ordinary `tap`. (#114)\n- `sim-use ios-device` discovery bails in ~1 s when no iPhone is attached, instead of waiting the full 5 s timeout. An empty attachment set never satisfies the quiescence rule (it needs a non-empty, unchanged set), so the discovery loop used to run to the deadline on every device-less host; it now gives up after a short grace once nothing has appeared. A device that is present still settles in ~0.4 s, and a multi-device attach burst still coalesces (the grace only applies until the first device is seen). (#117)\n- `sim-use ios` (simulator-only) verbs reject a physical iOS device UDID at resolution time — pointing at the routed top-level verbs — instead of misclassifying it as an Android serial and diagnosing a plugged-in iPhone as \"not reachable via adb\". (#99, #126)\n- Wait for physical-device attachment notifications to settle so multiple USB-connected iOS devices are all discovered. (#99)\n- Reject empty physical-device hierarchies, missing or ambiguous tap targets, and invalid hierarchy concurrency instead of reporting success or silently choosing an element. (#99)\n- Correlate DTX replies by both identifier and conversation index so unsolicited device events cannot satisfy an unrelated pending request. (#99)\n- `record-video --gif-markers` (all three surfaces): bracket a GIF with START/END marker cards (~1 s each) so the forever-looping clip has a visible boundary. Opt-in — the default output remains a faithful capture of the screen. A failed card render degrades to a marker-less GIF instead of failing the transcode. (#100, #101 — thanks @kws0210!)\n"
+        },
+        {
+          "tag": "v0.13.0",
+          "published_at_utc": "2026-08-06T10:15:20Z",
+          "prerelease": false,
+          "url": "https://github.com/lycorp-jp/sim-use/releases/tag/v0.13.0",
+          "notes": "### Added\r\n\r\n- `record-video --format gif` (top-level, `ios record-video`, and `android record-video`): record an animated GIF on both platforms. The format is also inferred from a `.gif` `--output` extension (explicit `--format` wins, with a stderr note on mismatch). Capture still runs through the existing H.264 pipelines into an intermediate MP4; on stop, the recording is transcoded into a looping GIF — sampled at `--fps` (GIF default 10) and scaled at `--scale` (GIF default 0.5), with per-frame delays derived from source timestamps so Android's variable frame rate keeps wall-clock pacing. A failed transcode preserves the intermediate MP4 and reports its path. (#84 — thanks @kws0210!)\r\n\r\n### Fixed\r\n\r\n- `type \"\"` (empty input) no longer runs the framework preflight: the empty-input short-circuit now returns before the Xcode check and private-framework load, not just before HID session creation. `type \"$VAR\"` with an empty variable is now a strict no-op even on hosts without a usable `xcode-select` path, and the preflight's subprocess no longer makes the empty-input unit test flake on loaded CI runners. (#92)\r\n- iOS hit-test probes no longer inherit the HID metric scale on display-downscaled devices (iPhone 12/13 mini, the 6/6s/7/8 Plus family). The AX point hit-test shares HID's native-portrait axes but consumes points in the **UI point metric** — verified live on iPhone 12 mini / iOS 26.4: querying the un-scaled UI point returns the element at that point, while the pixels/scale-shrunk point lands ~4% off. The `UIPointScale` introduced for HID dispatch was also applied to the orientation calibrator's discriminator probes, the quadtree recovery probes, and `describe-ui --point`'s re-issued query, shifting every probe ~4% off target on those devices: small discriminators (a 17x22 toolbar button) missed outright, wasting the probe budget and degrading collapsed-children recovery. Probe transforms now rotate on the UI-sized canvas (`OrientationCalibration.probeCGPoint`) and only HID dispatch carries the metric scale. The remote-content retry's sampling grid (issue #64) also moves to the UI-sized canvas — recovering the scale from the shell root's own display frame — so the right/bottom ~4% of a downscaled screen (where a picker's bottom bar tends to live) is actually probed. Portrait probes are the identity everywhere — which is what keeps the single-probe `--point` fast path valid on downscaled panels — and devices that render 1:1 are untouched (the two canvases coincide). (#92)\r\n- iOS taps, swipes and point hit-tests now land on the right element on **display-downscaled devices** (iPhone 12/13 mini, the 6/6s/7/8 Plus family). Those models lay out a larger point space than they display — the mini renders 375x812 points into a 1125x2436 buffer and downsamples onto its 1080x2340 panel — while `NativePortraitSize`, the space HID normalizes against, is `pixels / scale` and therefore reads 360x780. The two spaces were treated as one (the portrait mapping is the identity), so every AX-derived coordinate was dispatched 4.1% away from the origin: measured live on iPhone 12 mini / iOS 26.3.1, tapping a Settings row whose frame spans y 648...700 opened the row below it, and a 48pt-tall button could only be hit by hand-dividing its center by 1.041. Calibration now carries a `UIPointScale` — the metric ratio between the UI point space and the framebuffer point space, recovered from the AX-reported screen size — and applies it in both directions, so the gesture canvas, the stale-snapshot advisory and the quadtree's UI-space probes agree with HID again. Identity on every device that renders at its panel resolution; a UI size that is a window rather than the display (a resized iPad scene) is rejected by an axis-skew guard rather than turned into a bogus scale. (#90 — thanks @subdiox!)\r\n- The iOS `describe-ui` text outline now renders `value=\"…\"` for `TextArea` (UITextView / SwiftUI TextEditor — the shape of chat message inputs), `Slider`, and `Button`, not only `TextField`/`SecureTextField`/`Switch`. Text typed into a labeled multi-line editor was previously invisible in the outline — present only in `--json` `entries[].value` — so an agent could not confirm a `type` or a clear landed without falling back to JSON. A value that merely echoes the label slot is suppressed: this removes the pre-existing double print on label-less inputs (`TextField \"query\" value=\"query\"`) and keeps page controls and picker wheels (which the AX bridge reports as `Slider` with value == label) quiet. The whitelist additions are grounded in a live probe of the AX bridge's actual role vocabulary — see the playground's new *Value Roles* screen (UISearchBar → `TextField`, UIPageControl → `Slider`, UIProgressView → `GenericElement`, UISwitch → `CheckBox`); `GenericElement` stays excluded so status-bar values don't flood the outline. Android already rendered these correctly (`EditText` classifies as `TextField` regardless of `textMultiLine`); it gains a labeled multi-line fixture and a parity regression test. (#87)\r\n- JPEG frame scaling now produces the requested pixel dimensions on Retina displays instead of multiplying the result by the screen backing scale (#83, #85 — thanks @EuanTop!).\r\n- The `SIM_USE_VERSION` build-time override actually reaches the version stamp now. `VersionPlugin` registered its generator command with an empty environment, so the documented \"environment variable first\" priority was dead code and every build fell back to `git describe` — release builds happened to be correct only because they build on the tagged commit, while `scripts/dev-install.sh` builds stamped a stale describe string. The override is now resolved in the plugin process and baked into the command's argv, which also makes a changed override invalidate SPM's command cache without requiring a source-file edit.\r\n"
+        }
+      ],
+      "changed_files": [
+        {
+          "path": "CHANGELOG.md",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/CHANGELOG.md"
+        },
+        {
+          "path": "README.md",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/README.md"
+        },
+        {
+          "path": "Sources/AndroidBackend/Adb/Adb.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Adb/Adb.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Adb/AdbStreamingProcess.swift",
+          "status": "added",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Adb/AdbStreamingProcess.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Adb/AuthTokenFetcher.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Adb/AuthTokenFetcher.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Bridge/BridgeClient.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Bridge/BridgeClient.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Bridge/BridgeClientRegistry.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Bridge/BridgeClientRegistry.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Bridge/BridgeConnection.swift",
+          "status": "added",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Bridge/BridgeConnection.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Bridge/BridgeEnvelope.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Bridge/BridgeEnvelope.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Bridge/BridgeSession.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Bridge/BridgeSession.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Bridge/ElementNode.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Bridge/ElementNode.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Normalizer/AndroidSelector.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Normalizer/AndroidSelector.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Normalizer/TruncationHelpers.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Normalizer/TruncationHelpers.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Verbs/AndroidAppStateCommand.swift",
+          "status": "added",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Verbs/AndroidAppStateCommand.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Verbs/AndroidCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Verbs/AndroidCommand.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Verbs/AndroidCommandDeviceValidation.swift",
+          "status": "added",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Verbs/AndroidCommandDeviceValidation.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Verbs/AndroidDescribeUICommand.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Verbs/AndroidDescribeUICommand.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Verbs/AndroidDeviceController.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Verbs/AndroidDeviceController.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Verbs/AndroidGestureCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Verbs/AndroidGestureCommand.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Verbs/AndroidInitCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Verbs/AndroidInitCommand.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Verbs/AndroidLongPressCommand.swift",
+          "status": "added",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Verbs/AndroidLongPressCommand.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Verbs/AndroidRecordVideoCommand.swift",
+          "status": "added",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Verbs/AndroidRecordVideoCommand.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Verbs/AndroidStreamVideoCommand.swift",
+          "status": "added",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Verbs/AndroidStreamVideoCommand.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Verbs/AndroidSwipeCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Verbs/AndroidSwipeCommand.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Verbs/AndroidTapCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Verbs/AndroidTapCommand.swift"
+        },
+        {
+          "path": "Sources/AndroidBackend/Verbs/AndroidTouchCommand.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/AndroidBackend/Verbs/AndroidTouchCommand.swift"
+        },
+        {
+          "path": "Sources/SimUse/Commands/AppState.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/SimUse/Commands/AppState.swift"
+        },
+        {
+          "path": "Sources/SimUse/Commands/Button.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/SimUse/Commands/Button.swift"
+        },
+        {
+          "path": "Sources/SimUse/Commands/DescribeUI.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/SimUse/Commands/DescribeUI.swift"
+        },
+        {
+          "path": "Sources/SimUse/Commands/Devices.swift",
+          "status": "modified",
+          "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/Sources/SimUse/Commands/Devices.swift"
+        }
+      ],
+      "selected_files_only": true
+    },
+    {
+      "repository": "MobAI-App/simslim",
+      "url": "https://github.com/MobAI-App/simslim",
+      "default_branch": "main",
+      "archived": false,
+      "license": "MIT",
+      "pushed_at_utc": "2026-10-09T15:49:53Z",
+      "baseline": "4ae1659a0c0265787c2a7047fab466b326ba6d7e",
+      "head": "6518ba7eab1123d7e1d7797b0e05f51043b42a5b",
+      "head_date_utc": "2026-10-09T15:38:14Z",
+      "compare": {
+        "url": "https://github.com/MobAI-App/simslim/compare/4ae1659a0c0265787c2a7047fab466b326ba6d7e...6518ba7eab1123d7e1d7797b0e05f51043b42a5b",
+        "status": "ahead",
+        "ahead_by": 7,
+        "behind_by": 0,
+        "total_commits": 7,
+        "commits_returned": 7,
+        "files_returned": 31,
+        "truncated": false
+      },
+      "commits": [
+        {
+          "sha": "6518ba7eab1123d7e1d7797b0e05f51043b42a5b",
+          "date_utc": "2026-10-09T15:38:14Z",
+          "subject": "Keep navd enabled with --except widgets so the Maps widget does not flood the log (#61)",
+          "url": "https://github.com/MobAI-App/simslim/commit/6518ba7eab1123d7e1d7797b0e05f51043b42a5b"
+        },
+        {
+          "sha": "433243daf4797a9dfe2de1c1380f84dc6a5e03b0",
+          "date_utc": "2026-10-09T14:49:28Z",
+          "subject": "ci: generate GitHub release notes for tagged releases (#60)",
+          "url": "https://github.com/MobAI-App/simslim/commit/433243daf4797a9dfe2de1c1380f84dc6a5e03b0"
+        },
+        {
+          "sha": "2830b5d6b90a213af5f0b277e415fe0f5341879e",
+          "date_utc": "2026-10-09T12:04:00Z",
+          "subject": "Keep assistantd enabled to stop a Spotlight memory leak (#59)",
+          "url": "https://github.com/MobAI-App/simslim/commit/2830b5d6b90a213af5f0b277e415fe0f5341879e"
+        },
+        {
+          "sha": "60ba269d00b4801c058e6832b57ce704fd89e257",
+          "date_utc": "2026-10-08T11:41:53Z",
+          "subject": "Keep gamed enabled to avoid XCUITest launch delays (#57)",
+          "url": "https://github.com/MobAI-App/simslim/commit/60ba269d00b4801c058e6832b57ce704fd89e257"
+        },
+        {
+          "sha": "867e276c144486b0448f77eea78eb533c675a4cd",
+          "date_utc": "2026-10-08T10:23:03Z",
+          "subject": "feat: support Apple TV and Apple Watch simulator slimming (#54)",
+          "url": "https://github.com/MobAI-App/simslim/commit/867e276c144486b0448f77eea78eb533c675a4cd"
+        },
+        {
+          "sha": "2d4f6361dc6be0eec330f81ecfa558a4abe6f618",
+          "date_utc": "2026-10-04T09:38:06Z",
+          "subject": "docs: link mobai-ci for running simslim in CI (#55)",
+          "url": "https://github.com/MobAI-App/simslim/commit/2d4f6361dc6be0eec330f81ecfa558a4abe6f618"
+        },
+        {
+          "sha": "e752a72898ca69f703c74dc79b7b047a4f2093a3",
+          "date_utc": "2026-09-24T12:17:41Z",
+          "subject": "perf: slim booted simulators offline and run launchctl transitions in parallel (#51)",
+          "url": "https://github.com/MobAI-App/simslim/commit/e752a72898ca69f703c74dc79b7b047a4f2093a3"
+        },
+        {
+          "sha": "4ae1659a0c0265787c2a7047fab466b326ba6d7e",
+          "date_utc": "2026-09-19T04:44:39Z",
+          "subject": "feat: slim a shutdown simulator by writing its launchd overrides offline (#49)",
+          "url": "https://github.com/MobAI-App/simslim/commit/4ae1659a0c0265787c2a7047fab466b326ba6d7e"
+        },
+        {
+          "sha": "6984ea42cbd5954a42488030ed61559230693001",
+          "date_utc": "2026-09-17T17:10:49Z",
+          "subject": "docs: state where the slim profile survives and where it does not (#48)",
+          "url": "https://github.com/MobAI-App/simslim/commit/6984ea42cbd5954a42488030ed61559230693001"
+        },
+        {
+          "sha": "e52d06490570abc028b70d792dc481ba4ae99940",
+          "date_utc": "2026-09-16T20:28:54Z",
+          "subject": "feat: watch slims parallel-testing clones as they boot (#43)",
+          "url": "https://github.com/MobAI-App/simslim/commit/e52d06490570abc028b70d792dc481ba4ae99940"
+        },
+        {
+          "sha": "f3b979ecd913f56904a9b6100cad1f84fe01d228",
+          "date_utc": "2026-09-07T21:07:01Z",
+          "subject": "feat: on --no-reboot slims the current boot session without a reboot (#42)",
+          "url": "https://github.com/MobAI-App/simslim/commit/f3b979ecd913f56904a9b6100cad1f84fe01d228"
+        },
+        {
+          "sha": "cfa2919829a0e2d4ef5e7751c205cf80b4b7ce99",
+          "date_utc": "2026-09-02T15:59:49Z",
+          "subject": "Fix simulator selection hit target (#40)",
+          "url": "https://github.com/MobAI-App/simslim/commit/cfa2919829a0e2d4ef5e7751c205cf80b4b7ce99"
+        },
+        {
+          "sha": "cf36e6bf0f9a07b98456bf5d006815952a2805c0",
+          "date_utc": "2026-09-02T09:09:07Z",
+          "subject": "docs: swap README hero image for demo video (#39)",
+          "url": "https://github.com/MobAI-App/simslim/commit/cf36e6bf0f9a07b98456bf5d006815952a2805c0"
+        },
+        {
+          "sha": "09fc9cbbca35db5230e6d571a0a366fe6876266e",
+          "date_utc": "2026-08-31T19:59:25Z",
+          "subject": "Surface xcrun stderr when simctl list fails (#37)",
+          "url": "https://github.com/MobAI-App/simslim/commit/09fc9cbbca35db5230e6d571a0a366fe6876266e"
+        },
+        {
+          "sha": "3210598c455480d263854fe5b616dba5dfa31529",
+          "date_utc": "2026-08-31T19:53:43Z",
+          "subject": "fix: reject runtimes without persistent launchd overrides (#35)",
+          "url": "https://github.com/MobAI-App/simslim/commit/3210598c455480d263854fe5b616dba5dfa31529"
+        },
+        {
+          "sha": "d8adb4508452c92d36db8ef8a281ac68c38108bd",
+          "date_utc": "2026-08-31T12:33:13Z",
+          "subject": "fix: clarify slimming status and memory accounting (#36)",
+          "url": "https://github.com/MobAI-App/simslim/commit/d8adb4508452c92d36db8ef8a281ac68c38108bd"
+        },
+        {
+          "sha": "41632ba34741380baa3d5c99a5b07eff3a04f50f",
+          "date_utc": "2026-08-30T21:17:58Z",
+          "subject": "docs: restore README structure and add a category list spoiler (#32)",
+          "url": "https://github.com/MobAI-App/simslim/commit/41632ba34741380baa3d5c99a5b07eff3a04f50f"
+        },
+        {
+          "sha": "e7400623ba876ac4c1cd68e7c370e1732c2c14c2",
+          "date_utc": "2026-08-27T08:24:50Z",
+          "subject": "fix: make simulator clones independent (#28)",
+          "url": "https://github.com/MobAI-App/simslim/commit/e7400623ba876ac4c1cd68e7c370e1732c2c14c2"
+        },
+        {
+          "sha": "5a7da4913264d7c91294317815061712b95949ba",
+          "date_utc": "2026-08-14T17:44:57Z",
+          "subject": "ui: group and label simulator toolbar actions (#29)",
+          "url": "https://github.com/MobAI-App/simslim/commit/5a7da4913264d7c91294317815061712b95949ba"
+        },
+        {
+          "sha": "65bda5bd746a32abff14fa1160e4d802e2b057c4",
+          "date_utc": "2026-08-03T12:31:51Z",
+          "subject": "fix: keep Wallet daemons enabled with --except store so the payment sheet presents (#26)",
+          "url": "https://github.com/MobAI-App/simslim/commit/65bda5bd746a32abff14fa1160e4d802e2b057c4"
+        }
+      ],
+      "releases": [
+        {
+          "tag": "v0.12.2",
+          "published_at_utc": "2026-10-09T15:51:52Z",
+          "prerelease": false,
+          "url": "https://github.com/MobAI-App/simslim/releases/tag/v0.12.2",
+          "notes": "## What's Changed\n* ci: generate GitHub release notes for tagged releases by @Interlap01 in https://github.com/MobAI-App/simslim/pull/60\n* fix: keep navd enabled with --except widgets so the Maps widget does not flood the log by @yadaniyil in https://github.com/MobAI-App/simslim/pull/61\n\n## New Contributors\n* @yadaniyil made their first contribution in https://github.com/MobAI-App/simslim/pull/61\n\n**Full Changelog**: https://github.com/MobAI-App/simslim/compare/v0.12.1...v0.12.2"
+        },
+        {
+          "tag": "v0.12.1",
+          "published_at_utc": "2026-10-09T12:07:15Z",
+          "prerelease": false,
+          "url": "https://github.com/MobAI-App/simslim/releases/tag/v0.12.1",
+          "notes": "## What's Changed\n* Keep assistantd enabled: without it the simulator's Spotlight app leaks memory without bound by @Filsommer in https://github.com/MobAI-App/simslim/pull/59\n\n## New Contributors\n* @Filsommer made their first contribution in https://github.com/MobAI-App/simslim/pull/59\n\n**Full Changelog**: https://github.com/MobAI-App/simslim/compare/v0.12.0...v0.12.1\n"
+        },
+        {
+          "tag": "v0.12.0",
+          "published_at_utc": "2026-10-08T11:47:01Z",
+          "prerelease": false,
+          "url": "https://github.com/MobAI-App/simslim/releases/tag/v0.12.0",
+          "notes": "## What's changed\n\n- **Apple TV, Apple Watch, and Apple Vision Pro simulators.** Every command now finds and slims tvOS, watchOS, and visionOS simulators, not just iOS. `list`, `top`, `--json`, and SimSlim.app show each device's platform. Persistent slimming needs tvOS 18.5, watchOS 11.5, or visionOS 2.5 and newer; `on --no-reboot` works on every runtime. watchOS keeps `com.apple.homed` enabled and visionOS keeps `com.apple.mobileassetd`, so the Watch doesn't drift after startup and the Vision Pro surroundings still render (#54, #56).\n- **Faster `on --no-reboot`.** One `launchctl unload -w` call now stops up to 64 daemons at a time, and only the daemons it misses go through the slower one-at-a-time path. On a fresh iOS 27.0 simulator a live slim takes 4s instead of 16s (#56).\n- **No more 10-second XCUITest launch delay.** `com.apple.gamed` now stays enabled. With it disabled, Xcode waited up to 10s on every app launch it drove before giving up on a GameKit sync. A normal `simslim on` or `simslim off` re-enables `gamed` on simulators slimmed by an older version (#57).\n\nThanks @Jeehut for the Vision Pro support and the faster `--no-reboot` in #56, and @clindsay3 for tracking down the `gamed` delay in #58 and fixing it in #57!\n\n**Install/upgrade:** `brew install mobai-app/tap/simslim` / `brew upgrade simslim`\n\n**Full changelog:** https://github.com/MobAI-App/simslim/compare/v0.11.0...v0.12.0\n"
+        }
+      ],
+      "changed_files": [
+        {
+          "path": "README.md",
+          "status": "modified",
+          "url": "https://github.com/MobAI-App/simslim/blob/6518ba7eab1123d7e1d7797b0e05f51043b42a5b/README.md"
+        },
+        {
+          "path": "launchd_batch.go",
+          "status": "added",
+          "url": "https://github.com/MobAI-App/simslim/blob/6518ba7eab1123d7e1d7797b0e05f51043b42a5b/launchd_batch.go"
+        },
+        {
+          "path": "platform_test.go",
+          "status": "added",
+          "url": "https://github.com/MobAI-App/simslim/blob/6518ba7eab1123d7e1d7797b0e05f51043b42a5b/platform_test.go"
+        },
+        {
+          "path": "profiles.go",
+          "status": "modified",
+          "url": "https://github.com/MobAI-App/simslim/blob/6518ba7eab1123d7e1d7797b0e05f51043b42a5b/profiles.go"
+        },
+        {
+          "path": "profiles_test.go",
+          "status": "modified",
+          "url": "https://github.com/MobAI-App/simslim/blob/6518ba7eab1123d7e1d7797b0e05f51043b42a5b/profiles_test.go"
+        }
+      ]
+    },
+    {
+      "repository": "Mastersam07/OpenDeviceHub",
+      "url": "https://github.com/Mastersam07/OpenDeviceHub",
+      "default_branch": "dev",
+      "archived": false,
+      "license": "MIT",
+      "pushed_at_utc": "2026-09-28T16:30:31Z",
+      "baseline": "e50f07f1f4480cb14d57f192df7bf598ca26e708",
+      "head": "e50f07f1f4480cb14d57f192df7bf598ca26e708",
+      "head_date_utc": "2026-09-27T23:10:17Z",
+      "compare": {
+        "url": "https://github.com/Mastersam07/OpenDeviceHub/compare/e50f07f1f4480cb14d57f192df7bf598ca26e708...e50f07f1f4480cb14d57f192df7bf598ca26e708",
+        "status": "identical",
+        "ahead_by": 0,
+        "behind_by": 0,
+        "total_commits": 0,
+        "commits_returned": 0,
+        "files_returned": 0,
+        "truncated": false
+      },
+      "commits": [
+        {
+          "sha": "e50f07f1f4480cb14d57f192df7bf598ca26e708",
+          "date_utc": "2026-09-27T23:10:17Z",
+          "subject": "chore(app): raise the version to 0.2.0 (#83)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/e50f07f1f4480cb14d57f192df7bf598ca26e708"
+        },
+        {
+          "sha": "7530698adb28f4c1cb2526b30eb11aa9f9aeb72a",
+          "date_utc": "2026-09-27T21:03:28Z",
+          "subject": "feat(app): add shut down, location favorites and capture settings",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/7530698adb28f4c1cb2526b30eb11aa9f9aeb72a"
+        },
+        {
+          "sha": "2f6fa1153fa76bb7d5ea2a91bd1321dfc9264af3",
+          "date_utc": "2026-09-27T20:30:55Z",
+          "subject": "ci: publish the latest release, its feed, and a fixed download link (#84)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/2f6fa1153fa76bb7d5ea2a91bd1321dfc9264af3"
+        },
+        {
+          "sha": "8a0fe8a6c421f4684d6dea424e29f354f6d51650",
+          "date_utc": "2026-09-27T20:10:51Z",
+          "subject": "build(scripts): lay out the disk image window and draw its disk icon (#82)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/8a0fe8a6c421f4684d6dea424e29f354f6d51650"
+        },
+        {
+          "sha": "089b0fe97a2808b622fe5fda50c51b150bd4d3da",
+          "date_utc": "2026-09-27T18:50:50Z",
+          "subject": "fix(viewer): open a window the way the device is already turned (#81)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/089b0fe97a2808b622fe5fda50c51b150bd4d3da"
+        },
+        {
+          "sha": "d1682be948f88faba3ae93906b309a04933604ba",
+          "date_utc": "2026-09-27T17:49:17Z",
+          "subject": "feat(viewer): offer the camera control on every iPhone that has one (#80)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/d1682be948f88faba3ae93906b309a04933604ba"
+        },
+        {
+          "sha": "1a333e9dc49ca4c7c9614a84a2e95f90e64f6be1",
+          "date_utc": "2026-09-27T16:37:38Z",
+          "subject": "fix(viewer): keep the standing foldable inside the window (#79)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/1a333e9dc49ca4c7c9614a84a2e95f90e64f6be1"
+        },
+        {
+          "sha": "d88d7b4ec6e505a5fa75c71bc2afb7565f3ac2e0",
+          "date_utc": "2026-09-27T16:19:14Z",
+          "subject": "feat(viewer): record a foldable from the panel the guest is using (#78)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/d88d7b4ec6e505a5fa75c71bc2afb7565f3ac2e0"
+        },
+        {
+          "sha": "348253be863ac5b55c5307ecc701d91d82cf0efc",
+          "date_utc": "2026-09-27T15:36:33Z",
+          "subject": "feat(viewer): walk a foldable's hinge to a preset instead of jumping it (#76)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/348253be863ac5b55c5307ecc701d91d82cf0efc"
+        },
+        {
+          "sha": "160eec8f60c618088f4bc8b1f51c4f2a853dd468",
+          "date_utc": "2026-09-27T12:08:34Z",
+          "subject": "feat(engine): follow a fold from the screens' own callbacks (#75)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/160eec8f60c618088f4bc8b1f51c4f2a853dd468"
+        },
+        {
+          "sha": "0ca33ffae1d92b5c012a71b17299bc1b2e33c1cf",
+          "date_utc": "2026-09-27T11:19:07Z",
+          "subject": "docs: download the DMG straight from the readme and show the app (#67)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/0ca33ffae1d92b5c012a71b17299bc1b2e33c1cf"
+        },
+        {
+          "sha": "071a97fb8fec89edb96eda624433b5e6589c45d2",
+          "date_utc": "2026-09-27T10:31:28Z",
+          "subject": "ci: give the release workflow leave to create the release (#65)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/071a97fb8fec89edb96eda624433b5e6589c45d2"
+        },
+        {
+          "sha": "81268da4c00cebc1972887aab3fc08554a2364c2",
+          "date_utc": "2026-09-27T10:31:22Z",
+          "subject": "docs: put the foldable in the changelog and readme (#66)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/81268da4c00cebc1972887aab3fc08554a2364c2"
+        },
+        {
+          "sha": "7b3210519530173f64a399728dfd81f087764b9a",
+          "date_utc": "2026-09-27T10:19:34Z",
+          "subject": "feat(engine): support the iPhone Duo as the foldable it is (#64)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/7b3210519530173f64a399728dfd81f087764b9a"
+        },
+        {
+          "sha": "8d8ab6d4496cf269f28587cddc31b7017e3f6688",
+          "date_utc": "2026-09-24T23:07:37Z",
+          "subject": "docs: give the readme a front page and compose the release notes (#62)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/8d8ab6d4496cf269f28587cddc31b7017e3f6688"
+        },
+        {
+          "sha": "a83b6fee4e050e63fd370dcf8812dc005ebbb138",
+          "date_utc": "2026-09-24T22:54:37Z",
+          "subject": "feat(app): draw the icon as two device windows and ship it in usable sizes (#63)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/a83b6fee4e050e63fd370dcf8812dc005ebbb138"
+        },
+        {
+          "sha": "05e0b773eab26d633dbef7e893559d7bb46092a2",
+          "date_utc": "2026-09-24T21:54:26Z",
+          "subject": "feat(app): keep the clipboard in step with the device (#61)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/05e0b773eab26d633dbef7e893559d7bb46092a2"
+        },
+        {
+          "sha": "127e6e8ad42bd62234a5b155bc20c98103ba81ed",
+          "date_utc": "2026-09-24T19:18:01Z",
+          "subject": "feat(app): add a new simulator panel (#59)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/127e6e8ad42bd62234a5b155bc20c98103ba81ed"
+        },
+        {
+          "sha": "1916ac55089b701f843657ca3e25ae87a87c21f1",
+          "date_utc": "2026-09-24T18:37:57Z",
+          "subject": "feat(app): add the input and keyboard submenus (#58)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/1916ac55089b701f843657ca3e25ae87a87c21f1"
+        },
+        {
+          "sha": "53857c45dc90ac69a841901a5adfbafa789d9e67",
+          "date_utc": "2026-09-24T17:51:06Z",
+          "subject": "feat(app): surface the simctl device controls in the menus (#57)",
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/commit/53857c45dc90ac69a841901a5adfbafa789d9e67"
+        }
+      ],
+      "releases": [
+        {
+          "tag": "v0.2.0",
+          "published_at_utc": "2026-09-27T23:14:49Z",
+          "prerelease": false,
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/releases/tag/v0.2.0",
+          "notes": "- The camera control works on every iPhone that has one, not only the iPhone Duo, and Device,\n  Camera Control presses it. The item appears only for devices with the button. The simulator has\n  no camera, so the device takes a screenshot.\n- Choosing cover, half open or fully open on the iPhone Duo folds it smoothly to that angle instead\n  of jumping, unless Reduce Motion is on. The device stays inside the window in every pose,\n  standing ones included.\n- The iPhone Duo's window moves to the screen the device is using sooner after a fold.\n- Recording the iPhone Duo records the screen it is using, follows it through a fold, and keeps the\n  picture the right way up.\n- A window opens the way its device is already turned, instead of assuming it is upright.\n- Restarting a device no longer leaves its window half connected. The iPhone Duo's fold buttons,\n  cover screen and touches come back with the fold it was showing, and the clipboard sync picks up\n  again.\n- Device, Shut Down shuts a simulator down from the menu.\n- Every menu action acts on the simulator in front, not on every open one, and ticks such as Stay\n  On Top, Slow Animations and Connect Hardware Keyboard show that simulator's own setting.\n- Favorite locations: save named coordinates in Settings and choose them from Features, Location.\n- Screenshots and recordings each have their own folder in Settings, starting from the folder you\n  had already chosen, and Save Screen can put the picture on the clipboard instead of in a file.\n- Clipboard sync can be turned on or off in Settings as well as from the Edit menu, and the two stay\n  in step.\n- The screen shown while a device is shut down or starting stays inside its rounded corners.\n- The Settings window can be resized, and scrolls.\n- The disk image opens as an installer window: drag the app onto Applications. The mounted disk\n  shows the app's icon.\n\nShut Down, favorite locations and the capture and clipboard settings were contributed by\n@stephen-zeng.\n\n## Requirements\n\nmacOS 14 or later, Apple silicon, and Xcode 26 or 27 with at least one iOS simulator runtime.\n\nApple silicon only, and not by preference: the simulator frameworks this app loads from Xcode ship\nas `arm64e` with no Intel slice, so an Intel build would launch and then fail at the first framework\nload.\n\n## Known gaps\n\nThese are the ones worth knowing before you install it:\n\n- **The windows are invisible to accessibility**: VoiceOver, window managers and scripting tools see\n  the app and its menus but not its windows.\n- **A device taller than your display** keeps its bottom edge off screen, where the pointer cannot\n  reach it. Use Fit.\n- **The compact layout below 340 points wide** is written and unit tested but has never been used by\n  hand.\n- **Other Apple platforms**: tvOS, watchOS and visionOS simulators are not supported.\n\n## Verifying the download\n\nThe app is signed with a Developer ID certificate, notarized by Apple and stapled, so it launches\nwithout a Gatekeeper warning. `SHA256SUMS` is attached; to check the DMG against it:\n\n```sh\nshasum -a 256 -c SHA256SUMS\n```\n\n## Credits\n\nBuilt after studying two MIT licensed projects, and better for both:\n[Siniulator](https://github.com/kmagiera/Siniulator) by Krzysztof Magiera, and\n[idb / FBSimulatorControl](https://github.com/facebook/idb) by Meta. What was adapted from each, down\nto the individual constants, is listed in\n[THIRD_PARTY_NOTICES.md](https://github.com/Mastersam07/OpenDeviceHub/blob/dev/THIRD_PARTY_NOTICES.md).\n\n## Tell me what breaks\n\nIf something does not work, please [open an issue](https://github.com/Mastersam07/OpenDeviceHub/issues/new/choose):\n`odhub doctor` prints almost everything the bug form asks for.\n"
+        },
+        {
+          "tag": "v0.1.0",
+          "published_at_utc": "2026-09-27T10:35:35Z",
+          "prerelease": true,
+          "url": "https://github.com/Mastersam07/OpenDeviceHub/releases/tag/v0.1.0",
+          "notes": "First release.\n\n- Click the icon and a simulator opens: whatever is already running, or the one shown last. Pick any\n  other from the Dock icon or File, Open Simulator, and a device booted anywhere else gets a window\n  too.\n- One window per simulator, with the device body drawn around the screen and its buttons clickable.\n- The iPhone Duo is shown as the foldable it is: the body bends with the hinge, cover, half open\n  and fully open are a click away, the window follows whichever screen the device is using, and\n  touch, scroll, home, the app switcher, rotation, screenshots and the buttons on the body all work\n  on it.\n- Point Accurate, Pixel Accurate, Physical Size and Fit, plus full screen and windows that remember\n  where they were.\n- Click to tap, drag, two finger pinch and rotate, keyboard input, hardware buttons, and the swipe\n  up from the bottom edge that goes home or opens the app switcher.\n- Rotation, screenshots, screen recording, drag and drop onto a device, and the clipboard kept in\n  step with the Mac: copies carry over on their own, and a copy made inside a device is there when\n  you switch to another app.\n- A window follows its device: it shows when the device has shut down, offers a reboot, and\n  reattaches on its own when the device comes back.\n- A capture shows itself beside the window before it is filed, so you can open, copy, save or discard\n  it. Left alone it saves itself, to a folder you choose.\n- Create a simulator without leaving the app: name, device type and OS version, where the two lists\n  follow each other so a device no installed runtime can run is never offered.\n- Device controls beyond the buttons: restart, erase, text size, increased contrast, an iCloud sync,\n  and a location from a scenario or your own coordinates.\n- Keyboard choices: send keys to the device or keep them, connect the Mac keyboard as the device's\n  hardware keyboard, and match the device's keyboard language to the Mac's.\n- Settings for what closing a window does, what launching opens, where captures go, whether device\n  links open here, and updates.\n- The menu bar follows the simulator it replaces: the same menus in the same order, the same\n  shortcuts, and the standard macOS ones that were missing. The zoom shortcuts are Apple's now,\n  ⌘1 Physical Size, ⌘2 Point Accurate, ⌘3 Pixel Accurate, ⌘4 Fit Screen, which changes three of the\n  four this app used before.\n- The `odhub` command line tool beside the app, for listing devices and driving input from a script.\n  One menu item puts it on your PATH, without a password on most machines.\n- If Xcode is missing or its simulator frameworks will not load, the app says what is missing and\n  what to do about it instead of failing silently.\n\n## Requirements\n\nmacOS 14 or later, Apple silicon, and Xcode 26 or 27 with at least one iOS simulator runtime.\n\nApple silicon only, and not by preference: the simulator frameworks this app loads from Xcode ship\nas `arm64e` with no Intel slice, so an Intel build would launch and then fail at the first framework\nload.\n\n## Known gaps\n\nThis is a pre-release. These are the ones worth knowing before you install it:\n\n- **The windows are invisible to accessibility**: VoiceOver, window managers and scripting tools see\n  the app and its menus but not its windows.\n- **A device taller than your display** keeps its bottom edge off screen, where the pointer cannot\n  reach it. Use Fit.\n- **The compact layout below 340 points wide** is written and unit tested but has never been used by\n  hand.\n- **Other Apple platforms**: tvOS, watchOS and visionOS simulators are not supported.\n\n## Verifying the download\n\nThe app is signed with a Developer ID certificate, notarized by Apple and stapled, so it launches\nwithout a Gatekeeper warning. `SHA256SUMS` is attached; to check the DMG against it:\n\n```sh\nshasum -a 256 -c SHA256SUMS\n```\n\n## Credits\n\nBuilt after studying two MIT licensed projects, and better for both:\n[Siniulator](https://github.com/kmagiera/Siniulator) by Krzysztof Magiera, and\n[idb / FBSimulatorControl](https://github.com/facebook/idb) by Meta. What was adapted from each, down\nto the individual constants, is listed in\n[THIRD_PARTY_NOTICES.md](https://github.com/Mastersam07/OpenDeviceHub/blob/dev/THIRD_PARTY_NOTICES.md).\n\n## Tell me what breaks\n\nThis is the first release and it has been used by one person on one Mac. If something does not work,\nplease [open an issue](https://github.com/Mastersam07/OpenDeviceHub/issues/new/choose): `odhub doctor` prints almost\neverything the bug form asks for.\n"
+        }
+      ],
+      "changed_files": []
+    },
+    {
+      "repository": "JaviSoto/device-hub-ios",
+      "url": "https://github.com/JaviSoto/device-hub-ios",
+      "default_branch": "main",
+      "archived": false,
+      "license": "MIT",
+      "pushed_at_utc": "2026-10-14T06:34:43Z",
+      "baseline": "1fcdfb0a6799b62f05625d0cbb359bec57256b94",
+      "head": "9ea14d11e492ae289f2f92e47da6d1b9044adee0",
+      "head_date_utc": "2026-10-14T06:31:09Z",
+      "compare": {
+        "url": "https://github.com/JaviSoto/device-hub-ios/compare/1fcdfb0a6799b62f05625d0cbb359bec57256b94...9ea14d11e492ae289f2f92e47da6d1b9044adee0",
+        "status": "ahead",
+        "ahead_by": 16,
+        "behind_by": 0,
+        "total_commits": 16,
+        "commits_returned": 16,
+        "files_returned": 58,
+        "truncated": false
+      },
+      "commits": [
+        {
+          "sha": "9ea14d11e492ae289f2f92e47da6d1b9044adee0",
+          "date_utc": "2026-10-14T06:31:09Z",
+          "subject": "Verify private publication with the established LAN CA",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/9ea14d11e492ae289f2f92e47da6d1b9044adee0"
+        },
+        {
+          "sha": "32193a1e72dc9bc3da0c3bc6f5eb2043c2908709",
+          "date_utc": "2026-10-14T06:21:30Z",
+          "subject": "Use the canonical upload client without an API override",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/32193a1e72dc9bc3da0c3bc6f5eb2043c2908709"
+        },
+        {
+          "sha": "b0ebca797d80db43f55e626d441a50731e63cc58",
+          "date_utc": "2026-10-14T06:14:45Z",
+          "subject": "Bind the ad hoc profile to the local signing identity",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/b0ebca797d80db43f55e626d441a50731e63cc58"
+        },
+        {
+          "sha": "37bb68433aecef4495c83bd6ffd6a6bab7a73abb",
+          "date_utc": "2026-10-14T06:05:41Z",
+          "subject": "Validate the full-window iPad preview layout",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/37bb68433aecef4495c83bd6ffd6a6bab7a73abb"
+        },
+        {
+          "sha": "16c5c5e6f1622e3ba30c9f9324b90ab18d8bf3e4",
+          "date_utc": "2026-10-14T06:03:41Z",
+          "subject": "Remove obsolete selection from the readonly title",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/16c5c5e6f1622e3ba30c9f9324b90ab18d8bf3e4"
+        },
+        {
+          "sha": "6d54846f2480f9734070d85579a34ce04a47ffa1",
+          "date_utc": "2026-10-14T06:01:38Z",
+          "subject": "Build the app index before Periphery scans it",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/6d54846f2480f9734070d85579a34ce04a47ffa1"
+        },
+        {
+          "sha": "0545c644444bc8d3671896dd32e15260f4176433",
+          "date_utc": "2026-10-14T05:55:33Z",
+          "subject": "Record visual references on the canonical test simulator",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/0545c644444bc8d3671896dd32e15260f4176433"
+        },
+        {
+          "sha": "992ab8fdeff8a481e55af7c2e6fb946e28e2db65",
+          "date_utc": "2026-10-14T05:44:37Z",
+          "subject": "Compile media probes before allocating a simulator",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/992ab8fdeff8a481e55af7c2e6fb946e28e2db65"
+        },
+        {
+          "sha": "25bbdd7217b9650862a14617ac60d40acadd6ed5",
+          "date_utc": "2026-10-14T05:43:20Z",
+          "subject": "Merge upstream signoff gate with current simulator verification",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/25bbdd7217b9650862a14617ac60d40acadd6ed5"
+        },
+        {
+          "sha": "0e8d818087ce4eb471dcfabedeb0fb839bb1fe2e",
+          "date_utc": "2026-10-14T05:40:31Z",
+          "subject": "Restore Device Hub verification on the maintained simulator path",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/0e8d818087ce4eb471dcfabedeb0fb839bb1fe2e"
+        },
+        {
+          "sha": "80b86d2ecfb16338b782c0c3ad789cf188ec0629",
+          "date_utc": "2026-10-14T05:38:03Z",
+          "subject": "Repair Device Hub signing and publication for the UI update",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/80b86d2ecfb16338b782c0c3ad789cf188ec0629"
+        },
+        {
+          "sha": "a1c4415bff68e7d7171f5489eba4543f41d287d1",
+          "date_utc": "2026-10-14T05:37:46Z",
+          "subject": "Remove the obsolete sidebar presentation helpers",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/a1c4415bff68e7d7171f5489eba4543f41d287d1"
+        },
+        {
+          "sha": "95d46face71a8b9b2c3b7d91183d0c8bfa89d973",
+          "date_utc": "2026-10-14T05:33:49Z",
+          "subject": "Make the remote screen full-window and fix keyboard reopening",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/95d46face71a8b9b2c3b7d91183d0c8bfa89d973"
+        },
+        {
+          "sha": "1fcdfb0a6799b62f05625d0cbb359bec57256b94",
+          "date_utc": "2026-08-25T21:38:06Z",
+          "subject": "Replace GitHub Actions with local signoff gate",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/1fcdfb0a6799b62f05625d0cbb359bec57256b94"
+        },
+        {
+          "sha": "079b18bbf00d614b0a644c5f679a9673e7650f95",
+          "date_utc": "2026-08-24T03:40:48Z",
+          "subject": "Add Device Hub Builds.lan release path",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/079b18bbf00d614b0a644c5f679a9673e7650f95"
+        },
+        {
+          "sha": "c7b60e4f1922b8a947cafd854e8906c3fca2ffe2",
+          "date_utc": "2026-08-24T02:26:50Z",
+          "subject": "Add Device Hub probe scheme to install reports",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/c7b60e4f1922b8a947cafd854e8906c3fca2ffe2"
+        },
+        {
+          "sha": "f19d9c63e970c63d0d38ad9af702805753eadbf1",
+          "date_utc": "2026-08-23T19:20:27Z",
+          "subject": "Report Device Hub installation to Builds.lan",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/f19d9c63e970c63d0d38ad9af702805753eadbf1"
+        },
+        {
+          "sha": "d5b0de29ca7c2971157401aa791831200536772c",
+          "date_utc": "2026-08-15T00:17:13Z",
+          "subject": "Keep signing out of keychain state",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/d5b0de29ca7c2971157401aa791831200536772c"
+        },
+        {
+          "sha": "7d990146032b3cf103d7d531916c313b92f18396",
+          "date_utc": "2026-08-14T02:33:48Z",
+          "subject": "Make device builds use the login keychain noninteractively",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/7d990146032b3cf103d7d531916c313b92f18396"
+        },
+        {
+          "sha": "a6c3b4d620941a9301ede22ef1c9b84d74eda213",
+          "date_utc": "2026-07-27T04:10:08Z",
+          "subject": "Make hosted CI atomic and mise-driven",
+          "url": "https://github.com/JaviSoto/device-hub-ios/commit/a6c3b4d620941a9301ede22ef1c9b84d74eda213"
+        }
+      ],
+      "releases": [],
+      "changed_files": [
+        {
+          "path": "BuildSupport/Tests/test_ci_workflow.py",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/BuildSupport/Tests/test_ci_workflow.py"
+        },
+        {
+          "path": "BuildSupport/Tests/test_guarded_process.py",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/BuildSupport/Tests/test_guarded_process.py"
+        },
+        {
+          "path": "BuildSupport/Tests/test_mise_tooling.py",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/BuildSupport/Tests/test_mise_tooling.py"
+        },
+        {
+          "path": "BuildSupport/Tests/test_release_path.py",
+          "status": "added",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/BuildSupport/Tests/test_release_path.py"
+        },
+        {
+          "path": "BuildSupport/Tests/test_simulator_setup.py",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/BuildSupport/Tests/test_simulator_setup.py"
+        },
+        {
+          "path": "BuildSupport/Tests/test_xcodebuild_test_output.py",
+          "status": "added",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/BuildSupport/Tests/test_xcodebuild_test_output.py"
+        },
+        {
+          "path": "BuildSupport/guarded_process.py",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/BuildSupport/guarded_process.py"
+        },
+        {
+          "path": "BuildSupport/simulator_guard.sh",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/BuildSupport/simulator_guard.sh"
+        },
+        {
+          "path": "BuildSupport/simulator_setup.py",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/BuildSupport/simulator_setup.py"
+        },
+        {
+          "path": "BuildSupport/xcodebuild_test_output.sh",
+          "status": "added",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/BuildSupport/xcodebuild_test_output.sh"
+        },
+        {
+          "path": "Packages/DeviceHubKit/Sources/DeviceHubUI/DeviceHubPresentation.swift",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/Packages/DeviceHubKit/Sources/DeviceHubUI/DeviceHubPresentation.swift"
+        },
+        {
+          "path": "Packages/DeviceHubKit/Sources/DeviceHubUI/DeviceHubUI.swift",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/Packages/DeviceHubKit/Sources/DeviceHubUI/DeviceHubUI.swift"
+        },
+        {
+          "path": "Packages/DeviceHubKit/Sources/DeviceHubUI/DeviceKeyboardReceiver.swift",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/Packages/DeviceHubKit/Sources/DeviceHubUI/DeviceKeyboardReceiver.swift"
+        },
+        {
+          "path": "Packages/DeviceHubKit/Sources/DeviceHubUI/DeviceSidebar.swift",
+          "status": "removed",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/Packages/DeviceHubKit/Sources/DeviceHubUI/DeviceSidebar.swift"
+        },
+        {
+          "path": "Packages/DeviceHubKit/Sources/DeviceHubUI/RemoteCanvas.swift",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/Packages/DeviceHubKit/Sources/DeviceHubUI/RemoteCanvas.swift"
+        },
+        {
+          "path": "Packages/DeviceHubKit/Sources/DeviceHubUI/RemoteControlBar.swift",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/Packages/DeviceHubKit/Sources/DeviceHubUI/RemoteControlBar.swift"
+        },
+        {
+          "path": "Packages/DeviceHubKit/Sources/DeviceHubUI/RemoteSessionChromeLayout.swift",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/Packages/DeviceHubKit/Sources/DeviceHubUI/RemoteSessionChromeLayout.swift"
+        },
+        {
+          "path": "Packages/DeviceHubKit/Sources/DeviceHubUI/RemoteSessionView.swift",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/Packages/DeviceHubKit/Sources/DeviceHubUI/RemoteSessionView.swift"
+        },
+        {
+          "path": "README.md",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/README.md"
+        },
+        {
+          "path": "Sources/DeviceHubApp/DeviceHubApp.swift",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/Sources/DeviceHubApp/DeviceHubApp.swift"
+        },
+        {
+          "path": "Sources/DeviceHubLive/DeviceHubInstalledAppReporter.swift",
+          "status": "added",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/Sources/DeviceHubLive/DeviceHubInstalledAppReporter.swift"
+        },
+        {
+          "path": "Sources/DeviceHubPrivateMedia/Tests/run-tests.sh",
+          "status": "modified",
+          "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/Sources/DeviceHubPrivateMedia/Tests/run-tests.sh"
+        }
+      ]
+    }
+  ],
+  "read_sources": [
+    {
+      "repository": "tddworks/baguette",
+      "path": "docs/features/defaults/README.md",
+      "url": "https://github.com/tddworks/baguette/blob/8930ac601e38e04540cb3cad9547347c160882e4/docs/features/defaults/README.md",
+      "read": true
+    },
+    {
+      "repository": "lycorp-jp/sim-use",
+      "path": "CHANGELOG.md",
+      "url": "https://github.com/lycorp-jp/sim-use/blob/ca90b0540aaa58f9edff71be50313dfb5fd740f5/CHANGELOG.md",
+      "read": true
+    },
+    {
+      "repository": "EvanBacon/serve-sim",
+      "path": "package.json",
+      "url": "https://github.com/EvanBacon/serve-sim/blob/6d009686ed08f7d8bd19bca9f9f67a9237931f44/package.json",
+      "read": true
+    },
+    {
+      "repository": "JaviSoto/device-hub-ios",
+      "path": "Docs/Design.md",
+      "url": "https://github.com/JaviSoto/device-hub-ios/blob/9ea14d11e492ae289f2f92e47da6d1b9044adee0/Docs/Design.md",
+      "read": true
+    },
+    {
+      "repository": "EvanBacon/serve-sim",
+      "path": "packages/serve-sim/package.json",
+      "url": "https://github.com/EvanBacon/serve-sim/blob/main/packages/serve-sim/package.json",
+      "read": true
+    }
+  ],
+  "webpage_results": [
+    {
+      "url": "https://github.com/tddworks/baguette",
+      "result": "opened successfully"
+    },
+    {
+      "url": "https://github.com/EvanBacon/serve-sim",
+      "result": "opened successfully"
+    },
+    {
+      "url": "https://github.com/lycorp-jp/sim-use",
+      "result": "opened successfully"
+    },
+    {
+      "url": "https://github.com/MobAI-App/simslim",
+      "result": "opened successfully"
+    },
+    {
+      "url": "https://github.com/Mastersam07/OpenDeviceHub",
+      "result": "internal error; REST API succeeded"
+    },
+    {
+      "url": "https://github.com/JaviSoto/device-hub-ios",
+      "result": "opened successfully"
+    }
+  ]
+}

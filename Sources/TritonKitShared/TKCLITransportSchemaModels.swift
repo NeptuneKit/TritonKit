@@ -159,6 +159,9 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
             return ["diagnose", "observe"]
         default: break
         }
+        if ["screenshot_deadline_exceeded", "insufficient_visual_samples", "visual_motion_timeout", "runtime_ui_timeout", "runtime_ui_busy", "runtime_ui_circuit_open"].contains(failureCode) {
+            return ["diagnose", "observe", "plan"]
+        }
         // Runner failures may follow delivered input. Inspect evidence before replanning; never suggest replay.
         if failureCode.hasPrefix("runner_") || failureCode.hasPrefix("invalid_runner_") || failureCode == "unsupported_runner_action" {
             return ["diagnose", "plan"]

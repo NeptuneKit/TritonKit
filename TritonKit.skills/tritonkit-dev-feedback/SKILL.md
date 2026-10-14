@@ -47,6 +47,12 @@ For Device Hub information, prefer `triton device info --platform ios --device <
 
 For discovery, containers, Crash/Temporary, physical administration or specialized platforms, read [Device Hub feedback](references/device-hub-feedback.md). Preserve per-capability implementation and acceptance levels; historical execution never authorizes actions for the current report.
 
+## Bounded observation feedback
+
+For observation/recovery reports, preserve the exact entry and sanitized contract fields: outline aliases expire after 30 seconds and require a matching live whole-tree check; hierarchy `collection` partial/limits do not hard-cancel native IPC. OCR (`observe ocr --image` / `--device`) is candidate-only with no OID/action ref, top-left raw-raster pixels and points only with known scale; file mtime leaves freshness unknown. Record capture source, freshness, confidence and any explicit structure-unavailable reason.
+
+Visual `observe settle` never proves business readiness. Workspace `--visual-settle` / HTTP `/workspace/run` optional `visualSettle` is disabled by default; unknown/timeout stops the chain. Record `debug ui-health` (legacy unknown, new SDK ready/busy/timed_out/circuit_open) separately from business assertions, and retain action `outcome`/`uiHealth`. Do not reproduce an unknown-outcome timeout by automatically replaying it or substituting HID: the original action may still complete. Probe health and take a fresh read-only observation first.
+
 ## Always keep
 
 - Triton-first evidence for local simulator/emulator/device work: run `triton status/doctor/capabilities/schema/plan` or an exact command schema before falling back to raw `xcrun`, `adb`, `hdc`, DevEco CLI, XcodeBuildMCP, or `xcodebuild`.

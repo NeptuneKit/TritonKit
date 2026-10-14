@@ -25,6 +25,7 @@ struct TKWorkspaceObservationSeed {
     let screenCandidate: TKTestRunScreenCandidate
     let sourceCommands: [String]
     let changed: Bool?
+    var visualFeedback: VisualSettleOutput? = nil
 }
 
 private struct TKWorkspaceObservationFixture: Codable {
@@ -82,10 +83,22 @@ func workspaceInitialObservationSeed(
 
 func workspacePostActionObservationSeed(
     for request: TKWorkspaceRunRequest,
-    observeProvider: TKWorkspaceLiveObserveProvider
+    observeProvider: TKWorkspaceLiveObserveProvider,
+    visualFeedbackProvider: TKWorkspaceVisualFeedbackProvider = workspaceDefaultVisualFeedbackProvider
 ) async throws -> TKWorkspaceObservationSeed? {
     guard request.observeLive else { return nil }
-    return try await workspaceLiveObservationSeed(for: request, observeProvider: observeProvider)
+    let feedback: VisualSettleOutput?
+    if let configuration = request.visualSettle {
+        feedback = await visualFeedbackProvider(workspaceVisualFeedbackRequest(for: request, configuration: configuration))
+    } else {
+        feedback = nil
+    }
+    if let feedback, !workspaceVisualFeedbackAllowsContinuation(feedback) {
+        return try workspaceUnavailableVisualObservation(feedback)
+    }
+    var observation = try await workspaceLiveObservationSeed(for: request, observeProvider: observeProvider)
+    observation.visualFeedback = feedback
+    return observation
 }
 
 func workspaceDefaultLiveObserveProvider(_ request: TKWorkspaceLiveObserveRequest) async throws -> ObserveOutput {
@@ -114,7 +127,8 @@ func workspaceDefaultLiveObserveProvider(_ request: TKWorkspaceLiveObserveReques
             action: request.action,
             selected: hostTarget,
             adb: "adb",
-            output: request.output
+            output: request.output,
+            maxNodes: request.maxNodes
         )
     case .ios:
         return try await observeIOS(
@@ -135,6 +149,11 @@ func writeWorkspaceObservationEvidence(
     index: Int
 ) throws {
     let observationURL = runDir.appendingPathComponent(workspaceObservationEvidenceRef(index: index))
+    if let feedback = observation.visualFeedback {
+        let directory = runDir.appendingPathComponent("evidence/visual-settle", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try JSONEncoder().encode(feedback).write(to: directory.appendingPathComponent(String(format: "%04d.json", index)), options: .atomic)
+    }
     if let rawObservationData = observation.rawObservationData {
         try rawObservationData.write(to: observationURL, options: .atomic)
     } else if let fixturePath = observation.fixturePath {

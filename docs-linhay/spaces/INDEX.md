@@ -1,8 +1,8 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-13（SP-191 已随 v0.2.26 发布：默认使用 Xcode 全局 DerivedData）
-> 覆盖范围：191/191 个已存在 space
+> 最近同步：2026-10-14（SP-194：参考项目更新报告完成，文档门禁通过）
+> 覆盖范围：194/194 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 191/191 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 191/191 | 每条记录链接到现有 space README |
+| 编号登记 | 194/194 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 194/194 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -217,3 +217,6 @@
 | `SP-190-open-issues-integration` | [`SP-190-open-issues-integration`](./SP-190-open-issues-integration/README.md) | v0.2.25 已发布／#215–220 已关闭 | #214–#220 本地集成与统一验收；保留各项证据边界，#215～220 已关闭，#214 继续开放 |
 
 | `SP-191-default-xcode-deriveddata` | [`SP-191-default-xcode-deriveddata`](./SP-191-default-xcode-deriveddata/README.md) | 已发布 | 默认使用 Xcode 全局 DerivedData；`v0.2.26` 已发布，CLI/root tests、schema smoke、docs 门禁与远端 CI 通过；`--derived-data-path` 仅显式隔离/恢复，可能造成高磁盘占用 |
+| `SP-192-ictrl-adoption-feasibility` | [`SP-192-ictrl-adoption-feasibility`](./SP-192-ictrl-adoption-feasibility/README.md) | 已合入本地 main | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12及真实只读AX/alias/OCR/settle通过；iOS115、Android52与完整APK通过，本地门禁复跑通过；源码已合入本地main，worktree保留 |
+| `SP-193-ictrl-reference-tracking` | [`SP-193-ictrl-reference-tracking`](./SP-193-ictrl-reference-tracking/README.md) | 长期追踪已启用 | 正式参考档案、基线与本聊天每日 10:00 自动化已登记；有价值变化通知，采用另立项 |
+| `SP-194-reference-project-updates` | [`SP-194-reference-project-updates`](./SP-194-reference-project-updates/README.md) | 已归档 | 23主要仓库+9候选，上游版本/增量/限制与借鉴建议已汇总；docs门禁与来源校验通过 |

@@ -10,6 +10,7 @@ struct Debug: AsyncParsableCommand {
         verify, and evidence for normal automation flows.
         """,
         subcommands: [
+            DebugUIHealth.self,
             Runtime.self,
             State.self,
             Snapshot.self,

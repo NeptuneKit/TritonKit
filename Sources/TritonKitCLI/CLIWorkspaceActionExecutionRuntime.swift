@@ -57,7 +57,8 @@ struct TKWorkspaceActionExecutionResult {
         vlmGrounding: TKVLMGroundResponse? = nil,
         failure: TKWorkspaceActionFailure? = nil
     ) {
-        self.ok = ok
+        // Admission/transport uncertainty cannot become verification or trigger replay.
+        self.ok = ok && inputResult?.outcome != "unknown" && inputResult?.outcome != "not_started"
         self.action = action
         self.command = command
         self.proofSource = proofSource

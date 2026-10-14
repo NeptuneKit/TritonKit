@@ -49,6 +49,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let businessReadyInterval: Double?
     let resolveTarget: Bool?
     let executeActions: Bool?
+    let visualSettle: VisualSettleConfiguration?
 
     init(
         runsDir: String?,
@@ -98,7 +99,8 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         businessReadyTimeout: Double? = nil,
         businessReadyInterval: Double? = nil,
         resolveTarget: Bool? = nil,
-        executeActions: Bool? = nil
+        executeActions: Bool? = nil,
+        visualSettle: VisualSettleConfiguration? = nil
     ) {
         self.runsDir = runsDir
         self.runID = runID
@@ -148,6 +150,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         self.businessReadyInterval = businessReadyInterval
         self.resolveTarget = resolveTarget
         self.executeActions = executeActions
+        self.visualSettle = visualSettle
     }
 
     enum CodingKeys: String, CodingKey {
@@ -199,6 +202,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case businessReadyInterval
         case resolveTarget
         case executeActions
+        case visualSettle
     }
 }
 
@@ -227,7 +231,8 @@ func handleWorkspaceHTTPRunAsync(
     businessAssertProvider: TKWorkspaceBusinessAssertProvider = workspaceDefaultBusinessAssertProvider,
     modelDecisionProvider: TKWorkspaceModelDecisionProvider = workspaceDefaultModelDecisionProvider,
     vlmGroundingProvider: TKWorkspaceVLMGroundingProvider = workspaceDefaultVLMGroundingProvider,
-    actionExecutionProvider: TKWorkspaceActionExecutionProvider = workspaceDefaultActionExecutionProvider
+    actionExecutionProvider: TKWorkspaceActionExecutionProvider = workspaceDefaultActionExecutionProvider,
+    visualFeedbackProvider: TKWorkspaceVisualFeedbackProvider = workspaceDefaultVisualFeedbackProvider
 ) async throws -> TKWorkspaceRunResponse {
     let request = try decodeWorkspaceHTTP(TKWorkspaceHTTPRunRequest.self, from: body)
     return try await runWorkspaceRunAsync(
@@ -239,11 +244,12 @@ func handleWorkspaceHTTPRunAsync(
         businessAssertProvider: businessAssertProvider,
         modelDecisionProvider: modelDecisionProvider,
         vlmGroundingProvider: vlmGroundingProvider,
-        actionExecutionProvider: actionExecutionProvider
+        actionExecutionProvider: actionExecutionProvider,
+        visualFeedbackProvider: visualFeedbackProvider
     )
 }
 
-private func workspaceRunRequest(from request: TKWorkspaceHTTPRunRequest) -> TKWorkspaceRunRequest {
+func workspaceRunRequest(from request: TKWorkspaceHTTPRunRequest) -> TKWorkspaceRunRequest {
     TKWorkspaceRunRequest(
         runsDirectory: request.runsDir ?? ".triton/runs",
         runID: request.runID,
@@ -292,7 +298,8 @@ private func workspaceRunRequest(from request: TKWorkspaceHTTPRunRequest) -> TKW
         businessReadyTimeout: request.businessReadyTimeout ?? 10,
         businessReadyInterval: request.businessReadyInterval ?? 0.5,
         resolveTarget: request.resolveTarget ?? false,
-        executeActions: request.executeActions ?? false
+        executeActions: request.executeActions ?? false,
+        visualSettle: request.visualSettle
     )
 }
 

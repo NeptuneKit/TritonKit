@@ -8,6 +8,9 @@
 
 ## Memory Rules
 
+- [OpenMinis/iCTRL](https://github.com/OpenMinis/iCTRL) 是长期参考项目：正式档案见 [iCTRL 参考与追踪](../dev/ictrl-reference-tracking.md)，持续追踪见 [SP-193](../spaces/SP-193-ictrl-reference-tracking/README.md)，已有借鉴实现见 SP-192。自动化 `ictrl` 每天北京时间 10:00 检查上游，有价值变化通知；不自动采用、提交或操作设备。
+- 参考项目清单和2026-10-14上游更新统一入口：[参考项目更新报告](../dev/20261014-reference-project-updates.md) / [SP-194](../spaces/SP-194-reference-project-updates/README.md)，覆盖主要仓库与专题候选；后续比较优先使用其中固定SHA/Release证据，区分默认分支与已发布能力。
+
 - 长期稳定的项目入口和跨会话约定记录在本文件。
 - 每日实施记录继续写入 `docs-linhay/memory/YYYY-MM-DD.md`。
 - repo-wide 执行规则仍以根目录 `AGENTS.md` 为准。

@@ -207,6 +207,29 @@ Fallback 记录必须同时包含 Triton 命令、稳定错误码或 unsupported
 - receipt-bound sample 在 runner 已结束且固定组件完整时，才以 no-clobber 写私有 `reliability/identity-chain-v2.json`，hash binding、reset receipt、normalized plan、runtime target、`run/run.json` 与 `run/events.jsonl`，并只把一次 private declaration 追加到 manifest。receipt-backed report 的 `identityChain` 只提供 `state`、expected/valid/missing/invalid slot count 和 `receiptAnchorVerified`：缺失 v2 chain 阻断为 `identity_chain_incomplete`，body/frozen identity/terminal proof/artifact/manifest 漂移阻断为 `identity_chain_invalid`。`stage1B.receiptControlIntegrity` 要求完整 private receipt validation（binding、reset、plan、target、manifest、outcome 与 identity chain）**以及**同一 slot 的 core evidence/manifest completeness，不能只以 chain count 替代；harness 不会以 preflight target 回填或覆盖 runner manifest。legacy `--samples` 固定 `identityChain.state=not_applicable`，模型 `stage1=nil` 且 JSON 省略该字段。这些字段不回显 hash、path、UDID、bundle、flow、run ID 或 reset identity，也不证明真实 reset、App/runtime、历史执行时刻或 hostile filesystem 防护；不得在缺失 chain 后 backfill 或重跑来伪造通过。
 - `testrec replay --dry-run`、`testrec replay --executor local-simulated` 与 `testrec matrix` 只保留为 offline diagnostic compatibility surface，不是第二执行器。它们的旧 `ready` / `passed` / `passedCount` 仅表示规划或模拟状态；新输出固定附加 `verdictBoundary.classification=offline-diagnostic`、`countsAsRealTestVerdict=false`、`eligibleForReliabilityGate=false`，并以仅含占位符的 `migrationCommands` 给出 `triton test import -> triton test validate -> triton test run`。agent 不得把这些字段、或 generic testrec evidence 的旧 success 摘要，当作真实 runtime verdict、可靠性样本或回归通过；缺少 boundary 的历史 `replay-result.json` 只能按 legacy/unknown 处理。`local-device` 继续 unsupported，不承诺 future testrec executor。
 
+### SP-192 有界观察与 UI 恢复
+
+五项机制沿用 CLI 和现有本地 HTTP 契约；能力和参数以当前 `schema` 输出为准，不扩大设备与控制面边界。
+
+| 机制 | 入口与可读契约 |
+| --- | --- |
+| Alias freshness | `observe tree --outline` 写入 `@N`，`node resolve @N` 要求缓存与活观测均在 30 秒内，并验证 platform/target 和整树指纹。整树变化、过期或不完整时刷新 outline；alias 是观察引用，不是可执行 OID。 |
+| Collection budget | hierarchy 的 `collection` 报告 `visitedNodes` 与 `limitReasons`；限制原因非空表示采集不完整。节点数、深度、children 和 deadline 限制遍历；已进入的 native IPC 无法硬取消，partial 树不能用于证明节点不存在。 |
+| OCR candidates | `observe ocr --image <path>`、`observe ocr --platform <ios|android|harmony> --device <selector>` 返回 macOS Vision 候选，无 OID/action ref，始终 `candidateOnly=true`。坐标为 top-left 的 raw-raster pixels；只有已知显式 scale 才能输出 points，不推断旋转或偏移。文件 mtime 仅作为时间来源，`freshness=unknown`；即时设备截图保留来源及采集时间。 |
+| Visual settle | `observe settle --device <selector>` 在有限窗口内比较截图，结果 `settled|timeout|unknown`，始终 `businessVerified=false`。它不证明登录、跳转或其他业务条件；继续显式业务 wait/assert。 |
+| UI health / action outcome | `debug ui-health --target <runtime-id>` 通过现有 `POST /request` ping 查询；旧 SDK 缺少 metadata 时状态 `unknown`，新 SDK 暴露 `ready|busy|timed_out|circuit_open`。诊断响应与 UI admission 分开表达；input/semantic/WebView 动作响应保留 `outcome` 与 `uiHealth`。 |
+
+```bash
+triton observe ocr --image <screenshot.png> --json
+triton observe ocr --platform ios --device <simulator-selector> --json
+triton observe settle --platform ios --device <simulator-selector> --json
+triton debug ui-health --target <runtime-id> --json
+```
+
+`observe ocr` 是显式候选入口；`--policy structure-unavailable` 必须配 `--structure-unavailable-reason`。消费前检查 `freshness`、坐标契约、confidence 和 partial 限制，不将 OCR 候选升级为结构引用或业务成功证据。
+
+Workspace 的动作后视觉等待默认关闭。CLI 显式传 `workspace run --visual-settle`；本地 HTTP `POST /workspace/run` 可传 `visualSettle` 对象（`changeThreshold`、`pixelThreshold`、`stableWindow`、`interval`、`timeout`），省略则关闭。视觉 `unknown/timeout` 停止动作链，业务验证仍走原有 wait/assert。`runtime_ui_timeout` 且 `outcome=unknown` 表示原动作可能稍后完成：保留失败及健康字段，停止链路，先健康探针与只读活观测，再判断业务状态；禁止自动重放或 HID fallback。ping 可响应只证明诊断通道响应，不能当作 UI 可执行或业务 ready。
+
 ## 边界
 
 CLI/HTTP 是 AI 自动化控制入口；Web/Wails 不参与首期闭环。后续如果需要 UI，也应只消费只读 DTO，不能先于 CLI/HTTP 定义业务控制能力。

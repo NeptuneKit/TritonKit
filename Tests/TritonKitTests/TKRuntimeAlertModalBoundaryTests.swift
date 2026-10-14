@@ -5,6 +5,7 @@ import TritonKitShared
 #if canImport(UIKit)
 import UIKit
 
+extension TKUIKitWindowTests {
 @MainActor
 @Suite(.serialized)
 struct TKRuntimeAlertModalBoundaryTests {
@@ -40,20 +41,24 @@ struct TKRuntimeAlertModalBoundaryTests {
     }
 
     @Test("alert modal boundary blocks coordinate fallback to collection cell")
-    func blocksCollectionFallback() async {
-        let fixture = makeFixture(actionCount: 2)
+    func blocksCollectionFallback() async throws {
+        let fixture = try makeFixture(actionCount: 2)
         defer { fixture.window.isHidden = true }
         let modalHitView = UIView(frame: CGRect(x: 80, y: 220, width: 220, height: 64))
         modalHitView.isAccessibilityElement = true
         modalHitView.accessibilityLabel = "Cancel"
         fixture.alert.view.addSubview(modalHitView)
+        try #require(modalHitView.window === fixture.window)
         let frame = modalHitView.convert(modalHitView.bounds, to: nil)
 
-        let result = performTap(.tap(
+        let request = TKInputRequest.tap(
             x: Double(frame.midX),
             y: Double(frame.midY),
             targetOID: TKObjectRegistry.shared.register(modalHitView)
-        ))
+        )
+        try requireModalFallbackPreconditions(request, target: modalHitView, window: fixture.window,
+            alert: fixture.alert, collectionView: fixture.collectionView)
+        let result = performTap(request)
         await Task.yield()
 
         #expect(!result.ok)
@@ -65,18 +70,22 @@ struct TKRuntimeAlertModalBoundaryTests {
     }
 
     @Test("alert modal boundary blocks fallback when the hit view cannot map to an action")
-    func blocksFallbackForUnmappedAlertView() async {
-        let fixture = makeFixture(actionCount: 2)
+    func blocksFallbackForUnmappedAlertView() async throws {
+        let fixture = try makeFixture(actionCount: 2)
         defer { fixture.window.isHidden = true }
         let unmappedView = UIView(frame: CGRect(x: 80, y: 220, width: 220, height: 64))
         fixture.alert.view.addSubview(unmappedView)
+        try #require(unmappedView.window === fixture.window)
         let frame = unmappedView.convert(unmappedView.bounds, to: nil)
 
-        let result = performTap(.tap(
+        let request = TKInputRequest.tap(
             x: Double(frame.midX),
             y: Double(frame.midY),
             targetOID: TKObjectRegistry.shared.register(unmappedView)
-        ))
+        )
+        try requireModalFallbackPreconditions(request, target: unmappedView, window: fixture.window,
+            alert: fixture.alert, collectionView: fixture.collectionView)
+        let result = performTap(request)
         await Task.yield()
 
         #expect(!result.ok)
@@ -87,41 +96,63 @@ struct TKRuntimeAlertModalBoundaryTests {
     }
 
     @Test("alert modal boundary uses accessibility activation without collection fallback")
-    func usesAccessibilityActivation() async {
-        let fixture = makeFixture(actionCount: 1)
+    func usesAccessibilityActivation() async throws {
+        let fixture = try makeFixture(actionCount: 1)
         defer { fixture.window.isHidden = true }
         let activatingView = AccessibilityActivatingView(frame: CGRect(x: 80, y: 220, width: 220, height: 64))
         activatingView.isAccessibilityElement = true
         activatingView.accessibilityLabel = "Cancel"
-        activatingView.onActivate = { fixture.alert.dismiss(animated: false) }
+        var activationCallbackCount = 0
+        activatingView.onActivate = { activationCallbackCount += 1 }
         fixture.alert.view.addSubview(activatingView)
+        try #require(activatingView.window === fixture.window)
         let frame = activatingView.convert(activatingView.bounds, to: nil)
 
-        let result = performTap(.tap(
+        let request = TKInputRequest.tap(
             x: Double(frame.midX),
             y: Double(frame.midY),
             targetOID: TKObjectRegistry.shared.register(activatingView)
-        ))
+        )
+        try requireModalFallbackPreconditions(request, target: activatingView, window: fixture.window,
+            alert: fixture.alert, collectionView: fixture.collectionView)
+        let result = performTap(request)
         await Task.yield()
 
         #expect(result.ok)
         #expect(result.strategy == "alert-action-accessibility-activate")
         #expect(activatingView.activationCount == 1)
+        #expect(activationCallbackCount == 1)
         #expect(fixture.delegate.selectedIndexPath == nil)
         #expect(fixture.collectionView.indexPathsForSelectedItems?.isEmpty != false)
     }
 
-    private func makeFixture(actionCount: Int) -> (
+    private func makeFixture(actionCount: Int) throws -> (
         window: UIWindow,
         alert: UIAlertController,
         collectionView: UICollectionView,
         dataSource: CollectionDataSource,
         delegate: CollectionDelegate
     ) {
-        let window = makeVisibleTestWindow()
-        _ = TKObjectRegistry.shared.register(window)
-        let root = UIViewController()
-        window.rootViewController = root
+        let window = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        var ready = false
+        defer { if !ready { window.isHidden = true } }
+
+        // This fixture tests responder-chain routing, not UIKit presentation.
+        // Mount the real controller through UIWindow's public root API, keeping
+        // the target attached and all runtime active-window checks in force.
+        let alert = UIAlertController(title: "Delete items?", message: nil, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        if actionCount > 1 {
+            alert.addAction(UIAlertAction(title: "Delete", style: .destructive))
+        }
+        window.isHidden = true
+        window.rootViewController = alert
+        window.makeKeyAndVisible()
+        window.layoutIfNeeded()
+        alert.view.frame = window.bounds
+        try #require(window.rootViewController === alert)
+        try #require(alert.view.window === window, "Real alert responder hierarchy must be attached to the fixture window")
+        try #require(keyWindows().contains { $0 === window }, "Fixture must remain an active runtime window")
 
         let layout = UICollectionViewFlowLayout()
         layout.itemSize = CGSize(width: 390, height: 700)
@@ -134,34 +165,29 @@ struct TKRuntimeAlertModalBoundaryTests {
         collectionView.register(CollectionCell.self, forCellWithReuseIdentifier: "cell")
         collectionView.dataSource = dataSource
         collectionView.delegate = delegate
-        root.view.addSubview(collectionView)
+        // A visible same-window sibling remains discoverable by the actual
+        // coordinate fallback collector even beneath the alert's view.
+        window.insertSubview(collectionView, at: 0)
         collectionView.reloadData()
         collectionView.layoutIfNeeded()
 
-        let alert = UIAlertController(title: "Delete items?", message: nil, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        if actionCount > 1 {
-            alert.addAction(UIAlertAction(title: "Delete", style: .destructive))
-        }
-        root.present(alert, animated: false)
-        alert.loadViewIfNeeded()
-        alert.view.frame = window.bounds
+        window.layoutIfNeeded()
+        try #require(collectionView.window === window)
+        try #require(collectionView.cellForItem(at: IndexPath(item: 0, section: 0)), "Background fallback cell must be rendered")
+        ready = true
         return (window, alert, collectionView, dataSource, delegate)
     }
 
-    private func makeVisibleTestWindow() -> UIWindow {
-        if let scene = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .first {
-            let window = UIWindow(windowScene: scene)
-            window.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
-            window.makeKeyAndVisible()
-            return window
-        }
-
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
-        window.makeKeyAndVisible()
-        return window
+    private func requireModalFallbackPreconditions(_ request: TKInputRequest, target: UIView,
+        window: UIWindow, alert: UIAlertController, collectionView: UICollectionView) throws {
+        try #require(target.window === window)
+        try #require(nearestAlertController(from: target) === alert, "Target must resolve through the real alert responder chain")
+        try #require(keyWindows().contains { $0 === window })
+        let candidate = try #require(collectionCellContaining(request: request), "This exact tap must have a real background collection fallback candidate")
+        let renderedCell = try #require(collectionView.cellForItem(at: IndexPath(item: 0, section: 0)))
+        try #require(candidate === renderedCell)
+        try #require(candidate.window === window)
     }
+}
 }
 #endif

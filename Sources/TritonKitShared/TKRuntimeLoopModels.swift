@@ -180,6 +180,8 @@ public struct TKSemanticActionResponse: Codable, Equatable {
     public let message: String?
     public let error: TKCLIErrorDetail?
     public let redaction: TKSemanticActionRedaction?
+    public let outcome: String?
+    public let uiHealth: TKRuntimeUIHealthSnapshot?
 
     public init(
         ok: Bool,
@@ -190,7 +192,9 @@ public struct TKSemanticActionResponse: Codable, Equatable {
         elapsedMs: Int,
         message: String? = nil,
         error: TKCLIErrorDetail? = nil,
-        redaction: TKSemanticActionRedaction? = nil
+        redaction: TKSemanticActionRedaction? = nil,
+        outcome: String? = nil,
+        uiHealth: TKRuntimeUIHealthSnapshot? = nil
     ) {
         self.ok = ok
         self.action = action
@@ -201,6 +205,8 @@ public struct TKSemanticActionResponse: Codable, Equatable {
         self.message = message
         self.error = error
         self.redaction = redaction
+        self.outcome = outcome
+        self.uiHealth = uiHealth
     }
 }
 

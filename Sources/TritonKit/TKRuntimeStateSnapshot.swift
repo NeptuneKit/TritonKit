@@ -235,17 +235,15 @@ func currentRuntimeSnapshot(_ request: TKRuntimeSnapshotRequest) -> TKRuntimeSna
     if shouldBuildAX {
         let maxNodes = max(1, request.maxAXNodes ?? 800)
         var context = AXBuildContext(maxNodes: maxNodes)
-        let nodes = keyWindows().map { window in
-            buildAXWindowNode(for: window, context: &context)
-        }
+        let nodes = buildBudgetedAXWindows(keyWindows(), context: &context)
         axForMedia = nodes
         ax = (includes("ax") || includes("accessibility")) ? nodes : nil
-        if context.remaining == 0 {
+        if context.remaining == 0 || context.collection.summary.partial {
             truncation = TKRuntimeSnapshotTruncation(
                 truncated: true,
-                reason: "maxAXNodes reached",
+                reason: context.collection.summary.limitReasons.isEmpty ? "maxAXNodes reached" : context.collection.summary.limitReasons.joined(separator: ","),
                 originalCount: nil,
-                returnedCount: maxNodes
+                returnedCount: TKFlattenAXNodes(nodes).count
             )
         }
         if includes("ax") || includes("accessibility") {

@@ -42,7 +42,8 @@ func runWorkspaceActionLoop(
     businessAssertProvider: TKWorkspaceBusinessAssertProvider,
     modelDecisionProvider: TKWorkspaceModelDecisionProvider,
     vlmGroundingProvider: TKWorkspaceVLMGroundingProvider,
-    actionExecutionProvider: TKWorkspaceActionExecutionProvider
+    actionExecutionProvider: TKWorkspaceActionExecutionProvider,
+    visualFeedbackProvider: TKWorkspaceVisualFeedbackProvider
 ) async throws -> TKWorkspaceRunResponse {
     guard let runID = request.runID else {
         throw RuntimeError("Workspace action loop requires a resolved run ID.")
@@ -116,7 +117,7 @@ func runWorkspaceActionLoop(
         ))
         let postActionObservation: TKWorkspaceObservationSeed?
         if actionExecution.ok {
-            postActionObservation = try await workspacePostActionObservationSeed(for: request, observeProvider: observeProvider)
+            postActionObservation = try await workspacePostActionObservationSeed(for: request, observeProvider: observeProvider, visualFeedbackProvider: visualFeedbackProvider)
             if let postActionObservation {
                 observations.append(postActionObservation)
             }
@@ -125,7 +126,7 @@ func runWorkspaceActionLoop(
         }
 
         let businessCheckpoint: TKWorkspaceBusinessCheckpoint?
-        if actionExecution.ok {
+        if actionExecution.ok && workspaceVisualFeedbackAllowsContinuation(postActionObservation?.visualFeedback) {
             if request.businessReadyAssert {
                 let assertResult = try await businessAssertProvider(workspaceBusinessAssertRequest(for: request))
                 businessCheckpoint = workspaceBusinessAssertCheckpoint(
@@ -160,7 +161,7 @@ func runWorkspaceActionLoop(
             businessCheckpoint: businessCheckpoint
         ))
 
-        if businessCheckpoint?.ready == true || !actionExecution.ok {
+        if businessCheckpoint?.ready == true || !actionExecution.ok || !workspaceVisualFeedbackAllowsContinuation(postActionObservation?.visualFeedback) {
             break
         }
         guard let postActionObservation else {
@@ -178,7 +179,8 @@ func runWorkspaceActionLoop(
         modelLoopEnabled: true,
         modelDecisionAllowed: finalStep?.policyAllowed ?? true,
         businessCheckpoint: finalBusinessCheckpoint,
-        actionExecution: finalActionExecution
+        actionExecution: finalActionExecution,
+        visualFeedback: finalStep?.postActionObservation?.visualFeedback
     )
     let response = workspaceActionLoopRunResponse(
         request: request,
@@ -189,7 +191,8 @@ func runWorkspaceActionLoop(
         providerPreflight: providerPreflight,
         finalState: finalState,
         businessCheckpoint: finalBusinessCheckpoint,
-        actionExecution: finalActionExecution
+        actionExecution: finalActionExecution,
+        visualFeedback: finalStep?.postActionObservation?.visualFeedback
     )
 
     try writeWorkspaceRunConfig(response, to: runDir.appendingPathComponent("config.yaml"))
@@ -215,9 +218,9 @@ func runWorkspaceActionLoop(
             modelDecision: step.modelDecision,
             artifactIndex: step.artifactIndex,
             fromScreenID: workspaceScreenID(step.artifactIndex),
-            toScreenID: step.postActionObservation == nil
-                ? workspaceScreenID(step.artifactIndex)
-                : workspaceScreenID(step.artifactIndex + 1),
+            toScreenID: workspaceHasCapturedPostActionObservation(step.postActionObservation)
+                ? workspaceScreenID(step.artifactIndex + 1)
+                : workspaceScreenID(step.artifactIndex),
             appendAtlasDelta: step.artifactIndex > 0,
             writeFlow: false
         )
@@ -249,7 +252,8 @@ private func workspaceActionLoopRunResponse(
     providerPreflight: TKWorkspaceProviderPreflight,
     finalState: TKWorkspaceRunFinalState,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
-    actionExecution: TKWorkspaceActionExecutionResult?
+    actionExecution: TKWorkspaceActionExecutionResult?,
+    visualFeedback: VisualSettleOutput?
 ) -> TKWorkspaceRunResponse {
     let target = workspaceRunTarget(for: request, targetResolution: targetResolution)
     return TKWorkspaceRunResponse(
@@ -271,6 +275,7 @@ private func workspaceActionLoopRunResponse(
         ),
         runner: runner,
         business: businessCheckpoint?.readiness,
+        visualFeedback: visualFeedback,
         paths: TKWorkspaceRunPaths(
             runDir: runDir.path,
             events: runDir.appendingPathComponent("events.jsonl").path,
@@ -391,6 +396,7 @@ private func workspaceActionLoopAtlasDocument(
     observations: [TKWorkspaceObservationSeed],
     steps: [TKWorkspaceActionLoopStep]
 ) -> [String: Any] {
+    let observations = observations.filter { workspaceHasCapturedPostActionObservation($0) }
     let screens = observations.enumerated().map { index, observation in
         workspaceAtlasScreen(
             screenID: workspaceScreenID(index),
@@ -448,9 +454,9 @@ private func workspaceActionLoopTransition(_ step: TKWorkspaceActionLoopStep) ->
     return [
         "transitionId": "transition_\(workspaceGraphSuffix(step.artifactIndex))",
         "fromScreenId": workspaceScreenID(step.artifactIndex),
-        "toScreenId": step.postActionObservation == nil
-            ? workspaceScreenID(step.artifactIndex)
-            : workspaceScreenID(step.artifactIndex + 1),
+        "toScreenId": workspaceHasCapturedPostActionObservation(step.postActionObservation)
+            ? workspaceScreenID(step.artifactIndex + 1)
+            : workspaceScreenID(step.artifactIndex),
         "action": step.actionCandidate.action,
         "selector": [
             "text": step.actionCandidate.query,

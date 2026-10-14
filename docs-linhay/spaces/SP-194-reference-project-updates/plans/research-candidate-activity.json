@@ -1,0 +1,131 @@
+{
+  "maestro-release": {
+    "tag_name": "cli-2.11.0",
+    "published_at": "2026-09-29T13:36:34Z",
+    "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.11.0",
+    "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#2110",
+    "error": null
+  },
+  "maestro-releases": [
+    {
+      "tag_name": "cli-2.11.0",
+      "published_at": "2026-09-29T13:36:34Z",
+      "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.11.0",
+      "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#2110"
+    },
+    {
+      "tag_name": "cli-2.10.0",
+      "published_at": "2026-08-31T17:15:09Z",
+      "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.10.0",
+      "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#2100"
+    },
+    {
+      "tag_name": "cli-2.9.0",
+      "published_at": "2026-08-26T13:55:43Z",
+      "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.9.0",
+      "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#290"
+    },
+    {
+      "tag_name": "cli-2.8.0",
+      "published_at": "2026-07-31T12:04:37Z",
+      "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.8.0",
+      "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#280"
+    },
+    {
+      "tag_name": "cli-2.7.0",
+      "published_at": "2026-07-20T16:51:37Z",
+      "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.7.0",
+      "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#270"
+    },
+    {
+      "tag_name": "cli-2.6.1",
+      "published_at": "2026-06-12T11:49:32Z",
+      "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.6.1",
+      "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#261"
+    },
+    {
+      "tag_name": "cli-2.6.0",
+      "published_at": "2026-05-21T12:47:52Z",
+      "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.6.0",
+      "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#260"
+    },
+    {
+      "tag_name": "cli-2.5.1",
+      "published_at": "2026-04-30T10:09:06Z",
+      "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.5.1",
+      "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#251"
+    },
+    {
+      "tag_name": "cli-2.5.0",
+      "published_at": "2026-04-27T07:06:27Z",
+      "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.5.0",
+      "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#250"
+    },
+    {
+      "tag_name": "cli-2.4.0",
+      "published_at": "2026-04-02T22:29:36Z",
+      "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.4.0",
+      "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#240"
+    }
+  ],
+  "uground-commits": [
+    {
+      "sha": "8974f95b0685f139a6257f82d6b13895db3356cf",
+      "date": "2026-08-24T03:53:48Z",
+      "subject": "Update README.md",
+      "url": "https://github.com/OSU-NLP-Group/UGround/commit/8974f95b0685f139a6257f82d6b13895db3356cf"
+    }
+  ],
+  "mobileagent-commits": [
+    {
+      "sha": "11cea575561fb7800b5fb6b6cafa56f7a91de11f",
+      "date": "2026-07-07T09:22:18Z",
+      "subject": "Merge pull request #286 from M4rque2/main",
+      "url": "https://github.com/X-PLUG/MobileAgent/commit/11cea575561fb7800b5fb6b6cafa56f7a91de11f"
+    },
+    {
+      "sha": "593f9758a83214ed1d5eeeaed533a8d079d446c5",
+      "date": "2026-07-07T08:02:28Z",
+      "subject": "android_world_v3.5: Fix app arch priority, add Qwen dependency, and correct script",
+      "url": "https://github.com/X-PLUG/MobileAgent/commit/593f9758a83214ed1d5eeeaed533a8d079d446c5"
+    }
+  ],
+  "android-world-commits": [
+    {
+      "sha": "e54ed4f279c9fe0f7b8336040f03482ce67efda4",
+      "date": "2026-10-13T09:32:49Z",
+      "subject": "Code update",
+      "url": "https://github.com/google-research/android_world/commit/e54ed4f279c9fe0f7b8336040f03482ce67efda4"
+    },
+    {
+      "sha": "2dfc5ca3dc590efe9c72ce768f2b04182f2f75c7",
+      "date": "2026-10-05T11:58:55Z",
+      "subject": "Replace `# pytype: disable` suppressions with `# pyrefly: ignore`",
+      "url": "https://github.com/google-research/android_world/commit/2dfc5ca3dc590efe9c72ce768f2b04182f2f75c7"
+    },
+    {
+      "sha": "2655e27cd090f97fbf2ccaecf759057bec0a8460",
+      "date": "2026-09-29T09:14:44Z",
+      "subject": "Automated Code Change",
+      "url": "https://github.com/google-research/android_world/commit/2655e27cd090f97fbf2ccaecf759057bec0a8460"
+    },
+    {
+      "sha": "e3fea3ccc69787570e282c99573298f1c3019a34",
+      "date": "2026-09-09T16:13:28Z",
+      "subject": "Suppress new Pyrefly findings before upgrading to v1.2.0",
+      "url": "https://github.com/google-research/android_world/commit/e3fea3ccc69787570e282c99573298f1c3019a34"
+    },
+    {
+      "sha": "3e50888527ef9f29b9157ecd537e408008bb1c85",
+      "date": "2026-07-10T14:43:47Z",
+      "subject": "Consolidate port picking in AndroidEnv loaders.",
+      "url": "https://github.com/google-research/android_world/commit/3e50888527ef9f29b9157ecd537e408008bb1c85"
+    },
+    {
+      "sha": "f14341bf2ee0e36bb3cb2b92428d2a5512b35713",
+      "date": "2026-07-08T00:49:53Z",
+      "subject": "Automated Code Change",
+      "url": "https://github.com/google-research/android_world/commit/f14341bf2ee0e36bb3cb2b92428d2a5512b35713"
+    }
+  ]
+}

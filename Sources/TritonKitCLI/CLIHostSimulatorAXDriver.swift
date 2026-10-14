@@ -173,6 +173,7 @@ struct AXFrameTransform: Equatable, Sendable {
 // MARK: - AXP Translator Accessibility
 class AXPTranslatorAccessibility {
     let udid: String
+    private(set) var lastCollectionSummary = CLIObservationCollectionSummary(visitedNodes: 0, limitReasons: [])
 
     init(udid: String) {
         self.udid = udid
@@ -249,8 +250,12 @@ class AXPTranslatorAccessibility {
     }
 
 
-    func describeAll() throws -> TKAXNode? {
-        return try fetchTree(hitTest: nil)
+    func describeAll(budget: CLIObservationBudget = .simulatorDefault) throws -> TKAXNode? {
+        // Start before device/root discovery so those calls consume the same
+        // collection window. Native calls already in flight cannot be canceled.
+        let collector = CLIObservationTreeCollector(budget: budget)
+        defer { lastCollectionSummary = collector.summary }
+        return try fetchTree(collector: collector)
     }
 
     func describeAt(point: CGPoint) throws -> TKAXNode? {
@@ -259,7 +264,9 @@ class AXPTranslatorAccessibility {
                 return hit
             }
         }
-        guard let root = try describeAll() else { return nil }
+        // Preserve the existing point-search depth; observation callers can
+        // deliberately choose a shallower budget independently.
+        guard let root = try describeAll(budget: .init(maxDepth: Self.maxDepth)) else { return nil }
         return findNodeLocally(node: root, point: point)
     }
 
@@ -269,7 +276,7 @@ class AXPTranslatorAccessibility {
         }
         guard let pressedNode = try withAXPContext({ ctx in
             Self.stampElementTranslation(token: ctx.token, on: ctx.frontmostRoot)
-            Self.stampSubtree(ctx.frontmostRoot, token: ctx.token, depthCap: Self.maxDepth)
+            Self.stampSubtree(ctx.frontmostRoot, token: ctx.token, depthCap: Self.maxDepth, deadline: ctx.deadline)
 
             let selected: ElementNodeMatch?
             if let point {
@@ -325,39 +332,46 @@ class AXPTranslatorAccessibility {
         let deadline: Date
     }
 
-    private func withAXPContext<T>(_ body: (AXPContext) throws -> T?) throws -> T? {
+    private func withAXPContext<T>(collector: CLIObservationTreeCollector? = nil, _ body: (AXPContext) throws -> T?) throws -> T? {
+        if let collector, collector.remainingSeconds <= 0 { return nil }
         if let error = Self.availabilityError {
             throw error
         }
+        if let collector, collector.remainingSeconds <= 0 { return nil }
         guard let device = resolveDevice() else { throw HostSimulatorAXError.targetNotFound(udid) }
 
         let token = UUID().uuidString
-        let deadline = Date().addingTimeInterval(Self.xpcTimeoutSeconds)
+        let deadline = Date().addingTimeInterval(min(Self.xpcTimeoutSeconds, collector?.remainingSeconds ?? Self.xpcTimeoutSeconds))
         Self.sharedDispatcher.register(device: device, token: token, deadline: deadline)
         defer { Self.sharedDispatcher.unregister(token: token) }
 
         guard let translator = Self.sharedTranslator else { throw HostSimulatorAXError.translatorUnavailable }
 
+        if let collector, collector.remainingSeconds <= 0 { return nil }
         guard let translation = Self.frontmostApplication(translator: translator, token: token) else {
             throw HostSimulatorAXError.frontmostApplicationUnavailable(udid)
         }
+        if let collector, collector.remainingSeconds <= 0 { return nil }
         Self.stamp(token: token, on: translation)
 
+        if let collector, collector.remainingSeconds <= 0 { return nil }
         guard let frontmostRoot = Self.macPlatformElement(translator: translator, translation: translation) else {
             throw HostSimulatorAXError.platformElementUnavailable(udid)
         }
-        let pointSize = Self.devicePointSize(for: device)
-        let rootFrame = AXElementReader.frame(of: frontmostRoot)
+        let pointSize = collector?.readIfWithinDeadline { Self.devicePointSize(for: device) }
+            ?? (collector == nil ? Self.devicePointSize(for: device) : .zero)
+        let rootFrame = collector?.readIfWithinDeadline { AXElementReader.frame(of: frontmostRoot) }
+            ?? (collector == nil ? AXElementReader.frame(of: frontmostRoot) : .zero)
         let transform = AXFrameTransform(rootFrame: rootFrame, pointSize: pointSize)
 
         return try body(AXPContext(translator: translator, token: token, frontmostRoot: frontmostRoot, transform: transform, deadline: deadline))
     }
 
-    private func fetchTree(hitTest: CGPoint?) throws -> TKAXNode? {
-        try withAXPContext { ctx in
-            Self.stampElementTranslation(token: ctx.token, on: ctx.frontmostRoot)
-            Self.stampSubtree(ctx.frontmostRoot, token: ctx.token, depthCap: Self.maxDepth)
-            return buildTKAXNode(from: ctx.frontmostRoot, transform: ctx.transform, depthCap: Self.maxDepth, deadline: ctx.deadline)
+    private func fetchTree(collector: CLIObservationTreeCollector) throws -> TKAXNode? {
+        try withAXPContext(collector: collector) { ctx in
+            // Stamp on admission to the budget; a separate whole-tree stamp
+            // pass would spend unbounded work before the bounded AX walk.
+            return buildTKAXNode(from: ctx.frontmostRoot, token: ctx.token, transform: ctx.transform, collector: collector)
         }
     }
 
@@ -367,18 +381,21 @@ class AXPTranslatorAccessibility {
             guard let hitTranslation = Self.objectAtPoint(translator: ctx.translator, point: hostPoint, displayId: 0, token: ctx.token) else { return nil }
             Self.stamp(token: ctx.token, on: hitTranslation)
             guard let hitElement = Self.macPlatformElement(translator: ctx.translator, translation: hitTranslation) else { return nil }
-            Self.stampElementTranslation(token: ctx.token, on: hitElement)
-            Self.stampSubtree(hitElement, token: ctx.token, depthCap: Self.maxDepth)
-            return buildTKAXNode(from: hitElement, transform: ctx.transform, depthCap: Self.maxDepth, deadline: ctx.deadline)
+            let budget = CLIObservationBudget(maxDepth: Self.maxDepth, timeoutSeconds: max(0, ctx.deadline.timeIntervalSinceNow))
+            let collector = CLIObservationTreeCollector(budget: budget)
+            defer { lastCollectionSummary = collector.summary }
+            return buildTKAXNode(from: hitElement, token: ctx.token, transform: ctx.transform, collector: collector)
         }
     }
 
-    private static func stampSubtree(_ element: NSObject, token: String, depthCap: Int, depth: Int = 0) {
-        guard depth < depthCap else { return }
-        for kid in AXElementReader.children(of: element) {
-            stampElementTranslation(token: token, on: kid)
-            stampSubtree(kid, token: token, depthCap: depthCap, depth: depth + 1)
-        }
+    private static func stampSubtree(_ element: NSObject, token: String, depthCap: Int, deadline: Date) {
+        let collector = CLIObservationTreeCollector(budget: .init(
+            maxDepth: depthCap,
+            timeoutSeconds: max(0, deadline.timeIntervalSinceNow)
+        ))
+        _ = collector.collect(element, prepare: {
+            stampElementTranslation(token: token, on: $0)
+        }, read: { _ in () }, children: { AXElementReader.children(of: $0) })
     }
 
     static var isAvailable: Bool { sharedTranslator != nil }
@@ -459,36 +476,24 @@ class AXPTranslatorAccessibility {
     private static let maxDepth: Int = 80
     private static let xpcTimeoutSeconds: TimeInterval = 2.0
     
-    private func buildTKAXNode(from element: NSObject, transform: AXFrameTransform, depthCap: Int, deadline: Date) -> TKAXNode {
-        return Self.walkInternal(element: element, depth: 0, transform: transform, depthCap: depthCap, deadline: deadline)
+    private func buildTKAXNode(from element: NSObject, token: String, transform: AXFrameTransform, collector: CLIObservationTreeCollector) -> TKAXNode? {
+        guard let tree = collector.collect(element, prepare: {
+            Self.stampElementTranslation(token: token, on: $0)
+        }, read: { Self.summaryNode(from: $0, transform: transform, collector: collector) }, children: {
+            AXElementReader.children(of: $0)
+        }) else { return nil }
+        return Self.materialize(tree)
     }
 
-    private static func walkInternal(element: NSObject, depth: Int, transform: AXFrameTransform, depthCap: Int, deadline: Date) -> TKAXNode {
-        let role = AXElementReader.string(element, "accessibilityRole") ?? "AXUnknown"
-        let macFrame = AXElementReader.frame(of: element)
-        let projected = transform.map(macFrame)
-
-        let children: [TKAXNode]
-        if depth >= depthCap || Date() >= deadline {
-            children = []
-        } else {
-            let kids = AXElementReader.children(of: element)
-            children = kids.map { walkInternal(element: $0, depth: depth + 1, transform: transform, depthCap: depthCap, deadline: deadline) }
-        }
-
+    /// Rebuilds only the already bounded in-memory result; no AX/native calls.
+    private static func materialize(_ tree: CLIObservationCollectedNode<TKAXNode>) -> TKAXNode {
+        let node = tree.value
         return TKAXNode(
-            role: role,
-            label: AXElementReader.string(element, "accessibilityLabel"),
-            value: AXElementReader.stringOrNumber(element, "accessibilityValue"),
-            identifier: AXElementReader.string(element, "accessibilityIdentifier"),
-            title: AXElementReader.string(element, "accessibilityTitle"),
-            frame: TKRect(x: Double(projected.origin.x), y: Double(projected.origin.y), width: Double(projected.size.width), height: Double(projected.size.height)),
-            enabled: AXElementReader.bool(element, "accessibilityEnabled", default: true) || AXElementReader.bool(element, "isAccessibilityEnabled", default: false),
-            focused: AXElementReader.bool(element, "isAccessibilityFocused", default: false) || AXElementReader.bool(element, "accessibilityFocused", default: false),
-            hidden:  AXElementReader.bool(element, "isAccessibilityHidden", default: false) || AXElementReader.bool(element, "accessibilityHidden", default: false),
-            targetOID: nil,
-            className: nil,
-            children: children
+            role: node.role, label: node.label, value: node.value,
+            identifier: node.identifier, title: node.title, frame: node.frame,
+            enabled: node.enabled, focused: node.focused, hidden: node.hidden,
+            targetOID: node.targetOID, viewOID: node.viewOID, layerOID: node.layerOID,
+            className: node.className, children: tree.children.map(materialize)
         )
     }
 
@@ -597,24 +602,28 @@ class AXPTranslatorAccessibility {
         return ElementNodeMatch(element: element, node: node, depth: depth)
     }
 
-    private static func summaryNode(from element: NSObject, transform: AXFrameTransform) -> TKAXNode {
-        let role = AXElementReader.string(element, "accessibilityRole") ?? "AXUnknown"
-        let projected = transform.map(AXElementReader.frame(of: element))
+    private static func summaryNode(from element: NSObject, transform: AXFrameTransform, collector: CLIObservationTreeCollector? = nil) -> TKAXNode {
+        func read<Value>(_ fallback: Value, _ body: () -> Value) -> Value {
+            guard let collector else { return body() }
+            return collector.readIfWithinDeadline(body) ?? fallback
+        }
+        let role = read(nil as String?) { AXElementReader.string(element, "accessibilityRole") } ?? "AXUnknown"
+        let projected = transform.map(read(CGRect.zero) { AXElementReader.frame(of: element) })
         return TKAXNode(
             role: role,
-            label: AXElementReader.string(element, "accessibilityLabel"),
-            value: AXElementReader.stringOrNumber(element, "accessibilityValue"),
-            identifier: AXElementReader.string(element, "accessibilityIdentifier"),
-            title: AXElementReader.string(element, "accessibilityTitle"),
+            label: read(nil as String?) { AXElementReader.string(element, "accessibilityLabel") },
+            value: read(nil as String?) { AXElementReader.stringOrNumber(element, "accessibilityValue") },
+            identifier: read(nil as String?) { AXElementReader.string(element, "accessibilityIdentifier") },
+            title: read(nil as String?) { AXElementReader.string(element, "accessibilityTitle") },
             frame: TKRect(
                 x: Double(projected.origin.x),
                 y: Double(projected.origin.y),
                 width: Double(projected.size.width),
                 height: Double(projected.size.height)
             ),
-            enabled: AXElementReader.bool(element, "accessibilityEnabled", default: true) || AXElementReader.bool(element, "isAccessibilityEnabled", default: false),
-            focused: AXElementReader.bool(element, "isAccessibilityFocused", default: false) || AXElementReader.bool(element, "accessibilityFocused", default: false),
-            hidden: AXElementReader.bool(element, "isAccessibilityHidden", default: false) || AXElementReader.bool(element, "accessibilityHidden", default: false),
+            enabled: read(false) { AXElementReader.bool(element, "accessibilityEnabled", default: true) } || read(false) { AXElementReader.bool(element, "isAccessibilityEnabled", default: false) },
+            focused: read(false) { AXElementReader.bool(element, "isAccessibilityFocused", default: false) } || read(false) { AXElementReader.bool(element, "accessibilityFocused", default: false) },
+            hidden: read(true) { AXElementReader.bool(element, "isAccessibilityHidden", default: false) } || read(true) { AXElementReader.bool(element, "accessibilityHidden", default: false) },
             targetOID: nil,
             className: nil,
             children: []

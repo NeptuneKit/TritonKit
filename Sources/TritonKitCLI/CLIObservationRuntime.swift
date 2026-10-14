@@ -7,6 +7,12 @@ typealias AndroidObserveHostRunner = (TKHostCommand) throws -> HostProcessResult
 private struct AndroidBridgeTreeEnvelope: Decodable {
     let status: String
     let result: AndroidBridgeNode
+    let collection: AndroidBridgeCollection?
+}
+
+private struct AndroidBridgeCollection: Decodable {
+    let visited_nodes: Int
+    let reasons: [String]
 }
 
 private struct AndroidBridgeNode: Decodable {
@@ -69,6 +75,7 @@ func runObserve(
 ) async throws {
     let outputFormat = effectiveFormat(format, json: json)
     do {
+        if let maxNodes, !(1...10_000).contains(maxNodes) { throw ValidationError("--max-nodes must be between 1 and 10000.") }
         var response: ObserveOutput
         switch platform {
         case .harmony:
@@ -89,7 +96,8 @@ func runObserve(
                 action: action,
                 selected: selected.target,
                 adb: "adb",
-                output: output
+                output: output,
+                maxNodes: maxNodes
             )
         case .ios:
             response = try await observeIOS(
@@ -145,10 +153,11 @@ func observeHarmony(
 ) async throws -> ObserveOutput {
     let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
     let layout = try dumpHarmonyLayout(selected: selected, hdc: hdc, output: output)
-    var nodes = try TKHarmonyLayoutParser.nodeSummaries(in: layout.data).map(observeNode(fromHarmony:))
-    if let maxNodes {
-        nodes = Array(nodes.prefix(maxNodes))
-    }
+    let collected = try TKHarmonyLayoutParser.nodeSummaries(in: layout.data, budget: .init(maxNodes: maxNodes ?? 800))
+    var nodes = collected.nodes.map(observeNode(fromHarmony:))
+    let totalMaxNodes = min(10_000, max(1, maxNodes ?? 800))
+    var collectionReasons = collected.collection.limitReasons
+    var visitedNodes = collected.collection.visitedNodes
     var sources = [
         ObserveSourceOutput(
             name: "host-layout",
@@ -172,14 +181,19 @@ func observeHarmony(
             sourceCommands: []
         ),
     ]
-    if let runtimeBaseURL {
+    if let runtimeBaseURL, nodes.count < totalMaxNodes {
         do {
+            let remaining = totalMaxNodes - nodes.count
             let runtimeData = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.runtimeSnapshot, queryItems: [
-                URLQueryItem(name: "include", value: "app,scene,route,ax,geometry")
+                URLQueryItem(name: "include", value: "app,scene,route,ax,geometry"),
+                URLQueryItem(name: "maxAXNodes", value: String(remaining))
             ])
             let snapshot = try JSONDecoder().decode(TKRuntimeSnapshotResponse.self, from: runtimeData)
             let runtimeNodes = observeNodes(fromAX: snapshot.ax ?? [], source: "runtime-tree", prefix: "harmony-runtime")
-            nodes.append(contentsOf: maxNodes.map { Array(runtimeNodes.prefix(max(0, $0 - nodes.count))) } ?? runtimeNodes)
+            nodes.append(contentsOf: runtimeNodes.prefix(remaining))
+            visitedNodes += runtimeNodes.count
+            if snapshot.truncation.truncated { collectionReasons.append("runtime_limit") }
+            if runtimeNodes.count > remaining { collectionReasons.append("max_nodes") }
             sources[1] = ObserveSourceOutput(
                 name: "runtime-tree",
                 available: true,
@@ -206,6 +220,7 @@ func observeHarmony(
         target: selected.target,
         sources: sources,
         nodes: nodes,
+        collection: .init(visitedNodes: visitedNodes, limitReasons: Array(Set(collectionReasons)).sorted()),
         artifacts: [layout.localPath],
         sourceCommands: layout.sourceCommands,
         note: "Host layout proves visible text, bounds, and coordinate actions only; DOM, JavaScript, and WebView bridge remain unavailable without a provider."
@@ -217,9 +232,10 @@ func observeAndroid(
     selected: HostDeviceTarget,
     adb: String = "adb",
     output: String?,
+    maxNodes: Int? = nil,
     runner: AndroidObserveHostRunner = { command in try runHostCommand(command) }
 ) throws -> ObserveOutput {
-    if let bridge = try? observeAndroidBridge(action: action, selected: selected, output: output, runner: runner) {
+    if let bridge = try? observeAndroidBridge(action: action, selected: selected, output: output, maxNodes: maxNodes, runner: runner) {
         return bridge
     }
 
@@ -243,8 +259,8 @@ func observeAndroid(
     )
     try readResult.stdoutData.write(to: URL(fileURLWithPath: artifactPath), options: .atomic)
 
-    let nodes = try TKAndroidUIAutomatorXMLParser.nodeSummaries(in: readResult.stdoutData)
-        .enumerated()
+    let collected = try TKAndroidUIAutomatorXMLParser.nodeSummaries(in: readResult.stdoutData, budget: .init(maxNodes: maxNodes ?? 800))
+    let nodes = collected.nodes.enumerated()
         .map { offset, node in observeNode(fromAndroid: node, index: offset) }
 
     let sourceCommands = [dumpResult.sourceCommand, readResult.sourceCommand]
@@ -280,6 +296,7 @@ func observeAndroid(
             ),
         ],
         nodes: nodes,
+        collection: collected.collection,
         artifacts: [artifactPath],
         sourceCommands: sourceCommands,
         note: "Android P0 observe uses host-side UIAutomator XML. WebView DOM, JavaScript, and embedded runtime fusion remain unavailable."
@@ -290,6 +307,7 @@ private func observeAndroidBridge(
     action: String,
     selected: HostDeviceTarget,
     output: String?,
+    maxNodes: Int?,
     runner: AndroidObserveHostRunner
 ) throws -> ObserveOutput {
     let endpoint = "http://127.0.0.1:19422"
@@ -298,11 +316,13 @@ private func observeAndroidBridge(
     guard let token = androidBridgeAuthToken(from: tokenResult.stdout) else {
         throw RuntimeError("Android bridge auth token is not available.")
     }
-    let treeCommand = TKHostCommand(executable: "/usr/bin/curl", arguments: ["-fsS", "--max-time", "5", "-H", "Authorization: Bearer \(token)", "\(endpoint)/a11y_tree_full?filter=true"], sensitiveOutput: true)
+    let treeURL = "\(endpoint)/a11y_tree_full?filter=true&max_nodes=\(min(10_000, max(1, maxNodes ?? 800)))&max_depth=32&max_children=200&timeout_ms=2000"
+    let treeCommand = TKHostCommand(executable: "/usr/bin/curl", arguments: ["-fsS", "--max-time", "5", "-H", "Authorization: Bearer \(token)", treeURL], sensitiveOutput: true)
     let treeResult = try runner(treeCommand)
     guard treeResult.exitCode == 0 else {
         throw HostCommandRunError.nonZeroExit(command: treeCommand, result: treeResult)
     }
+    guard treeResult.stdoutData.count <= 10 * 1_024 * 1_024 else { throw TKCollectionInputError.inputTooLarge }
     let envelope = try JSONDecoder().decode(AndroidBridgeTreeEnvelope.self, from: treeResult.stdoutData)
     guard envelope.status == "success" else {
         throw RuntimeError("Android bridge tree returned status=\(envelope.status).")
@@ -315,9 +335,12 @@ private func observeAndroidBridge(
     )
     try treeResult.stdoutData.write(to: URL(fileURLWithPath: artifactPath), options: .atomic)
 
+    let collected = observeNodes(fromAndroidBridge: envelope.result, maxNodes: maxNodes)
+    let collection = TKCollectionBudgetSummary(visitedNodes: envelope.collection?.visited_nodes ?? collected.collection.visitedNodes,
+        limitReasons: Array(Set((envelope.collection?.reasons ?? []) + collected.collection.limitReasons)).sorted())
     let sourceCommands = [
         tokenResult.sourceCommand,
-        "/usr/bin/curl -fsS --max-time 5 -H 'Authorization: Bearer <redacted>' \(endpoint)/a11y_tree_full?filter=true",
+        "/usr/bin/curl -fsS --max-time 5 -H 'Authorization: Bearer <redacted>' \(treeURL)",
     ]
     let source = ObserveSourceOutput(
         name: "android-bridge",
@@ -340,7 +363,8 @@ private func observeAndroidBridge(
             ObserveSourceOutput(name: "runtime-tree", available: false, reason: "Android embedded runtime fusion is not available in P0", artifact: nil, sourceCommands: []),
             ObserveSourceOutput(name: "webview-provider", available: false, reason: "provider not registered", artifact: nil, sourceCommands: []),
         ],
-        nodes: observeNodes(fromAndroidBridge: envelope.result),
+        nodes: collected.nodes,
+        collection: collection,
         artifacts: [artifactPath],
         sourceCommands: sourceCommands,
         note: "Android observe used the TritonKit bridge AccessibilityService tree; WebView DOM and semantic runtime actions still require a provider."
@@ -363,9 +387,9 @@ func observeIOS(
     let snapshotData: Data
     let targetID: String
     if let runtimeBaseURL {
-        snapshotData = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.runtimeSnapshot, queryItems: [
-            URLQueryItem(name: "include", value: "app,scene,route,ax,geometry")
-        ])
+        var queryItems = [URLQueryItem(name: "include", value: "app,scene,route,ax,geometry")]
+        if let maxNodes { queryItems.append(URLQueryItem(name: "maxAXNodes", value: String(maxNodes))) }
+        snapshotData = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.runtimeSnapshot, queryItems: queryItems)
         targetID = runtimeBaseURL
     } else {
         let (summary, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
@@ -392,6 +416,7 @@ func observeIOS(
             ObserveSourceOutput(name: "webview-provider", available: false, reason: "provider not registered", artifact: nil, sourceCommands: []),
         ],
         nodes: nodes,
+        collection: .init(visitedNodes: nodes.count, limitReasons: snapshot.truncation.truncated ? [snapshot.truncation.reason ?? "runtime_limit"] : []),
         artifacts: snapshot.artifacts.map(\.name),
         sourceCommands: runtimeBaseURL.map { ["GET \($0)/snapshot"] } ?? ["triton runtimeSnapshot request"],
         note: "iOS P0 observe uses the DEBUG embedded runtime AX tree. WebView DOM, JavaScript, and bridge state require a Web provider."
@@ -400,10 +425,12 @@ func observeIOS(
 
 func observeIOSHostAX(action: String, target: String, maxNodes: Int?) throws -> ObserveOutput {
     #if os(macOS)
-    guard let tree = try AXPTranslatorAccessibility(udid: target).describeAll() else {
+    let driver = try AXPTranslatorAccessibility(udid: target)
+    guard let tree = try driver.describeAll(budget: .init(maxNodes: maxNodes ?? 800)) else {
         throw HostSimulatorAXError.treeUnavailable(target)
     }
-    return observeIOSHostAXOutput(action: action, target: target, root: tree, maxNodes: maxNodes)
+    return observeIOSHostAXOutput(action: action, target: target, root: tree, maxNodes: maxNodes,
+        collection: .init(visitedNodes: driver.lastCollectionSummary.visitedNodes, limitReasons: driver.lastCollectionSummary.limitReasons))
     #else
     throw HostSimulatorAXError.unsupportedPlatform
     #endif
@@ -414,7 +441,8 @@ func observeIOSHostAXOutput(
     target: String,
     root: TKAXNode,
     maxNodes: Int?,
-    capturedAt: String = ISO8601DateFormatter().string(from: Date())
+    capturedAt: String = ISO8601DateFormatter().string(from: Date()),
+    collection: TKCollectionBudgetSummary? = nil
 ) -> ObserveOutput {
     var nodes = observeNodes(fromAX: [root], source: "host-layout", prefix: "ios-host")
     if let maxNodes {
@@ -441,6 +469,7 @@ func observeIOSHostAXOutput(
             ObserveSourceOutput(name: "webview-provider", available: false, reason: "provider not registered", artifact: nil, sourceCommands: []),
         ],
         nodes: nodes,
+        collection: collection,
         artifacts: [],
         sourceCommands: sourceCommands,
         note: "iOS host observe uses the Simulator private-framework AX tree. Use embedded runtime AX when connected for runtime OIDs and app-internal state."
@@ -559,18 +588,21 @@ func observeNode(fromAndroid node: TKAndroidUIAutomatorNodeSummary, index: Int) 
     )
 }
 
-private func observeNodes(fromAndroidBridge root: AndroidBridgeNode) -> [ObserveNodeOutput] {
+private func observeNodes(fromAndroidBridge root: AndroidBridgeNode, maxNodes: Int?) -> TKBoundedNodeCollection<ObserveNodeOutput> {
     var result: [ObserveNodeOutput] = []
-
-    func visit(_ node: AndroidBridgeNode, path: String) {
+    var context = TKCollectionBudgetState(limits: .init(maxNodes: maxNodes ?? 800, maxDepth: 32))
+    func visit(_ node: AndroidBridgeNode, path: String, depth: Int) {
+        guard context.admit(depth: depth) else { return }
         result.append(observeNode(fromAndroidBridge: node, path: path))
-        for (offset, child) in (node.children ?? []).enumerated() {
-            visit(child, path: "\(path).\(offset)")
+        let children = node.children ?? []
+        let count = context.childCount(children.count)
+        for (offset, child) in children.prefix(count).enumerated() {
+            if context.isExhausted() { break }
+            visit(child, path: "\(path).\(offset)", depth: depth + 1)
         }
     }
-
-    visit(root, path: "0")
-    return result
+    visit(root, path: "0", depth: 0)
+    return .init(nodes: result, collection: context.summary)
 }
 
 private func observeNode(fromAndroidBridge node: AndroidBridgeNode, path: String) -> ObserveNodeOutput {
@@ -667,12 +699,25 @@ func runNodeResolve(
         let point = try at.map(parsePoint)
         let response: NodeResolveOutput
         if isNodeAliasQuery(text) {
-            response = try resolveNodeAlias(
+            response = try await resolveNodeAlias(
                 text,
                 platform: platform.rawValue,
-                target: target,
+                target: platform == .ios ? (runtimeBaseURL ?? target) : target,
                 workspace: FileManager.default.currentDirectoryPath
-            )
+            ) {
+                switch platform {
+                case .harmony:
+                    return try await observeHarmony(action: "observe.tree", target: target, hdc: hdc, runtimeBaseURL: runtimeBaseURL, maxNodes: nil, output: nil)
+                case .android:
+                    let selected = try resolveHostDeviceSelection(
+                        request: HostDeviceSelectionRequest(device: target, platform: .android, ready: true),
+                        hdc: hdc
+                    )
+                    return try observeAndroid(action: "observe.tree", selected: selected.target, output: nil)
+                case .ios:
+                    return try await observeIOS(action: "observe.tree", target: target, host: host, port: port, runtimeBaseURL: runtimeBaseURL, maxNodes: nil, iosHostAX: iosHostAX)
+                }
+            }
         } else {
             switch platform {
             case .harmony:
@@ -928,7 +973,8 @@ func makeNodeAliasCache(from output: ObserveOutput, outline: [ObserveNodeAliasOu
         capturedAt: output.capturedAt,
         primarySourceName: output.primarySource?.name,
         sourceCommands: output.sourceCommands,
-        aliases: outline
+        aliases: outline,
+        observationFingerprint: nodeAliasObservationFingerprint(output)
     )
 }
 
@@ -948,42 +994,6 @@ func loadNodeAliasCache(workspace: String, platform: String, target: String) thr
         throw NodeAliasResolutionError.cacheMissing(path: path, platform: platform, target: target)
     }
     return try JSONDecoder().decode(NodeAliasCache.self, from: Data(contentsOf: URL(fileURLWithPath: path)))
-}
-
-func resolveNodeAlias(_ alias: String, platform: String, target: String, workspace: String) throws -> NodeResolveOutput {
-    guard isNodeAliasQuery(alias) else {
-        throw NodeAliasResolutionError.invalidAlias(alias)
-    }
-    let cache = try loadNodeAliasCache(workspace: workspace, platform: platform, target: target)
-    guard cache.platform == platform, nodeAliasTargetMatches(requested: target, cached: cache.target) else {
-        throw NodeAliasResolutionError.staleAlias(
-            alias: alias,
-            expectedPlatform: platform,
-            expectedTarget: target,
-            cachedPlatform: cache.platform,
-            cachedTarget: cache.target
-        )
-    }
-    guard let entry = cache.aliases.first(where: { $0.alias == alias }) else {
-        throw NodeAliasResolutionError.aliasNotFound(
-            alias: alias,
-            path: NodeAliasCache.filePath(workspace: workspace),
-            platform: platform,
-            target: target,
-            availableAliases: cache.aliases.map(\.alias)
-        )
-    }
-    return NodeResolveOutput(
-        ok: true,
-        action: "node.resolve",
-        platform: platform,
-        query: alias,
-        matchIndex: Int(alias.dropFirst()) ?? 1,
-        matchCount: cache.aliases.count,
-        node: entry.node,
-        candidates: nil,
-        sourceCommands: cache.sourceCommands
-    )
 }
 
 func isNodeAliasQuery(_ query: String) -> Bool {
@@ -1007,6 +1017,7 @@ private func observeOutputWithNodeOutline(_ output: ObserveOutput, workspace: St
         nodes: output.nodes,
         outline: outline,
         aliasCache: ObserveAliasCacheOutput(path: path, aliasCount: outline.count),
+        collection: output.collection,
         artifacts: output.artifacts,
         sourceCommands: output.sourceCommands,
         note: output.note
@@ -1025,25 +1036,4 @@ private func isObserveOutlineCandidate(_ node: ObserveNodeOutput) -> Bool {
 private func hasNonEmptyValue(_ value: String?) -> Bool {
     guard let value else { return false }
     return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-}
-
-private func nodeAliasTargetMatches(requested: String, cached: String) -> Bool {
-    if requested == cached {
-        return true
-    }
-    let requestedVariants = nodeAliasTargetVariants(requested)
-    let cachedVariants = nodeAliasTargetVariants(cached)
-    return !requestedVariants.isDisjoint(with: cachedVariants)
-}
-
-private func nodeAliasTargetVariants(_ target: String) -> Set<String> {
-    var variants: Set<String> = [target]
-    for prefix in ["sim:", "android:", "harmony:"] {
-        if target.hasPrefix(prefix) {
-            variants.insert(String(target.dropFirst(prefix.count)))
-        } else {
-            variants.insert(prefix + target)
-        }
-    }
-    return variants
 }

@@ -1,0 +1,737 @@
+{
+  "as_of_date": "2026-10-14",
+  "timezone": "Asia/Shanghai",
+  "retrieved_at_utc": "2026-10-14T09:46:43.909232+00:00",
+  "method": "Read-only GitHub official REST API via gh; release pages cross-checked with web browsing. No upstream code execution or clone.",
+  "baseline_document": "docs-linhay/references/revylai.md (2026-05-24; revyl-cli clone 2026-05-27)",
+  "repositories": [
+    {
+      "repo": "RevylAI/revyl-cli",
+      "canonical_repo": "RevylAI/revyl-cli",
+      "url": "https://github.com/RevylAI/revyl-cli",
+      "redirected": false,
+      "archived": false,
+      "disabled": false,
+      "default_branch": "main",
+      "license_api_spdx": null,
+      "head": {
+        "sha": "ac35cd88e6f122b9e956069d6f170380a419d3d1",
+        "date_utc": "2026-10-14T06:41:24Z",
+        "message": "Sync from monorepo: c2c9870f",
+        "url": "https://github.com/RevylAI/revyl-cli/commit/ac35cd88e6f122b9e956069d6f170380a419d3d1"
+      },
+      "baseline": {
+        "sha": "9931a77d9f98942f5aa3622e25d9e0613dca0e47",
+        "mode": "SHA comparison"
+      },
+      "latest_release": {
+        "tag": "v0.1.153",
+        "published_at_utc": "2026-10-13T22:38:34Z",
+        "url": "https://github.com/RevylAI/revyl-cli/releases/tag/v0.1.153",
+        "endpoint_error": null
+      },
+      "comparison": {
+        "status": "ahead",
+        "ahead_by": 332,
+        "behind_by": 0,
+        "total_commits": 332,
+        "html_url": "https://github.com/RevylAI/revyl-cli/compare/9931a77d9f98942f5aa3622e25d9e0613dca0e47...ac35cd88e6f122b9e956069d6f170380a419d3d1",
+        "returned_file_count": 300,
+        "file_list_truncated_possible": true
+      },
+      "selected_changed_files": [
+        {
+          "filename": "README.md",
+          "status": "modified",
+          "blob_url": "https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/README.md"
+        },
+        {
+          "filename": "cmd/revyl-computer/main.go",
+          "status": "added",
+          "blob_url": "https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/cmd%2Frevyl-computer%2Fmain.go"
+        },
+        {
+          "filename": "cmd/revyl/atlas.go",
+          "status": "modified",
+          "blob_url": "https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/cmd%2Frevyl%2Fatlas.go"
+        },
+        {
+          "filename": "cmd/revyl/config_migrate.go",
+          "status": "added",
+          "blob_url": "https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/cmd%2Frevyl%2Fconfig_migrate.go"
+        },
+        {
+          "filename": "cmd/revyl/explore.go",
+          "status": "added",
+          "blob_url": "https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/cmd%2Frevyl%2Fexplore.go"
+        },
+        {
+          "filename": "cmd/revyl/private_runtime_files.go",
+          "status": "added",
+          "blob_url": "https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/cmd%2Frevyl%2Fprivate_runtime_files.go"
+        },
+        {
+          "filename": "cmd/revyl/proof.go",
+          "status": "added",
+          "blob_url": "https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/cmd%2Frevyl%2Fproof.go"
+        },
+        {
+          "filename": "cmd/revyl/skill_commands.go",
+          "status": "added",
+          "blob_url": "https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/cmd%2Frevyl%2Fskill_commands.go"
+        }
+      ],
+      "license_note": "README declares MIT; GitHub license metadata is null and root LICENSE endpoint returned 404. License text not confirmed.",
+      "version_note": "Current README badge says 0.1.157, latest published release is v0.1.153; main and release must be distinguished.",
+      "source_documents": [
+        {
+          "path": "README.md",
+          "ref": "ac35cd88e6f122b9e956069d6f170380a419d3d1",
+          "url": "https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/README.md",
+          "error": null
+        },
+        {
+          "path": "README.md",
+          "ref": "9931a77d9f98942f5aa3622e25d9e0613dca0e47",
+          "url": "https://github.com/RevylAI/revyl-cli/blob/9931a77d9f98942f5aa3622e25d9e0613dca0e47/README.md",
+          "error": null
+        },
+        {
+          "path": "docs/COMMANDS.md",
+          "ref": "ac35cd88e6f122b9e956069d6f170380a419d3d1",
+          "url": "https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/docs/COMMANDS.md",
+          "error": "gh: Not Found (HTTP 404)"
+        },
+        {
+          "path": "LICENSE",
+          "ref": "ac35cd88e6f122b9e956069d6f170380a419d3d1",
+          "url": "https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/LICENSE",
+          "error": "gh: Not Found (HTTP 404)"
+        },
+        {
+          "path": "docs/atlas.md",
+          "ref": "ac35cd88e6f122b9e956069d6f170380a419d3d1",
+          "url": "https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/docs/atlas.md",
+          "error": null
+        },
+        {
+          "path": "docs/local-runtime-files.md",
+          "ref": "ac35cd88e6f122b9e956069d6f170380a419d3d1",
+          "url": "https://github.com/RevylAI/revyl-cli/blob/ac35cd88e6f122b9e956069d6f170380a419d3d1/docs/local-runtime-files.md",
+          "error": null
+        }
+      ]
+    },
+    {
+      "repo": "RevylAI/app-explorer",
+      "canonical_repo": "RevylAI/app-explorer",
+      "url": "https://github.com/RevylAI/app-explorer",
+      "redirected": false,
+      "archived": false,
+      "disabled": false,
+      "default_branch": "main",
+      "license_api_spdx": null,
+      "head": {
+        "sha": "b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e",
+        "date_utc": "2026-04-17T20:43:02Z",
+        "message": "Merge pull request #2 from RevylAI/landseer/ios-skeleton-extraction",
+        "url": "https://github.com/RevylAI/app-explorer/commit/b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e"
+      },
+      "baseline": {
+        "sha": null,
+        "mode": "first exact SHA; recent activity since dated reference document only"
+      },
+      "latest_release": {
+        "tag": null,
+        "published_at_utc": null,
+        "url": null,
+        "endpoint_error": "gh: Not Found (HTTP 404)"
+      },
+      "source_documents": []
+    },
+    {
+      "repo": "RevylAI/greenlight",
+      "canonical_repo": "RevylAI/greenlight",
+      "url": "https://github.com/RevylAI/greenlight",
+      "redirected": false,
+      "archived": false,
+      "disabled": false,
+      "default_branch": "main",
+      "license_api_spdx": "MIT",
+      "head": {
+        "sha": "fcb36e395bd4ae20448f2535382baecba9396fd9",
+        "date_utc": "2026-08-05T21:40:07Z",
+        "message": "fix(playscan): detect per-library 64-bit gaps (#28)",
+        "url": "https://github.com/RevylAI/greenlight/commit/fcb36e395bd4ae20448f2535382baecba9396fd9"
+      },
+      "baseline": {
+        "sha": null,
+        "mode": "first exact SHA; recent activity since dated reference document only"
+      },
+      "latest_release": {
+        "tag": "v0.2.0",
+        "published_at_utc": "2026-07-28T20:17:16Z",
+        "url": "https://github.com/RevylAI/greenlight/releases/tag/v0.2.0",
+        "endpoint_error": null
+      },
+      "observed_commits_since_reference_date": [
+        {
+          "sha": "fcb36e395bd4ae20448f2535382baecba9396fd9",
+          "date": "2026-08-05T21:40:07Z",
+          "message": "fix(playscan): detect per-library 64-bit gaps (#28)",
+          "url": "https://github.com/RevylAI/greenlight/commit/fcb36e395bd4ae20448f2535382baecba9396fd9"
+        },
+        {
+          "sha": "590c24003b68ceadb37f0b3a1cf9018902be60ca",
+          "date": "2026-07-28T20:42:31Z",
+          "message": "fix(plugin): put the skill where Claude Code actually looks for it (#27)",
+          "url": "https://github.com/RevylAI/greenlight/commit/590c24003b68ceadb37f0b3a1cf9018902be60ca"
+        },
+        {
+          "sha": "432af42aeb8a5d19050c8d516232eb20f47fc4f9",
+          "date": "2026-07-28T20:34:27Z",
+          "message": "docs: describe how the Homebrew tap is actually updated (#26)",
+          "url": "https://github.com/RevylAI/greenlight/commit/432af42aeb8a5d19050c8d516232eb20f47fc4f9"
+        },
+        {
+          "sha": "db0ec50f0f8bdefc8d3d4e525cb935f2ef9014c5",
+          "date": "2026-07-28T20:15:41Z",
+          "message": "chore(release): prep v0.2.0, the first release with Google Play support (#25)",
+          "url": "https://github.com/RevylAI/greenlight/commit/db0ec50f0f8bdefc8d3d4e525cb935f2ef9014c5"
+        },
+        {
+          "sha": "5af7309d551c27d7cf749b62d06478fb9767d38d",
+          "date": "2026-07-28T20:07:45Z",
+          "message": "fix(playscan): match Android XR by namespace instead of invented feature names (#24)",
+          "url": "https://github.com/RevylAI/greenlight/commit/5af7309d551c27d7cf749b62d06478fb9767d38d"
+        },
+        {
+          "sha": "ec41b7c5a73db835bf42610a10503032f263efdc",
+          "date": "2026-07-28T19:56:55Z",
+          "message": "fix(playscan): close the Android scanning gaps from review (#22)",
+          "url": "https://github.com/RevylAI/greenlight/commit/ec41b7c5a73db835bf42610a10503032f263efdc"
+        },
+        {
+          "sha": "d0b675fda01c2a4d83819b705b3b227313bc64ac",
+          "date": "2026-07-28T19:50:14Z",
+          "message": "fix(playscan): close Android scanning gaps from review, and tag Revyl links for attribution (#21)",
+          "url": "https://github.com/RevylAI/greenlight/commit/d0b675fda01c2a4d83819b705b3b227313bc64ac"
+        },
+        {
+          "sha": "650113e066d82e241ada1b565f86b845774faadc",
+          "date": "2026-07-28T18:31:17Z",
+          "message": "docs: bring the README up to date with what greenlight actually does (#20)",
+          "url": "https://github.com/RevylAI/greenlight/commit/650113e066d82e241ada1b565f86b845774faadc"
+        },
+        {
+          "sha": "80a57026010af7af050e81026297c3e182326575",
+          "date": "2026-07-28T16:56:47Z",
+          "message": "fix(playscan): correct the foregroundServiceType resource ID (#19)",
+          "url": "https://github.com/RevylAI/greenlight/commit/80a57026010af7af050e81026297c3e182326575"
+        },
+        {
+          "sha": "4d41b5e13d0ab9fe909bcd3bc3707f351a4b6318",
+          "date": "2026-07-28T16:42:22Z",
+          "message": "fix(playscan): drop redundant clause from the Play Billing fix line (#18)",
+          "url": "https://github.com/RevylAI/greenlight/commit/4d41b5e13d0ab9fe909bcd3bc3707f351a4b6318"
+        },
+        {
+          "sha": "7223ea2c4a150ac233b303e6363e61ed61ce763e",
+          "date": "2026-07-27T23:47:29Z",
+          "message": "feat(playscan): scan Android projects against Google Play policies (#17)",
+          "url": "https://github.com/RevylAI/greenlight/commit/7223ea2c4a150ac233b303e6363e61ed61ce763e"
+        },
+        {
+          "sha": "8cf34221865dc7aac015ddad457a374f47aa9c36",
+          "date": "2026-07-01T19:43:11Z",
+          "message": "feat(codescan): detect crypto apps and flag Guideline 3.1.5(b) obligations (#14)",
+          "url": "https://github.com/RevylAI/greenlight/commit/8cf34221865dc7aac015ddad457a374f47aa9c36"
+        },
+        {
+          "sha": "7fcf71dd449c2300c0cdbe26d3960f63ebb50450",
+          "date": "2026-06-30T23:24:21Z",
+          "message": "Fix swapped plugin.json and marketplace.json manifests (#16)",
+          "url": "https://github.com/RevylAI/greenlight/commit/7fcf71dd449c2300c0cdbe26d3960f63ebb50450"
+        },
+        {
+          "sha": "4f3a1b7a1a7c9cda84e330509953aff137129735",
+          "date": "2026-06-30T02:16:45Z",
+          "message": "Tag greenlight signup CTA link with UTM params (#13)",
+          "url": "https://github.com/RevylAI/greenlight/commit/4f3a1b7a1a7c9cda84e330509953aff137129735"
+        },
+        {
+          "sha": "7522c763fe0cc499a1b5d17b54c82d3550342cca",
+          "date": "2026-06-27T01:34:28Z",
+          "message": "Merge remote-tracking branch 'revyl/feat/goreleaser' into integration/merge-all",
+          "url": "https://github.com/RevylAI/greenlight/commit/7522c763fe0cc499a1b5d17b54c82d3550342cca"
+        },
+        {
+          "sha": "de1caabee76ce6bfa7c6a6e5985c09e520b3b0f8",
+          "date": "2026-06-27T01:34:21Z",
+          "message": "Merge remote-tracking branch 'revyl/feat/config-file' into integration/merge-all",
+          "url": "https://github.com/RevylAI/greenlight/commit/de1caabee76ce6bfa7c6a6e5985c09e520b3b0f8"
+        },
+        {
+          "sha": "2c25db981a873132c28a891feab5a4ccc63ba21b",
+          "date": "2026-06-27T01:33:27Z",
+          "message": "Merge remote-tracking branch 'revyl/feat/sarif-output' into integration/merge-all",
+          "url": "https://github.com/RevylAI/greenlight/commit/2c25db981a873132c28a891feab5a4ccc63ba21b"
+        },
+        {
+          "sha": "339b0f85482de1c0a81a6c4524983e314efedd70",
+          "date": "2026-06-27T01:32:02Z",
+          "message": "Merge remote-tracking branch 'revyl/feat/ipa-binary-plist' into integration/merge-all",
+          "url": "https://github.com/RevylAI/greenlight/commit/339b0f85482de1c0a81a6c4524983e314efedd70"
+        },
+        {
+          "sha": "5d65eb9eeff577eea71666fc09d20a30619b4984",
+          "date": "2026-06-27T01:31:31Z",
+          "message": "Merge remote-tracking branch 'revyl/fix/tier1-qol' into integration/merge-all",
+          "url": "https://github.com/RevylAI/greenlight/commit/5d65eb9eeff577eea71666fc09d20a30619b4984"
+        },
+        {
+          "sha": "6f914f231333c3a1c3e99d1e0c739d82ab3c97fc",
+          "date": "2026-06-27T01:29:25Z",
+          "message": "Merge remote-tracking branch 'revyl/feat/coverage-rule-pack' into integration/merge-all",
+          "url": "https://github.com/RevylAI/greenlight/commit/6f914f231333c3a1c3e99d1e0c739d82ab3c97fc"
+        },
+        {
+          "sha": "921c0dfff03327cddb4667ab023c7ae0c4f38baa",
+          "date": "2026-06-27T01:09:32Z",
+          "message": "Fail --exit-code on an incomplete scan (code review)",
+          "url": "https://github.com/RevylAI/greenlight/commit/921c0dfff03327cddb4667ab023c7ae0c4f38baa"
+        },
+        {
+          "sha": "6f5ae815eb96af39396f40394d2f3ba95a928daf",
+          "date": "2026-06-27T01:07:43Z",
+          "message": "Fix UIWebView CRITICAL firing on string/comment text (code review)",
+          "url": "https://github.com/RevylAI/greenlight/commit/6f5ae815eb96af39396f40394d2f3ba95a928daf"
+        },
+        {
+          "sha": "903e0393d5eb1935cd8428fa9824ecc73557c383",
+          "date": "2026-06-27T00:47:47Z",
+          "message": "Add GoReleaser release pipeline + Homebrew tap automation",
+          "url": "https://github.com/RevylAI/greenlight/commit/903e0393d5eb1935cd8428fa9824ecc73557c383"
+        },
+        {
+          "sha": "766cae07a8a7952941cb36e84656a9a40bb806c2",
+          "date": "2026-06-26T23:30:28Z",
+          "message": "Add .greenlight.yml config for the code scan",
+          "url": "https://github.com/RevylAI/greenlight/commit/766cae07a8a7952941cb36e84656a9a40bb806c2"
+        },
+        {
+          "sha": "afbc262dd844c9c3a6d46e168b69382a3874427c",
+          "date": "2026-06-26T22:51:58Z",
+          "message": "Add SARIF 2.1.0 output (--format sarif) for codescan + preflight",
+          "url": "https://github.com/RevylAI/greenlight/commit/afbc262dd844c9c3a6d46e168b69382a3874427c"
+        },
+        {
+          "sha": "07320cb849bcb5b19a98811d26f6d394fd661beb",
+          "date": "2026-06-26T22:29:21Z",
+          "message": "Address code review: don't go silent when icons are in Assets.car",
+          "url": "https://github.com/RevylAI/greenlight/commit/07320cb849bcb5b19a98811d26f6d394fd661beb"
+        },
+        {
+          "sha": "c39436b1c48e7dff8a563bc0363984fea59c63f4",
+          "date": "2026-06-26T22:28:28Z",
+          "message": "Address code review: fix inline-ignore over-suppression",
+          "url": "https://github.com/RevylAI/greenlight/commit/c39436b1c48e7dff8a563bc0363984fea59c63f4"
+        },
+        {
+          "sha": "2a4f72fae95c5879774696ba9b95a22ab509ca03",
+          "date": "2026-06-26T22:26:27Z",
+          "message": "Address code review: narrow ipv4 and platform-reference ignore patterns",
+          "url": "https://github.com/RevylAI/greenlight/commit/2a4f72fae95c5879774696ba9b95a22ab509ca03"
+        },
+        {
+          "sha": "20ca2e48507b975662e2bc893dad72955e0753b1",
+          "date": "2026-06-26T22:24:39Z",
+          "message": "Address code review: tighten UIWebView pattern, fix Expo-config detection",
+          "url": "https://github.com/RevylAI/greenlight/commit/20ca2e48507b975662e2bc893dad72955e0753b1"
+        },
+        {
+          "sha": "3bfafe5a475d3edadbb7ffa9614ee8e8912c1282",
+          "date": "2026-06-26T21:58:39Z",
+          "message": "Add UIWebView-removed CRITICAL + encryption export-compliance check",
+          "url": "https://github.com/RevylAI/greenlight/commit/3bfafe5a475d3edadbb7ffa9614ee8e8912c1282"
+        },
+        {
+          "sha": "f112d33570010dafdfb0ab22dfae8ecb5d27d4a2",
+          "date": "2026-06-26T21:18:27Z",
+          "message": "Parse IPA plists for real (binary + XML) instead of string-matching",
+          "url": "https://github.com/RevylAI/greenlight/commit/f112d33570010dafdfb0ab22dfae8ecb5d27d4a2"
+        },
+        {
+          "sha": "d833730c8277b26a6ab2528af6c1dff0f9a373a0",
+          "date": "2026-06-26T20:46:18Z",
+          "message": "Polish: unify --version wording, document ignore-directive matching",
+          "url": "https://github.com/RevylAI/greenlight/commit/d833730c8277b26a6ab2528af6c1dff0f9a373a0"
+        },
+        {
+          "sha": "b0290fcd7bc6ef3a511cea623d27a4eb10014bcb",
+          "date": "2026-06-26T20:40:53Z",
+          "message": "CI: gofmt gate, race detector, macOS matrix",
+          "url": "https://github.com/RevylAI/greenlight/commit/b0290fcd7bc6ef3a511cea623d27a4eb10014bcb"
+        },
+        {
+          "sha": "de2a85d12c029e009423d52f2661b21bcc702c2e",
+          "date": "2026-06-26T20:40:13Z",
+          "message": "Format entire repo with gofmt",
+          "url": "https://github.com/RevylAI/greenlight/commit/de2a85d12c029e009423d52f2661b21bcc702c2e"
+        },
+        {
+          "sha": "f1a9dfa9663de4d786f61c79db2c9156bb32d6a2",
+          "date": "2026-06-26T20:12:54Z",
+          "message": "QOL: build-info version fallback, UTF-8 length checks, inline ignore",
+          "url": "https://github.com/RevylAI/greenlight/commit/f1a9dfa9663de4d786f61c79db2c9156bb32d6a2"
+        },
+        {
+          "sha": "20a7f1da7d45cd833eb3261d134fb9ae7553e2b3",
+          "date": "2026-06-26T18:58:58Z",
+          "message": "Add preflight tests for HIGH counting, dedup, and --exit-code",
+          "url": "https://github.com/RevylAI/greenlight/commit/20a7f1da7d45cd833eb3261d134fb9ae7553e2b3"
+        },
+        {
+          "sha": "ab0e5c318151b801fed6baa871c3d1cebf6416d7",
+          "date": "2026-06-26T18:51:42Z",
+          "message": "Add HIGH severity tier, honest 3-state verdict, and --exit-code",
+          "url": "https://github.com/RevylAI/greenlight/commit/ab0e5c318151b801fed6baa871c3d1cebf6416d7"
+        },
+        {
+          "sha": "ed56c8b2ca839d855545b680c4158ef6ef3280c5",
+          "date": "2026-06-26T18:14:02Z",
+          "message": "Fix scanner false positives/negatives + harden temp creds",
+          "url": "https://github.com/RevylAI/greenlight/commit/ed56c8b2ca839d855545b680c4158ef6ef3280c5"
+        },
+        {
+          "sha": "f61861c0595e20320444036b68b94542243a2ce0",
+          "date": "2026-06-03T21:43:58Z",
+          "message": "Merge pull request #5 from ethanzhoucool/feat/revyl-runtime-verify",
+          "url": "https://github.com/RevylAI/greenlight/commit/f61861c0595e20320444036b68b94542243a2ce0"
+        },
+        {
+          "sha": "14fd1734e36cc38662fd3cf6a185002bddb993bd",
+          "date": "2026-06-03T00:16:52Z",
+          "message": "Add runtime-tier --artifact upload and --open live session",
+          "url": "https://github.com/RevylAI/greenlight/commit/14fd1734e36cc38662fd3cf6a185002bddb993bd"
+        },
+        {
+          "sha": "934565eeac82ff3995cf34234f5d40d5f8dd906c",
+          "date": "2026-06-02T05:32:12Z",
+          "message": "Address Copilot 6th pass: dry-run secret redaction + smaller fixes",
+          "url": "https://github.com/RevylAI/greenlight/commit/934565eeac82ff3995cf34234f5d40d5f8dd906c"
+        },
+        {
+          "sha": "e6a4b652bfb18fb797fca20aa705a2d5a5c7c4f7",
+          "date": "2026-06-02T03:31:40Z",
+          "message": "Address Copilot 5th pass: redact secrets, gate onboarding, fix comment",
+          "url": "https://github.com/RevylAI/greenlight/commit/e6a4b652bfb18fb797fca20aa705a2d5a5c7c4f7"
+        },
+        {
+          "sha": "440c0e1e100eef7cf22716d10217cc20a344acad",
+          "date": "2026-06-02T03:24:59Z",
+          "message": "Address Copilot 4th pass: clean JSON output + smaller robustness fixes",
+          "url": "https://github.com/RevylAI/greenlight/commit/440c0e1e100eef7cf22716d10217cc20a344acad"
+        },
+        {
+          "sha": "2cac3722ae2cd00cd7978754c5b8ed831df26fa6",
+          "date": "2026-06-02T03:17:09Z",
+          "message": "Address Copilot 3rd pass: finalized-report verdict + input validation",
+          "url": "https://github.com/RevylAI/greenlight/commit/2cac3722ae2cd00cd7978754c5b8ed831df26fa6"
+        },
+        {
+          "sha": "59df00ca3fd3a7c7f00bd3437e6b0aecc850fbf0",
+          "date": "2026-06-02T03:08:54Z",
+          "message": "Address Copilot re-review: clearer errors + accurate README",
+          "url": "https://github.com/RevylAI/greenlight/commit/59df00ca3fd3a7c7f00bd3437e6b0aecc850fbf0"
+        },
+        {
+          "sha": "d71b693b460d9af76716fea347a6d71e431c4493",
+          "date": "2026-06-02T03:00:22Z",
+          "message": "Address PR review (Copilot + code review): correctness + robustness",
+          "url": "https://github.com/RevylAI/greenlight/commit/d71b693b460d9af76716fea347a6d71e431c4493"
+        },
+        {
+          "sha": "775bcbc9184d719c16f8844cd41a4e83a7c8e164",
+          "date": "2026-06-02T02:09:28Z",
+          "message": "codescan: cut false positives in the §2.1 and §5.1.1 rules",
+          "url": "https://github.com/RevylAI/greenlight/commit/775bcbc9184d719c16f8844cd41a4e83a7c8e164"
+        },
+        {
+          "sha": "3f4f3c69a916e7be9f617248a544c95c33b870cc",
+          "date": "2026-06-02T01:55:48Z",
+          "message": "verify: poll until the report settles; count steps from the step array",
+          "url": "https://github.com/RevylAI/greenlight/commit/3f4f3c69a916e7be9f617248a544c95c33b870cc"
+        },
+        {
+          "sha": "c5b4b4d27405e95c9ff4d6b125fd4a1b7e5c3e3d",
+          "date": "2026-06-02T01:47:58Z",
+          "message": "verify: associate the test with its app id (fix builds never installing)",
+          "url": "https://github.com/RevylAI/greenlight/commit/c5b4b4d27405e95c9ff4d6b125fd4a1b7e5c3e3d"
+        },
+        {
+          "sha": "0d32fc7e26758e0a4ce530f4f7fdf26b5b25e96f",
+          "date": "2026-06-02T01:15:19Z",
+          "message": "verify: unique test name per build (fix silent cross-app rebinding)",
+          "url": "https://github.com/RevylAI/greenlight/commit/0d32fc7e26758e0a4ce530f4f7fdf26b5b25e96f"
+        },
+        {
+          "sha": "5c42005cdfc33ed875d31e6ac5b833aefcdfa2be",
+          "date": "2026-06-02T01:04:49Z",
+          "message": "verify: don't report a setup/launch failure as a broken flow",
+          "url": "https://github.com/RevylAI/greenlight/commit/5c42005cdfc33ed875d31e6ac5b833aefcdfa2be"
+        },
+        {
+          "sha": "55b185c809dc24cbc820510c27fec4953788ddfd",
+          "date": "2026-06-02T00:51:33Z",
+          "message": "Point static users to --verify; say \"cloud device\", not \"real device\"",
+          "url": "https://github.com/RevylAI/greenlight/commit/55b185c809dc24cbc820510c27fec4953788ddfd"
+        },
+        {
+          "sha": "e668ec3a6babe569873fd24d731e56d7b7b47aa8",
+          "date": "2026-06-02T00:43:33Z",
+          "message": "Keep the static scanner separate: drop the auto upsell from preflight",
+          "url": "https://github.com/RevylAI/greenlight/commit/e668ec3a6babe569873fd24d731e56d7b7b47aa8"
+        },
+        {
+          "sha": "12dbf463d56fc82f2eeec18da7495dad5bfb41fc",
+          "date": "2026-06-02T00:38:44Z",
+          "message": "verify: Revyl sign-up funnel when the user has no account",
+          "url": "https://github.com/RevylAI/greenlight/commit/12dbf463d56fc82f2eeec18da7495dad5bfb41fc"
+        },
+        {
+          "sha": "f0eb89380242b06a197cb0604e03a3942c06300f",
+          "date": "2026-06-02T00:32:24Z",
+          "message": "preflight --verify: chain static checks into Revyl runtime validation",
+          "url": "https://github.com/RevylAI/greenlight/commit/f0eb89380242b06a197cb0604e03a3942c06300f"
+        },
+        {
+          "sha": "fbe2b73be6a397980083a7d455ac92c3e2074db0",
+          "date": "2026-06-02T00:12:34Z",
+          "message": "verify: parse real Revyl report schema for failure evidence",
+          "url": "https://github.com/RevylAI/greenlight/commit/fbe2b73be6a397980083a7d455ac92c3e2074db0"
+        },
+        {
+          "sha": "809813a3d40ecad61e4d13f66a007cd9dc2aa050",
+          "date": "2026-06-01T23:59:05Z",
+          "message": "Add `greenlight verify`: runtime flow validation via Revyl CLI",
+          "url": "https://github.com/RevylAI/greenlight/commit/809813a3d40ecad61e4d13f66a007cd9dc2aa050"
+        }
+      ],
+      "source_documents": [
+        {
+          "path": "README.md",
+          "ref": "fcb36e395bd4ae20448f2535382baecba9396fd9",
+          "url": "https://github.com/RevylAI/greenlight/blob/fcb36e395bd4ae20448f2535382baecba9396fd9/README.md",
+          "error": null
+        }
+      ]
+    },
+    {
+      "repo": "RevylAI/mobile-devtools",
+      "canonical_repo": "RevylAI/mobile-devtools",
+      "url": "https://github.com/RevylAI/mobile-devtools",
+      "redirected": false,
+      "archived": false,
+      "disabled": false,
+      "default_branch": "main",
+      "license_api_spdx": null,
+      "head": {
+        "sha": "efc1dae5da089ec08108a39f1ead39324c11b410",
+        "date_utc": "2026-07-21T19:18:56Z",
+        "message": "Add Redaction Checker to the catalog (#5)",
+        "url": "https://github.com/RevylAI/mobile-devtools/commit/efc1dae5da089ec08108a39f1ead39324c11b410"
+      },
+      "baseline": {
+        "sha": null,
+        "mode": "first exact SHA; recent activity since dated reference document only"
+      },
+      "latest_release": {
+        "tag": null,
+        "published_at_utc": null,
+        "url": null,
+        "endpoint_error": "gh: Not Found (HTTP 404)"
+      },
+      "observed_commits_since_reference_date": [
+        {
+          "sha": "efc1dae5da089ec08108a39f1ead39324c11b410",
+          "date": "2026-07-21T19:18:56Z",
+          "message": "Add Redaction Checker to the catalog (#5)",
+          "url": "https://github.com/RevylAI/mobile-devtools/commit/efc1dae5da089ec08108a39f1ead39324c11b410"
+        },
+        {
+          "sha": "3601440393037fea7edad4c27b142618265fd2a6",
+          "date": "2026-06-08T19:45:16Z",
+          "message": "Merge pull request #4 from ethanzhoucool/fix-device-gif-maker-links",
+          "url": "https://github.com/RevylAI/mobile-devtools/commit/3601440393037fea7edad4c27b142618265fd2a6"
+        },
+        {
+          "sha": "aa6ca05411a33bd8770a6efce306e07c2fb3db91",
+          "date": "2026-06-08T19:42:46Z",
+          "message": "docs: fix Device GIF Maker links (repo is under ethanzhoucool)",
+          "url": "https://github.com/RevylAI/mobile-devtools/commit/aa6ca05411a33bd8770a6efce306e07c2fb3db91"
+        },
+        {
+          "sha": "c5a0860635c7140354bd5985bc00892bcb2144b1",
+          "date": "2026-06-08T19:37:48Z",
+          "message": "Merge pull request #3 from ethanzhoucool/add-device-gif-maker",
+          "url": "https://github.com/RevylAI/mobile-devtools/commit/c5a0860635c7140354bd5985bc00892bcb2144b1"
+        },
+        {
+          "sha": "976a1d6de1fcfd1e9166b7d6883c7a066bdb9def",
+          "date": "2026-06-08T19:33:41Z",
+          "message": "docs: add Device GIF Maker to the tools list",
+          "url": "https://github.com/RevylAI/mobile-devtools/commit/976a1d6de1fcfd1e9166b7d6883c7a066bdb9def"
+        },
+        {
+          "sha": "5dfa23182e9545329e31daa67265b3c9f5683cc7",
+          "date": "2026-06-03T20:09:27Z",
+          "message": "Merge pull request #2 from RevylAI/docs/account-light-getting-started",
+          "url": "https://github.com/RevylAI/mobile-devtools/commit/5dfa23182e9545329e31daa67265b3c9f5683cc7"
+        },
+        {
+          "sha": "fd32803cf052b55ef294d5e09b7eb253cb3151e6",
+          "date": "2026-06-03T20:00:00Z",
+          "message": "Clarify account-light getting started",
+          "url": "https://github.com/RevylAI/mobile-devtools/commit/fd32803cf052b55ef294d5e09b7eb253cb3151e6"
+        }
+      ],
+      "source_documents": [
+        {
+          "path": "README.md",
+          "ref": "efc1dae5da089ec08108a39f1ead39324c11b410",
+          "url": "https://github.com/RevylAI/mobile-devtools/blob/efc1dae5da089ec08108a39f1ead39324c11b410/README.md",
+          "error": null
+        }
+      ]
+    },
+    {
+      "repo": "RevylAI/mobile-pr-reviewer",
+      "canonical_repo": "RevylAI/mobile-pr-reviewer",
+      "url": "https://github.com/RevylAI/mobile-pr-reviewer",
+      "redirected": false,
+      "archived": false,
+      "disabled": false,
+      "default_branch": "main",
+      "license_api_spdx": null,
+      "head": {
+        "sha": "ba1250c72f56a08f3718aefc82dc911c1b3a2f23",
+        "date_utc": "2026-04-07T23:30:19Z",
+        "message": "Merge pull request #3 from RevylAI/revamp-mode-1-recording",
+        "url": "https://github.com/RevylAI/mobile-pr-reviewer/commit/ba1250c72f56a08f3718aefc82dc911c1b3a2f23"
+      },
+      "baseline": {
+        "sha": null,
+        "mode": "first exact SHA; recent activity since dated reference document only"
+      },
+      "latest_release": {
+        "tag": null,
+        "published_at_utc": null,
+        "url": null,
+        "endpoint_error": "gh: Not Found (HTTP 404)"
+      },
+      "source_documents": []
+    },
+    {
+      "repo": "RevylAI/visual-regression",
+      "canonical_repo": "RevylAI/visual-regression",
+      "url": "https://github.com/RevylAI/visual-regression",
+      "redirected": false,
+      "archived": false,
+      "disabled": false,
+      "default_branch": "main",
+      "license_api_spdx": null,
+      "head": {
+        "sha": "2758e8a88f4efb3a251b675e0984c091bf8abeb8",
+        "date_utc": "2026-03-13T21:06:17Z",
+        "message": "Fix Revyl CLI links to point to GitHub repo",
+        "url": "https://github.com/RevylAI/visual-regression/commit/2758e8a88f4efb3a251b675e0984c091bf8abeb8"
+      },
+      "baseline": {
+        "sha": null,
+        "mode": "first exact SHA; recent activity since dated reference document only"
+      },
+      "latest_release": {
+        "tag": null,
+        "published_at_utc": null,
+        "url": null,
+        "endpoint_error": "gh: Not Found (HTTP 404)"
+      },
+      "source_documents": []
+    },
+    {
+      "repo": "RevylAI/figma-design-checker",
+      "canonical_repo": "RevylAI/figma-design-checker",
+      "url": "https://github.com/RevylAI/figma-design-checker",
+      "redirected": false,
+      "archived": false,
+      "disabled": false,
+      "default_branch": "main",
+      "license_api_spdx": null,
+      "head": {
+        "sha": "8b4e5cea045dcff5c30aa723b923e514d2cdc07a",
+        "date_utc": "2026-08-04T20:17:03Z",
+        "message": "Add AGENTS.md with Cursor Cloud dev environment instructions (#3)",
+        "url": "https://github.com/RevylAI/figma-design-checker/commit/8b4e5cea045dcff5c30aa723b923e514d2cdc07a"
+      },
+      "baseline": {
+        "sha": null,
+        "mode": "first exact SHA; recent activity since dated reference document only"
+      },
+      "latest_release": {
+        "tag": null,
+        "published_at_utc": null,
+        "url": null,
+        "endpoint_error": "gh: Not Found (HTTP 404)"
+      },
+      "observed_commits_since_reference_date": [
+        {
+          "sha": "8b4e5cea045dcff5c30aa723b923e514d2cdc07a",
+          "date": "2026-08-04T20:17:03Z",
+          "message": "Add AGENTS.md with Cursor Cloud dev environment instructions (#3)",
+          "url": "https://github.com/RevylAI/figma-design-checker/commit/8b4e5cea045dcff5c30aa723b923e514d2cdc07a"
+        },
+        {
+          "sha": "a24695c0ca615619158001e988cfe77d0f8ef93a",
+          "date": "2026-06-11T17:03:54Z",
+          "message": "Add Atlas-powered screenshot capture (capture_atlas.py) (#1)",
+          "url": "https://github.com/RevylAI/figma-design-checker/commit/a24695c0ca615619158001e988cfe77d0f8ef93a"
+        }
+      ],
+      "source_documents": []
+    },
+    {
+      "repo": "RevylAI/CogniSim",
+      "canonical_repo": "RevylAI/CogniSim",
+      "url": "https://github.com/RevylAI/CogniSim",
+      "redirected": false,
+      "archived": false,
+      "disabled": false,
+      "default_branch": "main",
+      "license_api_spdx": "MIT",
+      "head": {
+        "sha": "3d8902e011981b93cb0ebfafba1794eab93b053e",
+        "date_utc": "2024-11-24T22:31:31Z",
+        "message": "Sync files from main repository",
+        "url": "https://github.com/RevylAI/CogniSim/commit/3d8902e011981b93cb0ebfafba1794eab93b053e"
+      },
+      "baseline": {
+        "sha": null,
+        "mode": "first exact SHA; recent activity since dated reference document only"
+      },
+      "latest_release": {
+        "tag": null,
+        "published_at_utc": null,
+        "url": null,
+        "endpoint_error": "gh: Not Found (HTTP 404)"
+      },
+      "source_documents": []
+    }
+  ],
+  "limitations": [
+    "Only revyl-cli has a recorded prior SHA; other repositories establish their first exact baseline here.",
+    "updated_at and pushed_at are metadata, not proof of default-branch changes; report uses HEAD committer date.",
+    "revyl-cli compare reports 332 commits but files list is capped at 300; selected paths are evidence, not an exhaustive audit.",
+    "Latest release endpoint 404 means no published non-prerelease latest release found, not a repository failure."
+  ]
+}

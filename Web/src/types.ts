@@ -153,6 +153,10 @@ export type HierarchyScene = {
   };
   nodes: HierarchyLayerNode[];
   controllerContext?: HierarchyControllerContext;
+  collection?: {
+    visitedNodes: number;
+    limitReasons: string[];
+  };
 };
 
 export type DeviceTarget = {

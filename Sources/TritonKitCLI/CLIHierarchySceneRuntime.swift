@@ -21,14 +21,7 @@ func runHierarchyScene(
         if platform == .ios, runtimeBaseURL == nil {
             let (summary, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             let data = try await client.request(type: "hierarchy")
-            let hierarchy = try JSONDecoder().decode(LegacyIosHierarchyPayload.self, from: data)
-            let scene = makeLegacyIosHierarchyScene(
-                target: summary.id,
-                displayItems: hierarchy.displayItems,
-                viewportOverride: hierarchy.viewport,
-                maxNodes: maxNodes,
-                controllerContext: hierarchy.controllerContext
-            )
+            let scene = try decodeLegacyIosHierarchyScene(data: data, target: summary.id, maxNodes: maxNodes)
             let response = TKHostHierarchyResponse(
                 ok: true,
                 capturedAt: ISO8601DateFormatter().string(from: Date()),
@@ -71,7 +64,8 @@ func runHierarchyScene(
                 platform: platform.rawValue,
                 target: target,
                 nodes: observation.nodes,
-                sourceCommands: observation.sourceCommands
+                sourceCommands: observation.sourceCommands,
+                collection: observation.collection
             )
         )
         switch outputFormat {
@@ -94,7 +88,8 @@ func makeLegacyIosHierarchyScene(
     displayItems: [TKDisplayItem],
     viewportOverride: TKHierarchyViewport? = nil,
     maxNodes: Int? = nil,
-    controllerContext: TKHierarchyControllerContext? = nil
+    controllerContext: TKHierarchyControllerContext? = nil,
+    collection: TKCollectionBudgetSummary? = nil
 ) -> TKHierarchyScene {
     let viewport = legacyIosViewport(displayItems: displayItems, viewportOverride: viewportOverride)
     var nodes: [TKHierarchyLayerNode] = []
@@ -107,7 +102,20 @@ func makeLegacyIosHierarchyScene(
         rootId: rootId,
         viewport: viewport,
         nodes: nodes,
-        controllerContext: resolvedLegacyIosControllerContext(controllerContext, nodes: nodes)
+        controllerContext: resolvedLegacyIosControllerContext(controllerContext, nodes: nodes),
+        collection: collection
+    )
+}
+
+func decodeLegacyIosHierarchyScene(data: Data, target: String, maxNodes: Int? = nil) throws -> TKHierarchyScene {
+    let hierarchy = try JSONDecoder().decode(LegacyIosHierarchyPayload.self, from: data)
+    return makeLegacyIosHierarchyScene(
+        target: target,
+        displayItems: hierarchy.displayItems,
+        viewportOverride: hierarchy.viewport,
+        maxNodes: maxNodes,
+        controllerContext: hierarchy.controllerContext,
+        collection: hierarchy.collection
     )
 }
 
@@ -115,6 +123,7 @@ private struct LegacyIosHierarchyPayload: Decodable {
     let displayItems: [TKDisplayItem]
     let appInfo: LegacyIosAppInfo?
     let controllerContext: TKHierarchyControllerContext?
+    let collection: TKCollectionBudgetSummary?
 
     var viewport: TKHierarchyViewport? {
         guard let width = appInfo?.screenWidth, let height = appInfo?.screenHeight, width > 0, height > 0 else {
@@ -501,7 +510,8 @@ func makeHierarchyScene(
     platform: String,
     target: String,
     nodes: [ObserveNodeOutput],
-    sourceCommands: [String]
+    sourceCommands: [String],
+    collection: TKCollectionBudgetSummary? = nil
 ) -> TKHierarchyScene {
     let layerNodes = nodes
         .enumerated()
@@ -534,7 +544,7 @@ func makeHierarchyScene(
 
     let viewport = hierarchyViewport(from: layerNodes)
     let rootId = layerNodes.first?.id ?? "\(platform):\(target):root"
-    return TKHierarchyScene(platform: platform, rootId: rootId, viewport: viewport, nodes: layerNodes)
+    return TKHierarchyScene(platform: platform, rootId: rootId, viewport: viewport, nodes: layerNodes, collection: collection)
 }
 
 private func hierarchyObservation(

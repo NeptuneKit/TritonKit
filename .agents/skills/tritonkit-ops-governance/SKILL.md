@@ -67,6 +67,7 @@ metadata:
 
 - `#if canImport(UIKit)` 测试在 macOS `swift test` 不执行；涉及 UILabel/手势/cell 行为时应在独立 Simulator 的真实 iOS destination 运行，并记录实际测试数量，不把宏条件跳过算通过。
 - UIKit 的 key window、scene 与 registry 是进程共享状态。多个 `@Suite(.serialized)` 仍可跨 suite 并行；共享窗口的 fixtures 应置于同一外层串行 suite，先断言真实 window 可见及 runtime 选择一致，不为测试放松生产安全校验。动态色需要真实 trait 树；pinch 需要 viewForZooming；坐标应从实际 view 转到 window。
+- UIKit presentation 测试必须等待真实 completion 与目标 view 的 window 挂载，不能把 `present(animated:false)` 或 `Task.sleep` 当作展示完成。hostless runner 无法完成 presentation 时，不宣称展示验收通过；纯 responder/alert 路由测试可用真实 alert controller 的窗口夹具，但必须断言目标实际挂载、活动窗口及背景 fallback candidate 确实存在。`UIView.alpha` 与 backing `CALayer.opacity` 联动，同批 patch 应按真实执行顺序验证最终值，并分别覆盖两个入口；不要要求同一 backing value 同时保持不同值。
 - CLI 测试使用自定义 scratch 时显式设置 `TRITON_CLI_PATH` 为本次构建产物。含全局 stdout/stderr capture 的整套测试使用 `swift test --package-path CLI --no-parallel`，避免 Swift Testing 进度混入 JSON；异步 stdout/stderr reader 必须完成有界 drain 后才发布最终字节数。
 
 ## 文档与记忆

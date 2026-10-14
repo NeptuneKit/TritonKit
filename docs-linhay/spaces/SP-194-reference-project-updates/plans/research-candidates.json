@@ -1,0 +1,192 @@
+{
+  "checked_on": "2026-10-14",
+  "scope": "历史专题研究候选，仅核对当前元信息及最近提交，不声称完整增量",
+  "repositories": [
+    {
+      "requested_repository": "hughkli/Lookin",
+      "repository": "hughkli/Lookin",
+      "url": "https://github.com/hughkli/Lookin",
+      "archived": false,
+      "license": "GPL-3.0",
+      "default_branch": "Develop",
+      "head_sha": "95e30fdcc8151092678387c5262bce790a0d9530",
+      "committed_at": "2024-03-03T19:14:22Z",
+      "subject": "text fix",
+      "head_url": "https://github.com/hughkli/Lookin/commit/95e30fdcc8151092678387c5262bce790a0d9530",
+      "releases": [
+        {
+          "tag": "1.0.7",
+          "published_at": "2024-03-03T17:49:34Z",
+          "prerelease": false,
+          "url": "https://github.com/hughkli/Lookin/releases/tag/1.0.7"
+        },
+        {
+          "tag": "1.0.6",
+          "published_at": "2024-01-22T07:40:53Z",
+          "prerelease": false,
+          "url": "https://github.com/hughkli/Lookin/releases/tag/1.0.6"
+        },
+        {
+          "tag": "1.0.5",
+          "published_at": "2023-12-21T15:20:49Z",
+          "prerelease": false,
+          "url": "https://github.com/hughkli/Lookin/releases/tag/1.0.5"
+        },
+        {
+          "tag": "1.0.4",
+          "published_at": "2023-11-12T08:19:19Z",
+          "prerelease": false,
+          "url": "https://github.com/hughkli/Lookin/releases/tag/1.0.4"
+        },
+        {
+          "tag": "1.0.3",
+          "published_at": "2023-10-30T13:46:32Z",
+          "prerelease": false,
+          "url": "https://github.com/hughkli/Lookin/releases/tag/1.0.3"
+        }
+      ]
+    },
+    {
+      "requested_repository": "OSU-NLP-Group/UGround",
+      "repository": "OSU-NLP-Group/UGround",
+      "url": "https://github.com/OSU-NLP-Group/UGround",
+      "archived": false,
+      "license": "MIT",
+      "default_branch": "main",
+      "head_sha": "8974f95b0685f139a6257f82d6b13895db3356cf",
+      "committed_at": "2026-08-24T03:53:48Z",
+      "subject": "Update README.md",
+      "head_url": "https://github.com/OSU-NLP-Group/UGround/commit/8974f95b0685f139a6257f82d6b13895db3356cf",
+      "releases": []
+    },
+    {
+      "requested_repository": "bytedance/UI-TARS",
+      "repository": "bytedance/UI-TARS",
+      "url": "https://github.com/bytedance/UI-TARS",
+      "archived": false,
+      "license": "Apache-2.0",
+      "default_branch": "main",
+      "head_sha": "582f3a7ea5d285ee8ed9e2e84048d1ab01453c49",
+      "committed_at": "2025-09-05T03:28:26Z",
+      "subject": "Merge pull request #214 from AL-377/main",
+      "head_url": "https://github.com/bytedance/UI-TARS/commit/582f3a7ea5d285ee8ed9e2e84048d1ab01453c49",
+      "releases": []
+    },
+    {
+      "requested_repository": "OpenBMB/AgentCPM-GUI",
+      "repository": "OpenBMB/AgentCPM-GUI",
+      "url": "https://github.com/OpenBMB/AgentCPM-GUI",
+      "archived": false,
+      "license": "Apache-2.0",
+      "default_branch": "main",
+      "head_sha": "2168ae21b1bed1cdb88736d422934825795a9fd7",
+      "committed_at": "2026-01-11T08:24:15Z",
+      "subject": "Add '更多项目' section to README_zh.md",
+      "head_url": "https://github.com/OpenBMB/AgentCPM-GUI/commit/2168ae21b1bed1cdb88736d422934825795a9fd7",
+      "releases": []
+    },
+    {
+      "requested_repository": "X-PLUG/MobileAgent",
+      "repository": "X-PLUG/MobileAgent",
+      "url": "https://github.com/X-PLUG/MobileAgent",
+      "archived": false,
+      "license": "MIT",
+      "default_branch": "main",
+      "head_sha": "11cea575561fb7800b5fb6b6cafa56f7a91de11f",
+      "committed_at": "2026-07-07T09:22:18Z",
+      "subject": "Merge pull request #286 from M4rque2/main",
+      "head_url": "https://github.com/X-PLUG/MobileAgent/commit/11cea575561fb7800b5fb6b6cafa56f7a91de11f",
+      "releases": []
+    },
+    {
+      "requested_repository": "njucckevin/SeeClick",
+      "repository": "njucckevin/SeeClick",
+      "url": "https://github.com/njucckevin/SeeClick",
+      "archived": false,
+      "license": "Apache-2.0",
+      "default_branch": "main",
+      "head_sha": "0ef37ac4d7aaf37ba7b990e3e3c3ca77e1fb8f93",
+      "committed_at": "2025-07-13T06:44:39Z",
+      "subject": "Update readme.md",
+      "head_url": "https://github.com/njucckevin/SeeClick/commit/0ef37ac4d7aaf37ba7b990e3e3c3ca77e1fb8f93",
+      "releases": []
+    },
+    {
+      "requested_repository": "google-research/android_world",
+      "repository": "google-research/android_world",
+      "url": "https://github.com/google-research/android_world",
+      "archived": false,
+      "license": "Apache-2.0",
+      "default_branch": "main",
+      "head_sha": "e54ed4f279c9fe0f7b8336040f03482ce67efda4",
+      "committed_at": "2026-10-13T09:32:49Z",
+      "subject": "Code update",
+      "head_url": "https://github.com/google-research/android_world/commit/e54ed4f279c9fe0f7b8336040f03482ce67efda4",
+      "releases": []
+    },
+    {
+      "requested_repository": "mobile-dev-inc/Maestro",
+      "repository": "mobile-dev-inc/Maestro",
+      "url": "https://github.com/mobile-dev-inc/Maestro",
+      "archived": false,
+      "license": "Apache-2.0",
+      "default_branch": "main",
+      "head_sha": "df40dea5dee0b8639aade6e80b558950e982e8a2",
+      "committed_at": "2026-10-12T17:43:22Z",
+      "subject": "docs: add commit and PR hygiene guidance (#3642)",
+      "head_url": "https://github.com/mobile-dev-inc/Maestro/commit/df40dea5dee0b8639aade6e80b558950e982e8a2",
+      "releases": [
+        {
+          "tag": "cli-2.11.0",
+          "published_at": "2026-09-29T13:36:34Z",
+          "prerelease": false,
+          "url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.11.0"
+        },
+        {
+          "tag": "cli-2.10.0",
+          "published_at": "2026-08-31T17:15:09Z",
+          "prerelease": false,
+          "url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.10.0"
+        },
+        {
+          "tag": "cli-2.9.0",
+          "published_at": "2026-08-26T13:55:43Z",
+          "prerelease": false,
+          "url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.9.0"
+        },
+        {
+          "tag": "cli-2.8.0",
+          "published_at": "2026-07-31T12:04:37Z",
+          "prerelease": false,
+          "url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.8.0"
+        },
+        {
+          "tag": "cli-2.7.0",
+          "published_at": "2026-07-20T16:51:37Z",
+          "prerelease": false,
+          "url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.7.0"
+        }
+      ]
+    },
+    {
+      "requested_repository": "linhay/SKProcessRunner",
+      "repository": "linhay/SKProcessRunner",
+      "url": "https://github.com/linhay/SKProcessRunner",
+      "archived": false,
+      "license": null,
+      "default_branch": "master",
+      "head_sha": "24e036604b9e2b28e14c3f55e75a686be1a8bd8a",
+      "committed_at": "2026-05-16T06:46:31Z",
+      "subject": "Restore SKProcessRunError source compatibility",
+      "head_url": "https://github.com/linhay/SKProcessRunner/commit/24e036604b9e2b28e14c3f55e75a686be1a8bd8a",
+      "releases": [
+        {
+          "tag": "0.0.17",
+          "published_at": "2026-02-25T10:12:52Z",
+          "prerelease": false,
+          "url": "https://github.com/linhay/SKProcessRunner/releases/tag/0.0.17"
+        }
+      ]
+    }
+  ]
+}

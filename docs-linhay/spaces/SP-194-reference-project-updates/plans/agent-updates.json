@@ -1,0 +1,1099 @@
+{
+  "checked_at_utc": "2026-10-14T09:44:10Z",
+  "checked_at_beijing": "2026-10-14T17:44:10+08:00",
+  "method": "只读 GitHub REST API（gh）与官方 GitHub 网页；未运行上游代码、未 clone/pull。近期提交样本每项目最多30条，release最多5条；无SHA项目不称完整增量。",
+  "projects": [
+    {
+      "requested_repo": "getsentry/XcodeBuildMCP",
+      "repository": {
+        "full_name": "getsentry/MobileBuildMCP",
+        "html_url": "https://github.com/getsentry/MobileBuildMCP",
+        "default_branch": "main",
+        "archived": false,
+        "disabled": false,
+        "license": {
+          "key": "mit",
+          "name": "MIT License",
+          "spdx_id": "MIT",
+          "url": "https://api.github.com/licenses/mit",
+          "node_id": "MDc6TGljZW5zZTEz"
+        },
+        "pushed_at": "2026-10-09T03:47:28Z",
+        "updated_at": "2026-10-14T09:05:50Z"
+      },
+      "head": {
+        "date": "2026-09-23T20:14:49Z",
+        "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/d13ff0c707b0681769cf31da0eb42c4f94ceafff",
+        "message": "Release v2.7.1",
+        "sha": "d13ff0c707b0681769cf31da0eb42c4f94ceafff"
+      },
+      "recent_commits": [
+        {
+          "date": "2026-09-23T20:14:49Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/d13ff0c707b0681769cf31da0eb42c4f94ceafff",
+          "message": "Release v2.7.1",
+          "sha": "d13ff0c707b0681769cf31da0eb42c4f94ceafff"
+        },
+        {
+          "date": "2026-09-23T20:14:31Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/f0e977ec7e0515628b551d5e18f47d2f6bb6d220",
+          "message": "Merge pull request #539 from getsentry/itaybre/fix/release-workflow-failures",
+          "sha": "f0e977ec7e0515628b551d5e18f47d2f6bb6d220"
+        },
+        {
+          "date": "2026-09-23T20:09:44Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/34e93ec3288fa22fc541ffb1a8374ba85bc20e57",
+          "message": "ci: Unblock tag-triggered release workflows",
+          "sha": "34e93ec3288fa22fc541ffb1a8374ba85bc20e57"
+        },
+        {
+          "date": "2026-09-23T20:00:59Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/7a509990cbb803be7944dad5c580e27760c0eb3e",
+          "message": "Release v2.7.1",
+          "sha": "7a509990cbb803be7944dad5c580e27760c0eb3e"
+        },
+        {
+          "date": "2026-09-23T19:57:26Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/f57067311bd47e219da1188a87764b651af9b421",
+          "message": "Merge pull request #538 from getsentry/itaybre/ref/rename-to-mobilebuildmcp",
+          "sha": "f57067311bd47e219da1188a87764b651af9b421"
+        },
+        {
+          "date": "2026-09-23T19:29:25Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/116ac5cbacbdcccdcf62e88eb0d6fa459bc9d936",
+          "message": "fix(scaffolding): Keep existing template repository names",
+          "sha": "116ac5cbacbdcccdcf62e88eb0d6fa459bc9d936"
+        },
+        {
+          "date": "2026-09-23T17:32:30Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/b7e2a25e7059970adfc02e192bac576e8991d0f7",
+          "message": "test(scaffolding): Expect MobileBuildMCP template repository names",
+          "sha": "b7e2a25e7059970adfc02e192bac576e8991d0f7"
+        },
+        {
+          "date": "2026-09-23T17:24:19Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/3794c208d3c2aecbd811263434b8fdcf5f840d20",
+          "message": "ref!: Rename project to MobileBuildMCP",
+          "sha": "3794c208d3c2aecbd811263434b8fdcf5f840d20"
+        },
+        {
+          "date": "2026-08-02T10:44:35Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/e6ef59b49b44012c824f0a0de261c96142e37390",
+          "message": "test(mcp): make live schema probes platform-aware",
+          "sha": "e6ef59b49b44012c824f0a0de261c96142e37390"
+        },
+        {
+          "date": "2026-08-02T10:44:35Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/9e848ebca69c9f07fe2abd0ccde755b87db883c0",
+          "message": "fix(mcp): Complete Codex schema compatibility",
+          "sha": "9e848ebca69c9f07fe2abd0ccde755b87db883c0"
+        },
+        {
+          "date": "2026-08-02T10:44:35Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/95b89f24973b426de60ff8507073122778383970",
+          "message": "fix(mcp): normalize Codex tool schemas",
+          "sha": "95b89f24973b426de60ff8507073122778383970"
+        },
+        {
+          "date": "2026-07-23T14:05:36Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/c79f4eb9b7b96680d5a774acb0ae525416d254fb",
+          "message": "Release v2.7.0",
+          "sha": "c79f4eb9b7b96680d5a774acb0ae525416d254fb"
+        },
+        {
+          "date": "2026-07-23T10:20:09Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/bceb88181af3aee456a5c16042751a08f3607cb2",
+          "message": "chore(deps): bump hono from 4.12.26 to 4.12.31 (#490)",
+          "sha": "bceb88181af3aee456a5c16042751a08f3607cb2"
+        },
+        {
+          "date": "2026-07-23T10:19:57Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/e02804411f8fd83d991c9d0589125dad0d647fe6",
+          "message": "chore(deps): bump fast-uri from 3.1.2 to 3.1.4 (#489)",
+          "sha": "e02804411f8fd83d991c9d0589125dad0d647fe6"
+        },
+        {
+          "date": "2026-07-23T10:19:24Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/61795738bc8b66e637081b114dd43746205174d2",
+          "message": "fix(security): harden shell arguments and workflow permissions (#488)",
+          "sha": "61795738bc8b66e637081b114dd43746205174d2"
+        },
+        {
+          "date": "2026-07-23T09:47:09Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/98e3ceeaed721107b6b7467aa7ed8a177a186901",
+          "message": "ci: Keep package preview failures non-blocking (#487)",
+          "sha": "98e3ceeaed721107b6b7467aa7ed8a177a186901"
+        },
+        {
+          "date": "2026-07-23T09:15:35Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/393e29254e64e67e190f4eae0678f6aed5113141",
+          "message": "ci(warden): Use OpenRouter for sweep (#486)",
+          "sha": "393e29254e64e67e190f4eae0678f6aed5113141"
+        },
+        {
+          "date": "2026-07-23T08:51:32Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/bc54feeb26ab2ee99d00f2d55643e44d880c1603",
+          "message": "Fix badge links in README.md",
+          "sha": "bc54feeb26ab2ee99d00f2d55643e44d880c1603"
+        },
+        {
+          "date": "2026-07-22T13:20:09Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/a7d367fae1c1fc75f778b5b43753e8c706b28902",
+          "message": "fix(macos): prevent stop_mac_app from terminating unrelated processes (#484)",
+          "sha": "a7d367fae1c1fc75f778b5b43753e8c706b28902"
+        },
+        {
+          "date": "2026-07-22T09:44:42Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/931b57ace9ec9cf4ccbc6a6fcda47f39b44e4de9",
+          "message": "fix(build): support absolute DerivedData paths with xcodemake (#485)",
+          "sha": "931b57ace9ec9cf4ccbc6a6fcda47f39b44e4de9"
+        },
+        {
+          "date": "2026-07-21T17:14:16Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/55b889eceace865a2e6bdd7e63fc850fbdc61521",
+          "message": "chore(deps): bump body-parser from 2.2.1 to 2.3.0 (#482)",
+          "sha": "55b889eceace865a2e6bdd7e63fc850fbdc61521"
+        },
+        {
+          "date": "2026-07-21T16:53:14Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/f73e3a54cef1c497ecefc4436114883bb649b035",
+          "message": "ci(warden): Reduce PR review cost and enforce timeout (#480)",
+          "sha": "f73e3a54cef1c497ecefc4436114883bb649b035"
+        },
+        {
+          "date": "2026-07-21T12:18:13Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/7cd7d5af4e8e5d502f9408a96a42b6ada9e06f78",
+          "message": "fix(simulator): prefer Device Hub for simulator UI (#479)",
+          "sha": "7cd7d5af4e8e5d502f9408a96a42b6ada9e06f78"
+        },
+        {
+          "date": "2026-07-20T08:09:20Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/e21bf437b923d9717624b6c97c9d367dbf210dff",
+          "message": "feat(testing): Support reusable prepared test artifacts (#475)",
+          "sha": "e21bf437b923d9717624b6c97c9d367dbf210dff"
+        },
+        {
+          "date": "2026-07-16T18:55:45Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/60cfdc357ea6e91744ad85fe3bbe9d037a84d675",
+          "message": "fix: Harden scaffold and utility edge cases (#476)",
+          "sha": "60cfdc357ea6e91744ad85fe3bbe9d037a84d675"
+        },
+        {
+          "date": "2026-07-16T18:54:54Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/46b2cf641df2de4f3f21511fbd70ac3797cd815e",
+          "message": "fix: Address verified Warden findings (#477)",
+          "sha": "46b2cf641df2de4f3f21511fbd70ac3797cd815e"
+        },
+        {
+          "date": "2026-07-12T19:22:34Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/3e42f4b7fe53553a581c922629dc12649ce4b708",
+          "message": "build: migrate Vitest and ESLint major versions (#473)",
+          "sha": "3e42f4b7fe53553a581c922629dc12649ce4b708"
+        },
+        {
+          "date": "2026-07-12T18:29:10Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/f0ab204756d487b053f6791beb19db1de5b7ac4e",
+          "message": "fix(mcp): do not await startup lifecycle snapshot on critical path (#468)",
+          "sha": "f0ab204756d487b053f6791beb19db1de5b7ac4e"
+        },
+        {
+          "date": "2026-07-12T18:10:09Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/5797bae99425f4fc71d5b9f9ae2215f1bb239191",
+          "message": "fix(rendering): honor suppressWarnings in settled build output (#470)",
+          "sha": "5797bae99425f4fc71d5b9f9ae2215f1bb239191"
+        },
+        {
+          "date": "2026-07-11T22:02:15Z",
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/commit/1ec584f18be8b81926ea9d266f9381675c5d4946",
+          "message": "fix(simulator): Make simulator platform inference deterministic (#472)",
+          "sha": "1ec584f18be8b81926ea9d266f9381675c5d4946"
+        }
+      ],
+      "releases": [
+        {
+          "body": "## Release v2.7.1\n\n### Changed\n\n- Renamed the project from XcodeBuildMCP to MobileBuildMCP. The npm package, CLI binaries (`mobilebuildmcp`, `mobilebuildmcp-doctor`), Homebrew formula, `MOBILEBUILDMCP_*` environment variables, `mobilebuildmcp://` resource URIs, `mobilebuildmcp.output.*` structured output schema IDs, the `.mobilebuildmcp/config.yaml` project config directory, and the `~/Library/Developer/MobileBuildMCP` state directory all use the new name. The `xcodebuildmcp.com` domain is retired: structured output schema `$id` URLs now use `https://raw.githubusercontent.com/getsentry/MobileBuildMCP/main/schemas/structured-output/`, documentation links point at the docs sources in the `getsentry/xcodebuildmcp.com` repository, and the MCP registry name is `io.github.getsentry/mobilebuildmcp`.\n- Dictionary-shaped MCP inputs now use client-compatible wire representations ([#491](https://github.com/getsentry/XcodeBuildMCP/issues/491)). The `env` and `testRunnerEnv` inputs on build, launch, test, and session-default tools are arrays of `{ \"key\": \"...\", \"value\": \"...\" }` entries, while `xcode_ide_call_tool.arguments` is a JSON object string. MobileBuildMCP converts these values to their existing internal objects only after MCP input validation.\n\n### Option A — Homebrew (no Node.js required)\n\nInstall:\n```bash\nbrew tap getsentry/xcodebuildmcp\nbrew install mobilebuildmcp\n```\n\nMCP config:\n```json\n\"MobileBuildMCP\": {\n  \"command\": \"mobilebuildmcp\",\n  \"args\": [\"mcp\"]\n}\n```\n\n### Option B — npm / npx (Node.js 18+)\n\nInstall:\n```bash\nnpm install -g mobilebuildmcp@latest\n```\n\nMCP config:\n```json\n\"MobileBuildMCP\": {\n  \"command\": \"npx\",\n  \"args\": [\"-y\", \"mobilebuildmcp@latest\", \"mcp\"]\n}\n```\n\n📦 **NPM Package**: https://www.npmjs.com/package/mobilebuildmcp/v/2.7.1\n",
+          "draft": false,
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/releases/tag/v2.7.1",
+          "prerelease": false,
+          "published_at": "2026-09-23T20:18:31Z",
+          "tag_name": "v2.7.1",
+          "body_truncated": false
+        },
+        {
+          "body": "## Release v2.7.0\n\n### New! Xcode 27 Device Hub simulator support\n\nUI automation tools now work fully with Xcode 27 simulators through Device Hub, including simulator window launching and keyboard controls. XcodeBuildMCP targets the selected simulator directly and uses locale-independent menu actions, while maintaining backward compatibility with Simulator.app on earlier Xcode versions.\n\n### Breaking\n\n#### Build and test structured results now use schema version 3\n\nBuild and test tools now return `schemaVersion: \"3\"` so prepared-test paths can be included in structured results. This affects MCP and CLI JSON consumers that validate `xcodebuildmcp.output.build-result` or `xcodebuildmcp.output.test-result` against version 2; consumers that only display or pass through tool results are unaffected.\n\nIf no action is taken, validators pinned to version 2 will reject new build and test results. Update them to accept the version 3 schemas, while retaining version 2 support when older XcodeBuildMCP releases remain in use.\n\nBefore:\n\n```text\nhttps://xcodebuildmcp.com/schemas/structured-output/xcodebuildmcp.output.build-result/2.schema.json\nhttps://xcodebuildmcp.com/schemas/structured-output/xcodebuildmcp.output.test-result/2.schema.json\n```\n\nAfter:\n\n```text\nhttps://xcodebuildmcp.com/schemas/structured-output/xcodebuildmcp.output.build-result/3.schema.json\nhttps://xcodebuildmcp.com/schemas/structured-output/xcodebuildmcp.output.test-result/3.schema.json\n```\n\n#### Unspecified build configurations now follow the scheme\n\nBuild, test, clean, and app-path commands now honor the scheme action's configuration when `configuration` is omitted instead of always using Debug. This fixes incorrect build settings for schemes that use another configuration, but scripts or agents that relied on the",
+          "draft": false,
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/releases/tag/v2.7.0",
+          "prerelease": false,
+          "published_at": "2026-07-23T14:07:50Z",
+          "tag_name": "v2.7.0",
+          "body_truncated": true
+        },
+        {
+          "body": "## Release v2.6.2\n\n### Fixed\n\n- Fixed `xcodebuildmcp upgrade` so update checks use the latest GitHub release as the canonical target instead of stale package-manager metadata, ensuring multi-version upgrades show release notes for the actual target version.\n\n### Option A — Homebrew (no Node.js required)\n\nInstall:\n```bash\nbrew tap getsentry/xcodebuildmcp\nbrew install xcodebuildmcp\n```\n\nMCP config:\n```json\n\"XcodeBuildMCP\": {\n  \"command\": \"xcodebuildmcp\",\n  \"args\": [\"mcp\"]\n}\n```\n\n### Option B — npm / npx (Node.js 18+)\n\nInstall:\n```bash\nnpm install -g xcodebuildmcp@latest\n```\n\nMCP config:\n```json\n\"XcodeBuildMCP\": {\n  \"command\": \"npx\",\n  \"args\": [\"-y\", \"xcodebuildmcp@latest\", \"mcp\"]\n}\n```\n\n📦 **NPM Package**: https://www.npmjs.com/package/xcodebuildmcp/v/2.6.2\n",
+          "draft": false,
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/releases/tag/v2.6.2",
+          "prerelease": false,
+          "published_at": "2026-06-02T20:38:36Z",
+          "tag_name": "v2.6.2",
+          "body_truncated": false
+        },
+        {
+          "body": "## Release v2.6.1\n\n### Fixed\n\n- Fixed tab bar item discovery so agents can switch `UITabBar` items ([#439](https://github.com/getsentry/XcodeBuildMCP/issues/439), [#441](https://github.com/getsentry/XcodeBuildMCP/pull/441)).\n\n### Option A — Homebrew (no Node.js required)\n\nInstall:\n```bash\nbrew tap getsentry/xcodebuildmcp\nbrew install xcodebuildmcp\n```\n\nMCP config:\n```json\n\"XcodeBuildMCP\": {\n  \"command\": \"xcodebuildmcp\",\n  \"args\": [\"mcp\"]\n}\n```\n\n### Option B — npm / npx (Node.js 18+)\n\nInstall:\n```bash\nnpm install -g xcodebuildmcp@latest\n```\n\nMCP config:\n```json\n\"XcodeBuildMCP\": {\n  \"command\": \"npx\",\n  \"args\": [\"-y\", \"xcodebuildmcp@latest\", \"mcp\"]\n}\n```\n\n📦 **NPM Package**: https://www.npmjs.com/package/xcodebuildmcp/v/2.6.1\n",
+          "draft": false,
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/releases/tag/v2.6.1",
+          "prerelease": false,
+          "published_at": "2026-06-02T20:15:52Z",
+          "tag_name": "v2.6.1",
+          "body_truncated": false
+        },
+        {
+          "body": "## Release v2.6.0\n\n### New! Runtime UI automation\n\nUI automation now hands your agent reusable context instead of just confirming an action ran. After a tap, swipe, type, wait, or batch, the result includes a compact snapshot of the foreground UI with stable element references and a screen hash, so the agent can pick the next control directly rather than taking another screenshot or re-running a full snapshot. Candidate controls are ranked from real accessibility data, and suggested next steps point at concrete element references instead of guessed coordinates.\n\nIn a deterministic Weather-app task, this cut wall-clock time by roughly 70%, token usage by roughly 68%, and total tool calls by roughly 76%.\n\nNew tools and options:\n\n- `wait_for_ui` polls the UI until a predicate is satisfied — existence, enabled state, focus, visible text, or settled layout.\n- `batch` performs a sequence of element-reference actions in one call, so agents can run several same-screen taps without a snapshot round-trip between each step.\n- `drag` performs element-reference drag gestures for expanding sheets and scrolling real list regions without coordinate guessing.\n- `snapshot_ui` now returns stable element references and a screen hash. Pass `sinceScreenHash` (MCP) / `--since-screen-hash` (CLI) to skip a full snapshot when the screen has not changed.\n- `type_text` accepts `replaceExisting` to replace a field's current value instead of appending to it.\n\nSee [Tools Reference](https://xcodebuildmcp.com/docs/tools).\n\n### Added\n\n- Added follow-up `nextSteps` to machine-readable results so agents can act on suggested next actions without scraping prose. MCP `structuredContent` carries MCP tool-call hints and CLI `--output json` carries shell command lines. Result schemas that include `nextSteps` mo",
+          "draft": false,
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/releases/tag/v2.6.0",
+          "prerelease": false,
+          "published_at": "2026-06-01T20:58:16Z",
+          "tag_name": "v2.6.0",
+          "body_truncated": true
+        }
+      ],
+      "queries": [
+        {
+          "kind": "readme",
+          "endpoint": "https://api.github.com/repos/getsentry/MobileBuildMCP/readme",
+          "exit_code": 0
+        },
+        {
+          "kind": "commits",
+          "endpoint": "https://api.github.com/repos/getsentry/MobileBuildMCP/commits?per_page=30",
+          "exit_code": 0
+        },
+        {
+          "kind": "releases",
+          "endpoint": "https://api.github.com/repos/getsentry/MobileBuildMCP/releases?per_page=5",
+          "exit_code": 0
+        }
+      ]
+    },
+    {
+      "requested_repo": "awizemann/harness",
+      "repository": {
+        "full_name": "awizemann/harness",
+        "html_url": "https://github.com/awizemann/harness",
+        "default_branch": "main",
+        "archived": false,
+        "disabled": false,
+        "license": {
+          "key": "mit",
+          "name": "MIT License",
+          "spdx_id": "MIT",
+          "url": "https://api.github.com/licenses/mit",
+          "node_id": "MDc6TGljZW5zZTEz"
+        },
+        "pushed_at": "2026-09-02T19:54:16Z",
+        "updated_at": "2026-10-12T16:58:37Z"
+      },
+      "head": {
+        "date": "2026-09-02T19:54:05Z",
+        "html_url": "https://github.com/awizemann/harness/commit/3f58c077ded131cca71d75efb05c5d325f0ed18f",
+        "message": "release: v0.8.4\n\nHarness 0.8.4 — set_value, and type() stops lying about no-ops\n\nCo-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "sha": "3f58c077ded131cca71d75efb05c5d325f0ed18f"
+      },
+      "recent_commits": [
+        {
+          "date": "2026-09-02T19:54:05Z",
+          "html_url": "https://github.com/awizemann/harness/commit/3f58c077ded131cca71d75efb05c5d325f0ed18f",
+          "message": "release: v0.8.4",
+          "sha": "3f58c077ded131cca71d75efb05c5d325f0ed18f"
+        },
+        {
+          "date": "2026-09-02T19:51:32Z",
+          "html_url": "https://github.com/awizemann/harness/commit/95baa191c3e9ad69bfa179582898cb30aaef767e",
+          "message": "chore(setup): Memophant update",
+          "sha": "95baa191c3e9ad69bfa179582898cb30aaef767e"
+        },
+        {
+          "date": "2026-09-02T19:50:42Z",
+          "html_url": "https://github.com/awizemann/harness/commit/2f20edce5ee15e044c3066bc5fcc883e59102c08",
+          "message": "release: prep v0.8.4 — MCP identity bump + release notes",
+          "sha": "2f20edce5ee15e044c3066bc5fcc883e59102c08"
+        },
+        {
+          "date": "2026-09-02T15:17:05Z",
+          "html_url": "https://github.com/awizemann/harness/commit/1bf093566b24abf70777bebd14c848c4ec2141c1",
+          "message": "WB-27: set_value, and stop type() lying about no-ops",
+          "sha": "1bf093566b24abf70777bebd14c848c4ec2141c1"
+        },
+        {
+          "date": "2026-09-02T12:39:36Z",
+          "html_url": "https://github.com/awizemann/harness/commit/396b732748de7d730c117f4a60c48bf0b5b8a807",
+          "message": "release: v0.8.3",
+          "sha": "396b732748de7d730c117f4a60c48bf0b5b8a807"
+        },
+        {
+          "date": "2026-09-02T12:37:12Z",
+          "html_url": "https://github.com/awizemann/harness/commit/e20451f3c83113dca2d969750e92e9c520d8b45f",
+          "message": "release: prep v0.8.3 — MCP identity bump + release notes",
+          "sha": "e20451f3c83113dca2d969750e92e9c520d8b45f"
+        },
+        {
+          "date": "2026-09-02T02:42:02Z",
+          "html_url": "https://github.com/awizemann/harness/commit/2a202930d1b15a0499241e96747d8e665cedf724",
+          "message": "WB-25: mark the small controls, and settle on geometry not pixels",
+          "sha": "2a202930d1b15a0499241e96747d8e665cedf724"
+        },
+        {
+          "date": "2026-09-02T01:35:35Z",
+          "html_url": "https://github.com/awizemann/harness/commit/ab60adcf7abce659e0c9a96169d6460b679d4d63",
+          "message": "WB-23: make a macOS mark tappable, and let a session name its fixture",
+          "sha": "ab60adcf7abce659e0c9a96169d6460b679d4d63"
+        },
+        {
+          "date": "2026-09-01T22:47:49Z",
+          "html_url": "https://github.com/awizemann/harness/commit/0292dd9b41a6eb36ccbded53e0013a874abcecd6",
+          "message": "WB-17: scope what the agent can see, and let it reach past the fold",
+          "sha": "0292dd9b41a6eb36ccbded53e0013a874abcecd6"
+        },
+        {
+          "date": "2026-09-01T21:39:08Z",
+          "html_url": "https://github.com/awizemann/harness/commit/22ff2646e793fb86d70097747a5f8169f99d01c8",
+          "message": "WB-17: name what macOS shows, and mark only what's in frame",
+          "sha": "22ff2646e793fb86d70097747a5f8169f99d01c8"
+        },
+        {
+          "date": "2026-09-01T18:13:56Z",
+          "html_url": "https://github.com/awizemann/harness/commit/889cd411b69276c7c581bb445fc62dc05e33637d",
+          "message": "release: v0.8.2",
+          "sha": "889cd411b69276c7c581bb445fc62dc05e33637d"
+        },
+        {
+          "date": "2026-09-01T18:11:23Z",
+          "html_url": "https://github.com/awizemann/harness/commit/93116a9475c6caebefebd1be67adf0cd4fcdfd25",
+          "message": "release: prep v0.8.2 — MCP identity bump + release notes",
+          "sha": "93116a9475c6caebefebd1be67adf0cd4fcdfd25"
+        },
+        {
+          "date": "2026-08-28T23:00:07Z",
+          "html_url": "https://github.com/awizemann/harness/commit/d7cf6d159faf62f52f9c0334485b7e0bf1b8dd17",
+          "message": "Redact WDA error bodies for text-bearing endpoints",
+          "sha": "d7cf6d159faf62f52f9c0334485b7e0bf1b8dd17"
+        },
+        {
+          "date": "2026-08-28T22:51:42Z",
+          "html_url": "https://github.com/awizemann/harness/commit/e0e33b80c9ae2d8956bedf288a1adb181d41ad8a",
+          "message": "feat(mcp): staged credentials in UI sessions, and honest fill failures",
+          "sha": "e0e33b80c9ae2d8956bedf288a1adb181d41ad8a"
+        },
+        {
+          "date": "2026-08-28T16:55:17Z",
+          "html_url": "https://github.com/awizemann/harness/commit/1cdc93dc2a0a5cb359c15ceec54c94f6947a3bfd",
+          "message": "feat(mcp): only mark what's actionable, and never ship an empty label",
+          "sha": "1cdc93dc2a0a5cb359c15ceec54c94f6947a3bfd"
+        },
+        {
+          "date": "2026-08-28T14:26:45Z",
+          "html_url": "https://github.com/awizemann/harness/commit/e8096525d2feee658d855820183a09759d00d990",
+          "message": "release: v0.8.1",
+          "sha": "e8096525d2feee658d855820183a09759d00d990"
+        },
+        {
+          "date": "2026-08-28T14:24:14Z",
+          "html_url": "https://github.com/awizemann/harness/commit/64939b2a232da428c45abb3493d605ae41bcc40e",
+          "message": "chore(mcp): MCPServerIdentity.version 0.8.0 -> 0.8.1 for release",
+          "sha": "64939b2a232da428c45abb3493d605ae41bcc40e"
+        },
+        {
+          "date": "2026-08-28T14:23:39Z",
+          "html_url": "https://github.com/awizemann/harness/commit/81a273f5982831dbcebd123db1b4d0a8ef8e87f4",
+          "message": "docs(wiki): Memophant update",
+          "sha": "81a273f5982831dbcebd123db1b4d0a8ef8e87f4"
+        },
+        {
+          "date": "2026-08-28T14:22:48Z",
+          "html_url": "https://github.com/awizemann/harness/commit/d4d9baca4bfbf44882b856cc910e0f12d5fb553c",
+          "message": "chore(release): 0.8.1 release notes; README What's-new -> 0.8.1",
+          "sha": "d4d9baca4bfbf44882b856cc910e0f12d5fb553c"
+        },
+        {
+          "date": "2026-08-28T14:21:49Z",
+          "html_url": "https://github.com/awizemann/harness/commit/ed0c727705be5cb9f2cdb711f5424ac7eea65a5b",
+          "message": "chore(documents): Memophant update",
+          "sha": "ed0c727705be5cb9f2cdb711f5424ac7eea65a5b"
+        },
+        {
+          "date": "2026-08-28T14:21:49Z",
+          "html_url": "https://github.com/awizemann/harness/commit/bddfe10f1417085eee55858c49b25ff81f5e0abc",
+          "message": "docs(wiki): Memophant update",
+          "sha": "bddfe10f1417085eee55858c49b25ff81f5e0abc"
+        },
+        {
+          "date": "2026-08-28T12:54:34Z",
+          "html_url": "https://github.com/awizemann/harness/commit/66fc9f49ada094d8ead03a6e4268e1069a6e085c",
+          "message": "feat(mcp): label provenance, armed settle, and web session-state injection",
+          "sha": "66fc9f49ada094d8ead03a6e4268e1069a6e085c"
+        },
+        {
+          "date": "2026-08-28T01:10:17Z",
+          "html_url": "https://github.com/awizemann/harness/commit/cbac7548755bb43289badd92d4df2828dc9b99e9",
+          "message": "docs(readme): single What's-new section (0.8); older release notes live on the Releases page",
+          "sha": "cbac7548755bb43289badd92d4df2828dc9b99e9"
+        },
+        {
+          "date": "2026-08-28T01:08:14Z",
+          "html_url": "https://github.com/awizemann/harness/commit/4b275209c1f7bc86b9ea55a5c4224d11674bdb45",
+          "message": "release: v0.8.0",
+          "sha": "4b275209c1f7bc86b9ea55a5c4224d11674bdb45"
+        },
+        {
+          "date": "2026-08-28T01:05:14Z",
+          "html_url": "https://github.com/awizemann/harness/commit/cf83d70386758ff86c34605c2aa0527424d11b82",
+          "message": "chore(setup): Memophant update",
+          "sha": "cf83d70386758ff86c34605c2aa0527424d11b82"
+        },
+        {
+          "date": "2026-08-28T01:05:14Z",
+          "html_url": "https://github.com/awizemann/harness/commit/ad117a5747b11e66604aca700c71c838176bb003",
+          "message": "chore(documents): Memophant update",
+          "sha": "ad117a5747b11e66604aca700c71c838176bb003"
+        },
+        {
+          "date": "2026-08-28T01:05:13Z",
+          "html_url": "https://github.com/awizemann/harness/commit/7c8ae2a30ef75b3941ad7e9eb66cc8d614a25402",
+          "message": "docs(wiki): Memophant update",
+          "sha": "7c8ae2a30ef75b3941ad7e9eb66cc8d614a25402"
+        },
+        {
+          "date": "2026-08-28T00:33:18Z",
+          "html_url": "https://github.com/awizemann/harness/commit/201a4b3fe1e03acf7b951362d86566788839240b",
+          "message": "chore(release): 0.8.0 release notes; ignore machine-local .scarf/project.json",
+          "sha": "201a4b3fe1e03acf7b951362d86566788839240b"
+        },
+        {
+          "date": "2026-08-27T23:04:24Z",
+          "html_url": "https://github.com/awizemann/harness/commit/7d42b6ccd1ec1a4697dd04d3978c060835bf7797",
+          "message": "feat(mcp): structured marks + page text on observe_ui / act_ui",
+          "sha": "7d42b6ccd1ec1a4697dd04d3978c060835bf7797"
+        },
+        {
+          "date": "2026-08-21T12:45:59Z",
+          "html_url": "https://github.com/awizemann/harness/commit/3612b49e2104ff2ff08677e965374fbac91910ca",
+          "message": "chore(setup): Memophant update",
+          "sha": "3612b49e2104ff2ff08677e965374fbac91910ca"
+        }
+      ],
+      "releases": [
+        {
+          "body": "# Harness 0.8.4 — set_value, and type() stops lying about no-ops\n\nA focused point release for one severe finding (WB-27 / W36): `act{type}` could not fill an `<input type=\"datetime-local\">` behind a controlled React `onChange` — the field cleared and the create was silently dropped, while REST and Playwright both worked. Two failure modes hid behind it: reading `selectionStart` on a date/number/datetime-local input *throws* (aborting the whole insert), and a controlled component reverts any value not set the framework's way. Tool-surface change is additive.\n\n## Highlights\n\n### New `set_value(id, value)` web act\n\nAddresses a Set-of-Mark id (the same parked registry `scroll_into_view` uses), focuses the element, drives the value through the native prototype setter — the React-value-tracker-correct path — dispatches `input` + `change`, blurs to commit, then **reads the value back** and reports whether it stuck. `<select>` matches by option value or visible label.\n\nIt's a distinct tool rather than a `value` argument on `type` because the contracts differ — keystroke-and-caret versus whole-value-and-verified — and a distinct tool advertises and refuses web-only cleanly. Wired end to end: the act vocabulary, `act_ui` schema, decoder, supervisor dispatch, settle profile, logging, replay, and previews. macOS/iOS refuse it explicitly for now — an AX value-set needs per-role verification, and a value-set that silently no-ops while reporting success is exactly the dishonesty this release is about.\n\n### `type()` stops reporting no-ops as success\n\nThe typing JS now guards the `selectionStart` read and reports `{ had, changed }`: a no-op (no field focused, or a controlled/readonly field ignoring the insert) sets an honest driver detail pointing at `set_value`, instead of a clean \"typ",
+          "draft": false,
+          "html_url": "https://github.com/awizemann/harness/releases/tag/v0.8.4",
+          "prerelease": false,
+          "published_at": "2026-09-02T19:54:12Z",
+          "tag_name": "v0.8.4",
+          "body_truncated": true
+        },
+        {
+          "body": "# Harness 0.8.3 — macOS sessions grow up, undeclared modals count, and taps mean what marks mean\n\nA larger point release from two acceptance waves: the drop-help web re-shakedown (WB-17) and the first real-app macOS pass against Scarf (WB-17/23/25). The theme across all of it: the engine now tells a client what is true of the *screen*, not merely of the DOM or the AX tree. All tool-surface changes are additive.\n\n## Highlights\n\n### macOS mark probe rebuilt — named, deduplicated, scoped, and honest\n\nThe macOS AX walk moves out of the driver into a pure `MacMarkProbe` over a snapshotted tree — which is what makes it testable (38 fixture-tree tests plus a live suite against a real SwiftUI app). What it fixes:\n\n- **Labels**: SwiftUI form fields whose label is an unassociated sibling `Text` came back as `label: \"\"`. The probe now resolves an accessible name through an ordered rule chain, reports which rule won as `label_source` (mirroring web's enum), and never ships an empty label. Adjacent-text association only speaks when the app said nothing, and refuses on ties, second claimants, intervening controls, and section boundaries — a wrong label is worse than an honest `unlabelled textField`.\n- **One mark per element**, however many paths the AX graph offers to it (menus used to appear twice).\n- **`page_text` on macOS**: the front frame's static text in reading order, from the same scoped subtree the marks come from.\n- **Frame scoping**: a front sheet, popover, or menu owns the mark table; the window behind it does not, and every rect is in the frame's own space. No plausible root → an empty table, never a background window clipped into the frame.\n- **Small controls are marked**: the 16pt minimum extent silently dropped SwiftUI controls whose AX extent is the *text*, not the h",
+          "draft": false,
+          "html_url": "https://github.com/awizemann/harness/releases/tag/v0.8.3",
+          "prerelease": false,
+          "published_at": "2026-09-02T12:39:44Z",
+          "tag_name": "v0.8.3",
+          "body_truncated": true
+        },
+        {
+          "body": "# Harness 0.8.2 — marks you can trust, credentials in step-level sessions, and no secrets in error bodies\n\nA point release from putting the step-level UI session tools to work in a consuming product (walkabout). Two engine gaps in the web Set-of-Mark probe with production evidence, the missing credential story for step-level sessions, and a credential-leak fix in the WDA client. All tool-surface changes are additive — existing tools keep their names and shapes.\n\n## Highlights\n\n### Only mark what's actionable, and never ship an empty label\n\nWith a modal dialog open, the dimmed page behind it stayed in the mark table — including a background button whose label collided with the modal's own, so a resolver keyed on that label matched two elements and the run died at step 0. The web probe's `consider()` now filters for actual interactability: `pointer-events: none` (inherited, so ancestors count), `[inert]` subtrees, and a hit-test probe (`elementFromPoint` at up to seven points of the element's viewport-clipped rect, accepting the element, a descendant, or an ancestor). Separately, no mark ships with an empty label any more — a mark is a promise that `tap_mark(id)` will do something and that its label can key a resolver, and both halves of that promise are now enforced. The probe itself moved into its own `WebMarkProbe.swift` with a dedicated ~500-line test suite.\n\n### Staged credentials in UI sessions, and honest fill failures\n\n`fill_credential` was a silent no-op in step-level sessions: nothing carried a credential id into the session, and the drivers logged the step \"ok\" while doing nothing — a caller could believe it had logged in and see an unchanged screen with nothing to explain it. Now:\n\n- **`start_ui_session` takes `credential_id`**, validated at start (unknown id ",
+          "draft": false,
+          "html_url": "https://github.com/awizemann/harness/releases/tag/v0.8.2",
+          "prerelease": false,
+          "published_at": "2026-09-01T18:14:11Z",
+          "tag_name": "v0.8.2",
+          "body_truncated": true
+        },
+        {
+          "body": "# Harness 0.8.1 — authenticated web sessions, honest mark labels, and a settle that waits for the swap\n\nA point release driven by the first real-app shakedown of the step-level UI session tools against a production web app. Three engine gaps, each fixed with evidence from that run. All changes are additive on the tool surface — the five original session tools keep their names and shapes.\n\n## Highlights\n\n### Session-state injection + export — the authenticated-app story\n\nWeb sessions run on a non-persistent data store — a fresh user every time. That stays the default, but it put every SSO-only product out of reach: there is no password for an agent to type, and there shouldn't be. The new flow:\n\n1. `start_ui_session({ platform: \"web\", url, visible: true })` — the session's window comes **on screen**, titled and accepting real input.\n2. A **human** logs in — password, SSO redirect, MFA, whatever the product needs.\n3. **`export_ui_session_state`** (new tool, web only) returns the session's cookies + current-origin `localStorage`, flagged `sensitive: true`.\n4. The client stores that in a secret manager or Keychain; later headless runs pass it straight back as `session_state` — the export's shape round-trips with no transformation. Cookies inject **before the first navigation**, so even the first request is authenticated.\n\nCookie values are treated like `fill_credential`'s password: never logged (counts only, with redacted `description`s so even a stray interpolation can't leak one), never in `steps.jsonl`, never on disk, never in an error message, never on the persisted run model. A session started **without** `session_state` inherits nothing — the fresh-user invariant is untouched and live-smoke-asserted. All three capabilities (`visible`, `session_state`, the export) are ",
+          "draft": false,
+          "html_url": "https://github.com/awizemann/harness/releases/tag/v0.8.1",
+          "prerelease": false,
+          "published_at": "2026-08-28T14:26:50Z",
+          "tag_name": "v0.8.1",
+          "body_truncated": true
+        },
+        {
+          "body": "# Harness 0.8.0 — macOS UI sessions arrive contained, and observations go structured\n\n0.7 let agents drive a **web or iOS** target step by step through `harness-mcp`, with macOS deferred. 0.8 delivers that third tier — an agent can now drive a **Mac app** the same way, through a **contained input backend that never touches your pointer, focus, or any app but the target**. And the step tools stop throwing away what they know: `observe_ui` / `act_ui` now return **machine-readable structured results** — element geometry and (on web) the page's visible text — alongside the marked screenshot.\n\n## Highlights\n\n### macOS UI sessions — drive a Mac app without losing your desktop\n\n`start_ui_session` accepts `platform: \"macos\"` with either a **prebuilt `app_path`** (the preferred QA flow — no Xcode preflight) or `project_path` + `scheme` (falls back to `xcodebuild`). What makes it safe to run on a machine you're actively using:\n\n- **Contained input by default.** Actions go **AX-first** (`AXPress` on the hit-tested element; focus + `AXSetValue` for text), then `CGEvent.postToPid` scoped to the target — the real pointer never moves, focus is never stolen, the app is never foregrounded (`activates: false`). No path falls back to global HID; if the ladder is exhausted you get a precise `unactuatable` error naming what was attempted. Legacy global-HID behavior survives only behind `HARNESS_MACOS_INPUT=hid`.\n- **Pid-scoped, stranger-proof.** Every operation on the target — input, window lookup, teardown — resolves via the **launched process id**, never the bundle id. Running your own copy of the same app alongside a session can no longer get it force-quit or clicked on.\n- **Clean teardown, always.** `end_ui_session` terminates the target app (unlike GUI runs, which leave it open), a fai",
+          "draft": false,
+          "html_url": "https://github.com/awizemann/harness/releases/tag/v0.8.0",
+          "prerelease": false,
+          "published_at": "2026-08-28T01:08:20Z",
+          "tag_name": "v0.8.0",
+          "body_truncated": true
+        }
+      ],
+      "queries": [
+        {
+          "kind": "readme",
+          "endpoint": "https://api.github.com/repos/awizemann/harness/readme",
+          "exit_code": 0
+        },
+        {
+          "kind": "commits",
+          "endpoint": "https://api.github.com/repos/awizemann/harness/commits?per_page=30",
+          "exit_code": 0
+        },
+        {
+          "kind": "releases",
+          "endpoint": "https://api.github.com/repos/awizemann/harness/releases?per_page=5",
+          "exit_code": 0
+        }
+      ]
+    },
+    {
+      "requested_repo": "dongxinsuperman/ai-phone",
+      "repository": {
+        "full_name": "dongxinsuperman/ai-phone",
+        "html_url": "https://github.com/dongxinsuperman/ai-phone",
+        "default_branch": "main",
+        "archived": false,
+        "disabled": false,
+        "license": {
+          "key": "mit",
+          "name": "MIT License",
+          "spdx_id": "MIT",
+          "url": "https://api.github.com/licenses/mit",
+          "node_id": "MDc6TGljZW5zZTEz"
+        },
+        "pushed_at": "2026-10-13T10:48:21Z",
+        "updated_at": "2026-10-13T10:28:18Z"
+      },
+      "head": {
+        "date": "2026-10-13T09:52:03Z",
+        "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/38ef0c4fd81975195f37bb4ceead9efaaeaeb141",
+        "message": "docs(jev): align replay usage with current configuration\n\nDescribe the four supported Jev settings and provider defaults, remove obsolete endpoint and timeout instructions, and explain automatic platform selection under the single switch. Align screenshot evidence documentation with annotated-only Jev reporting.",
+        "sha": "38ef0c4fd81975195f37bb4ceead9efaaeaeb141"
+      },
+      "recent_commits": [
+        {
+          "date": "2026-10-13T09:52:03Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/38ef0c4fd81975195f37bb4ceead9efaaeaeb141",
+          "message": "docs(jev): align replay usage with current configuration",
+          "sha": "38ef0c4fd81975195f37bb4ceead9efaaeaeb141"
+        },
+        {
+          "date": "2026-10-13T09:38:05Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/59ea8c354ca773b9e42f6f5c0fc36332261979e5",
+          "message": "fix(jev): hand the latest locator frame to V3 rescue",
+          "sha": "59ea8c354ca773b9e42f6f5c0fc36332261979e5"
+        },
+        {
+          "date": "2026-10-13T09:18:48Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/4bd381c82314099088b20c21f7ba8d742aadb237",
+          "message": "test(jev): verify disabled replay retains original routes on all platforms",
+          "sha": "4bd381c82314099088b20c21f7ba8d742aadb237"
+        },
+        {
+          "date": "2026-10-13T09:17:44Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/f79194114bc83389029384aebb5dd573976153e5",
+          "message": "docs(config): show provider-specific Jev model examples",
+          "sha": "f79194114bc83389029384aebb5dd573976153e5"
+        },
+        {
+          "date": "2026-10-13T09:14:33Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/ab3a088671f152e856ebcb7f170bab3e918acf4d",
+          "message": "docs(config): match Jev comments to existing environment style",
+          "sha": "ab3a088671f152e856ebcb7f170bab3e918acf4d"
+        },
+        {
+          "date": "2026-10-13T09:11:51Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/bbe0bc03cafe65203a9c228c88c11095912dbd25",
+          "message": "docs(config): explain Jev switch scope and provider settings",
+          "sha": "bbe0bc03cafe65203a9c228c88c11095912dbd25"
+        },
+        {
+          "date": "2026-10-13T09:10:45Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/72758e4e9a1453ee96bbbfc88d51bffba32c64bc",
+          "message": "fix(jev): use one switch for the complete replay integration",
+          "sha": "72758e4e9a1453ee96bbbfc88d51bffba32c64bc"
+        },
+        {
+          "date": "2026-10-13T09:01:18Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/dd3affd36869defe83a5246d445f3d7eddf71247",
+          "message": "chore(release): align backend and web versions at 0.8.0",
+          "sha": "dd3affd36869defe83a5246d445f3d7eddf71247"
+        },
+        {
+          "date": "2026-10-13T09:01:18Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/782801aab80e7c5f8501b325956a76e4edf1cc25",
+          "message": "docs(jev): introduce multimodal click replay with device demonstrations",
+          "sha": "782801aab80e7c5f8501b325956a76e4edf1cc25"
+        },
+        {
+          "date": "2026-10-13T09:01:18Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/cc41c31537f4be87a06c618c068d2965fc42e6c7",
+          "message": "fix(v3): select Jev route from the original cached action",
+          "sha": "cc41c31537f4be87a06c618c068d2965fc42e6c7"
+        },
+        {
+          "date": "2026-10-12T15:59:18Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/98dc364c91ae37402659dc56f0429a0a08e734ac",
+          "message": "chore(config): document stability opt-in and allow larger click thresholds",
+          "sha": "98dc364c91ae37402659dc56f0429a0a08e734ac"
+        },
+        {
+          "date": "2026-10-12T15:58:56Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/77dd910beb1ead6df82869e254afe35f4f613f81",
+          "message": "feat(jev): align candidate labels with immutable click points",
+          "sha": "77dd910beb1ead6df82869e254afe35f4f613f81"
+        },
+        {
+          "date": "2026-10-12T15:58:56Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/5bab909df2746a65bb50814dac7e7d2cffea4ddb",
+          "message": "feat(reports): expose Jev model-input evidence in run logs",
+          "sha": "5bab909df2746a65bb50814dac7e7d2cffea4ddb"
+        },
+        {
+          "date": "2026-10-12T15:58:34Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/a4c43902ed18e3715cdbe5b0f7f7a1645473b247",
+          "message": "feat(v3): add optional Jev click relocation and platform fast channels",
+          "sha": "a4c43902ed18e3715cdbe5b0f7f7a1645473b247"
+        },
+        {
+          "date": "2026-10-12T03:22:16Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/2715dbcfab3342ddacb95dacd708dc3df167a2ae",
+          "message": "fix(v3): 移除低使用率的同坐标定位保护",
+          "sha": "2715dbcfab3342ddacb95dacd708dc3df167a2ae"
+        },
+        {
+          "date": "2026-10-11T01:51:33Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/478c107c85a099c7178c6d49697418415757dbff",
+          "message": "feat(assertion): supplement verification history with existing action summaries",
+          "sha": "478c107c85a099c7178c6d49697418415757dbff"
+        },
+        {
+          "date": "2026-10-10T16:13:50Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/392539ee3d5cde2aeda61ffa7a71bbc09c58c7f5",
+          "message": "test(assertion): align cache checks with shared verification policy",
+          "sha": "392539ee3d5cde2aeda61ffa7a71bbc09c58c7f5"
+        },
+        {
+          "date": "2026-10-10T16:06:10Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/77c0050ecea639bc5a7016b64f487e446326a63f",
+          "message": "refactor(assertion): streamline prompts and harden final verdict parsing",
+          "sha": "77c0050ecea639bc5a7016b64f487e446326a63f"
+        },
+        {
+          "date": "2026-10-10T02:05:11Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/0f409c7bbd2d9c25e6d75c2e9bd7732547345d6c",
+          "message": "fix(cache): hand off explicit rescue give-up to long rescue",
+          "sha": "0f409c7bbd2d9c25e6d75c2e9bd7732547345d6c"
+        },
+        {
+          "date": "2026-10-09T16:24:44Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/bb6a90c736c52cb170c7fc3949501eec9f90cf1d",
+          "message": "feat(cache): hand off exhausted V3 replay to independent long rescue",
+          "sha": "bb6a90c736c52cb170c7fc3949501eec9f90cf1d"
+        },
+        {
+          "date": "2026-10-09T15:53:24Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/2d13a03a6872dd9eb187e59577d8532d27a34fc1",
+          "message": "fix(cache): remove V3 popup call cap and reuse Seed XML for rescue",
+          "sha": "2d13a03a6872dd9eb187e59577d8532d27a34fc1"
+        },
+        {
+          "date": "2026-10-09T10:26:57Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/dbf4cd4f15c69e42508975737ad0a5f6e5d91f20",
+          "message": "fix(cache): preserve full action descriptions in V3 rescue",
+          "sha": "dbf4cd4f15c69e42508975737ad0a5f6e5d91f20"
+        },
+        {
+          "date": "2026-10-09T07:51:58Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/074101dd37e246c30338041c938f649c76d7a623",
+          "message": "feat(cache): reuse complete action summaries per case",
+          "sha": "074101dd37e246c30338041c938f649c76d7a623"
+        },
+        {
+          "date": "2026-10-09T06:42:05Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/6146079a0db8307351557402f767c58f39a55424",
+          "message": "feat(cache): prefer action summaries for V3 cleaning",
+          "sha": "6146079a0db8307351557402f767c58f39a55424"
+        },
+        {
+          "date": "2026-10-09T04:45:49Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/b2f48a8ca1a4a27d867a9e8f673db19eb1bd041e",
+          "message": "fix(cache): support PostgreSQL 9.4 and prevent Doubao output truncation",
+          "sha": "b2f48a8ca1a4a27d867a9e8f673db19eb1bd041e"
+        },
+        {
+          "date": "2026-10-06T13:04:55Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/36f3872d000a889337f51585cc625c81eaa6e843",
+          "message": "fix(scroll): adapt Seed timing per platform and prefer fresh recordings",
+          "sha": "36f3872d000a889337f51585cc625c81eaa6e843"
+        },
+        {
+          "date": "2026-10-06T11:50:31Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/615079ce65a3bb6c3d26a413621624d51425a2e8",
+          "message": "fix(scroll): correct Seed touch geometry and preserve CU behavior",
+          "sha": "615079ce65a3bb6c3d26a413621624d51425a2e8"
+        },
+        {
+          "date": "2026-10-04T11:21:57Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/3677c7c52c163fc8e32dab1b2600d3cbffe5d795",
+          "message": "fix(vlm): distinguish mobile gestures from content scrolling",
+          "sha": "3677c7c52c163fc8e32dab1b2600d3cbffe5d795"
+        },
+        {
+          "date": "2026-10-04T03:18:09Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/0b41cf9b87f155031fd08d5478f8657c229e911a",
+          "message": "feat(vlm): default Doubao main requests to a five-round Chat window",
+          "sha": "0b41cf9b87f155031fd08d5478f8657c229e911a"
+        },
+        {
+          "date": "2026-10-03T20:52:07Z",
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/c5aae922f0bb35186e5691e0dda6f93ac3b75cbe",
+          "message": "feat(vlm): add opt-in server-distributed Chat round window",
+          "sha": "c5aae922f0bb35186e5691e0dda6f93ac3b75cbe"
+        }
+      ],
+      "releases": [
+        {
+          "body": "## JEV 多模态决策，进入手机点击加速的新阶段\n\nAI Phone v0.8.0 将 JEV 接入 V3 缓存回放：把已有动作目标转换为当前画面中的编号候选，由多模态 Decisions 模型选择目标，再映射到设备坐标执行。Android、iOS、HarmonyOS 共用这条定位流程，并按平台使用各自的设备适配。\n\n### 本次更新\n\n- **JEV 普通点击定位**：截图与 UI 树生成候选编号，模型选择编号，程序计算并执行点击；输入、滚动、拖动等动作继续使用原 V3 定位，失败进入现有救援。\n- **三端快速设备通道**：Android 使用 UiAutomator2 原生 JPEG、坐标点击与实时尺寸读取；HarmonyOS 使用原生截图及 UITest；iOS 使用 WDA 按需截图与点击适配。启动检查失败时保留原通道兜底。\n- **统一开关**：`AI_PHONE_JEV_ENABLED` 控制 JEV 及其配套快速通道、稳定检测，默认关闭。另提供渠道、密钥及可选模型配置，请参阅 ENV 示例与轨迹缓存使用文档。\n- **加载等待与截图复用**：JEV 可在明确加载迹象下请求有界等待；稳定图直接用于定位。等待刷新后定位仍失败时，救援承接最新定位图，避免根据旧画面决策。\n- **定位证据**：日志展示实际编号标注模型输入图、所选编号、坐标和分段耗时；JEV 分支不重复上传画框前原图。\n- **混合动作分流修复**：在加载原始缓存 Action 时确定定位路线，避免输入框检查生成的临时点击请求被 JEV 接管。\n- **V3 回放节奏**：取消逐动作 after 留证截图，动作后观察调整为 200ms，最终断言前等待 2 秒。这部分为当前 V3 公共行为，不仅在 JEV 开启时生效。\n- **文档与展示**：README 新增 JEV 原理图、真机连续执行动图和本地性能分段说明，前后端版本统一为 0.8.0。\n\n### 性能与适用范围\n\n已有 Android 实验中，候选标注与编码约 15–50ms，非模型点击链路中位耗时约 620ms；特定样本包含模型往返的一次点击达到约 0.99 秒。完整流程耗时仍由模型往返、页面加载、缓存动作与救援共同决定，这些样本不是每次请求的速度保证。\n\nJEV 当前承接 V3 回放中的普通 Click，不替代任务规划或最终业务断言。模型选错、目标未出现等情况仍可能发生，现有救援及原链路继续保留。\n\n### 配置\n\n```dotenv\nAI_PHONE_JEV_ENABLED=true\nAI_PHONE_JEV_PROVIDER=openrouter\nAI_PHONE_JEV_API_KEY=<your-provider-key>\nAI_PHONE_JEV_MODEL=\n```\n\n`PROVIDER` 支持 `openrouter` / `openai`，模型留空使用对应渠道默认值。Android Agent 在 backend 目录安装可选依赖：`pip install -e '.[jev]'`。请求地址按渠道选择，超时为内部设置，无需填写额外 ENV。\n\n### 验证\n\n已完成 JEV、混合动作分流、三端关闭分支、截图与稳定通道、救援截图交接等回归测试，并通过 Web 构建。包含三端设备实验记录；最新关闭分支的 iOS 真机验证因设备锁屏未完成，不计为通过。\n\n无新增数据库迁移。更新后需重启 Server 与 Agent，使新版配置和执行代码生效。\n",
+          "draft": false,
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/releases/tag/v0.8.0",
+          "prerelease": false,
+          "published_at": "2026-10-13T10:48:23Z",
+          "tag_name": "v0.8.0",
+          "body_truncated": false
+        },
+        {
+          "body": "## v0.7.1 — 隔离性修复\n\n这是 `v0.7.0` 的补丁版本，修复发布后发现的两处隔离性问题。建议所有 `v0.7.0` 用户升级到本版本。\n\n### 修复\n\n- 隔离 readiness 长时间故障：单个设备长期不可用时，不再把失败影响扩散到其他设备的健康检查。\n- 隔离 iOS Simulator 与 iOS 真机轮询：Simulator 发现或轮询异常不再干扰真机设备扫描链路。\n- 补充对应回归测试，覆盖长时间故障和 Simulator / 真机扫描隔离场景。\n\n### 升级\n\n本版本不改变对外 API、设备池模型或部署结构，可从 `v0.7.0` 直接升级。\n",
+          "draft": false,
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/releases/tag/v0.7.1",
+          "prerelease": false,
+          "published_at": "2026-08-04T03:45:56Z",
+          "tag_name": "v0.7.1",
+          "body_truncated": false
+        },
+        {
+          "body": "> [!WARNING]\n> `v0.7.0` 已被 [`v0.7.1`](https://github.com/dongxinsuperman/ai-phone/releases/tag/v0.7.1) 替代。`v0.7.1` 修复 readiness 长时间故障扩散，以及 iOS Simulator 轮询干扰 iOS 真机扫描的问题。请勿新部署 `v0.7.0`。\n\n## v0.7.0 — 三端真机 + 三端虚拟机\n\nai-phone 现在完整覆盖 iOS、Android、HarmonyOS 三端真机与三端虚拟设备，并继续通过同一个设备池、同一套调度和执行链路对外提供能力。\n\n### 主要更新\n\n- 新增 iOS Simulator 全生命周期管理：配置、复制、Agent 分配、启动、停止、删除、重启认领与状态对账。\n- iOS Simulator 启动后以 iOS 设备进入统一设备池，复用现有队列、设备锁、工作台、VLM 执行、日志和报告链路。\n- 接入 WDA 控制与 MJPEG 实时画面，支持点击、滑动、输入和应用操作。\n- 应用分发支持 iOS Simulator `.app` / `.zip` 产物，并与真机 IPA 安装通道明确分离。\n- 补充 readiness 退避、WDA 自愈、端口隔离和 Agent 重启后的实例恢复。\n- 更新中英文 README、三端设备总览截图和 iOS Simulator Agent 环境准备文档。\n\n### 为什么需要虚拟设备\n\n决定批量测试耗时的是并发，而不只是单条 case 的执行速度。虚拟设备让设备供给从依赖真机采购，扩展为按 Agent 的计算资源复制；它没有引入另一套测试架构，只是让原有设备池的供给不再受限。\n\n### 部署\n\niOS Simulator Agent 需要 macOS、Xcode、对应 Simulator Runtime 与 WDA 环境。完整准备步骤见仓库中的 `docs/agent-ios-sim-vm-env-setup（Agent iOS虚拟机环境准备）.md`。\n",
+          "draft": false,
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/releases/tag/v0.7.0",
+          "prerelease": false,
+          "published_at": "2026-08-02T10:24:25Z",
+          "tag_name": "v0.7.0",
+          "body_truncated": false
+        },
+        {
+          "body": "适用分支：`main`（Distributed Agent Brain，当前推荐主线）\n\n本版本是 `main` 主线的大功能版本，正式加入 HarmonyOS 虚拟机完整生命周期管理；`next/server-brain` 暂不同步该能力。\n\n## 主要更新\n\n- 新增独立的「鸿蒙虚拟机」配置页、Server API、数据库模型和 Agent 生命周期管理，与现有 Android 虚拟机实现隔离，避免影响已经稳定的 Android 链路。\n- 支持按 DevEco 官方设备形态、机型和实测可创建系统版本配置虚拟机，并支持折叠屏初始形态。\n- 支持 Agent 能力探查、下发、启动、停止、复制、删除、重连认领、孤儿实例对账和消失巡检。\n- 鸿蒙虚拟机启动后带 `virtual` 标识进入统一设备池，复用鸿蒙真机的工作台、调度、执行、应用分发和报告链路。\n- 新增独立 HDC 端口租约与 hmdriver2 FPort 隔离，支持同一 Agent 同时连接多台鸿蒙真机和虚拟机，避免设备画面与控制通道串台。\n- 新增全局共享 Emulator UUID / UDID 配置，开发证书只需登记一次；配置在虚拟机下次启动时生效，写入失败会明确阻断启动。\n- 新增 HAP ABI 解析与受管鸿蒙虚拟机安装前校验，不向 ABI 不明或不匹配的虚拟机盲目下发。\n- 新增可重复执行的 VLM 准确率评测工具，用于检查坐标、动作协议、语义判断和多轮状态续接。\n\n## 当前运行边界\n\n- 当前 DevEco 本地 Emulator 没有经过验证的公开 Headless / `-no-window` 等价入口，因此采用 Agent 承接的本地 GUI 模式，宿主必须保持已登录的图形会话。\n- 官方本地 Headless 能力可用后，现有 Agent 启动层将直接切换；Server、数据库、端口租约、前端、调度和设备池不变。\n- 集中式场景规划接入 Harmony Linux gRPC Provider；在真实交付物、协议、无头能力和 HDC 映射完成验证前，不作为当前可用能力展示。\n- DevEco 模拟器是开发调试环境，不等同于带完整应用市场和消费者账号环境的零售真机。应用市场分发、内部测试发布等真实用户链路仍建议使用鸿蒙真机验证。\n\n## 数据库迁移\n\n存量 PostgreSQL 部署升级前执行：\n\n```bash\npsql \"<PostgreSQL 连接地址>\" -f backend/migrations/harmony_vm_v1.sql\n```\n\n迁移仅新增以下 5 张表，不修改 Android 和既有核心表：\n\n- `harmony_vm_instances`\n- `harmony_vm_port_leases`\n- `harmony_vm_catalog_snapshots`\n- `harmony_app_package_meta`\n- `harmony_vm_settings`\n\n迁移脚本可重复执行，并兼容 PostgreSQL 9.4。\n\n## Agent 环境\n\n- 安装 DevEco Studio 并完成首次 GUI 初始化与协议确认。\n- 按需下载目标设备类型、系统版本和宿主架构对应的镜像。\n- 安装项目鸿蒙依赖：`pip install -e \".[harmony]\"`。\n- 当前验收版本固定为 `hmdriver2==1.4.4`。\n- 完整步骤见：`docs/agent-harmony-vm-env-setup（Agent鸿蒙虚拟机环境准备）.md`。\n\n## 验证\n\n- 后端完整测试：`647 passed, 1 xfailed`\n- Android / HarmonyOS 虚拟机专项：`97 passed`\n- Web 构建通过\n- Midscene Bridge 构建通过\n\n## 推荐\n\n新部署、需要 Android / HarmonyOS 虚拟机扩容，或希望跟随最新主线能力的用户，建议使用 `main` + `v0.6.0`。\n",
+          "draft": false,
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/releases/tag/v0.6.0",
+          "prerelease": false,
+          "published_at": "2026-07-31T07:19:00Z",
+          "tag_name": "v0.6.0",
+          "body_truncated": false
+        },
+        {
+          "body": "适用分支：`main`（Distributed Agent Brain，当前推荐主线）\n\n本版本是 `main` 主线的大版本发布，不再为 `next/server-brain` 同步发布配套 tag。`next/server-brain` 仍可继续使用，但新功能优先以 `main` 为准。\n\n## 主要更新\n\n- 新增 Android 虚拟机（Emulator）接入与全生命周期管理：可在「虚拟机」页按品牌 / 机型 / 系统 / 分辨率创建 AVD，下发到 Agent 启动，启动后以 `virtual` 设备进入设备池。\n- 虚拟机与真机复用同一条调度与执行链路：设备池、队列、Run、报告、日志、终态广播等能力保持一致。\n- 补齐虚拟机机型目录、覆盖 profile、Agent 环境准备文档和前端管理页面。\n- README / features 补齐应用分发与黑屏工程说明，并明确 `main` 为推荐主线。\n\n## 稳定性修复\n\n- 修复 `device_alias_pool` 粒度下的队头阻塞问题。\n- 修复 Agent 断连 / Server 重启后的孤儿 Run 回收与设备占用恢复。\n- 虚拟机启动前要求目标 Agent 在线，避免向离线 Agent 下发启动任务。\n- VM 默认启用 GPU host 渲染，缓解纯 CPU 渲染导致的宿主 CPU 打满与模拟器 ANR。\n- iOS 应用列表查询改用 fresh lockdown，降低复用旧连接导致的查询异常。\n\n## 部署注意\n\n- 从旧版本升级到本版本时，需要执行数据库迁移：\n\n```sql\nbackend/migrations/android_vm_v1.sql\n```\n\n- Agent 宿主如果要使用 Android 虚拟机，需要提前准备 Android SDK / Emulator / JDK / 系统镜像环境；完整流程见：\n\n```text\ndocs/agent-vm-env-setup（Agent虚拟机环境准备）.md\n```\n\n## 验证\n\n- `backend/.venv/bin/python -m pytest backend/tests/test_android_vm.py backend/tests/test_scheduler_recover.py backend/tests/test_scheduler_drain.py`\n- `npm run build`（web）\n\n## 推荐\n\n新部署、需要 Android 虚拟机扩容、或希望跟随最新主线能力的用户，建议直接使用 `main` + `v0.5.0`。\n",
+          "draft": false,
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/releases/tag/v0.5.0",
+          "prerelease": false,
+          "published_at": "2026-06-11T03:05:04Z",
+          "tag_name": "v0.5.0",
+          "body_truncated": false
+        }
+      ],
+      "queries": [
+        {
+          "kind": "readme",
+          "endpoint": "https://api.github.com/repos/dongxinsuperman/ai-phone/readme",
+          "exit_code": 0
+        },
+        {
+          "kind": "commits",
+          "endpoint": "https://api.github.com/repos/dongxinsuperman/ai-phone/commits?per_page=30",
+          "exit_code": 0
+        },
+        {
+          "kind": "releases",
+          "endpoint": "https://api.github.com/repos/dongxinsuperman/ai-phone/releases?per_page=5",
+          "exit_code": 0
+        },
+        {
+          "kind": "compare_main",
+          "endpoint": "https://api.github.com/repos/dongxinsuperman/ai-phone/compare/e03e8d1...main",
+          "exit_code": 0
+        },
+        {
+          "kind": "compare_research",
+          "endpoint": "https://api.github.com/repos/dongxinsuperman/ai-phone/compare/e03e8d1...next/server-brain",
+          "exit_code": 1
+        },
+        {
+          "kind": "license",
+          "endpoint": "https://api.github.com/repos/dongxinsuperman/ai-phone/contents/LICENSE",
+          "exit_code": 0
+        },
+        {
+          "kind": "license_change",
+          "endpoint": "https://api.github.com/repos/dongxinsuperman/ai-phone/commits/6e72093a99ea9c4c0e60adcdcd96dcb3602805b5",
+          "exit_code": 0
+        },
+        {
+          "kind": "coordinate_fix",
+          "endpoint": "https://api.github.com/repos/dongxinsuperman/ai-phone/commits/c8ac9395dbddca636504b2a83c8144b273f4877b",
+          "exit_code": 0
+        }
+      ],
+      "compare_main": {
+        "ahead_by": 141,
+        "base_commit": {
+          "date": "2026-05-20T09:01:24Z",
+          "sha": "e03e8d137e7d5600c779624390dfc3c50485dac8"
+        },
+        "behind_by": 95,
+        "head": {
+          "date": "2026-10-13T09:52:03Z",
+          "message": "docs(jev): align replay usage with current configuration",
+          "sha": "38ef0c4fd81975195f37bb4ceead9efaaeaeb141"
+        },
+        "html_url": "https://github.com/dongxinsuperman/ai-phone/compare/e03e8d1...main",
+        "status": "diverged",
+        "total_commits": 141
+      },
+      "compare_research": {
+        "ahead_by": 27,
+        "base_commit": {
+          "date": "2026-05-20T09:01:24Z",
+          "sha": "e03e8d137e7d5600c779624390dfc3c50485dac8"
+        },
+        "behind_by": 0,
+        "commits": [
+          {
+            "date": "2026-05-21T03:22:30Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/a0cab0f8b48d49e296b7acff5df3be8e80924ded",
+            "message": "Add product boundaries document",
+            "sha": "a0cab0f8b48d49e296b7acff5df3be8e80924ded"
+          },
+          {
+            "date": "2026-05-21T03:59:20Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/4febc0c1edc59da55bdae0c56d3296c990855907",
+            "message": "Fix screenshot PNG formats",
+            "sha": "4febc0c1edc59da55bdae0c56d3296c990855907"
+          },
+          {
+            "date": "2026-05-21T11:34:03Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/6a714ee4f33cbabc7a26bb472cff0e96cda55717",
+            "message": "fix(agent): filter noisy hdc target output",
+            "sha": "6a714ee4f33cbabc7a26bb472cff0e96cda55717"
+          },
+          {
+            "date": "2026-05-22T04:50:12Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/9fd8249382a225a5305dd18c1003fde083fa8278",
+            "message": "fix: repair iOS readiness after reconnect",
+            "sha": "9fd8249382a225a5305dd18c1003fde083fa8278"
+          },
+          {
+            "date": "2026-05-22T05:26:46Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/e07bc4783bae398b2b1ed6d7e7646e1b960897f7",
+            "message": "fix: drop stale mirror jpeg frames",
+            "sha": "e07bc4783bae398b2b1ed6d7e7646e1b960897f7"
+          },
+          {
+            "date": "2026-05-25T09:43:45Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/8a4442e24da9b58293351ade15cfe44423dcb119",
+            "message": "perf: reduce stability screenshot RPC load",
+            "sha": "8a4442e24da9b58293351ade15cfe44423dcb119"
+          },
+          {
+            "date": "2026-05-26T05:53:24Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/c8ac9395dbddca636504b2a83c8144b273f4877b",
+            "message": "fix(agent): remap iOS downsampled touch coordinates",
+            "sha": "c8ac9395dbddca636504b2a83c8144b273f4877b"
+          },
+          {
+            "date": "2026-05-26T06:41:04Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/630966e30635b00d33cd19671c3a3b27319fa88e",
+            "message": "docs: clarify iOS WDA signing deployment paths",
+            "sha": "630966e30635b00d33cd19671c3a3b27319fa88e"
+          },
+          {
+            "date": "2026-05-26T15:21:20Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/70c9c5b766c983553be6c7535395f69af2684064",
+            "message": "fix(agent): keep device status snapshots fresh",
+            "sha": "70c9c5b766c983553be6c7535395f69af2684064"
+          },
+          {
+            "date": "2026-05-26T16:00:06Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/6212e85a631f0df886cc976bc92cf7d4aeebfd56",
+            "message": "fix(agent): pass WDA runner bundle id to xcodebuild",
+            "sha": "6212e85a631f0df886cc976bc92cf7d4aeebfd56"
+          },
+          {
+            "date": "2026-05-28T07:47:18Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/e3e8f18e2cff81d605e41add84af06ee9c0d7773",
+            "message": "feat: add app package distribution",
+            "sha": "e3e8f18e2cff81d605e41add84af06ee9c0d7773"
+          },
+          {
+            "date": "2026-05-28T12:34:25Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/cbf92660ef49affafc6e2056f052bbb8b7ab6a14",
+            "message": "feat: support screen-off run wake policies",
+            "sha": "cbf92660ef49affafc6e2056f052bbb8b7ab6a14"
+          },
+          {
+            "date": "2026-05-28T12:53:41Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/1b59c0d468e991e617b33cad271576cd3d7b348f",
+            "message": "fix: avoid iOS Any app listing for open_app",
+            "sha": "1b59c0d468e991e617b33cad271576cd3d7b348f"
+          },
+          {
+            "date": "2026-05-28T14:47:22Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/4a41ae1a0315466ca3530aaef963d715c7dd7acd",
+            "message": "docs: refresh agent and iOS deployment guidance",
+            "sha": "4a41ae1a0315466ca3530aaef963d715c7dd7acd"
+          },
+          {
+            "date": "2026-05-28T14:58:44Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/f5c64a3186b6b5e752c67c48b718e8a36577062a",
+            "message": "fix: pin qs for dependabot alert",
+            "sha": "f5c64a3186b6b5e752c67c48b718e8a36577062a"
+          },
+          {
+            "date": "2026-05-28T16:39:00Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/fb70ebf689af399efead8e36604e1651d56b3b15",
+            "message": "fix: allow non-secure Android keyguard readiness",
+            "sha": "fb70ebf689af399efead8e36604e1651d56b3b15"
+          },
+          {
+            "date": "2026-05-30T16:31:29Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/9c7ef2e8fed98d587aa27b6146a263c7742b7860",
+            "message": "docs: 分支叙事对齐 — main 恢复为默认主线（分布式 Agent），本分支为 Server 脑并行线",
+            "sha": "9c7ef2e8fed98d587aa27b6146a263c7742b7860"
+          },
+          {
+            "date": "2026-05-31T01:01:56Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/fe37bf400943fc517f9a8c7517dfb033d898ff9f",
+            "message": "fix: ignore network-paired iOS devices",
+            "sha": "fe37bf400943fc517f9a8c7517dfb033d898ff9f"
+          },
+          {
+            "date": "2026-05-31T07:24:07Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/38deeb108ba600c697c91e5790aeafef1b2f6ee9",
+            "message": "feat(server-brain): add function map context",
+            "sha": "38deeb108ba600c697c91e5790aeafef1b2f6ee9"
+          },
+          {
+            "date": "2026-05-31T08:11:38Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/ae649e96c8e958e8d80c08477d729c39e36c019b",
+            "message": "ui: compact device console controls",
+            "sha": "ae649e96c8e958e8d80c08477d729c39e36c019b"
+          },
+          {
+            "date": "2026-05-31T09:35:43Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/2a0a4042e3fab88b5c411b289d5bb0c860a9daca",
+            "message": "fix(web): 手动设备锁防掉锁与防后台霸占",
+            "sha": "2a0a4042e3fab88b5c411b289d5bb0c860a9daca"
+          },
+          {
+            "date": "2026-05-31T15:33:25Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/9c957ec301ae95be709ddba41ae846d22f629e70",
+            "message": "ui: improve device console log resizing",
+            "sha": "9c957ec301ae95be709ddba41ae846d22f629e70"
+          },
+          {
+            "date": "2026-06-03T14:09:25Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/0b3b3c4c05e2e04a2caa045d9a4e63bc3dc20f93",
+            "message": "fix(ios): use fresh lockdown for app listing",
+            "sha": "0b3b3c4c05e2e04a2caa045d9a4e63bc3dc20f93"
+          },
+          {
+            "date": "2026-06-09T09:33:14Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/1a6c3babc38dc746c27f8b27c1e9b9d2aca71fd4",
+            "message": "docs: 同步通用文档与截图（应用分发/黑屏工程），对齐分支策略",
+            "sha": "1a6c3babc38dc746c27f8b27c1e9b9d2aca71fd4"
+          },
+          {
+            "date": "2026-06-15T03:19:45Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/6e72093a99ea9c4c0e60adcdcd96dcb3602805b5",
+            "message": "chore: switch project license to MIT",
+            "sha": "6e72093a99ea9c4c0e60adcdcd96dcb3602805b5"
+          },
+          {
+            "date": "2026-06-15T04:07:09Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/f23de5e4eeff59b8fcb871a536ef7def13d5a5e7",
+            "message": "docs: add README hero animation",
+            "sha": "f23de5e4eeff59b8fcb871a536ef7def13d5a5e7"
+          },
+          {
+            "date": "2026-06-15T04:58:42Z",
+            "html_url": "https://github.com/dongxinsuperman/ai-phone/commit/9340e7ac641af20d3b6d42e130b549412e3c7188",
+            "message": "docs: add English README entry",
+            "sha": "9340e7ac641af20d3b6d42e130b549412e3c7188"
+          }
+        ],
+        "html_url": "https://github.com/dongxinsuperman/ai-phone/compare/e03e8d1...next/server-brain",
+        "status": "ahead",
+        "total_commits": 27
+      },
+      "license_text": "MIT License\n\nCopyright (c) 2026 Dongxin and ai-phone contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n\n"
+    },
+    {
+      "requested_repo": "karminski/eyes-on-my-phone",
+      "repository": {
+        "full_name": "karminski/eyes-on-my-phone",
+        "html_url": "https://github.com/karminski/eyes-on-my-phone",
+        "default_branch": "main",
+        "archived": false,
+        "disabled": false,
+        "license": null,
+        "pushed_at": "2026-05-22T08:44:49Z",
+        "updated_at": "2026-08-22T12:17:10Z"
+      },
+      "head": {
+        "date": "2026-05-22T08:44:42Z",
+        "html_url": "https://github.com/karminski/eyes-on-my-phone/commit/eef71926e613c3242643923bb21c92beab439990",
+        "message": "ADD cover image for readme",
+        "sha": "eef71926e613c3242643923bb21c92beab439990"
+      },
+      "recent_commits": [
+        {
+          "date": "2026-05-22T08:44:42Z",
+          "html_url": "https://github.com/karminski/eyes-on-my-phone/commit/eef71926e613c3242643923bb21c92beab439990",
+          "message": "ADD cover image for readme",
+          "sha": "eef71926e613c3242643923bb21c92beab439990"
+        },
+        {
+          "date": "2026-05-22T08:39:35Z",
+          "html_url": "https://github.com/karminski/eyes-on-my-phone/commit/31205797eb8380d8b32663018c844548310cea31",
+          "message": "INIT commit",
+          "sha": "31205797eb8380d8b32663018c844548310cea31"
+        }
+      ],
+      "releases": [],
+      "queries": [
+        {
+          "kind": "readme",
+          "endpoint": "https://api.github.com/repos/karminski/eyes-on-my-phone/readme",
+          "exit_code": 0
+        },
+        {
+          "kind": "commits",
+          "endpoint": "https://api.github.com/repos/karminski/eyes-on-my-phone/commits?per_page=30",
+          "exit_code": 0
+        },
+        {
+          "kind": "releases",
+          "endpoint": "https://api.github.com/repos/karminski/eyes-on-my-phone/releases?per_page=5",
+          "exit_code": 0
+        },
+        {
+          "kind": "eyes_license",
+          "endpoint": "https://api.github.com/repos/karminski/eyes-on-my-phone/contents/LICENSE",
+          "exit_code": 1
+        },
+        {
+          "kind": "architecture",
+          "endpoint": "https://api.github.com/repos/karminski/eyes-on-my-phone/contents/docs/architecture.md",
+          "exit_code": 0
+        }
+      ],
+      "license_file_status": "HTTP 404；README 声称 MIT，repository.license=null。"
+    }
+  ]
+}

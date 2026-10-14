@@ -138,7 +138,7 @@ func workspaceModelDecisionEvents(
             ref: "evidence/actions/action-\(suffix).json"
         ),
     ]
-    if let postActionObservation {
+    if let postActionObservation, workspaceHasCapturedPostActionObservation(postActionObservation) {
         events.append(.observationCaptured(
             runID: runID,
             stepIndex: stepIndex,
@@ -173,6 +173,17 @@ func workspaceModelDecisionEvents(
             phase: failurePhase
         ))
         events.append(.init(type: .flowRecoveryProposed, runID: runID, timestamp: now, stepIndex: stepIndex, command: ["stop"], ref: "evidence/model/recovery-\(suffix).json"))
+    } else if let feedback = postActionObservation?.visualFeedback, feedback.state != .settled {
+        let visualRef = "evidence/visual-settle/\(String(format: "%04d", stepIndex)).json"
+        let phase = "visual_" + feedback.state.rawValue
+        events.append(.init(type: .verifyChecked, runID: runID, timestamp: now, stepIndex: stepIndex,
+                            status: .failed, ref: "evidence/model/verify-\(suffix).json", phase: phase))
+        events.append(.init(type: .flowRecoveryDetected, runID: runID, timestamp: now, stepIndex: stepIndex,
+                            failure: TKTestRunFailure(type: phase,
+                                                     message: "Visual stability is uncertain; business verification was not attempted.",
+                                                     artifactRefs: [visualRef]), phase: phase))
+        events.append(.init(type: .flowRecoveryProposed, runID: runID, timestamp: now, stepIndex: stepIndex,
+                            command: ["stop"], ref: "evidence/model/recovery-\(suffix).json", phase: phase))
     } else if let businessCheckpoint, businessCheckpoint.stage == .postAction {
         events += workspaceBusinessCheckpointEvents(
             runID: runID,

@@ -156,7 +156,7 @@ func runtimeLedgerDetails(
             source,
             input.action,
             input.ok,
-            input.ok ? nil : "action_failed",
+            input.ok ? nil : (input.error?.code ?? "action_failed"),
             input.message,
             input.redacted == true ? TKSemanticActionRedaction(secure: input.secure == true, text: "length-only", insertedLength: input.insertedLength) : redaction
         )
