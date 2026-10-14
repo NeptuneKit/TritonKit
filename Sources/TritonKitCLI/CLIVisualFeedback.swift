@@ -103,6 +103,18 @@ struct VisualSettleOutput: Codable, Equatable {
     let comparisonPolicy: String
 }
 
+private func visualSettleOutput(
+    state: VisualSettleState, reason: String, elapsed: TimeInterval,
+    sampleCount: Int, lastChange: Double?, previous: VisualScreenshotFrame?,
+    configuration: VisualSettleConfiguration
+) -> VisualSettleOutput {
+    VisualSettleOutput(ok: state == .settled, action: "observe.settle", state: state, reason: reason,
+                      businessVerified: false, elapsedMs: max(0, Int(elapsed * 1000)),
+                      sampleCount: sampleCount, lastChangeFraction: lastChange,
+                      capturedAt: previous?.capturedAt, source: previous?.source, configuration: configuration,
+                      comparisonPolicy: "changed RGB pixel area on a raw-raster thumbnail of at most 384 pixels per axis")
+}
+
 /// The screenshot provider receives the remaining deadline. Native provider cancellation is
 /// cooperative; this function never pretends a blocked native collector was forcibly stopped.
 func runVisualSettle(
@@ -119,34 +131,26 @@ func runVisualSettle(
     var sampleCount = 0
     var lastChange: Double?
 
-    func output(_ state: VisualSettleState, _ reason: String) -> VisualSettleOutput {
-        VisualSettleOutput(ok: state == .settled, action: "observe.settle", state: state, reason: reason,
-                          businessVerified: false, elapsedMs: max(0, Int((now() - start) * 1000)),
-                          sampleCount: sampleCount, lastChangeFraction: lastChange,
-                          capturedAt: previous?.capturedAt, source: previous?.source, configuration: configuration,
-                          comparisonPolicy: "changed RGB pixel area on a raw-raster thumbnail of at most 384 pixels per axis")
-    }
-
     while now() - start < configuration.timeout {
         let frame: VisualScreenshotFrame
         do {
             try Task.checkCancellation()
             frame = try await capture(configuration.timeout - (now() - start))
         } catch {
-            return output(.unknown, "screenshot_unavailable")
+            return visualSettleOutput(state: .unknown, reason: "screenshot_unavailable", elapsed: now() - start, sampleCount: sampleCount, lastChange: lastChange, previous: previous, configuration: configuration)
         }
         let sampledAt = now()
         sampleCount += 1
         if sampledAt - start >= configuration.timeout {
             previous = frame
-            return output(.unknown, "screenshot_deadline_exceeded")
+            return visualSettleOutput(state: .unknown, reason: "screenshot_deadline_exceeded", elapsed: now() - start, sampleCount: sampleCount, lastChange: lastChange, previous: previous, configuration: configuration)
         }
-        if let previous {
+        if let priorFrame = previous {
             do {
-                let sameGeometry = previous.pixelWidth == frame.pixelWidth && previous.pixelHeight == frame.pixelHeight && previous.scale == frame.scale
-                lastChange = sameGeometry ? try visualChangedAreaFraction(previous.raster, frame.raster, pixelThreshold: configuration.pixelThreshold) : 1
+                let sameGeometry = priorFrame.pixelWidth == frame.pixelWidth && priorFrame.pixelHeight == frame.pixelHeight && priorFrame.scale == frame.scale
+                lastChange = sameGeometry ? try visualChangedAreaFraction(priorFrame.raster, frame.raster, pixelThreshold: configuration.pixelThreshold) : 1
             } catch {
-                return output(.unknown, "screenshot_comparison_failed")
+                return visualSettleOutput(state: .unknown, reason: "screenshot_comparison_failed", elapsed: now() - start, sampleCount: sampleCount, lastChange: lastChange, previous: previous, configuration: configuration)
             }
             if let lastChange, lastChange <= configuration.changeThreshold {
                 // A slowly moving surface may change only a few pixels per frame. Compare
@@ -167,15 +171,20 @@ func runVisualSettle(
         }
         previous = frame
         if let stableSince, sampledAt - stableSince + 0.000001 >= configuration.stableWindow {
-            return output(.settled, "visual_stable_window")
+            return visualSettleOutput(state: .settled, reason: "visual_stable_window", elapsed: now() - start, sampleCount: sampleCount, lastChange: lastChange, previous: previous, configuration: configuration)
         }
         do {
             try await sleep(min(configuration.interval, max(0, configuration.timeout - (now() - start))))
         } catch {
-            return output(.unknown, "observation_cancelled")
+            return visualSettleOutput(state: .unknown, reason: "observation_cancelled", elapsed: now() - start, sampleCount: sampleCount, lastChange: lastChange, previous: previous, configuration: configuration)
         }
     }
-    return sampleCount < 2 ? output(.unknown, "insufficient_visual_samples") : output(.timeout, "visual_motion_timeout")
+    return visualSettleOutput(
+        state: sampleCount < 2 ? .unknown : .timeout,
+        reason: sampleCount < 2 ? "insufficient_visual_samples" : "visual_motion_timeout",
+        elapsed: now() - start, sampleCount: sampleCount, lastChange: lastChange,
+        previous: previous, configuration: configuration
+    )
 }
 
 func visualImageSource(_ data: Data) throws -> (CGImageSource, Int, Int) {
