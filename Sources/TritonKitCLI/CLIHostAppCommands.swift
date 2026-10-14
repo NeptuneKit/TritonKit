@@ -116,7 +116,7 @@ func ensureHostDeviceSelectorCompatibility(device: String?, simulator: String?, 
     }
 }
 
-private func resolveHostAppDeviceSelection(
+func resolveHostAppDeviceSelection(
     device: String?,
     platform: HostAppPlatform?,
     defaultPlatform: HostDevicePlatform?,
@@ -1398,87 +1398,6 @@ struct HostAppContainer: AsyncParsableCommand {
     }
 }
 
-struct HostAppPrefs: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        commandName: "prefs",
-        abstract: "Read and update simulator app preferences as JSON",
-        subcommands: [HostAppPrefsDump.self, HostAppPrefsGet.self, HostAppPrefsSet.self]
-    )
-}
-
-struct HostAppPrefsDump: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "dump", abstract: "Dump app preferences")
-
-    @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
-    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
-    @Option(help: "Device name filter, for example iPhone 15") var name: String?
-    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
-    @Option(help: "Target state filter, for example booted") var state: String?
-    @Flag(help: "Only match ready targets") var ready = false
-    @Option(help: "App bundle identifier") var bundleID: String
-    @Flag(help: "Alias for --format json") var json = false
-    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
-
-    func run() async throws {
-        let outputFormat = effectiveFormat(format, json: json)
-        do {
-            let selection = try resolveHostAppDeviceSelection(
-                device: device,
-                platform: .ios,
-                defaultPlatform: .ios,
-                scope: nil,
-                simulator: simulator,
-                target: nil,
-                name: name,
-                runtime: runtime,
-                state: state,
-                ready: ready,
-                hdc: "hdc"
-            )
-            try printPreferences(simulator: selection.target.target, bundleID: bundleID, key: nil, outputFormat: outputFormat)
-        } catch {
-            try failHostCommand(error, outputFormat: outputFormat)
-        }
-    }
-}
-
-struct HostAppPrefsGet: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "get", abstract: "Read one app preference value")
-
-    @Argument(help: "Preference key") var key: String
-    @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
-    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
-    @Option(help: "Device name filter, for example iPhone 15") var name: String?
-    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
-    @Option(help: "Target state filter, for example booted") var state: String?
-    @Flag(help: "Only match ready targets") var ready = false
-    @Option(help: "App bundle identifier") var bundleID: String
-    @Flag(help: "Alias for --format json") var json = false
-    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
-
-    func run() async throws {
-        let outputFormat = effectiveFormat(format, json: json)
-        do {
-            let selection = try resolveHostAppDeviceSelection(
-                device: device,
-                platform: .ios,
-                defaultPlatform: .ios,
-                scope: nil,
-                simulator: simulator,
-                target: nil,
-                name: name,
-                runtime: runtime,
-                state: state,
-                ready: ready,
-                hdc: "hdc"
-            )
-            try printPreferences(simulator: selection.target.target, bundleID: bundleID, key: key, outputFormat: outputFormat)
-        } catch {
-            try failHostCommand(error, outputFormat: outputFormat)
-        }
-    }
-}
-
 typealias AndroidAppInspectHostRunner = (TKHostCommand) throws -> HostProcessResult
 
 func inspectAndroidApp(
@@ -1504,61 +1423,6 @@ func inspectAndroidApp(
         bundleID: bundle,
         app: app
     )
-}
-
-enum HostPreferenceSetType: String, ExpressibleByArgument {
-    case json
-    case data
-}
-
-struct HostAppPrefsSet: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "set", abstract: "Set one simulator app preference value")
-
-    @Argument(help: "Preference key") var key: String
-    @Argument(help: "JSON value to write when --type json is used") var value: String?
-    @Option(help: "Preference value type: json or data") var type: HostPreferenceSetType = .json
-    @Option(help: "Base64 payload when --type data is used") var base64: String?
-    @Option(help: "Hex payload when --type data is used") var hex: String?
-    @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
-    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
-    @Option(help: "Device name filter, for example iPhone 15") var name: String?
-    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
-    @Option(help: "Target state filter, for example booted") var state: String?
-    @Flag(help: "Only match ready targets") var ready = false
-    @Option(help: "App bundle identifier") var bundleID: String
-    @Flag(help: "Alias for --format json") var json = false
-    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
-
-    func run() async throws {
-        let outputFormat = effectiveFormat(format, json: json)
-        do {
-            let selection = try resolveHostAppDeviceSelection(
-                device: device,
-                platform: .ios,
-                defaultPlatform: .ios,
-                scope: nil,
-                simulator: simulator,
-                target: nil,
-                name: name,
-                runtime: runtime,
-                state: state,
-                ready: ready,
-                hdc: "hdc"
-            )
-            try setPreference(
-                simulator: selection.target.target,
-                bundleID: bundleID,
-                key: key,
-                value: value,
-                type: type,
-                base64: base64,
-                hex: hex,
-                outputFormat: outputFormat
-            )
-        } catch {
-            try failHostCommand(error, outputFormat: outputFormat)
-        }
-    }
 }
 
 extension TKHostAppContainerKind: @retroactive ExpressibleByArgument {}

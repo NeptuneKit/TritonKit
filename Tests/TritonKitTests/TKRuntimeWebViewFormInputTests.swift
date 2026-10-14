@@ -181,6 +181,25 @@ struct TKRuntimeWebViewFormInputTests {
         #expect(html.contains("data-triton-form-input=\"1\""))
     }
 
+    @Test("native setters bypass controlled field value tracking")
+    func inputScriptUsesNativePrototypeSetter() throws {
+        let script = try runtimeWebViewFormInputScript(selector: "#title", mode: .setText, text: "Updated")
+        #expect(script.contains("Object.getOwnPropertyDescriptor"))
+        #expect(script.contains("HTMLInputElement"))
+        #expect(script.contains("HTMLTextAreaElement"))
+        #expect(script.contains("HTMLSelectElement"))
+        #expect(script.contains("descriptor.set.call(element"))
+    }
+
+    @Test("readback rejects controlled rollback without echoing the field value")
+    func inputScriptVerifiesReadback() throws {
+        let script = try runtimeWebViewFormInputScript(selector: "#title", mode: .setText, text: "private-value")
+        #expect(script.contains("valueMatched"))
+        #expect(script.contains("webview_element_not_interactable"))
+        #expect(script.contains("element.blur()"))
+        #expect(!script.contains("message: String(error"))
+    }
+
     private static func fixtureHTML() throws -> String {
         var directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         while !FileManager.default.fileExists(atPath: directory.appendingPathComponent("Package.swift").path) {

@@ -15,6 +15,21 @@ struct HostPreferencesSetTests {
         #expect(try parseHostPreferenceJSONValue(#"{"mode":"debug","count":2}"#) == .dictionary(["mode": .string("debug"), "count": .int(2)]))
     }
 
+    @Test("strict import rejects unselected invalid values before mutation")
+    func importRejectsWholeInvalidPackage() throws {
+        #expect(throws: (any Error).self) {
+            try parseHostPreferenceImport(data: Data(#"{"selected":true,"ignored":null}"#.utf8), format: .json, keys: ["selected"])
+        }
+    }
+
+    @Test("import changes only explicitly selected keys")
+    func scopedImport() throws {
+        let values = try parseHostPreferenceImport(data: Data(#"{"selected":false,"ignored":3}"#.utf8), format: .json, keys: ["selected"])
+        #expect(values == ["selected": .bool(false)])
+        #expect(throws: (any Error).self) { try parseHostPreferenceImport(data: Data(#"{"x":0}"#.utf8), format: .json, keys: ["missing"]) }
+        #expect(throws: (any Error).self) { try parseHostPreferenceImport(data: Data(#"{"x":0}"#.utf8), format: .json, keys: []) }
+    }
+
     @Test("preference JSON value parser rejects null")
     func rejectsNull() throws {
         do {
@@ -22,6 +37,16 @@ struct HostPreferencesSetTests {
             Issue.record("Expected null to be rejected")
         } catch let error as RuntimeError {
             #expect(error.description.contains("Property list preferences do not support null"))
+        }
+    }
+
+    @Test("previous numeric zero and one retain integer plist types")
+    func previousIntegers() throws {
+        for number in [0, 1] {
+            let original = try PropertyListSerialization.data(fromPropertyList: ["count": number], format: .binary, options: 0)
+            let result = try updatingPreferencePlistData(existingData: original, bundleID: "com.example.app", plistPath: "fixture", key: "count", newValue: .int(2))
+            #expect(result.previousValue == .int(number))
+            #expect(result.previousPlistType == "int")
         }
     }
 

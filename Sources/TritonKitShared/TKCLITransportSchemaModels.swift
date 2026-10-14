@@ -185,6 +185,31 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if failureCode.hasPrefix("runner_") || failureCode.hasPrefix("invalid_runner_") || failureCode == "unsupported_runner_action" {
             return ["diagnose", "plan"]
         }
+        // These failures require fresh inspection or an explicit plan; never infer a retry of delivered input.
+        if ["skills_update_busy", "ios_simulator_resize_touch_unroutable", "ios_simulator_resize_state_unknown", "ios_simulator_resize_capture_state_unknown"].contains(failureCode) {
+            return ["diagnose", "plan"]
+        }
+        if failureCode == "ios_simulator_resize_target_invalid" {
+            return ["prepare-target", "diagnose"]
+        }
+        if failureCode == "ios_simulator_resize_capture_unroutable" {
+            return ["archive", "diagnose", "plan"]
+        }
+        if failureCode == "preferences_relaunch_failed" {
+            return ["diagnose", "observe", "verify"]
+        }
+        if failureCode == "prepared_tests_result_incomplete" {
+            return ["archive", "diagnose", "verify"]
+        }
+        if ["prepared_tests_identity_mismatch", "prepared_tests_artifact_invalid", "prepared_tests_manifest_invalid", "prepared_tests_unsupported"].contains(failureCode) {
+            return ["project", "diagnose", "plan"]
+        }
+        if failureCode == "artifact_output_rejected" {
+            return ["archive", "diagnose"]
+        }
+        if failureCode == "empty_app_map_suite" {
+            return ["archive", "plan", "diagnose"]
+        }
         var categories: [String] = []
         if targetFailureCodesRequiringRecovery.contains(failureCode) {
             categories.append("prepare-target")
@@ -216,7 +241,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if ["request_failed", "server_unavailable", "target_unavailable", "runtime_unavailable", "proxy_status_probe_failed"].contains(failureCode) {
             categories.append("diagnose")
         }
-        if ["artifact_write_failed", "file_write_failed", "artifact_output_rejected"].contains(failureCode) {
+        if ["artifact_write_failed", "file_write_failed"].contains(failureCode) {
             categories.append("archive")
         }
         if ["output_already_exists", "output_write_failed"].contains(failureCode) {

@@ -736,6 +736,9 @@ func runXcodeBuild(
     timeout: Double? = nil,
     allowNonZeroExit: Bool = true,
     allowProvisioningUpdates: Bool = false,
+    buildForTesting: Bool = false,
+    testProductsPath: String? = nil,
+    preparedTestsManifestPath: String? = nil,
     progress: XcodeProgressMode = .full,
     statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) }
 ) throws -> TKXcodeActionSummary {
@@ -751,6 +754,8 @@ func runXcodeBuild(
         derivedDataPath: executionInvocation.derivedDataPath,
         buildSettings: executionInvocation.buildSettings,
         allowProvisioningUpdates: allowProvisioningUpdates,
+        buildForTesting: buildForTesting,
+        testProductsPath: testProductsPath,
         redactDestination: executionInvocation.redactsXcodebuildDestination
     ).withTimeout(timeout)
     let (result, durationMs) = try runXcodeHostCommand(
@@ -791,6 +796,7 @@ func runXcodeBuild(
         destination: executionInvocation.destination,
         derivedDataPath: executionInvocation.derivedDataPath,
         derivedDataCache: observedXcodeDerivedDataCache(executionInvocation.derivedDataCache, result: result),
+        preparedTestsManifestPath: ok ? preparedTestsManifestPath : nil,
         simulatorUDID: executionInvocation.simulatorUDID,
         device: executionInvocation.device,
         durationMs: durationMs,
@@ -812,106 +818,6 @@ func runXcodeBuild(
                 ? "SDK-only generic iOS build finished. No physical device was selected, installed, or launched; build success does not prove installability or business readiness."
                 : "Build finished. Use `triton xcode run --jsonl` or verify business readiness with runtime `triton status/wait/assert`.",
             defaultFailureNote: "Build failed. Inspect xcodeDiagnostics first, then stdout/stderr artifacts if needed."
-        )
-    )
-}
-
-func runXcodeTest(
-    invocation: ResolvedXcodeInvocation,
-    resultBundlePath: String?,
-    onlyTesting: [String] = [],
-    jsonl: Bool,
-    timeout: Double? = nil,
-    progress: XcodeProgressMode = .compact,
-    statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) },
-    hostCommandRunner: (TKHostCommand, String, Bool, XcodeProgressMode) throws -> (HostProcessResult, Int) = { command, event, jsonl, progress in
-        try runXcodeHostCommand(command, event: event, jsonl: jsonl, allowNonZeroExit: true, progress: progress)
-    },
-    resultCommandRunner: (TKHostCommand) throws -> HostProcessResult = { command in
-        try runHostCommand(command, maximumOutputBytes: xcresultInlineJSONLimit)
-    }
-) throws -> TKXcodeActionSummary {
-    let onlyTesting = try validateXcodeOnlyTesting(onlyTesting)
-    let executionInvocation = try preparedXcodeInvocationForExecution(invocation)
-    let resolvedResultBundlePath = xcodePackageArtifactPath(
-        resultBundlePath,
-        package: executionInvocation.package
-    )
-    let command = TKXcodebuildCommand.test(
-        workspace: executionInvocation.workspace,
-        project: executionInvocation.project,
-        package: executionInvocation.package,
-        scheme: executionInvocation.scheme,
-        configuration: executionInvocation.configuration,
-        sdk: executionInvocation.sdk,
-        destination: executionInvocation.xcodebuildDestination,
-        derivedDataPath: executionInvocation.derivedDataPath,
-        resultBundlePath: resolvedResultBundlePath,
-        buildSettings: executionInvocation.buildSettings,
-        onlyTesting: onlyTesting,
-        redactDestination: executionInvocation.redactsXcodebuildDestination
-    ).withTimeout(timeout)
-    let (result, durationMs) = try hostCommandRunner(command, "xcode.test", jsonl, progress)
-    let diagnostics = xcodeBuildOutputDiagnostics(result, redacting: command)
-    let ok = result.exitCode == 0
-    let workspaceFilter = xcodeWorkspaceFilter(for: executionInvocation)
-    let postActionProcessStatus = redactedXcodePostActionProcessStatus(
-        xcodePostActionProcessStatusIfInterrupted(
-            ok: ok,
-            result: result,
-            workspaceFilter: workspaceFilter,
-            statusProvider: statusProvider
-        ),
-        command: command
-    )
-    let failureCode = xcodeBuildFailureCode(
-        ok: ok,
-        diagnostics: diagnostics,
-        result: result,
-        postActionProcessStatus: postActionProcessStatus
-    )
-    let resultDetails = xcodeTestResultBundleDetails(
-        resultBundlePath: resolvedResultBundlePath,
-        redacting: command,
-        runCommand: resultCommandRunner
-    )
-    return TKXcodeActionSummary(
-        ok: ok,
-        action: "xcode.test",
-        failureCode: failureCode,
-        workspace: executionInvocation.workspace,
-        project: executionInvocation.project,
-        package: executionInvocation.package,
-        scheme: executionInvocation.scheme,
-        configuration: executionInvocation.configuration,
-        sdk: executionInvocation.sdk,
-        destination: executionInvocation.destination,
-        derivedDataPath: executionInvocation.derivedDataPath,
-        derivedDataCache: observedXcodeDerivedDataCache(executionInvocation.derivedDataCache, result: result),
-        resultBundlePath: resolvedResultBundlePath,
-        onlyTesting: onlyTesting.isEmpty ? nil : onlyTesting,
-        simulatorUDID: executionInvocation.simulatorUDID,
-        device: executionInvocation.device,
-        durationMs: durationMs,
-        sourceCommand: result.sourceCommand,
-        exitCode: result.exitCode,
-        stdoutTruncated: result.stdoutTruncated,
-        stderrTruncated: result.stderrTruncated,
-        stdoutLogPath: result.stdoutLogPath,
-        stderrLogPath: result.stderrLogPath,
-        stdoutBytes: result.stdoutBytes,
-        stderrBytes: result.stderrBytes,
-        testResultSummary: resultDetails.summary,
-        topFailures: resultDetails.topFailures,
-        xcresultNote: resultDetails.note,
-        xcodeDiagnostics: diagnostics,
-        postActionProcessStatus: postActionProcessStatus,
-        nextActions: xcodeBuildRecoveryActions(failureCode: failureCode, workspaceFilter: workspaceFilter),
-        note: xcodeBuildSummaryNote(
-            ok: ok,
-            failureCode: failureCode,
-            successNote: "Test command finished. Use `triton xcresult summary --path <result.xcresult> --json` or `triton xcresult failures --path <result.xcresult> --json` for structured result parsing.",
-            defaultFailureNote: "Test command failed. Inspect xcodeDiagnostics and xcresult details first, then stdout/stderr artifacts if needed."
         )
     )
 }
@@ -1505,7 +1411,7 @@ func xcodeBuildSummaryNote(
     }
 }
 
-private func xcodeWorkspaceFilter(for invocation: ResolvedXcodeInvocation) -> String? {
+func xcodeWorkspaceFilter(for invocation: ResolvedXcodeInvocation) -> String? {
     invocation.workspace ?? invocation.project
 }
 

@@ -146,9 +146,10 @@ func currentResponderState() -> TKRuntimeResponderStateResponse {
 
 @MainActor
 func allRuntimeWindows() -> [UIWindow] {
-    UIApplication.shared.connectedScenes
-        .compactMap { $0 as? UIWindowScene }
-        .flatMap(\.windows)
+    let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+    // Observation remains scene-wide. A hostless legacy app may still own
+    // real UIApplication windows; mutation eligibility is checked separately.
+    return scenes.isEmpty ? UIApplication.shared.windows : scenes.flatMap(\.windows)
 }
 
 func runtimeWindowState(_ window: UIWindow, id: String) -> TKRuntimeWindowState {

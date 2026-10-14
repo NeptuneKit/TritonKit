@@ -1,3 +1,4 @@
+import ImageIO
 import Darwin
 import Foundation
 import Hummingbird
@@ -331,42 +332,21 @@ func captureWebHostDeviceScreenshot(id: String, hdc: String = "hdc", adb: String
 }
 
 func captureWebHostDeviceScreenshotPayload(id: String, hdc: String = "hdc", adb: String = "adb") throws -> WebHostDeviceScreenshot {
-    // 快速通道：对于 iOS 宿主模拟器，直接从 ID 中提取 UDID 并命显存高刷，绕过同步执行子进程检索
-    if id.hasPrefix("host:ios:") {
-        let parts = id.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false)
-        if parts.count == 3 {
-            let udid = String(parts[2])
-            print("[TritonCLI] Entered fast-path for host:ios with UDID: \(udid)")
-            fflush(stdout)
-            _ = CLIHostSimulatorFramebufferService.shared.startStreaming(udid: udid)
-            if let jpegData = CLIHostSimulatorFramebufferService.shared.getLatestFrame(udid: udid) {
-                print("[TritonCLI] Hit framebuffer cache! Returning fast screenshot.")
-                fflush(stdout)
-                return WebHostDeviceScreenshot(
-                    data: jpegData,
-                    contentType: "image/jpeg",
-                    width: 1290,
-                    height: 2796
-                )
-            } else {
-                print("[TritonCLI] Framebuffer cache was nil, falling back to slow resolve path.")
-                fflush(stdout)
-            }
-        }
-    }
-
     let resolved = try resolveWebHostDeviceTarget(id, hdc: hdc, adb: adb)
-
     if resolved.platform == .ios {
         let udid = resolved.target.rawTarget
-        _ = CLIHostSimulatorFramebufferService.shared.startStreaming(udid: udid)
-        if let jpegData = CLIHostSimulatorFramebufferService.shared.getLatestFrame(udid: udid) {
-            return WebHostDeviceScreenshot(
-                data: jpegData,
-                contentType: "image/jpeg",
-                width: 1290,
-                height: 2796
-            )
+        let resize = probeIOSSimulatorResize(target: udid)
+        // Only a verified main display may consume this cache. Active Resize Mode
+        // falls through to the display-bound still-image path; unknown fails closed.
+        _ = try iosSimulatorResizeScreenshotDisplay(resize)
+        if resize == .inactive, CLIHostSimulatorFramebufferService.shared.startStreaming(udid: udid) {
+            defer { CLIHostSimulatorFramebufferService.shared.stopStreaming(udid: udid) }
+            if let jpegData = CLIHostSimulatorFramebufferService.shared.getLatestFrame(udid: udid) {
+                let source = CGImageSourceCreateWithData(jpegData as CFData, nil)
+                let properties = source.flatMap { CGImageSourceCopyPropertiesAtIndex($0, 0, nil) as? [CFString: Any] }
+                return WebHostDeviceScreenshot(data: jpegData, contentType: "image/jpeg",
+                    width: properties?[kCGImagePropertyPixelWidth] as? Int, height: properties?[kCGImagePropertyPixelHeight] as? Int)
+            }
         }
     }
 
@@ -923,8 +903,10 @@ private struct WebIOSBaguetteInputAck: Decodable {
 @discardableResult
 func runWebIOSBaguetteLifecycle(
     _ lifecycle: WebIOSBaguetteSwipeLifecycle,
+    resizeProbe: IOSSimulatorResizeProbe = { probeIOSSimulatorResize(target: $0, environment: $1) },
     runner: WebIOSBaguetteLifecycleRunner = runWebIOSBaguetteLifecycleProcess
 ) throws -> HostProcessResult {
+    try assertIOSSimulatorResizeTouchAllowed(lifecycle.command, probe: resizeProbe)
     let result = try runner(lifecycle)
     let ackLines = result.stdout.split(whereSeparator: \.isNewline).map(String.init)
     guard ackLines.count == lifecycle.events.count else {

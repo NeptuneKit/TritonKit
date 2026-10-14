@@ -67,7 +67,7 @@ func performTapGestureAccessibilityActivation(
 func collectionCellContaining(request: TKInputRequest) -> UICollectionViewCell? {
     guard let point = inputPoint(from: request) else { return nil }
     for window in keyWindows() {
-        for collectionView in allSubviews(of: window, matching: UICollectionView.self) where isInteractable(collectionView) {
+        for collectionView in allSubviews(of: window, matching: UICollectionView.self) where isInteractable(collectionView) && runtimeForegroundTargetFailure(for: collectionView) == nil {
             let collectionPoint = collectionView.convert(point, from: nil)
             guard collectionView.bounds.contains(collectionPoint),
                   let indexPath = collectionView.indexPathForItem(at: collectionPoint) else {

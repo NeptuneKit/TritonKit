@@ -516,7 +516,7 @@ struct EvidenceBundleTests {
         try FileManager.default.createDirectory(at: session, withIntermediateDirectories: true)
 
         let captureURL = session.appendingPathComponent("requests.ndjson")
-        try Data(#"{"event":"proxy.serve.request","method":"GET","url":"https://example.test/login","redaction":"headers-names-only"}"#.utf8)
+        try evidenceProxyCaptureFixture(captureURL: captureURL)
             .write(to: captureURL, options: .atomic)
 
         let state = NetworkProxySessionStatePayload(
@@ -570,6 +570,10 @@ struct EvidenceBundleTests {
         #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/network/session-state.json").path))
         #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/network/requests.ndjson").path))
         #expect(try summarizeEvidenceBundle(input: root.path).sensitiveArtifactCount == 2)
+        let importedCapture = try String(contentsOf: root.appendingPathComponent("artifacts/network/requests.ndjson"), encoding: .utf8)
+        #expect(!importedCapture.contains("proxy-fixture-secret"))
+        #expect(!importedCapture.contains("token="))
+        #expect(!importedCapture.contains("fixture-user"))
     }
 
     @Test("evidence capture imports proxy session from argv")
@@ -588,7 +592,7 @@ struct EvidenceBundleTests {
             try FileManager.default.createDirectory(at: session, withIntermediateDirectories: true)
 
             let captureURL = session.appendingPathComponent("requests.ndjson")
-            try Data(#"{"event":"proxy.serve.request","method":"GET","host":"example.test","redaction":"headers-names-only"}"#.utf8)
+            try evidenceProxyCaptureFixture(captureURL: captureURL)
                 .write(to: captureURL, options: .atomic)
 
             let state = NetworkProxySessionStatePayload(
@@ -635,6 +639,10 @@ struct EvidenceBundleTests {
             #expect(manifest.primaryArtifacts.map { $0.kind }.first == "network-capture")
             #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/network/session-state.json").path))
             #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/network/requests.ndjson").path))
+            let importedCapture = try String(contentsOf: root.appendingPathComponent("artifacts/network/requests.ndjson"), encoding: .utf8)
+            #expect(!importedCapture.contains("proxy-fixture-secret"))
+            #expect(!importedCapture.contains("token="))
+            #expect(!importedCapture.contains("fixture-user"))
         }
     }
 
@@ -654,7 +662,7 @@ struct EvidenceBundleTests {
             try FileManager.default.createDirectory(at: session, withIntermediateDirectories: true)
 
             let captureURL = session.appendingPathComponent("requests.ndjson")
-            try Data(#"{"event":"proxy.serve.request","method":"CONNECT","host":"example.test","redaction":"headers-names-only"}"#.utf8)
+            try evidenceProxyCaptureFixture(captureURL: captureURL, method: "CONNECT")
                 .write(to: captureURL, options: .atomic)
 
             let state = NetworkProxySessionStatePayload(
@@ -692,6 +700,10 @@ struct EvidenceBundleTests {
             #expect(captureArtifact.target == fixture.target)
             #expect(captureArtifact.path == "artifacts/network/requests.ndjson")
             #expect(manifest.primaryArtifacts.map(\.kind).first == "network-capture")
+            let importedCapture = try String(contentsOf: root.appendingPathComponent("artifacts/network/requests.ndjson"), encoding: .utf8)
+            #expect(!importedCapture.contains("proxy-fixture-secret"))
+            #expect(!importedCapture.contains("token="))
+            #expect(!importedCapture.contains("fixture-user"))
             #expect(manifest.skipped.isEmpty)
         }
     }
@@ -1546,4 +1558,14 @@ private extension NSLock {
         defer { unlock() }
         return try body()
     }
+}
+
+
+private func evidenceProxyCaptureFixture(captureURL: URL, method: String = "GET") throws -> Data {
+    let target = method == "CONNECT"
+        ? "example.test:443"
+        : "https://fixture-user:proxy-fixture-secret@example.test/login?token=proxy-fixture-secret"
+    let request = Data("\(method) \(target) HTTP/1.1\r\nHost: example.test\r\nAuthorization: proxy-fixture-secret\r\n\r\n".utf8)
+    let event = try parseNetworkProxyHTTPHeader(request, listen: "127.0.0.1:19431", capturePath: captureURL.path, connectionIndex: 1)
+    return Data((try encodeCompactJSON(event) + "\n").utf8)
 }

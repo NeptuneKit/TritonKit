@@ -60,21 +60,26 @@ final class CLIAndroidFramebufferService: @unchecked Sendable {
 final class AndroidSession: @unchecked Sendable {
     let serial: String
     let adbPath: String
+    private let captureTimeout: TimeInterval
+    var running: Bool { lock.lock(); defer { lock.unlock() }; return isRunning }
 
     private let lock = NSLock()
     private var latestJPEGData = Data()
     private var latestFrameVersion: UInt64 = 0
     private var isRunning = false
+    private var isStopped = false
     private var thread: Thread?
+    private let captureProcess = FramebufferCaptureProcess()
 
-    init(serial: String, adbPath: String) {
+    init(serial: String, adbPath: String, captureTimeout: TimeInterval = 5) {
         self.serial = serial
         self.adbPath = adbPath
+        self.captureTimeout = captureTimeout
     }
 
     func start() {
         lock.lock()
-        guard !isRunning else {
+        guard !isRunning, !isStopped else {
             lock.unlock()
             return
         }
@@ -91,7 +96,10 @@ final class AndroidSession: @unchecked Sendable {
     func stop() {
         lock.lock()
         isRunning = false
+        isStopped = true
+        latestJPEGData = Data()
         lock.unlock()
+        captureProcess.cancel()
     }
 
     func getLatestFrameWithVersion() -> (Data, UInt64)? {
@@ -102,6 +110,7 @@ final class AndroidSession: @unchecked Sendable {
     }
 
     private func runLoop() {
+        defer { stop() }
         var lastSuccessTime = Date().timeIntervalSince1970
 
         while true {
@@ -112,44 +121,18 @@ final class AndroidSession: @unchecked Sendable {
 
             let startTime = Date().timeIntervalSince1970
 
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: adbPath.hasPrefix("/") ? adbPath : "/usr/bin/env")
-            if !adbPath.hasPrefix("/") {
-                process.arguments = [adbPath, "-s", serial, "exec-out", "screencap", "-p"]
-            } else {
-                process.arguments = ["-s", serial, "exec-out", "screencap", "-p"]
-            }
-
-            let pipe = Pipe()
-            let errorPipe = Pipe()
-            process.standardOutput = pipe
-            process.standardError = errorPipe
-            do {
-                try process.run()
-                let stdoutData = try pipe.fileHandleForReading.readToEnd() ?? Data()
-                let stderrData = try errorPipe.fileHandleForReading.readToEnd() ?? Data()
-                process.waitUntilExit()
-
-                if process.terminationStatus != 0 {
-                    let errStr = String(data: stderrData, encoding: .utf8) ?? ""
-                    print("[TritonCLI][AndroidError] adb exited with code \(process.terminationStatus): \(errStr)")
-                } else if stdoutData.isEmpty {
-                    print("[TritonCLI][AndroidError] adb output was empty")
-                } else {
-                    if let jpegData = convertPNGToJPEG(pngData: stdoutData) {
-                        lock.lock()
-                        if jpegData != latestJPEGData {
-                            latestJPEGData = jpegData
-                            latestFrameVersion += 1
-                            lastSuccessTime = Date().timeIntervalSince1970
-                        }
-                        lock.unlock()
-                    } else {
-                        print("[TritonCLI][AndroidError] convertPNGToJPEG failed for data length: \(stdoutData.count)")
-                    }
+            let executable = adbPath.hasPrefix("/") ? adbPath : "/usr/bin/env"
+            let arguments = (adbPath.hasPrefix("/") ? [] : [adbPath]) + ["-s", serial, "exec-out", "screencap", "-p"]
+            guard let result = captureProcess.run(executable: executable, arguments: arguments, timeout: captureTimeout) else { break }
+            if result.exitStatus == 0,
+               let jpegData = convertPNGToJPEG(pngData: result.stdout) {
+                lock.lock()
+                if isRunning, jpegData != latestJPEGData {
+                    latestJPEGData = jpegData
+                    latestFrameVersion += 1
+                    lastSuccessTime = Date().timeIntervalSince1970
                 }
-            } catch {
-                print("[TritonCLI][AndroidError] Failed to run adb process: \(error.localizedDescription)")
+                lock.unlock()
             }
 
             let elapsed = Date().timeIntervalSince1970 - startTime
@@ -247,7 +230,9 @@ final class HarmonySession: @unchecked Sendable {
     private var latestJPEGData = Data()
     private var latestFrameVersion: UInt64 = 0
     private var isRunning = false
+    private var isStopped = false
     private var thread: Thread?
+    private let captureProcess = FramebufferCaptureProcess()
 
     init(target: String, hdcPath: String) {
         self.target = target
@@ -256,7 +241,7 @@ final class HarmonySession: @unchecked Sendable {
 
     func start() {
         lock.lock()
-        guard !isRunning else {
+        guard !isRunning, !isStopped else {
             lock.unlock()
             return
         }
@@ -273,21 +258,10 @@ final class HarmonySession: @unchecked Sendable {
     func stop() {
         lock.lock()
         isRunning = false
+        isStopped = true
+        latestJPEGData = Data()
         lock.unlock()
-
-        // Cleanup remote and local temp files
-        let remotePath = "/data/local/tmp/triton-stream.jpeg"
-        let localTempPath = NSTemporaryDirectory() + "triton-harmony-\(target).jpeg"
-
-        let deleteProcess = Process()
-        deleteProcess.executableURL = URL(fileURLWithPath: hdcPath.hasPrefix("/") ? hdcPath : "/usr/bin/env")
-        if !hdcPath.hasPrefix("/") {
-            deleteProcess.arguments = [hdcPath, "-t", target, "shell", "rm", "-f", remotePath]
-        } else {
-            deleteProcess.arguments = ["-t", target, "shell", "rm", "-f", remotePath]
-        }
-        try? deleteProcess.run()
-        try? FileManager.default.removeItem(atPath: localTempPath)
+        captureProcess.cancel()
     }
 
     func getLatestFrameWithVersion() -> (Data, UInt64)? {
@@ -298,8 +272,19 @@ final class HarmonySession: @unchecked Sendable {
     }
 
     private func runLoop() {
-        let remotePath = "/data/local/tmp/triton-stream.jpeg"
-        let localTempPath = NSTemporaryDirectory() + "triton-harmony-\(target).jpeg"
+        defer { stop() }
+        let sessionID = UUID().uuidString
+        let remotePath = "/data/local/tmp/triton-stream-\(sessionID).jpeg"
+        let localDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("triton-harmony-\(sessionID)", isDirectory: true)
+        let localURL = localDirectory.appendingPathComponent("frame.jpeg")
+        guard (try? FileManager.default.createDirectory(at: localDirectory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])) != nil else { return }
+        let executable = hdcPath.hasPrefix("/") ? hdcPath : "/usr/bin/env"
+        let prefix = (hdcPath.hasPrefix("/") ? [] : [hdcPath]) + ["-t", target]
+        defer {
+            // A separate bounded cleanup can run after capture cancellation.
+            _ = FramebufferCaptureProcess().run(executable: executable, arguments: prefix + ["shell", "rm", "-f", remotePath], timeout: 2, maximumOutputBytes: 65536)
+            try? FileManager.default.removeItem(at: localDirectory)
+        }
         var lastSuccessTime = Date().timeIntervalSince1970
 
         while true {
@@ -310,53 +295,22 @@ final class HarmonySession: @unchecked Sendable {
 
             let startTime = Date().timeIntervalSince1970
 
-            // 1. Run snapshot_display
-            let snapProcess = Process()
-            snapProcess.executableURL = URL(fileURLWithPath: hdcPath.hasPrefix("/") ? hdcPath : "/usr/bin/env")
-            if !hdcPath.hasPrefix("/") {
-                snapProcess.arguments = [hdcPath, "-t", target, "shell", "snapshot_display", "-f", remotePath]
-            } else {
-                snapProcess.arguments = ["-t", target, "shell", "snapshot_display", "-f", remotePath]
-            }
-            snapProcess.standardOutput = Pipe()
-            snapProcess.standardError = Pipe()
-
-            var snapSuccess = false
-            do {
-                try snapProcess.run()
-                snapProcess.waitUntilExit()
-                if snapProcess.terminationStatus == 0 {
-                    snapSuccess = true
-                }
-            } catch {}
-
-            if snapSuccess {
-                // 2. Run hdc file recv
-                let recvProcess = Process()
-                recvProcess.executableURL = URL(fileURLWithPath: hdcPath.hasPrefix("/") ? hdcPath : "/usr/bin/env")
-                if !hdcPath.hasPrefix("/") {
-                    recvProcess.arguments = [hdcPath, "-t", target, "file", "recv", remotePath, localTempPath]
-                } else {
-                    recvProcess.arguments = ["-t", target, "file", "recv", remotePath, localTempPath]
-                }
-                recvProcess.standardOutput = Pipe()
-                recvProcess.standardError = Pipe()
-
-                do {
-                    try recvProcess.run()
-                    recvProcess.waitUntilExit()
-                    if recvProcess.terminationStatus == 0 {
-                        if let localData = try? Data(contentsOf: URL(fileURLWithPath: localTempPath)), !localData.isEmpty {
-                            lock.lock()
-                            if localData != latestJPEGData {
-                                latestJPEGData = localData
-                                latestFrameVersion += 1
-                                lastSuccessTime = Date().timeIntervalSince1970
-                            }
-                            lock.unlock()
-                        }
+            guard let snapshot = captureProcess.run(executable: executable, arguments: prefix + ["shell", "snapshot_display", "-f", remotePath]) else { break }
+            if snapshot.exitStatus == 0 {
+                guard let received = captureProcess.run(executable: executable, arguments: prefix + ["file", "recv", remotePath, localURL.path]) else { break }
+                if received.exitStatus == 0,
+                   let attributes = try? FileManager.default.attributesOfItem(atPath: localURL.path),
+                   attributes[.type] as? FileAttributeType == .typeRegular,
+                   let size = attributes[.size] as? NSNumber, size.intValue > 0, size.intValue <= 16 * 1024 * 1024,
+                   let localData = try? Data(contentsOf: localURL), !localData.isEmpty {
+                    lock.lock()
+                    if isRunning, localData != latestJPEGData {
+                        latestJPEGData = localData
+                        latestFrameVersion += 1
+                        lastSuccessTime = Date().timeIntervalSince1970
                     }
-                } catch {}
+                    lock.unlock()
+                }
             }
 
             let elapsed = Date().timeIntervalSince1970 - startTime

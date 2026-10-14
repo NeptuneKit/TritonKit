@@ -57,29 +57,35 @@ The Web launch plan should report `mode=packaged` for a released Homebrew instal
 
 ## Update Public Skills
 
-When `triton update` is available and the agent skills directory is known, prefer:
+First inspect `triton schema --command update --json` and the installed version. The guarded installer described here must be present in that CLI; a command name or this development skill alone does not prove an older released binary implements it. When supported and the agent skills directory is known, preview the plan, then apply the authorized update:
 
 ```sh
+triton update --include-skills --skills-dir "$AGENT_SKILLS_DIR" --dry-run --json
 triton update --include-skills --skills-dir "$AGENT_SKILLS_DIR" --yes --json
 ```
 
-This downloads `tritonkit-skills.tar.gz` from the selected release and replaces the installed `TritonKit.skills/` bundle. It should still update skills when the CLI binary is already at the selected version; verify `skillsUpdated=true` in the JSON response.
+The guarded installer verifies `tritonkit-skills.tar.gz` against `tritonkit_checksums.txt` from the same selected release, validates the complete archive, stages the bundle, and checks installed file hashes against `.triton-install.json`. Local additions, edits, deletions, or a differing installation without a baseline cause refusal. Do not delete the receipt, remove the existing bundle, or retry with a forceful manual replacement to bypass that refusal. The CLI dry-run is a plan preview; it does not perform the downloaded archive and installed-file validation that the Python dry-run below performs.
 
-1. Download `tritonkit-skills.tar.gz` from the same GitHub Release as the CLI.
+Installation uses an exclusive update lock and an atomic directory exchange, writes a private installation receipt, and retains the previous bundle in `.triton-skills-backup-*`. Staged files use private permissions; retain backups rather than treating them as disposable update debris. A failed post-exchange step can leave the new bundle installed with the old bundle retained at a stage/backup path: inspect both before retrying. Skills can update even when the CLI binary is already at the selected version; verify `skillsUpdated=true` and the installed bundle metadata.
+
+1. Download `tritonkit-skills.tar.gz` and `tritonkit_checksums.txt` from the same GitHub Release as the CLI; use the manifest's expected SHA-256 for that archive.
 2. Locate the user's configured agent skills directory. For Codex this is usually under the configured `CODEX_HOME` skills directory; if the path is not known, ask the user or inspect the local agent configuration.
-3. Remove old pre-bundle top-level installs if present:
-   - `tritonkit-dev-feedback`
-   - `tritonkit-emulator-cli-takeover`
-   - `tritonkit-real-project-regression`
-   - `tritonkit-update`
-4. Replace the installed `TritonKit.skills/` directory with the extracted bundle from `tritonkit-skills.tar.gz`.
+3. Preserve old top-level public skill installs. The guarded installer migrates only empty or byte-identical legacy folders to `.triton-skills-legacy-*`; local changes cause refusal and require resolving the conflict first.
+4. Validate and install the whole bundle through the guarded installer. Do not remove the installed directory before staging or exchange.
 5. Verify:
    - `TritonKit.skills/BUILD_INFO.json` exists.
    - `BUILD_INFO.json.version` matches the intended release.
    - `TritonKit.skills/tritonkit-update/SKILL.md` exists.
    - Every bundled public skill `metadata.version` matches the intended release.
 
-For a manual install, extract the verified release tarball to a fresh temporary directory and replace the installed `TritonKit.skills/` as one bundle. Preserve local customizations separately before replacement. Cross-skill references require all four bundled skills; do not copy individual `SKILL.md` files alone.
+If the installed CLI lacks this contract, use the matching repository's guarded Python installer after confirming its supported flags. From that checkout, with `EXPECTED_SKILLS_SHA256` set to the checksum manifest entry:
+
+```sh
+python3 docs-linhay/scripts/install-public-skills.py "$AGENT_SKILLS_DIR" --from-tar "$SKILLS_ARCHIVE" --sha256 "$EXPECTED_SKILLS_SHA256" --dry-run
+python3 docs-linhay/scripts/install-public-skills.py "$AGENT_SKILLS_DIR" --from-tar "$SKILLS_ARCHIVE" --sha256 "$EXPECTED_SKILLS_SHA256"
+```
+
+The Python dry-run validates the archive and installed/legacy baselines without changing installation files. If validation fails, preserve the installed files and resolve the reported conflict; do not use extract-and-replace instructions. Cross-skill references require all four bundled skills; do not copy individual `SKILL.md` files alone.
 
 ## Update App Dependencies
 
@@ -96,4 +102,4 @@ The app Podfile should depend on `TritonKit` only, with Debug-only configuration
 
 ## Report Back
 
-Report the installed CLI version, the installed skills bundle version, whether old top-level skill directories were removed, and whether app dependencies were updated or only left as instructions.
+Report the installed CLI and skills bundle versions, checksum/baseline validation outcome, retained backup and legacy migration outcome, and whether app dependencies were updated or only left as instructions. Separate a dry-run plan from a completed installation.

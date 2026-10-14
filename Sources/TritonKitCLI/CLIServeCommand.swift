@@ -693,7 +693,15 @@ struct Serve: AsyncParsableCommand {
                 udid = target
             }
 
-            _ = CLIHostSimulatorFramebufferService.shared.startStreaming(udid: udid)
+            do { try assertIOSSimulatorResizeCaptureAllowed(target: udid) }
+            catch let error as IOSSimulatorResizeCaptureError {
+                return jsonError(code: error.detail.code, message: error.detail.message, endpoint: "/web/ios-simulator/framebuffer", hint: error.detail.hint, status: .conflict)
+            } catch {
+                return jsonError(code: "ios_simulator_resize_capture_state_unknown", message: "Capture routing could not be verified.", endpoint: "/web/ios-simulator/framebuffer", status: .conflict)
+            }
+            guard CLIHostSimulatorFramebufferService.shared.startStreaming(udid: udid) else {
+                return jsonError(code: "web_ios_simulator_mjpeg_unavailable", message: "Framebuffer service did not start.", endpoint: "/web/ios-simulator/framebuffer", status: .conflict)
+            }
 
             let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 60
             let fps = min(120, max(1, requestedFps))

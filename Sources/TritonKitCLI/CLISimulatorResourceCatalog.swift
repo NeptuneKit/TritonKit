@@ -1,6 +1,7 @@
 /*
 Ported from https://github.com/MobAI-App/simslim
- profiles.go and features.go at commit 4ae1659a0c0265787c2a7047fab466b326ba6d7e
+ profiles.go at commit 6518ba7eab1123d7e1d7797b0e05f51043b42a5b
+ Feature IDs retain the previous integration with dependency updates.
 
 MIT License
 
@@ -50,10 +51,14 @@ enum SimulatorResourceCatalogError: Error, Equatable {
 }
 
 enum SimulatorResourceCatalog {
-    static let sourceCommit = "4ae1659a0c0265787c2a7047fab466b326ba6d7e"
+    static let sourceCommit = "6518ba7eab1123d7e1d7797b0e05f51043b42a5b"
     static let sourceURL = "https://github.com/MobAI-App/simslim"
-    static let alwaysEnabledLabels: Set<String> = ["com.apple.sharingd"]
-    static let alwaysEnabledReasons = ["com.apple.sharingd": "Required for system share sheets."]
+    static let alwaysEnabledLabels: Set<String> = ["com.apple.sharingd", "com.apple.assistantd", "com.apple.gamed"]
+    static let alwaysEnabledReasons = [
+        "com.apple.sharingd": "Required for system share sheets.",
+        "com.apple.assistantd": "Hosts the dictation service; without it the system Spotlight app leaks memory.",
+        "com.apple.gamed": "Required for timely XCUITest app launches (DTServiceHub / GameKit).",
+    ]
     static let categories: [SimulatorResourceServiceCategory] = [
         .init(id: "widgets", name: "Widgets & Wallpaper",
               description: "Home and lock screen posters, widgets, and Live Activities.",
@@ -62,12 +67,12 @@ enum SimulatorResourceCatalog {
                   "com.apple.PosterBoard",
                   "com.apple.chronod",
                   "com.apple.liveactivitiesd",
+                  "com.apple.navd", // Stock Maps widget otherwise retries in a tight loop.
               ]),
         .init(id: "siri", name: "Siri & Intelligence",
               description: "Siri, Apple Intelligence, speech, and on-device ML model services.",
               downside: "Siri, speech features, and Apple Intelligence services are unavailable.",
               approxMemoryMB: 265, labels: [
-                  "com.apple.assistantd",
                   "com.apple.assistant_cdmd",
                   "com.apple.assistant_service",
                   "com.apple.siriactionsd",
@@ -238,7 +243,6 @@ enum SimulatorResourceCatalog {
                   "com.apple.MapKit.SnapshotService",
                   "com.apple.jetpackassetd",
                   "com.apple.tipsd",
-                  "com.apple.gamed",
                   "com.apple.gamesaved",
                   "com.apple.GameController.gamecontrollerd",
               ]),
@@ -324,7 +328,7 @@ enum SimulatorResourceCatalog {
         .init(id: "health", name: "HealthKit", labels: ["com.apple.healthd"]),
         .init(id: "homekit", name: "HomeKit", labels: ["com.apple.homed"]),
         .init(id: "imessage", name: "iMessage & FaceTime", labels: ["com.apple.identityservicesd"]),
-        .init(id: "widgets", name: "Widgets & Live Activities", labels: ["com.apple.chronod", "com.apple.liveactivitiesd"]),
+        .init(id: "widgets", name: "Widgets & Live Activities", labels: ["com.apple.chronod", "com.apple.liveactivitiesd", "com.apple.navd"]),
         .init(id: "wallet", name: "Wallet & passes", labels: ["com.apple.passd"]),
         .init(id: "maps", name: "Maps background services", labels: ["com.apple.Maps.mapssyncd"]),
         .init(id: "weather", name: "Weather", labels: ["com.apple.weatherd"]),

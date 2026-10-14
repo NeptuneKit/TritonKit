@@ -230,8 +230,10 @@ func runHostCommandDetached(
 func runHostCommand(
     _ command: TKHostCommand,
     interruptAfter: Double? = nil,
-    maximumOutputBytes: Int? = 1_048_576
+    maximumOutputBytes: Int? = 1_048_576,
+    simulatorResizeProbe: IOSSimulatorResizeProbe? = nil
 ) throws -> HostProcessResult {
+    try assertIOSSimulatorResizeTouchAllowed(command, probe: simulatorResizeProbe ?? { probeIOSSimulatorResize(target: $0, environment: $1) })
     let timeoutSeconds = command.defaultTimeoutSeconds
     let process = Process()
     configureHostProcessExecutable(process, command: command)
@@ -782,6 +784,10 @@ func failHostCommand(
     case let error as HostApplePlatformInventoryFailure:
         detail = error.detail
     case let error as HostDeviceAdministrationDiscoveryFailure:
+        detail = error.detail
+    case let error as IOSSimulatorResizeCaptureError:
+        detail = error.detail
+    case let error as IOSSimulatorResizeError:
         detail = error.detail
     case let error as HostDeviceInfoError:
         detail = error.detail

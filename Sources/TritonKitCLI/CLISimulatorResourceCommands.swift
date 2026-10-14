@@ -9,7 +9,8 @@ func resourceRun(_ req: SimulatorResourceRequest) throws {
     case .profiles:
         let data = try encoder.encode(SimulatorResourceCatalog.categories)
         let body: [String: Any] = ["ok": true, "catalogCommit": SimulatorResourceCatalog.sourceCommit,
-                                 "categories": try JSONSerialization.jsonObject(with: data)]
+                                 "categories": try JSONSerialization.jsonObject(with: data),
+                                 "alwaysEnabledReasons": SimulatorResourceCatalog.alwaysEnabledReasons]
         print(String(decoding: try JSONSerialization.data(withJSONObject: body, options: [.sortedKeys]), as: UTF8.self))
     case .features:
         let data = try encoder.encode(SimulatorResourceCatalog.features)
@@ -37,18 +38,19 @@ func resourceRun(_ req: SimulatorResourceRequest) throws {
         if measurement.partial { throw ExitCode.failure }
     case .plan:
         guard let u=req.udid, let p=req.profile else { throw ValidationError("udid and profile are required") }
-        let profile = TKSimulatorResourceProfile(id:p); try profile.validate()
-        let d = try JSONSerialization.data(withJSONObject: ["ok":true, "udid":u, "profile": try JSONSerialization.jsonObject(with: JSONEncoder().encode(profile))], options: [.sortedKeys]); print(String(decoding:d,as:UTF8.self))
+        guard UUID(uuidString: u) != nil else { throw SimulatorResourceMutationError.missingUDID }
+        let profile = try CLISimulatorResourceRuntime.resolveProfile(p)
+        let d = try JSONSerialization.data(withJSONObject: ["ok":true, "udid":u, "catalogCommit": SimulatorResourceCatalog.sourceCommit, "desiredDisabledLabels": SimulatorResourceMutationPlanner.labels(for: profile), "alwaysEnabledReasons": SimulatorResourceCatalog.alwaysEnabledReasons, "profile": try JSONSerialization.jsonObject(with: JSONEncoder().encode(profile))], options: [.sortedKeys]); print(String(decoding:d,as:UTF8.self))
     case .apply:
-        guard let udid=req.udid, let profile=req.profile else { throw ValidationError("udid and profile are required") }
+        guard let udid=req.udid, req.profile != nil else { throw ValidationError("udid and profile are required") }
         let runtime = CLISimulatorResourceRuntime()
-        let actual = try runtime.readOverrides(udid: udid)
-        let previous = TKSimulatorResourceStatus(udid: udid, runtime: "unknown", enabled: !actual.overrides.isEmpty)
+        // apply owns the initial observation, including shutdown offline stores.
+        let previous = TKSimulatorResourceStatus(udid: udid, runtime: "unknown")
         let receipt = try runtime.apply(req, previous: previous)
         let data = try encoder.encode(receipt)
         print(String(decoding:data, as: UTF8.self))
     case .verify:
-        guard let udid=req.udid, let profile=req.profile else { throw ValidationError("udid and profile are required") }
+        guard req.udid != nil, req.profile != nil else { throw ValidationError("udid and profile are required") }
         try CLISimulatorResourceRuntime().verify(req)
         print("{\"ok\":true}")
     default:
@@ -68,10 +70,10 @@ struct SimResourceRestore: AsyncParsableCommand {
     @Flag(name: .long) var json=false
     static let configuration=CommandConfiguration(commandName:"restore")
     func run() async throws {
-        let data = try Data(contentsOf: URL(fileURLWithPath: receipt))
-        let value = try JSONDecoder().decode(TKSimulatorResourceReceipt.self, from: data)
+        let value = try SimulatorResourceReceiptReader.read(receipt)
         try CLISimulatorResourceRuntime().restore(value)
-        print("{\"ok\":true,\"receipt\":\"\(receipt)\"}")
+        let body: [String: Any] = ["ok": true, "receipt": receipt, "receiptID": value.id.uuidString]
+        print(String(decoding: try JSONSerialization.data(withJSONObject: body, options: [.sortedKeys]), as: UTF8.self))
     }
 }
 struct SimResourceWatch: AsyncParsableCommand {

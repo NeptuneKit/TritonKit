@@ -17,6 +17,8 @@ func mapCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "inspect <dir.tritonmap>", type: "Subcommand", description: "Inspect map counts and health"),
                 TKCommandSchemaOption(name: "paths <dir.tritonmap>", type: "Subcommand", description: "List path graph assets"),
                 TKCommandSchemaOption(name: "screens <dir.tritonmap>", type: "Subcommand", description: "List screen nodes"),
+                TKCommandSchemaOption(name: "--offset", type: "Int", defaultValue: "0", description: "screens/transitions/paths: nonnegative offset into stable ID order"),
+                TKCommandSchemaOption(name: "--limit", type: "Int", defaultValue: "100", description: "screens/transitions/paths: returned page size, 1...1000; count fields remain totals and pagination reports truncation"),
                 TKCommandSchemaOption(name: "transitions <dir.tritonmap>", type: "Subcommand", description: "List transition edges"),
                 TKCommandSchemaOption(name: "path show <dir.tritonmap> --path <pathId>", type: "Subcommand", description: "Show one path with screens and transitions"),
                 TKCommandSchemaOption(name: "path confirm <dir.tritonmap> --path <pathId>", type: "Subcommand", description: "Confirm one observed path for suite eligibility"),
@@ -85,7 +87,7 @@ func mapCommandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "TKAppMapMergeResponse, TKAppMapInspectResponse, TKAppMapPathsResponse, TKAppMapScreensResponse, TKAppMapTransitionsResponse, TKAppMapPathShowResponse, TKAppMapHealthResponse, TKAppMapSuiteInspectResponse, TKAppMapSuiteRunResponse, TKAppMapExportFlowResponse, or TKAppMapViewerResponse",
             failureShape: "{ ok:false, error:{ code: app_map_error, message, hint } }",
-            outputSemantics: "Offline App Map projection and path planning only. It reads existing .tritonevidence and .tritonmap files; it can confirm paths, edit suite membership, and export a static HTML viewer, but it does not execute runner steps, devices, selector healing, Web/Wails control, or JUnit. Path list/show responses expose requiresVLM plus executable suggestedCommands for export/run, and export-flow returns validate/run suggestedCommands with --allow-vlm when the source path has VLM provenance.",
+            outputSemantics: "screens/transitions/paths return bounded stable-ID pages with totalCount, returnedCount, truncated and nextOffset; empty suites cannot pass. Offline App Map projection and path planning only. It reads existing .tritonevidence and .tritonmap files; it can confirm paths, edit suite membership, and export a static HTML viewer, but it does not execute runner steps, devices, selector healing, Web/Wails control, or JUnit. Path list/show responses expose requiresVLM plus executable suggestedCommands for export/run, and export-flow returns validate/run suggestedCommands with --allow-vlm when the source path has VLM provenance.",
             artifacts: ["app-map", "app-map.screens", "app-map.transitions", "app-map.paths", "app-map.suites", "tritontest-yaml", "app-map-viewer-html"],
             nextCommands: [
                 "triton evidence project-workspace <dir.tritonevidence> --json",
@@ -109,7 +111,7 @@ func mapCommandSchemas() -> [TKCommandSchema] {
                 appMapExportFlowOutputContract(),
                 appMapViewerOutputContract(),
             ],
-            failureCodes: ["app_map_error", "validation_failed", "unconfirmed_path", "non_replayable_path"],
+            failureCodes: ["invalid_app_map_page", "empty_app_map_suite", "app_map_error", "validation_failed", "unconfirmed_path", "non_replayable_path"],
             subcommands: [
                 TKCommandSubcommandSchema(
                     name: "merge",
@@ -138,35 +140,35 @@ func mapCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "paths",
                     summary: "List path graph assets",
-                    optionalOptions: ["--format", "--json"],
+                    optionalOptions: ["--offset", "--limit", "--format", "--json"],
                     artifacts: ["app-map.paths"],
                     nextCommands: [
                         "triton map export-flow <dir.tritonmap> --path <pathId> --out <file.tritontest.yaml> --json",
                     ],
                     outputSelectors: ["app-map.paths"],
-                    failureCodes: ["app_map_error"]
+                    failureCodes: ["invalid_app_map_page", "app_map_error"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "screens",
                     summary: "List screen nodes",
-                    optionalOptions: ["--format", "--json"],
+                    optionalOptions: ["--offset", "--limit", "--format", "--json"],
                     artifacts: ["app-map.screens"],
                     nextCommands: [
                         "triton map health <dir.tritonmap> --json",
                     ],
                     outputSelectors: ["app-map.screens"],
-                    failureCodes: ["app_map_error"]
+                    failureCodes: ["invalid_app_map_page", "app_map_error"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "transitions",
                     summary: "List transition edges",
-                    optionalOptions: ["--format", "--json"],
+                    optionalOptions: ["--offset", "--limit", "--format", "--json"],
                     artifacts: ["app-map.transitions"],
                     nextCommands: [
                         "triton map path show <dir.tritonmap> --path <pathId> --json",
                     ],
                     outputSelectors: ["app-map.transitions"],
-                    failureCodes: ["app_map_error"]
+                    failureCodes: ["invalid_app_map_page", "app_map_error"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "path",

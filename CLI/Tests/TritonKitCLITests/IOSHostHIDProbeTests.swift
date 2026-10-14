@@ -86,10 +86,10 @@ struct IOSHostHIDProbeTests {
         """
         try script.write(to: executable, atomically: true, encoding: .utf8)
         chmod(executable.path, S_IRWXU)
-        let lifecycle = try webIOSBaguetteSwipeLifecycle(input: .swipe(startX: 2, startY: 8, endX: 2, endY: 2), udid: "SIM-1", screen: .init(width: 10, height: 10), executable: executable.path)
+        let lifecycle = try webIOSBaguetteSwipeLifecycle(input: .swipe(startX: 2, startY: 8, endX: 2, endY: 2), udid: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE", screen: .init(width: 10, height: 10), executable: executable.path)
         let started = Date()
         var failure: Error?
-        do { _ = try runWebIOSBaguetteLifecycle(lifecycle) }
+        do { _ = try runWebIOSBaguetteLifecycle(lifecycle, resizeProbe: { _, _ in .inactive }) }
         catch { failure = error }
         let error = try #require(failure)
         guard case HostCommandRunError.nonZeroExit(_, let result) = error else {

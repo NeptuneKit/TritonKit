@@ -238,7 +238,9 @@ struct ReplayCommandTests {
         try FileManager.default.createDirectory(at: session, withIntermediateDirectories: true)
 
         let captureURL = session.appendingPathComponent("requests.ndjson")
-        try Data(#"{"event":"proxy.serve.request","method":"GET","url":"https://example.test/failure","redaction":"headers-names-only"}"#.utf8)
+        let request = Data("GET https://fixture-user:proxy-fixture-secret@example.test/failure?token=proxy-fixture-secret HTTP/1.1\r\nHost: example.test\r\nAuthorization: proxy-fixture-secret\r\n\r\n".utf8)
+        let event = try parseNetworkProxyHTTPHeader(request, listen: "127.0.0.1:19431", capturePath: captureURL.path, connectionIndex: 1, captureMode: "block", policyAction: "blocked")
+        try Data((try encodeCompactJSON(event) + "\n").utf8)
             .write(to: captureURL, options: .atomic)
         let state = NetworkProxySessionStatePayload(
             schemaVersion: "triton.proxy.session.v1",
@@ -297,6 +299,10 @@ struct ReplayCommandTests {
         #expect(manifest.primaryArtifacts.map(\.kind).first == "network-capture")
         #expect(FileManager.default.fileExists(atPath: output.appendingPathComponent("artifacts/network/session-state.json").path))
         #expect(FileManager.default.fileExists(atPath: output.appendingPathComponent("artifacts/network/requests.ndjson").path))
+        let importedCapture = try String(contentsOf: output.appendingPathComponent("artifacts/network/requests.ndjson"), encoding: .utf8)
+        #expect(!importedCapture.contains("proxy-fixture-secret"))
+        #expect(!importedCapture.contains("token="))
+        #expect(!importedCapture.contains("fixture-user"))
     }
 
     @Test("replay suggested commands route failed waits to find snapshot and evidence summary")

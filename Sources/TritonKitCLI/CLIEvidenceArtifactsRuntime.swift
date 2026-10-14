@@ -353,7 +353,7 @@ func appendNetworkProxySessionEvidenceArtifacts(
         if let capture = state.artifacts.first(where: { $0.kind == "network-capture" }) {
             let captureURL = networkProxyArtifactURL(path: capture.path, sessionURL: sessionURL)
             do {
-                let captureData = try Data(contentsOf: captureURL)
+                let captureData = try readValidatedNetworkCapture(sourceURL: captureURL).data
                 try appendEvidenceArtifact(
                     kind: "network-capture",
                     relativePath: "artifacts/network/requests.ndjson",

@@ -5,17 +5,30 @@ import Testing
 struct SimulatorResourceCatalogTests {
     @Test("Pinned upstream catalog includes every category, feature and managed service")
     func completeCatalog() {
-        #expect(SimulatorResourceCatalog.sourceCommit == "4ae1659a0c0265787c2a7047fab466b326ba6d7e")
+        #expect(SimulatorResourceCatalog.sourceCommit == "6518ba7eab1123d7e1d7797b0e05f51043b42a5b")
         #expect(SimulatorResourceCatalog.categories.map(\.id) == [
             "widgets", "siri", "search", "icloud", "store", "pim", "web", "family",
             "health", "photos", "apps", "messaging", "connectivity", "telemetry", "other",
         ])
         #expect(SimulatorResourceCatalog.features.count == 24)
-        #expect(SimulatorResourceCatalog.slimmableLabels.count == 170)
+        #expect(SimulatorResourceCatalog.slimmableLabels.count == 168)
         #expect(SimulatorResourceCatalog.managedLabels.count == 171)
         for feature in SimulatorResourceCatalog.features {
-            #expect(Set(feature.labels).isSubset(of: SimulatorResourceCatalog.slimmableLabels))
+            #expect(Set(feature.labels).isSubset(of: SimulatorResourceCatalog.managedLabels))
         }
+    }
+
+    @Test("Required services remain repairable but cannot be disabled")
+    func protectedServices() throws {
+        let required: Set<String> = ["com.apple.assistantd", "com.apple.gamed", "com.apple.sharingd"]
+        #expect(SimulatorResourceCatalog.alwaysEnabledLabels == required)
+        #expect(required.isDisjoint(with: try SimulatorResourceCatalog.desired()))
+        #expect(SimulatorResourceCatalog.delta(current: required, desired: required).enable == required.sorted())
+    }
+
+    @Test("Keeping widgets also keeps navd from connectivity")
+    func widgetsPreserveNavigation() throws {
+        #expect(try !SimulatorResourceCatalog.desired(exceptCategories: ["widgets"]).contains("com.apple.navd"))
     }
 
     @Test("Keeping a category preserves its services shared with other disabled categories")

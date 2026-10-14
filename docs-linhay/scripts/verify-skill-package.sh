@@ -2,6 +2,9 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
+  -s "${root}/docs-linhay/scripts/tests" \
+  -p test_install_public_skills.py
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "${tmp_dir}"' EXIT
 

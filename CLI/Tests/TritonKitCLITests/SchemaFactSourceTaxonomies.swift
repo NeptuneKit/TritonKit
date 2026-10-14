@@ -341,6 +341,18 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "observe", "plan"]
     case "highlight_render_timeout", "highlight_restore_conflict", "highlight_restore_failed":
         return ["diagnose", "observe"]
+    case "skills_update_busy", "ios_simulator_resize_touch_unroutable", "ios_simulator_resize_state_unknown", "ios_simulator_resize_capture_state_unknown":
+        return ["diagnose", "plan"]
+    case "ios_simulator_resize_target_invalid":
+        return ["prepare-target", "diagnose"]
+    case "ios_simulator_resize_capture_unroutable":
+        return ["archive", "diagnose", "plan"]
+    case "preferences_relaunch_failed":
+        return ["diagnose", "observe", "verify"]
+    case "prepared_tests_result_incomplete":
+        return ["archive", "diagnose", "verify"]
+    case "empty_app_map_suite":
+        return ["archive", "plan", "diagnose"]
     case "ambiguous_target", "android_target_unauthorized", "device_not_ready", "simulator_not_booted", "simulator_not_found", "target_not_found", "target_platform_mismatch", "target_unavailable":
         return ["discover", "prepare-target", "diagnose"]
     case "ios_host_ax_unsupported_platform":
