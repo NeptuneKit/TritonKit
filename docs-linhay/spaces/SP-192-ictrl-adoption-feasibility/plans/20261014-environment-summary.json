@@ -1,0 +1,426 @@
+{
+  "capturedDate": "2026-10-14",
+  "baselineCommit": "8aaf6c31d308194b489e10ed83362cee91f549d5",
+  "environment": {
+    "macOS": "27.0.1",
+    "macOSBuild": "26A434",
+    "Xcode": "27.1",
+    "XcodeBuild": "27A9275",
+    "architecture": "arm64",
+    "installedTriton": "0.2.26"
+  },
+  "probePolicy": {
+    "deviceActionsExecuted": false,
+    "servicesStartedOrStopped": false,
+    "screenshotsCaptured": false,
+    "identifiersPublished": false
+  },
+  "probes": [
+    {
+      "name": "version",
+      "argv": [
+        "triton",
+        "version",
+        "--json"
+      ],
+      "exitCode": 0,
+      "singleJSON": true,
+      "ok": true,
+      "errorCode": null
+    },
+    {
+      "name": "status",
+      "argv": [
+        "triton",
+        "status",
+        "--json"
+      ],
+      "exitCode": 0,
+      "singleJSON": true,
+      "ok": true,
+      "errorCode": null
+    },
+    {
+      "name": "doctor",
+      "argv": [
+        "triton",
+        "doctor",
+        "--json"
+      ],
+      "exitCode": 0,
+      "singleJSON": true,
+      "ok": true,
+      "errorCode": null
+    },
+    {
+      "name": "capabilities",
+      "argv": [
+        "triton",
+        "capabilities",
+        "--json"
+      ],
+      "exitCode": 0,
+      "singleJSON": true,
+      "ok": true,
+      "errorCode": null
+    },
+    {
+      "name": "schema",
+      "argv": [
+        "triton",
+        "schema",
+        "--json"
+      ],
+      "exitCode": 0,
+      "singleJSON": true,
+      "ok": null,
+      "errorCode": null
+    },
+    {
+      "name": "plan",
+      "argv": [
+        "triton",
+        "plan",
+        "--json"
+      ],
+      "exitCode": 0,
+      "singleJSON": true,
+      "ok": true,
+      "errorCode": null
+    },
+    {
+      "name": "ios-simulator-doctor",
+      "argv": [
+        "triton",
+        "device",
+        "doctor",
+        "--platform",
+        "ios",
+        "--scope",
+        "simulator",
+        "--json"
+      ],
+      "exitCode": 0,
+      "singleJSON": true,
+      "ok": true,
+      "errorCode": null
+    },
+    {
+      "name": "ios-real-doctor",
+      "argv": [
+        "triton",
+        "device",
+        "doctor",
+        "--platform",
+        "ios",
+        "--scope",
+        "real",
+        "--json"
+      ],
+      "exitCode": 0,
+      "singleJSON": true,
+      "ok": true,
+      "errorCode": null
+    },
+    {
+      "name": "ios-simulator-list",
+      "argv": [
+        "triton",
+        "device",
+        "list",
+        "--platform",
+        "ios",
+        "--scope",
+        "simulator",
+        "--json"
+      ],
+      "exitCode": 0,
+      "singleJSON": true,
+      "ok": true,
+      "errorCode": null
+    },
+    {
+      "name": "ios-real-list",
+      "argv": [
+        "triton",
+        "device",
+        "list",
+        "--platform",
+        "ios",
+        "--scope",
+        "real",
+        "--json"
+      ],
+      "exitCode": 0,
+      "singleJSON": true,
+      "ok": true,
+      "errorCode": null
+    },
+    {
+      "name": "android-doctor",
+      "argv": [
+        "triton",
+        "device",
+        "doctor",
+        "--platform",
+        "android",
+        "--json"
+      ],
+      "exitCode": 0,
+      "singleJSON": true,
+      "ok": true,
+      "errorCode": null
+    },
+    {
+      "name": "harmony-doctor",
+      "argv": [
+        "triton",
+        "device",
+        "doctor",
+        "--platform",
+        "harmony",
+        "--json"
+      ],
+      "exitCode": 0,
+      "singleJSON": true,
+      "ok": true,
+      "errorCode": null
+    }
+  ],
+  "runtimeObservation": {
+    "serverReachable": true,
+    "connected": true,
+    "targetCount": 2,
+    "activeHierarchyAvailable": true,
+    "hierarchyCacheState": "active"
+  },
+  "hostDoctors": {
+    "ios-simulator-doctor": {
+      "ok": true,
+      "tools": [
+        {
+          "name": "simctl",
+          "available": true
+        },
+        {
+          "name": "xcodebuild",
+          "available": true
+        }
+      ],
+      "strongControl": [
+        {
+          "name": "ios-host-ax",
+          "available": false,
+          "runtimeScope": "host-simulator",
+          "fallbackCapability": "embedded-runtime-or-public-simctl"
+        },
+        {
+          "name": "ios-host-hid",
+          "available": false,
+          "runtimeScope": "host-simulator",
+          "fallbackCapability": "embedded-runtime-or-public-simctl"
+        }
+      ],
+      "commandSupport": [
+        {
+          "name": "simctl.list",
+          "supported": true,
+          "verification": "help-advertised-only",
+          "missingOptions": []
+        },
+        {
+          "name": "simctl.bootstatus",
+          "supported": true,
+          "verification": "help-advertised-only",
+          "missingOptions": []
+        }
+      ]
+    },
+    "ios-real-doctor": {
+      "ok": true,
+      "tools": [
+        {
+          "name": "devicectl",
+          "available": true
+        },
+        {
+          "name": "xcodebuild",
+          "available": true
+        }
+      ],
+      "strongControl": [
+        {
+          "name": "ios-host-ax",
+          "available": false,
+          "runtimeScope": "host-simulator",
+          "fallbackCapability": "embedded-runtime-or-public-simctl"
+        },
+        {
+          "name": "ios-host-hid",
+          "available": false,
+          "runtimeScope": "host-simulator",
+          "fallbackCapability": "embedded-runtime-or-public-simctl"
+        }
+      ],
+      "commandSupport": [
+        {
+          "name": "devicectl.list-devices",
+          "supported": true,
+          "verification": "help-advertised-only",
+          "missingOptions": []
+        },
+        {
+          "name": "devicectl.info-details",
+          "supported": true,
+          "verification": "help-advertised-only",
+          "missingOptions": []
+        },
+        {
+          "name": "devicectl.launch",
+          "supported": true,
+          "verification": "help-advertised-only",
+          "missingOptions": []
+        },
+        {
+          "name": "devicectl.launch-environment",
+          "supported": true,
+          "verification": "help-advertised-only",
+          "missingOptions": []
+        }
+      ]
+    },
+    "android-doctor": {
+      "ok": true,
+      "tools": [
+        {
+          "name": "adb",
+          "available": true
+        }
+      ],
+      "strongControl": [],
+      "commandSupport": []
+    },
+    "harmony-doctor": {
+      "ok": true,
+      "tools": [
+        {
+          "name": "hdc",
+          "available": true
+        }
+      ],
+      "strongControl": [],
+      "commandSupport": []
+    }
+  },
+  "inventory": {
+    "ios-simulator-list": {
+      "querySucceeded": true,
+      "discoveredCount": 18,
+      "readyCount": 2,
+      "stateCounts": {
+        "Booted": 2,
+        "Shutdown": 16
+      },
+      "blockedCodeCounts": {},
+      "lockStateVerified": false,
+      "uiAutomationVerified": false,
+      "osVersionCounts": {
+        "iOS 27.0": 15,
+        "iOS 27.1": 3
+      }
+    },
+    "ios-real-list": {
+      "querySucceeded": true,
+      "discoveredCount": 3,
+      "readyCount": 3,
+      "stateCounts": {
+        "connected": 3
+      },
+      "blockedCodeCounts": {},
+      "lockStateVerified": false,
+      "uiAutomationVerified": false,
+      "osVersionCounts": {
+        "iOS 26.6.2": 1,
+        "iOS 26.0": 1,
+        "iOS 26.5.2": 1
+      }
+    },
+    "android-list": {
+      "querySucceeded": true,
+      "exitCode": 0,
+      "discoveredCount": 0,
+      "readyCount": 0,
+      "stateCounts": {},
+      "errorCode": null,
+      "uiAutomationVerified": false
+    },
+    "harmony-list": {
+      "querySucceeded": true,
+      "exitCode": 0,
+      "discoveredCount": 1,
+      "readyCount": 1,
+      "stateCounts": {
+        "Connected": 1
+      },
+      "errorCode": null,
+      "uiAutomationVerified": false
+    }
+  },
+  "frameworkProbe": {
+    "coreGraphicsSyntheticImageCreated": true,
+    "deviceScreenshotUsed": false,
+    "expectedTextFound": true,
+    "fixtureOnly": true,
+    "normalizedBoundingBoxesValid": true,
+    "observationCount": 1,
+    "probe": "synthetic-image-vision-ocr",
+    "productOCRImplemented": false,
+    "visionRequestExecuted": true,
+    "visualSettleImplemented": false
+  },
+  "selectedSimulatorHIDProbe": {
+    "argv": [
+      "triton",
+      "device",
+      "doctor",
+      "--platform",
+      "ios",
+      "--scope",
+      "simulator",
+      "--device",
+      "<existing-booted-simulator>",
+      "--json"
+    ],
+    "selection": "one existing booted simulator; exact identity retained privately",
+    "exitCode": 0,
+    "ok": true,
+    "hid": {
+      "compatible": true,
+      "code": "ios_host_hid_framework_compatible",
+      "backend": "SimulatorKit.SimDeviceLegacyHIDClient",
+      "frameworkLayout": "contents-shared-frameworks",
+      "toolchainSource": "xcode-select"
+    },
+    "inputSent": false,
+    "businessOutcomeVerified": false
+  },
+  "selectedSimulatorAXProbe": {
+    "argv": [
+      "triton",
+      "sim",
+      "ax",
+      "--device",
+      "<existing-booted-simulator>",
+      "--json"
+    ],
+    "exitCode": 0,
+    "singleJSON": true,
+    "ok": null,
+    "errorCode": null,
+    "observedNodeCount": 42,
+    "inputSent": false,
+    "uiTextOrIdentifiersPublished": false,
+    "publicSummaryOnly": true,
+    "readSucceeded": true
+  }
+}
