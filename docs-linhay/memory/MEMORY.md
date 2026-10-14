@@ -25,4 +25,4 @@
 
 ## 上游优化交付入口
 
-- 参考更新的已实现采用项与验证边界见[SP-196验收报告](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-validation-report.md)及[工程说明](../dev/20261014-upstream-optimization-delivery.md)。本地验证完成不代表主线集成或发布；active Resize与跨OS私有行为仍需专项证明。后续复用按报告的模块/真实/跳过口径判断，不继承上游性能估计。
+- 参考更新的已实现采用项与验证边界见[SP-196验收报告](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-validation-report.md)及[工程说明](../dev/20261014-upstream-optimization-delivery.md)。已于2026-10-15完成主线集成及v0.2.28发布，详见[发布验收](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-release.md)；active Resize与跨OS私有行为仍需专项证明。后续复用按报告的模块/真实/跳过口径判断，不继承上游性能估计。

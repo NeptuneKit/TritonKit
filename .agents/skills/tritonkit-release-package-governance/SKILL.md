@@ -44,7 +44,7 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 9. After release, verify GitHub Release assets, GitHub Actions success including x86_64 backfill, Homebrew upgrade, `triton version --json`, packaged `triton web --print-command --json`, and a real `triton web` HTTP smoke.
    - If the release changes Web input routing, the smoke must POST the same complete gesture DTO used by the Web client. Coordinate taps include `x`, `y`, `width`, and `height`; an intentionally incomplete probe may return a contract error but is not success evidence.
    - Run the installed packaged binary from outside the repository on an isolated port first. When handing the canonical Web port back to another task, resolve and replace only that listener; preserve the shared `triton serve`, Simulator/Emulator, and App processes unless their owner explicitly authorizes a restart.
-   - Require both machine-readable input success and a browser-level result: LIVE target, visible gesture status, and zero console errors. A homepage HTTP 200 alone does not prove the input bridge works.
+   - Follow the current space contract: for readonly Web, require `readonly=true`, HTML/JS/CSS success, complete gesture DTO rejection with `405/web_host_input_readonly`, and a real browser with zero console errors. Only an explicitly authorized write-capable product surface requires machine-readable input success and visible gesture status; do not restore a retired write bridge to satisfy historical smoke instructions. A homepage HTTP 200 alone is insufficient.
 
 ## Recovery Rules
 
@@ -54,6 +54,9 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 - Re-download public assets into a fresh temporary directory and wait for `gh release download` to exit successfully before running checksum or archive validation. A still-running download can leave smaller, truncated `.tar.gz` files that produce a false checksum mismatch; inspect the download process, release asset sizes, and `gzip -t` before rewriting any published asset or checksum manifest.
 - Do not move an already published tag. If a GitHub Release exists for the wrong version, stop and make an explicit maintainer decision; the default recovery is a new higher version tag, not retagging history.
 - For Homebrew validation, check the remote formula first, then run `brew update`, `brew upgrade NeptuneKit/tap/triton`, `brew test NeptuneKit/tap/triton`, and verify packaged web mode from outside the repository so a source checkout does not mask release behavior with dev mode.
+
+- 区分认证失败与网络失败。DNS/transport错误时`gh auth status`可能报告token invalid；先在不打印凭据的情况下检查认证API是否可达，不据该提示自动清除认证或改全局DNS。必要网络回退只绑定当前任务进程，结束后关闭自有通道。
+- 发布runner的Swift版本可与本机/main CI不同；局部新版Release通过不证明旧编译器优化路径。保留编译器版本、函数与SIL崩溃证据，优先以最小源码结构修复并复验旧工具链，不以关优化/跳过build换绿色。失败tag不等于公开Release；下一补丁保留失败尝试关系。SP-196视觉结果纯snapshot builder恢复记录见[发布验收](../../../docs-linhay/spaces/SP-196-upstream-optimization-delivery/plans/20261014-release.md)。
 
 ## CI / Release Performance Contract
 

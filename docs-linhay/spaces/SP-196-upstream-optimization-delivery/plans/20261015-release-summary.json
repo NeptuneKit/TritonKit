@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-15",
+  "state": "released",
+  "tag": "v0.2.28",
+  "tagCommit": "8abe76db06cf9b1e6c550fe52ac103209c458e4e",
+  "failedAttempt": {
+    "tag": "v0.2.27",
+    "releaseCreated": false,
+    "reason": "Swift 6.1.2 SIL ownership optimization crash"
+  },
+  "ci": {
+    "main": 38590838771,
+    "tag": 38592810236,
+    "release": 38592809931,
+    "conclusion": "success"
+  },
+  "cli": {
+    "xctest": 51,
+    "swiftTesting": 1394,
+    "failures": 0,
+    "defaultDisabledLiveTests": 1
+  },
+  "ios": {
+    "total": 76,
+    "passed": 76,
+    "failed": 0,
+    "skipped": 0
+  },
+  "assets": {
+    "checksum": true,
+    "architectures": [
+      "arm64",
+      "x86_64"
+    ],
+    "bothExecutedVersion": "0.2.28",
+    "runnerArchivesVerified": true,
+    "skillsVersionTagCommitVerified": true
+  },
+  "homebrew": {
+    "from": "0.2.26",
+    "to": "0.2.28",
+    "formulaTest": true,
+    "installedRunnerVerified": true
+  },
+  "packagedWeb": {
+    "outsideRepository": true,
+    "htmlAndAssets": 200,
+    "completeGesturePost": 405,
+    "writeCode": "web_host_input_readonly",
+    "consoleErrors": 0,
+    "consoleWarnings": 0
+  },
+  "cocoaPods": {
+    "standardCI": "passed",
+    "trunkPublished": false
+  },
+  "limitations": [
+    "active Resize live routing not proven",
+    "cross-OS private ABI not proven",
+    "customer business consumption and performance benefit not proven"
+  ]
+}

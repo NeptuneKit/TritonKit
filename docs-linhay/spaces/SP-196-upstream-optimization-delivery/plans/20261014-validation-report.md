@@ -1,6 +1,6 @@
 # SP-196 上游优化开发与验证报告
 
-日期：2026-10-14。状态：**实现与本地验证完成，独立工作区待集成**。源码在 `../TritonKit-worktrees/SP-196-upstream-optimization-delivery/`，branch `feat/SP-196-upstream-optimization-delivery`，起点 `306dc42b`。没有提交、合入、推送或发布。
+日期：2026-10-14。原隔离候选状态：**实现与本地验证完成**。最新已集成并发布v0.2.28，见[发布记录](20261014-release.md)。源码在 `../TritonKit-worktrees/SP-196-upstream-optimization-delivery/`，branch `feat/SP-196-upstream-optimization-delivery`，起点 `306dc42b`。该隔离验收时点尚未提交、合入、推送或发布；后续集成与发布见上述记录。
 
 [需求与BDD](../README.md)、[更新报告](../../../dev/20261014-reference-project-updates.md)、[接入裁决](../../SP-194-reference-project-updates/plans/20261014-adoption-decision.md)、[工程交付说明](../../../dev/20261014-upstream-optimization-delivery.md)、[机器可读验收摘要](20261014-validation-summary.json)。上游数据不作为本工程的测试或性能数字。
 
@@ -44,7 +44,7 @@ UIKit第一次hostless前置失败，hosted1/3有诊断代码编译错误，host
 
 ## 剩余边界与下一步
 
-- 实现已完成本地验证；主线后来增加SP-195 Runner与SP-197高亮，尚未与本分支集成。集成时保留这些既有改动并再跑总门禁。
+- 隔离验收时主线新增的SP-195 Runner与SP-197高亮尚未集成；后续已保留两者完成集成并重跑总门禁，最终结果见发布记录。
 - active Resize 真实路由、跨OS私有框架/键盘窗口身份、长流期间Resize切换、客户React/业务提交仍需专项验收。现有未知状态拒绝规则保留。
 - 资源节省数字未实测；没有以upstream估算或简单相减宣称性能收益。
 - prefs磁盘成功与relaunch成功不代表运行App消费；App Group、suite、LegacyInspection属性patch不在本轮。

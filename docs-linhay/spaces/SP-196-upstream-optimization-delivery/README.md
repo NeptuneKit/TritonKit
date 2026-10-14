@@ -2,9 +2,9 @@
 
 ## 边界与授权
 
-用户授权主控推进SP-194建议的规划、开发与验证。影响CLI/HTTP/shared core、host simulator和embedded WebView；Web只读展示。不发布、推送，保留主线 SP-195 Runner、SP-197 高亮及 SP-198 治理改动。
+用户授权主控推进SP-194建议的规划、开发与验证。影响CLI/HTTP/shared core、host simulator和embedded WebView；Web只读展示。用户后续已授权分段提交、推送与发布；保留主线 SP-195 Runner、SP-197 高亮及 SP-198 治理改动。
 
-状态：**实现与本地验证完成，待主线集成**。独立worktree：`../TritonKit-worktrees/SP-196-upstream-optimization-delivery/`；branch：`feat/SP-196-upstream-optimization-delivery`；起点main@306dc42b。主控负责集成、失败场景、验证与记忆。主仓文档和索引为事实源，代码隔离于worktree。
+状态：**已集成、推送并发布 v0.2.28**。独立worktree：`../TritonKit-worktrees/SP-196-upstream-optimization-delivery/`；branch：`feat/SP-196-upstream-optimization-delivery`；起点main@306dc42b。主控负责集成、失败场景、验证与记忆。主仓文档和索引为事实源，代码隔离于worktree。
 
 ## 交付队列与BDD
 
@@ -32,9 +32,14 @@
 
 专用模拟器资源plan/apply/verify/restore完成，前后disabledLabels完全相同；typed prefs与relaunch实测、真实JPEG双订阅生命周期、一次编译两次测试复用及源码漂移拒绝均完成。原始设备身份、日志、结果包留在私有忽略目录。
 
-真实active Resize、跨OS私有ABI、客户React业务消费和性能收益尚未证明；详见报告的剩余边界。代码留在本space独立分支，尚未提交、合入、推送或发布。后续集成应保留主线新能力并在合并候选上重跑门禁。本工作区SP-195只保留编号连续所需文档快照，不携带Runner实现。
+真实active Resize、跨OS私有ABI、客户React业务消费和性能收益尚未证明；详见报告的剩余边界。本段保留隔离候选验收口径；后续已分段提交、主线集成并在新候选重跑门禁，最新状态见下方发布记录。本工作区SP-195只保留编号连续所需文档快照，不携带Runner实现。
 
 
 ## 提交与发布授权
 
-用户追加分段提交、推送、发版；8个产品切片已与最新main集成，候选CLI1394+51、真实UIKit76项及总门禁通过。当前发布准备v0.2.27，原“未提交/未合入”描述保留当时验证阶段，最新阶段以[发布记录](./plans/20261014-release.md)为准。
+用户追加分段提交、推送、发版；8个产品切片已与最新main集成，候选CLI1394+51、真实UIKit76项及总门禁通过。v0.2.27编译失败后以v0.2.28完成发布，原“未提交/未合入”描述保留当时验证阶段，最新阶段以[发布记录](./plans/20261014-release.md)为准。
+
+
+## 已发布验收
+
+2026-10-15：v0.2.28发布与双架构/Homebrew/skills/Runner验收完成；CLI1394+51、真实UIKit76项全过。详见[发布记录](./plans/20261014-release.md)与[机器可读发布摘要](./plans/20261015-release-summary.json)。v0.2.27旧编译器失败尝试保留tag，不移动历史。专项未测边界保留。

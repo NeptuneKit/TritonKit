@@ -72,6 +72,8 @@ metadata:
 - UIKit presentation 测试必须等待真实 completion 与目标 view 的 window 挂载，不能把 `present(animated:false)` 或 `Task.sleep` 当作展示完成。hostless runner 无法完成 presentation 时，不宣称展示验收通过；纯 responder/alert 路由测试可用真实 alert controller 的窗口夹具，但必须断言目标实际挂载、活动窗口及背景 fallback candidate 确实存在。`UIView.alpha` 与 backing `CALayer.opacity` 联动，同批 patch 应按真实执行顺序验证最终值，并分别覆盖两个入口；不要要求同一 backing value 同时保持不同值。
 - CLI 测试使用自定义 scratch 时显式设置 `TRITON_CLI_PATH` 为本次构建产物。含全局 stdout/stderr capture 的整套测试使用 `swift test --package-path CLI --no-parallel`，避免 Swift Testing 进度混入 JSON；异步 stdout/stderr reader 必须完成有界 drain 后才发布最终字节数。
 
+- UIKit enabled与unsupported平台的恢复契约测试都应编码真实强类型payload；unsupported提前返回可能掩盖空payload错误。目标释放场景先有界观察真实weak目标归零，再验targetGone；一次main queue turn不是CA/ARC释放证据，不放松生产identityChanged规则。SP-196发布候选修复两旧夹具后真实App-hosted76项通过，见[发布验收](../../../docs-linhay/spaces/SP-196-upstream-optimization-delivery/plans/20261014-release.md)。
+
 ## 文档与记忆
 
 - Space 编号索引：`docs-linhay/spaces/INDEX.md`；路线总览：`docs-linhay/spaces/README.md`。

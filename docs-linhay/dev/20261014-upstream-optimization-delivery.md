@@ -1,6 +1,6 @@
 # TritonKit 上游优化工程交付说明 — 2026-10-14
 
-**状态：实现与本地验证完成；独立工作区待集成。** 本文描述 SP-196 当前代码行为、采用依据与能力边界，能力边界与验收以报告为准，本轮未发布。完整结果以 [验收报告](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-validation-report.md) 为准，需求入口为 [SP-196](../spaces/SP-196-upstream-optimization-delivery/README.md)。
+**状态：已集成、推送并发布v0.2.28。** 本文描述 SP-196 当前代码行为、采用依据与能力边界，隔离候选结果保留原口径；集成与发布结果见[发布记录](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-release.md)。完整结果以 [验收报告](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-validation-report.md) 为准，需求入口为 [SP-196](../spaces/SP-196-upstream-optimization-delivery/README.md)。
 
 ## 采用原则与来源
 

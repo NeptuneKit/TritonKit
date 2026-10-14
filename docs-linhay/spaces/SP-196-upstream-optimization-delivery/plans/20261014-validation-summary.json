@@ -1,6 +1,6 @@
 {
   "date": "2026-10-14",
-  "state": "implementation-validated-awaiting-integration",
+  "state": "isolated-candidate-validation-completed",
   "baseCommit": "306dc42b",
   "branch": "feat/SP-196-upstream-optimization-delivery",
   "cli": {
@@ -84,6 +84,11 @@
     "Keyboard overlay exclusion is exact UIKit class/root/bundle identity verified on iOS 27.",
     "AppMap limits response size, not full underlying read or a transaction snapshot.",
     "Source root must cover project-external dependencies; excluded source paths not fingerprinted.",
-    "Private logs/result bundles stay local; no remote push, commit, merge or release."
-  ]
+    "Private logs/result bundles stay local. No commit, merge, push or release occurred at the isolated validation stage; subsequent delivery is recorded separately."
+  ],
+  "delivery": {
+    "state": "released",
+    "tag": "v0.2.28",
+    "record": "20261015-release-summary.json"
+  }
 }

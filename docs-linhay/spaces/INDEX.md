@@ -223,7 +223,7 @@
 
 | `SP-195-ios-runner-product` | [`SP-195-ios-runner-product`](./SP-195-ios-runner-product/README.md) | 已引入本地main | Runner统一CLI/HTTP/随包；CLI1297+36、完整门禁与真机/Simulator通过；主仓门禁exit0；参考文档与产品分别提交，未push/release；已完成worktree收口见SP195计划；本地完成分支已清理/归档 |
 
-| `SP-196-upstream-optimization-delivery` | [`SP-196-upstream-optimization-delivery`](./SP-196-upstream-optimization-delivery/README.md) | 本地验证完成 | 11项优化；CLI41+1323、真实iOS56与总门禁通过；独立分支待集成，未提交/推送/发布 |
+| `SP-196-upstream-optimization-delivery` | [`SP-196-upstream-optimization-delivery`](./SP-196-upstream-optimization-delivery/README.md) | 已发布v0.2.28 | 分段提交与主线集成；CLI1394+51、真实iOS76、双架构/skills/Runner/Homebrew通过；专项未测边界保留 |
 
 
 | `SP-197-view-annotation` | [`SP-197-view-annotation`](./SP-197-view-annotation/README.md) | 已合入本地main | 可选UIKit高亮与条件恢复已验收；7b1a2f76集成实现、证据和skills，保留并行WIP |
