@@ -42,3 +42,5 @@
 ## Worktree收口
 
 2026-10-14用户要求已完成worktree合入后清理；本产品与早期研究worktree已清理，源码在main@2a8b793f，私有恢复归档留同级目录。历史完成项及仍在进行的两个工作区见[收口记录](./plans/20261014-worktree-closeout.md)。
+
+后续用户要求清理分支：26个正常删除、11个历史tip归档，剩main与两个在用分支。详见[分支收口](./plans/20261014-branch-closeout.md)。
