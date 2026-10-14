@@ -17,19 +17,27 @@ import TritonKitShared
             Issue.record("Highlight was incorrectly routed through observation admission")
             return nil
         })
-        let capabilityResponse = await handler.tritonKit(TritonKit.shared, didReceiveMessage: TKMessage(id: 2, type: .highlightCapabilities))
-        let readback = await handler.tritonKit(TritonKit.shared, didReceiveMessage: TKMessage(id: 3, type: .highlightStatus, payload: Data("{\"sessionID\":\"unknown-highlight-session\"}".utf8)))
-        let cleanup = await handler.tritonKit(TritonKit.shared, didReceiveMessage: TKMessage(id: 4, type: .highlightClear, payload: Data("{\"sessionID\":\"unknown-highlight-session\"}".utf8)))
+        // Exercise the same valid payload on enabled UIKit and unsupported
+        // platforms; an unavailable provider can return before decoding it.
+        let encoder = JSONEncoder()
+        let capabilityPayload = try encoder.encode(TKHighlightCapabilitiesRequest())
+        let statusPayload = try encoder.encode(TKHighlightStatusRequest(sessionID: "unknown-highlight-session"))
+        let clearPayload = try encoder.encode(TKHighlightClearRequest(sessionID: "unknown-highlight-session"))
+        let capabilityResponse = await handler.tritonKit(TritonKit.shared, didReceiveMessage: TKMessage(id: 2, type: .highlightCapabilities, payload: capabilityPayload))
+        let readback = await handler.tritonKit(TritonKit.shared, didReceiveMessage: TKMessage(id: 3, type: .highlightStatus, payload: statusPayload))
+        let cleanup = await handler.tritonKit(TritonKit.shared, didReceiveMessage: TKMessage(id: 4, type: .highlightClear, payload: clearPayload))
         let inflight = controller.snapshot().inflight
         await latch.release()
         _ = await observation.value
         let data = try #require(capabilityResponse?.payload)
         let capability = try JSONDecoder().decode(TKHighlightCapabilitiesResponse.self, from: data)
         #expect(capability.ok)
+        #expect(capability.error == nil)
         for response in [readback, cleanup] {
             let receipt = try JSONDecoder().decode(TKHighlightReceipt.self, from: try #require(response?.payload))
             #expect(!receipt.ok)
             #expect(receipt.error?.code != "runtime_ui_busy")
+            #expect(receipt.error?.code != "validation_failed")
             #expect(receipt.marks.isEmpty)
         }
         #expect(inflight?.requestID == 1)

@@ -169,11 +169,21 @@ import UIKit
         window.addSubview(view!)
         let manager = TKHighlightSessionManager(provider: TKUIKitHighlightProvider(roots: { [window] }))
         let applied = await manager.apply(request(view!))
+        try #require(applied.ok)
         weak var releasedLayer = view?.layer
-        view?.removeFromSuperview()
-        view = nil
-        await withCheckedContinuation { continuation in DispatchQueue.main.async { continuation.resume() } }
-        #expect(releasedLayer == nil)
+        // UIKit/CA may retain a removed layer until a transaction and an
+        // autorelease pool drain. One main-queue opportunity does not prove ARC
+        // release in a real app host. Observe the actual weak target instead.
+        autoreleasepool {
+            view?.removeFromSuperview()
+            view = nil
+            CATransaction.flush()
+        }
+        for _ in 0..<200 {
+            if releasedLayer == nil { break }
+            try await Task.sleep(nanoseconds: 10_000_000)
+        }
+        try #require(releasedLayer == nil, "The release fixture must actually release its original layer before testing targetGone")
         let cleared = manager.clear(TKHighlightClearRequest(sessionID: try #require(applied.sessionID)))
         #expect(cleared.cleanupComplete)
         #expect(!cleared.restorationVerified)
