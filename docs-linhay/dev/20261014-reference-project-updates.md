@@ -2,6 +2,8 @@
 
 核查日期：2026-10-14，北京时间。覆盖 23 个主要参考仓库（含 RevylAI 8 个子项目），另附 9 个历史研究候选。采用 GitHub 官方 API、Release notes 与固定 SHA 源码；各请求的观测时间见来源 JSON，不是所有仓库在同一秒的原子快照。报告与验收：[SP-194](../spaces/SP-194-reference-project-updates/README.md)。
 
+后续新增参考：[mobile-next/mobile-mcp 登记与当前能力差距](mobile-mcp-reference.md)（[SP-199](../spaces/SP-199-mobile-mcp-reference/README.md)）；不改写上述原核查数量。
+
 ## 本期判断
 
 值得优先研究的是**防止输入或验证误报成功、Xcode 27 适配、采集与证据完整性**。iCTRL 与本日登记基线相同，未出现新机制；OpenDeviceHub 与 10-08 研究基线相同。其他项目的活跃更新不能直接解释为 TritonKit 存在相同缺陷，以下采纳顺序属于研究建议。
