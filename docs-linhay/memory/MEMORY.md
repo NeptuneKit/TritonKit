@@ -6,6 +6,8 @@
 - 新建 space、状态变化、worktree 集成或 space 收口时，必须同步更新两个入口。
 - 新 space 采用 `SP-<三位序号>-<topic>`；单个需求的详细边界、BDD、计划和证据仍以对应 `docs-linhay/spaces/<space-id>-<topic>/README.md` 为事实源。
 
+- 开工与交付的按主题入口：[经验索引](EXPERIENCE.md)；每个任务/交付切片默认自动沉淀，有复用价值的纠正/缺陷/失败触发原文更新，无需用户提醒。详细动作以 [治理流程](../dev/20260619-agent-workflow-skill-governance.md) 为准。无需全量预读每日历史，原文后续证据可替代旧结论。
+
 ## Memory Rules
 
 - [OpenMinis/iCTRL](https://github.com/OpenMinis/iCTRL) 是长期参考项目：正式档案见 [iCTRL 参考与追踪](../dev/ictrl-reference-tracking.md)，持续追踪见 [SP-193](../spaces/SP-193-ictrl-reference-tracking/README.md)，已有借鉴实现见 SP-192。自动化 `ictrl` 每天北京时间 10:00 检查上游，有价值变化通知；不自动采用、提交或操作设备。

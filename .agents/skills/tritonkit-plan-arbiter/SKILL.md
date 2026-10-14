@@ -5,6 +5,8 @@ description: Use when TritonKit work has two or more competing plans, agent prop
 
 # TritonKit Plan Arbiter
 
+开工与交付按[经验索引](../../../docs-linhay/memory/EXPERIENCE.md)只读命中主题，未命中再检索；读取、证据、修订与退出遵循[治理闭环](../../../docs-linhay/dev/20260619-agent-workflow-skill-governance.md)。
+
 把多个方案裁决成一个可执行方向。不要把不同计划机械拼成折中稿；先归一化、核对事实，再给出明确采用、混合或退回重写的决定。
 
 ## 触发场景

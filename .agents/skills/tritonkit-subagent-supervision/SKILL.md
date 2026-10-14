@@ -5,6 +5,8 @@ description: TritonKit 监督交付模式：任务可安全拆分或用户要求
 
 # TritonKit Subagent Supervision
 
+开工与交付按[经验索引](../../../docs-linhay/memory/EXPERIENCE.md)只读命中主题，未命中再检索；读取、证据、修订与退出遵循[治理闭环](../../../docs-linhay/dev/20260619-agent-workflow-skill-governance.md)。
+
 当任务可安全拆分且预计能明显提升速度或质量，或用户明确要求“用 subagent 做、主控 agent 负责监督到完成”时，进入本模式。简单任务、同一文件的紧耦合改动、共享环境或副作用冲突不强行并行。
 
 ## 目标
@@ -38,7 +40,7 @@ description: TritonKit 监督交付模式：任务可安全拆分或用户要求
 
 - `git status`、diff、最近 commit 和 touched files。
 - 相关未改文件的上下文，避免只看 patch。
-- 声称运行的命令、真实输出、失败或跳过原因。
+- 声称运行的命令、真实输出、失败或跳过原因；按治理闭环绑定候选 diff、环境和入口，变化后重跑，关键风险在隔离副本证明旧错可被测试抓住。
 - CI、测试日志、浏览器截图、模拟器 / 真机证据、GitHub review thread。
 - UI / Web mock 变更优先看截图或浏览器 / DOM 验收。
 
@@ -54,7 +56,7 @@ description: TritonKit 监督交付模式：任务可安全拆分或用户要求
 
 ## 执行顺序
 
-1. 先确认需求文档、范围和验收标准。
+1. 先确认需求文档、当前维护权限、命中经验、范围和验收标准；handoff 给出已命中的权威链接与本次候选证据基线。
 2. 按写入面拆分 subagent 任务，避免冲突。
 3. 给每个 subagent 自包含 handoff：repo path、目标、文件范围、禁止范围、预期证据、验证命令和停止条件。
 4. 主控 agent 持续集成 subagent 结果，不等到最后统一收口。

@@ -5,6 +5,8 @@ description: TritonKit 内部自动巡航流程。用户要求长期计划、自
 
 # TritonKit Autonomous Cruise
 
+开工与交付按[经验索引](../../../docs-linhay/memory/EXPERIENCE.md)只读命中主题，未命中再检索；读取、证据、修订与退出遵循[治理闭环](../../../docs-linhay/dev/20260619-agent-workflow-skill-governance.md)。
+
 ## 触发条件
 
 - 用户说“长期计划”“自动巡航”“巡航进化”“提前巡航”“我离开一段时间你来推进”。

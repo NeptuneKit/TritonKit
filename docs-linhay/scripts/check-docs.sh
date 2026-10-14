@@ -87,4 +87,7 @@ while IFS= read -r space_id; do
   expected_number="$((expected_number + 1))"
 done <<< "$space_ids"
 
+python3 -B "$docs/scripts/check-agent-experience.py"
+python3 -B "$docs/scripts/test-agent-experience.py"
+
 echo "docs-linhay structure ok ($space_count spaces registered)"

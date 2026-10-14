@@ -54,6 +54,8 @@
 
 ## 集成结果
 
+当前结论以本节“远端完成”为准；下方“预合并审计 / 等待授权 / 未写入 main”等条目记录合并前过程，已被 PR #177 合并结果替代，不属于当前待办或执行授权。2026-10-14 本地核对 `66f975d9` 是当前 HEAD 祖先，不将历史 CI/测试当作今日运行证据。
+
 - 远端完成：integration branch 已推送，PR #177 在 CI `30515397742` 的 scope、Swift、contracts、podspec 与 aggregate job 全绿后合并；#172～176 自动关闭，#166～171 补充限制说明后按 completed 关闭。
 - 本地清理：SP-151～156 的 source branch/worktree 已确认 clean 且为 `main` 可达祖先，随后用非强制方式回收；#164 worktree 保持原样。
 - Issue 扩展 merge commits：`7ba0955d`（SP-152）、`0424e9f9`（SP-153）、`ce09e30a`（SP-154）、`5d133413`（SP-155）、`fe2fd45c`（SP-156）。新增 #176 在最终开放清单复查时出现，因此按“全部 issue”边界纳入同批处理。

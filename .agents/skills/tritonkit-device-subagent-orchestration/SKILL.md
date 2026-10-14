@@ -7,6 +7,8 @@ metadata:
 
 # TritonKit Device Subagent Orchestration
 
+开工与交付按[经验索引](../../../docs-linhay/memory/EXPERIENCE.md)只读命中主题，未命中再检索；读取、证据、修订与退出遵循[治理闭环](../../../docs-linhay/dev/20260619-agent-workflow-skill-governance.md)。
+
 Use this internal skill when a TritonKit device track needs project-scoped Codex subagents. It replaces the older track-specific `tritonkit-android-subagent-orchestration` and `tritonkit-real-device-subagent-orchestration` entries.
 
 Always combine with `tritonkit-subagent-supervision`: subagents do scoped work, while the main agent owns boundary, integration, verification, docs, memory, and final completion judgment.

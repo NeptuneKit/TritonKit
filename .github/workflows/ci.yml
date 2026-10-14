@@ -52,6 +52,7 @@ jobs:
         if: steps.validate-scope.outputs.mode == 'contracts'
         run: |
           docs-linhay/scripts/verify-ci-validate-mode.sh
+          docs-linhay/scripts/check-docs.sh
           docs-linhay/scripts/verify-homebrew-formula.sh
           docs-linhay/scripts/verify-version-stamping.sh
           docs-linhay/scripts/verify-release-automation.sh
@@ -119,6 +120,9 @@ jobs:
 
       - name: Validate CI scope classifier
         run: docs-linhay/scripts/verify-ci-validate-mode.sh
+
+      - name: Validate docs and agent experience
+        run: docs-linhay/scripts/check-docs.sh
 
       - name: Validate Homebrew formula template
         run: docs-linhay/scripts/verify-homebrew-formula.sh

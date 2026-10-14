@@ -7,6 +7,8 @@ metadata:
 
 # TritonKit Xcode Workflow Takeover
 
+开工与交付按[经验索引](../../../docs-linhay/memory/EXPERIENCE.md)只读命中主题，未命中再检索；读取、证据、修订与退出遵循[治理闭环](../../../docs-linhay/dev/20260619-agent-workflow-skill-governance.md)。
+
 ## Principle
 
 Eat XcodeBuildMCP's useful capabilities, not its public API. TritonKit exposes `triton` CLI/HTTP schema as the product contract; XcodeBuildMCP is a reference for workflows, structured output, session defaults, and daemon patterns.

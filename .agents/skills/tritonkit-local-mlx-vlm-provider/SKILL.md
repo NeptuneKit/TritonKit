@@ -7,6 +7,8 @@ metadata:
 
 # TritonKit Local MLX Swift VLM Provider
 
+开工与交付按[经验索引](../../../docs-linhay/memory/EXPERIENCE.md)只读命中主题，未命中再检索；读取、证据、修订与退出遵循[治理闭环](../../../docs-linhay/dev/20260619-agent-workflow-skill-governance.md)。
+
 Use this skill when work touches the local `mlx-swift-lm` VLM provider track:
 
 - `triton vlm providers`, `ground`, `compare`, or `model *`

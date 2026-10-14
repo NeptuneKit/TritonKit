@@ -6,6 +6,8 @@ These skills are for maintainers working inside this repository: governance, pla
 
 Public skills for external users live in `TritonKit.skills/` and are packaged into `tritonkit-skills.tar.gz`.
 
+仓库任务开工与交付按 [经验索引](../../docs-linhay/memory/EXPERIENCE.md) 只读命中主题，并执行 [治理闭环](../../docs-linhay/dev/20260619-agent-workflow-skill-governance.md)。内部经验入口不随 public skills 打包。
+
 Current internal orchestration entries include:
 
 - `tritonkit-device-subagent-orchestration`: coordinates device-related Codex subagent tracks such as Android Emulator and cross-platform real-device support.

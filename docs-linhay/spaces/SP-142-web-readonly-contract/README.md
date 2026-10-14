@@ -2,11 +2,13 @@
 
 ## 状态
 
-- 状态：已完成（本地 checkpoint）。
+- 状态：已由 [SP-151](../SP-151-trusted-baseline-integration/README.md) 整合，PR #177 合并提交 `66f975d9`（2026-07-30）已在本仓 HEAD 可达；旧“本地 checkpoint / 等待 integration”退出当前待办。
 - 负责人：Codex。
 - Branch：`feat/SP-142-web-readonly-contract`。
 - Worktree：`../TritonKit-worktrees/SP-142-web-readonly-contract/`。
 - 基线：`main@d016979d`。
+
+以上 branch/worktree/基线及下文切片测试、登记失败与集成顺序保留历史日期含义；当前整合结果以上述 SP-151 为准，不继承旧待合并状态或操作授权。2026-10-14 只核对了本地提交可达性，未重跑 Web 产品验收。
 
 ## 裁决
 

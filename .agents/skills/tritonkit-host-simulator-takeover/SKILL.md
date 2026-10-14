@@ -7,6 +7,8 @@ metadata:
 
 # TritonKit Host Simulator Takeover
 
+开工与交付按[经验索引](../../../docs-linhay/memory/EXPERIENCE.md)只读命中主题，未命中再检索；读取、证据、修订与退出遵循[治理闭环](../../../docs-linhay/dev/20260619-agent-workflow-skill-governance.md)。
+
 ## Device Hub Delivery and Evidence Rules
 
 Deliver by capability groups: semantic App/Group containers and file-domain policies, administration execution, specialized platforms, then full compatibility acceptance. Preserve independent commands and old namespace/IDs/argv; no mandatory server/Run. Keep help advertisement, synthetic fixtures, source/DI, actual envelopes, actions and business postconditions separate; pinned /usr/bin/xcrun cannot be traced by a PATH shim. Review every discovery-error branch for raw candidates/logs/paths, preserving stable codes with static messages. DeviceFS authority is exact bytes and the same nofollow FD chain/owners/double-stat, not path re-resolution; native devicefs inode exception never broadens other filesystems. Serialize scratch/device work and set this build's TRITON_CLI_PATH. A requested local commit stages only the task's reviewed manifest, no raw evidence/builds/other spaces; do not copy unrelated research or soften docs gates to close a registry gap. A committed slice is not full Device Hub/action/platform acceptance; merge/push/release need separate authorization.

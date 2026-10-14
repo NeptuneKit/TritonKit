@@ -7,6 +7,8 @@ metadata:
 
 # TritonKit Web Mock UI
 
+开工与交付按[经验索引](../../../docs-linhay/memory/EXPERIENCE.md)只读命中主题，未命中再检索；读取、证据、修订与退出遵循[治理闭环](../../../docs-linhay/dev/20260619-agent-workflow-skill-governance.md)。
+
 ## Trigger
 
 Use this skill when the user asks for a Web UI mock, dashboard concept, browser prototype, design iteration, or React/Vite implementation for TritonKit.

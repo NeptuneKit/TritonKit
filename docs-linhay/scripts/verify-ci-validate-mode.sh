@@ -34,6 +34,9 @@ expect_mode swift Sources/TritonKitCLI/TritonKitCLI.swift .github/workflows/ci.y
 
 expect_mode contracts .github/workflows/ci.yml
 expect_mode contracts docs-linhay/scripts/ci-validate-mode.sh
+expect_mode contracts docs-linhay/scripts/check-docs.sh
+expect_mode contracts docs-linhay/scripts/check-agent-experience.py
+expect_mode contracts docs-linhay/scripts/test-agent-experience.py AGENTS.md docs-linhay/memory/EXPERIENCE.md
 expect_mode contracts docs-linhay/scripts/verify-release-automation.sh README.md
 expect_mode contracts docs-linhay/scripts/package-public-skills.py
 expect_mode contracts docs-linhay/scripts/public-skill-command-schema.json

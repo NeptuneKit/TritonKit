@@ -2,9 +2,9 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（197/197 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（198/198 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-14（SP-197高亮已合入本地main；SP-196仅编号预留）
+> 最近审计：2026-10-14（SP-198 经验闭环本地完成；并行任务按各 space 保留状态）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -23,6 +23,7 @@
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
 | 已合入本地main | [SP-197-view-annotation](./SP-197-view-annotation/README.md) | 可选UIKit真实高亮与条件还原；CLI/HTTP、截图与skills已验收 | 7b1a2f76完成集成；P1截图消费者与跨端另行实施 |
+| 本地提交归档 | [SP-198-agent-experience-loop](./SP-198-agent-experience-loop/README.md) | 按主题读取与默认自动沉淀已接线；28用例通过 | 后续任务按命中主题执行；CI配置已接入、远端未运行 |
 | 已引入本地main | [SP-195-ios-runner-product](./SP-195-ios-runner-product/README.md) | 产品与设备验收、主仓门禁通过 | 参考文档306dc42b与Runner分别提交；原worktree已清理；未push/release；已完成worktree收口见SP195计划 |
 | 已归档 | [SP-194-reference-project-updates](./SP-194-reference-project-updates/README.md) | 23主要仓库+9候选更新报告与分组来源已完成；文档门禁与来源结构校验通过 | 按报告建议另立实施切片；不自动采用 |
 | 长期追踪 | [SP-193-ictrl-reference-tracking](./SP-193-ictrl-reference-tracking/README.md) | 正式列为长期参考；基线 main@99dbfec / v1.97.1；本聊天每日北京时间 10:00 追踪 | 有价值变化通知，增量归档后更新检查点；后续采用另立项 |
@@ -103,7 +104,7 @@
 | 已发布（v0.2.16） | [SP-139-issue-169-xcode-focused-testing](./SP-139-issue-169-xcode-focused-testing/README.md) | #169 已为 `triton xcode test` 增加 repeatable `--only-testing`，每项保持独立 xcodebuild argv，JSON/JSONL 可审计 sourceCommand | issue 已关闭；不实现 `--skip-testing`，真实 XCTest/xcodebuild 未运行 |
 | 已完成（本地） | [SP-140-ios-simulator-reliability-live-harness](./SP-140-ios-simulator-reliability-live-harness/README.md) | receipt-backed reserve/sample 将 3×20+1 的 future collection 固化为 immutable contract、strict exact target 与 no-clobber slot；业务 mismatch 保持 typed result + exit 语义 | 本地 harness/契约验证完成；不得自动真实采样，后续必须先获得 dedicated Simulator、server ownership、reset recipe、negative control 与私有 evidence 授权 |
 | 已发布（v0.2.16） | [SP-141-packaged-web-simulator-input](./SP-141-packaged-web-simulator-input/README.md) | packaged `/web/host-input` 已按 iOS real runtime mirror、三平台 host target 与 unsupported 三路分流，不再错拒 Simulator | Homebrew 0.2.16 安装版真实 Simulator HTTP/页面点击通过，console 0 error/warning |
-| 已完成（本地） | [SP-142-web-readonly-contract](./SP-142-web-readonly-contract/README.md) | Web Device Hub 统一只读：browser `/web/input`、`/web/node-property`、`/web/host-input` 不再执行或转发，React/HTML 保留 DTO、截图、层级与本地 patch 草案复制 | local checkpoint 只做离线契约验证；先集成 SP-141 再集成 SP-142 后重跑 docs gate，读路径的 serve 生命周期风险另立裁决 |
+| 已吸收／退出待整合队列 | [SP-142-web-readonly-contract](./SP-142-web-readonly-contract/README.md) | browser Web write endpoint 统一只读；原切片证据保留 | 已由 SP-151 / PR #177 整合；旧本地 checkpoint 状态被后续证据替代 |
 | 已完成（本地） | [SP-143-reliability-gate-integrity](./SP-143-reliability-gate-integrity/README.md) | Stage 1 reliability gate 只接受 receipt-backed authority；legacy sample 保留诊断但不能 passed，observation/failure artifact 均需 kind 与 step 时序归因 | 纯离线 TDD、focused contracts 与 release build 完成；不触碰 #164；SP-141 → SP-142 → SP-143 集成后统一复跑 docs gate |
 | 已完成（本地） | [SP-144-reliability-receipt-anchor](./SP-144-reliability-receipt-anchor/README.md) | 为 receipt-backed sample/report 增加 operator-owned SHA-256 expected anchor，阻断 root 内完整 receipt 的自洽替换 | 纯离线 BDD/TDD 与 release build 已完成；不宣称签名、远端不可抵赖、hostile filesystem、真实 reset/runtime identity 或 live sampling |
 | 已完成（本地） | [SP-145-private-identity-chain-v2](./SP-145-private-identity-chain-v2/README.md) | 基于 SP-144 root 外 anchor，记录并核验每 slot 的私有 evidence identity chain，并输出安全 aggregate | 仅离线 consistency/漂移检测；不写采样器，不主张真实 reset/App/runtime proof，也不触碰设备/服务 |

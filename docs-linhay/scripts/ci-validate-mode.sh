@@ -56,6 +56,9 @@ is_contract_only_path() {
       ;;
     docs-linhay/scripts/ci-validate-mode.sh|\
 docs-linhay/scripts/verify-ci-validate-mode.sh|\
+docs-linhay/scripts/check-docs.sh|\
+docs-linhay/scripts/check-agent-experience.py|\
+docs-linhay/scripts/test-agent-experience.py|\
 docs-linhay/scripts/verify-release-automation.sh|\
 docs-linhay/scripts/verify-homebrew-formula.sh|\
 docs-linhay/scripts/verify-version-stamping.sh|\
