@@ -217,7 +217,7 @@
 | `SP-190-open-issues-integration` | [`SP-190-open-issues-integration`](./SP-190-open-issues-integration/README.md) | v0.2.25 已发布／#215–220 已关闭 | #214–#220 本地集成与统一验收；保留各项证据边界，#215～220 已关闭，#214 继续开放 |
 
 | `SP-191-default-xcode-deriveddata` | [`SP-191-default-xcode-deriveddata`](./SP-191-default-xcode-deriveddata/README.md) | 已发布 | 默认使用 Xcode 全局 DerivedData；`v0.2.26` 已发布，CLI/root tests、schema smoke、docs 门禁与远端 CI 通过；`--derived-data-path` 仅显式隔离/恢复，可能造成高磁盘占用 |
-| `SP-192-ictrl-adoption-feasibility` | [`SP-192-ictrl-adoption-feasibility`](./SP-192-ictrl-adoption-feasibility/README.md) | 已合入本地 main | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12及真实只读AX/alias/OCR/settle通过；iOS115、Android52与完整APK通过，本地门禁复跑通过；源码已合入本地main，worktree保留 |
+| `SP-192-ictrl-adoption-feasibility` | [`SP-192-ictrl-adoption-feasibility`](./SP-192-ictrl-adoption-feasibility/README.md) | 已合入本地 main | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12及真实只读AX/alias/OCR/settle通过；iOS115、Android52与完整APK通过，本地门禁复跑通过；源码已合入本地main，worktree已清理 |
 | `SP-193-ictrl-reference-tracking` | [`SP-193-ictrl-reference-tracking`](./SP-193-ictrl-reference-tracking/README.md) | 长期追踪已启用 | 正式参考档案、基线与本聊天每日 10:00 自动化已登记；有价值变化通知，采用另立项 |
 | `SP-194-reference-project-updates` | [`SP-194-reference-project-updates`](./SP-194-reference-project-updates/README.md) | 已归档 | 23主要仓库+9候选，上游版本/增量/限制与借鉴建议已汇总；docs门禁与来源校验通过 |
-| `SP-195-ios-runner-product` | [`SP-195-ios-runner-product`](./SP-195-ios-runner-product/README.md) | 已引入本地main | Runner统一CLI/HTTP/随包；CLI1297+36、完整门禁与真机/Simulator通过；主仓门禁exit0；参考文档与产品分别提交，未push/release |
+| `SP-195-ios-runner-product` | [`SP-195-ios-runner-product`](./SP-195-ios-runner-product/README.md) | 已引入本地main | Runner统一CLI/HTTP/随包；CLI1297+36、完整门禁与真机/Simulator通过；主仓门禁exit0；参考文档与产品分别提交，未push/release；已完成worktree收口见SP195计划 |

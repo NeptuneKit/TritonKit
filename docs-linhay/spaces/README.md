@@ -22,10 +22,10 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 已引入本地main | [SP-195-ios-runner-product](./SP-195-ios-runner-product/README.md) | 产品与设备验收、主仓门禁通过 | 参考文档306dc42b与Runner分别提交；原worktree保留；未push/release |
+| 已引入本地main | [SP-195-ios-runner-product](./SP-195-ios-runner-product/README.md) | 产品与设备验收、主仓门禁通过 | 参考文档306dc42b与Runner分别提交；原worktree已清理；未push/release；已完成worktree收口见SP195计划 |
 | 已归档 | [SP-194-reference-project-updates](./SP-194-reference-project-updates/README.md) | 23主要仓库+9候选更新报告与分组来源已完成；文档门禁与来源结构校验通过 | 按报告建议另立实施切片；不自动采用 |
 | 长期追踪 | [SP-193-ictrl-reference-tracking](./SP-193-ictrl-reference-tracking/README.md) | 正式列为长期参考；基线 main@99dbfec / v1.97.1；本聊天每日北京时间 10:00 追踪 | 有价值变化通知，增量归档后更新检查点；后续采用另立项 |
-| 已集成（本地 main） | [SP-192-ictrl-adoption-feasibility](./SP-192-ictrl-adoption-feasibility/README.md) | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12、iOS115、Android52与完整APK及真实只读AX/alias/OCR/settle通过 | `e308a2eb` / merge `da76a708`，main总门禁通过；真实设备与OCR输入坐标边界见限制收口计划 |
+| 已集成（本地 main） | [SP-192-ictrl-adoption-feasibility](./SP-192-ictrl-adoption-feasibility/README.md) | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12、iOS115、Android52与完整APK及真实只读AX/alias/OCR/settle通过 | `e308a2eb` / merge `da76a708`，main总门禁通过；真实设备与OCR输入坐标边界见限制收口计划；worktree已清理 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-190-open-issues-integration](./SP-190-open-issues-integration/README.md) | #214–#220 本地集成与统一验收；保留各项证据边界，#215～220 已关闭，#214 继续开放 | main CI / Release / Homebrew 通过，已回复关闭 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-189-issue-220-package-result-path](./SP-189-issue-220-package-result-path/README.md) | #220：package result 路径与 inline parser 一致；49 + 2 focused tests 通过，夹具贯通执行结果路径解析，非实际 Xcode test | main CI / Release / Homebrew 通过，已回复关闭 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-188-issue-219-generic-ios-build](./SP-188-issue-219-generic-ios-build/README.md) | #219：显式 generic iOS SDK-only build；51 + 5 focused tests 通过，未做真实 SDK 编译 | main CI / Release / Homebrew 通过，已回复关闭 |
@@ -124,15 +124,15 @@
 
 | Space | Branch | Worktree | 基线 | 当前状态与后续 |
 | --- | --- | --- | --- | --- |
-| `SP-192-ictrl-adoption-feasibility` | `feat/SP-192-ictrl-adoption-feasibility` | `../TritonKit-worktrees/SP-192-ictrl-adoption-feasibility/` | `main@8aaf6c31` | 五机制及Android/iOS验证限制收口完成，本地门禁通过；`e308a2eb` / merge `da76a708` 已合入本地main，main总门禁通过 |
+| `SP-192-ictrl-adoption-feasibility` | `feat/SP-192-ictrl-adoption-feasibility` | 已清理（2026-10-14） | `main@8aaf6c31` | 五机制及Android/iOS验证限制收口完成，本地门禁通过；`e308a2eb` / merge `da76a708` 已合入本地main，main总门禁通过；worktree已清理 |
 | `SP-156-issue-176-xcode-compact-progress` | `feat/SP-156-issue-176-xcode-compact-progress`（已清理） | 已清理（历史由 PR #177 merge 可达） | `feat/SP-153-issue-173-xcode-run-target-binding@57ff4092` | #176 已合并并关闭；compact/full 合同与 focused 证据保留 |
-| `SP-157-open-issues-178-195-audit` | `feat/SP-157-open-issues-178-195-audit` | `../TritonKit-worktrees/SP-157-open-issues-178-195-audit/` | `main@e77c72b7` | `ad1e55a9` 已由 merge `1564e7ed` 进入主线；#178–#194 已评论并关闭，worktree 保留为审计记录 |
-| `SP-158-issue-196-xcode-archive-export` | `feat/SP-158-issue-196-xcode-archive-export` | `../TritonKit-worktrees/SP-158-issue-196-xcode-archive-export/` | `main@e77c72b7` | `b3d0c27c` 已由 merge `424113b6` 进入主线；#196 已评论并关闭，真实签名风险保留 |
-| `SP-159-issue-195-ios-ddi-recovery` | `feat/SP-159-issue-195-ios-ddi-recovery` | `../TritonKit-worktrees/SP-159-issue-195-ios-ddi-recovery/` | `main@e77c72b7` | `45c3ebbd` 已由 merge `faa74638` 进入主线；#195 已评论并关闭，真实 DDI/tunnel 风险保留 |
-| `SP-160-issue-197-harmony-wait-budget` | `feat/SP-160-issue-197-harmony-wait-budget` | `../TritonKit-worktrees/SP-160-issue-197-harmony-wait-budget/` | `main@e77c72b7` | `0ff8089e` 已由 merge `e77c72b7` 进入主线；#197 已评论并关闭，真实 Harmony smoke 风险保留 |
-| `SP-161-issue-198-harmony-signed-hap` | `feat/SP-161-issue-198-harmony-signed-hap` | `../TritonKit-worktrees/SP-161-issue-198-harmony-signed-hap/` | `main@c55c5cab` | `ffc69a34` 已由 merge `574bbc9c` 进入本地 main；#198 待远端评论/关闭，worktree 保留为审计记录 |
-| `SP-162-issue-199-ios-collection-cell-host-hid` | `feat/SP-162-issue-199-ios-collection-cell-host-hid` | `../TritonKit-worktrees/SP-162-issue-199-ios-collection-cell-host-hid/` | `main@c55c5cab` | `711db3f2` 已由 merge `38967558` 进入本地 main；#199 待远端评论/关闭，真实 Simulator/Baguette 风险保留 |
-| `SP-163-issue-200-simulator-foreground-runtime` | `feat/SP-163-issue-200-simulator-foreground-runtime` | `../TritonKit-worktrees/SP-163-issue-200-simulator-foreground-runtime/` | `origin/main@adbfc92c` | 已完成（本地）：focused 20/20、release schema 与 local gate 通过；未操作真实 Simulator，#200 待远端处置 |
+| `SP-157-open-issues-178-195-audit` | `feat/SP-157-open-issues-178-195-audit` | 已清理（2026-10-14） | `main@e77c72b7` | `ad1e55a9` 已由 merge `1564e7ed` 进入主线；#178–#194 已评论并关闭，worktree已清理，审计记录已归档 |
+| `SP-158-issue-196-xcode-archive-export` | `feat/SP-158-issue-196-xcode-archive-export` | 已清理（2026-10-14） | `main@e77c72b7` | `b3d0c27c` 已由 merge `424113b6` 进入主线；#196 已评论并关闭，真实签名风险保留；worktree已清理 |
+| `SP-159-issue-195-ios-ddi-recovery` | `feat/SP-159-issue-195-ios-ddi-recovery` | 已清理（2026-10-14） | `main@e77c72b7` | `45c3ebbd` 已由 merge `faa74638` 进入主线；#195 已评论并关闭，真实 DDI/tunnel 风险保留；worktree已清理 |
+| `SP-160-issue-197-harmony-wait-budget` | `feat/SP-160-issue-197-harmony-wait-budget` | 已清理（2026-10-14） | `main@e77c72b7` | `0ff8089e` 已由 merge `e77c72b7` 进入主线；#197 已评论并关闭，真实 Harmony smoke 风险保留；worktree已清理 |
+| `SP-161-issue-198-harmony-signed-hap` | `feat/SP-161-issue-198-harmony-signed-hap` | 已清理（2026-10-14） | `main@c55c5cab` | `ffc69a34` 已由 merge `574bbc9c` 进入本地 main；#198 待远端评论/关闭，worktree已清理，审计记录已归档 |
+| `SP-162-issue-199-ios-collection-cell-host-hid` | `feat/SP-162-issue-199-ios-collection-cell-host-hid` | 已清理（2026-10-14） | `main@c55c5cab` | `711db3f2` 已由 merge `38967558` 进入本地 main；#199 待远端评论/关闭，真实 Simulator/Baguette 风险保留；worktree已清理 |
+| `SP-163-issue-200-simulator-foreground-runtime` | `feat/SP-163-issue-200-simulator-foreground-runtime` | 已清理（2026-10-14） | `origin/main@adbfc92c` | 已完成（本地）：focused 20/20、release schema 与 local gate 通过；未操作真实 Simulator，#200 待远端处置；worktree已清理 |
 | `SP-164-issue-201-harmony-act-find` | `feat/SP-164-issue-201-harmony-act-find`（已清理） | 已清理（merge `8469375a` 可达） | `origin/main@8cc72765` | #201 已合并并关闭；Harmony `act find` host adapter 11/11 |
 | `SP-165-issue-202-sim-tap-help-dimensions` | `feat/SP-165-issue-202-sim-tap-help-dimensions`（已清理） | 已清理（merge `07a11612` 可达） | `origin/main@8cc72765` | #202 已合并并关闭；sim tap point-space 62/62 |
 | `SP-166-issue-203-ios-text-query-consistency` | `feat/SP-166-issue-203-ios-text-query-consistency`（已清理） | 已清理（merge `e27e0de3` 可达） | `origin/main@8cc72765` | #203 已合并并关闭；共享文本归一化 245/245、4/4 |
