@@ -18,6 +18,14 @@ final class SimulatorResourceInspectionTests: XCTestCase {
         XCTAssertEqual(report["verificationBoundary"] as? String, "service-overrides-only")
     }
 
+    func testWidgetsDoctorChecksNavigationDependency() throws {
+        let inspector = SimulatorResourceInspection(read: { _ in .init(overrides: ["com.apple.navd": true]) })
+        let report = try inspector.doctor(udid: "fixture", requires: ["widgets"])
+        XCTAssertEqual(report["ok"] as? Bool, false)
+        let features = report["features"] as? [[String: Any]]
+        XCTAssertEqual(features?.first?["disabledLabels"] as? [String], ["com.apple.navd"])
+    }
+
     func testInvalidRequirementsFailBeforeDeviceRead() {
         let inspector = SimulatorResourceInspection(read: { _ in XCTFail("unexpected device read"); return .init(overrides: [:]) })
         XCTAssertThrowsError(try inspector.doctor(udid: "fixture", requires: ["unknown"]))

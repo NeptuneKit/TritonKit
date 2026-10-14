@@ -33,85 +33,97 @@ public enum SimulatorResourceMutationError: Error, Equatable { case missingUDID,
 
 extension CLISimulatorResourceRuntime {
     public func apply(_ request: SimulatorResourceRequest, previous: TKSimulatorResourceStatus) throws -> TKSimulatorResourceReceipt {
-        guard let udid=request.udid else { throw SimulatorResourceMutationError.missingUDID }
-        guard let p=request.profile, !p.isEmpty else { throw SimulatorResourceMutationError.missingProfile }
-        let profile = try Self.resolveProfile(p)
+        guard let udid = request.udid, UUID(uuidString: udid) != nil else { throw SimulatorResourceMutationError.missingUDID }
+        guard let value = request.profile, !value.isEmpty else { throw SimulatorResourceMutationError.missingProfile }
+        let profile = try Self.resolveProfile(value)
         let desired = Set(SimulatorResourceMutationPlanner.labels(for: profile))
-        if !request.noReboot, (try? simulatorIsBooted(udid: udid)) == false {
-            if let receipt = try? applyOffline(request, previous: previous, profile: profile, desired: desired) {
-                return receipt
-            }
+        let actual: Set<String>
+        if !request.noReboot, try !isBooted(udid: udid) {
+            actual = Set(try SimulatorResourceOfflineStore.read(udid).filter(\.value).map(\.key))
+            let delta = SimulatorResourceCatalog.delta(current: actual, desired: desired)
+            try SimulatorResourceOfflineStore.merge(udid, disable: Set(delta.disable), enable: Set(delta.enable))
+            try runChecked(SimulatorResourceMutationPlanner.bootCommands(udid: udid))
+        } else {
+            actual = Set(try readOverrides(udid: udid).overrides.filter(\.value).map(\.key))
+            let delta = SimulatorResourceCatalog.delta(current: actual, desired: desired)
+            // Required services are repaired before slimming other services.
+            try runChecked(SimulatorResourceMutationPlanner.enableCommands(udid: udid, labels: delta.enable))
+            try runChecked(SimulatorResourceMutationPlanner.disableCommands(udid: udid, labels: delta.disable))
+            if !request.noReboot { try runChecked(SimulatorResourceMutationPlanner.rebootCommands(udid: udid)) }
         }
-        let observed = try readOverrides(udid: udid)
-        let actual = Set(observed.overrides.compactMap { $0.value ? $0.key : nil })
-        let toDisable = desired.subtracting(actual)
-        for command in SimulatorResourceMutationPlanner.disableCommands(udid: udid, labels: Array(toDisable).sorted()) {
-            let result = try runner.run(command); guard result.exitCode == 0 else { throw SimulatorResourceMutationError.commandFailed }
-        }
-        if !request.noReboot { for command in SimulatorResourceMutationPlanner.rebootCommands(udid: udid) { let result = try runner.run(command); guard result.exitCode == 0 else { throw SimulatorResourceMutationError.commandFailed } } }
-        let after = try readOverrides(udid: udid)
-        let appliedLabels = Set(after.overrides.compactMap { $0.value ? $0.key : nil })
-        guard desired.isSubset(of: appliedLabels) else { throw SimulatorResourceMutationError.verificationFailed }
-        let previousStatus = TKSimulatorResourceStatus(udid: udid, runtime: previous.runtime, profileID: previous.profileID, enabled: !actual.isEmpty, disabledCategories: previous.disabledCategories)
-        let appliedStatus = TKSimulatorResourceStatus(udid: udid, runtime: previous.runtime, profileID: profile.id, enabled: true, disabledCategories: profile.disabledCategories)
-        return TKSimulatorResourceReceipt(udid: udid, profile: profile, previous: previousStatus, applied: appliedStatus, noReboot: request.noReboot, previousManagedDisabled: actual.intersection(desired), appliedManagedDisabled: appliedLabels.intersection(desired))
+        let applied = Set(try readOverrides(udid: udid).overrides.filter(\.value).map(\.key))
+        guard applied.intersection(SimulatorResourceCatalog.managedLabels) == desired else { throw SimulatorResourceMutationError.verificationFailed }
+        let previousStatus = TKSimulatorResourceStatus(udid: udid, runtime: previous.runtime, profileID: previous.profileID, enabled: !actual.intersection(SimulatorResourceCatalog.managedLabels).isEmpty, disabledCategories: previous.disabledCategories)
+        let appliedStatus = TKSimulatorResourceStatus(udid: udid, runtime: previous.runtime, profileID: profile.id, enabled: !desired.isEmpty, disabledCategories: profile.disabledCategories)
+        return TKSimulatorResourceReceipt(udid: udid, profile: profile, previous: previousStatus, applied: appliedStatus, noReboot: request.noReboot,
+            previousManagedDisabled: actual.intersection(SimulatorResourceCatalog.managedLabels), appliedManagedDisabled: applied.intersection(SimulatorResourceCatalog.managedLabels))
     }
 
-    private func applyOffline(_ request: SimulatorResourceRequest, previous: TKSimulatorResourceStatus, profile: TKSimulatorResourceProfile, desired: Set<String>) throws -> TKSimulatorResourceReceipt {
-        guard let udid = request.udid else { throw SimulatorResourceMutationError.missingUDID }
-        let entries = try SimulatorResourceOfflineStore.read(udid)
-        let actual = Set(entries.compactMap { $0.value ? $0.key : nil })
-        try SimulatorResourceOfflineStore.merge(udid, disable: desired.subtracting(actual), enable: actual.subtracting(desired))
-        for command in SimulatorResourceMutationPlanner.bootCommands(udid: udid) {
-            let result = try runner.run(command)
-            guard result.exitCode == 0 else { throw SimulatorResourceMutationError.commandFailed }
+    private func isBooted(udid: String) throws -> Bool {
+        let result = try runner.run(TKSimctlCommand.listAvailableDevices())
+        guard result.exitCode == 0, !result.stdoutTruncated else { throw SimulatorResourceMutationError.commandFailed }
+        let devices = try TKSimctlDeviceListParser.parse(result.stdoutData)
+        guard let device = devices.first(where: { $0.udid == udid }) else { throw SimulatorResourceMutationError.missingUDID }
+        return device.isBooted
+    }
+
+    private func runChecked(_ commands: [TKHostCommand]) throws {
+        for command in commands {
+            guard try runner.run(command).exitCode == 0 else { throw SimulatorResourceMutationError.commandFailed }
         }
-        let after = try readOverrides(udid: udid)
-        let appliedLabels = Set(after.overrides.compactMap { $0.value ? $0.key : nil })
-        guard desired.isSubset(of: appliedLabels) else { throw SimulatorResourceMutationError.verificationFailed }
-        let previousStatus = TKSimulatorResourceStatus(udid: udid, runtime: previous.runtime, profileID: previous.profileID, enabled: !actual.isEmpty, disabledCategories: previous.disabledCategories)
-        let appliedStatus = TKSimulatorResourceStatus(udid: udid, runtime: previous.runtime, profileID: profile.id, enabled: true, disabledCategories: profile.disabledCategories)
-        return TKSimulatorResourceReceipt(udid: udid, profile: profile, previous: previousStatus, applied: appliedStatus, noReboot: false, previousManagedDisabled: actual.intersection(desired), appliedManagedDisabled: appliedLabels.intersection(desired))
     }
+
     static func resolveProfile(_ value: String) throws -> TKSimulatorResourceProfile {
-        if value == "stock" { return TKSimulatorResourceProfile(id: "stock") }
-        if value == "ci" { return TKSimulatorResourceProfile(id: "ci", disabledCategories: Set(TKSimulatorResourceCategory.allCases).subtracting([.core])) }
-        let data = try Data(contentsOf: URL(fileURLWithPath: value))
-        return try JSONDecoder().decode(TKSimulatorResourceProfile.self, from: data)
+        let profile: TKSimulatorResourceProfile
+        if value == "stock" { profile = TKSimulatorResourceProfile(id: "stock") }
+        else if value == "ci" {
+            profile = TKSimulatorResourceProfile(id: "ci", disabledCategories: Set(SimulatorResourceCatalog.categories.compactMap { TKSimulatorResourceCategory(rawValue: $0.id) }))
+        } else {
+            profile = try JSONDecoder().decode(TKSimulatorResourceProfile.self, from: SimulatorResourceReceiptReader.readData(value))
+        }
+        try profile.validate()
+        let supported = Set(SimulatorResourceCatalog.categories.map(\.id))
+        guard profile.disabledCategories.allSatisfy({ supported.contains($0.rawValue) }) else { throw TKSimulatorResourceProfile.ValidationError.invalidProfile }
+        return profile
     }
+
     public func verify(_ request: SimulatorResourceRequest) throws {
         guard let udid = request.udid else { throw SimulatorResourceMutationError.missingUDID }
-        guard let p = request.profile, !p.isEmpty else { throw SimulatorResourceMutationError.missingProfile }
-        let profile = try Self.resolveProfile(p)
+        guard let value = request.profile, !value.isEmpty else { throw SimulatorResourceMutationError.missingProfile }
+        let profile = try Self.resolveProfile(value)
         let state = try readOverrides(udid: udid)
         let desired = Set(SimulatorResourceMutationPlanner.labels(for: profile))
-        let actual = Set(state.overrides.compactMap { $0.value ? $0.key : nil })
-        guard desired.isSubset(of: actual) else { throw SimulatorResourceMutationError.verificationFailed }
+        let actual = Set(state.overrides.filter(\.value).map(\.key))
+        guard actual.intersection(SimulatorResourceCatalog.managedLabels) == desired else { throw SimulatorResourceMutationError.verificationFailed }
     }
+
     public func restore(_ receipt: TKSimulatorResourceReceipt) throws {
-        guard !receipt.udid.isEmpty else { throw SimulatorResourceMutationError.invalidReceipt }
-        let current = try readOverrides(udid: receipt.udid)
+        try SimulatorResourceReceiptReader.validate(receipt)
+        let state = try readOverrides(udid: receipt.udid)
+        let current = Set(state.overrides.filter(\.value).map(\.key))
         let previous = receipt.previousManagedDisabled
         let applied = receipt.appliedManagedDisabled
-        for label in applied.subtracting(previous) { _ = try runner.run(SimulatorResourceMutationPlanner.enableCommands(udid: receipt.udid, labels: [label]).first!) }
-        for label in previous.subtracting(applied) { _ = try runner.run(SimulatorResourceMutationPlanner.disableCommands(udid: receipt.udid, labels: [label]).first!) }
-        _ = current
-        if !receipt.noReboot {
-            for command in SimulatorResourceMutationPlanner.rebootCommands(udid: receipt.udid) {
-                let result = try runner.run(command)
-                guard result.exitCode == 0 else { throw SimulatorResourceMutationError.commandFailed }
-            }
+        // Three-way comparison: revert only labels whose state still matches this receipt's applied state.
+        let enable = applied.subtracting(previous).intersection(current)
+        let disable = Set(previous.subtracting(applied).filter { state.overrides[$0] == false })
+            .subtracting(SimulatorResourceCatalog.alwaysEnabledLabels)
+        try runChecked(SimulatorResourceMutationPlanner.enableCommands(udid: receipt.udid, labels: enable.sorted()))
+        try runChecked(SimulatorResourceMutationPlanner.disableCommands(udid: receipt.udid, labels: disable.sorted()))
+        if !receipt.noReboot && (!enable.isEmpty || !disable.isEmpty) {
+            try runChecked(SimulatorResourceMutationPlanner.rebootCommands(udid: receipt.udid))
         }
-        let final = try readOverrides(udid: receipt.udid)
-        let actual = Set(final.overrides.compactMap { $0.value ? $0.key : nil })
-        guard previous.isSubset(of: actual) else { throw SimulatorResourceMutationError.verificationFailed }
+        let final = Set(try readOverrides(udid: receipt.udid).overrides.filter(\.value).map(\.key))
+        guard enable.isDisjoint(with: final), disable.isSubset(of: final) else { throw SimulatorResourceMutationError.verificationFailed }
     }
 }
 
 struct SimulatorResourceMutationPlanner {
     static func labels(for profile: TKSimulatorResourceProfile) -> [String] {
-        let cats = SimulatorResourceCatalog.categories.filter { catalogCategory in profile.disabledCategories.contains(where: { category in category.rawValue == catalogCategory.id }) }
-        return Array(Set(cats.flatMap { $0.labels }.filter { !SimulatorResourceCatalog.alwaysEnabledLabels.contains($0) })).sorted()
+        let except = Set(SimulatorResourceCatalog.categories.filter { category in
+            !profile.disabledCategories.contains(where: { $0.rawValue == category.id })
+        }.map(\.id))
+        // Categories share dependencies; a kept category always wins.
+        return (try? SimulatorResourceCatalog.desired(exceptCategories: except).sorted()) ?? []
     }
     static func disableCommands(udid: String, labels: [String]) -> [TKHostCommand] {
         labels.map { TKHostCommand(arguments: ["simctl", "spawn", udid, "launchctl", "disable", "system/\($0)"]) }
@@ -120,7 +132,7 @@ struct SimulatorResourceMutationPlanner {
         labels.map { TKHostCommand(arguments: ["simctl", "spawn", udid, "launchctl", "enable", "system/\($0)"]) }
     }
     static func rebootCommands(udid: String) -> [TKHostCommand] {
-        [TKHostCommand(arguments:["simctl","shutdown",udid]), TKHostCommand(arguments:["simctl","boot",udid])]
+        [TKHostCommand(arguments:["simctl","shutdown",udid])] + bootCommands(udid: udid)
     }
     static func bootCommands(udid: String) -> [TKHostCommand] {
         [TKHostCommand(arguments:["simctl","boot",udid]), TKHostCommand(arguments:["simctl","bootstatus",udid,"-b"])]

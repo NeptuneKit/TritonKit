@@ -30,14 +30,17 @@ struct SimulatorResourceOverrideState: Equatable {
 
     static func parse(_ output: String) throws -> Self {
         let text = output.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard text.contains("{"), text.hasSuffix("}") else {
+        let lines = text.components(separatedBy: .newlines)
+        guard let first = lines.first?.trimmingCharacters(in: .whitespaces),
+              first == "{" || first == "disabled services = {",
+              lines.last?.trimmingCharacters(in: .whitespaces) == "}" else {
             throw ParseError.malformedOutput
         }
         let pattern = #"^\s*"([^"]+)"\s*=>\s*(disabled|enabled|true|false)\s*[,;]?\s*$"#
         let expression = try NSRegularExpression(pattern: pattern)
         var result: [String: Bool] = [:]
-        for line in text.components(separatedBy: .newlines) {
-            guard line.contains("=>") || line.contains("\"") else { continue }
+        for line in lines.dropFirst().dropLast() {
+            guard !line.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
             let range = NSRange(line.startIndex..., in: line)
             guard let match = expression.firstMatch(in: line, range: range),
                   let labelRange = Range(match.range(at: 1), in: line),
