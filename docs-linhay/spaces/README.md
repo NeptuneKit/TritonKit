@@ -22,10 +22,10 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 联合验证通过 | [SP-206-ictrl-security-integration](./SP-206-ictrl-security-integration/README.md) | 负责 SP-203～205 交付审查、集成与联合验证 | 串行提交并合入本地 main，保护 SP-201 WIP；不推送发布 |
-| 已验证·待本地合并 | [SP-203-ictrl-discovery-hardening](./SP-203-ictrl-discovery-hardening/README.md) | 发现与连接安全，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；待本地合并，不推送发布 |
-| 已验证·待本地合并 | [SP-204-ictrl-log-privacy](./SP-204-ictrl-log-privacy/README.md) | 日志脱敏与降噪，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；待本地合并，不推送发布 |
-| 已验证·待本地合并 | [SP-205-ios-runner-auth-hardening](./SP-205-ios-runner-auth-hardening/README.md) | Runner 鉴权强化，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；待本地合并，不推送发布 |
+| 已合入本地main | [SP-206-ictrl-security-integration](./SP-206-ictrl-security-integration/README.md) | 负责 SP-203～205 交付审查、集成与联合验证 | 本地 main 已合并，继续合并后复核，保护 SP-201 WIP；不推送发布 |
+| 已合入本地main | [SP-203-ictrl-discovery-hardening](./SP-203-ictrl-discovery-hardening/README.md) | 发现与连接安全，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，不推送发布 |
+| 已合入本地main | [SP-204-ictrl-log-privacy](./SP-204-ictrl-log-privacy/README.md) | 日志脱敏与降噪，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，不推送发布 |
+| 已合入本地main | [SP-205-ios-runner-auth-hardening](./SP-205-ios-runner-auth-hardening/README.md) | Runner 鉴权强化，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，不推送发布 |
 | 评估完成 | [SP-202-ictrl-security-assessment](./SP-202-ictrl-security-assessment/README.md) | 优先广播 opt-in/发现信任边界，再做日志隐私和 Runner 强化；配置预检等已有覆盖 | 实现另立切片；本轮仅源码评估与验收规划 |
 | 已登记·待集成 | [SP-201-sdk-floating-picker](./SP-201-sdk-floating-picker/README.md) | 仅登记编号与独立worktree | 本期不携带实现、设计、截图或验收内容 |
 | 已归档（待合并发布） | [SP-200-mobile-device-parity](./SP-200-mobile-device-parity/README.md) | Mobile设备环境/录屏/诊断/归档安装/动作/终端镜像已实现并完成本地回归 | 合并 feat/SP-200-mobile-device-parity，发布 v0.2.29；排除云预订/MCP |
