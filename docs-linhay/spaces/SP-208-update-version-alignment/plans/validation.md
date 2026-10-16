@@ -22,9 +22,9 @@
 
 ## 阶段边界
 
-不以维护机0.2.29替代反馈用户的安装证明。实现阶段未创建Git提交；本轮按用户合并清理授权形成本地候选，尚无远端push/tag/release或用户消息发送；回复草稿位于同目录user-reply.md。当前main比origin/main含SP-206未发布改动，发布需明确联合范围，不能把本次修复自动当作那批变更的发布授权。
+不以维护机0.2.29替代反馈用户的安装证明。初次实现验证时无Git提交；当前已通过6c120ccd本地整合，未执行远端push/tag/release或用户消息发送；回复草稿位于同目录user-reply.md。当前main比origin/main含SP-206未发布改动，发布需明确联合范围，不能把本次修复自动当作那批变更的发布授权。
 
-候选源码/测试/public skill的11个文件SHA见candidate-files.json；完整回归后未再修改这些文件。实现与验证完成；本轮形成局部候选提交，待主控合入 main，未公开发布。
+候选源码/测试/public skill的11个文件SHA见candidate-files.json；完整回归后未再修改这些文件。实现与验证完成；随后按14个文件逐一核对main未变更且与基线一致，再回写主工作区，11个源码/测试/skill SHA一致；保留已有WIP、不stage。主工作区focused复核27 tests / 4 suites通过（含public schema snapshot）；主工作区ci-docs/check-docs/diff三门禁通过；现已完成本地提交与整合，未公开发布。
 
 ## 2026-10-16 合并清理候选复核
 
@@ -32,3 +32,7 @@
 - 本轮在独立worktree默认scratch补跑更新相关focused tests，26 tests / 3 suites通过；`verify.sh --ci-docs`、`check-docs.sh`与`git diff --check`通过。docs门禁针对包含借入SP-207目录及共享索引的工作区运行，不表示局部提交独立通过编号连续性检查。
 - 提交仅包含SP-208产品、直接文档/skill、SP-208空间与当日SP-208日志；借入SP-207目录、SP-201/207索引上下文及误改SP-151历史测试计数均不纳入。共享INDEX/路线登记交主控基于最新main集成，避免覆盖并行SP-201状态。
 - 自动经验回看：原发布治理skill、发布契约、CLI信息契约与public update skill已沉淀版本核验边界；本轮仅核对候选隔离，无新增产品经验。
+
+## 主线联合验收与清理
+
+`6c120ccd`合入SP-201/206后的main：根包291项与CLI1474项Swift Testing、59项XCTest通过；`TRITON_VERIFY_XCODE=0 verify.sh --local`通过，包含release build、schema/错误envelope及host/runtime smoke。通用Xcode build跳过，本轮没有新增设备/安装验收；SP-201此前107项iOS及真实手势证据见其整合记录。候选11文件SHA仍与plans/candidate-files.json一致。源worktree与分支已清理，未push/release。

@@ -43,3 +43,7 @@
 ## 已发布验收
 
 2026-10-15：v0.2.28发布与双架构/Homebrew/skills/Runner验收完成；CLI1394+51、真实UIKit76项全过。详见[发布记录](./plans/20261014-release.md)与[机器可读发布摘要](./plans/20261015-release-summary.json)。v0.2.27旧编译器失败尝试保留tag，不移动历史。专项未测边界保留。
+
+## 2026-10-16 工作区收口
+
+已核对本期产品实现进入本地 main，原 worktree 与本地 feature 分支已清理。原始验证日志、历史未提交副本已保存至仓库外私有归档；本次清理不改变发布与真实设备验收边界。详见[本地 worktree 与分支收口](../../dev/20261016-worktree-closeout.md)。

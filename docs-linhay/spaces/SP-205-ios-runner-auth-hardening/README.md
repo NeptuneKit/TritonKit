@@ -40,3 +40,7 @@ CLIIOSRunnerRuntime/Wire/Transport 与随包 ios-runner 鉴权协议、对应 Ru
 ## SP-206 联合验收
 
 本切片已冻结交接，主控在联合候选上重跑适用完整门禁通过，实现提交6bfeba80，已由0a246d00合入本地main；原独立交付记录保留其历史范围。最终整合状态和证据见 [SP-206](../SP-206-ictrl-security-integration/README.md)，未发布或设备运行接替。
+
+## 2026-10-16 工作区收口
+
+已核对本期产品实现进入本地 main，原 worktree 与本地 feature 分支已清理。原始验证日志、历史未提交副本已保存至仓库外私有归档；本次清理不改变发布与真实设备验收边界。详见[本地 worktree 与分支收口](../../dev/20261016-worktree-closeout.md)。

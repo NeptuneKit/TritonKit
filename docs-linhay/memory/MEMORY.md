@@ -33,3 +33,5 @@
 - iCTRL安全采用在[SP-206](../spaces/SP-206-ictrl-security-integration/README.md)联合验收：默认发现/广播显式开启、响应日志元数据白名单、Runner CryptoKit会话持密证明与加密通道；未宣称embedded服务认证、物理身份、防透明转发或设备运行验收。
 
 - 内置SDK悬浮圆点与用户选控件的需求入口：[SP-201](../spaces/SP-201-sdk-floating-picker/README.md) / [设计](../dev/20261015-sdk-floating-picker.md)。2026-10-16 已实现并验证直接拖选/长按移位、稳定方向罗盘、父子记忆和局部放大镜；UIKit85项、真实拖选0次→CLI guarded tap 1次通过。功能提交2711565f已按用户授权整合本地main，联合UIKit/启动回归107项通过，待用户验收，未推送发布；与SP-197属性高亮独立。
+
+- 2026-10-16：[worktree与分支收口](../dev/20261016-worktree-closeout.md)完成9个源工作区和本地分支回收，仅保留main；未提交历史副本有可恢复snapshot/bundle，SP-208已本地整合未发布。

@@ -1,8 +1,8 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-16（SP-206 主控验证与本地合并；SP-201 已完成本地整合）
-> 覆盖范围：206/206 个已存在 space
+> 最近同步：2026-10-16（本地分支整合与worktree收口；仅保留main）
+> 覆盖范围：208/208 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 206/206 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 206/206 | 每条记录链接到现有 space README |
+| 编号登记 | 208/208 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 208/208 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -223,25 +223,29 @@
 
 | `SP-195-ios-runner-product` | [`SP-195-ios-runner-product`](./SP-195-ios-runner-product/README.md) | 已引入本地main | Runner统一CLI/HTTP/随包；CLI1297+36、完整门禁与真机/Simulator通过；主仓门禁exit0；参考文档与产品分别提交，未push/release；已完成worktree收口见SP195计划；本地完成分支已清理/归档 |
 
-| `SP-196-upstream-optimization-delivery` | [`SP-196-upstream-optimization-delivery`](./SP-196-upstream-optimization-delivery/README.md) | 已发布v0.2.28 | 分段提交与主线集成；CLI1394+51、真实iOS76、双架构/skills/Runner/Homebrew通过；专项未测边界保留 |
+| `SP-196-upstream-optimization-delivery` | [`SP-196-upstream-optimization-delivery`](./SP-196-upstream-optimization-delivery/README.md) | 已发布v0.2.28 | 分段提交与主线集成；CLI1394+51、真实iOS76、双架构/skills/Runner/Homebrew通过；专项未测边界保留；worktree/分支已清理 |
 
 
-| `SP-197-view-annotation` | [`SP-197-view-annotation`](./SP-197-view-annotation/README.md) | 已合入本地main | 可选UIKit高亮与条件恢复已验收；7b1a2f76集成实现、证据和skills，保留并行WIP |
+| `SP-197-view-annotation` | [`SP-197-view-annotation`](./SP-197-view-annotation/README.md) | 已合入本地main | 可选UIKit高亮与条件恢复已验收；7b1a2f76集成实现、证据和skills，保留并行WIP；worktree/分支已清理 |
 
 | `SP-198-agent-experience-loop` | [`SP-198-agent-experience-loop`](./SP-198-agent-experience-loop/README.md) | 本地提交归档 | Agent默认自动沉淀、主题索引与原权威资料修订退出；28隔离用例通过，远端CI未运行 |
 
 | `SP-199-mobile-mcp-reference` | [`SP-199-mobile-mcp-reference`](./SP-199-mobile-mcp-reference/README.md) | 已归档 | 参考档案与当前源码差距完成；199 space docs门禁通过，不采用功能或启用自动追踪 |
 
-| `SP-200-mobile-device-parity` | [`SP-200-mobile-device-parity`](./SP-200-mobile-device-parity/README.md) | 实施中 | 除云预订/MCP外全部差距补齐；独立worktree，授权实现验证提交合并上线 |
+| `SP-200-mobile-device-parity` | [`SP-200-mobile-device-parity`](./SP-200-mobile-device-parity/README.md) | 已合入本地main | 10acfae6已进入main，worktree/分支已清理；排除云预订/MCP |
 
-| `SP-201-sdk-floating-picker` | [`SP-201-sdk-floating-picker`](./SP-201-sdk-floating-picker/README.md) | 已合入本地main | iOS UIKit原生手势、稳定罗盘、导航记忆及拖动放大镜已验证并安装试用，guarded agent tap；独立worktree保留，未推送发布 |
+| `SP-201-sdk-floating-picker` | [`SP-201-sdk-floating-picker`](./SP-201-sdk-floating-picker/README.md) | 已合入本地main | 3f1b500a已整合；UIKit/真实手势与CLI闭环通过，worktree/分支已清理，未发布 |
 
 | `SP-202-ictrl-security-assessment` | [`SP-202-ictrl-security-assessment`](./SP-202-ictrl-security-assessment/README.md) | 评估完成 | 静态评估归档；采用项由SP-203～205实施并经SP-206本地整合 |
 
-| `SP-203-ictrl-discovery-hardening` | [`SP-203-ictrl-discovery-hardening`](./SP-203-ictrl-discovery-hardening/README.md) | 已合入本地main | 默认发现/广播显式开启；联合验证通过；未发布或真实App接入验收 |
+| `SP-203-ictrl-discovery-hardening` | [`SP-203-ictrl-discovery-hardening`](./SP-203-ictrl-discovery-hardening/README.md) | 已合入本地main | 默认发现/广播显式开启；联合验证通过；未发布或真实App接入验收；worktree/分支已清理 |
 
-| `SP-204-ictrl-log-privacy` | [`SP-204-ictrl-log-privacy`](./SP-204-ictrl-log-privacy/README.md) | 已合入本地main | 响应日志元数据白名单、限长和计数；业务payload不变；未发布 |
+| `SP-204-ictrl-log-privacy` | [`SP-204-ictrl-log-privacy`](./SP-204-ictrl-log-privacy/README.md) | 已合入本地main | 响应日志元数据白名单、限长和计数；业务payload不变；未发布；worktree/分支已清理 |
 
-| `SP-205-ios-runner-auth-hardening` | [`SP-205-ios-runner-auth-hardening`](./SP-205-ios-runner-auth-hardening/README.md) | 已合入本地main | 会话加密通道与实际socket/路由鉴权负例通过；设备运行未验收 |
+| `SP-205-ios-runner-auth-hardening` | [`SP-205-ios-runner-auth-hardening`](./SP-205-ios-runner-auth-hardening/README.md) | 已合入本地main | 会话加密通道与实际socket/路由鉴权负例通过；设备运行未验收；worktree/分支已清理 |
 
-| `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | 已合入本地main | 接管 SP-203～205 候选复核、联合验证与本地 main 合并；不推送发布 |
+| `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | 已合入本地main | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
+
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 最小登记 | 完整流程资料作为主工作区并行WIP保留；本轮仅确保编号连续 |
+
+| `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | 已合入本地main | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，未发布 |

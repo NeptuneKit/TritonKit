@@ -67,3 +67,7 @@ stateDiagram-v2
 - [初版HTML原型](picker-design.html)与[浏览器验证](plans/20261015-design-validation.md)只作为历史设计证据；固定圆球/菜单切移动模式/横向工具条均已退出当前方案。
 - [SP-197属性高亮](../SP-197-view-annotation/README.md)是修改/恢复真实属性的独立能力，本功能使用浮层预览。
 - 下一步：用户体验验收；已授权并完成本地main整合，不执行推送或发布。
+
+## 2026-10-16 工作区收口
+
+本期产品与收口历史均已合入本地 main，主仓本地总门禁通过；原 worktree 与本地分支已清理，原始证据及历史副本已校验归档。发布、运行接替和用户验收边界不变。详见[本地 worktree 与分支收口](../../dev/20261016-worktree-closeout.md)。

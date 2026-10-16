@@ -14,9 +14,13 @@
 
 ## 状态
 
-实现与验证完成，按用户“合并 main 后清理 worktree / branches”授权整理本地候选提交，待主控合入 main。未推送或发布，用户回复未发送。
+实现与验证完成；候选提交 `d61499ed` 已通过 `6c120ccd` 合入本地 main，主仓本地总门禁与完整CLI1474+59通过，worktree与本地分支已清理。未推送或发布，用户回复未发送。
 
 - [验收与阶段边界](plans/validation.md)：完整CLI1466+59、focused26、本地总门禁通过；主工作区回写后focused27与docs门禁通过；真实进程6场景及只读网络check通过，独立审查无剩余阻断。
 - [TDD证据](plans/runtime-tests.md)、[候选摘要](plans/candidate-files.json)、[进程验收](plans/process-results.json)、[用户回复草稿](plans/user-reply.md)。
 - 当前main包含SP-206未发布安全改动，现有发布脚本要求从main发布；需要明确此次是否联合发布，不能将处理本次更新缺陷自动推导为另一批改动的发布授权。
 - Xcode/真实设备与反馈用户安装场景未验收；此轮CLI行为验证不需要设备。
+
+## 2026-10-16 工作区收口
+
+本期产品与收口历史均已合入本地 main，主仓本地总门禁通过；原 worktree 与本地分支已清理，原始证据及历史副本已校验归档。发布、运行接替和用户验收边界不变。详见[本地 worktree 与分支收口](../../dev/20261016-worktree-closeout.md)。

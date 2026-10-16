@@ -35,3 +35,7 @@
 ## 收口记录
 
 实现、focused tests、Android Emulator 与 iOS Simulator 回归证据见 [实现说明](../../dev/20261015-mobile-device-parity.md)。云设备预订/释放和标准 MCP server 按用户授权明确排除。
+
+## 2026-10-16 工作区收口
+
+已核对本期产品实现进入本地 main，原 worktree 与本地 feature 分支已清理。原始验证日志、历史未提交副本已保存至仓库外私有归档；本次清理不改变发布与真实设备验收边界。详见[本地 worktree 与分支收口](../../dev/20261016-worktree-closeout.md)。
