@@ -27,14 +27,11 @@ extension WebSocketOutboundWriter {
 func handleResponse(
     data: Data,
     store: DataStore,
-    targetState: TargetState
+    targetState: TargetState,
+    responseLogger: ServerResponseLogger = .shared
 ) {
     guard let msg = try? JSONDecoder().decode(TKMessage.self, from: data) else {
-        if let json = try? JSONSerialization.jsonObject(with: data),
-           let pretty = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]),
-           let str = String(data: pretty, encoding: .utf8) {
-            log("[tritonkit] <- raw:\n\(str)")
-        }
+        responseLogger.record(message: nil, frameBytes: data.count, json: nil)
         return
     }
 
@@ -42,53 +39,30 @@ func handleResponse(
         return
     }
 
-    log("[tritonkit] <- \(msg.type.rawValue) [id:\(msg.id)]")
-
     guard let payload = msg.payload,
-          let json = try? JSONSerialization.jsonObject(with: payload) else { return }
+          let json = try? JSONSerialization.jsonObject(with: payload) else {
+        responseLogger.record(message: msg, frameBytes: data.count, json: nil)
+        return
+    }
+    // Preserve the exact response bytes and existing state changes independently of diagnostics.
     targetState.storeResponse(id: msg.id, payload: payload)
 
     switch msg.type {
     case .hierarchy:
         targetState.setLatestHierarchy(payload)
-        if let dict = json as? [String: Any] {
-            if let items = dict["displayItems"] as? [[String: Any]] {
-                printHierarchy(items, indent: 0)
-            }
-            if let info = dict["appInfo"] as? [String: Any] {
-                log("── App: \(info["appName"] ?? "?") | \(info["deviceDescription"] ?? "?") | OS \(info["osDescription"] ?? "?")")
-            }
-        }
-
     case .appInfo:
         targetState.setLatestAppInfo(payload)
-        if let dict = json as? [String: Any] {
-            log("── \(dict["appName"] ?? "?") | \(dict["appBundleIdentifier"] ?? "?") | Device: \(dict["deviceDescription"] ?? "?")")
-        }
-
     case .runtimeManifest:
         targetState.setRuntimeRegistrationManifest(payload)
-        let decision = targetState.registrationDecision
-        log("── Runtime registration: \(decision.code) | SDK \(decision.sdkVersion ?? "unreported")")
-
-    case .hierarchyDetails:
-        checkAndShowImage(json: json, label: "solo", store: store)
-        checkAndShowImage(json: json, label: "group", store: store)
-
-    case .ping: log("  Pong!")
     default:
-        if let pretty = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]),
-           let str = String(data: pretty, encoding: .utf8) { log(str) }
+        break
     }
-}
-
-func checkAndShowImage(json: Any, label: String, store: DataStore) {
-    guard let dict = json as? [String: Any],
-          let ref = dict["\(label)ScreenshotRef"] as? String,
-          let id = UUID(uuidString: ref),
-          let imgData = store.get(id) else { return }
-    let size = ByteCountFormatter.string(fromByteCount: Int64(imgData.count), countStyle: .file)
-    log("  [\(label) screenshot: \(size)]")
+    responseLogger.record(
+        message: msg,
+        frameBytes: data.count,
+        json: json,
+        registrationAccepted: msg.type == .runtimeManifest ? targetState.registrationDecision.accepted : nil
+    )
 }
 
 func renderHierarchyTree(_ data: Data, hideNoise: Bool = true) throws -> String {
@@ -219,12 +193,6 @@ func describeAttributeValue(_ value: TKAttributeValue?) -> String {
     case .bool(let value): return "\(value)"
     case .stringArray(let value): return value.joined(separator: ",")
     case .numberArray(let value): return value.map { "\($0)" }.joined(separator: ",")
-    }
-}
-
-func printHierarchy(_ items: [[String: Any]], indent: Int) {
-    for line in hierarchyTreeLines(items, indent: indent, hideNoise: true) {
-        log(line)
     }
 }
 

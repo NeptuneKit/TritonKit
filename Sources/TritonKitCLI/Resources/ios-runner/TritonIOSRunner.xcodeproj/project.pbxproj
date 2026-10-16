@@ -12,6 +12,11 @@
 		75D8D7EB75DE1FCAE31A0AE9 /* RunnerFixtureApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3910DF07DCFD4F3ECD158D2E /* RunnerFixtureApp.swift */; };
 		958508B4F0CBD66E44F0975E /* HTTPProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBC8460C1C549387845CA459 /* HTTPProtocol.swift */; };
 		A4B780BCBD7DD724E1D9C414 /* HTTPProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBC8460C1C549387845CA459 /* HTTPProtocol.swift */; };
+		C20500000000000000000011 /* SecureChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20500000000000000000001 /* SecureChannel.swift */; };
+		C20500000000000000000021 /* SecureChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20500000000000000000001 /* SecureChannel.swift */; };
+		C20500000000000000000012 /* RunnerServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20500000000000000000002 /* RunnerServer.swift */; };
+		C20500000000000000000022 /* RunnerServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20500000000000000000002 /* RunnerServer.swift */; };
+		C20500000000000000000013 /* RunnerServerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20500000000000000000003 /* RunnerServerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +37,9 @@
 		B69771C3B7D65FB12852F710 /* HTTPProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPProtocolTests.swift; sourceTree = "<group>"; };
 		EBC8460C1C549387845CA459 /* HTTPProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPProtocol.swift; sourceTree = "<group>"; };
 		F4826B750A7716B10E34D524 /* TritonIOSRunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TritonIOSRunnerTests.swift; sourceTree = "<group>"; };
+		C20500000000000000000001 /* SecureChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureChannel.swift; sourceTree = "<group>"; };
+		C20500000000000000000002 /* RunnerServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerServer.swift; sourceTree = "<group>"; };
+		C20500000000000000000003 /* RunnerServerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerServerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -48,6 +56,8 @@
 		9003A2B5780714E63FFA615E /* RunnerTests */ = {
 			isa = PBXGroup;
 			children = (
+				C20500000000000000000001 /* SecureChannel.swift */,
+				C20500000000000000000002 /* RunnerServer.swift */,
 				EBC8460C1C549387845CA459 /* HTTPProtocol.swift */,
 				F4826B750A7716B10E34D524 /* TritonIOSRunnerTests.swift */,
 			);
@@ -67,6 +77,7 @@
 		D03525A607AB81D12E6A98DE /* ProtocolTests */ = {
 			isa = PBXGroup;
 			children = (
+				C20500000000000000000003 /* RunnerServerTests.swift */,
 				B69771C3B7D65FB12852F710 /* HTTPProtocolTests.swift */,
 			);
 			path = ProtocolTests;
@@ -190,7 +201,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C20500000000000000000011 /* SecureChannel.swift in Sources */,
+				C20500000000000000000012 /* RunnerServer.swift in Sources */,
 				958508B4F0CBD66E44F0975E /* HTTPProtocol.swift in Sources */,
+				C20500000000000000000013 /* RunnerServerTests.swift in Sources */,
 				3BA115C922128BAD462B381C /* HTTPProtocolTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -199,6 +213,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C20500000000000000000021 /* SecureChannel.swift in Sources */,
+				C20500000000000000000022 /* RunnerServer.swift in Sources */,
 				A4B780BCBD7DD724E1D9C414 /* HTTPProtocol.swift in Sources */,
 				4DDCB44BD58E98AF5B116CB6 /* TritonIOSRunnerTests.swift in Sources */,
 			);

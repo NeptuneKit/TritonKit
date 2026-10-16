@@ -17,7 +17,7 @@ The fixture is launched and both known AX identifiers are checked before the lis
 
 Required `TRITON_RUNNER_TOKEN` (16...256 bytes), `TRITON_RUNNER_SESSION` (1...128 bytes); optional `TRITON_RUNNER_PORT` (default 19439), `TRITON_RUNNER_TTL` (10...3600 seconds, default 300), `TRITON_RUNNER_ALLOWED_BUNDLES` (comma-separated exact IDs, at most 32). The fixture is always allowed. Aliases `fixture`, `settings`, `calculator`, `safari` require matching `expectedBundle` and session whitelist membership. `app: "target"` accepts an explicitly whitelisted `expectedBundle`.
 
-All requests require Bearer authentication, X-Session-ID and bounded X-Request-ID. GET `/health`; POST `/probe`, `/snapshot`, `/screenshot`, `/tap`, `/receipt`, `/home`, `/activateFixture`, `/crossApp`, `/stop`. Results retain one envelope `{ok,sessionID,requestID,result,error}`.
+All requests require the v2 authenticated channel, X-Session-ID and bounded X-Request-ID. No Bearer or token is transmitted. GET `/health`; POST `/probe`, `/snapshot`, `/screenshot`, `/tap`, `/receipt`, `/home`, `/activateFixture`, `/crossApp`, `/environment`, `/stop`. Results retain one envelope `{ok,sessionID,requestID,result,error}`.
 
 `/crossApp` accepts app, expectedBundle, operation, optional selector (`kind: identifier|label`, exact value), direction, text, limit. Operations: activate, probe, inspect, tap, typeText, scroll, home, back, screenshot, navigateExample. Inspect returns at most 40 items. Selectors must be present in the most recent observation within 30 seconds, then live, unique and hittable. Text is nonempty, at most 4096 UTF-8 bytes, and is sent only to the observed focused editable field; ambiguity is rejected. navigateExample remains a Safari-specific diagnostic for `https://example.com`.
 
@@ -31,4 +31,10 @@ Tokens, session configuration, native logs, screenshots and receipts must remain
 
 ## Protocol tests
 
-Run `swift test --package-path CLI/Sources/TritonKitCLI/Resources/ios-runner --scratch-path .build/ios-runner-protocol-tests` from the repository root. These Foundation-only tests do not validate UIKit, signing or physical-device lifecycle.
+Run `swift test --package-path CLI/Sources/TritonKitCLI/Resources/ios-runner --scratch-path .build/ios-runner-protocol-tests` from the repository root. These macOS tests run the shipped Network server, parser, authentication, routing and ledger with an injected UI executor; they do not validate UIKit, signing or physical-device lifecycle.
+
+## Authenticated channel v2
+
+The client sends `TRITON2\n` and a random 32-byte nonce. The server returns the same magic, a fresh 32-byte nonce and a CryptoKit HMAC-SHA256 proof binding the session and both nonces. The client verifies proof before sending any request. HKDF-SHA256 derives separate proof/request/response keys from the existing session secret. Requests and responses are AES-GCM sealed complete HTTP messages, framed with a 4-byte big-endian sealed-box length. Each connection handles exactly one request and response; no plaintext fallback exists.
+
+The CLI and bundled Runner must upgrade together, then prepare/start a fresh session. Proof and record verification use system CryptoKit; the client copy of SecureChannel.swift is checked for byte equality. TTL is checked at routing and again before queued UI execution. The protocol proves session-key possession, not process/device identity; it does not provide forward secrecy or prevent denial of service, credential-file access, or transparent forwarding of opaque ciphertext. Limits are 80 KiB request plaintext and 12 MiB + 16 KiB response plaintext, plus 28 bytes sealed-box overhead.

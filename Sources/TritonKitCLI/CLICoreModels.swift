@@ -241,9 +241,11 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
     let target = [("--target <target>", "目标 id，来自 `triton list`；只有一个目标时可省略")]
     let formatTextJSON = [("--format <format>", "输出格式：text 或 json"), ("--json", "等价于 --format json")]
     return [
-        "serve": ChineseCommandHelp(name: "serve", overview: "启动本地控制服务。", usage: "triton serve [--host <host>] [--port <port>]", options: [
+        "serve": ChineseCommandHelp(name: "serve", overview: "启动本地控制服务。", usage: "triton serve [--host <host>] [--port <port>] [--advertise|--no-advertise]", options: [
             ("--host <host>", "监听 host，默认 127.0.0.1"),
-            ("--port <port>", "监听端口，默认 19421"),
+            ("--port <port>", "监听端口，默认 19421；范围 1–65535"),
+            ("--advertise", "显式启用 Bonjour 广播，默认关闭；TRITON_ADVERTISE=true|false；不代表身份认证"),
+            ("--no-advertise", "显式关闭 Bonjour 广播，覆盖环境配置"),
         ]),
         "web": ChineseCommandHelp(name: "web", overview: "从 TritonKit checkout 启动 Vite dev 模式，或从 release/Homebrew 随包 web/ 静态产物启动 packaged 模式。", usage: "triton web [--root <path>] [--host <host>] [--port <port>] [--print-command] [--json]", options: [
             ("--root <path>", "TritonKit 仓库根目录或 Web 目录；默认从当前目录向上查找"),

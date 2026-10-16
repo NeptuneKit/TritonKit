@@ -4,7 +4,7 @@ import XCTest
 
 final class IOSRunnerTransportTests: XCTestCase {
     private let connection = IOSRunnerConnection(scope: "simulator", targetAddress: "127.0.0.1", port: 19439,
-                                                  token: "private-token", sessionID: "session-1")
+                                                  token: "private-token-for-tests", sessionID: "session-1")
     private func response(_ object: [String: Any], status: Int = 200, extra: String = "") throws -> Data {
         let body = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
         return Data("HTTP/1.1 \(status) OK\r\nContent-Type: application/json\r\nContent-Length: \(body.count)\r\n\(extra)\r\n".utf8) + body
@@ -15,7 +15,8 @@ final class IOSRunnerTransportTests: XCTestCase {
         let request = try IOSRunnerWire.request(connection: connection, route: "health", body: nil, requestID: "r1")
         let text = try XCTUnwrap(String(data: request, encoding: .utf8))
         XCTAssertTrue(text.hasPrefix("GET /health HTTP/1.1\r\n"))
-        XCTAssertTrue(text.contains("Authorization: Bearer private-token\r\n"))
+        XCTAssertFalse(text.contains("Authorization:"))
+        XCTAssertFalse(text.contains(connection.token))
         XCTAssertTrue(text.contains("X-Session-ID: session-1\r\n"))
         XCTAssertTrue(text.contains("X-Request-ID: r1\r\n"))
     }

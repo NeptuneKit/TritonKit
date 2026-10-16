@@ -483,6 +483,10 @@ For the embedded runtime workflow, start the macOS-side server before launching 
 triton serve --host 127.0.0.1 --port 19421
 ```
 
+Bonjour publication is **off by default**, including with an explicit LAN bind. Opt in separately with `--advertise` or `TRITON_ADVERTISE=true` (`1` also accepted); `--no-advertise` overrides the environment. Invalid environment values fail before listening. `triton status --json` and `GET /status` include `discovery.wanted`, `discovery.state` (`wanted`, `publishing`, `advertising`, `failed`, `stopped`), publication errors and `identityVerified:false`. Only the NetService success callback produces `advertising`; it proves neither peer identity nor LAN endpoint reachability. Older servers omit `discovery`.
+
+The SDK no longer silently selects the first Bonjour service. `.environment()` defaults to the configured host or loopback without browsing; explicit `TRITON_HOST` / `TritonKitDefaultHost` still take precedence. To migrate a Debug bootstrap that intentionally uses discovery, opt in with `.environment(discoveryPolicy: .bonjour(timeout: 0.15))`, or set `TRITON_DISCOVERY=bonjour` in the **App process** (optional `TRITON_DISCOVERY_TIMEOUT_SECONDS`, greater than 0 and at most 5; invalid values reject discovery). `TRITON_DISCOVERY=disabled` is the default. `start()` rejects failed or ambiguous discovery instead of connecting to a fallback address. A full bounded browse window must contain exactly one resolved service; an unresolved or removed second service still prevents implicit selection. Use an explicit host to resolve ambiguity. `.bonjourDiscovery(timeout:)` exposes candidates and the rejection status; `.bonjour(timeout:)` remains an explicit optional endpoint helper. Public IDs, names, a single candidate, and TCP readiness are not authentication. Release SDK discovery remains a no-op.
+
 For an iOS Simulator, `127.0.0.1:19421` is the usual development path. For a physical device, bind the server to a reachable Mac interface and set `TRITON_HOST` to the Mac LAN IP:
 
 ```bash
