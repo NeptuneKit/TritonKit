@@ -22,5 +22,44 @@
     "release": "e0480593d27e39c49654400ae27078a70f5dac46a9e8afe3012ca7f1c4b28613"
   },
   "devicesRun": false,
-  "published": false
+  "published": false,
+  "localMerge": "0a246d008219b85d778d43931f8dc17e89571a5b",
+  "mainProductSHAEqualsJointCandidate": true,
+  "mainCLITests": {
+    "swiftTesting": 1451,
+    "xctest": 59,
+    "passed": true
+  },
+  "isolatedOldBehavior": {
+    "sdk": {
+      "tests": 1,
+      "behaviorFailures": 3
+    },
+    "runner": {
+      "tests": 1,
+      "behaviorFailures": 4
+    },
+    "log": {
+      "newExit": 0,
+      "oldExit": 133,
+      "compiled": true,
+      "failure": "synthetic secret disclosure"
+    }
+  },
+  "committedDocsExportGate": {
+    "passed": true,
+    "spaces": 206,
+    "governanceTests": 28
+  },
+  "mainPostMergeGates": {
+    "cli-full": 0,
+    "local": 0,
+    "docs": 0,
+    "check-docs": 0,
+    "resources": 0,
+    "release-resource": 0,
+    "serve-release": 0,
+    "whitespace": 0
+  },
+  "mainDocsContextSpaces": 207
 }

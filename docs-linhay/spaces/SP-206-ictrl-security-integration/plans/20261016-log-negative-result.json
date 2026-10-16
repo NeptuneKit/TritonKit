@@ -1,0 +1,12 @@
+{
+  "baseline": "dd613a99",
+  "oldExit": 133,
+  "oldBuild": "passed",
+  "oldFailure": "Assertion failed: response log disclosed synthetic secret",
+  "newExit": 0,
+  "newCases": [
+    "unknown JSON",
+    "normal input response"
+  ],
+  "scope": "exact old/new handleResponse functions; UI/cache dependencies inert for these paths; no network, synthetic secrets only"
+}

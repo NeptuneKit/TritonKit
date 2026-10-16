@@ -1,0 +1,16 @@
+{
+  "baseline": "dd613a99",
+  "scope": "exact handleResponse function; inert unreachable UI dependencies; unknown JSON and normal response branches",
+  "files": [
+    {
+      "variant": "old",
+      "handlerSHA256": "b4c4c8ac55cba1ed90ac4cdeaeddfede6db13d58184efe28c5c53a752d8817ea",
+      "harnessSHA256": "0072e4e32b7c040466818d257a0af153c4c12973da6b2a305f963858b9d02305"
+    },
+    {
+      "variant": "new",
+      "handlerSHA256": "3f76696c3a56ed534832b2e27969839e351e42effcc8d2e6c7c2ca2183cb1872",
+      "harnessSHA256": "7b4d397b44cba6e9d8244072c64b7558ab4fb07dd08802926b16a7bac8ae2bb7"
+    }
+  ]
+}
