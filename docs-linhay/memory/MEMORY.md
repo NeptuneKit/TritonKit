@@ -10,7 +10,9 @@
 
 ## Memory Rules
 
-- [OpenMinis/iCTRL](https://github.com/OpenMinis/iCTRL) 是长期参考项目：正式档案见 [iCTRL 参考与追踪](../dev/ictrl-reference-tracking.md)，持续追踪见 [SP-193](../spaces/SP-193-ictrl-reference-tracking/README.md)，已有借鉴实现见 SP-192。自动化 `ictrl` 每天北京时间 10:00 检查上游，有价值变化通知；不自动采用、提交或操作设备。
+- 新会话模型锁定（2026-10-16）：本项目由agent创建的新会话（含执行和主控）在 `create_thread` 中显式指定 `model: "gpt-6.1-sol"`；不依赖默认值或自动回退。后续主控分派遵守同一约束，既有会话与推理强度保持原设置。
+- 全部参考项目采用授权（2026-10-16）：用户明确从iCTRL扩至所有参考；[SP-207](../spaces/SP-207-reference-adoption-pipeline/README.md) / [正式流程](../dev/reference-project-adoption-workflow.md)为当前事实源。评估可纳入项直接独立开发会话/worktree，由主控验证、必要本地提交与main合并，不逐项重问。原 `ictrl` 自动任务扩大范围并复用每日10:00计划；当前33仓（24参考+9研究候选），新正式登记项目后续加入，按机制/本地需求去重。push/发版、设备等按各自授权。
+- [OpenMinis/iCTRL](https://github.com/OpenMinis/iCTRL) 是长期参考项目：正式档案见 [iCTRL 参考与追踪](../dev/ictrl-reference-tracking.md)，持续追踪见 [SP-193](../spaces/SP-193-ictrl-reference-tracking/README.md)，已有借鉴实现见 SP-192。自动化 `ictrl` 每天北京时间 10:00 检查上游。2026-10-16用户授权：评估可纳入项直接建立独立开发会话/worktree，由主控验证、必要本地提交并合入main，无需逐项确认；按 SP-207 统一采用登记去重。推送/发版、依赖/设备等不随此自动授权。
 - [mobile-next/mobile-mcp](https://github.com/mobile-next/mobile-mcp) 已列为参考项目：正式档案与能力差距见 [Mobile MCP 参考](../dev/mobile-mcp-reference.md) / [SP-199](../spaces/SP-199-mobile-mcp-reference/README.md)。固定源码与外部 mobilecli backend 分开核对；计入现有 iOS Runner。仅登记研究，未启用周期追踪或采用功能。
 - 参考项目清单和2026-10-14上游更新统一入口：[参考项目更新报告](../dev/20261014-reference-project-updates.md) / [SP-194](../spaces/SP-194-reference-project-updates/README.md)，覆盖主要仓库与专题候选；后续比较优先使用其中固定SHA/Release证据，区分默认分支与已发布能力。
 
@@ -30,8 +32,10 @@
 
 - SP-200 Mobile 设备能力补齐：除云设备预订/释放与标准 MCP 接入外，已实现本机三平台环境、录屏、诊断、归档安装、动作、终端镜像及统一 HTTP command；真实证据和平台边界见 [SP-200](../spaces/SP-200-mobile-device-parity/README.md) / [实现说明](../dev/20261015-mobile-device-parity.md)。
 
+- 内置SDK悬浮圆点与用户选控件的需求入口：[SP-201](../spaces/SP-201-sdk-floating-picker/README.md) / [设计](../dev/20261015-sdk-floating-picker.md)。2026-10-16 已实现并验证直接拖选/长按移位、稳定方向罗盘、父子记忆和局部放大镜；UIKit85项、真实拖选0次→CLI guarded tap 1次通过。功能提交2711565f已按用户授权整合本地main，联合UIKit/启动回归107项通过，已随v0.2.30发布，用户体验另验；与SP-197属性高亮独立。
+
 - iCTRL安全采用在[SP-206](../spaces/SP-206-ictrl-security-integration/README.md)联合验收：默认发现/广播显式开启、响应日志元数据白名单、Runner CryptoKit会话持密证明与加密通道；未宣称embedded服务认证、物理身份、防透明转发或设备运行验收。
 
-- 内置SDK悬浮圆点与用户选控件的需求入口：[SP-201](../spaces/SP-201-sdk-floating-picker/README.md) / [设计](../dev/20261015-sdk-floating-picker.md)。2026-10-16 已实现并验证直接拖选/长按移位、稳定方向罗盘、父子记忆和局部放大镜；UIKit85项、真实拖选0次→CLI guarded tap 1次通过。功能提交2711565f已按用户授权整合本地main，联合UIKit/启动回归107项通过，待用户验收，未推送发布；与SP-197属性高亮独立。
+- 2026-10-16：[SP-208更新版本对齐](../spaces/SP-208-update-version-alignment/README.md)已通过完整CLI/本地门禁并随v0.2.30发布；检查无target的false不证明已最新，执行须核验实际CLI与skills，部分失败保留完成状态。
 
-- 2026-10-16：[worktree与分支收口](../dev/20261016-worktree-closeout.md)完成9个源工作区和本地分支回收，仅保留main；未提交历史副本有可恢复snapshot/bundle，SP-208已本地整合未发布。
+- 2026-10-16：[worktree与分支收口](../dev/20261016-worktree-closeout.md)完成9个源工作区和本地分支回收，仅保留main；未提交历史副本有可恢复snapshot/bundle，SP-208已整合并随v0.2.30发布。

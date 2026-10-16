@@ -1,8 +1,8 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-16（本地分支整合与worktree收口；仅保留main）
-> 覆盖范围：208/208 个已存在 space
+> 最近同步：2026-10-17（v0.2.30发布收口；SP-207流程沉淀）
+> 覆盖范围：209/209 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 208/208 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 208/208 | 每条记录链接到现有 space README |
+| 编号登记 | 209/209 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 209/209 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -234,18 +234,20 @@
 
 | `SP-200-mobile-device-parity` | [`SP-200-mobile-device-parity`](./SP-200-mobile-device-parity/README.md) | 已合入本地main | 10acfae6已进入main，worktree/分支已清理；排除云预订/MCP |
 
-| `SP-201-sdk-floating-picker` | [`SP-201-sdk-floating-picker`](./SP-201-sdk-floating-picker/README.md) | 已合入本地main | 3f1b500a已整合；UIKit/真实手势与CLI闭环通过，worktree/分支已清理，未发布 |
+| `SP-201-sdk-floating-picker` | [`SP-201-sdk-floating-picker`](./SP-201-sdk-floating-picker/README.md) | v0.2.30已发布 | 3f1b500a已整合；UIKit/真实手势与CLI闭环、双架构与安装验收通过，用户原机另验 |
 
 | `SP-202-ictrl-security-assessment` | [`SP-202-ictrl-security-assessment`](./SP-202-ictrl-security-assessment/README.md) | 评估完成 | 静态评估归档；采用项由SP-203～205实施并经SP-206本地整合 |
 
-| `SP-203-ictrl-discovery-hardening` | [`SP-203-ictrl-discovery-hardening`](./SP-203-ictrl-discovery-hardening/README.md) | 已合入本地main | 默认发现/广播显式开启；联合验证通过；未发布或真实App接入验收；worktree/分支已清理 |
+| `SP-203-ictrl-discovery-hardening` | [`SP-203-ictrl-discovery-hardening`](./SP-203-ictrl-discovery-hardening/README.md) | v0.2.30已发布 | 默认发现/广播显式开启；联合验证通过；真实App接入另验；worktree/分支已清理 |
 
-| `SP-204-ictrl-log-privacy` | [`SP-204-ictrl-log-privacy`](./SP-204-ictrl-log-privacy/README.md) | 已合入本地main | 响应日志元数据白名单、限长和计数；业务payload不变；未发布；worktree/分支已清理 |
+| `SP-204-ictrl-log-privacy` | [`SP-204-ictrl-log-privacy`](./SP-204-ictrl-log-privacy/README.md) | v0.2.30已发布 | 响应日志元数据白名单、限长和计数；业务payload不变；worktree/分支已清理 |
 
-| `SP-205-ios-runner-auth-hardening` | [`SP-205-ios-runner-auth-hardening`](./SP-205-ios-runner-auth-hardening/README.md) | 已合入本地main | 会话加密通道与实际socket/路由鉴权负例通过；设备运行未验收；worktree/分支已清理 |
+| `SP-205-ios-runner-auth-hardening` | [`SP-205-ios-runner-auth-hardening`](./SP-205-ios-runner-auth-hardening/README.md) | v0.2.30已发布 | 会话加密通道与实际socket/路由鉴权负例通过；设备运行另验；worktree/分支已清理 |
 
-| `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | 已合入本地main | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
+| `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30已发布 | SP-203～205已整合；057d1012补齐收口历史，联合候选与发布安装验收通过，worktree/分支已清理 |
 
-| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 最小登记 | 完整流程资料作为主工作区并行WIP保留；本轮仅确保编号连续 |
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 流程已启用 | 全部已登记参考统一追踪、当前源码评估、直接分派与主控验证本地合并；33仓历史基线登记 |
 
-| `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | 已合入本地main | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，未发布 |
+| `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁、CLI1474+59、双架构、Homebrew、skills与安装验收通过 |
+
+| `SP-209-picker-runtime-toggle` | [`SP-209-picker-runtime-toggle`](./SP-209-picker-runtime-toggle/README.md) | v0.2.30已发布 | 系统半屏Modal五路由、选择器二级配置与独立显隐；0e296783已合入main，发布安装验收通过 |

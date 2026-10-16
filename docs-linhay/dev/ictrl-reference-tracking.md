@@ -28,7 +28,7 @@ iCTRL 以长期运行的 XCUITest Runner 提供 agent 可发现的 HTTP JSON-RPC
 
 ## 追踪流程
 
-自动化 `ictrl` 绑定当前聊天，每天北京时间 10:00 查询 GitHub 默认分支、Release 和许可证，与最后成功检查点比较。增量摘要保存到 SP-193 `plans/`，包含旧/新 SHA 和 tag、原始链接、事实、与 SP-192 的关系及可借鉴价值；重大结论同步本档案和每日 memory。摘要成功保存后才更新检查点；读取失败不推进状态。无变化保持安静，有值得借鉴的更新、安全/兼容性变化或首次/变化故障及恢复时通知，重复变化和不变故障去重。后续实现独立立项，提交与远端写入沿用 AGENTS 授权规则。
+自动化 `ictrl` 绑定当前聊天，每天北京时间 10:00 查询 GitHub 默认分支、Release 和许可证，与最后成功检查点比较。增量摘要保存到 SP-193 `plans/`，包含旧/新 SHA 和 tag、原始链接、事实、与 SP-192 的关系及可借鉴价值；重大结论同步本档案和每日 memory。摘要成功保存后才更新检查点；读取失败不推进状态。无变化保持安静，有值得借鉴的更新、安全/兼容性变化或首次/变化故障及恢复时通知，重复变化和不变故障去重。2026-10-16 用户已授权评估通过项自动独立立项、创建执行/主控会话、开发验证及必要本地提交/本地 main 合并，无需逐项确认；采用登记与读取检查点分开，具体以 SP-193 当前授权为准。push/tag/release 等仍须另有授权。
 
 
 ## 2026-10-16：v1.98.12 增量与可复用检查
@@ -44,6 +44,14 @@ iCTRL 以长期运行的 XCUITest Runner 提供 agent 可发现的 HTTP JSON-RPC
 用户要求评估后，已在 [SP-202](../spaces/SP-202-ictrl-security-assessment/README.md) 对照 `main@dd613a99` 源码与既有测试完成[采用评估和验收规划](../spaces/SP-202-ictrl-security-assessment/plans/20261016-assessment.md)。先前“可复用检查”是上游原则，不等于本地全部缺失：workspace 配置已有完整预检/安全原子替换，Runner 已有 target/USB Serial/token/session/request 绑定，id=0 心跳已静默。
 
 推荐先收敛已有 Bonjour 无条件广播与 SDK 首服务自动连接；该风险承接 SP-129，默认 loopback 不证明没有广播，公开 ID/单候选也不证明身份。后续再做响应日志脱敏/限长和 Runner 本机恶意端口占用强化；文件替换不等于运行态配置事务、回包关联不等于双向认证。AWDL、远端配对管理、权限回退和手写密码学不纳入本期。以上为静态源码评估，未复现攻击、实施修复或操作设备，长期追踪只读边界不变。
+
+## 当前采用授权（2026-10-16 更新）
+
+用户要求“后期评估可以纳入的改动可以直接按照这个流程直接进入开发”。因此后续可纳入项直接走：当前源码差距评估与BDD → 独立space/worktree及开发会话 → 主控复核/联合验证 → 必要本地提交与main合并。此条替代前述历史研究中的“不自动采用”权限说明，不把历史未实施状态改写成已交付。
+
+[SP-193采用边界](../spaces/SP-193-ictrl-reference-tracking/README.md)为流程事实源，[统一采用登记](../spaces/SP-207-reference-adoption-pipeline/plans/adoption-state.json)对任务与会话去重，[流程授权记录](../spaces/SP-193-ictrl-reference-tracking/plans/20261016-adoption-workflow.md)记录本次变更。自动任务沿用原计划；新批次建立/复用主控，不把不相关批次强塞入已完成会话。推送/发布、依赖变更和设备等边界不因采用授权自动开放。
+
+用户随后明确将上述流程从iCTRL扩大到所有参考项目；当前统一事实源见 [SP-207](../spaces/SP-207-reference-adoption-pipeline/README.md) 与 [正式说明](reference-project-adoption-workflow.md)。自动任务复用id `ictrl`并扩为“参考项目更新与采用推进”，iCTRL原检查点保留；历史只读权限记录由本条和当前统一授权接替。
 
 
 ## 2026-10-16：本地采用后的复核

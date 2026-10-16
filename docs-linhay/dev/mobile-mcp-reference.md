@@ -2,7 +2,7 @@
 
 ## 登记与证据口径
 
-[mobile-next/mobile-mcp](https://github.com/mobile-next/mobile-mcp) 自 2026-10-14 列为 TritonKit 参考项目，需求及验收入口为 [SP-199](../spaces/SP-199-mobile-mcp-reference/README.md)。本次只登记并比较；后续采用另立实现需求，不自动安装、操作设备或启用周期追踪。
+[mobile-next/mobile-mcp](https://github.com/mobile-next/mobile-mcp) 自 2026-10-14 列为 TritonKit 参考项目，需求及验收入口为 [SP-199](../spaces/SP-199-mobile-mcp-reference/README.md)。2026-10-14本次只登记并比较；2026-10-16用户将全部参考纳入 [SP-207统一追踪与采用流程](../spaces/SP-207-reference-adoption-pipeline/README.md)，可纳入项直接独立实施/主控验证本地合并；安装与设备动作仍按单独授权。
 
 - 上游固定 revision：`d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023`；[README](https://github.com/mobile-next/mobile-mcp/blob/d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023/README.md)、[工具注册](https://github.com/mobile-next/mobile-mcp/blob/d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023/src/server.ts)、[设备命令包装](https://github.com/mobile-next/mobile-mcp/blob/d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023/src/mobile-device.ts)。
 - 当次 GitHub 官方 API 最新 release：[`1.0.11`](https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.11)，`published_at=2026-10-14T15:53:00Z`；与源码 changelog 一致。浏览器 latest 页面缓存曾返回 1.0.10，采用官方 API 观测值；不以仓库 `package.json` 的占位版本 0.0.1 判断发布状态。

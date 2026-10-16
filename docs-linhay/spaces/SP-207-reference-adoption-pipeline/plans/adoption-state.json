@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "authorization_on": "2026-10-16",
+  "scope": "all_formally_registered_reference_projects_and_evidence_based_research_candidates",
+  "workflow_authority": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/README.md",
+  "allowed": [
+    "evaluate_current_code",
+    "create_execution_and_controller_threads",
+    "coordinate_scoped_execution_threads",
+    "isolated_development_and_verification",
+    "necessary_local_commits",
+    "verified_local_main_merge"
+  ],
+  "not_implied": [
+    "push",
+    "tag",
+    "release",
+    "install_or_upgrade_dependencies",
+    "run_third_party_code",
+    "signing",
+    "DDI",
+    "device_actions",
+    "expand_product_scope"
+  ],
+  "deduplication": "canonical_repository + mechanism, plus cross-repository local requirement_key; inspect current source and existing deliveries before dispatch",
+  "existing_delivery_indexes": [
+    "docs-linhay/spaces/SP-192-ictrl-adoption-feasibility/README.md",
+    "docs-linhay/spaces/SP-196-upstream-optimization-delivery/README.md",
+    "docs-linhay/spaces/SP-200-mobile-device-parity/README.md"
+  ],
+  "tasks": [
+    {
+      "key": "OpenMinis/iCTRL:discovery-trust-boundary",
+      "requirement_key": "discovery-trust-boundary",
+      "repository": "OpenMinis/iCTRL",
+      "source_revision": "d88bbf0b3a5addead31b4298d605d7ac7a87d6e7",
+      "decision": "adopt",
+      "assessment": "docs-linhay/spaces/SP-202-ictrl-security-assessment/plans/20261016-assessment.md",
+      "space": "SP-203-ictrl-discovery-hardening",
+      "execution_thread_id": "01a14284-df87-7d13-8373-a4d3a56fd470",
+      "controller_space": "SP-206-ictrl-security-integration",
+      "controller_thread_id": "01a142ac-b6e1-7db1-87ad-e0e10935ae69",
+      "host_id": "local",
+      "state": "dispatched",
+      "state_evidence": "Existing successful task creation; current implementation/merge status must be refreshed from controller evidence.",
+      "local_merge_sha": null
+    },
+    {
+      "key": "OpenMinis/iCTRL:response-log-privacy",
+      "requirement_key": "response-log-privacy",
+      "repository": "OpenMinis/iCTRL",
+      "source_revision": "d88bbf0b3a5addead31b4298d605d7ac7a87d6e7",
+      "decision": "adopt",
+      "assessment": "docs-linhay/spaces/SP-202-ictrl-security-assessment/plans/20261016-assessment.md",
+      "space": "SP-204-ictrl-log-privacy",
+      "execution_thread_id": "01a14285-3be0-7213-9433-374c139189bd",
+      "controller_space": "SP-206-ictrl-security-integration",
+      "controller_thread_id": "01a142ac-b6e1-7db1-87ad-e0e10935ae69",
+      "host_id": "local",
+      "state": "dispatched",
+      "state_evidence": "Existing successful task creation; current implementation/merge status must be refreshed from controller evidence.",
+      "local_merge_sha": null
+    },
+    {
+      "key": "OpenMinis/iCTRL:runner-service-authentication",
+      "requirement_key": "runner-service-authentication",
+      "repository": "OpenMinis/iCTRL",
+      "source_revision": "d88bbf0b3a5addead31b4298d605d7ac7a87d6e7",
+      "decision": "adopt",
+      "assessment": "docs-linhay/spaces/SP-202-ictrl-security-assessment/plans/20261016-assessment.md",
+      "space": "SP-205-ios-runner-auth-hardening",
+      "execution_thread_id": "01a14285-3edd-7722-9c46-538e6f6066f4",
+      "controller_space": "SP-206-ictrl-security-integration",
+      "controller_thread_id": "01a142ac-b6e1-7db1-87ad-e0e10935ae69",
+      "host_id": "local",
+      "state": "dispatched",
+      "state_evidence": "Existing successful task creation; current implementation/merge status must be refreshed from controller evidence.",
+      "local_merge_sha": null
+    }
+  ],
+  "new_thread_policy": {
+    "model": "gpt-6.1-sol",
+    "explicit_model_argument_required": true,
+    "scope": "future_execution_and_controller_threads_created_by_agent_in_this_project",
+    "fallback_allowed": false,
+    "existing_threads_changed": false,
+    "reasoning_effort": "unchanged"
+  }
+}

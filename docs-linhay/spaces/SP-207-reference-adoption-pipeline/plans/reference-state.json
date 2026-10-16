@@ -1,0 +1,580 @@
+{
+  "schema_version": 1,
+  "configured_on": "2026-10-16",
+  "canonical_space": "SP-207-reference-adoption-pipeline",
+  "automation_id": "ictrl",
+  "timezone": "Asia/Shanghai",
+  "local_time": "10:00",
+  "source_inventory": [
+    "docs-linhay/dev/20261014-reference-project-updates.md",
+    "docs-linhay/dev/mobile-mcp-reference.md"
+  ],
+  "coverage_note": "Imported historical observations only. No new all-repository query has run during configuration. Per-repository checkpoints advance only after complete evidence and saved summary. iCTRL delegates to SP-193. Future formally registered references are added with evidence; incidental links/clones do not self-register.",
+  "repositories": [
+    {
+      "repository": "tddworks/baguette",
+      "url": "https://github.com/tddworks/baguette",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "8930ac601e38e04540cb3cad9547347c160882e4",
+        "release_tag": "v0.2.6",
+        "license_spdx": "Apache-2.0",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/simulator-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "EvanBacon/serve-sim",
+      "url": "https://github.com/EvanBacon/serve-sim",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "6d009686ed08f7d8bd19bca9f9f67a9237931f44",
+        "release_tag": null,
+        "license_spdx": "Apache-2.0",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/simulator-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "lycorp-jp/sim-use",
+      "url": "https://github.com/lycorp-jp/sim-use",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "ca90b0540aaa58f9edff71be50313dfb5fd740f5",
+        "release_tag": "v0.15.0",
+        "license_spdx": "Apache-2.0",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/simulator-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "MobAI-App/simslim",
+      "url": "https://github.com/MobAI-App/simslim",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "6518ba7eab1123d7e1d7797b0e05f51043b42a5b",
+        "release_tag": "v0.12.2",
+        "license_spdx": "MIT",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/simulator-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "Mastersam07/OpenDeviceHub",
+      "url": "https://github.com/Mastersam07/OpenDeviceHub",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "e50f07f1f4480cb14d57f192df7bf598ca26e708",
+        "release_tag": "v0.2.0",
+        "license_spdx": "MIT",
+        "default_branch": "dev",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/simulator-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "JaviSoto/device-hub-ios",
+      "url": "https://github.com/JaviSoto/device-hub-ios",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "9ea14d11e492ae289f2f92e47da6d1b9044adee0",
+        "release_tag": null,
+        "license_spdx": "MIT",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/simulator-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "heoblitz/Loupe",
+      "url": "https://github.com/heoblitz/Loupe",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "ff1351242e6dbaba4a0b4de40d10350a668f03b8",
+        "release_tag": "v0.5.1",
+        "license_spdx": "MIT",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/runtime-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "jfarcand/mirroir-mcp",
+      "url": "https://github.com/jfarcand/mirroir-mcp",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "845a981163aa6d40999d343fee26778df8627843",
+        "release_tag": "v0.40.1",
+        "license_spdx": "Apache-2.0",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/runtime-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "RockxyApp/Rockxy",
+      "url": "https://github.com/RockxyApp/Rockxy",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "de791b63e7f9b5df49f127524a5c9320e675eb23",
+        "release_tag": "v0.41.0",
+        "license_spdx": "AGPL-3.0",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/runtime-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "ProxymanApp/atlantis",
+      "url": "https://github.com/ProxymanApp/atlantis",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "cc059013de8778072b4fea6453b45e964e4202fe",
+        "release_tag": "1.36.0",
+        "license_spdx": "Apache-2.0",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/runtime-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "OpenMinis/iCTRL",
+      "url": "https://github.com/OpenMinis/iCTRL",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "99dbfecdb39836ba26a0b2b0dcfde90f705a6835",
+        "release_tag": "v1.97.1",
+        "license_spdx": "Apache-2.0",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/runtime-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null,
+      "checkpoint_source": "docs-linhay/spaces/SP-193-ictrl-reference-tracking/plans/upstream-state.json",
+      "checkpoint_note": "delegated; do not duplicate or regress the existing SP-193 checkpoint"
+    },
+    {
+      "repository": "getsentry/MobileBuildMCP",
+      "url": "https://github.com/getsentry/MobileBuildMCP",
+      "classification": "registered_reference",
+      "aliases": [
+        "getsentry/XcodeBuildMCP"
+      ],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "d13ff0c707b0681769cf31da0eb42c4f94ceafff",
+        "release_tag": "v2.7.1",
+        "license_spdx": "MIT",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/agent-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "awizemann/harness",
+      "url": "https://github.com/awizemann/harness",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "3f58c077ded131cca71d75efb05c5d325f0ed18f",
+        "release_tag": "v0.8.4",
+        "license_spdx": "MIT",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/agent-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "dongxinsuperman/ai-phone",
+      "url": "https://github.com/dongxinsuperman/ai-phone",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "38ef0c4fd81975195f37bb4ceead9efaaeaeb141",
+        "release_tag": "v0.8.0",
+        "license_spdx": "MIT",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/agent-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "karminski/eyes-on-my-phone",
+      "url": "https://github.com/karminski/eyes-on-my-phone",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "eef71926e613c3242643923bb21c92beab439990",
+        "release_tag": null,
+        "license_spdx": null,
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/agent-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "RevylAI/revyl-cli",
+      "url": "https://github.com/RevylAI/revyl-cli",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "ac35cd88e6f122b9e956069d6f170380a419d3d1",
+        "release_tag": "v0.1.153",
+        "license_spdx": null,
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/revyl-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "RevylAI/app-explorer",
+      "url": "https://github.com/RevylAI/app-explorer",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e",
+        "release_tag": null,
+        "license_spdx": null,
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/revyl-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "RevylAI/greenlight",
+      "url": "https://github.com/RevylAI/greenlight",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "fcb36e395bd4ae20448f2535382baecba9396fd9",
+        "release_tag": "v0.2.0",
+        "license_spdx": "MIT",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/revyl-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "RevylAI/mobile-devtools",
+      "url": "https://github.com/RevylAI/mobile-devtools",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "efc1dae5da089ec08108a39f1ead39324c11b410",
+        "release_tag": null,
+        "license_spdx": null,
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/revyl-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "RevylAI/mobile-pr-reviewer",
+      "url": "https://github.com/RevylAI/mobile-pr-reviewer",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "ba1250c72f56a08f3718aefc82dc911c1b3a2f23",
+        "release_tag": null,
+        "license_spdx": null,
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/revyl-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "RevylAI/visual-regression",
+      "url": "https://github.com/RevylAI/visual-regression",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "2758e8a88f4efb3a251b675e0984c091bf8abeb8",
+        "release_tag": null,
+        "license_spdx": null,
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/revyl-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "RevylAI/figma-design-checker",
+      "url": "https://github.com/RevylAI/figma-design-checker",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "8b4e5cea045dcff5c30aa723b923e514d2cdc07a",
+        "release_tag": null,
+        "license_spdx": null,
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/revyl-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "RevylAI/CogniSim",
+      "url": "https://github.com/RevylAI/CogniSim",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "3d8902e011981b93cb0ebfafba1794eab93b053e",
+        "release_tag": null,
+        "license_spdx": "MIT",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/revyl-updates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "hughkli/Lookin",
+      "url": "https://github.com/hughkli/Lookin",
+      "classification": "research_candidate",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "95e30fdcc8151092678387c5262bce790a0d9530",
+        "release_tag": "1.0.7",
+        "license_spdx": "GPL-3.0",
+        "default_branch": "Develop",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/research-candidates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "OSU-NLP-Group/UGround",
+      "url": "https://github.com/OSU-NLP-Group/UGround",
+      "classification": "research_candidate",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "8974f95b0685f139a6257f82d6b13895db3356cf",
+        "release_tag": null,
+        "license_spdx": "MIT",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/research-candidates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "bytedance/UI-TARS",
+      "url": "https://github.com/bytedance/UI-TARS",
+      "classification": "research_candidate",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "582f3a7ea5d285ee8ed9e2e84048d1ab01453c49",
+        "release_tag": null,
+        "license_spdx": "Apache-2.0",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/research-candidates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "OpenBMB/AgentCPM-GUI",
+      "url": "https://github.com/OpenBMB/AgentCPM-GUI",
+      "classification": "research_candidate",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "2168ae21b1bed1cdb88736d422934825795a9fd7",
+        "release_tag": null,
+        "license_spdx": "Apache-2.0",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/research-candidates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "X-PLUG/MobileAgent",
+      "url": "https://github.com/X-PLUG/MobileAgent",
+      "classification": "research_candidate",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "11cea575561fb7800b5fb6b6cafa56f7a91de11f",
+        "release_tag": null,
+        "license_spdx": "MIT",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/research-candidates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "njucckevin/SeeClick",
+      "url": "https://github.com/njucckevin/SeeClick",
+      "classification": "research_candidate",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "0ef37ac4d7aaf37ba7b990e3e3c3ca77e1fb8f93",
+        "release_tag": null,
+        "license_spdx": "Apache-2.0",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/research-candidates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "google-research/android_world",
+      "url": "https://github.com/google-research/android_world",
+      "classification": "research_candidate",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "e54ed4f279c9fe0f7b8336040f03482ce67efda4",
+        "release_tag": null,
+        "license_spdx": "Apache-2.0",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/research-candidates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "mobile-dev-inc/Maestro",
+      "url": "https://github.com/mobile-dev-inc/Maestro",
+      "classification": "research_candidate",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "df40dea5dee0b8639aade6e80b558950e982e8a2",
+        "release_tag": "cli-2.11.0",
+        "license_spdx": "Apache-2.0",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/research-candidates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "linhay/SKProcessRunner",
+      "url": "https://github.com/linhay/SKProcessRunner",
+      "classification": "research_candidate",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "24e036604b9e2b28e14c3f55e75a686be1a8bd8a",
+        "release_tag": "0.0.17",
+        "license_spdx": null,
+        "default_branch": "master",
+        "source": "docs-linhay/spaces/SP-194-reference-project-updates/plans/research-candidates.json",
+        "coverage": "historical_observation_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": null
+    },
+    {
+      "repository": "mobile-next/mobile-mcp",
+      "url": "https://github.com/mobile-next/mobile-mcp",
+      "classification": "registered_reference",
+      "aliases": [],
+      "imported_observation": {
+        "observed_on": "2026-10-14",
+        "head_sha": "d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023",
+        "release_tag": "1.0.11",
+        "license_spdx": "Apache-2.0",
+        "default_branch": null,
+        "source": "docs-linhay/dev/mobile-mcp-reference.md",
+        "coverage": "historical_reference_snapshot"
+      },
+      "checkpoint": null,
+      "last_error": null
+    }
+  ]
+}

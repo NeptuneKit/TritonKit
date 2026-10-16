@@ -4,6 +4,8 @@
 
 后续新增参考：[mobile-next/mobile-mcp 登记与当前能力差距](mobile-mcp-reference.md)（[SP-199](../spaces/SP-199-mobile-mcp-reference/README.md)）；不改写上述原核查数量。
 
+> 2026-10-16流程更新：用户已将“评估可纳入→独立开发→主控验证→本地合并”扩展到全部参考，当前入口见 [SP-207](../spaces/SP-207-reference-adoption-pipeline/README.md)。本报告数量与研究时点保留为历史快照，不代表当前总数或当前采用授权。
+
 ## 本期判断
 
 值得优先研究的是**防止输入或验证误报成功、Xcode 27 适配、采集与证据完整性**。iCTRL 与本日登记基线相同，未出现新机制；OpenDeviceHub 与 10-08 研究基线相同。其他项目的活跃更新不能直接解释为 TritonKit 存在相同缺陷，以下采纳顺序属于研究建议。

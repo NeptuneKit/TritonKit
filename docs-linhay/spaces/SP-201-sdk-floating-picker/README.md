@@ -2,7 +2,7 @@
 
 ## 当前状态（2026-10-16）
 
-- iOS UIKit 首版与用户试用后的交互优化已实现、验证并安装专用模拟器。功能提交 `2711565f` 已按用户授权整合到本地 `main`；保留独立worktree和主工作区其他任务WIP，待用户体验验收，未推送发布。
+- iOS UIKit 首版与用户试用后的交互优化已实现、验证并安装专用模拟器。功能提交 `2711565f` 已按用户授权整合到本地 `main`；保留用户体验验收边界；已随 v0.2.30 发布，发布与安装证据见 [SP-208 发布记录](../SP-208-update-version-alignment/plans/20261016-release.md)。
 - 工作区：`../TritonKit-worktrees/SP-201-sdk-floating-picker`，实现基线 `dd613a99`。影响 embedded SDK、shared DTO、CLI 与现有本地 HTTP/runtime 转发；Web/Wails 无新写控制面。
 - 用户需求：内置 SDK 悬浮圆点拖选并标记控件，供 agent 操作。先调研与交互设计，随后用户授权实现、测试、安装，并逐轮修订手势、实时反馈、方向罗盘与遮挡体验。
 - 首版仅支持 Debug UIKit 可映射节点。SwiftUI 虚拟节点、WebView DOM、Android/Harmony provider 不在本次范围。
@@ -66,8 +66,8 @@ stateDiagram-v2
 - [SDK接入指南](../../dev/20260519-ios-integration-guide.md)
 - [初版HTML原型](picker-design.html)与[浏览器验证](plans/20261015-design-validation.md)只作为历史设计证据；固定圆球/菜单切移动模式/横向工具条均已退出当前方案。
 - [SP-197属性高亮](../SP-197-view-annotation/README.md)是修改/恢复真实属性的独立能力，本功能使用浮层预览。
-- 下一步：用户体验验收；已授权并完成本地main整合，不执行推送或发布。
+- 下一步：用户体验验收；产品已随 v0.2.30 发布，用户原机仍需单独代验。
 
 ## 2026-10-16 工作区收口
 
-本期产品与收口历史均已合入本地 main，主仓本地总门禁通过；原 worktree 与本地分支已清理，原始证据及历史副本已校验归档。发布、运行接替和用户验收边界不变。详见[本地 worktree 与分支收口](../../dev/20261016-worktree-closeout.md)。
+本期产品与收口历史均已合入本地 main，主仓本地总门禁通过；原 worktree 与本地分支已清理，原始证据及历史副本已校验归档。运行接替和用户验收边界不变；发布与安装证据见 [SP-208 发布记录](../SP-208-update-version-alignment/plans/20261016-release.md)。详见[本地 worktree 与分支收口](../../dev/20261016-worktree-closeout.md)。
