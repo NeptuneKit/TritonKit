@@ -88,7 +88,7 @@ enum IOSRunnerWire {
             }
         } else if let body, !body.isEmpty { throw IOSRunnerWireError("request_body_invalid") }
         let method = normalized == "health" ? "GET" : "POST"
-        let header = "\(method) /\(normalized) HTTP/1.1\r\nHost: 127.0.0.1:\(connection.port)\r\nAuthorization: Bearer \(connection.token)\r\nX-Session-ID: \(connection.sessionID)\r\nX-Request-ID: \(requestID)\r\nAccept: application/json\r\nContent-Type: application/json\r\nContent-Length: \(payload.count)\r\nConnection: close\r\n\r\n"
+        let header = "\(method) /\(normalized) HTTP/1.1\r\nHost: 127.0.0.1:\(connection.port)\r\nX-Session-ID: \(connection.sessionID)\r\nX-Request-ID: \(requestID)\r\nAccept: application/json\r\nContent-Type: application/json\r\nContent-Length: \(payload.count)\r\nConnection: close\r\n\r\n"
         guard header.utf8.count <= maximumHeaderBytes else { throw IOSRunnerWireError("request_header_budget") }
         return Data(header.utf8) + payload
     }

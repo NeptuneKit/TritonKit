@@ -1,0 +1,79 @@
+{
+  "ok": true,
+  "binary": "<worktree>/CLI/.build/debug/triton",
+  "checks": [
+    {
+      "case": "invalid-before-bind",
+      "args": [
+        "--port",
+        "0"
+      ],
+      "environment": {},
+      "exit": 64
+    },
+    {
+      "case": "invalid-before-bind",
+      "args": [
+        "--port",
+        "65536"
+      ],
+      "environment": {},
+      "exit": 64
+    },
+    {
+      "case": "invalid-before-bind",
+      "args": [],
+      "environment": {
+        "TRITON_ADVERTISE": "invalid"
+      },
+      "exit": 64
+    },
+    {
+      "case": "occupied-bind-does-not-publish",
+      "exit": 1
+    },
+    {
+      "case": "actual-http-cli-status",
+      "http": {
+        "activeHierarchyAvailable": false,
+        "connected": false,
+        "discovery": {
+          "identityVerified": false,
+          "serviceType": "_tritonkit-server._tcp.",
+          "state": "stopped",
+          "wanted": false
+        },
+        "hierarchyCacheState": "unavailable",
+        "latestHierarchyAvailable": false,
+        "targetConnectionState": "disconnected",
+        "targetCount": 0
+      },
+      "cli": {
+        "activeHierarchyAvailable": false,
+        "connected": false,
+        "discovery": {
+          "identityVerified": false,
+          "serviceType": "_tritonkit-server._tcp.",
+          "state": "stopped",
+          "wanted": false
+        },
+        "hierarchyCacheState": "unavailable",
+        "latestHierarchyAvailable": false,
+        "ok": true,
+        "runtime": "none",
+        "serverReachable": true,
+        "surface": "status",
+        "targetConnectionState": "disconnected",
+        "targetCount": 0
+      }
+    },
+    {
+      "case": "owned-process-cleaned-up",
+      "exit": 0
+    },
+    {
+      "case": "forged-status-cannot-claim-authentication",
+      "identityVerified": false
+    }
+  ]
+}

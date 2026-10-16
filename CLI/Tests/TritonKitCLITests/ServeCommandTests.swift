@@ -5,6 +5,73 @@ import TritonKitShared
 
 @Suite
 struct ServeCommandTests {
+    @Test("Bonjour publishing is opt-in independently of bind address")
+    func advertisingOptIn() throws {
+        #expect(try Serve.parse([]).advertisingWanted(environment: [:]) == false)
+        #expect(try Serve.parse(["--host", "0.0.0.0"]).advertisingWanted(environment: [:]) == false)
+        #expect(try Serve.parse(["--advertise"]).advertisingWanted(environment: [:]))
+        #expect(try Serve.parse([]).advertisingWanted(environment: ["TRITON_ADVERTISE": "true"]))
+        #expect(try Serve.parse(["--no-advertise"]).advertisingWanted(environment: ["TRITON_ADVERTISE": "1"]) == false)
+        #expect(throws: (any Error).self) {
+            try Serve.parse([]).advertisingWanted(environment: ["TRITON_ADVERTISE": "maybe"])
+        }
+        for port in ["0", "-1", "65536"] {
+            #expect(throws: (any Error).self) { try Serve.parse(["--port", port]) }
+        }
+        #expect(throws: (any Error).self) { try Serve.parse(["--host", " "]) }
+    }
+
+    @Test("Advertisement environment accepts boolean forms and explicit flags take priority")
+    func advertisingEnvironmentMatrix() throws {
+        for value in ["false", "0", "FALSE"] {
+            #expect(try Serve.parse([]).advertisingWanted(environment: ["TRITON_ADVERTISE": value]) == false)
+        }
+        for value in ["true", "1", "TRUE"] {
+            #expect(try Serve.parse([]).advertisingWanted(environment: ["TRITON_ADVERTISE": value]))
+        }
+        for value in ["false", "0", "invalid"] {
+            #expect(try Serve.parse(["--advertise"]).advertisingWanted(environment: ["TRITON_ADVERTISE": value]))
+        }
+        for value in ["true", "1", "invalid"] {
+            #expect(try Serve.parse(["--no-advertise"]).advertisingWanted(environment: ["TRITON_ADVERTISE": value]) == false)
+        }
+        // ArgumentParser's inverted optional flag uses the final explicit value.
+        #expect(try Serve.parse(["--advertise", "--no-advertise"]).advertisingWanted(environment: [:]) == false)
+        #expect(try Serve.parse(["--no-advertise", "--advertise"]).advertisingWanted(environment: [:]))
+    }
+
+    @Test("Bonjour state only reports advertising after the publish callback")
+    func publishingCallbacks() throws {
+        let publisher = TritonBonjourPublisher(wanted: true, port: 19421)
+        #expect(publisher.snapshot.state == "wanted")
+        let first = NetService(domain: "local.", type: "_sp203-test._tcp.", name: "fixture", port: 19421)
+        publisher.begin(first)
+        #expect(publisher.snapshot.state == "publishing")
+        publisher.netService(first, didNotPublish: [NetService.errorCode: -72001])
+        #expect(publisher.snapshot.state == "failed")
+        #expect(publisher.snapshot.errorCode == -72001)
+        let second = NetService(domain: "local.", type: "_sp203-test._tcp.", name: "retry", port: 19421)
+        publisher.begin(second)
+        publisher.netServiceDidPublish(first)
+        #expect(publisher.snapshot.state == "publishing")
+        #expect(publisher.snapshot.errorCode == nil)
+        publisher.netServiceDidPublish(second)
+        #expect(publisher.snapshot.state == "advertising")
+        publisher.netServiceDidStop(second)
+        #expect(publisher.snapshot.state == "stopped")
+        publisher.netServiceDidPublish(second)
+        #expect(publisher.snapshot.state == "stopped")
+    }
+
+    @Test("Serve schema exposes advertisement opt-in and readonly status")
+    func discoverySchema() throws {
+        let serve = try #require(buildSchemaResponse(command: "serve").commands.first)
+        #expect(serve.options.contains { $0.name == "--advertise" })
+        #expect(serve.options.contains { $0.name == "--no-advertise" })
+        #expect(try #require(chineseCommandHelps()["serve"]).options.contains { $0.0 == "--advertise" })
+        #expect(statusOutputContract().fields.contains { $0.name == "discovery.state" })
+    }
+
     @Test("0.2.15 legacy runtime manifest is accepted without a registration frame")
     func legacyRuntimeManifestIsAccepted() throws {
         let fixture = try #require("""

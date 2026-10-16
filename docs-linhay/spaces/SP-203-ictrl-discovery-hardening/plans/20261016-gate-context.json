@@ -1,0 +1,149 @@
+{
+  "purpose": "Read-only copies from primary worktree solely for documentation gate context; exclude every listed file from SP-203 integration.",
+  "files": [
+    {
+      "path": "docs-linhay/spaces/INDEX.md",
+      "sha256": "8da9f37056d68d90cff820faf8e1d58d78fff80da0c669fce7fd9e8fb25c5bab"
+    },
+    {
+      "path": "docs-linhay/spaces/README.md",
+      "sha256": "7495d169f9f3328c7ea42af670d41c4d2ac1b2ed64cf50d70d095e500e6935c0"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/picker-design.html",
+      "sha256": "5e6440490df50f7c9daf65febd49588eb18b84fc926c2a61f5d5914d267ccefc"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/README.md",
+      "sha256": "e460b29e0dcc48b85d56e80be3ada1310bb9c48144d627cc4ebd5e16ef4e0fa3"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-clicked-v01.png",
+      "sha256": "5fd1db16a2e249da90e24b18bca5f8ac15a28d4af43faec9000a7ea7f903ca19"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-toolbar-avoids-selection-v01.png",
+      "sha256": "6326a51c26280d5336eb9f8c820a1401241c1aab82c250a9f11f529b621456a1"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-clicked-v02.png",
+      "sha256": "2ba50aeb6ad2340ec6306e676782d5a4d8a5411bdc4d82b919c9bfb882733ac2"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-dragged-v01.png",
+      "sha256": "3deaf1d451e18b60459b3cf00b72f9709e9b5c71e7454570b20b3d225b4989ce"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-business-only-v01.png",
+      "sha256": "492d2f15a6d1453972834ac212d937b86c65ba40a23c5b3f477ddb8199130e2b"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-dragged-v02.png",
+      "sha256": "ef82a2c31364cc8516f2270beaf6d0c5db3ed615efc67548a8b7696a40feb061"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261016-picker-compass-selected-v01.png",
+      "sha256": "0d101f6a8585344753b7c7b6b647f6bcc57b04f1ed1369306e3f1c9897a63180"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-desktop-selected-v01.png",
+      "sha256": "a7b599c73a0ea1fbbb1ffc06ceb83cdc52bd7cb155769b960bd34780e54fb175"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-idle-v01.png",
+      "sha256": "9d3191e04a05ccd1c21d5dc4ed43e0d0fc153b013dd1c857b8fab0cb73708649"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-style-selected-v01.png",
+      "sha256": "23428f9b5f0851add3ef812cfec7884f7b2cbad1345e0c8132d1af5e5b6d169b"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-selected-v02.png",
+      "sha256": "1b6c7a510244435509c6ca96e2f61c0826a74cd55d0a2db55cfd966854cbd0f7"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-idle-v02.png",
+      "sha256": "2099c075783bb9249db353ae483e52f177da4794d91763d1a79d108cc599434c"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-mobile-selected-v01.png",
+      "sha256": "c457b393ea9f52b34bd39c242e3a0bbabb6a29e8d55f0c641584d3f6c4ae7ec8"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-selected-v01.png",
+      "sha256": "d154bf1cd7ac2b49389fac45dbc85a8126ca327e3679119aefd1caa800100466"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-idle-design-v01.png",
+      "sha256": "0901eabe5619a1bcbcc48361470837ca2e99b3b78572b2daf802fdfd4078806b"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-design-validation.md",
+      "sha256": "c8e4054903ca91fd0030f6657ac578158dd573eaa0dc66763c0160910a848fd1"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-browser-check.js",
+      "sha256": "33fa6cb340df2d3f7d6c88559da1326864d83d727166d99148b7c78a04d1eb1f"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-implementation-validation.md",
+      "sha256": "cfc2dabd45d9c9a567541f7ad2c96241f3178237782d9ec82d9d00aa721e7807"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/candidate-summary.json",
+      "sha256": "6f0709495f28e1022e4488b14394571bc1d6b2b3cfc81f59aa08ba0e5f043e66"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/summary.json",
+      "sha256": "5d83adb22dae72cc176cc72c60dedd763d1f7be2ea1b691414ea61ee12b64209"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/live-preview-summary.json",
+      "sha256": "2447176951fd38bcc74594af4e49fab96687ceb477c1ffe5a3ac7dc21e305943"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/verify-no-business-click.json",
+      "sha256": "6e2a1904b6bd1b4b561f1d02c3e7c528393fb97bd3d6aad39b1665e30f9eff38"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/gesture-revision-summary.json",
+      "sha256": "c1e4d619ba5c2bcc685fee01f4dcf05be909e05be6070c5b180698eebf93f519"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/guarded-tap.json",
+      "sha256": "4dfc981854c900b0eec25c6969833c473e198caa11fe4fce83386bf64b034297"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/selection.json",
+      "sha256": "bc6fe911db98ecffd40180ce5426eef59921db6e2d39e58a7f01d31ddd6a618b"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/reject-wrong-revision.json",
+      "sha256": "bf39750e13d5b5d6e6b6f83e856b609547fd0bb9c737db9186950299cb59040d"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/verify-after-rejections.json",
+      "sha256": "6e2a1904b6bd1b4b561f1d02c3e7c528393fb97bd3d6aad39b1665e30f9eff38"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/reject-wrong-runtime.json",
+      "sha256": "46d01d160f380dceb4a7304d7a35a470131de398407fdd99513c33615a403718"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-202-ictrl-security-assessment/README.md",
+      "sha256": "687e038e26164e8364af842b3fece875c9a2fdecef250f84de07d952903c3a3d"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-202-ictrl-security-assessment/plans/20261016-assessment.md",
+      "sha256": "294083915f7a1a48ccef9fc3517e95d640ea2e06f6ecfca00fe6643986f82b2e"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-204-ictrl-log-privacy/README.md",
+      "sha256": "15dfe7b204f197606e9460ae364d1045022280c1fcb11c558e2ffef38c2c549f"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-205-ios-runner-auth-hardening/README.md",
+      "sha256": "ce0e0b8f47c8201a2bdb3b6749997d6883dc910fd03f2fb74760e92c41b93144"
+    }
+  ]
+}

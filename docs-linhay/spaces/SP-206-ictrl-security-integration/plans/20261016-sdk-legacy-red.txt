@@ -1,0 +1,5 @@
+Build complete! (19.55秒)
+􀢄  Test "default environment never invokes Bonjour discovery" recorded an issue at DefaultDiscoveryRegression.swift:11:9: Expectation failed: resolverCalls == 0
+􀢄  Test "default environment never invokes Bonjour discovery" recorded an issue at DefaultDiscoveryRegression.swift:12:9: Expectation failed: payload.host == "127.0.0.1"
+􀢄  Test "default environment never invokes Bonjour discovery" recorded an issue at DefaultDiscoveryRegression.swift:13:9: Expectation failed: payload.port == 19421
+􀢄  Test run with 1 test in 1 suite failed after 0.001 seconds with 3 issues.

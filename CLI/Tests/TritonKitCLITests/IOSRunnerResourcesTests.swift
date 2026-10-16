@@ -5,10 +5,18 @@ import Testing
 
 @Suite
 struct IOSRunnerResourcesTests {
+    @Test("CLI and bundled Runner use the identical authenticated channel implementation")
+    func secureChannelSourceParity() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let client = root.appendingPathComponent("Sources/TritonKitCLI/CLIIOSRunnerSecureChannel.swift")
+        let runner = root.appendingPathComponent("Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/SecureChannel.swift")
+        #expect(try Data(contentsOf: client) == Data(contentsOf: runner))
+    }
+
     private func fixture() throws -> URL {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let paths = [
-            "FixtureApp/RunnerFixtureApp.swift", "RunnerTests/TritonIOSRunnerTests.swift", "RunnerTests/HTTPProtocol.swift",
+            "FixtureApp/RunnerFixtureApp.swift", "RunnerTests/TritonIOSRunnerTests.swift", "RunnerTests/HTTPProtocol.swift", "RunnerTests/SecureChannel.swift", "RunnerTests/RunnerServer.swift",
             "TritonIOSRunner.xcodeproj/project.pbxproj",
             "TritonIOSRunner.xcodeproj/xcshareddata/xcschemes/TritonIOSRunner.xcscheme",
         ]
@@ -31,7 +39,7 @@ struct IOSRunnerResourcesTests {
         let root = try fixture()
         defer { try? FileManager.default.removeItem(at: root) }
         #expect(try bundledIOSRunnerProjectURL(candidates: [root]) == root)
-        #expect(try validateIOSRunnerResources(at: root, expectedVersion: "test-version").files.count == 5)
+        #expect(try validateIOSRunnerResources(at: root, expectedVersion: "test-version").files.count == 7)
     }
 
     @Test("macOS SwiftPM Contents Resources bundle resolves without source fallback")
@@ -54,8 +62,8 @@ struct IOSRunnerResourcesTests {
         let root = try fixture()
         defer { try? FileManager.default.removeItem(at: root) }
         let directoryURL = URL(fileURLWithPath: root.path + "/", isDirectory: true)
-        #expect(try validateIOSRunnerResources(at: directoryURL).files.count == 5)
-        #expect(try validateIOSRunnerResources(at: root.resolvingSymlinksInPath()).files.count == 5)
+        #expect(try validateIOSRunnerResources(at: directoryURL).files.count == 7)
+        #expect(try validateIOSRunnerResources(at: root.resolvingSymlinksInPath()).files.count == 7)
     }
 
     @Test("missing package reports an error without Bundle.module fatal")

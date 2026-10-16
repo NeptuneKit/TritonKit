@@ -31,9 +31,11 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
             outputFormats: ["logs"],
             options: [
                 TKCommandSchemaOption(name: "--host", type: "String", defaultValue: "127.0.0.1", description: "Host to bind to"),
-                TKCommandSchemaOption(name: "--port", type: "Int", defaultValue: "19421", description: "Port to listen on"),
+                TKCommandSchemaOption(name: "--port", type: "Int", defaultValue: "19421", description: "Port to listen on (1...65535)"),
+                TKCommandSchemaOption(name: "--advertise", type: "Bool", defaultValue: "false", description: "Opt in to Bonjour; TRITON_ADVERTISE=true|false|1|0. Independent of bind address; never authenticates peers"),
+                TKCommandSchemaOption(name: "--no-advertise", type: "Bool", description: "Disable Bonjour, overriding TRITON_ADVERTISE"),
             ],
-            examples: ["triton serve --host 127.0.0.1 --port 19421"],
+            examples: ["triton serve --host 127.0.0.1 --port 19421", "triton serve --host 127.0.0.1 --port 19421 --advertise"],
             successShape: "Long-running process; exposes /status, /targets, /request, /input, /hierarchy/latest and WebSocket /",
             failureShape: "Startup failures use process stderr/logs with stable CLI failure codes for invalid bind options or server startup failure",
             nextCommands: [

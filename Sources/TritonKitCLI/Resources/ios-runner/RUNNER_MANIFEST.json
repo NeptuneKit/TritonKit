@@ -7,33 +7,48 @@
     },
     {
       "path": "Package.swift",
-      "sha256": "07e4adfa03da74aac3c3d8ca7d32c0eb7c99e2cb85b6f6ee08a261f23d25c82f",
-      "size": 491
+      "sha256": "d97953dc57f53c9c8685bd5e76f303ce2a2101659b2590d96b82780c009002da",
+      "size": 536
     },
     {
       "path": "ProtocolTests/HTTPProtocolTests.swift",
-      "sha256": "ad1599b5cd5953a7db750b8ed9653a66e763c9bbbcdd332643eee7b4f7894bfc",
-      "size": 13539
+      "sha256": "dc6ad49a5f6c199b92481562bf7ec805c968d0fdf512383a442108e9a65cfc8e",
+      "size": 13503
+    },
+    {
+      "path": "ProtocolTests/RunnerServerTests.swift",
+      "sha256": "713296fc271dd33624f91c3e64942c61c0ff21be109bf784dbfe42b6bc51e819",
+      "size": 17757
     },
     {
       "path": "README.md",
-      "sha256": "ab97d31fe4ba2284283ff6760162350256eef0fa800f382f499327208ded78f1",
-      "size": 3798
+      "sha256": "13e9ffdae8198006288b3e78b1f31379d05aebd6840ab5a2c8c7d9774c956ce5",
+      "size": 5115
     },
     {
       "path": "RunnerTests/HTTPProtocol.swift",
-      "sha256": "7d435d8ffcd8448bcd7edadd62211d92cebf7cbd972b8e6934f3b2b72dc6f74a",
-      "size": 18729
+      "sha256": "ecdfe9e4abff131e43a5516d75c2e31356e465867649e4d8972ea84d2b6f48dc",
+      "size": 18806
+    },
+    {
+      "path": "RunnerTests/RunnerServer.swift",
+      "sha256": "12cacf785e5e80f1df533adfbd3f5ae61348cae5393129800e0e44187ef3e6e0",
+      "size": 12413
+    },
+    {
+      "path": "RunnerTests/SecureChannel.swift",
+      "sha256": "5206112311b64fe6cf264e6fa157a7ca61f5b770830640df7d1590ec9cf53217",
+      "size": 6311
     },
     {
       "path": "RunnerTests/TritonIOSRunnerTests.swift",
-      "sha256": "776ca736875243cd4eabbb49ce187b995747da03f2942eaeaca9682ae54b899a",
-      "size": 31426
+      "sha256": "1350f35e6297f45d457ed4e39cd0daaee19031708cc5a9485634e2c0b300e2fd",
+      "size": 22892
     },
     {
       "path": "TritonIOSRunner.xcodeproj/project.pbxproj",
-      "sha256": "07b60af689385a6bf299cecfef2c5c1a1c64c99b70d84ea52e8158af7b700bdc",
-      "size": 17433
+      "sha256": "ac4e9c8fb7bd456831d0194095cbd68220787c7e13441fbbec1f9d046ab2590b",
+      "size": 19230
     },
     {
       "path": "TritonIOSRunner.xcodeproj/xcshareddata/xcschemes/TritonIOSRunner.xcscheme",

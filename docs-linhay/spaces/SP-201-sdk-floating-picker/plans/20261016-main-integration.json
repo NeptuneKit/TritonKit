@@ -1,0 +1,71 @@
+{
+  "featureCommit": "2711565f",
+  "mainBase": "3000be924724034ceeea9722805e802c60bbb4e4",
+  "scope": "local main integration; no push or release",
+  "checks": {
+    "localGate": {
+      "status": "passed",
+      "rootTests": 291,
+      "xcodeBuildSkipped": "TRITON_VERIFY_XCODE=0; separately tested actual iOS host"
+    },
+    "uikitAndStartup": {
+      "status": "passed",
+      "tests": 107
+    },
+    "realGesture": {
+      "status": "passed",
+      "tests": 1
+    },
+    "cliFixture": {
+      "status": "passed",
+      "checks": 7
+    },
+    "fullCLI": {
+      "status": "passed",
+      "tests": 1459,
+      "suites": 145
+    }
+  },
+  "sourceSHA256": {
+    "CLI/Tests/TritonKitCLITests/FloatingSelectionCommandTests.swift": "d151cb7b7249abe1d071b61bc40b687119c828f4bba6f049efc52096217c45c1",
+    "CLI/Tests/TritonKitCLITests/SchemaFactSourceTaxonomies.swift": "f6d8df19024ffccf53b7c23a2e37f676236e9f61e8493cbf27a34ab7c4eea2d3",
+    "Sources/TritonKit/Picker/TKPickerMagnifierView.swift": "0ed3cd6b1e95de996f718ad1d3388867730173e46368d36bdb31a0633d83f660",
+    "Sources/TritonKit/Picker/TKPickerOverlay.swift": "1430868f93fefc368dc7f4c250204ae7bdf91dfd12d812089f92cd075891c970",
+    "Sources/TritonKit/Picker/TKPickerOverlayViewController.swift": "21e2041b0428b806975c2faaa06c9b8a35d20cc66161779af6d947ceca8a3d0d",
+    "Sources/TritonKit/Picker/TKPickerSessionManager.swift": "e74c68a0abb361df60a15f57451541743d2c75e5604643970a8eb3833b2ff031",
+    "Sources/TritonKit/Server/TKHierarchyBuilder.swift": "6c1af32dde73c7fa407c9bbbf7eafa145f3e7da687eccafe5cc0815b1784ab03",
+    "Sources/TritonKit/TKPickerRuntimeStorage.swift": "6ddfe4f07edb64b5e8a684222091050d61d173ee9d53b8e0218f822789b7e45b",
+    "Sources/TritonKit/TKRuntimeCapabilityGate.swift": "2a379f54fb51b19ac06bf0b7ecd88a3469864706f4bc384b67212ec5242bb675",
+    "Sources/TritonKit/TKRuntimeForegroundTargets.swift": "75246159d0f10c3a368ef81410bb114a131ed4fa377b3344f76ae8f5edb83535",
+    "Sources/TritonKit/TKRuntimeRequestDomain.swift": "04a497ed38c331065ca49d69938d54494f2daf3151d0b74de26288d89875c4cf",
+    "Sources/TritonKit/TKRuntimeSupport.swift": "c10e214858726669c09db2e7d07ba0ea51d49e26728da64f274e452f91421b79",
+    "Sources/TritonKit/TKRuntimeUIHealthResponses.swift": "f42ac5ab9761077b56f7bc76145090be663d643ac76418afdb3c3208c8888b63",
+    "Sources/TritonKit/TritonKit.swift": "d5c5cb5e81fb65d49c9f75e160b5bb22c58e9f3cb61734c999b7c19f49154447",
+    "Sources/TritonKit/TritonKitRequestHandler+Input.swift": "4d1a5544d6a1b7e9c41c23c10096ee663a30b53e75ad118ce4e7dd2436492217",
+    "Sources/TritonKit/TritonKitRequestHandler+Selection.swift": "791490c670798b4f18fa28a25c7f77b42636ab79aa811a68cbc4212e883bd5f3",
+    "Sources/TritonKit/TritonKitRequestHandler.swift": "ae9d8af257353856b4123b8b08653b643e544cb09de6e54bad79a151f4dd4e29",
+    "Sources/TritonKitCLI/CLIInspectionCommands.swift": "8a7cc035fe3f777dcc0b7562bbd48c405d8aaf3573a017b0eca4fdf9880b85a7",
+    "Sources/TritonKitCLI/CLISchemaActionCommands.swift": "7d31318a27d011a0553fe576c4664d3fda6227c0684e104881d29fb45aabccb4",
+    "Sources/TritonKitCLI/CLISchemaObservationCommands.swift": "40b4508d9e5f759ce2f8dee699274a4517e2df2152dbb6901fd20cb4bfa829be",
+    "Sources/TritonKitCLI/CLISchemaSelectionContracts.swift": "a79f41adc13070e99cfd1894d24f8f3ca6c7a169139ae131e18e964b0a47e82e",
+    "Sources/TritonKitCLI/CLISchemaShared.swift": "37ce76078f442cd5151a8cd64ec75185604a22daacdfc23638606b44af64cdb0",
+    "Sources/TritonKitCLI/CLISelectionCommands.swift": "3e7392ac1d599b40156c038e46c554e781e581e2f87258f264eef4f5fa205f66",
+    "Sources/TritonKitCLI/CLITapCommands.swift": "1689cca5911e269c9bd4353d69b63686ab48ed93a33c961683fbb9c940884c0f",
+    "Sources/TritonKitShared/TKCLITransportModels.swift": "d9c01adf12226766058cc47fbe078aa6acb4ac60a7073d8e508500ed5b8c0680",
+    "Sources/TritonKitShared/TKCLITransportSchemaModels.swift": "01ee40ede906d23822dad2fa9eb0fc1c9fd31415867a7a628cdaab3378600c06",
+    "Sources/TritonKitShared/TKEmbeddedRuntimeHTTPRoutes.swift": "1e7847899052d81efd74e52f5b2362b8499a38433e42457250c22e0de5861468",
+    "Sources/TritonKitShared/TKInputModels.swift": "b0692c03f346563dea0f4150fca16da4e7119b8ac074d14f316df56e1bfd5148",
+    "Sources/TritonKitShared/TKMessage.swift": "c52066db6ecf285e9bd7190d186b5cde3b3102f4716c91af5b1f180fab65c268",
+    "Sources/TritonKitShared/TKRuntimeManifestModels.swift": "51b62158ee0922dde07aae3a73e097a7025944f34685afbd9a4556b5fef1327d",
+    "Sources/TritonKitShared/TKSelectionModels.swift": "2b4db8b540bf349d9fef3a974154d6385fce30d7f8520ad6a923fa91003f0b01",
+    "Tests/TritonKitSharedTests/TKSelectionModelsTests.swift": "d2c6f5de59057a1415976d8650d4189130dc77b921776e849169c183f86b0bec",
+    "Tests/TritonKitTests/TKDiscoveryTests.swift": "d62f1618eb53e4bee0125b3f574a5ed20ede57673787576ea6958da706c870f7",
+    "Tests/TritonKitTests/TKPickerCandidateTests.swift": "69371576fe2600361f02d10282d1352644b8137ab8bcfaf2e49362d2437da096",
+    "Tests/TritonKitTests/TKPickerRuntimeStorageTests.swift": "7efd532f84735b59a23997ab340520c763c80e7fe2e1d4af5b695b33101b1f23",
+    "Tests/TritonKitTests/TKPickerSessionTests.swift": "fc47f5853b6614a3a2706d67c9106f56221383f2450f08f75564eabdd667c0ad",
+    "Tests/TritonKitTests/TKPickerUITests.swift": "b0214f3efae2ccbe4cbdcbd11074b8837f0fbdf04a732afb0eb6f41063f61b9d",
+    "Tests/TritonKitTests/TKRuntimeForegroundTargetTests.swift": "a61f4bb6763e4b6e2ae3c6e375df3c0c4910aeeb79596c54be9f7c86d47af18f",
+    "Tests/TritonKitTests/TKSelectionAvailabilityTests.swift": "dc09eaeb0a446ade6529ce94f48a70a43010d67c0af63cb61d99e6efc0bb29d4",
+    "Tests/TritonKitTests/TKSelectionUIHealthTests.swift": "53888623819653fe06ae30f59b712f803e0ec5575925b6772477b6c34b3f363f"
+  }
+}

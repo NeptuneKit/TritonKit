@@ -23,12 +23,15 @@ public extension TritonKitDelegate {
 
 public enum TritonKitRuntimeError: Error {
     case disabledOutsideDebug
+    case discoveryRejected(TritonKitDiscoveryResult.Status)
 }
 
 public struct TritonKitStartPayload: Equatable {
     public var host: String
     public var port: UInt16
     public var dataURL: URL?
+    /// Discovery observations are unauthenticated, even when there is one candidate.
+    public internal(set) var discovery: TritonKitDiscoveryResult?
 
     public init(host: String = "127.0.0.1", port: UInt16 = 19421, dataURL: URL? = nil) {
         self.host = host
@@ -41,19 +44,62 @@ public struct TritonKitStartPayload: Equatable {
         defaultHost: String = "127.0.0.1",
         defaultPort: UInt16 = 19421,
         bundleInfo: [String: Any]? = Bundle.main.infoDictionary,
-        bonjourResolver: () -> Self? = { Self.bonjour(timeout: 0.15) }
+        discoveryPolicy: TritonKitDiscoveryPolicy? = nil,
+        bonjourResolver: (() -> Self?)? = nil
     ) -> Self {
         let bundleHost = Self.bundleString("TritonKitDefaultHost", in: bundleInfo)
-        let discovered = environment["TRITON_HOST"] == nil && bundleHost == nil ? bonjourResolver() : nil
-        let host = environment["TRITON_HOST"]
-            ?? bundleHost
-            ?? discovered?.host
-            ?? defaultHost
-        let port = environment["TRITON_PORT"].flatMap(UInt16.init)
+        let explicitHost = environment["TRITON_HOST"] ?? bundleHost
+        let explicitPort = environment["TRITON_PORT"].flatMap(UInt16.init)
             ?? Self.bundlePort("TritonKitDefaultPort", in: bundleInfo)
-            ?? discovered?.port
-            ?? defaultPort
-        return Self(host: host, port: port)
+        var payload = Self(host: explicitHost ?? defaultHost, port: explicitPort ?? defaultPort)
+        guard explicitHost == nil else { return payload }
+
+        let policy: TritonKitDiscoveryPolicy
+        if let discoveryPolicy {
+            policy = discoveryPolicy
+        } else {
+            switch environment["TRITON_DISCOVERY"] ?? "disabled" {
+            case "disabled": policy = .disabled
+            case "bonjour":
+                let rawTimeout = environment["TRITON_DISCOVERY_TIMEOUT_SECONDS"] ?? "0.15"
+                guard let timeout = TimeInterval(rawTimeout), TritonKitBonjourDiscovery.isValid(timeout: timeout) else {
+                    payload.discovery = .init(status: .invalidConfiguration)
+                    return payload
+                }
+                policy = .bonjour(timeout: timeout)
+            default:
+                payload.discovery = .init(status: .invalidConfiguration)
+                return payload
+            }
+        }
+        guard case let .bonjour(timeout) = policy else { return payload }
+        guard TritonKitBonjourDiscovery.isValid(timeout: timeout) else {
+            payload.discovery = .init(status: .invalidConfiguration)
+            return payload
+        }
+        #if TRITONKIT_RUNTIME_ENABLED
+        let result: TritonKitDiscoveryResult
+        if let bonjourResolver {
+            // Source-compatible injection hook; production discovery uses the full
+            // bounded candidate window below. Injected endpoints are never trusted.
+            if let resolved = bonjourResolver() {
+                result = resolved.discovery ?? .init(status: .candidate, candidates: [
+                    .init(serviceName: "injected", host: resolved.host, port: resolved.port),
+                ])
+            } else {
+                result = .init(status: .noCandidates)
+            }
+        } else {
+            result = Self.bonjourDiscovery(timeout: timeout)
+        }
+        if let endpoint = result.endpoint {
+            payload = Self(host: endpoint.host, port: explicitPort ?? endpoint.port)
+        }
+        payload.discovery = result
+        #else
+        payload.discovery = .init(status: .runtimeDisabled)
+        #endif
+        return payload
     }
 
     public static func local(port: UInt16 = 19421) -> Self {
@@ -64,11 +110,20 @@ public struct TritonKitStartPayload: Equatable {
         Self(host: host, port: port)
     }
 
+    /// Explicit opt-in to an unauthenticated, unique Bonjour candidate.
     public static func bonjour(timeout: TimeInterval = 0.15) -> Self? {
-        #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
-        TritonKitBonjourResolver().resolve(timeout: timeout)
+        bonjourDiscovery(timeout: timeout).endpoint
+    }
+
+    /// Reports all observed candidates and why selection was refused.
+    public static func bonjourDiscovery(timeout: TimeInterval = 0.15) -> TritonKitDiscoveryResult {
+        guard TritonKitBonjourDiscovery.isValid(timeout: timeout) else { return .init(status: .invalidConfiguration) }
+        #if !TRITONKIT_RUNTIME_ENABLED
+        return .init(status: .runtimeDisabled)
+        #elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
+        return TritonKitBonjourDiscovery.resolve(timeout: timeout, driverFactory: { TritonKitBonjourDriver() })
         #else
-        nil
+        return .init(status: .unsupported)
         #endif
     }
 
@@ -91,46 +146,6 @@ public struct TritonKitStartPayload: Equatable {
         return bundleString(key, in: bundleInfo).flatMap(UInt16.init)
     }
 }
-
-#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
-private final class TritonKitBonjourResolver: NSObject, NetServiceBrowserDelegate, NetServiceDelegate {
-    private let browser = NetServiceBrowser()
-    private var services: [NetService] = []
-    private var endpoint: TritonKitStartPayload?
-    private var resolved = false
-
-    func resolve(timeout: TimeInterval) -> TritonKitStartPayload? {
-        guard timeout > 0 else { return nil }
-        browser.delegate = self
-        browser.searchForServices(ofType: "_tritonkit-server._tcp.", inDomain: "local.")
-        let deadline = Date().addingTimeInterval(timeout)
-        while !resolved && Date() < deadline {
-            RunLoop.current.run(mode: .default, before: min(deadline, Date().addingTimeInterval(0.02)))
-        }
-        browser.stop()
-        return endpoint
-    }
-
-    func netServiceBrowser(_ browser: NetServiceBrowser, didFind service: NetService, moreComing: Bool) {
-        services.append(service)
-        service.delegate = self
-        service.resolve(withTimeout: 0.1)
-    }
-
-    func netServiceDidResolveAddress(_ sender: NetService) {
-        guard endpoint == nil, let hostName = sender.hostName, sender.port > 0, let port = UInt16(exactly: sender.port) else {
-            return
-        }
-        endpoint = .device(hostName.trimmingCharacters(in: CharacterSet(charactersIn: ".")), port: port)
-        resolved = true
-        browser.stop()
-    }
-
-    func netServiceBrowser(_ browser: NetServiceBrowser, didNotSearch errorDict: [String: NSNumber]) {
-        resolved = true
-    }
-}
-#endif
 
 public class TritonKit {
     public enum ConnectionState {
@@ -564,6 +579,12 @@ public class TritonKit {
             let requestHandler = defaultRequestHandler ?? TritonKitRequestHandler()
             defaultRequestHandler = requestHandler
             delegate = requestHandler
+        }
+
+        if let discovery = configuration.endpoint.discovery, discovery.status != .candidate {
+            stop()
+            notifyError(TritonKitRuntimeError.discoveryRejected(discovery.status))
+            return false
         }
 
         startPickerRuntime(configuration)

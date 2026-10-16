@@ -77,10 +77,22 @@ struct TKPlatformFallbackTests {
         #expect(bundledPayload.port == 19424)
         #expect(environmentWins.host == "192.168.1.40")
         #expect(environmentWins.port == 19425)
-        #expect(bonjourPayload.host == "bonjour.local")
-        #expect(bonjourPayload.port == 19426)
-        #expect(unresolvedBuildSettingsPayload.host == "bonjour.local")
-        #expect(unresolvedBuildSettingsPayload.port == 19426)
+        #expect(bonjourPayload.host == "127.0.0.1")
+        #expect(bonjourPayload.port == 19421)
+        #expect(unresolvedBuildSettingsPayload.host == "127.0.0.1")
+        #expect(unresolvedBuildSettingsPayload.port == 19421)
+    }
+
+    @Test("default environment never invokes Bonjour discovery")
+    func defaultEnvironmentDoesNotBrowse() {
+        var resolverCalls = 0
+        let payload = TritonKitStartPayload.environment([:], bundleInfo: nil, bonjourResolver: {
+            resolverCalls += 1
+            return .device("untrusted.local", port: 19426)
+        })
+        #expect(resolverCalls == 0)
+        #expect(payload.host == "127.0.0.1")
+        #expect(payload.port == 19421)
     }
 
     @Test("endpoint conveniences describe local environment and device targets")
@@ -227,11 +239,19 @@ struct TKPlatformFallbackTests {
             let message = TKMessage(id: 1, type: .input, payload: try JSONEncoder().encode(request))
 
             let response = await handler.tritonKit(TritonKit.shared, didReceiveMessage: message)
+            #if TRITONKIT_RUNTIME_ENABLED
             let result = try #require(response?.payload).decoded(as: TKInputResult.self)
 
             #expect(result.ok == false)
             #expect(result.action == "tap")
             #expect(result.error?.code == "capability_disabled")
+            #else
+            let result = try #require(response?.payload).decoded(as: TKErrorPayload.self)
+            #expect(response?.id == message.id)
+            #expect(response?.type == .ping)
+            #expect(result.message == "TritonKit runtime is disabled outside DEBUG builds")
+            #expect(handler.kit == nil)
+            #endif
         }
     }
 
@@ -243,11 +263,19 @@ struct TKPlatformFallbackTests {
             let message = TKMessage(id: 1, type: .semanticAction, payload: try JSONEncoder().encode(request))
 
             let response = await handler.tritonKit(TritonKit.shared, didReceiveMessage: message)
+            #if TRITONKIT_RUNTIME_ENABLED
             let result = try #require(response?.payload).decoded(as: TKSemanticActionResponse.self)
 
             #expect(result.ok == false)
             #expect(result.action == .setText)
             #expect(result.error?.code == "capability_disabled")
+            #else
+            let result = try #require(response?.payload).decoded(as: TKErrorPayload.self)
+            #expect(response?.id == message.id)
+            #expect(response?.type == .ping)
+            #expect(result.message == "TritonKit runtime is disabled outside DEBUG builds")
+            #expect(handler.kit == nil)
+            #endif
         }
     }
 
@@ -258,11 +286,19 @@ struct TKPlatformFallbackTests {
             let message = TKMessage(id: 1, type: .webViewList)
 
             let response = await handler.tritonKit(TritonKit.shared, didReceiveMessage: message)
+            #if TRITONKIT_RUNTIME_ENABLED
             let result = try #require(response?.payload).decoded(as: TKWebViewErrorResponse.self)
 
             #expect(result.ok == false)
             #expect(result.action == "webview.list")
             #expect(result.error.code == "capability_disabled")
+            #else
+            let result = try #require(response?.payload).decoded(as: TKErrorPayload.self)
+            #expect(response?.id == message.id)
+            #expect(response?.type == .ping)
+            #expect(result.message == "TritonKit runtime is disabled outside DEBUG builds")
+            #expect(handler.kit == nil)
+            #endif
         }
     }
 

@@ -1,0 +1,8 @@
+Build complete! (8.74秒)
+$SP206/.build/sp206-validation/negative/runner/Tests/LegacyTests/AuthenticationTests.swift:44: error: -[LegacyTests.IOSRunnerAuthenticationTests testMaliciousListenerCannotCaptureCredentialOrForgeReady] : XCTAssertNil failed: "67..<131" - Must not disclose reusable session credential
+$SP206/.build/sp206-validation/negative/runner/Tests/LegacyTests/AuthenticationTests.swift:45: error: -[LegacyTests.IOSRunnerAuthenticationTests testMaliciousListenerCannotCaptureCredentialOrForgeReady] : XCTAssertNil failed: "60..<67"
+$SP206/.build/sp206-validation/negative/runner/Tests/LegacyTests/AuthenticationTests.swift:29: error: -[LegacyTests.IOSRunnerAuthenticationTests testMaliciousListenerCannotCaptureCredentialOrForgeReady] : XCTAssertFalse failed - Echo identifiers are not server authentication
+$SP206/.build/sp206-validation/negative/runner/Tests/LegacyTests/AuthenticationTests.swift:30: error: -[LegacyTests.IOSRunnerAuthenticationTests testMaliciousListenerCannotCaptureCredentialOrForgeReady] : XCTAssertEqual failed: ("nil") is not equal to ("Optional(false)")
+	 Executed 1 test, with 4 failures (0 unexpected) in 0.138 (0.139) seconds
+	 Executed 1 test, with 4 failures (0 unexpected) in 0.138 (0.139) seconds
+	 Executed 1 test, with 4 failures (0 unexpected) in 0.138 (0.139) seconds

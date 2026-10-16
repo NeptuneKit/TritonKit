@@ -141,7 +141,7 @@ final class HTTPProtocolTests: XCTestCase {
     }
     private let token = "unit-secret"
     private let session = "unit-session"
-    private func raw(_ method: String = "GET", _ path: String = "/health", body: String = "", token: String? = "unit-secret", session: String = "unit-session", requestID: String = "r1") -> Data {
+    private func raw(_ method: String = "GET", _ path: String = "/health", body: String = "", token: String? = nil, session: String = "unit-session", requestID: String = "r1") -> Data {
         var text = "\(method) \(path) HTTP/1.1\r\nHost: localhost\r\nX-Session-ID: \(session)\r\nX-Request-ID: \(requestID)\r\nContent-Length: \(body.utf8.count)\r\n"
         if let token { text += "Authorization: Bearer \(token)\r\n" }
         return Data((text + "\r\n" + body).utf8)
@@ -154,16 +154,16 @@ final class HTTPProtocolTests: XCTestCase {
         XCTAssertEqual(request.path, "/tap")
         XCTAssertEqual(try request.jsonBody()["expectedCounter"] as? Int, 0)
     }
-    func testNoAuthenticationIsRejected() throws {
-        let request = try XCTUnwrap(BoundedHTTPParser().append(raw(token: nil)))
-        XCTAssertThrowsError(try request.validate(token: token, session: session)) { error in
-            XCTAssertEqual((error as? ProtocolFailure)?.code, "unauthorized")
+    func testLegacyBearerIsRejected() throws {
+        let request = try XCTUnwrap(BoundedHTTPParser().append(raw(token: token)))
+        XCTAssertThrowsError(try request.validate(session: session)) { error in
+            XCTAssertEqual((error as? ProtocolFailure)?.code, "legacy_authentication_rejected")
         }
     }
     func testWrongSessionAndMissingRequestIDAreRejected() throws {
         for data in [raw(session: "another"), raw(requestID: "")] {
             let request = try XCTUnwrap(BoundedHTTPParser().append(data))
-            XCTAssertThrowsError(try request.validate(token: token, session: session))
+            XCTAssertThrowsError(try request.validate(session: session))
         }
     }
     func testPayloadAndHeaderBudgetsAreEnforcedBeforeParsing() {
@@ -173,7 +173,7 @@ final class HTTPProtocolTests: XCTestCase {
     func testUnknownMethodPathAndTransferEncodingAreRejected() throws {
         for data in [raw("DELETE"), raw("GET", "/tap"), raw("POST", "/unknown")] {
             let request = try XCTUnwrap(BoundedHTTPParser().append(data))
-            XCTAssertThrowsError(try request.validate(token: token, session: session))
+            XCTAssertThrowsError(try request.validate(session: session))
         }
         XCTAssertThrowsError(try BoundedHTTPParser().append(Data("GET /health HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n".utf8))) { error in
             XCTAssertEqual((error as? ProtocolFailure)?.code, "unsupported_encoding")

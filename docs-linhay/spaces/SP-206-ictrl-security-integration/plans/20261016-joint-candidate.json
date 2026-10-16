@@ -1,0 +1,174 @@
+{
+  "baseline": "dd613a994abe45aa14e072c381662a0e3d868f03",
+  "phase": "joint-candidate-after-review-fixes",
+  "files": [
+    {
+      "path": "CLI/Package.swift",
+      "sha256": "6be9b2123620c2837d0634bdd26ae6c78b54de58fd5c3aa52be4a69865908559"
+    },
+    {
+      "path": "CLI/Tests/TritonKitCLITests/IOSRunnerAuthenticationTests.swift",
+      "sha256": "755747dda6a2c16b5fd91b945956af7a50602f58024679894aa117ac446ca918"
+    },
+    {
+      "path": "CLI/Tests/TritonKitCLITests/IOSRunnerResourcesTests.swift",
+      "sha256": "7518e225141512d57b4247348a58953446e4af1892613d1fb201c7fe8f71eb45"
+    },
+    {
+      "path": "CLI/Tests/TritonKitCLITests/IOSRunnerSecureIntegrationTests.swift",
+      "sha256": "9597d30fdb8c709fc9333938151654f87b525d658a3bace9f4beee9aaef60c16"
+    },
+    {
+      "path": "CLI/Tests/TritonKitCLITests/IOSRunnerTransportTests.swift",
+      "sha256": "463923fcaa47c12392c740c8de69a2d7b96227444ea3fbd685ef761cc1ec5779"
+    },
+    {
+      "path": "CLI/Tests/TritonKitCLITests/ServeCommandTests.swift",
+      "sha256": "731ad36e33ce50680fb7f933d644070419f048ba6daf3fa91066a78e72ae1589"
+    },
+    {
+      "path": "CLI/Tests/TritonKitCLITests/ServeDiscoveryTests.swift",
+      "sha256": "ba25ebcede6e8a0b822302433a969301e225137fed3b224205252de1e5767901"
+    },
+    {
+      "path": "CLI/Tests/TritonKitCLITests/ServerResponseLoggingTests.swift",
+      "sha256": "5a6c05cbdecdb38c696853a01e599a53d522f5b8929916c94a51e043286c8620"
+    },
+    {
+      "path": "README.md",
+      "sha256": "2846a72f3161c1753165c3c855411f4b466858dbe6169d2453fc622fddba5890"
+    },
+    {
+      "path": "Sources/TritonKit/TritonKit.swift",
+      "sha256": "380efadd78df20dddb75f672e229be11eaf3b34e9124911c461c377bc8e51992"
+    },
+    {
+      "path": "Sources/TritonKit/TritonKitDiscovery.swift",
+      "sha256": "78c2ec2584fa4e899419b78fe3a6b5d80e8e1b64d4791a3209097b8fdb3904f9"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIBonjourPublisher.swift",
+      "sha256": "a2ff22b60ada68a1961b6100f824de50af48c56c93e06306526c957084b962f5"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLICoreCommands.swift",
+      "sha256": "bee2fbc976d5bcea44b6bfc8700c5ee3088846853fb9e34fc61e4a17680bc956"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLICoreModels.swift",
+      "sha256": "5bb88f3819aa48c64fd2056ba752bc026c66876aea74df5c5ca748e1418a72bf"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIIOSRunnerResources.swift",
+      "sha256": "153c8c2ef9e10b0a7653b5308b1beeea6266b8a99f0fad26886a171dad800f2d"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIIOSRunnerSecureChannel.swift",
+      "sha256": "5206112311b64fe6cf264e6fa157a7ca61f5b770830640df7d1590ec9cf53217"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIIOSRunnerTransport.swift",
+      "sha256": "5fcb3dd8584e120eedfd9778e7376f7ae465fd2be3d319fe83b5e4532b56a2d0"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIIOSRunnerWire.swift",
+      "sha256": "2660fa03cae95fc67ec8d4f91412022a23722172335790a07459c028f5b93382"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLISchemaBootstrapCommands.swift",
+      "sha256": "56f628cf41eeccb543947bd28fb5820eae25bf82c50a1f30b32bc66b6fd5067f"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLISchemaOutputContracts.swift",
+      "sha256": "9319e5c57760a4d4503c4b80cfe61ee8f8f168b56bc1c37e9d9fdbd2b092fb9c"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIServeCommand.swift",
+      "sha256": "03fb8285ee97441410728d98039e1f158a70cc27f5ec4159e9844205b771ace4"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIServeStatus.swift",
+      "sha256": "4d9ac6fa45dbe6f15d13a394a1a8b119375fa1256c174e8d29628fa065685ddc"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIServerResponseLogger.swift",
+      "sha256": "1806eb77ec5f7885bcebff7c29f7acd2ffda041e52bf552df4da6626aab4cab0"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIServerRuntime.swift",
+      "sha256": "663de356391bbcc4c4c139f397af4cb654d4f75163aa84db8cbe4c0f090e6f14"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/FixtureApp/RunnerFixtureApp.swift",
+      "sha256": "abc5727472f1cfbd46db2e0bf824f07078f0f74d934bbc9848c4a0834503a5fb"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/Package.swift",
+      "sha256": "d97953dc57f53c9c8685bd5e76f303ce2a2101659b2590d96b82780c009002da"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/ProtocolTests/HTTPProtocolTests.swift",
+      "sha256": "dc6ad49a5f6c199b92481562bf7ec805c968d0fdf512383a442108e9a65cfc8e"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/ProtocolTests/RunnerServerTests.swift",
+      "sha256": "713296fc271dd33624f91c3e64942c61c0ff21be109bf784dbfe42b6bc51e819"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/README.md",
+      "sha256": "13e9ffdae8198006288b3e78b1f31379d05aebd6840ab5a2c8c7d9774c956ce5"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RUNNER_MANIFEST.json",
+      "sha256": "03aa3f3085454418f9acbac59d0c3305ad2adf98cd5a35d5b3134b82c665775d"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/HTTPProtocol.swift",
+      "sha256": "ecdfe9e4abff131e43a5516d75c2e31356e465867649e4d8972ea84d2b6f48dc"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/RunnerServer.swift",
+      "sha256": "12cacf785e5e80f1df533adfbd3f5ae61348cae5393129800e0e44187ef3e6e0"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/SecureChannel.swift",
+      "sha256": "5206112311b64fe6cf264e6fa157a7ca61f5b770830640df7d1590ec9cf53217"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/TritonIOSRunnerTests.swift",
+      "sha256": "1350f35e6297f45d457ed4e39cd0daaee19031708cc5a9485634e2c0b300e2fd"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/TritonIOSRunner.xcodeproj/project.pbxproj",
+      "sha256": "ac4e9c8fb7bd456831d0194095cbd68220787c7e13441fbbec1f9d046ab2590b"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/TritonIOSRunner.xcodeproj/xcshareddata/xcschemes/TritonIOSRunner.xcscheme",
+      "sha256": "abffa54f6a5fdd8d2a74a501a55d149cad444b77b28318a7ba0b1896b9298d3a"
+    },
+    {
+      "path": "Sources/TritonKitShared/TKCLITransportModels.swift",
+      "sha256": "be70b045c0967f968b5c61fd52c347c1f5e5776e7f0edcacb4032cab0c683d6f"
+    },
+    {
+      "path": "Sources/TritonKitShared/TKDiscoveryStatus.swift",
+      "sha256": "2b8bab8cff21d5028765fef8beec6d84ab465a909689dc52837fc0e187b2aad6"
+    },
+    {
+      "path": "Tests/TritonKitTests/TKDiscoveryTests.swift",
+      "sha256": "e56ff4a4d1ec8be900f84addffc8dd30df217c368c6924879701d7aa25b262be"
+    },
+    {
+      "path": "Tests/TritonKitTests/TKPlatformFallbackTests.swift",
+      "sha256": "4cbf97f45bbdd9fb34e6574634f2883b4158da62537e8083eac76658caf11bd2"
+    },
+    {
+      "path": "TritonKit.skills/tritonkit-dev-feedback/SKILL.md",
+      "sha256": "11526674ef4a9070b9f4c61a4331435873e3bc18de83e5d25d1574f3e7cd770e"
+    },
+    {
+      "path": "TritonKit.skills/tritonkit-real-project-regression/SKILL.md",
+      "sha256": "e608d9003fdcc12edbcea24e1884755169ebef85cb48dcb809d0c79588b59eb6"
+    }
+  ]
+}

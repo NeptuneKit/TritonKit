@@ -2,7 +2,7 @@
 
 ## 当前状态（2026-10-16）
 
-- iOS UIKit 首版与用户试用后的交互优化已实现、验证并安装专用模拟器。用户本轮授权整理、沉淀、提交；本次提交保存在 `feat/SP-201-sdk-floating-picker`，待主线集成与用户体验验收，未发布。
+- iOS UIKit 首版与用户试用后的交互优化已实现、验证并安装专用模拟器。功能提交 `2711565f` 已按用户授权整合到本地 `main`；保留独立worktree和主工作区其他任务WIP，待用户体验验收，未推送发布。
 - 工作区：`../TritonKit-worktrees/SP-201-sdk-floating-picker`，实现基线 `dd613a99`。影响 embedded SDK、shared DTO、CLI 与现有本地 HTTP/runtime 转发；Web/Wails 无新写控制面。
 - 用户需求：内置 SDK 悬浮圆点拖选并标记控件，供 agent 操作。先调研与交互设计，随后用户授权实现、测试、安装，并逐轮修订手势、实时反馈、方向罗盘与遮挡体验。
 - 首版仅支持 Debug UIKit 可映射节点。SwiftUI 虚拟节点、WebView DOM、Android/Harmony provider 不在本次范围。
@@ -51,7 +51,8 @@ stateDiagram-v2
 
 ## 验证与交付
 
-- 最终UIKit 85项通过，真实手势1项及CLI 7步闭环通过；复跑不叠加为独立场景数量。本地门禁通过。
+- [main整合验证](plans/20261016-main-integration.md)：包含发现服务拒绝启动与picker停用的联合回归。
+- 功能分支最终UIKit 85项通过，真实手势1项及CLI 7步闭环通过；复跑不叠加为独立场景数量。本地门禁通过。
 - 新Debug已安装并打开Picker Fixture，确认Connected、计数0。服务与设备供用户试用，安装不等同用户验收。
 - 原始xcresult/log/build保留本机，提交受控摘要和公开fixture截图；无Package.resolved变化，不提交生成Xcode工程或构建产物。
 - [最终整理与文件地图](plans/20261016-recap-v01.md)
@@ -65,4 +66,4 @@ stateDiagram-v2
 - [SDK接入指南](../../dev/20260519-ios-integration-guide.md)
 - [初版HTML原型](picker-design.html)与[浏览器验证](plans/20261015-design-validation.md)只作为历史设计证据；固定圆球/菜单切移动模式/横向工具条均已退出当前方案。
 - [SP-197属性高亮](../SP-197-view-annotation/README.md)是修改/恢复真实属性的独立能力，本功能使用浮层预览。
-- 下一步：用户体验验收及后续主线集成；本次授权仅本地提交，不执行合并、推送或发布。
+- 下一步：用户体验验收；已授权并完成本地main整合，不执行推送或发布。

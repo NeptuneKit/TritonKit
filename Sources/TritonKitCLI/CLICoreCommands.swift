@@ -58,9 +58,13 @@ struct Status: AsyncParsableCommand {
                     runtime: status.connected ? "embedded" : "none",
                     activeHierarchyAvailable: status.activeHierarchyAvailable,
                     hierarchyCacheState: status.hierarchyCacheState,
-                    targetConnectionState: status.targetConnectionState
+                    targetConnectionState: status.targetConnectionState,
+                    discovery: status.discovery
                 )))
             case .text:
+                if let discovery = status.discovery {
+                    print("Bonjour: \(discovery.state) (wanted: \(discovery.wanted), identityVerified: \(discovery.identityVerified))")
+                }
                 switch language {
                 case .en:
                     print("connected: \(status.connected)")

@@ -9,6 +9,8 @@ let package = Package(
     ],
     dependencies: [
         .package(name: "tritonkit", path: ".."),
+        // Test-only local source dependency: exercises the exact shipped Runner server.
+        .package(name: "TritonIOSRunnerProtocol", path: "Sources/TritonKitCLI/Resources/ios-runner"),
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-websocket.git", from: "2.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
@@ -35,6 +37,7 @@ let package = Package(
             name: "TritonKitCLITests",
             dependencies: [
                 "TritonKitCLI",
+                .product(name: "RunnerProtocol", package: "TritonIOSRunnerProtocol"),
                 .product(name: "HummingbirdTesting", package: "hummingbird"),
             ]
         ),
