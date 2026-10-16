@@ -1,5 +1,6 @@
 import Darwin
 import Foundation
+import TritonKitShared
 
 func currentTritonExecutablePath() -> String {
     var size = UInt32(0)
@@ -25,26 +26,19 @@ func makeCLIUpdatePlan(
     environment: [String: String]
 ) throws -> CLIUpdateResponse {
     let target = normalizedReleaseTarget(requestedVersion)
+    guard let targetVersion = target.version,
+          targetVersion.range(of: #"\A[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?(?:\+[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?\z"#, options: .regularExpression) != nil else {
+        throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "An update plan requires a valid numeric release version.", hint: "Resolve the latest release or pass --version vX.Y.Z.")
+    }
     let installSource = detectCLIUpdateInstallSource(currentExecutable: currentExecutable, environment: environment)
     let assetName = cliUpdateAssetName(forArchitecture: architecture)
-    let updateAvailable = target.version.map { versionIsNewer($0, than: currentVersion) } ?? false
+    let updateAvailable = versionIsNewer(targetVersion, than: currentVersion)
     let checksumManifestName = "tritonkit_checksums.txt"
     let mutating = !checkOnly && !dryRun
     let requiresConfirmation = mutating && !confirm && (updateAvailable || includeSkills)
     var actions: [CLIUpdateAction] = []
     var manualInstructions: [String] = []
 
-    if requestedVersion == nil && installSource != .homebrew && installSource != .sourceCheckout {
-        actions.append(CLIUpdateAction(
-            id: "resolve-release",
-            kind: .resolveRelease,
-            description: "Resolve latest GitHub Release for \(repository)",
-            command: nil,
-            args: [],
-            path: nil,
-            destructive: false
-        ))
-    }
 
     switch installSource {
     case .homebrew:
@@ -54,6 +48,15 @@ func makeCLIUpdatePlan(
             description: "Refresh Homebrew tap metadata",
             command: "brew",
             args: ["update"],
+            path: nil,
+            destructive: false
+        ))
+        actions.append(CLIUpdateAction(
+            id: "verify-homebrew-version",
+            kind: .verifyHomebrewVersion,
+            description: "Require the refreshed Homebrew formula to match target version \(targetVersion)",
+            command: "brew",
+            args: ["info", "--json=v2", "neptunekit/tap/triton"],
             path: nil,
             destructive: false
         ))
@@ -117,6 +120,18 @@ func makeCLIUpdatePlan(
         }
     case .sourceCheckout:
         manualInstructions.append("Current executable appears to be a source checkout build. Build locally with: swift build --package-path CLI --scratch-path .build/cli -c release --product triton")
+    }
+
+    if updateAvailable || includeSkills {
+        actions.append(CLIUpdateAction(
+            id: "verify-installed-version",
+            kind: .verifyInstalledVersion,
+            description: "Read the installed CLI version and require target version \(targetVersion) before installing skills",
+            command: nil,
+            args: ["version", "--json"],
+            path: nil,
+            destructive: false
+        ))
     }
 
     if includeSkills {
@@ -245,25 +260,23 @@ func runCLIUpdate(
     skillsDirectory: String?,
     repository: String,
     latestReleaseTagResolver: ((String) async throws -> String) = fetchLatestTritonReleaseTag,
-    skillsBundleInstaller: ((String, String, String) async throws -> Void) = installSkillsBundle
+    skillsBundleInstaller: ((String, String, String) async throws -> Void) = installSkillsBundle,
+    hostCommandRunner: (String, [String]) throws -> String = captureProcess,
+    currentVersion: String = TritonKitBuildInfo.cliVersion
 ) async throws -> CLIUpdateResponse {
-    let installSource = detectCLIUpdateInstallSource(
-        currentExecutable: currentExecutable,
-        environment: ProcessInfo.processInfo.environment
-    )
     let releaseTarget: (tag: String?, version: String?)
     if let requestedVersion {
         releaseTarget = normalizedReleaseTarget(requestedVersion)
-    } else if installSource == .homebrew && !includeSkills {
-        releaseTarget = (nil, nil)
-    } else if installSource == .sourceCheckout {
-        releaseTarget = (nil, nil)
     } else {
-        let tag = try await latestReleaseTagResolver(repository)
-        releaseTarget = normalizedReleaseTarget(tag)
+        do {
+            let tag = try await latestReleaseTagResolver(repository)
+            releaseTarget = normalizedReleaseTarget(tag)
+        } catch {
+            throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "Unable to resolve the latest GitHub release: \(error)", hint: "Check network access or pass --version vX.Y.Z explicitly.")
+        }
     }
     let plan = try makeCLIUpdatePlan(
-        currentVersion: TritonKitBuildInfo.cliVersion,
+        currentVersion: currentVersion,
         requestedVersion: releaseTarget.tag,
         currentExecutable: currentExecutable,
         architecture: architecture,
@@ -275,8 +288,13 @@ func runCLIUpdate(
         repository: repository,
         environment: ProcessInfo.processInfo.environment
     )
-    let canRunUntargetedHomebrewUpdate = plan.installSource == .homebrew && plan.releaseTag == nil
-    if plan.checkOnly || plan.dryRun || (!plan.updateAvailable && !canRunUntargetedHomebrewUpdate && !includeSkills) {
+    if plan.checkOnly || plan.dryRun {
+        return plan
+    }
+    if let targetVersion = plan.targetVersion, versionIsNewer(currentVersion, than: targetVersion) {
+        throw CLIUpdateErrorDetail(code: "downgrade_unsupported", message: "Target version \(targetVersion) is older than the active CLI \(currentVersion).", hint: "Choose the current or a newer release so CLI and skills stay aligned.")
+    }
+    if !plan.updateAvailable && !includeSkills {
         return plan
     }
     if includeSkills && skillsDirectory == nil {
@@ -290,41 +308,67 @@ func runCLIUpdate(
         )
     }
 
+    var cliUpdateAttempted = false
     var cliUpdated = false
-    if plan.updateAvailable || canRunUntargetedHomebrewUpdate {
-        switch plan.installSource {
-        case .homebrew:
-            try runProcess("brew", ["update"])
-            try runProcess("brew", ["upgrade", "neptunekit/tap/triton"])
-        case .manual, .unknown:
-            guard let tag = plan.releaseTag else {
-                throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "Unable to resolve release tag.", hint: "Pass --version vX.Y.Z explicitly.")
+    var installedVersion: String?
+    do {
+        if plan.updateAvailable {
+            switch plan.installSource {
+            case .homebrew:
+                _ = try hostCommandRunner("brew", ["update"])
+                let formulaJSON = try hostCommandRunner("brew", ["info", "--json=v2", "neptunekit/tap/triton"])
+                try verifyHomebrewUpdateVersion(formulaJSON: formulaJSON, expectedVersion: plan.targetVersion!)
+                cliUpdateAttempted = true
+                _ = try hostCommandRunner("brew", ["upgrade", "neptunekit/tap/triton"])
+            case .manual, .unknown:
+                guard let tag = plan.releaseTag else {
+                    throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "Unable to resolve release tag.", hint: "Pass --version vX.Y.Z explicitly.")
+                }
+                cliUpdateAttempted = true
+                try await installManualCLIUpdate(plan: plan, tag: tag, repository: repository)
+            case .sourceCheckout:
+                throw CLIUpdateErrorDetail(
+                    code: "source_checkout_update_unsupported",
+                    message: "The active triton binary appears to be built from a source checkout.",
+                    hint: "Use swift build --package-path CLI --scratch-path .build/cli -c release --product triton."
+                )
             }
-            try await installManualCLIUpdate(plan: plan, tag: tag, repository: repository)
-        case .sourceCheckout:
-            throw CLIUpdateErrorDetail(
-                code: "source_checkout_update_unsupported",
-                message: "The active triton binary appears to be built from a source checkout.",
-                hint: "Use swift build --package-path CLI --scratch-path .build/cli -c release --product triton."
-            )
         }
-        cliUpdated = true
-    }
 
-    var skillsUpdated = false
-    if includeSkills {
-        guard let tag = plan.releaseTag else {
-            throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "Unable to resolve release tag for skills bundle.", hint: "Pass --version vX.Y.Z explicitly.")
-        }
-        guard let skillsDirectory else {
-            throw CLIUpdateErrorDetail(code: "skills_dir_required", message: "--include-skills requires --skills-dir.", hint: "Pass the agent skills root directory.")
-        }
-        try await skillsBundleInstaller(repository, tag, skillsDirectory)
-        skillsUpdated = true
-    }
+        installedVersion = try verifyInstalledCLIUpdateVersion(plan: plan, hostCommandRunner: hostCommandRunner)
+        cliUpdated = plan.updateAvailable
 
-    return CLIUpdateResponse(
-        ok: true,
+        var skillsUpdated = false
+        if includeSkills {
+            guard let tag = plan.releaseTag else {
+                throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "Unable to resolve release tag for skills bundle.", hint: "Pass --version vX.Y.Z explicitly.")
+            }
+            guard let skillsDirectory else {
+                throw CLIUpdateErrorDetail(code: "skills_dir_required", message: "--include-skills requires --skills-dir.", hint: "Pass the agent skills root directory.")
+            }
+            try await skillsBundleInstaller(repository, tag, skillsDirectory)
+            skillsUpdated = true
+        }
+
+        return makeCLIUpdateExecutionResponse(plan: plan, updated: cliUpdated, skillsUpdated: skillsUpdated,
+            installedVersion: installedVersion, cliUpdateAttempted: cliUpdateAttempted, error: nil)
+    } catch {
+        let detail = (error as? CLIUpdateErrorDetail) ?? CLIUpdateErrorDetail(
+            code: "update_failed", message: String(describing: error), hint: "Inspect the installed CLI and skills versions before retrying."
+        )
+        throw CLIUpdateExecutionFailure(response: makeCLIUpdateExecutionResponse(
+            plan: plan, updated: cliUpdated, skillsUpdated: false, installedVersion: installedVersion,
+            cliUpdateAttempted: cliUpdateAttempted, error: detail
+        ))
+    }
+}
+
+private func makeCLIUpdateExecutionResponse(
+    plan: CLIUpdateResponse, updated: Bool, skillsUpdated: Bool, installedVersion: String?,
+    cliUpdateAttempted: Bool, error: CLIUpdateErrorDetail?
+) -> CLIUpdateResponse {
+    CLIUpdateResponse(
+        ok: error == nil,
         currentVersion: plan.currentVersion,
         latestVersion: plan.latestVersion,
         targetVersion: plan.targetVersion,
@@ -333,7 +377,7 @@ func runCLIUpdate(
         checkOnly: plan.checkOnly,
         dryRun: plan.dryRun,
         requiresConfirmation: false,
-        updated: cliUpdated,
+        updated: updated,
         skillsUpdated: skillsUpdated,
         installSource: plan.installSource,
         currentExecutable: plan.currentExecutable,
@@ -342,7 +386,9 @@ func runCLIUpdate(
         checksumManifestName: plan.checksumManifestName,
         actions: plan.actions,
         manualInstructions: plan.manualInstructions,
-        error: nil
+        error: error,
+        installedVersion: installedVersion,
+        cliUpdateAttempted: cliUpdateAttempted
     )
 }
 
@@ -422,7 +468,10 @@ private func installSkillsBundle(repository: String, tag: String, skillsDirector
         throw CLIUpdateErrorDetail(code: "checksum_mismatch", message: "Skills bundle checksum mismatch.", hint: nil)
     }
     let source = try extractValidatedPublicSkillArchive(archive: archive, into: temp)
-    try installValidatedPublicSkillDirectory(source: source, destinationRoot: URL(fileURLWithPath: skillsDirectory, isDirectory: true))
+    _ = try validatePublicSkillRelease(source: source, expectedTag: tag)
+    let destinationRoot = URL(fileURLWithPath: skillsDirectory, isDirectory: true)
+    try installValidatedPublicSkillDirectory(source: source, destinationRoot: destinationRoot)
+    _ = try validatePublicSkillRelease(source: destinationRoot.appendingPathComponent("TritonKit.skills", isDirectory: true), expectedTag: tag)
 
 }
 
@@ -477,19 +526,15 @@ func makeCLIUpdateProcessLaunch(executable: String, arguments: [String]) -> (exe
 
 private func captureProcess(_ executable: String, _ arguments: [String]) throws -> String {
     let launch = makeCLIUpdateProcessLaunch(executable: executable, arguments: arguments)
-    let process = Process()
-    process.executableURL = URL(fileURLWithPath: launch.executable)
-    process.arguments = launch.arguments
-    let stdout = Pipe()
-    let stderr = Pipe()
-    process.standardOutput = stdout
-    process.standardError = stderr
-    try process.run()
-    process.waitUntilExit()
-    let output = String(data: stdout.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-    if process.terminationStatus != 0 {
-        let error = String(data: stderr.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        throw CLIUpdateErrorDetail(code: "host_command_failed", message: error.isEmpty ? "Command failed: \(executable)" : error, hint: nil)
+    do {
+        let result = try runHostCommand(TKHostCommand(executable: launch.executable, arguments: launch.arguments, defaultTimeoutSeconds: 600))
+        guard !result.stdoutTruncated else {
+            throw CLIUpdateErrorDetail(code: "host_command_failed", message: "Command output exceeded the update parser limit: \(executable)", hint: nil)
+        }
+        return result.stdout
+    } catch let detail as CLIUpdateErrorDetail {
+        throw detail
+    } catch {
+        throw CLIUpdateErrorDetail(code: "host_command_failed", message: String(describing: error), hint: nil)
     }
-    return output
 }

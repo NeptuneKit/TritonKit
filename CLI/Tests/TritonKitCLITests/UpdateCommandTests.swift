@@ -62,13 +62,13 @@ struct UpdateCommandTests {
         )
 
         #expect(plan.installSource == .homebrew)
-        #expect(plan.actions.map(\.kind) == [.homebrewUpdate, .homebrewUpgrade])
+        #expect(plan.actions.map(\.kind) == [.homebrewUpdate, .verifyHomebrewVersion, .homebrewUpgrade, .verifyInstalledVersion])
         #expect(!plan.actions.contains(where: { $0.kind == .replaceBinary }))
         #expect(plan.requiresConfirmation == false)
     }
 
-    @Test("homebrew update without explicit version does not require GitHub latest")
-    func homebrewUpdateWithoutExplicitVersionDoesNotRequireGitHubLatest() async throws {
+    @Test("homebrew check without explicit version resolves GitHub latest")
+    func homebrewCheckWithoutExplicitVersionResolvesGitHubLatest() async throws {
         let root = try temporaryUpdateDirectory()
         let cellarBin = root
             .appendingPathComponent("Homebrew", isDirectory: true)
@@ -90,22 +90,16 @@ struct UpdateCommandTests {
             includeSkills: false,
             skillsDirectory: nil,
             repository: "NeptuneKit/TritonKit",
-            latestReleaseTagResolver: { _ in
-                throw CLIUpdateErrorDetail(
-                    code: "unexpected_latest_resolution",
-                    message: "Homebrew update should not require GitHub latest resolution.",
-                    hint: nil
-                )
-            }
+            latestReleaseTagResolver: { _ in "v999.0.0" }
         )
 
         #expect(plan.installSource == .homebrew)
-        #expect(plan.releaseTag == nil)
-        #expect(plan.latestVersion == nil)
-        #expect(plan.targetVersion == nil)
-        #expect(plan.updateAvailable == false)
+        #expect(plan.releaseTag == "v999.0.0")
+        #expect(plan.latestVersion == "999.0.0")
+        #expect(plan.targetVersion == "999.0.0")
+        #expect(plan.updateAvailable == true)
         #expect(plan.requiresConfirmation == false)
-        #expect(plan.actions.map(\.kind) == [.homebrewUpdate, .homebrewUpgrade])
+        #expect(plan.actions.map(\.kind) == [.homebrewUpdate, .verifyHomebrewVersion, .homebrewUpgrade, .verifyInstalledVersion])
     }
 
     @Test("include skills installs bundle even when cli is already target version")
@@ -135,6 +129,14 @@ struct UpdateCommandTests {
             repository: "NeptuneKit/TritonKit",
             skillsBundleInstaller: { repository, tag, skillsDirectory in
                 await installer.install(repository: repository, tag: tag, skillsDirectory: skillsDirectory)
+            },
+            hostCommandRunner: { executable, args in
+                if executable == "brew" && args == ["--prefix", "neptunekit/tap/triton"] {
+                    return root.path
+                }
+                #expect(executable == root.appendingPathComponent("bin/triton").path)
+                #expect(args == ["version", "--json"])
+                return "{\"ok\":true,\"version\":\"\(TritonKitBuildInfo.cliVersion)\"}"
             }
         )
 

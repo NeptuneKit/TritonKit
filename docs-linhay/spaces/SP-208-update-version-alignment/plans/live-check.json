@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "scope": "readonly live GitHub lookup using unstamped candidate CLI and Homebrew install-source override",
+  "candidateVersion": "0.1.0-dev",
+  "targetVersion": "0.2.29",
+  "releaseTag": "v0.2.29",
+  "installSource": "homebrew",
+  "updated": false,
+  "skillsUpdated": false,
+  "cliUpdateAttempted": false
+}

@@ -1,0 +1,48 @@
+{
+  "ok": true,
+  "scope": "candidate CLI process with isolated fake Homebrew; no real installation update",
+  "cases": [
+    {
+      "case": "check-is-readonly",
+      "exitCode": 0,
+      "ok": true,
+      "errorCode": null,
+      "hostCommandCount": 0
+    },
+    {
+      "case": "confirmation-before-mutation",
+      "exitCode": 1,
+      "ok": false,
+      "errorCode": "confirmation_required",
+      "hostCommandCount": 0
+    },
+    {
+      "case": "invalid-target",
+      "exitCode": 1,
+      "ok": false,
+      "errorCode": "release_resolution_failed",
+      "hostCommandCount": 0
+    },
+    {
+      "case": "stale-formula",
+      "exitCode": 1,
+      "ok": false,
+      "errorCode": "homebrew_version_mismatch",
+      "hostCommandCount": 2
+    },
+    {
+      "case": "wrong-installed-version",
+      "exitCode": 1,
+      "ok": false,
+      "errorCode": "installed_version_mismatch",
+      "hostCommandCount": 4
+    },
+    {
+      "case": "verified-upgrade",
+      "exitCode": 0,
+      "ok": true,
+      "errorCode": null,
+      "hostCommandCount": 4
+    }
+  ]
+}

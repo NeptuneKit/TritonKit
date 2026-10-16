@@ -33,6 +33,13 @@ triton update --version v0.1.24 --yes --json
 
 For Homebrew-managed installs, `triton update` must use Homebrew and must not overwrite the Cellar binary directly.
 
+Check results must include an explicit target version before interpreting `updateAvailable=false` as up to date. Older CLI releases can return false without querying any version source for Homebrew installs. If target/latest is missing, treat the result as unknown and resolve the latest GitHub Release separately. Do not infer a user's installed version from a maintainer machine.
+
+The corrected update flow resolves the release target even for Homebrew check/dry-run. Lookup failures are errors. Execution refreshes Homebrew metadata, requires the formula version to match the selected release, then checks the installed CLI's actual `version --json` output. A stale or different formula reports `homebrew_version_mismatch`; an unexpected installed binary reports `installed_version_mismatch`. Neither is successful version alignment, and skills installation stops. Homebrew does not support installing an arbitrary historical release through this command.
+
+CLI updates do not automatically update skills. When both are requested, use `--include-skills --skills-dir <agent-skills-root>` for each configured skills root. Success requires the actual CLI and the bundle's BUILD_INFO, skill entries, and individual skill metadata to match the selected release; `skills_version_mismatch` rejects inconsistent bundles before installation. Verify `installedVersion` on execution as well as `skillsUpdated` and bundle metadata. `currentVersion` describes the process before the update. A check/dry-run is not installation evidence. On failure, inspect `cliUpdateAttempted`, `updated`, and `installedVersion`: a CLI upgrade can already have completed before a later skills failure. Preserve local files and resolve that failure without assuming nothing changed.
+
+
 Prefer Homebrew:
 
 ```sh
