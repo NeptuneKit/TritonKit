@@ -39,4 +39,4 @@ CLIIOSRunnerRuntime/Wire/Transport 与随包 ios-runner 鉴权协议、对应 Ru
 
 ## SP-206 联合验收
 
-本切片已冻结交接，主控在联合候选上重跑适用完整门禁通过，待串行本地提交与合并；原独立交付记录保留其历史范围。最终整合状态和证据见 [SP-206](../SP-206-ictrl-security-integration/README.md)，未发布或设备运行接替。
+本切片已冻结交接，主控在联合候选上重跑适用完整门禁通过，实现提交6bfeba80，已由0a246d00合入本地main；原独立交付记录保留其历史范围。最终整合状态和证据见 [SP-206](../SP-206-ictrl-security-integration/README.md)，未发布或设备运行接替。

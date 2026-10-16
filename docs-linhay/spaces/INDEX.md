@@ -238,10 +238,10 @@
 
 | `SP-202-ictrl-security-assessment` | [`SP-202-ictrl-security-assessment`](./SP-202-ictrl-security-assessment/README.md) | 评估完成 | 对照当前源码优先收敛 Bonjour 广播/自动连接；Runner、配置与日志区分已有保护和剩余边界，未实施 |
 
-| `SP-203-ictrl-discovery-hardening` | [`SP-203-ictrl-discovery-hardening`](./SP-203-ictrl-discovery-hardening/README.md) | 已验证·待本地合并 | 发现与连接安全独立会话开发与验证；SP-206联合验证通过，待本地合并；不推送发布 |
+| `SP-203-ictrl-discovery-hardening` | [`SP-203-ictrl-discovery-hardening`](./SP-203-ictrl-discovery-hardening/README.md) | 已合入本地main | 发现与连接安全独立会话开发与验证；SP-206已合入本地main，已本地合并；不推送发布 |
 
-| `SP-204-ictrl-log-privacy` | [`SP-204-ictrl-log-privacy`](./SP-204-ictrl-log-privacy/README.md) | 已验证·待本地合并 | 日志脱敏与降噪独立会话开发与验证；SP-206联合验证通过，待本地合并；不推送发布 |
+| `SP-204-ictrl-log-privacy` | [`SP-204-ictrl-log-privacy`](./SP-204-ictrl-log-privacy/README.md) | 已合入本地main | 日志脱敏与降噪独立会话开发与验证；SP-206已合入本地main，已本地合并；不推送发布 |
 
-| `SP-205-ios-runner-auth-hardening` | [`SP-205-ios-runner-auth-hardening`](./SP-205-ios-runner-auth-hardening/README.md) | 已验证·待本地合并 | Runner 鉴权强化独立会话开发与验证；SP-206联合验证通过，待本地合并；不推送发布 |
+| `SP-205-ios-runner-auth-hardening` | [`SP-205-ios-runner-auth-hardening`](./SP-205-ios-runner-auth-hardening/README.md) | 已合入本地main | Runner 鉴权强化独立会话开发与验证；SP-206已合入本地main，已本地合并；不推送发布 |
 
-| `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | 联合验证通过 | 接管 SP-203～205 候选复核、联合验证与本地 main 合并；不推送发布 |
+| `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | 已合入本地main | 接管 SP-203～205 候选复核、联合验证与本地 main 合并；不推送发布 |

@@ -48,4 +48,4 @@ iCTRL 以长期运行的 XCUITest Runner 提供 agent 可发现的 HTTP JSON-RPC
 
 ## 2026-10-16：本地采用后的复核
 
-SP-202 的静态建议已由 SP-203/204/205 实现，联合候选由 [SP-206](../spaces/SP-206-ictrl-security-integration/README.md) 审查验证。默认广播/自动发现策略、响应日志元数据白名单、Runner会话持密证明与加密通道分别解决其明确边界；不能继续把这些作为“尚未实施”待办，也不能将它们升级为embedded服务认证、物理设备身份或防透明转发。证据区分冻结候选、真实socket、UIKit spy、SDK编译与实际设备验收；上游每日监控仍为只读。
+SP-202 的静态建议已由 SP-203/204/205 实现，联合候选由 [SP-206](../spaces/SP-206-ictrl-security-integration/README.md) 审查验证。默认广播/自动发现策略、响应日志元数据白名单、Runner会话持密证明与加密通道分别解决其明确边界；不能继续把这些作为“尚未实施”待办，也不能将它们升级为embedded服务认证、物理设备身份或防透明转发。证据区分冻结候选、真实socket、UIKit spy、SDK编译与实际设备验收；SP-206未改动自动任务；后续监控授权由其独立会话的最新记录决定。
