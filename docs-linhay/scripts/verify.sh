@@ -29,7 +29,7 @@ run_step() {
 }
 
 swift_tests() {
-  env TRITON_HOST=127.0.0.1 TRITON_PORT=19421 swift test --disable-sandbox
+  env TRITON_HOST=127.0.0.1 TRITON_PORT=19421 swift test --no-parallel --disable-sandbox
 }
 
 ensure_cocoapods() {

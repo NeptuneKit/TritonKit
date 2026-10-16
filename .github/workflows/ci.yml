@@ -82,7 +82,7 @@ jobs:
         run: docs-linhay/scripts/verify-spm-dependency-boundary.sh
 
       - name: Swift tests
-        run: swift test
+        run: swift test --no-parallel
 
       - name: CLI release build
         run: swift build --package-path CLI --scratch-path .build/cli -c release --product triton

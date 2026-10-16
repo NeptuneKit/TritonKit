@@ -13,7 +13,7 @@ struct TKRuntimeUIHealthTests {
             await latch.wait()
             return message
         } }
-        await latch.waitUntilEntered()
+        try await latch.waitUntilEntered()
         let response = try #require(await request.value)
         let data = try #require(response.payload)
         let error = try JSONDecoder().decode(TKCLIErrorResponse.self, from: data)
@@ -44,7 +44,7 @@ struct TKRuntimeUIHealthTests {
             return TKMessage(id: message.id, type: message.type)
         })
         let request = Task { await handler.tritonKit(TritonKit.shared, didReceiveMessage: TKMessage(id: 17, type: .hierarchy)) }
-        await latch.waitUntilEntered()
+        try await latch.waitUntilEntered()
 
         let ping = try #require(await handler.tritonKit(TritonKit.shared, didReceiveMessage: TKMessage(id: 18, type: .ping)))
         let pingData = try #require(ping.payload)
@@ -74,7 +74,7 @@ struct TKRuntimeUIHealthTests {
         })
         let message = TKMessage(id: 71, type: .input, payload: try JSONEncoder().encode(TKInputRequest.tap(x: 1, y: 2)))
         let first = Task { await handler.tritonKit(TritonKit.shared, didReceiveMessage: message) }
-        await latch.waitUntilEntered()
+        try await latch.waitUntilEntered()
         timeout.fire()
         let result = try #require(await first.value)
         let resultData = try #require(result.payload)
@@ -109,7 +109,7 @@ struct TKRuntimeUIHealthTests {
                 await latch.wait()
                 return TKMessage(id: message.id, type: message.type)
             } }
-            await latch.waitUntilEntered()
+            try await latch.waitUntilEntered()
             timeout.fire()
             _ = await operation.value
             await latch.release()
@@ -139,7 +139,7 @@ struct TKRuntimeUIHealthTests {
             await latch.wait()
             return message
         } }
-        await latch.waitUntilEntered()
+        try await latch.waitUntilEntered()
         previousTimer()
         previousTimer()
         #expect(controller.snapshot().inflight?.requestID == 2)
@@ -199,8 +199,15 @@ private actor UIHealthLatch {
         entryCount += 1
         await withCheckedContinuation { continuation = $0 }
     }
-    func waitUntilEntered() async {
-        while entryCount == 0 { await Task.yield() }
+    func waitUntilEntered() async throws {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+        while entryCount == 0 {
+            guard ContinuousClock.now < deadline else {
+                struct ProviderDidNotEnter: Error {}
+                throw ProviderDidNotEnter()
+            }
+            try await Task.sleep(for: .milliseconds(1))
+        }
     }
     func release() { continuation?.resume(); continuation = nil }
 }

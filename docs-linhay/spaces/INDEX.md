@@ -234,20 +234,20 @@
 
 | `SP-200-mobile-device-parity` | [`SP-200-mobile-device-parity`](./SP-200-mobile-device-parity/README.md) | 已合入本地main | 10acfae6已进入main，worktree/分支已清理；排除云预订/MCP |
 
-| `SP-201-sdk-floating-picker` | [`SP-201-sdk-floating-picker`](./SP-201-sdk-floating-picker/README.md) | 已合入本地main | 3f1b500a已整合；UIKit/真实手势与CLI闭环通过，worktree/分支已清理，未发布 |
+| `SP-201-sdk-floating-picker` | [`SP-201-sdk-floating-picker`](./SP-201-sdk-floating-picker/README.md) | v0.2.30发布准备 | 3f1b500a已整合；UIKit/真实手势与CLI闭环通过，worktree/分支已清理，已授权发布，待验收 |
 
 | `SP-202-ictrl-security-assessment` | [`SP-202-ictrl-security-assessment`](./SP-202-ictrl-security-assessment/README.md) | 评估完成 | 静态评估归档；采用项由SP-203～205实施并经SP-206本地整合 |
 
-| `SP-203-ictrl-discovery-hardening` | [`SP-203-ictrl-discovery-hardening`](./SP-203-ictrl-discovery-hardening/README.md) | 已合入本地main | 默认发现/广播显式开启；联合验证通过；未发布或真实App接入验收；worktree/分支已清理 |
+| `SP-203-ictrl-discovery-hardening` | [`SP-203-ictrl-discovery-hardening`](./SP-203-ictrl-discovery-hardening/README.md) | v0.2.30发布准备 | 默认发现/广播显式开启；联合验证通过；已授权发布，待验收或真实App接入验收；worktree/分支已清理 |
 
-| `SP-204-ictrl-log-privacy` | [`SP-204-ictrl-log-privacy`](./SP-204-ictrl-log-privacy/README.md) | 已合入本地main | 响应日志元数据白名单、限长和计数；业务payload不变；未发布；worktree/分支已清理 |
+| `SP-204-ictrl-log-privacy` | [`SP-204-ictrl-log-privacy`](./SP-204-ictrl-log-privacy/README.md) | v0.2.30发布准备 | 响应日志元数据白名单、限长和计数；业务payload不变；已授权发布，待验收；worktree/分支已清理 |
 
-| `SP-205-ios-runner-auth-hardening` | [`SP-205-ios-runner-auth-hardening`](./SP-205-ios-runner-auth-hardening/README.md) | 已合入本地main | 会话加密通道与实际socket/路由鉴权负例通过；设备运行未验收；worktree/分支已清理 |
+| `SP-205-ios-runner-auth-hardening` | [`SP-205-ios-runner-auth-hardening`](./SP-205-ios-runner-auth-hardening/README.md) | v0.2.30发布准备 | 会话加密通道与实际socket/路由鉴权负例通过；设备运行未验收；worktree/分支已清理 |
 
-| `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | 已合入本地main | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
+| `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30发布准备 | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
 
 | `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 最小登记 | 完整流程资料作为主工作区并行WIP保留；本轮仅确保编号连续 |
 
-| `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | 已合入本地main | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，未发布 |
+| `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30发布准备 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，已授权发布，待验收 |
 
-| `SP-209-picker-runtime-toggle` | [`SP-209-picker-runtime-toggle`](./SP-209-picker-runtime-toggle/README.md) | 已实现·已验证 | 系统半屏Modal五路由、选择器二级配置与独立显隐；已验证待试用/集成 |
+| `SP-209-picker-runtime-toggle` | [`SP-209-picker-runtime-toggle`](./SP-209-picker-runtime-toggle/README.md) | v0.2.30发布准备 | 系统半屏Modal五路由、选择器二级配置与独立显隐；0e296783已合入main，待发布验收 |

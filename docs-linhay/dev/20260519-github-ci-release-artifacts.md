@@ -166,3 +166,7 @@ brew upgrade triton
 - `docs-linhay/scripts/gh-run-summary.sh --watch <run-id>`：低噪音观察 GitHub Actions run，只输出 job 状态和 URL；失败后再进入详细日志。
 - `docs-linhay/scripts/gh-issue-comment-file.sh <issue> <markdown-file>`：通过 `gh issue comment --body-file` 发送 Markdown，避免正文里的反引号命令被 shell 执行。
 - `docs-linhay/scripts/check-docs.sh`：固定 TritonKit 的 文档门禁入口。当前 文档记录 CLI 不支持 `update/embed` 按 collection 过滤，所以脚本仍会执行全量 `docs-linhay/scripts/check-docs.sh`。
+
+## v0.2.30 联合发布
+
+用户授权发布main全部内容，包含SP-206安全、SP-201选择器、SP-208版本核验与SP-209原生SDK设置；[发布验收](../spaces/SP-208-update-version-alignment/plans/20261016-release.md)记录全部门禁和资产。Bonjour默认关闭需显式开启；Runner安全协议升级要求CLI/随包Runner同版并重新prepare/start，旧HTTP Runner不降级明文。

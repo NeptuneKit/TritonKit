@@ -168,3 +168,5 @@ SwiftPM / CLI 修复沉淀：
 - Space 新增、状态变化、worktree 集成或收口时，`docs-linhay/spaces/INDEX.md` 与 `docs-linhay/spaces/README.md` 已同步。
 - 若产生可复用模式，已更新对应 skill 或说明暂不沉淀。
 - 若任务要求“从头开始”，需同步检查 docs、skills 和 AGENTS 是否仍残留旧方向规则。
+
+- 根包测试跨suite共享TritonKit.shared配置，suite内.serialized不足以隔离；本地/CI根包使用swift test --no-parallel。等待注入provider进入必须有界失败，不能无限Task.yield把能力门禁拒绝误成永久等待。发布Web测试先构建同候选CLI，再显式绑定TRITONKIT_TRITON_BIN。

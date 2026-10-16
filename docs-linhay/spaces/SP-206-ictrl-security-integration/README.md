@@ -3,7 +3,7 @@
 ## 授权与状态
 
 - 用户要求：2026-10-16“添加主控会话，负责验证，合并”。
-- 状态：主控会话已创建并启动，集成结果待后续验收。
+- 状态：已完成联合验收并合入main；2026-10-16用户追加授权main全量推送发布，随v0.2.30验收。
 - 范围：接管 SP-203 / SP-204 / SP-205，复核实际候选、整合、修复集成冲突、联合验证，合并到本地 main。授权完成必要的本地候选提交和合并；不自动 push/tag/release。
 - 影响层：CLI / HTTP / embedded SDK / 随包 Runner；保持 Web/Wails 只读边界、Debug/Release 隔离和上游监控只读权限。
 - 评估依据：[SP-202](../SP-202-ictrl-security-assessment/plans/20261016-assessment.md)。
