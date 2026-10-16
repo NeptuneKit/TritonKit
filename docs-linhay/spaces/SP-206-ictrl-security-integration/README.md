@@ -1,5 +1,7 @@
 # SP-206 — iCTRL 安全改动主控验证与合并
 
+2026-10-16发布更新：已随[v0.2.30](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.30)交付；双架构、Homebrew与skills验收见[发布记录](../SP-208-update-version-alignment/plans/20261016-release.md)。设备运行与用户环境验收沿用各自边界，以下早期未发布描述为历史阶段。
+
 ## 授权与状态
 
 - 用户要求：2026-10-16“添加主控会话，负责验证，合并”。

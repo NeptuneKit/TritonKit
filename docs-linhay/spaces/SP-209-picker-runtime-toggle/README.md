@@ -2,7 +2,7 @@
 
 ## 状态与范围
 
-2026-10-16 SDK hub 已改为系统半屏 Modal，最终 UIKit/真实交互与门禁通过。自绘卡片已退出当前方案，其通过记录只保留为历史。基线 main@35356c9c；独立 worktree `../TritonKit-worktrees/SP-209-picker-runtime-toggle`，分支 `feat/SP-209-picker-runtime-toggle`。延续 SP-201，影响 embedded SDK 自有浮层、运行时显隐 API 与示例测试；无新增 CLI/HTTP 写入口，宿主调试菜单不属于 SDK 范围。整理提交已由 `0e296783` 合入 main；用户已授权随main全量发布v0.2.30。
+2026-10-16 SDK hub 已改为系统半屏 Modal，最终 UIKit/真实交互与门禁通过。自绘卡片已退出当前方案，其通过记录只保留为历史。基线 main@35356c9c；独立 worktree `../TritonKit-worktrees/SP-209-picker-runtime-toggle`，分支 `feat/SP-209-picker-runtime-toggle`。延续 SP-201，影响 embedded SDK 自有浮层、运行时显隐 API 与示例测试；无新增 CLI/HTTP 写入口，宿主调试菜单不属于 SDK 范围。整理提交已由 `0e296783` 合入 main；已随main全量发布v0.2.30，发布与安装证据见[SP-208发布记录](../SP-208-update-version-alignment/plans/20261016-release.md)。
 
 ## 当前设计与功能边界
 

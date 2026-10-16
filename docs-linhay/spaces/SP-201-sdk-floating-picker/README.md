@@ -2,8 +2,8 @@
 
 ## 当前状态（2026-10-16）
 
-- iOS UIKit 首版与用户试用后的交互优化已实现、验证并安装专用模拟器。功能提交 `2711565f` 已按用户授权整合到本地 `main`；保留独立worktree和主工作区其他任务WIP，待用户体验验收，未推送发布。
-- 工作区：`../TritonKit-worktrees/SP-201-sdk-floating-picker`，实现基线 `dd613a99`。影响 embedded SDK、shared DTO、CLI 与现有本地 HTTP/runtime 转发；Web/Wails 无新写控制面。
+- iOS UIKit 首版与用户试用后的交互优化已实现、验证并安装专用模拟器。功能提交 `2711565f` 已按用户授权整合到本地 `main`；已随v0.2.30推送发布；原独立worktree已清理，用户体验验收边界保留。
+- 历史工作区（已清理）：`../TritonKit-worktrees/SP-201-sdk-floating-picker`，实现基线 `dd613a99`。影响 embedded SDK、shared DTO、CLI 与现有本地 HTTP/runtime 转发；Web/Wails 无新写控制面。
 - 用户需求：内置 SDK 悬浮圆点拖选并标记控件，供 agent 操作。先调研与交互设计，随后用户授权实现、测试、安装，并逐轮修订手势、实时反馈、方向罗盘与遮挡体验。
 - 首版仅支持 Debug UIKit 可映射节点。SwiftUI 虚拟节点、WebView DOM、Android/Harmony provider 不在本次范围。
 

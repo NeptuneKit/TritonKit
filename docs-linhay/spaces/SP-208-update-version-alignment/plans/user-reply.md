@@ -1,9 +1,23 @@
 # 用户回复草稿（未发送）
 
-已确认是 Triton 更新检查的缺陷：旧版在 Homebrew 安装场景下未查询最新版，也可能返回“无更新”。CLI 和 skills 又是独立更新，因此你反馈的版本差异有效。
+已确认是我们更新检查的缺陷：旧版Homebrew检查未查询最新版，也可能误报“无更新”；CLI与skills又是独立更新，导致版本差异。
 
-我们正在修复检查误报、升级后的实际版本核验，以及 CLI/skills 同版本校验。修复版发布并完成安装验证后，会提供准确版本与升级步骤；目前不会把维护机已更新作为你的环境已修复的依据。
+修复已发布到[v0.2.30](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.30)，已验证双架构CLI、Homebrew与skills版本一致。请先更新旧CLI：
 
-旧版临时处理：先核对 GitHub 最新 Release 与远端 Homebrew formula。通过 `brew update`、`brew upgrade neptunekit/tap/triton` 更新 CLI，再执行 `triton version --json` 核对实际版本。只有 CLI 版本与目标 release 一致时，再按更新 skill 的 guarded installer 流程更新 skills；保留本地修改和备份，逐个核对已安装 bundle 的 BUILD_INFO。不能只凭旧 `updateAvailable=false` 或 `updated=true` 判断完成。
+```sh
+brew update
+brew upgrade neptunekit/tap/triton
+triton version --json
+triton update --check --json
+```
 
-发布后发送前需填入已验证版本、Release 链接及确认过的用户通知渠道；当前草稿不宣称已发布。
+确认CLI为0.2.30或更高的目标发布版后，按实际agent安装目录逐一更新skills：
+
+```sh
+triton update --include-skills --skills-dir ~/.codex/skills --yes --json
+triton update --include-skills --skills-dir ~/.agents/skills --yes --json
+```
+
+只执行实际使用的目录。新版会检查CLI实际安装版本与skills元数据；如本地skills有修改，保留冲突内容按提示处理。若仍有差异，请提供version/check的JSON结果，我们继续定位。维护机验证不代表你的机器已完成升级。
+
+发送渠道尚未指定，本草稿未外发。

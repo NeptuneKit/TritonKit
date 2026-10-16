@@ -1,5 +1,7 @@
 # SP-204 — 日志脱敏与降噪
 
+2026-10-16发布更新：已随[v0.2.30](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.30)交付；双架构、Homebrew与skills验收见[发布记录](../SP-208-update-version-alignment/plans/20261016-release.md)。设备运行与用户环境验收沿用各自边界，以下早期未发布描述为历史阶段。
+
 ## 状态与授权
 
 - 状态：已由 SP-206 验证并合入本地 main（0a246d00）；未发布或设备运行接替。

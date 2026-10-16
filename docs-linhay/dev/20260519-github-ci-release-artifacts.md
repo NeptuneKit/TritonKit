@@ -170,3 +170,7 @@ brew upgrade triton
 ## v0.2.30 联合发布
 
 用户授权发布main全部内容，包含SP-206安全、SP-201选择器、SP-208版本核验与SP-209原生SDK设置；[发布验收](../spaces/SP-208-update-version-alignment/plans/20261016-release.md)记录全部门禁和资产。Bonjour默认关闭需显式开启；Runner安全协议升级要求CLI/随包Runner同版并重新prepare/start，旧HTTP Runner不降级明文。
+
+## v0.2.30 发布完成
+
+main@ebfbb405全量推送，main CI38922511471/tag CI38924507762/Release38924507771全部成功；双架构、checksum、tap、Homebrew升级与test、两处skills同版receipt通过，packaged Web只读HTTP与真实浏览器通过。原最低iOS13标准pod lint在CI通过，未推送trunk。详见[发布验收](../spaces/SP-208-update-version-alignment/plans/20261016-release.md)。用户原机尚未代验，通知草稿未外发。

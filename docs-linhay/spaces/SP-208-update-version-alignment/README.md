@@ -14,7 +14,7 @@
 
 ## 状态
 
-实现与验证完成；候选提交 `d61499ed` 已通过 `6c120ccd` 合入本地 main，主仓本地总门禁与完整CLI1474+59通过，worktree与本地分支已清理。2026-10-16用户已授权main全量推送发布，v0.2.30准备中；用户回复未发送。
+实现与验证完成；候选提交 `d61499ed` 已通过 `6c120ccd` 合入本地 main，主仓本地总门禁与完整CLI1474+59通过，worktree与本地分支已清理。2026-10-16用户已授权main全量推送发布，v0.2.30已发布，双架构、tap、安装CLI与两处skills均已验证同版；用户回复未发送。
 
 - [验收与阶段边界](plans/validation.md)：完整CLI1466+59、focused26、本地总门禁通过；主工作区回写后focused27与docs门禁通过；真实进程6场景及只读网络check通过，独立审查无剩余阻断。
 - [TDD证据](plans/runtime-tests.md)、[候选摘要](plans/candidate-files.json)、[进程验收](plans/process-results.json)、[用户回复草稿](plans/user-reply.md)。
