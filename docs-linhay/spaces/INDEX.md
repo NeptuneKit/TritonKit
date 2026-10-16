@@ -236,12 +236,12 @@
 
 | `SP-201-sdk-floating-picker` | [`SP-201-sdk-floating-picker`](./SP-201-sdk-floating-picker/README.md) | 已登记·待集成 | 仅登记编号与独立worktree；实现及验收不属于SP-206提交 |
 
-| `SP-202-ictrl-security-assessment` | [`SP-202-ictrl-security-assessment`](./SP-202-ictrl-security-assessment/README.md) | 评估完成 | 对照当前源码优先收敛 Bonjour 广播/自动连接；Runner、配置与日志区分已有保护和剩余边界，未实施 |
+| `SP-202-ictrl-security-assessment` | [`SP-202-ictrl-security-assessment`](./SP-202-ictrl-security-assessment/README.md) | 评估完成 | 静态评估归档；采用项由SP-203～205实施并经SP-206本地整合 |
 
-| `SP-203-ictrl-discovery-hardening` | [`SP-203-ictrl-discovery-hardening`](./SP-203-ictrl-discovery-hardening/README.md) | 已合入本地main | 发现与连接安全独立会话开发与验证；SP-206已合入本地main，已本地合并；不推送发布 |
+| `SP-203-ictrl-discovery-hardening` | [`SP-203-ictrl-discovery-hardening`](./SP-203-ictrl-discovery-hardening/README.md) | 已合入本地main | 默认发现/广播显式开启；联合验证通过；未发布或真实App接入验收 |
 
-| `SP-204-ictrl-log-privacy` | [`SP-204-ictrl-log-privacy`](./SP-204-ictrl-log-privacy/README.md) | 已合入本地main | 日志脱敏与降噪独立会话开发与验证；SP-206已合入本地main，已本地合并；不推送发布 |
+| `SP-204-ictrl-log-privacy` | [`SP-204-ictrl-log-privacy`](./SP-204-ictrl-log-privacy/README.md) | 已合入本地main | 响应日志元数据白名单、限长和计数；业务payload不变；未发布 |
 
-| `SP-205-ios-runner-auth-hardening` | [`SP-205-ios-runner-auth-hardening`](./SP-205-ios-runner-auth-hardening/README.md) | 已合入本地main | Runner 鉴权强化独立会话开发与验证；SP-206已合入本地main，已本地合并；不推送发布 |
+| `SP-205-ios-runner-auth-hardening` | [`SP-205-ios-runner-auth-hardening`](./SP-205-ios-runner-auth-hardening/README.md) | 已合入本地main | 会话加密通道与实际socket/路由鉴权负例通过；设备运行未验收 |
 
 | `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | 已合入本地main | 接管 SP-203～205 候选复核、联合验证与本地 main 合并；不推送发布 |
