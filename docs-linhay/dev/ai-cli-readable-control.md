@@ -592,3 +592,9 @@ DerivedData safety (#214): 默认 `xcode derived-data inspect` 和 `cleanup` 检
 新增 `highlight capabilities/apply/status/clear`，CLI与本地HTTP `/request` 同一回执；embedded direct HTTP 采用 `/v2/runtime/highlight/{apply,status,clear,capabilities}`。新能力必须按目标provider探测，全局连接状态不代表可写，默认恢复入口不被可选highlight抢占。普通查看/操作/截图不新增SDK要求，首个可选provider是Debug UIKit。
 
 spec支持OID或唯一identifier以及withinOID，保存borderColor/borderWidth原类型值；会话不依赖CLI连接。operationID只对已接纳/可能写入操作去重，预检零写拒绝不登记。dispatch后的不确定错误保留operation/runtime恢复键。clear保留业务新值，冲突返回非零及needs_attention/possible；status.ok只代表查询。详细流程和验收见[SP-197](../spaces/SP-197-view-annotation/README.md)。截图组合与其他端尚未开放。
+
+## 更新版本对齐（SP-208）
+
+`triton update --check --json` 和 `--dry-run` 对 Homebrew 也解析 GitHub latest（或显式目标），不刷新/升级brew；查询失败返回失败，不以无target的false表示已最新。执行先确认，再刷新tap、核对formula版本、升级并用brew实际prefix下的CLI读取版本；只有实际版本等于目标才可安装同版本skills。`currentVersion`保留更新前进程版本，`installedVersion`是执行后的核验值；检查/预览不提供安装证明。执行失败仍保留`cliUpdateAttempted`、已核验的`installedVersion`和`updated`，不能将CLI已更新但skills失败重置成全部未更新。
+
+formula不匹配返回`homebrew_version_mismatch`，安装版不匹配返回`installed_version_mismatch`，降级返回`downgrade_unsupported`，skills元数据缺失或版本不匹配返回`skills_version_mismatch`。网络查询失败保留`release_resolution_failed`。均为单一失败JSON并非零退出。skills默认独立更新，仅显式`--include-skills --skills-dir`启用。发布前不将源码实现描述为用户已有安装能力。

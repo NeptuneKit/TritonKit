@@ -55,6 +55,9 @@ struct Update: AsyncParsableCommand {
                 repository: repository
             )
             try printCLIUpdateResponse(response, format: outputFormat)
+        } catch let failure as CLIUpdateExecutionFailure {
+            try printCLIUpdateResponse(failure.response, format: outputFormat)
+            throw ExitCode.failure
         } catch let detail as CLIUpdateErrorDetail {
             try printCLIUpdateError(detail, format: outputFormat)
             throw ExitCode.failure
@@ -89,9 +92,13 @@ private func printCLIUpdateResponse(_ response: CLIUpdateResponse, format: Clien
         if let targetVersion = response.targetVersion {
             print("targetVersion: \(targetVersion)")
         }
+        if let installedVersion = response.installedVersion {
+            print("installedVersion: \(installedVersion)")
+        }
         print("installSource: \(response.installSource.rawValue)")
         print("updateAvailable: \(response.updateAvailable)")
         print("updated: \(response.updated)")
+        print("cliUpdateAttempted: \(response.cliUpdateAttempted)")
         if response.requiresConfirmation {
             print("requiresConfirmation: true")
             print("rerun with --yes to update")
@@ -105,6 +112,7 @@ private func printCLIUpdateResponse(_ response: CLIUpdateResponse, format: Clien
         for instruction in response.manualInstructions {
             print("note: \(instruction)")
         }
+        if let error = response.error { try printCLIUpdateError(error, format: .text) }
     }
 }
 
@@ -134,7 +142,7 @@ private func printCLIUpdateError(_ detail: CLIUpdateErrorDetail, format: ClientO
         )
         print(try encodeJSON(response))
     case .text:
-        FileHandle.standardError.write(Data("Error: \(detail.message)\n".utf8))
+        FileHandle.standardError.write(Data("Error [\(detail.code)]: \(detail.message)\n".utf8))
         if let hint = detail.hint {
             FileHandle.standardError.write(Data("Hint: \(hint)\n".utf8))
         }

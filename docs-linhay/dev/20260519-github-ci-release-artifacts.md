@@ -105,6 +105,14 @@ GitHub Release：<https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.18>�
 
 ## Homebrew
 
+### 更新检查和版本验收（SP-208）
+
+2026-10-16用户截图暴露Homebrew默认check跳过查询、nil target折成false的问题，历史v0.2.19与v0.2.29均存在；原测试还固定了此行为。截图tap 0.2.24来自本地缓存还是当时远端状态仍未知，维护机的0.2.29不能证明用户环境已修复。
+
+修复候选见[SP-208](../spaces/SP-208-update-version-alignment/README.md)：check/dry-run必须解析目标或明确失败；执行更新刷新tap后先验证formula，再读取实际安装CLI版本。CLI与目标不符时停止skills更新；下载bundle在变更前核验BUILD_INFO、四个skill条目及frontmatter版本，安装后再次验证。`updated`只在实际CLI版本核验通过后成立，`currentVersion`仍表示更新前进程，`installedVersion`表示核验值。
+
+发布验收必须分别记录远端Release、远端formula、本地formula、实际CLI及每个skills根目录，不能以维护机、命令exit 0、checksum或plan单独证明用户版本一致。源码修复、公开发布、安装接替与用户确认分开记录。
+
 新增 Homebrew 二进制安装链路：
 
 1. `.github/homebrew/triton.rb.template` 定义 `triton` formula 模板。

@@ -1,0 +1,16 @@
+{
+  "base": "3000be924724034ceeea9722805e802c60bbb4e4",
+  "files": {
+    "CLI/Tests/TritonKitCLITests/PublicSkillReleaseValidationTests.swift": "b8015c19e9ca2731bcff60d03ae18409ca0db9e294c6c9963c306a7c1ef492b9",
+    "CLI/Tests/TritonKitCLITests/UpdateCommandTests.swift": "133b8415d948b088e14b3776748a45839152c3fc842d54413fbd4a737d5967b5",
+    "CLI/Tests/TritonKitCLITests/UpdateVersionAlignmentTests.swift": "8b75fdb687b8d67e1b12e7925aec9bc4438964f62dcf19efebbf2cd02b87f1b6",
+    "Sources/TritonKitCLI/CLIPublicSkillReleaseValidation.swift": "67a6138b4f5f2c9e4a3c9c63fb90ecc9481558d24e97ac4e01d673237391a200",
+    "Sources/TritonKitCLI/CLISchemaOutputContracts.swift": "4179c0bfee47cb001c9fb1beff278134474356b21d031607da82f7aaf4b4a514",
+    "Sources/TritonKitCLI/CLISchemaUpdateCommands.swift": "4cf56471402b29ba5ff90f3e763e75fa76c843c4f0731096764d9a5c0d6334be",
+    "Sources/TritonKitCLI/CLIUpdateCommands.swift": "a58d8c0c90326f6df4a6fb4f6c96fdb1d2b2329837d5db43ff6d2011c2ba3acb",
+    "Sources/TritonKitCLI/CLIUpdateModels.swift": "b8e29b0be4d333948c4dc9a206ce6cb6cd1bd53be2f804f65caf1172dfecd4f8",
+    "Sources/TritonKitCLI/CLIUpdateRuntime.swift": "a8e21410fb93f652826b02c00fb923fd20960df064abbe0569dfaefe202447d1",
+    "Sources/TritonKitCLI/CLIUpdateVerification.swift": "82db53f687c9f279f26a0eda0ffdad110b237b5cb87ee52d5c56ad2ab4304cc9",
+    "TritonKit.skills/tritonkit-update/SKILL.md": "a2325110577a400b8d21c80927741952f8e2639350dac6d89b03c03716a9e825"
+  }
+}

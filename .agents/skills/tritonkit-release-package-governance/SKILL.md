@@ -68,6 +68,11 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 - `publish-x86-release-asset` must checkout the repository before calling `gh release download`; the GitHub CLI requires git repository context for release lookup.
 - Public skill packaging must fail before tarball creation when a Markdown command uses a root absent from the checked CLI command snapshot. Keep `act` and `debug` subcommands strict so retired action/inspection roots cannot silently re-enter release documentation.
 
+## Update Version Evidence
+
+- Homebrew update checks in older releases can return `updateAvailable=false` without a target/latest version; treat that as unqueried, not up to date. Compare remote Release, remote formula, local formula, actual CLI, and each installed skills BUILD_INFO separately. A maintainer machine is not evidence for a reporting user's installation.
+- Update regression must cover latest lookup failure, stale/different formula, brew success with wrong installed binary, and mismatched skill metadata. Only actual installed version verification supports update success; stop before skills installation when CLI and selected release differ.
+
 ## Reporting
 
 State which surfaces were aligned, which validations passed, and whether CocoaPods was only linted or also pushed to a pod repo/trunk. If CocoaPods publishing is not performed, say that explicitly.

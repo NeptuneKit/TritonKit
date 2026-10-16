@@ -11,6 +11,8 @@ enum CLIUpdateInstallSource: String, Codable, Equatable, ExpressibleByArgument {
 enum CLIUpdateActionKind: String, Codable, Equatable {
     case resolveRelease
     case homebrewUpdate
+    case verifyHomebrewVersion
+    case verifyInstalledVersion
     case homebrewUpgrade
     case downloadCLIAsset
     case downloadChecksumManifest
@@ -51,6 +53,8 @@ struct CLIUpdateResponse: Codable, Equatable {
     let actions: [CLIUpdateAction]
     let manualInstructions: [String]
     let error: CLIUpdateErrorDetail?
+    var installedVersion: String? = nil
+    var cliUpdateAttempted: Bool = false
 }
 
 struct CLIUpdateErrorDetail: Codable, Equatable, Error {
@@ -65,4 +69,8 @@ struct GitHubLatestReleaseResponse: Decodable {
     enum CodingKeys: String, CodingKey {
         case tagName = "tag_name"
     }
+}
+
+struct CLIUpdateExecutionFailure: Error {
+    let response: CLIUpdateResponse
 }

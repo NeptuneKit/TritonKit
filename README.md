@@ -403,6 +403,8 @@ brew update
 brew upgrade triton
 ```
 
+For a machine-readable check, use `triton update --check --json`. A successful check resolves a target release; older versions may return `updateAvailable=false` with no target, which means the version was not checked. Use `triton update --yes --json` to upgrade, or add `--include-skills --skills-dir <agent-skills-root>` to align the public skills too. Execution verifies the Homebrew formula and installed CLI against the selected release; version mismatch is an error and stops skills installation. Check `installedVersion` and the installed skills `BUILD_INFO.json` before reporting alignment.
+
 Homebrew installs only the macOS CLI. The iOS runtime still needs SwiftPM or CocoaPods integration in the app target.
 
 TritonKit's release workflow updates the default tap repository, `NeptuneKit/homebrew-tap`, when a tag matching `v*` is pushed. Maintainers should publish through `docs-linhay/scripts/release.sh <version>`, which checks the tap repository, `TAP_GITHUB_TOKEN`, local validation, the GitHub Actions run, GitHub Release assets, and Homebrew fetch.

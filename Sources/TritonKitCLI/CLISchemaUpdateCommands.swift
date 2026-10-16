@@ -33,9 +33,9 @@ func updateCommandSchemas() -> [TKCommandSchema] {
                 "triton update --version v0.1.24 --yes --json",
                 "triton update --include-skills --skills-dir ~/.codex/skills --yes --json",
             ],
-            successShape: "{ ok, currentVersion, targetVersion, installSource, updateAvailable, actions[], updated, skillsUpdated }",
+            successShape: "{ ok, currentVersion, targetVersion, installSource, updateAvailable, actions[], cliUpdateAttempted, installedVersion, updated, skillsUpdated }",
             failureShape: "{ ok:false, error:{ code,message,hint? } }",
-            outputSemantics: "Agent-readable self-update plan and execution result; mutating updates require --yes.",
+            outputSemantics: "Checks resolve the release target without modifying Homebrew; execution requires --yes and verifies installed version before skills installation.",
             nextCommands: [
                 "triton update --check --json",
                 "triton version --json",
@@ -46,6 +46,10 @@ func updateCommandSchemas() -> [TKCommandSchema] {
             ],
             failureCodes: [
                 "release_resolution_failed",
+                "homebrew_version_mismatch",
+                "installed_version_mismatch",
+                "downgrade_unsupported",
+                "skills_version_mismatch",
                 "download_failed",
                 "invalid_checksum_manifest",
                 "checksum_missing",
