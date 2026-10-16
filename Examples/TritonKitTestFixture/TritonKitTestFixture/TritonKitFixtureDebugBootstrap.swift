@@ -10,8 +10,17 @@ final class TritonKitFixtureDebugBootstrap: TritonKitDelegate {
     func connect(host: String, port: UInt16) {
         onStatusChange?("Connecting")
         var configuration = TritonKit.Configuration(endpoint: .init(host: host, port: port))
-        if configuration.picker.enabled { configuration.features.insert(.inspector) }
+        // This Debug fixture grants inspector capability even when its entry
+        // starts hidden; TRITON_PICKER_ENABLED still controls initial visibility.
+        configuration.features.insert(.inspector)
         TritonKit.shared.start(configuration, delegate: self)
+    }
+
+    @MainActor var isPickerEnabled: Bool { TritonKit.shared.isPickerEnabled }
+
+    @MainActor @discardableResult
+    func setPickerEnabled(_ enabled: Bool) -> Bool {
+        TritonKit.shared.setPickerEnabled(enabled)
     }
 
     func tritonKit(_ kit: TritonKit, didChangeState state: TritonKit.ConnectionState) {

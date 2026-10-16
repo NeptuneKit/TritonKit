@@ -3,6 +3,7 @@ import UIKit
 
 /// A non-key, SDK-owned surface. Empty space and decorations never intercept
 /// business touches; an already captured drag stays entirely within the dot.
+/// While the SDK modal is presented, UIKit owns the full sheet/dimming hit area.
 @MainActor
 final class TKPickerOverlayWindow: UIWindow, TKRuntimeInspectorOverlayWindow {
     @available(iOS 15.0, *)
@@ -19,12 +20,24 @@ final class TKPickerOverlayWindow: UIWindow, TKRuntimeInspectorOverlayWindow {
 @MainActor
 final class TKPickerOverlayCoordinator {
     private let manager: TKPickerSessionManager
+    private let onHide: (() -> Void)?
     private var windows: [ObjectIdentifier: TKPickerOverlayWindow] = [:]
     private var observers: [NSObjectProtocol] = []
     private var refreshTimer: Timer?
     private var running = false
+    private var presentation = TritonKit.PickerConfiguration()
 
-    init(manager: TKPickerSessionManager) { self.manager = manager }
+    init(manager: TKPickerSessionManager, onHide: (() -> Void)? = nil) {
+        self.manager = manager
+        self.onHide = onHide
+    }
+
+    func updatePresentation(_ configuration: TritonKit.PickerConfiguration) {
+        presentation = configuration
+        for window in windows.values {
+            (window.rootViewController as? TKPickerOverlayViewController)?.updatePresentation(configuration)
+        }
+    }
 
     func start() {
         guard TritonKit.isRuntimeEnabled, !running else { return }
@@ -61,7 +74,8 @@ final class TKPickerOverlayCoordinator {
         guard TritonKit.isRuntimeEnabled, running, scene.activationState == .foregroundActive else { return }
         let id = ObjectIdentifier(scene)
         guard windows[id] == nil else { return }
-        let controller = TKPickerOverlayViewController(manager: manager)
+        let controller = TKPickerOverlayViewController(manager: manager, onHide: onHide)
+        controller.updatePresentation(presentation)
         controller.businessWindowProvider = { [weak scene] in
             guard let scene, scene.activationState == .foregroundActive else { return nil }
             // Match runtime's action authority. A different simultaneously active

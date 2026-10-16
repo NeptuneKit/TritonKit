@@ -1,6 +1,6 @@
 # SDK 悬浮圆点控件选择：当前契约、调研与经验
 
-当前版本：2026-10-16。需求、BDD与交付阶段见 [SP-201](../spaces/SP-201-sdk-floating-picker/README.md)。源码已实现并验证，仍为未发布候选；下文初版调研/契约草案保留历史，不能覆盖本节与“已实施契约”的实际字段。
+当前版本：2026-10-16。SP-201 选择器需求与既有验收见 [SP-201](../spaces/SP-201-sdk-floating-picker/README.md)；当前 SDK 系统 modal 修订与最终验证见 [SP-209](../spaces/SP-209-picker-runtime-toggle/README.md)。既有选择器已验证，系统 modal 已完成当前 iOS27 模拟器验证，仍为未发布候选；下文初版调研/契约草案保留历史，不能覆盖本节与“已实施契约”的实际字段。
 
 ## 当前交互与机器契约
 
@@ -57,7 +57,7 @@ Android 当前本仓 `Tools/AndroidBridge/` 为 AccessibilityService 外部辅�
 
 状态区分 UI 与目标：UI 为 hidden/idle/picking/selected；目标为 valid/stale/observeOnly/none。取消 picking 不隐式清空旧 selection。用户每次提交目标、切换父级或清除均递增 revision；失效原因可查询。
 
-- 圆点视觉直径可先试 24–28 pt，触摸区域先试 44 pt；最终以真实设备操作验证为准。仅圆点/菜单接收触摸，其余区域透传。
+- 圆点视觉直径可先试 24–28 pt，触摸区域先试 44 pt；最终以真实设备操作验证为准。普通浮层在 modal 关闭时仅圆点/罗盘接收触摸，其余区域透传；SDK modal 打开期间由系统遮罩整窗拦截。
 - 直接拖动圆球实时预览控件；长按 0.4 秒后拖动仅移动圆球并停留。选取时松手固定标记并恢复圆球停靠位置；轻点打开父级/清除菜单。使用 UIKit 原生 pan/long-press recognizer 区分手势，取消菜单内的移动模式。
 - 拖动期间圆球自身变为透明底十字准星并跟随手指，准星中心就是命中位置；松手恢复圆球。线框和紧凑标签预览候选。选中后显示编号和控件类型。
 - 用户可向父级调整选择，UI 明示实际层级；保留 rawHitOID、targetOID 与解析原因。任何自动语义祖先归并都应能被理解。
@@ -183,4 +183,23 @@ Android 当前本仓 `Tools/AndroidBridge/` 为 AccessibilityService 外部辅�
 | 测试结束后构建看似卡住 | Xcode失败后simctl诊断仍占执行通道 | xcode status核对PID和日志，原进程退出后才跑下一构建 | 行为红测诊断清理后绿测 |
 | 后续文档仍写旧交互、截图链接无法随提交复现 | 只追加过程记录且screenshots被忽略 | 当前入口归一、旧方案标历史，核对staged截图与最终源码摘要 | 本轮整理提交与closeout-summary |
 
-以上经验更新原入口并由治理skill/public回归skill链接复用，不新增repo-wide AGENTS规则。最新体验仍待用户验收，真机触感/特殊渲染/多scene矩阵保留明确边界。
+以上经验更新原入口并由治理skill/public回归skill链接复用，不新增repo-wide AGENTS规则。最新体验已在 iOS27 模拟器验收，真机触感/特殊渲染/多scene矩阵保留明确边界。
+
+## 2026-10-16 运行时开关（SP-209）
+
+新增 `@MainActor setPickerEnabled(_:) -> Bool` 与 `isPickerEnabled`，仅修改选择器，不重启SDK连接。隐藏入口清理selection/浮层，宿主通过公开API负责恢复；收起、清除、隐藏各自独立。已授权inspector且runtime已启动才允许开启，Release保持no-op。详见[SP-209](../spaces/SP-209-picker-runtime-toggle/README.md)与[接入指南](20260519-ios-integration-guide.md)。
+
+经验：可隐藏浮层必须同时提供浮层之外的恢复入口；独立开关应与transport生命周期解耦，重复开启保持selection，真正停用清除旧guard。验证除开关可见性，还需检查连接状态、delegate与业务副作用不变。
+
+开关与启动必须复用相同配置约束：`PickerConfiguration.ttlSeconds`可在初始化后修改，不能只依赖init校验；运行时启用同样将非法TTL回退300秒，已有真实UIKit负例。
+
+### 历史修订：宿主与SDK设置职责
+
+宿主App的调试菜单由宿主实现，不属于SDK交付。SP-209撤除示例中的新增宿主菜单；圆球单击升级为TritonKit SDK设置（放大镜/密集辅助/触感/隐藏），拖选松手保留方向罗盘。宿主通过公开API负责恢复隐藏入口。前述示例调试菜单方案被此设计替代。
+
+### SDK统一入口消融（替代单一选择器设置面板）
+
+圆球是整个SDK入口。首页按连接、选择器、SDK功能、应用环境和入口管理组织；选择器配置下沉，设置中的节点导航移除。只展示有真实数据或执行路径的功能；权限配置不等于provider能力，未消费隐私字段/硬编码版本不能冒充已实现设置。当前展示方式为系统 pageSheet；iOS 15+ medium/large detents 与 grabber，iOS 13/14 降级系统 pageSheet，不承诺半屏。内部使用 UINavigationController 与 insetGrouped UITableViewController，隐藏走入口页系统 UIAlertController 确认。Modal 期间圆球与选择提示暂隐藏，系统遮罩整窗拦截业务触摸；关闭/下拉恢复有效选择。原外围透传仅适用于 modal 关闭后的普通浮层。设计事实源见[消融记录](../spaces/SP-209-picker-runtime-toggle/plans/20261016-sdk-hub-design.md)。
+
+
+系统样式经验：用户明确要求系统 modal 时，直接使用平台 presentation、导航、分组列表和确认控件，不继续调整自绘卡片尺寸模拟系统行为。presentation 完成和交互关闭必须按真实生命周期验收；下拉与关闭按钮都恢复选择，确认隐藏才清空 guard。自绘卡片的截图/测试只保留历史；当前 modal Red 已得到导航控制器 nil 的预期失败，最终通过证据已写回 SP-209 验证记录。

@@ -16,6 +16,15 @@ import TritonKitShared
         #expect(!invalid.enabled && invalid.ttlSeconds == 300)
         #expect(TritonKit.PickerConfiguration(enabled: true, ttlSeconds: 999).ttlSeconds == 300)
     }
+    @Test @MainActor func runtimeToggleCannotStartStoppedSDK() {
+        let kit = TritonKit.shared
+        kit.stop()
+        #expect(!kit.setPickerEnabled(true))
+        #expect(!kit.isPickerEnabled)
+        #expect(kit.setPickerEnabled(false))
+        #expect(kit.state == .disconnected)
+    }
+
     @Test func disabledSelectionHasTypedEnvelope() async throws {
         let kit = TritonKit.shared
         kit.stop()
@@ -55,6 +64,9 @@ import TritonKitShared
         configuration.features.insert(.inspector)
         configuration.picker = .init(enabled: true)
         #expect(!kit.start(configuration))
+        let enabled = await kit.setPickerEnabled(true)
+        #expect(!enabled)
+        #expect(!kit.isPickerEnabled)
         #expect(kit.state == .disconnected)
         #if canImport(UIKit)
         let hasManager = await MainActor.run { kit.pickerStorage.current() != nil }

@@ -8,6 +8,85 @@ extension TKUIKitWindowTests {
 @Suite(.serialized)
 @MainActor
 struct TKPickerUITests {
+    private func toggleNavigation(_ controller: TKPickerOverlayViewController) throws {
+        let menu = try #require(controller.view.subviews.first { $0.accessibilityIdentifier == "triton.picker.navigation" })
+        if !menu.isHidden {
+            let close = try #require(menu.subviews.compactMap { $0 as? UIButton }.first { $0.accessibilityLabel == "收起导航" })
+            close.sendActions(for: .touchUpInside)
+        } else {
+            controller.showNavigation()
+        }
+    }
+
+    @Test("disabled presentation aids do not render during picking")
+    func disabledPresentation() throws {
+        let business = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
+        defer { business.isHidden = true }
+        let target = UILabel(frame: CGRect(x: 60, y: 100, width: 120, height: 44))
+        target.text = "Target"
+        business.rootViewController?.view.addSubview(target)
+        var feedback = 0
+        let controller = TKPickerOverlayViewController(manager: TKPickerSessionManager(), selectionFeedback: { feedback += 1 })
+        controller.businessWindowProvider = { business }
+        controller.loadViewIfNeeded()
+        controller.view.frame = business.bounds
+        controller.view.layoutIfNeeded()
+        controller.updatePresentation(.init(magnifierEnabled: false, guidesEnabled: false, feedbackEnabled: false))
+        controller.beginPicking(at: CGPoint(x: 100, y: 120))
+        #expect(feedback == 0)
+        let lensesHidden = controller.view.subviews.compactMap { $0 as? TKPickerMagnifierView }.allSatisfy { $0.isHidden }
+        #expect(lensesHidden)
+        #expect(controller.view.layer.sublayers?.first { $0.name == "triton.picker.guides" }?.isHidden == true)
+        controller.updatePresentation(.init(magnifierEnabled: true, guidesEnabled: true, feedbackEnabled: true))
+        let lens = try #require(controller.view.subviews.compactMap { $0 as? TKPickerMagnifierView }.first)
+        #expect(!lens.isHidden)
+        controller.updatePresentation(.init(magnifierEnabled: false, guidesEnabled: false, feedbackEnabled: false))
+        #expect(lens.isHidden)
+        controller.finishPicking(at: CGPoint(x: 100, y: 120), cancelled: true)
+    }
+
+    @Test("SDK hub uses a modal sheet, shields background and restores picker after dismissal")
+    func sdkHubPages() async throws {
+        let business = try makeRuntimeTestWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        defer { business.isHidden = true }
+        let controller = TKPickerOverlayViewController(manager: TKPickerSessionManager())
+        let overlay: TKPickerOverlayWindow
+        if let scene = business.windowScene { overlay = TKPickerOverlayWindow(windowScene: scene) }
+        else { overlay = TKPickerOverlayWindow(frame: business.bounds) }
+        overlay.frame = business.frame
+        overlay.rootViewController = controller
+        overlay.isHidden = false
+        defer { overlay.isHidden = true }
+        controller.view.layoutIfNeeded()
+        controller.dot.sendActions(for: .touchUpInside)
+        try await Task.sleep(nanoseconds: 400_000_000)
+        let navigation = try #require(controller.presentedViewController as? UINavigationController)
+        #expect(navigation.modalPresentationStyle == .pageSheet)
+        #expect(controller.dot.isHidden)
+        #expect(controller.acceptsTouch(at: CGPoint(x: 10, y: 10)))
+        #expect(overlay.hitTest(CGPoint(x: 10, y: 10), with: nil) != nil)
+        #expect(!overlay.isKeyWindow)
+        if #available(iOS 15.0, *) {
+            let sheet = try #require(navigation.sheetPresentationController)
+            #expect(sheet.detents.map(\.identifier) == [.medium, .large])
+            #expect(sheet.selectedDetentIdentifier == .medium)
+            #expect(sheet.prefersGrabberVisible)
+            #expect(sheet.largestUndimmedDetentIdentifier == nil)
+        }
+        let caption = try #require(controller.view.subviews.first { $0.accessibilityIdentifier == "triton.picker.caption" })
+        #expect(caption.isHidden)
+        let root = try #require(navigation.viewControllers.first as? UITableViewController)
+        #expect(root.tableView.style == .insetGrouped)
+        controller.cancelInteraction()
+        for _ in 0..<30 where controller.presentedViewController != nil {
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+        #expect(controller.presentedViewController == nil)
+        #expect(!controller.dot.isHidden)
+        #expect(!caption.isHidden)
+        #expect(!controller.acceptsTouch(at: CGPoint(x: 10, y: 10)))
+    }
+
     @Test("picker chrome receives touches while its empty area passes through")
     func passthrough() throws {
         let manager = TKPickerSessionManager()
@@ -164,7 +243,7 @@ struct TKPickerUITests {
         controller.loadViewIfNeeded()
         controller.view.frame = business.bounds
         controller.view.layoutIfNeeded()
-        controller.dot.sendActions(for: .touchUpInside)
+        try toggleNavigation(controller)
         let menu = try #require(controller.view.subviews.first { $0.accessibilityIdentifier == "triton.picker.navigation" })
         let parent = try #require(menu.subviews.compactMap { $0 as? UIButton }.first { $0.accessibilityLabel == "选择父级" })
         #expect(!menu.isHidden)
@@ -174,7 +253,7 @@ struct TKPickerUITests {
         parent.sendActions(for: .touchUpInside)
         #expect(manager.selectedView === outer)
         #expect(!menu.isHidden)
-        controller.dot.sendActions(for: .touchUpInside)
+        try toggleNavigation(controller)
         #expect(menu.isHidden)
     }
 
@@ -189,7 +268,7 @@ struct TKPickerUITests {
         controller.loadViewIfNeeded()
         controller.view.frame = business.bounds
         controller.view.layoutIfNeeded()
-        controller.dot.sendActions(for: .touchUpInside)
+        try toggleNavigation(controller)
         let menu = try #require(controller.view.subviews.first { $0.accessibilityIdentifier == "triton.picker.navigation" })
         for y: CGFloat in [140, 390, 20] {
             button.frame.origin.y = y
@@ -209,7 +288,7 @@ struct TKPickerUITests {
         controller.loadViewIfNeeded()
         controller.view.frame = CGRect(x: 0, y: 0, width: 320, height: 480)
         controller.view.layoutIfNeeded()
-        controller.dot.sendActions(for: .touchUpInside)
+        try toggleNavigation(controller)
         controller.view.layoutIfNeeded()
         let menu = try #require(controller.view.subviews.first { $0.accessibilityIdentifier == "triton.picker.navigation" })
         let buttons = menu.subviews.compactMap { $0 as? UIButton }
@@ -242,7 +321,7 @@ struct TKPickerUITests {
         controller.loadViewIfNeeded()
         controller.view.frame = business.bounds
         controller.view.layoutIfNeeded()
-        controller.dot.sendActions(for: .touchUpInside)
+        try toggleNavigation(controller)
         controller.view.layoutIfNeeded()
         let menu = try #require(controller.view.subviews.first { $0.accessibilityIdentifier == "triton.picker.navigation" })
         let parked = menu.frame

@@ -206,9 +206,16 @@ public class TritonKit {
     public struct PickerConfiguration: Equatable {
         public var enabled: Bool
         public var ttlSeconds: Int
-        public init(enabled: Bool = false, ttlSeconds: Int = 300) {
+        public var magnifierEnabled: Bool
+        public var guidesEnabled: Bool
+        public var feedbackEnabled: Bool
+        public init(enabled: Bool = false, ttlSeconds: Int = 300,
+                    magnifierEnabled: Bool = true, guidesEnabled: Bool = true, feedbackEnabled: Bool = true) {
             self.enabled = enabled
             self.ttlSeconds = (1...300).contains(ttlSeconds) ? ttlSeconds : 300
+            self.magnifierEnabled = magnifierEnabled
+            self.guidesEnabled = guidesEnabled
+            self.feedbackEnabled = feedbackEnabled
         }
         public static func environment(_ environment: [String: String] = ProcessInfo.processInfo.environment) -> Self {
             Self(enabled: environment["TRITON_PICKER_ENABLED"] == "1",
@@ -402,6 +409,50 @@ public class TritonKit {
     @discardableResult
     public func start(_ configuration: Configuration, delegate: TritonKitDelegate) -> Bool {
         startRuntime(configuration, delegate: delegate)
+    }
+
+    /// Whether the picker is enabled for this runtime session, including while
+    /// no foreground scene exists. This is not a screen-visibility measurement.
+    public var isPickerEnabled: Bool {
+        #if canImport(UIKit)
+        return Self.isRuntimeEnabled && pickerStorage.isEnabled
+        #else
+        return false
+        #endif
+    }
+
+    /// Changes only the picker; never starts or reconnects the SDK transport.
+    /// Enabling requires a started Debug UIKit runtime and `.inspector` permission.
+    /// Disabling clears the selection and invalidates existing action guards.
+    /// Returns whether the requested state was accepted. Repeated enabling is idempotent.
+    @MainActor @discardableResult
+    public func setPickerEnabled(_ enabled: Bool) -> Bool {
+        #if canImport(UIKit)
+        if enabled {
+            guard Self.isRuntimeEnabled, isStarted, configuration.features.contains(.inspector) else { return false }
+            if pickerStorage.isEnabled, pickerStorage.current() != nil { return true }
+        }
+        configuration.picker.enabled = enabled
+        let token = pickerStorage.invalidate(enabled: enabled)
+        let ttl = configuration.picker.ttlSeconds
+        pickerStorage.configure(token: token, ttlSeconds: (1...300).contains(ttl) ? ttl : 300)
+        pickerStorage.updatePresentation(configuration.picker)
+        return true
+        #else
+        return !enabled
+        #endif
+    }
+
+    /// Updates picker presentation preferences without restarting transport or clearing selection.
+    @MainActor
+    public func setPickerPresentation(magnifier: Bool, guides: Bool, feedback: Bool) {
+        guard Self.isRuntimeEnabled else { return }
+        configuration.picker.magnifierEnabled = magnifier
+        configuration.picker.guidesEnabled = guides
+        configuration.picker.feedbackEnabled = feedback
+        #if canImport(UIKit)
+        pickerStorage.updatePresentation(configuration.picker)
+        #endif
     }
 
     public func stop() {

@@ -167,7 +167,7 @@ Read [Device Hub acceptance](references/device-hub-acceptance.md) before metadat
 
 ## Optional floating-picker acceptance (SP-201, unreleased)
 
-This is an isolated worktree candidate, not an integrated or published release. Use a matching candidate SDK and CLI only when this feature is in the regression scope. Keep business-app edits isolated. Inside the existing file-level `#if DEBUG` bootstrap, enable `config.features.insert(.inspector)` and `config.picker = .init(enabled: true, ttlSeconds: 300)`; keep `.input` enabled for actions. Picker defaults to off, adds no third-party dependency, and remains no-op in Release. `TRITON_PICKER_ENABLED=1` only enables the default picker environment configuration: `.inspector` opt-in and the app's runtime startup gate still apply. Fixture auto-insertion is not general app behavior.
+SP-201 is integrated into local main but is not a published release; the SP-209 SDK hub remains an isolated worktree candidate. Use a matching candidate SDK and CLI only when this feature is in the regression scope. Keep business-app edits isolated. Inside the existing file-level `#if DEBUG` bootstrap, enable `config.features.insert(.inspector)` and `config.picker = .init(enabled: true, ttlSeconds: 300)`; keep `.input` enabled for actions. Picker defaults to off, adds no third-party dependency, and remains no-op in Release. `TRITON_PICKER_ENABLED=1` only enables the default picker environment configuration: `.inspector` opt-in and the app's runtime startup gate still apply. Fixture auto-insertion is not general app behavior.
 
 After confirming an explicit embedded runtime target, preserve these commands and their JSON results; perform the tap only after reading a valid selection with `tap` in `supportedActions`:
 
@@ -185,3 +185,11 @@ Check overlay exclusion from normal AX/hierarchy/screenshots and action targetin
 
 
 For native picker interaction regressions, exercise direct drag preview/crosshair/magnifier, long-press relocation, release-to-open compass, persistent navigation, stable unobstructed placement and parent-child return memory. Assert no business action during selection; record a held-drag screenshot as well as the released selection. Simulator tests can verify haptic trigger conditions, not physical feel. Wait for an explicit XCTest handoff before the CLI action; an already-valid selection is not proof the zero-click assertions finished. Keep image-only rendering of video/Metal/remote WebView content and multi-scene/device coverage explicit when untested.
+
+### SDK hub 与选择器运行时开关
+
+Debug App 预先授权 `.inspector` 后，在 MainActor 通过 `TritonKit.shared.setPickerEnabled(true/false)` 开关，读取 `isPickerEnabled` 判断会话状态；不重新 start SDK。接入代码放独立 Debug bootstrap。宿主负责自己的唤回入口，SDK 不实现宿主调试菜单。
+
+圆球单击以系统 pageSheet 打开 SDK hub：首页真实连接摘要，连接、选择器、SDK 功能、应用、入口五路由。放大镜、辅助框、触感在选择器二级配置。SDK 功能是宿主配置的只读展示，不代表平台支持、provider 就绪或业务可执行；不展示未被消费的隐私配置或硬编码 SDK 版本，不为填充菜单添加无效按钮。
+
+系统 modal 内部使用 UINavigationController 与 insetGrouped UITableViewController；iOS 15+ 使用 medium/large detents、grabber，iOS 13/14 降级系统 pageSheet，不承诺半屏。验收 modal 打开暂隐藏圆球、全部选择提示与罗盘，下拉或关闭恢复有效选择上下文；系统遮罩拦截整个窗口业务触摸，外围透传仅适用于 modal 关闭后。罗盘只保留节点导航和清除。隐藏操作仅在入口页经系统 UIAlertController 确认后执行，取消保持状态；确认后旧 selection guard 失效，宿主 API 恢复从空选择开始。分别核对隐藏/恢复前后连接与业务计数不变、Release 不能开启，以及浅深色、小屏滚动和子页面返回。SP-209 为未发布候选，使用前核对匹配源码/版本与实际验证记录；自绘卡片通过记录不能代替系统 modal 验收。

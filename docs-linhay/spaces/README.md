@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（208/208 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（209/209 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-10-16（本地分支整合与worktree收口；仅保留main）
 
@@ -317,3 +317,9 @@
 - [SP-191-default-xcode-deriveddata](./SP-191-default-xcode-deriveddata/README.md)：已发布（`v0.2.26`）；默认交给 Xcode 使用用户级 DerivedData，显式 `--derived-data-path` 仅用于隔离/恢复并提示高磁盘占用；CLI/root tests、schema smoke、docs 门禁与远端 CI 通过。
 
 | 已引入本地main | [SP-195-ios-runner-product](./SP-195-ios-runner-product/README.md) | 产品与设备验收、主仓门禁通过 | 参考文档306dc42b与Runner分别提交；原worktree已清理；未push/release；已完成worktree收口见SP195计划；本地完成分支已清理/归档 |
+
+## 2026-10-16 · 选择器开关
+
+| 状态 | Space | 范围 | 下一步 |
+| --- | --- | --- | --- |
+| 已实现·已验证 | [SP-209-picker-runtime-toggle](./SP-209-picker-runtime-toggle/README.md) | SDK运行时开关与原生半屏Modal | 独立worktree待试用、提交/集成 |

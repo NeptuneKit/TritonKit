@@ -2,13 +2,16 @@
 import UIKit
 
 @MainActor
-final class TKPickerOverlayViewController: UIViewController, UIGestureRecognizerDelegate {
+final class TKPickerOverlayViewController: UIViewController, UIGestureRecognizerDelegate, UIAdaptivePresentationControllerDelegate {
     let dot = UIButton(type: .custom)
     var businessWindowProvider: (() -> UIWindow?)?
     private let manager: TKPickerSessionManager
     private let outline = UIView()
     private let caption = UILabel()
     private let menu = UIView()
+    private var settingsNavigation: UINavigationController?
+    private var pendingSettingsDismissal: (animated: Bool, completion: (() -> Void)?)?
+    private var presentation = TritonKit.PickerConfiguration()
     private let guides = CAShapeLayer()
     private let crosshair = CAShapeLayer()
     private let magnifier = TKPickerMagnifierView()
@@ -29,11 +32,13 @@ final class TKPickerOverlayViewController: UIViewController, UIGestureRecognizer
 
     private let clock: () -> TimeInterval
     private let selectionFeedback: (() -> Void)?
+    private let onHide: (() -> Void)?
 
     init(manager: TKPickerSessionManager, clock: @escaping () -> TimeInterval = { CACurrentMediaTime() },
-         selectionFeedback: (() -> Void)? = nil) {
+         selectionFeedback: (() -> Void)? = nil, onHide: (() -> Void)? = nil) {
         self.clock = clock
         self.selectionFeedback = selectionFeedback
+        self.onHide = onHide
         self.manager = manager
         super.init(nibName: nil, bundle: nil)
     }
@@ -107,9 +112,9 @@ final class TKPickerOverlayViewController: UIViewController, UIGestureRecognizer
         crosshair.isHidden = true
         dot.layer.addSublayer(crosshair)
         dot.accessibilityLabel = "Triton 控件选择器"
-        dot.accessibilityHint = "拖动实时预览控件，松手选中，长按拖动移动圆球，轻点显示菜单"
+        dot.accessibilityHint = "拖动实时预览控件，松手选中，长按拖动移动圆球，轻点打开 TritonKit SDK 设置"
         dot.accessibilityIdentifier = "triton.picker.dot"
-        dot.addTarget(self, action: #selector(toggleMenu), for: .touchUpInside)
+        dot.addTarget(self, action: #selector(toggleSettings), for: .touchUpInside)
         let pan = UIPanGestureRecognizer(target: self, action: #selector(panEntry(_:)))
         pan.maximumNumberOfTouches = 1
         pan.cancelsTouchesInView = true
@@ -188,6 +193,9 @@ final class TKPickerOverlayViewController: UIViewController, UIGestureRecognizer
     }
 
     func acceptsTouch(at point: CGPoint) -> Bool {
+        // UIKit owns the sheet and its dimming view. Never pass modal touches
+        // through the SDK window into the host app.
+        if settingsNavigation != nil || presentedViewController != nil { return true }
         if !dot.isHidden && dot.frame.contains(point) { return true }
         guard !menu.isHidden else { return false }
         let local = view.convert(point, to: menu)
@@ -224,7 +232,7 @@ final class TKPickerOverlayViewController: UIViewController, UIGestureRecognizer
         switch press.state {
         case .began:
             guard !picking else { return }
-            UISelectionFeedbackGenerator().selectionChanged()
+            if presentation.feedbackEnabled { UISelectionFeedbackGenerator().selectionChanged() }
             beginMoving()
             refreshSelection()
         case .changed:
@@ -238,6 +246,7 @@ final class TKPickerOverlayViewController: UIViewController, UIGestureRecognizer
     }
 
     func beginMoving() {
+        dismissSettings(animated: false)
         guard !picking else { return }
         entryOrigin = dot.center
         movingEntry = true
@@ -259,6 +268,7 @@ final class TKPickerOverlayViewController: UIViewController, UIGestureRecognizer
     }
 
     func beginPicking(at point: CGPoint) {
+        dismissSettings(animated: false)
         entryOrigin = dot.center
         movingEntry = false
         picking = true
@@ -288,7 +298,7 @@ final class TKPickerOverlayViewController: UIViewController, UIGestureRecognizer
         let next = TKPickerSessionManager.candidate(at: local, in: window)
         let changed = candidate !== next
         let time = clock()
-        if changed, next != nil, time - lastFeedbackAt >= 0.08 {
+        if presentation.feedbackEnabled, changed, next != nil, time - lastFeedbackAt >= 0.08 {
             if let selectionFeedback { selectionFeedback() }
             else { haptic.selectionChanged(); haptic.prepare() }
             lastFeedbackAt = time
@@ -298,8 +308,8 @@ final class TKPickerOverlayViewController: UIViewController, UIGestureRecognizer
             guideDwellOrigin = point
             guideDwellStartedAt = time
         }
-        updateGuides(around: time - guideDwellStartedAt >= 0.25 ? candidate : nil)
-        if let candidate {
+        updateGuides(around: presentation.guidesEnabled && time - guideDwellStartedAt >= 0.25 ? candidate : nil)
+        if let candidate, presentation.magnifierEnabled {
             placeMagnifier(at: point)
             magnifier.update(window: window, point: local, targetRect: visibleRect(candidate, in: window),
                              time: time, force: changed)
@@ -330,6 +340,7 @@ final class TKPickerOverlayViewController: UIViewController, UIGestureRecognizer
     }
 
     func cancelInteraction() {
+        dismissSettings(animated: false)
         finishPicking(at: .zero, cancelled: true)
         finishMoving(cancelled: true)
         menu.isHidden = true
@@ -337,6 +348,16 @@ final class TKPickerOverlayViewController: UIViewController, UIGestureRecognizer
 
     func refreshSelection() {
         guard isViewLoaded else { return }
+        if let navigation = settingsNavigation {
+            (navigation.topViewController as? TKSDKSettingsViewController)?.refreshSnapshot()
+            dot.isHidden = true
+            outline.isHidden = true
+            caption.isHidden = true
+            menu.isHidden = true
+            return
+        }
+        dot.isHidden = false
+        caption.isHidden = false
         if !menu.isHidden {
             for (button, direction) in navigationButtons {
                 button.isEnabled = manager.canNavigate(direction)
@@ -519,6 +540,90 @@ final class TKPickerOverlayViewController: UIViewController, UIGestureRecognizer
         }
         menu.frame = best
         menuIsPlaced = true
+    }
+
+    func updatePresentation(_ configuration: TritonKit.PickerConfiguration) {
+        presentation = configuration
+        for page in settingsNavigation?.viewControllers ?? [] {
+            (page as? TKSDKSettingsViewController)?.update(configuration)
+        }
+        refreshSelection()
+    }
+
+    @objc private func toggleSettings() {
+        guard settingsNavigation == nil else { dismissSettings(); return }
+        guard view.window != nil, presentedViewController == nil else { return }
+        let root = TKSDKSettingsViewController(configuration: presentation, snapshotProvider: {
+            let kit = TritonKit.shared
+            let bundle = Bundle.main
+            return TKSDKSettingsSnapshot(configuration: kit.configuration, state: kit.state, appInfo: [
+                "displayName": kit.configuration.appIdentity?.name ?? bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? bundle.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "",
+                "version": bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "",
+                "build": bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "",
+                "bundleIdentifier": bundle.bundleIdentifier ?? "",
+                "os": UIDevice.current.systemName + " " + UIDevice.current.systemVersion
+            ])
+        }, onChange: { [weak self] magnifier, guides, feedback in
+            guard let self else { return }
+            self.presentation.magnifierEnabled = magnifier
+            self.presentation.guidesEnabled = guides
+            self.presentation.feedbackEnabled = feedback
+            TritonKit.shared.setPickerPresentation(magnifier: magnifier, guides: guides, feedback: feedback)
+        }, onHide: { [weak self] in
+            self?.dismissSettings { [weak self] in self?.onHide?() }
+        })
+        root.onClose = { [weak self] in self?.dismissSettings() }
+        let navigation = UINavigationController(rootViewController: root)
+        navigation.modalPresentationStyle = .pageSheet
+        if #available(iOS 15.0, *) {
+            let sheet = navigation.sheetPresentationController
+            sheet?.detents = [.medium(), .large()]
+            sheet?.selectedDetentIdentifier = .medium
+            sheet?.prefersGrabberVisible = true
+            sheet?.prefersScrollingExpandsWhenScrolledToEdge = true
+        }
+        settingsNavigation = navigation
+        navigation.presentationController?.delegate = self
+        menu.isHidden = true
+        guides.isHidden = true
+        magnifier.isHidden = true
+        refreshSelection()
+        present(navigation, animated: true) { [weak self] in
+            guard let self, let pending = self.pendingSettingsDismissal else { return }
+            self.pendingSettingsDismissal = nil
+            self.dismissSettings(animated: pending.animated, completion: pending.completion)
+        }
+    }
+
+    private func dismissSettings(animated: Bool = true, completion: (() -> Void)? = nil) {
+        guard let navigation = settingsNavigation else { completion?(); return }
+        if navigation.isBeingPresented {
+            pendingSettingsDismissal = (animated, completion)
+            return
+        }
+        // Dismiss from the presenting root so a confirmation alert cannot
+        // leave the settings navigation controller stranded underneath.
+        dismiss(animated: animated) { [weak self, weak navigation] in
+            guard let self else { completion?(); return }
+            if self.settingsNavigation === navigation {
+                self.settingsNavigation = nil
+                self.refreshSelection()
+            }
+            completion?()
+        }
+    }
+
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        guard presentationController.presentedViewController === settingsNavigation else { return }
+        settingsNavigation = nil
+        pendingSettingsDismissal = nil
+        refreshSelection()
+    }
+
+    func showNavigation() {
+        dismissSettings(animated: false)
+        menu.isHidden = true
+        toggleMenu()
     }
 
     @objc private func toggleMenu() {

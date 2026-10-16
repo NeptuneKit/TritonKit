@@ -35,3 +35,5 @@
 - 内置SDK悬浮圆点与用户选控件的需求入口：[SP-201](../spaces/SP-201-sdk-floating-picker/README.md) / [设计](../dev/20261015-sdk-floating-picker.md)。2026-10-16 已实现并验证直接拖选/长按移位、稳定方向罗盘、父子记忆和局部放大镜；UIKit85项、真实拖选0次→CLI guarded tap 1次通过。功能提交2711565f已按用户授权整合本地main，联合UIKit/启动回归107项通过，待用户验收，未推送发布；与SP-197属性高亮独立。
 
 - 2026-10-16：[worktree与分支收口](../dev/20261016-worktree-closeout.md)完成9个源工作区和本地分支回收，仅保留main；未提交历史副本有可恢复snapshot/bundle，SP-208已本地整合未发布。
+
+- [SP-209 SDK hub 与选择器运行时开关](../spaces/SP-209-picker-runtime-toggle/README.md)：圆球单击进入系统 pageSheet 的首页连接摘要与连接/选择器/SDK功能/应用/入口五路由；iOS 15+ medium/large detents，旧系统 pageSheet 降级。选择辅助二级配置，能力为宿主配置只读，隐藏仅入口页确认。宿主自行通过独立API唤回，不重连；modal 期间圆球/选择提示暂隐藏且系统遮罩整窗拦截，关闭/下拉恢复有效上下文；内部使用系统导航与分组列表。未发布候选与最终回归范围见space。

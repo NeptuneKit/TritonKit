@@ -63,12 +63,39 @@ App 启动入口仍只在 `#if DEBUG` 内调用 `TritonKitDebugBootstrap.startIf
 
 - `TRITON_PICKER_ENABLED=1` 仅把默认环境配置中的 `picker.enabled` 设为 true，**不会**把 `.inspector` 加入 App 的 feature 集合。采用环境控制时保留 `config.features.insert(.inspector)`，不要再用显式 `config.picker = ...` 覆盖环境配置。runtime 的 `TRITON_ENABLED` 启动条件仍独立生效。
 - `TRITON_PICKER_TTL_SECONDS` 设置环境配置中的标记有效期；当前范围为 1–300 秒，缺失、无法解析或越界时回退到 300 秒，显式初始化的非法值也回退到 300 秒。
-- 测试 fixture 在 picker 环境开关启用时自动插入 `.inspector`，这是 fixture 的接入便利，不能推断普通业务 App 只设一个环境变量就能启用。
+- 测试 fixture 的 Debug bootstrap 固定授权 `.inspector`，环境变量决定初始显示，宿主可调用独立API在初始关闭时开启；普通业务 App 仍需自行显式授权。
 - Release public API 可编译，但 runtime 和浮层保持 no-op；未启用时不显示圆点。本功能不引入第三方依赖。
+
+
+### 运行时开关与SDK设置
+
+启动时授权 `.inspector`，`picker.enabled` 仅决定初始状态。之后在主线程通过独立API开关，不调用 `start`、不重连或替换delegate：
+
+```swift
+#if DEBUG
+import TritonKit
+
+@MainActor
+enum PickerDebugActions {
+    static var isEnabled: Bool { TritonKit.shared.isPickerEnabled }
+    @discardableResult
+    static func setEnabled(_ enabled: Bool) -> Bool {
+        TritonKit.shared.setPickerEnabled(enabled)
+    }
+}
+#endif
+```
+
+在App现有Debug调试菜单调用 `PickerDebugActions.setEnabled(true/false)`；普通App入口只保留 `#if DEBUG` 代理调用。宿主App自行实现调试入口，SDK不实现宿主菜单。
+
+- 开启仅在SDK已启动、Debug UIKit运行时且已授权 `.inspector` 时接受；返回false表示不满足条件，不会隐式授权或启动连接。连接暂时离线不妨碍本地选择器，SDK stop后不能重新开启。
+- `isPickerEnabled` 是当前会话开关，不代表此刻有前台scene或圆球可见。关闭返回后清理当前浮层和selection；旧guard失效，重新开启为空选择。重复开启不清除已有标记。
+- 圆球轻点打开“TritonKit”统一面板：连接与会话、控件选择器、SDK功能、应用与环境、悬浮入口；选择器辅助开关位于二级页，隐藏入口需二次确认；“收起导航”保留标记，“清除标记”保留圆球。没有选中控件时同样可隐藏。
+- 状态只保留本次运行；重新 `start` 按传入配置决定，重启App重新读取启动配置/环境变量，不写UserDefaults。Release/非UIKit平台开启返回false，关闭安全no-op。
 
 ### 用户选择与 agent 动作
 
-直接拖动圆球实时显示候选轮廓、类型与名称，提示“松手选中”，松手保留一个标记并恢复圆球停靠位置。拖动显示局部放大镜，密集区域停留后显示辅助框。长按 0.4 秒后拖动仅移动圆球并停留；有效松手自动展开罗盘，轻点圆球可收起/展开。罗盘上父级、下子级、左右同级，父子往返记住原节点，无遮挡时保持位置；中心收起保留标记，清除独立。重新选取替换原目标；选中不是点击，也不自动发起 agent 任务。切换父层级会改变目标和 revision；取消选取保留原来仍有效的标记。
+直接拖动圆球实时显示候选轮廓、类型与名称，提示“松手选中”，松手保留一个标记并恢复圆球停靠位置。拖动显示局部放大镜，密集区域停留后显示辅助框。长按 0.4 秒后拖动仅移动圆球并停留；有效松手自动展开罗盘，轻点圆球打开SDK面板并暂藏选择提示，关闭恢复原标记；节点罗盘保留在拖选流程。罗盘上父级、下子级、左右同级，父子往返记住原节点，无遮挡时保持位置；中心收起保留标记，清除独立。重新选取替换原目标；选中不是点击，也不自动发起 agent 任务。切换父层级会改变目标和 revision；取消选取保留原来仍有效的标记。
 
 先从 `triton list --json` 获取并核对目标 App 的 embedded runtime id。以下所有命令使用同一个 `--target`，占位符必须替换为当前响应中的真实值：
 
@@ -134,3 +161,5 @@ Mac CLI 的 `--host` 是 CLI 到 server 的地址，默认仍可用 `127.0.0.1`�
 - `TritonKit.skills/tritonkit-dev-feedback/SKILL.md`
 - `docs-linhay/dev/20260519-ios-integration-guide.md`
 - `Examples/TritonKitDemo/TritonKitDemo/TritonKitDebugBootstrap.swift`
+
+SDK 设置使用系统 pageSheet：iOS 15+ 默认半屏，可上拉展开、下拉关闭；iOS 13/14 使用系统 pageSheet 降级。内容为原生导航和分组列表，弹窗期间隐藏圆球与选择提示并拦截背景触摸，关闭恢复选择，隐藏入口通过系统确认框完成。

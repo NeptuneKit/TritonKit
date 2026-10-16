@@ -33,6 +33,7 @@ final class TKPickerRuntimeStorage: @unchecked Sendable {
     }
     @MainActor func configure(token: UInt64, ttlSeconds: Int) {
         guard accepts(token) else { return }
+        if managerGeneration == token, manager != nil { return }
         overlay?.stop(); overlay = nil
         manager?.shutdown(); manager = nil
         managerGeneration = nil
@@ -40,9 +41,14 @@ final class TKPickerRuntimeStorage: @unchecked Sendable {
         let manager = TKPickerSessionManager(ttlSeconds: ttlSeconds)
         self.manager = manager
         managerGeneration = token
-        let overlay = TKPickerOverlayCoordinator(manager: manager)
+        let overlay = TKPickerOverlayCoordinator(manager: manager, onHide: {
+            TritonKit.shared.setPickerEnabled(false)
+        })
         self.overlay = overlay
         overlay.start()
+    }
+    @MainActor func updatePresentation(_ configuration: TritonKit.PickerConfiguration) {
+        overlay?.updatePresentation(configuration)
     }
     @MainActor func current() -> TKPickerSessionManager? {
         // A new enabled configuration must not expose the previous selection
@@ -60,7 +66,10 @@ extension TritonKit {
         let enabled = Self.isRuntimeEnabled && configuration.features.contains(.inspector) && configuration.picker.enabled
         let token = pickerStorage.invalidate(enabled: enabled)
         let ttl = (1...300).contains(configuration.picker.ttlSeconds) ? configuration.picker.ttlSeconds : 300
-        Task { @MainActor [pickerStorage] in pickerStorage.configure(token: token, ttlSeconds: ttl) }
+        Task { @MainActor [pickerStorage] in
+            pickerStorage.configure(token: token, ttlSeconds: ttl)
+            if pickerStorage.accepts(token) { pickerStorage.updatePresentation(TritonKit.shared.configuration.picker) }
+        }
         #endif
     }
     func stopPickerRuntime() {

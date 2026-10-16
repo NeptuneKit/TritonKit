@@ -1,0 +1,46 @@
+{
+  "base": "35356c9c",
+  "stage": "implemented, verified, and committed in isolated worktree; not integrated or pushed",
+  "scope": "Native SDK pageSheet with navigation and grouped tables; picker runtime controls; host debug menu excluded",
+  "checks": {
+    "rootSwiftTesting": {
+      "TritonKit": 108,
+      "TritonKitShared": 291
+    },
+    "rootXCTest": 7,
+    "appHostedUIKit": {
+      "passed": 231,
+      "skipped": 1,
+      "skipReason": "Bonjour opt-in not enabled"
+    },
+    "releaseSelection": 5,
+    "localGate": "passed; separate UIKit validation",
+    "docs": "ci-docs, check-docs, diff --check passed",
+    "nativeRealUI": 4
+  },
+  "sourceSHA256": {
+    "Examples/TritonKitTestFixture/PickerUITests/PickerUITests.swift": "806e7cbbd0d4847a649eae0c6159e648e2124452716aac7e2e0a8c28aeaa774d",
+    "Examples/TritonKitTestFixture/TritonKitTestFixture/TritonKitFixtureDebugBootstrap.swift": "6b30434c0343525be9beee9ae633a3a5b673d4f80fc47da558ac372d6a0d6477",
+    "Sources/TritonKit/Picker/TKPickerOverlay.swift": "13c927489ffe7c237ca0b1ab459b0e8159751b82cc0a87327fc6b42c1109d987",
+    "Sources/TritonKit/Picker/TKPickerOverlayViewController.swift": "bd81a429e5e6f9a0ebeb50b25c56b5ee31bd5ec836be69dbeef7a3f1b5bee348",
+    "Sources/TritonKit/Picker/TKSDKSettingsSnapshot.swift": "6d687720d46c380932f9bb550da518a29189d800a1fde1370289eafae1f1d247",
+    "Sources/TritonKit/Picker/TKSDKSettingsViewController.swift": "2a614277e1d45271d25e3c59b75bc369a650fd227838ee1dce97c8b9457c9430",
+    "Sources/TritonKit/TKPickerRuntimeStorage.swift": "41aa74a21388f50b6ad81526af41ac7f3ee9c1d2ce2021eae06476eac790c503",
+    "Sources/TritonKit/TritonKit.swift": "32c2ead4b0cf93b9349a83e3207e547c2f40a608db69fe0be349b07b6b0a284d",
+    "Tests/TritonKitTests/TKPickerRuntimeStorageTests.swift": "ad18e68ed858075c1f606f9933711a29a23499aaaa20a407c6ce78ccc523ef0b",
+    "Tests/TritonKitTests/TKPickerUITests.swift": "d5e1bb1411664e8a372f25c777de5c290454deec73d4f0282521a132e100a908",
+    "Tests/TritonKitTests/TKSDKSettingsSnapshotTests.swift": "c812dd6fb655701753294db0e40cfc2a70bf64a816df0f8d0339d413c1d9ce15",
+    "Tests/TritonKitTests/TKSelectionAvailabilityTests.swift": "8a0bb9fda782072839d30c757e94c013146331626f8bb29836d31d172e1ad962"
+  },
+  "evidenceNotes": [
+    "Current native modal: modal-uikit-final, modal-local, modal-release.",
+    "Hub/self-drawn screenshots and tests are historical and not native modal proof."
+  ],
+  "screenshots": {
+    "20261016-sdk-modal-picker-v01.png": "581052e5a8fbcb7076d93ebb62bd2ca721eb13f3f3df69b59da6eadc79306ef2",
+    "20261016-sdk-modal-confirmation-v01.png": "3809f486f61aedb360e5eff2e8b617539f98c432d4c7c43163baa9aa8a478132",
+    "20261016-sdk-modal-dismissed-v01.png": "965737ea174e7bb0c077a0ac4c5e90340192c15fd53cfc5c3c2022fbd1d8b5db",
+    "20261016-sdk-modal-home-v01.png": "748ac20e38982756e2def7ec9f2446a867a474ae1591fd3d0e1b7771881dd04b"
+  },
+  "commit": "afbe3077"
+}
