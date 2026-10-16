@@ -13,15 +13,15 @@ SCHEME = "TritonIOSRunner"
 ALLOWED = {
     "README.md", "Package.swift", "project.yml",
     "FixtureApp/RunnerFixtureApp.swift",
-    "RunnerTests/TritonIOSRunnerTests.swift", "RunnerTests/HTTPProtocol.swift",
-    "ProtocolTests/HTTPProtocolTests.swift",
+    "RunnerTests/TritonIOSRunnerTests.swift", "RunnerTests/HTTPProtocol.swift", "RunnerTests/SecureChannel.swift", "RunnerTests/RunnerServer.swift",
+    "ProtocolTests/HTTPProtocolTests.swift", "ProtocolTests/RunnerServerTests.swift",
     f"{PROJECT}/project.pbxproj",
     f"{PROJECT}/xcshareddata/xcschemes/{SCHEME}.xcscheme",
     f"{PROJECT}/project.xcworkspace/contents.xcworkspacedata",
 }
 REQUIRED = {
     "FixtureApp/RunnerFixtureApp.swift", "RunnerTests/TritonIOSRunnerTests.swift",
-    "RunnerTests/HTTPProtocol.swift", f"{PROJECT}/project.pbxproj",
+    "RunnerTests/HTTPProtocol.swift", "RunnerTests/SecureChannel.swift", "RunnerTests/RunnerServer.swift", f"{PROJECT}/project.pbxproj",
     f"{PROJECT}/xcshareddata/xcschemes/{SCHEME}.xcscheme",
 }
 

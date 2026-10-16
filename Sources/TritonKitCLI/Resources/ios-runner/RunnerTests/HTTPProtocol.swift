@@ -17,9 +17,10 @@ struct RunnerHTTPRequest {
     let body: Data
     var requestID: String { headers["x-request-id"] ?? "" }
     var fingerprint: Data { Data((method + " " + path + "\n").utf8) + body }
-    func validate(token: String, session: String) throws {
-        guard !token.isEmpty, headers["authorization"] == "Bearer " + token else {
-            throw ProtocolFailure("unauthorized", "Bearer authentication required", status: 401)
+    /// Called only after RunnerServer has authenticated and decrypted the frame.
+    func validate(session: String) throws {
+        guard headers["authorization"] == nil else {
+            throw ProtocolFailure("legacy_authentication_rejected", "Bearer authentication is not accepted by protocol v2", status: 401)
         }
         guard headers["x-session-id"] == session else {
             throw ProtocolFailure("session_mismatch", "Session binding does not match", status: 409)

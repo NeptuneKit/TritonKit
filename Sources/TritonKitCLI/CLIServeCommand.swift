@@ -14,7 +14,30 @@ struct Serve: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "Port to listen on") var port: Int = 19421
     @Option(name: .shortAndLong, help: "Host to bind to") var host: String = "127.0.0.1"
 
+    @Flag(name: .long, inversion: .prefixedNo, help: "Opt in to Bonjour publication (TRITON_ADVERTISE=true|false; default false). Does not authenticate peers.")
+    var advertise: Bool?
+
+    func advertisingWanted(environment: [String: String] = ProcessInfo.processInfo.environment) throws -> Bool {
+        if let advertise { return advertise }
+        guard let value = environment["TRITON_ADVERTISE"] else { return false }
+        switch value.lowercased() {
+        case "1", "true": return true
+        case "0", "false": return false
+        default: throw ValidationError("TRITON_ADVERTISE must be true, false, 1, or 0")
+        }
+    }
+
+    mutating func validate() throws {
+        guard (1...65535).contains(port) else { throw ValidationError("Port must be between 1 and 65535") }
+        guard !host.isEmpty, host.rangeOfCharacter(from: .whitespacesAndNewlines) == nil,
+              !host.contains("/"), !host.contains("://") else { throw ValidationError("Host must be a nonempty hostname or IP address") }
+        _ = try advertisingWanted()
+    }
+
     func run() async throws {
+        let publisher = TritonBonjourPublisher(wanted: try advertisingWanted(), port: port)
+        defer { publisher.stop() }
+
         let store = DataStore()
         let state = ConnectionState()
         let encoder = JSONEncoder()
@@ -94,17 +117,7 @@ struct Serve: AsyncParsableCommand {
                             body: .init(byteBuffer: ByteBuffer(data: data)))
         }
 
-        router.get("/status") { _, _ -> Response in
-            let cacheStatus = state.cacheStatus()
-            return jsonResponse(TKStatusResponse(
-                connected: state.isConnected,
-                latestHierarchyAvailable: cacheStatus.latestHierarchyAvailable,
-                targetCount: state.targetCount,
-                activeHierarchyAvailable: cacheStatus.activeHierarchyAvailable,
-                hierarchyCacheState: cacheStatus.hierarchyCacheState,
-                targetConnectionState: state.isConnected ? "connected" : "disconnected"
-            ))
-        }
+        registerTritonStatusRoute(on: router, state: state, publisher: publisher)
 
         router.get("/targets") { _, _ -> Response in
             return jsonResponse(TKTargetsResponse(targets: state.summaries()))
@@ -1078,7 +1091,8 @@ struct Serve: AsyncParsableCommand {
                 webSocketRouter: webSocketRouter,
                 configuration: .init(maxFrameSize: tritonWebSocketMaxFrameSize, extensions: [])
             ),
-            configuration: .init(address: .hostname(host, port: port))
+            configuration: .init(address: .hostname(host, port: port)),
+            onServerRunning: { _ in publisher.start() }
         )
 
         log("[tritonkit] Control: ws://\(host):\(port)/")
@@ -1088,16 +1102,12 @@ struct Serve: AsyncParsableCommand {
         log("[tritonkit] Command: POST http://\(host):\(port)/command")
         log("[tritonkit] Commands: h[ierarchy] | a[ppinfo] | p[ing] | q[uit]")
         webHostTargetCache.refreshIfNeeded()
-        let bonjourService = publishTritonBonjourService(port: port)
-        if bonjourService != nil {
-            log("[tritonkit] Bonjour: _tritonkit-server._tcp.local:\(port)")
-        }
 
         // Stdin
         Task {
             while let line = readLine() {
                 switch line.trimmingCharacters(in: .whitespaces).lowercased() {
-                case "q", "quit", "exit": log("[tritonkit] Shut down."); Darwin.exit(0)
+                case "q", "quit", "exit": publisher.stop(); log("[tritonkit] Shut down."); Darwin.exit(0)
                 case "h", "hierarchy":
                     if let ws = state.outbound {
                         let id = counter.next()
@@ -1125,18 +1135,11 @@ struct Serve: AsyncParsableCommand {
 
         signal(SIGINT, SIG_IGN)
         let sig = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
-        sig.setEventHandler { log("\n[tritonkit] Interrupted."); Darwin.exit(0) }
+        sig.setEventHandler { publisher.stop(); log("\n[tritonkit] Interrupted."); Darwin.exit(0) }
         sig.resume()
 
         do { try await app.run() } catch { log("[tritonkit] Error: \(error)"); throw error }
     }
-}
-
-private func publishTritonBonjourService(port: Int) -> NetService? {
-    guard port > 0 && port <= Int(Int32.max) else { return nil }
-    let service = NetService(domain: "local.", type: "_tritonkit-server._tcp.", name: "TritonKit", port: Int32(port))
-    service.publish()
-    return service
 }
 
 private func queryTarget(from request: Request) -> String? {

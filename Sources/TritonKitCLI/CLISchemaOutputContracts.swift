@@ -18,6 +18,13 @@ func statusOutputContract() -> TKCommandOutputContract {
             ("activeHierarchyAvailable", "Bool?", false, "Whether the active target has a hierarchy snapshot"),
             ("hierarchyCacheState", "String?", false, "active, stale, or unavailable"),
             ("targetConnectionState", "String?", false, "connected or disconnected target state"),
+            ("discovery", "TKDiscoveryStatus?", false, "Bonjour publication snapshot; absent on older servers"),
+            ("discovery.wanted", "Bool", true, "Explicit advertisement intent, independent of bind address"),
+            ("discovery.state", "String", true, "wanted, publishing, advertising, failed, or stopped; advertising requires a publication callback"),
+            ("discovery.serviceType", "String", true, "Bonjour service type"),
+            ("discovery.identityVerified", "Bool", true, "Always false; publication and TCP readiness are not authentication"),
+            ("discovery.errorCode", "Int?", false, "NetService publication error code"),
+            ("discovery.errorDomain", "Int?", false, "NetService publication error domain"),
         ])
     )
 }

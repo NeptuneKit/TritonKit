@@ -7,6 +7,12 @@ metadata:
 
 # TritonKit Real Project Regression
 
+## Embedded discovery migration
+
+`triton serve` never advertises implicitly, including with an explicit LAN bind. Use `--advertise` or `TRITON_ADVERTISE=true|1` only when discovery is intended; `--no-advertise` overrides it. `false|0` disables it; other environment values fail before bind. Read `discovery` in `triton status --json` / `GET /status`: wanted is intent, advertising requires a real publication callback, failed includes the NetService error, stopped means withdrawn/disabled. Older servers omit the field. `identityVerified` remains false: publication is neither peer authentication nor proof of LAN reachability.
+
+The SDK's `.environment()` no longer browses or selects the first Bonjour service. Prefer explicit App-process `TRITON_HOST` / `TRITON_PORT`, Debug bundle host, or `.device(...)`. For intentional discovery, use `.environment(discoveryPolicy: .bonjour(timeout: 0.15))` or App-process `TRITON_DISCOVERY=bonjour`; `disabled` is the default. `TRITON_DISCOVERY_TIMEOUT_SECONDS` must be finite and greater than 0, at most 5. Invalid configuration, multiple/unresolved/removed candidates, or no candidates make `start()` reject discovery without connecting to a fallback host. `.bonjourDiscovery(timeout:)` exposes the reason and candidates; `.bonjour(timeout:)` retains its optional endpoint API. Resolve ambiguity with an explicit host. A public ID, name, one candidate or TCP readiness never authenticates the service. Keep all SDK symbols in the existing file-level `#if DEBUG` bootstrap; Release discovery and runtime remain no-op. When upgrading from versions that browsed automatically, migrate the Debug bootstrap and verify the installed CLI/SDK schema before testing.
+
 ## Principle
 
 Real-project validation is not demo smoke. Treat the business app as an external system under test:

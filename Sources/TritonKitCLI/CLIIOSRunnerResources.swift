@@ -23,14 +23,14 @@ private let iosRunnerManifestName = "RUNNER_MANIFEST.json"
 private let iosRunnerAllowedPaths: Set<String> = [
     "README.md", "Package.swift", "project.yml",
     "FixtureApp/RunnerFixtureApp.swift", "RunnerTests/TritonIOSRunnerTests.swift",
-    "RunnerTests/HTTPProtocol.swift", "ProtocolTests/HTTPProtocolTests.swift",
+    "RunnerTests/HTTPProtocol.swift", "RunnerTests/SecureChannel.swift", "RunnerTests/RunnerServer.swift", "ProtocolTests/HTTPProtocolTests.swift", "ProtocolTests/RunnerServerTests.swift",
     "TritonIOSRunner.xcodeproj/project.pbxproj",
     "TritonIOSRunner.xcodeproj/xcshareddata/xcschemes/TritonIOSRunner.xcscheme",
     "TritonIOSRunner.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
 ]
 private let iosRunnerRequiredPaths: Set<String> = [
     "FixtureApp/RunnerFixtureApp.swift", "RunnerTests/TritonIOSRunnerTests.swift",
-    "RunnerTests/HTTPProtocol.swift", "TritonIOSRunner.xcodeproj/project.pbxproj",
+    "RunnerTests/HTTPProtocol.swift", "RunnerTests/SecureChannel.swift", "RunnerTests/RunnerServer.swift", "TritonIOSRunner.xcodeproj/project.pbxproj",
     "TritonIOSRunner.xcodeproj/xcshareddata/xcschemes/TritonIOSRunner.xcscheme",
 ]
 

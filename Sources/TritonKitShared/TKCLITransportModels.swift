@@ -9,6 +9,7 @@ public struct TKStatusResponse: Codable, Equatable {
     public let activeHierarchyAvailable: Bool?
     public let hierarchyCacheState: String?
     public let targetConnectionState: String?
+    public let discovery: TKDiscoveryStatus?
 
     public init(
         connected: Bool,
@@ -16,7 +17,8 @@ public struct TKStatusResponse: Codable, Equatable {
         targetCount: Int,
         activeHierarchyAvailable: Bool? = nil,
         hierarchyCacheState: String? = nil,
-        targetConnectionState: String? = nil
+        targetConnectionState: String? = nil,
+        discovery: TKDiscoveryStatus? = nil
     ) {
         self.connected = connected
         self.latestHierarchyAvailable = latestHierarchyAvailable
@@ -28,6 +30,7 @@ public struct TKStatusResponse: Codable, Equatable {
             return "unavailable"
         }()
         self.targetConnectionState = targetConnectionState ?? (connected ? "connected" : "disconnected")
+        self.discovery = discovery
     }
 }
 
@@ -42,6 +45,7 @@ public struct TKCLIStatusEnvelope: Codable, Equatable {
     public let activeHierarchyAvailable: Bool?
     public let hierarchyCacheState: String?
     public let targetConnectionState: String?
+    public let discovery: TKDiscoveryStatus?
 
     enum CodingKeys: String, CodingKey {
         case ok
@@ -54,6 +58,7 @@ public struct TKCLIStatusEnvelope: Codable, Equatable {
         case activeHierarchyAvailable
         case hierarchyCacheState
         case targetConnectionState
+        case discovery
     }
 
     public init(
@@ -66,7 +71,8 @@ public struct TKCLIStatusEnvelope: Codable, Equatable {
         surface: String = "status",
         activeHierarchyAvailable: Bool? = nil,
         hierarchyCacheState: String? = nil,
-        targetConnectionState: String? = nil
+        targetConnectionState: String? = nil,
+        discovery: TKDiscoveryStatus? = nil
     ) {
         self.ok = ok
         self.serverReachable = serverReachable
@@ -82,6 +88,7 @@ public struct TKCLIStatusEnvelope: Codable, Equatable {
             return "unavailable"
         }()
         self.targetConnectionState = targetConnectionState ?? (connected ? "connected" : "disconnected")
+        self.discovery = discovery
     }
 
     public init(from decoder: Decoder) throws {
@@ -93,6 +100,7 @@ public struct TKCLIStatusEnvelope: Codable, Equatable {
         self.targetCount = try container.decode(Int.self, forKey: .targetCount)
         self.runtime = try container.decode(String.self, forKey: .runtime)
         self.surface = try container.decodeIfPresent(String.self, forKey: .surface) ?? "status"
+        self.discovery = try container.decodeIfPresent(TKDiscoveryStatus.self, forKey: .discovery)
         let defaultHierarchyCacheState =
             if connected && latestHierarchyAvailable {
                 "active"

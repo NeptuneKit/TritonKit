@@ -88,14 +88,21 @@ enum IOSRunnerTransport {
             } else {
                 try socket.connectLoopback(port: connection.port, deadline: deadline)
             }
-            try socket.write(request, deadline: deadline)
-            let response = try socket.readHTTP(deadline: deadline)
+            let hello = RunnerSecureChannel.clientHello()
+            try socket.write(hello, deadline: deadline)
+            let proof = try socket.readExactly(RunnerSecureChannel.proofSize, deadline: deadline)
+            let channel = try RunnerSecureChannel.client(token: connection.token, session: connection.sessionID, hello: hello, proof: proof)
+            // Authenticate the listener before any request (or credential) is sent.
+            try socket.write(channel.sealRequest(request), deadline: deadline)
+            let header = try socket.readExactly(4, deadline: deadline)
+            let length = try RunnerSecureChannel.frameLength(header, maximumPlaintext: RunnerSecureChannel.maximumResponseBytes)
+            let response = try channel.openResponse(header + socket.readExactly(length, deadline: deadline))
             _ = try deadline.remaining()
             let parsed = try IOSRunnerWire.parseHTTPResponse(response, sessionID: connection.sessionID, requestID: requestID)
             _ = try deadline.remaining()
             return parsed
         } catch {
-            let cause = (error as? IOSRunnerWireError)?.cause ?? "socket_failed"
+            let cause = (error as? IOSRunnerWireError)?.cause ?? (error as? RunnerSecureChannelError)?.cause ?? "socket_failed"
             return IOSRunnerWireResponse(envelope: ["ok": false, "sessionID": connection.sessionID, "requestID": requestID,
                 "error": ["code": "ios_runner_transport_unknown", "cause": cause, "delivery": "unknown", "retryable": false]])
         }
@@ -189,7 +196,7 @@ private final class IOSRunnerSocket {
             return Data(buffer.prefix(count))
         }
     }
-    private func readExactly(_ size: Int, deadline: IOSRunnerDeadline) throws -> Data {
+    func readExactly(_ size: Int, deadline: IOSRunnerDeadline) throws -> Data {
         var data = Data()
         while data.count < size { data.append(try read(upTo: min(65536, size - data.count), deadline: deadline)) }
         return data
@@ -199,19 +206,5 @@ private final class IOSRunnerSocket {
         let header = try readExactly(16, deadline: deadline)
         let length = try IOSRunnerMux.payloadLength(header, expectedTag: tag)
         return try IOSRunnerMux.parseFrame(header + readExactly(length, deadline: deadline), expectedTag: tag)
-    }
-    func readHTTP(deadline: IOSRunnerDeadline) throws -> Data {
-        var data = Data()
-        while true {
-            if let header = try IOSRunnerWire.httpHeader(data) {
-                let expected = header.bodyOffset + header.bodyLength
-                guard data.count <= expected else { throw IOSRunnerWireError("http_trailing_data") }
-                while data.count < expected {
-                    data.append(try read(upTo: min(65536, expected - data.count), deadline: deadline))
-                }
-                return data
-            }
-            data.append(try read(upTo: min(4096, IOSRunnerWire.maximumHeaderBytes + 1 - data.count), deadline: deadline))
-        }
     }
 }

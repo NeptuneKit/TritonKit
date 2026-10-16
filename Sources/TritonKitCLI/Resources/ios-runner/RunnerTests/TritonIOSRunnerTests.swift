@@ -13,13 +13,14 @@ final class TritonIOSRunnerTests: XCTestCase {
         fixture.launch()
         XCTAssertTrue(fixture.buttons["incrementButton"].waitForExistence(timeout: 10))
         XCTAssertTrue(fixture.staticTexts["counterValue"].waitForExistence(timeout: 10))
-        let server = try IOSRunnerServer(config: config, fixture: fixture)
+        let ui = IOSRunnerUI(config: config, fixture: fixture)
+        let server = try IOSRunnerServer(config: config, perform: ui.perform)
         server.start()
         let tick = Timer(timeInterval: 0.1, repeats: true) { _ in }
         RunLoop.current.add(tick, forMode: .default)
         defer { tick.invalidate() }
-        let until = Date().addingTimeInterval(config.ttl)
-        while !server.stopped && Date() < until {
+        let until = ProcessInfo.processInfo.systemUptime + config.ttl
+        while !server.stopped && ProcessInfo.processInfo.systemUptime < until {
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         }
         server.stop()
@@ -29,151 +30,18 @@ final class TritonIOSRunnerTests: XCTestCase {
 }
 
 
-final class IOSRunnerServer {
+final class IOSRunnerUI {
     private let config: RunnerConfiguration
     private let fixture: XCUIApplication
-    private let listener: NWListener
-    private let queue = DispatchQueue(label: "dev.tritonkit.iosrunner.http")
-    private let ledger = RequestLedger()
-    private let lock = NSLock()
-    private var stopRequested = false
-    private var listenerError: String?
-    var listenerFailure: String? { lock.lock(); defer { lock.unlock() }; return listenerError }
-    private var clients: [ObjectIdentifier: NWConnection] = [:]
-    private var uiPending: [(RunnerHTTPRequest, [String: Any], NWConnection)] = []
-    private var uiBusy = false
     private var observedApp: String?
     private var observedAt: Date?
     private var observedID: String?
     private var observedGeometry: RunnerGeometry?
     private var observedElements: [[String: String]] = []
-    private let started = Date()
-    var stopped: Bool { lock.lock(); defer { lock.unlock() }; return stopRequested }
-    init(config: RunnerConfiguration, fixture: XCUIApplication) throws {
+    init(config: RunnerConfiguration, fixture: XCUIApplication) {
         self.config = config; self.fixture = fixture
-        let parameters = NWParameters.tcp
-        parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: config.port)!)
-        listener = try NWListener(using: parameters)
     }
-    func start() {
-        listener.stateUpdateHandler = { [weak self] state in
-            if case .ready = state { print("TritonIOSRunner listener ready at \(Date().timeIntervalSince1970)") }
-            if case .failed = state {
-                guard let self else { return }
-                self.lock.lock(); self.listenerError = "Runner listener failed"; self.lock.unlock()
-                self.stop()
-            }
-        }
-        listener.newConnectionHandler = { [weak self] connection in self?.accept(connection) }
-        listener.start(queue: queue)
-    }
-    func stop() {
-        lock.lock(); stopRequested = true; lock.unlock()
-        listener.cancel()
-        queue.async { [weak self] in
-            guard let self else { return }
-            for client in self.clients.values { client.cancel() }
-            self.clients.removeAll()
-        }
-    }
-    private func accept(_ connection: NWConnection) {
-        guard clients.count < 8 else { connection.cancel(); return }
-        let id = ObjectIdentifier(connection)
-        clients[id] = connection
-        connection.stateUpdateHandler = { [weak self] state in
-            if case .cancelled = state { self?.clients.removeValue(forKey: id) }
-            if case .failed = state { self?.clients.removeValue(forKey: id) }
-        }
-        connection.start(queue: queue)
-        // Connections and incomplete reads have a strict lifetime. Cancelling a
-        // connection does not cancel an already dispatched XCTest action.
-        queue.asyncAfter(deadline: .now() + 20) { connection.cancel() }
-        receive(connection, parser: BoundedHTTPParser())
-    }
-    private func receive(_ connection: NWConnection, parser: BoundedHTTPParser) {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 8192) { [weak self] data, _, complete, error in
-            guard let self else { return }
-            do {
-                if let data, let request = try parser.append(data) { self.handle(request, connection: connection); return }
-                if complete || error != nil { connection.cancel(); return }
-                self.receive(connection, parser: parser)
-            } catch {
-                self.send(self.failure(error, requestID: ""), status: (error as? ProtocolFailure)?.status ?? 400, connection: connection)
-            }
-        }
-    }
-    private func envelope(ok: Bool, requestID: String, result: Any = NSNull(), error: Any = NSNull()) -> [String: Any] {
-        ["ok": ok, "sessionID": config.session, "requestID": requestID, "result": result, "error": error]
-    }
-    private func failure(_ error: Error, requestID: String) -> [String: Any] {
-        let value = error as? ProtocolFailure ?? ProtocolFailure("request_failed", "Request could not be completed")
-        return envelope(ok: false, requestID: requestID, error: ["code": value.code, "message": value.message])
-    }
-    private func handle(_ request: RunnerHTTPRequest, connection: NWConnection) {
-        do {
-            try request.validate(token: config.token, session: config.session)
-            let body = try request.jsonBody()
-            if request.path == "/crossApp" { _ = try CrossAppRequest(body: body, allowedBundles: config.allowedBundles) }
-            if request.path == "/environment" { _ = try RunnerEnvironmentRequest(body: body) }
-            if request.path == "/health" {
-                send(envelope(ok: true, requestID: request.requestID, result: ["listenerReady": true, "networkReady": true, "automationReady": false, "uptimeSeconds": Date().timeIntervalSince(started), "ttlSeconds": config.ttl, "backend": "public-xctest-runner"]), connection: connection)
-                return
-            }
-            if request.path == "/receipt" {
-                guard let actionID = body["actionRequestID"] as? String, !actionID.isEmpty else { throw ProtocolFailure("invalid_receipt", "actionRequestID required") }
-                send(envelope(ok: true, requestID: request.requestID, result: ["found": ledger.receipt(actionID) != nil, "receipt": ledger.receipt(actionID) ?? [:]]), connection: connection)
-                return
-            }
-            if request.path == "/stop" {
-                send(envelope(ok: true, requestID: request.requestID, result: ["stopping": true]), connection: connection, after: { [weak self] in self?.stop() })
-                return
-            }
-            let isAction = ["/probe", "/snapshot", "/screenshot", "/tap", "/home", "/activateFixture", "/crossApp", "/environment"].contains(request.path)
-            if isAction, let existing = try ledger.claim(request) {
-                let value = existing["status"] as? String == "pending" ? envelope(ok: false, requestID: request.requestID, result: ["status": "pending"], error: ["code": "request_pending", "message": "Original action has not completed"]) : existing
-                send(value, status: existing["status"] as? String == "pending" ? 202 : 200, connection: connection)
-                return
-            }
-            guard uiPending.count < 8 else {
-                let value = failure(ProtocolFailure("ui_queue_budget", "UI queue budget exhausted", status: 429), requestID: request.requestID)
-                if isAction { ledger.complete(requestID: request.requestID, envelope: value) }
-                send(value, status: 429, connection: connection)
-                return
-            }
-            uiPending.append((request, body, connection))
-            drainUI()
-        } catch {
-            send(failure(error, requestID: request.requestID), status: (error as? ProtocolFailure)?.status ?? 400, connection: connection)
-        }
-    }
-    private func drainUI() {
-        guard !uiBusy, !uiPending.isEmpty else { return }
-        uiBusy = true
-        let (request, body, connection) = uiPending.removeFirst()
-        DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                let result: [String: Any]
-                let status: Int
-                do {
-                    guard !self.stopped else { throw ProtocolFailure("session_stopping", "Runner is stopping", status: 409) }
-                    result = self.envelope(ok: true, requestID: request.requestID, result: try self.perform(request.path, body: body))
-                    status = 200
-                } catch {
-                    result = self.failure(error, requestID: request.requestID)
-                    status = (error as? ProtocolFailure)?.status ?? 500
-                }
-                if ["/probe", "/snapshot", "/screenshot", "/tap", "/home", "/activateFixture", "/crossApp", "/environment"].contains(request.path) {
-                    self.ledger.complete(requestID: request.requestID, envelope: result)
-                }
-                let delivered = self.ledger.receipt(request.requestID) ?? result
-                self.queue.async {
-                    self.send(delivered, status: delivered["ok"] as? Bool == false && status == 200 ? 413 : status, connection: connection)
-                    self.uiBusy = false
-                    self.drainUI()
-                }
-            }
-    }
-    private func perform(_ path: String, body: [String: Any]) throws -> [String: Any] {
+    func perform(_ path: String, body: [String: Any]) throws -> [String: Any] {
         if path == "/environment" { return try performEnvironment(RunnerEnvironmentRequest(body: body)) }
         if path == "/crossApp" { return try performCrossApp(CrossAppRequest(body: body, allowedBundles: config.allowedBundles)) }
         if path == "/home" { XCUIDevice.shared.press(.home); return ["submitted": true] }
@@ -470,11 +338,5 @@ final class IOSRunnerServer {
             result.append(["identifier": identifier, "numericValue": value])
         }
         return result
-    }
-    private func send(_ body: [String: Any], status: Int = 200, connection: NWConnection, after: (() -> Void)? = nil) {
-        guard let json = try? JSONSerialization.data(withJSONObject: body), json.count <= 12 * 1024 * 1024 else { connection.cancel(); return }
-        let requestID = body["requestID"] as? String ?? ""
-        let header = "HTTP/1.1 \(status) Runner\r\nContent-Type: application/json\r\nContent-Length: \(json.count)\r\nConnection: close\r\nX-Request-ID: \(requestID)\r\n\r\n"
-        connection.send(content: Data(header.utf8) + json, completion: .contentProcessed { _ in connection.cancel(); after?() })
     }
 }
