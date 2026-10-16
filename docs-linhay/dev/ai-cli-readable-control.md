@@ -13,7 +13,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 
 ## 接口
 
-- `GET /status`：返回 `connected` 与 `latestHierarchyAvailable`。
+- `GET /status`：返回 `connected`、`latestHierarchyAvailable` 与 `discovery` 广播快照；`triton status --json` 透传 `wanted/state/serviceType/identityVerified/errorCode/errorDomain`。旧服务缺字段仍兼容。`state` 是 wanted/publishing/advertising/failed/stopped；仅真实发布回调产生 advertising，`identityVerified` 恒 false，不能据此推断身份认证或 LAN 可达。`serve` 默认不广播（包括显式 LAN bind），`--advertise` / `TRITON_ADVERTISE=true|1` 显式开启，`--no-advertise` 覆盖环境；false|0 关闭，其余环境值、非法 host/port 在监听前拒绝。
 - `GET /targets`：返回当前可调试 target 列表；`triton serve` 支持多个 embedded runtime WebSocket 同时连接。
 - `POST /command`：请求体为 `{"type":"ping","target":"<target-id>"}`、`{"type":"appInfo","target":"<target-id>"}` 或 `{"type":"hierarchy","target":"<target-id>"}`；成功返回请求 `id` 和 `type`。
 - `POST /request`：请求体为 `{"type":"<requestType>","payload":"...","target":"<target-id>"}`；会等待 iOS 端按 request id 返回 payload，适合 `attrs`、`object`、`input` 等同步读取/控制。
@@ -21,6 +21,8 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `GET /hierarchy/latest?target=<target-id>`：返回指定 target 最近一次 hierarchy JSON；尚未收到 hierarchy 时返回 `404`。
 - `POST /data` 与 `GET /data/:id`：保留为二进制数据通道。
 - `ws://host:19421/`：保留为 iOS 与 CLI 的控制通道。
+
+SP-203 解码边界：`discovery.identityVerified` 仅能为 false，消费服务响应时也不能透传对方自报的 true。该协议没有服务认证机制；公开 metadata、字段名和对方声明都不能制造信任证据。已用 forged HTTP status JSON 先失败再修复的回归保护。
 
 ## CLI 命令
 

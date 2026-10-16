@@ -61,15 +61,16 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 1. 在 `Package.swift` 的 `TritonKit` target 通过 `.define("TRITONKIT_RUNTIME_ENABLED", .when(configuration: .debug))` 定义 SwiftPM Debug runtime 启用边界；在 `TritonKit.podspec` 通过 `pod_target_xcconfig` 的 `OTHER_SWIFT_FLAGS[config=Debug]` 定义 CocoaPods pod target Debug runtime 启用边界；`TritonKit.isRuntimeEnabled` 只读取该宏，不直接绑定裸 `#if DEBUG`。
 2. Release 下保留 public API，避免业务 App 仅因依赖存在而编译失败。
 3. Release 下 runtime 行为采用 no-op 或明确错误：`connect` / `send` / reconnect / ping no-op，hierarchy 返回空数组，data upload 抛出 `TritonKitRuntimeError.disabledOutsideDebug`，request handler 返回 disabled 错误。
-4. `canImport(UIKit)` 仍只用于保护 UIKit 符号可编译性，不用于决定 runtime 是否启用。
-5. 业务 App 示例必须推荐独立 `TritonKitDebugBootstrap.swift`，整个文件用 `#if DEBUG` 包住，并优先调用 `TritonKit.shared.start()` / `start { config in ... }` facade；CocoaPods 示例必须使用 `:configurations => ['Debug']`。
-6. 面向团队 App 的默认模板优先提供 `startIfEnabled()`：通过 `--triton-enabled`、`TRITON_ENABLED=1` 或 Debug-only user default 显式启用，避免普通 Debug 包默认暴露 runtime。
-7. SwiftPM 示例必须明确不能提供配置级 dependency gating；若需要 Release 不链接 TritonKit，使用独立 Debug-only app target / scheme。
+4. SDK 默认 endpoint 不浏览 Bonjour；显式发现仍须受 `TRITONKIT_RUNTIME_ENABLED` 保护，Release 在构造 browser/调用注入 resolver 前返回 runtimeDisabled。默认参数求值也必须纳入此验证，不能只验证 `start` 函数体。
+5. `canImport(UIKit)` 仍只用于保护 UIKit 符号可编译性，不用于决定 runtime 是否启用。
+6. 业务 App 示例必须推荐独立 `TritonKitDebugBootstrap.swift`，整个文件用 `#if DEBUG` 包住，并优先调用 `TritonKit.shared.start()` / `start { config in ... }` facade；CocoaPods 示例必须使用 `:configurations => ['Debug']`。
+7. 面向团队 App 的默认模板优先提供 `startIfEnabled()`：通过 `--triton-enabled`、`TRITON_ENABLED=1` 或 Debug-only user default 显式启用，避免普通 Debug 包默认暴露 runtime。
+8. SwiftPM 示例必须明确不能提供配置级 dependency gating；若需要 Release 不链接 TritonKit，使用独立 Debug-only app target / scheme。
 
 ## 验证
 
 - `swift test` 覆盖 Debug package 分支，确认 `TRITONKIT_RUNTIME_ENABLED` 生效且 `TritonKit.isRuntimeEnabled == true`。
-- `swift test -c release` 覆盖 Release package 分支，确认 `TRITONKIT_RUNTIME_ENABLED` 不生效且 `TritonKit.isRuntimeEnabled == false`。
+- `swift test -c release` 覆盖 Release package 分支，确认 `TRITONKIT_RUNTIME_ENABLED` 不生效且 `TritonKit.isRuntimeEnabled == false`。Release request handler 的早退使用通用 `TKErrorPayload`（`type=.ping`、message 为 runtime disabled outside DEBUG），不可按 Debug 的 input/semantic/WebView 专属 `capability_disabled` payload 解码；需分别验证两条分支。
 - `swift build -c release --target TritonKit` 确认 Package Manager 的 Release library target 可编译。
 - `swift build --package-path CLI --scratch-path .build/cli -c release --product triton` 确认 CLI release 产物不受影响。
 - `docs-linhay/scripts/verify-ios-debug-isolation.sh` 校验 `Examples/TritonKitDemo` 的 app-side 接入示例采用文件级 `#if DEBUG`，并确认 SwiftPM / CocoaPods 的 `TRITONKIT_RUNTIME_ENABLED` Release no-op 防线存在。
