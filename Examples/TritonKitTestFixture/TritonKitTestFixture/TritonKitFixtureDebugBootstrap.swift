@@ -9,7 +9,9 @@ final class TritonKitFixtureDebugBootstrap: TritonKitDelegate {
 
     func connect(host: String, port: UInt16) {
         onStatusChange?("Connecting")
-        TritonKit.shared.start(.init(host: host, port: port), delegate: self)
+        var configuration = TritonKit.Configuration(endpoint: .init(host: host, port: port))
+        if configuration.picker.enabled { configuration.features.insert(.inspector) }
+        TritonKit.shared.start(configuration, delegate: self)
     }
 
     func tritonKit(_ kit: TritonKit, didChangeState state: TritonKit.ConnectionState) {

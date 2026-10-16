@@ -175,7 +175,17 @@ struct List: AsyncParsableCommand {
 }
 
 struct Inspect: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(abstract: "Inspect one TritonKit target")
+    // Keep connection options on the leaf commands. Defining them here as well
+    // consumes values before SelectionOptions is decoded and silently restores defaults.
+    static let configuration = CommandConfiguration(
+        abstract: "Inspect one TritonKit target",
+        subcommands: [InspectSummary.self, InspectSelection.self, InspectSelectionClear.self, InspectSelectionCapabilities.self],
+        defaultSubcommand: InspectSummary.self
+    )
+}
+
+struct InspectSummary: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "summary", abstract: "Inspect one TritonKit target summary", shouldDisplay: false)
 
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"

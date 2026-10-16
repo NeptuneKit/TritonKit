@@ -1,8 +1,8 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-15（SP-200 Mobile 设备能力补齐已完成本地验证，待合并发布）
-> 覆盖范围：200/200 个已存在 space
+> 最近同步：2026-10-16（SP-201 整理与本地提交）
+> 覆盖范围：201/201 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 200/200 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 200/200 | 每条记录链接到现有 space README |
+| 编号登记 | 201/201 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 201/201 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -233,3 +233,5 @@
 | `SP-199-mobile-mcp-reference` | [`SP-199-mobile-mcp-reference`](./SP-199-mobile-mcp-reference/README.md) | 已归档 | 参考档案与当前源码差距完成；199 space docs门禁通过，不采用功能或启用自动追踪 |
 
 | `SP-200-mobile-device-parity` | [`SP-200-mobile-device-parity`](./SP-200-mobile-device-parity/README.md) | 实施中 | 除云预订/MCP外全部差距补齐；独立worktree，授权实现验证提交合并上线 |
+
+| `SP-201-sdk-floating-picker` | [`SP-201-sdk-floating-picker`](./SP-201-sdk-floating-picker/README.md) | 已本地提交·待集成 | iOS UIKit原生手势、稳定罗盘、导航记忆及拖动放大镜已验证并安装试用，guarded agent tap；独立worktree待集成，未发布 |

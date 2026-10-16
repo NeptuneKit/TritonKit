@@ -74,6 +74,9 @@ metadata:
 
 - UIKit enabled与unsupported平台的恢复契约测试都应编码真实强类型payload；unsupported提前返回可能掩盖空payload错误。目标释放场景先有界观察真实weak目标归零，再验targetGone；一次main queue turn不是CA/ARC释放证据，不放松生产identityChanged规则。SP-196发布候选修复两旧夹具后真实App-hosted76项通过，见[发布验收](../../../docs-linhay/spaces/SP-196-upstream-optimization-delivery/plans/20261014-release.md)。
 
+- 原生手势交互的中间态需要独立截图/断言；松手截图只能证明结束状态。跨进程UI测试与CLI动作使用显式ready交接，不能凭selection已出现就执行业务动作。连续导航同时验收菜单持续可用、目标可见和按钮位置稳定。
+- Xcode输出测试结果不代表进程已退出；失败后的simctl诊断可能继续占用通道。下一次同DerivedData/设备构建前用`triton xcode status`核对，必要时只清理已确认属于本轮的诊断进程并保留证据。整理提交时核对被忽略的截图是否已显式暂存，避免文档存在而引用证据缺失。
+
 ## 文档与记忆
 
 - Space 编号索引：`docs-linhay/spaces/INDEX.md`；路线总览：`docs-linhay/spaces/README.md`。

@@ -40,8 +40,9 @@ public enum TKHierarchyBuilder {
                 windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap { $0.windows }
             } else { windows = UIApplication.shared.windows }
             var data: [LayerData] = []
-            let count = context.childCount(windows.count)
-            for window in windows.prefix(count) {
+            let businessWindows = windows.filter { !($0 is TKRuntimeInspectorOverlayWindow) }
+            let count = context.childCount(businessWindows.count)
+            for window in businessWindows.prefix(count) {
                 if context.isExhausted() { break }
                 if let item = collectLayerData(from: window.layer, depth: 0, context: &context,
                     includeScreenshots: includeScreenshots, remainingScreenshotItems: &remainingScreenshotItems) {

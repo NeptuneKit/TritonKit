@@ -19,6 +19,7 @@ public enum TKTapActivationStrategy: String, Codable, CaseIterable {
 }
 
 public struct TKInputRequest: Codable, Equatable {
+    public let selection: TKSelectionGuard?
     public let type: TKInputType
     public let targetOID: UInt?
     public let matchedOID: UInt?
@@ -64,8 +65,10 @@ public struct TKInputRequest: Codable, Equatable {
         duration: Double? = nil,
         text: String? = nil,
         button: String? = nil,
-        secure: Bool? = nil
+        secure: Bool? = nil,
+        selection: TKSelectionGuard? = nil
     ) {
+        self.selection = selection
         self.type = type
         self.targetOID = targetOID
         self.matchedOID = matchedOID

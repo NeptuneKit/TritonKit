@@ -10,11 +10,14 @@ enum TKRuntimeRequestDomain: Equatable {
     case semantic
     case ledger
     case highlight
+    case selection
     case legacyInspection
     case unsupported
 
     static func domain(for type: TKRequestType) -> TKRuntimeRequestDomain {
         switch type {
+        case .selectionStatus, .selectionClear, .selectionCapabilities:
+            return .selection
         case .highlightApply, .highlightStatus, .highlightClear, .highlightCapabilities:
             return .highlight
         case .ping, .runtimeManifest:

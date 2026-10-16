@@ -2,9 +2,9 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（200/200 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（201/201 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-15（SP-200 实现与真实设备回归收口）
+> 最近审计：2026-10-16（SP-201 整理与本地提交）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -22,6 +22,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 已本地提交·待集成 | [SP-201-sdk-floating-picker](./SP-201-sdk-floating-picker/README.md) | 原生直接拖选实时预览/长按移位，标记身份与CLI操作；手势、稳定罗盘、导航记忆及拖动放大镜验证通过，模拟器试用中 | 独立 `../TritonKit-worktrees/SP-201-sdk-floating-picker` / `feat/SP-201-sdk-floating-picker` 待集成，未推送发布 |
 | 已归档（待合并发布） | [SP-200-mobile-device-parity](./SP-200-mobile-device-parity/README.md) | Mobile设备环境/录屏/诊断/归档安装/动作/终端镜像已实现并完成本地回归 | 合并 feat/SP-200-mobile-device-parity，发布 v0.2.29；排除云预订/MCP |
 | 已归档 | [SP-199-mobile-mcp-reference](./SP-199-mobile-mcp-reference/README.md) | Mobile MCP 参考与差距报告已完成 | docs门禁通过；功能采用另立项，未启用自动追踪 |
 | 已合入本地main | [SP-197-view-annotation](./SP-197-view-annotation/README.md) | 独立可选UIKit高亮与条件恢复；真实模拟器截图、CLI/HTTP与skills已验收 | 7b1a2f76完成集成；P1截图消费者与跨端另行实施 |

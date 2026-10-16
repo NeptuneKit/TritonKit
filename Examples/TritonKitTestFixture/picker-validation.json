@@ -1,0 +1,146 @@
+{
+  "name": "SP201RuntimeHost",
+  "options": {
+    "deploymentTarget": {
+      "iOS": "17.0"
+    }
+  },
+  "packages": {
+    "TritonKit": {
+      "path": "${TRITON_PICKER_REPO}"
+    }
+  },
+  "settings": {
+    "base": {
+      "CODE_SIGNING_ALLOWED": "NO",
+      "SWIFT_VERSION": "5.0"
+    }
+  },
+  "targets": {
+    "RuntimeValidationTests": {
+      "type": "bundle.unit-test",
+      "platform": "iOS",
+      "sources": [
+        {
+          "path": "../../Tests/TritonKitTests",
+          "excludes": [
+            "Fixtures"
+          ]
+        }
+      ],
+      "dependencies": [
+        {
+          "target": "ValidationHost"
+        },
+        {
+          "package": "TritonKit",
+          "product": "TritonKit"
+        },
+        {
+          "package": "TritonKit",
+          "product": "TritonKitShared"
+        }
+      ],
+      "settings": {
+        "base": {
+          "PRODUCT_BUNDLE_IDENTIFIER": "org.tritonkit.sp201.tests",
+          "GENERATE_INFOPLIST_FILE": "YES"
+        },
+        "configs": {
+          "Debug": {
+            "OTHER_SWIFT_FLAGS": "$(inherited) -DTRITONKIT_RUNTIME_ENABLED"
+          }
+        }
+      }
+    },
+    "PickerFixture": {
+      "type": "application",
+      "platform": "iOS",
+      "sources": [
+        "TritonKitTestFixture"
+      ],
+      "dependencies": [
+        {
+          "package": "TritonKit",
+          "product": "TritonKit"
+        }
+      ],
+      "settings": {
+        "base": {
+          "PRODUCT_BUNDLE_IDENTIFIER": "com.neptunekit.tritonkit.testfixture",
+          "INFOPLIST_FILE": "${TRITON_PICKER_REPO}/Examples/TritonKitTestFixture/TritonKitTestFixture/Info.plist"
+        }
+      }
+    },
+    "PickerGestureTests": {
+      "type": "bundle.ui-testing",
+      "platform": "iOS",
+      "sources": [
+        "PickerUITests"
+      ],
+      "dependencies": [
+        {
+          "target": "PickerFixture"
+        }
+      ],
+      "settings": {
+        "base": {
+          "PRODUCT_BUNDLE_IDENTIFIER": "org.tritonkit.sp201.gesturetests",
+          "GENERATE_INFOPLIST_FILE": "YES"
+        }
+      }
+    },
+    "ValidationHost": {
+      "type": "application",
+      "platform": "iOS",
+      "sources": [
+        "RuntimeTestHost"
+      ],
+      "settings": {
+        "base": {
+          "PRODUCT_BUNDLE_IDENTIFIER": "org.tritonkit.sp201.validation",
+          "GENERATE_INFOPLIST_FILE": "YES",
+          "INFOPLIST_KEY_UIApplicationSceneManifest_Generation": "YES",
+          "INFOPLIST_KEY_UILaunchScreen_Generation": "YES"
+        }
+      }
+    }
+  },
+  "schemes": {
+    "RuntimeValidation": {
+      "build": {
+        "targets": {
+          "ValidationHost": "all",
+          "RuntimeValidationTests": [
+            "test"
+          ]
+        }
+      },
+      "test": {
+        "targets": [
+          "RuntimeValidationTests"
+        ],
+        "parallelizable": false
+      }
+    },
+    "PickerGesture": {
+      "build": {
+        "targets": {
+          "PickerFixture": "all",
+          "PickerGestureTests": [
+            "test"
+          ]
+        }
+      },
+      "test": {
+        "targets": [
+          "PickerGestureTests"
+        ],
+        "parallelizable": false,
+        "environmentVariables": {
+          "SP201_WAIT_FOR_AGENT": "${SP201_WAIT_FOR_AGENT}"
+        }
+      }
+    }
+  }
+}

@@ -365,6 +365,12 @@ Hybrid pages are exposed through the CLI instead of a browser UI. On iOS, `trito
 
 Harmony host-side layout identifies Web candidates; layout alone does not prove DOM, URL, or bridge access. With a reachable ArkWeb DevTools socket, `triton webview list --platform harmony --target <selector> --json` discovers CDP pages and `triton webview bridge-call --platform harmony --target <selector> --webview-id <webview-id> --method <method> --params '{}' --json` calls an own function registered in `window.__tritonBridge.methods`. The page function receives `(params, complete, reject)` and may return a value/Promise or complete asynchronously. Stale/ambiguous IDs fail closed. Navigation-session validation is unsupported on this host path; provider-level DOM/events still require their corresponding embedded provider. `triton capabilities --json` mirrors this split: `webview-list/current` are candidate discovery capabilities, while `webview-current-url/snapshot/bridge-call/events/wait` and `route-current-url-assert` are provider-level capabilities with separate `nextAction` and `evidence`.
 
+### 7. Optional Floating Picker (Unreleased)
+
+The SP-201 worktree adds an opt-in Debug UIKit floating dot: drag it onto a view to preview and retain one selection for an agent. It is currently isolated development work, not an integrated or published release. See the [picker integration and guarded action workflow](docs-linhay/dev/20260519-ios-integration-guide.md#可选悬浮控件选择sp-201未发布).
+
+Inside the existing Debug bootstrap, enable both `config.features.insert(.inspector)` and `config.picker = .init(enabled: true, ttlSeconds: 300)`. `TRITON_PICKER_ENABLED=1` only enables picker configuration; the app must still opt into `.inspector`. The picker defaults to off, adds no third-party dependency, and is a no-op in Release. Agents read `triton inspect selection`, then use `act tap` with the returned selection ID, revision and runtime instance ID; marking alone never submits a business action. This first slice permits guarded taps on eligible `UIButton` targets only; labels and cells are observation-only. SwiftUI virtual nodes, WebView DOM, Android and Harmony remain subsequent work.
+
 ## CLI Integration Guide
 
 Use the CLI guide independently when an agent only needs host-side simulator or Harmony / DevEco Emulator control. Use it together with the iOS or Harmony embedded runtime guides when the app process exposes TritonKit runtime endpoints.

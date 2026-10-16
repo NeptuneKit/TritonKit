@@ -329,6 +329,9 @@ public struct TKCLICommandRequest: Codable, Equatable {
 
     public var requestType: TKRequestType? {
         switch type.lowercased() {
+        case "selectionstatus", "selection.status": .selectionStatus
+        case "selectionclear", "selection.clear": .selectionClear
+        case "selectioncapabilities", "selection.capabilities": .selectionCapabilities
         case "highlightapply", "highlight.apply": .highlightApply
         case "highlightstatus", "highlight.status": .highlightStatus
         case "highlightclear", "highlight.clear": .highlightClear

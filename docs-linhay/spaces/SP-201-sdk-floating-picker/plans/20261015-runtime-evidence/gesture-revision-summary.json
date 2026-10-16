@@ -1,0 +1,14 @@
+{
+  "revision": "native-gesture-feedback",
+  "files": {
+    "Sources/TritonKit/Picker/TKPickerOverlayViewController.swift": "76a91dfd057720c5d03affb68ff4f909d0c2462ba5b0d0dd18bfad7d2ee18bad",
+    "Tests/TritonKitTests/TKPickerUITests.swift": "fd4b07238c8cae6e71076d6b135535ad3974d685cd3a046e09335b1897fb8542",
+    "Examples/TritonKitTestFixture/PickerUITests/PickerUITests.swift": "8300820c15e76eb93a2ad990822dd39320e9ea88359ca7bd61616987e764b899",
+    "docs-linhay/scripts/verify-ios-picker-fixture.py": "2ac1fc3f2492bf1d2048325730888e3024f54f20311f8256b6a832e864809241"
+  },
+  "uiKitTests": 73,
+  "realGestureTests": 1,
+  "cliChecks": 7,
+  "localGate": "passed",
+  "userAcceptance": "pending"
+}

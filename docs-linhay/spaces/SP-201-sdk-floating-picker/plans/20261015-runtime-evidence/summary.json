@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "checks": [
+    "verify-no-business-click",
+    "ordinary-ax",
+    "ordinary-screenshot",
+    "reject-wrong-revision",
+    "reject-wrong-runtime",
+    "verify-after-rejections",
+    "guarded-tap"
+  ],
+  "target": "triton:ios-simulator:100F7945-426D-472A-89DA-00C08067805A/app:com.neptunekit.tritonkit.testfixture",
+  "postcondition": "XCTest must separately confirm Picker Clicks: 1"
+}

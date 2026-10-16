@@ -55,6 +55,8 @@ enum TKRuntimeCapabilityGate {
 
     static func capability(for message: TKMessage) -> TKRuntimeCapabilityName? {
         switch message.type {
+        case .selectionStatus, .selectionClear, .selectionCapabilities:
+            return nil
         case .highlightApply:
             return .highlight
         case .highlightStatus, .highlightClear, .highlightCapabilities:
@@ -177,6 +179,8 @@ enum TKRuntimeCapabilityGate {
 extension TritonKit.Configuration {
     func isRuntimeCapabilityEnabled(_ capability: TKRuntimeCapabilityName) -> Bool {
         switch capability {
+        case .inspector:
+            return features.contains(.inspector) && picker.enabled
         case .highlight:
             return features.contains(.highlight)
         case .runtimeManifest, .ledger:

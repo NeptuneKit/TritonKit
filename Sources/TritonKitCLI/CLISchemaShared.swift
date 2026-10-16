@@ -75,14 +75,15 @@ func inputActionSchemas() -> [TKInputActionSchema] {
         TKInputActionSchema(
             type: "tap",
             requiredFields: ["type"],
-            optionalFields: ["x", "y", "targetOID", "matchedOID", "matchedClassName", "activationStrategy", "width", "height", "duration"],
-            oneOfRequired: [["x", "y"], ["targetOID"]],
+            optionalFields: ["x", "y", "targetOID", "matchedOID", "matchedClassName", "activationStrategy", "width", "height", "duration", "selection"],
+            oneOfRequired: [["x", "y"], ["targetOID"], ["selection"]],
             coordinateSpace: "window-points",
             fields: [
                 inputField("type", "String", required: true, enumValues: ["tap"], "Action discriminator"),
                 inputField("x", "Double", "Window x coordinate in points; required with y unless targetOID is used"),
                 inputField("y", "Double", "Window y coordinate in points; required with x unless targetOID is used"),
                 inputField("targetOID", "UInt", "View oid from hierarchy/ax/hit; alternative to x/y"),
+                inputField("selection", "TKSelectionGuard", "Guard {runtimeInstanceID,selectionID,revision}; positive revision, nonempty identities, mutually exclusive with coordinates and targetOID; runtime revalidates before activation"),
                 inputField("matchedOID", "UInt", "Original matched node oid for smart text activation"),
                 inputField("matchedClassName", "String", "Original matched node class name for smart text activation"),
                 inputField("activationStrategy", "String", enumValues: ["smart", "exact", "ancestor"], "Tap activation strategy"),

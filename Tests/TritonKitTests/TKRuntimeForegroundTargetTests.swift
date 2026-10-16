@@ -58,6 +58,16 @@ struct TKRuntimeForegroundWindowPolicyTests {
         #expect(orderedRuntimeForegroundWindowIndices([fact(0, state: .background), overlay], hasSceneEnvironment: true).isEmpty)
     }
 
+    @Test("inspector overlay excludes only explicitly owned windows")
+    func inspectorOverlayRanking() {
+        var overlay = fact(1, state: .foregroundActive, level: 3000)
+        overlay.isInspectorOverlay = true
+        #expect(orderedRuntimeForegroundWindowIndices([
+            fact(0, state: .foregroundActive, key: true), overlay,
+            fact(2, state: .foregroundActive, level: 2000)
+        ], hasSceneEnvironment: true) == [2, 0])
+    }
+
     private func fact(_ index: Int, state: RuntimeForegroundSceneState? = nil, visible: Bool = true, level: Double = 0, key: Bool = false) -> RuntimeForegroundWindowFact {
         RuntimeForegroundWindowFact(index: index, sceneState: state, visible: visible, level: level, key: key)
     }

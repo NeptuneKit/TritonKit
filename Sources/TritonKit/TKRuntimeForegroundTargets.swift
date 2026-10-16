@@ -12,6 +12,7 @@ struct RuntimeForegroundWindowFact {
     let level: Double
     let key: Bool
     var isKnownInputOverlay: Bool = false
+    var isInspectorOverlay: Bool = false
 }
 
 /// Read-only identity check for the exact system overlay observed by hosted
@@ -24,7 +25,7 @@ func isRuntimeKnownInputOverlay(windowClassName: String, rootClassName: String?,
 
 func orderedRuntimeForegroundWindowIndices(_ facts: [RuntimeForegroundWindowFact], hasSceneEnvironment: Bool) -> [Int] {
     facts.filter {
-        !$0.isKnownInputOverlay && $0.visible && $0.level.isFinite && (hasSceneEnvironment ? $0.sceneState == .foregroundActive : $0.sceneState == nil)
+        !$0.isKnownInputOverlay && !$0.isInspectorOverlay && $0.visible && $0.level.isFinite && (hasSceneEnvironment ? $0.sceneState == .foregroundActive : $0.sceneState == nil)
     }.sorted {
         if $0.level != $1.level { return $0.level > $1.level }
         if $0.key != $1.key { return $0.key }
@@ -52,7 +53,8 @@ func keyWindows() -> [UIWindow] {
             visible: !window.isHidden && window.alpha > 0.01 && window.isUserInteractionEnabled,
             level: Double(window.windowLevel.rawValue),
             key: window.isKeyWindow,
-            isKnownInputOverlay: runtimeKnownInputOverlay(window)
+            isKnownInputOverlay: runtimeKnownInputOverlay(window),
+            isInspectorOverlay: window is TKRuntimeInspectorOverlayWindow
         )
     }
     return orderedRuntimeForegroundWindowIndices(facts, hasSceneEnvironment: !scenes.isEmpty).map { windows[$0] }

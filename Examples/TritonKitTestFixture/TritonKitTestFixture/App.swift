@@ -22,6 +22,7 @@ enum FixtureScreen: String {
     case dynamicList
     case error
     case highlight
+    case picker
 }
 
 @MainActor
@@ -144,6 +145,8 @@ struct FixtureUIKitPanel: UIViewRepresentable {
 }
 
 final class FixtureUIKitView: UIView, UITableViewDataSource, UITableViewDelegate {
+    private var pickerClickCount = 0
+    private let pickerCountLabel = UILabel()
     private let highlightTarget = UILabel()
     private let highlightNilTarget = UILabel()
     private let highlightReadback = UILabel()
@@ -320,6 +323,30 @@ final class FixtureUIKitView: UIView, UITableViewDataSource, UITableViewDelegate
         )
         addButton("Go Home", identifier: "fixture.login.goHome", action: #selector(showHome))
         addButton("Highlight Fixture", identifier: "fixture.login.highlight", action: #selector(showHighlight))
+        addButton("Picker Fixture", identifier: "fixture.login.picker", action: #selector(showPicker))
+    }
+
+    @objc private func showPicker() {
+        screen = .picker
+        pickerClickCount = 0
+        reset(title: "Picker Fixture", titleID: "fixture.picker.title")
+        pickerCountLabel.font = .monospacedSystemFont(ofSize: 20, weight: .medium)
+        pickerCountLabel.accessibilityIdentifier = "fixture.picker.count"
+        updatePickerCount()
+        stack.addArrangedSubview(pickerCountLabel)
+        addButton("Increment Once", identifier: "fixture.picker.increment", action: #selector(incrementPicker))
+        addListItem("Observe Only Label", identifier: "fixture.picker.label")
+        addButton("Back to Login", identifier: "fixture.picker.back", action: #selector(showLogin))
+    }
+
+    @objc private func incrementPicker() {
+        pickerClickCount += 1
+        updatePickerCount()
+    }
+
+    private func updatePickerCount() {
+        pickerCountLabel.text = "Picker Clicks: \(pickerClickCount)"
+        pickerCountLabel.accessibilityLabel = pickerCountLabel.text
     }
 
     @objc private func showHighlight() {

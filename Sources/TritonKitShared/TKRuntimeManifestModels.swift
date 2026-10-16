@@ -2,6 +2,7 @@ import Foundation
 
 public enum TKRuntimeCapabilityName: String, Codable, CaseIterable {
     case highlight
+    case inspector
     case runtimeManifest = "runtime.manifest"
     case stateApp = "state.app"
     case stateScene = "state.scene"
@@ -235,6 +236,8 @@ public struct TKRuntimeManifestResponse: Codable, Equatable {
     }
 
     public static let defaultDebugCapabilities: [TKRuntimeCapabilityDetail] = [
+        TKRuntimeCapabilityDetail(name: .inspector, supported: false, scope: .embedded, boundary: .appProcess,
+            reason: "Optional Debug UIKit floating picker must be explicitly enabled"),
         TKRuntimeCapabilityDetail(name: .highlight, supported: false, scope: .embedded, boundary: .appProcess,
             reason: "Optional highlight requires a writable provider; ordinary screenshots remain available"),
         TKRuntimeCapabilityDetail(name: .runtimeManifest, supported: true, scope: .embedded, boundary: .appProcess),

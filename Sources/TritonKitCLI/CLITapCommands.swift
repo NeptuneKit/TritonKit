@@ -12,6 +12,10 @@ import TritonKitShared
 struct Tap: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Tap a UI target by text, coordinate, oid, or AX node")
 
+    @Option(help: "Selection id returned by inspect selection; requires revision and runtime instance") var selection: String?
+    @Option(name: .customLong("selection-revision"), help: "Positive revision returned by inspect selection") var selectionRevision: UInt64?
+    @Option(name: .customLong("runtime-instance-id"), help: "Runtime instance returned by inspect selection") var runtimeInstanceID: String?
+
     @Argument(help: "Text, label, identifier, or visible option title to tap") var query: String?
     @Option(help: "Alternate flag form for the text query; use either positional <query> or --text") var text: String?
     @Option(help: "Host platform adapter: ios, android, or harmony") var platform: HostPlatform?
@@ -52,6 +56,14 @@ struct Tap: AsyncParsableCommand {
                 hint: "Omit --duration only for an ordinary tap. For a recognizer-driven hold, use an app-owned semantic DEBUG action; embedded longPress and the current host tap provider cannot prove that gesture.",
                 outputFormat: outputFormat
             )
+        }
+        do {
+            if let request = try makeSelectionInputRequest() {
+                try await runSelectionTap(request, outputFormat: outputFormat)
+                return
+            }
+        } catch let error as TKSelectionError {
+            try failHostValidation(code: error.code, message: error.message, hint: "Read inspect selection and supply all three identity fields without another selector.", outputFormat: outputFormat)
         }
         if webViewAware {
             try await runWebViewAwareTap(outputFormat: outputFormat)

@@ -1,0 +1,40 @@
+{
+  "condition" : "text-exists",
+  "count" : 1,
+  "hierarchyCacheState" : "active",
+  "matches" : [
+    {
+      "className" : "UILabel",
+      "frame" : {
+        "height" : 24,
+        "width" : 198,
+        "x" : 96,
+        "y" : 212.66666666666666
+      },
+      "identifier" : "fixture.picker.count",
+      "label" : "Picker Clicks: 0",
+      "role" : "text",
+      "source" : "label",
+      "targetOID" : 36,
+      "text" : "Picker Clicks: 0",
+      "viewOID" : 36
+    }
+  ],
+  "ok" : true,
+  "query" : "Picker Clicks: 0",
+  "sample" : [
+    "Fixture Runtime: Connected",
+    "fixture.runtime.status",
+    "Picker Fixture",
+    "fixture.picker.title",
+    "Picker Clicks: 0",
+    "fixture.picker.count",
+    "Increment Once",
+    "fixture.picker.increment",
+    "Observe Only Label",
+    "fixture.picker.label",
+    "Back to Login",
+    "fixture.picker.back"
+  ],
+  "targetConnectionState" : "connected"
+}

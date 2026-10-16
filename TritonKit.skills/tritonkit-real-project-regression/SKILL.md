@@ -158,3 +158,24 @@ Read [Device Hub acceptance](references/device-hub-acceptance.md) before metadat
 ## Optional view-highlight acceptance
 
 `triton highlight capabilities/apply/status/clear` is optional; never require an embedded SDK for ordinary host screenshots. See [the highlight workflow](../tritonkit-emulator-cli-takeover/references/view-highlight.md). Validate real properties, before/during/after images, exact session cleanup, TTL, business-write conflicts and reconnect. Screenshot success is not restoration success; preserve operationID/sessionID and incomplete cleanup evidence. This slice supports Debug UIKit ordinary views only.
+
+## Optional floating-picker acceptance (SP-201, unreleased)
+
+This is an isolated worktree candidate, not an integrated or published release. Use a matching candidate SDK and CLI only when this feature is in the regression scope. Keep business-app edits isolated. Inside the existing file-level `#if DEBUG` bootstrap, enable `config.features.insert(.inspector)` and `config.picker = .init(enabled: true, ttlSeconds: 300)`; keep `.input` enabled for actions. Picker defaults to off, adds no third-party dependency, and remains no-op in Release. `TRITON_PICKER_ENABLED=1` only enables the default picker environment configuration: `.inspector` opt-in and the app's runtime startup gate still apply. Fixture auto-insertion is not general app behavior.
+
+After confirming an explicit embedded runtime target, preserve these commands and their JSON results; perform the tap only after reading a valid selection with `tap` in `supportedActions`:
+
+```bash
+triton inspect capabilities --target '<runtime-target>' --json
+triton inspect selection --target '<runtime-target>' --json
+triton act tap --target '<runtime-target>' \
+  --selection '<selection.id>' --selection-revision '<selection.revision>' \
+  --runtime-instance-id '<runtimeInstanceID>' --json
+```
+
+All three guard fields come from one current response; do not substitute a bare OID, coordinates or another provider after rejection. Validate separately: dragging and releasing on a button emits no business click; one guarded tap increments the business count once; re-selection/parent changes reject an already-read revision; expiry, target loss and runtime replacement reject stale identity; labels and cells remain `observeOnly` and cannot be clicked through the selection guard. The initial executable scope is eligible `UIButton` only; SwiftUI virtual nodes, WebView DOM, Android and Harmony are deferred.
+
+Check overlay exclusion from normal AX/hierarchy/screenshots and action targeting, disabled configuration, and Release no-op using actual native evidence. HTML interactions and tests excluded by `canImport(UIKit)` are not native proof. Selection previews are independent of `triton highlight` property changes. Cleanup is explicit: `triton inspect clear --target '<runtime-target>' --runtime-instance-id '<runtimeInstanceID>' --json`. Preserve action receipts and business postconditions independently, and redact selection labels, identifiers and images before sharing.
+
+
+For native picker interaction regressions, exercise direct drag preview/crosshair/magnifier, long-press relocation, release-to-open compass, persistent navigation, stable unobstructed placement and parent-child return memory. Assert no business action during selection; record a held-drag screenshot as well as the released selection. Simulator tests can verify haptic trigger conditions, not physical feel. Wait for an explicit XCTest handoff before the CLI action; an already-valid selection is not proof the zero-click assertions finished. Keep image-only rendering of video/Metal/remote WebView content and multi-scene/device coverage explicit when untested.

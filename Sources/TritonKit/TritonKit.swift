@@ -143,6 +143,7 @@ public class TritonKit {
 
     public enum Feature: String, CaseIterable, Hashable {
         case highlight
+        case inspector
         case appInfo
         case hierarchy
         case accessibility
@@ -187,6 +188,19 @@ public class TritonKit {
         }
     }
 
+    public struct PickerConfiguration: Equatable {
+        public var enabled: Bool
+        public var ttlSeconds: Int
+        public init(enabled: Bool = false, ttlSeconds: Int = 300) {
+            self.enabled = enabled
+            self.ttlSeconds = (1...300).contains(ttlSeconds) ? ttlSeconds : 300
+        }
+        public static func environment(_ environment: [String: String] = ProcessInfo.processInfo.environment) -> Self {
+            Self(enabled: environment["TRITON_PICKER_ENABLED"] == "1",
+                 ttlSeconds: environment["TRITON_PICKER_TTL_SECONDS"].flatMap(Int.init) ?? 300)
+        }
+    }
+
     public struct Configuration: Equatable {
         public static let defaultFeatures: Set<Feature> = [
             .highlight,
@@ -205,19 +219,22 @@ public class TritonKit {
         public var features: Set<Feature>
         public var redaction: RedactionPolicy
         public var appIdentity: AppIdentity?
+        public var picker: PickerConfiguration
 
         public init(
             endpoint: Endpoint = .environment(),
             autoReconnect: Bool = true,
             features: Set<Feature> = Configuration.defaultFeatures,
             redaction: RedactionPolicy = RedactionPolicy(),
-            appIdentity: AppIdentity? = nil
+            appIdentity: AppIdentity? = nil,
+            picker: PickerConfiguration = .environment()
         ) {
             self.endpoint = endpoint
             self.autoReconnect = autoReconnect
             self.features = features
             self.redaction = redaction
             self.appIdentity = appIdentity
+            self.picker = picker
         }
 
         public init(_ configure: (inout Configuration) -> Void) {
@@ -277,6 +294,7 @@ public class TritonKit {
     private var pingTimer: Timer?
     private var defaultRequestHandler: TritonKitRequestHandler?
     #if canImport(UIKit)
+    let pickerStorage = TKPickerRuntimeStorage()
     private let highlightManagerStorage = TKHighlightManagerStorage()
     var highlightCleanupPending: Bool { highlightManagerStorage.cleanupPending }
     var highlightGeneration: UInt64 { highlightManagerStorage.requestGeneration }
@@ -372,6 +390,7 @@ public class TritonKit {
     }
 
     public func stop() {
+        stopPickerRuntime()
         #if canImport(UIKit)
         let (manager, generation) = highlightManagerStorage.beginCleanup()
         let storage = highlightManagerStorage
@@ -394,9 +413,13 @@ public class TritonKit {
     /// Unresolved snapshots remain retained so a subsequent connection can inspect them.
     public func stopAndRestoreHighlights() async -> TKHighlightReceipt? {
         #if canImport(UIKit)
+        let pickerGeneration = pickerStorage.invalidate(enabled: false)
         let (manager, generation) = highlightManagerStorage.beginCleanup()
         stopTransport()
-        let receipt = await MainActor.run { self.highlightManagerStorage.performCleanup(manager: manager, generation: generation) }
+        let receipt = await MainActor.run {
+            self.pickerStorage.configure(token: pickerGeneration, ttlSeconds: 300)
+            return self.highlightManagerStorage.performCleanup(manager: manager, generation: generation)
+        }
         #else
         stopTransport()
         let receipt: TKHighlightReceipt? = nil
@@ -543,6 +566,7 @@ public class TritonKit {
             delegate = requestHandler
         }
 
+        startPickerRuntime(configuration)
         dataURL = configuration.endpoint.dataURL
         connect(host: configuration.endpoint.host, port: configuration.endpoint.port, autoReconnect: configuration.autoReconnect)
         return true

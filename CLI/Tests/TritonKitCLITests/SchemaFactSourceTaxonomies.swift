@@ -115,6 +115,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "target-list",
         "target-resolution",
         "target-summary",
+        "floating-selection",
         "test-normalized-plan",
         "test-create-result",
         "test-import-result",
@@ -335,6 +336,8 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "plan"]
     }
     switch failureCode {
+    case "selection_missing", "selection_stale", "selection_revision_mismatch", "selection_identity_unverifiable", "selection_unsupported":
+        return ["diagnose", "observe", "plan"]
     case "highlight_unsupported", "highlight_busy", "highlight_operation_conflict", "highlight_capacity_exceeded", "highlight_receipt_expired":
         return ["diagnose", "plan"]
     case "highlight_target_ambiguous", "highlight_target_not_found", "highlight_identity_unverifiable", "highlight_identity_changed", "highlight_stale_runtime":

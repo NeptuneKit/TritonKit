@@ -1,0 +1,30 @@
+async page => {
+ const results=[];
+ const assert=async (condition,name)=>{if(!condition) throw new Error(name);results.push(name);};
+ const text=id=>page.locator('#'+id).textContent();
+ const drag=async id=>{await page.locator('#picker-dot').scrollIntoViewIfNeeded();const a=await page.locator('#picker-dot').boundingBox(),b=await page.locator('#'+id).boundingBox();await page.mouse.move(a.x+a.width/2,a.y+a.height/2);await page.mouse.down();await page.mouse.move(b.x+b.width/2,b.y+b.height/2,{steps:12});await page.mouse.up();};
+ await page.locator('#reset-demo').click();
+ await drag('start-reading');
+ await assert((await text('selection-name'))==='开始阅读','drag_selects_button');
+ await assert((await text('business-count'))==='0','drag_does_not_click');
+ await page.locator('#agent-read').click();await page.locator('#agent-execute').click();
+ await assert((await text('business-count'))==='1','read_then_execute_clicks_once');
+ await drag('view-plan');await page.locator('#agent-execute').click();
+ await assert((await text('action-result')).includes('selection_revision_mismatch'),'stale_read_revision_rejected');
+ await assert((await text('business-count'))==='1','revision_rejection_no_click');
+ await page.locator('#agent-read').click();await page.locator('#invalidate-selection').click();await page.locator('#agent-execute').click();
+ await assert((await text('action-result')).includes('selection_stale'),'invalid_target_rejected');
+ await page.locator('#keyboard-select').click();await page.locator('#select-parent').click();await page.locator('#agent-read').click();await page.locator('#agent-execute').click();
+ await assert((await text('action-result')).includes('unsupported'),'parent_observe_only');
+ const rev=await text('selection-revision');
+ await page.locator('#picker-dot').scrollIntoViewIfNeeded();const a=await page.locator('#picker-dot').boundingBox(),b=await page.locator('#book-title').boundingBox();await page.mouse.move(a.x+a.width/2,a.y+a.height/2);await page.mouse.down();await page.mouse.move(b.x+b.width/2,b.y+b.height/2,{steps:8});await page.keyboard.press('Escape');await page.mouse.up();
+ await assert((await text('selection-revision'))===rev,'escape_preserves_previous_selection');
+ await page.locator('#picker-dot').click();await assert(await page.locator('#picker-menu').isVisible(),'dot_menu_opens');await page.keyboard.press('Escape');await assert(!(await page.locator('#picker-menu').isVisible()),'escape_closes_menu');
+ await page.locator('#clear-selection').click();await page.locator('#agent-execute').click();await assert((await text('action-result')).includes('selection_missing'),'cleared_target_rejected');
+ await page.setViewportSize({width:390,height:844});await page.locator('#reset-demo').click();await assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile_no_horizontal_overflow');
+ await drag('start-reading');await assert((await text('selection-name'))==='开始阅读','mobile_drag_selects');await assert((await text('business-count'))==='0','mobile_drag_no_business_click');
+ await page.screenshot({path:'docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-mobile-selected-v01.png',fullPage:true});
+ await page.setViewportSize({width:1380,height:1120});await page.locator('#reset-demo').click();await drag('start-reading');await page.locator('#agent-read').click();await page.evaluate(()=>window.scrollTo(0,0));
+ await page.screenshot({path:'docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-desktop-selected-v01.png',fullPage:true});
+ return {passed:results.length,checks:results};
+}

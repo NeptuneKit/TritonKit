@@ -1,0 +1,41 @@
+{
+  "ok": true,
+  "revision": 2,
+  "runtimeInstanceID": "4DF2D98E-B585-4A2C-8BD7-26541E6FB8FD",
+  "schemaVersion": 1,
+  "selection": {
+    "coordinateSpace": "window-points",
+    "expiresAt": 1792055013.421866,
+    "id": "101DDE48-1DA4-4C00-9213-0F4B7C116FF4",
+    "rawHitOID": 34,
+    "resolutionReason": "explicit-parent",
+    "revision": 2,
+    "sceneID": "00F4C3B6-9405-4F7C-91AC-B576387C4FE8",
+    "selectedAt": 1792054713.421866,
+    "supportedActions": [
+      "tap"
+    ],
+    "target": {
+      "children": [],
+      "className": "UIButton",
+      "enabled": true,
+      "focused": false,
+      "frame": {
+        "height": 38.99999999999997,
+        "width": 160,
+        "x": 115,
+        "y": 252.66666666666666
+      },
+      "hidden": false,
+      "identifier": "fixture.picker.increment",
+      "label": "Increment Once",
+      "role": "button",
+      "targetOID": 35,
+      "title": "Increment Once",
+      "viewOID": 35
+    },
+    "validity": "valid",
+    "windowID": 1
+  },
+  "state": "valid"
+}

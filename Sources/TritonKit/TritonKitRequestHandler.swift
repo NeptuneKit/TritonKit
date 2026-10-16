@@ -37,6 +37,9 @@ public class TritonKitRequestHandler: TritonKitDelegate {
 
     public func tritonKit(_ kit: TritonKit, didReceiveMessage message: TKMessage) async -> TKMessage? {
         guard TritonKit.isRuntimeEnabled else {
+            if [.selectionStatus, .selectionClear, .selectionCapabilities].contains(message.type) {
+                return await handleSelection(message)
+            }
             if [.highlightApply, .highlightStatus, .highlightClear, .highlightCapabilities].contains(message.type) {
                 return await handleHighlight(message)
             }
@@ -57,7 +60,7 @@ public class TritonKitRequestHandler: TritonKitDelegate {
             response = disabled
         } else {
             switch TKRuntimeRequestDomain.domain(for: message.type) {
-            case .observation, .input, .webView, .semantic, .legacyInspection:
+            case .observation, .input, .webView, .semantic, .legacyInspection, .selection:
                 response = await uiHealthController.execute(message) { [self] request in
                     if let uiMessageHandler { return await uiMessageHandler(request) }
                     return await handle(request)
@@ -109,6 +112,8 @@ public class TritonKitRequestHandler: TritonKitDelegate {
             return TKMessage(id: msg.id, type: .runtimeLedger, payload: try? JSONEncoder().encode(response))
         case .highlight:
             return await handleHighlight(msg)
+        case .selection:
+            return await handleSelection(msg)
         case .legacyInspection:
             return await handleLegacyInspection(msg)
         case .unsupported:

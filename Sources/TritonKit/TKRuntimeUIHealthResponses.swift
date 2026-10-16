@@ -15,6 +15,13 @@ func runtimeUIHealthErrorResponse(_ message: TKMessage, code: String, health: TK
     let outcome = timedOut ? "unknown" : "not_started"
     let payload: Data?
     switch message.type {
+    case .selectionStatus, .selectionClear, .selectionCapabilities:
+        // Admission runs off MainActor and must not inspect the selected view or
+        // reuse caller-supplied runtime identity when the provider never replied.
+        payload = try? JSONEncoder().encode(TKSelectionResponse(
+            ok: false, runtimeInstanceID: "unavailable", state: "unavailable",
+            error: TKSelectionError(code: code, message: description), outcome: outcome, uiHealth: health
+        ))
     case .input:
         let request = message.payload.flatMap { try? JSONDecoder().decode(TKInputRequest.self, from: $0) }
         payload = try? JSONEncoder().encode(TKInputResult.failure(action: request?.type.rawValue ?? "input", message: description, error: error, outcome: outcome, uiHealth: health))

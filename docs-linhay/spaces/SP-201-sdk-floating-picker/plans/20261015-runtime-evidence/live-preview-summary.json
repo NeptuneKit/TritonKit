@@ -1,0 +1,9 @@
+{
+  "revision": "direct-drag-live-preview",
+  "uiKitPassed": 73,
+  "realGesturePassed": 1,
+  "cliChecks": 7,
+  "localGate": "passed",
+  "sourceSHA256": "2cca103347a490b44d61b57086f835f1b11dba1577091f88075ce64a88b35364",
+  "userAcceptance": "pending"
+}

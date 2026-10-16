@@ -15,7 +15,7 @@
   "evidence": ["capture", "ingest", "inspect", "project-screens", "project-workspace", "redact", "summary"],
   "export": [],
   "highlight": ["apply", "capabilities", "clear", "status"],
-  "inspect": [],
+  "inspect": ["capabilities", "clear", "selection"],
   "list": [],
   "map": ["export-flow", "health", "inspect", "merge", "path", "paths", "screens", "suite", "transitions", "viewer", "vlm-health"],
   "node": [],
