@@ -1,0 +1,98 @@
+{
+  "baseline": "dd613a994abe45aa14e072c381662a0e3d868f03",
+  "branch": "feat/SP-205-ios-runner-auth-hardening",
+  "files": [
+    {
+      "path": "CLI/Package.swift",
+      "sha256": "6be9b2123620c2837d0634bdd26ae6c78b54de58fd5c3aa52be4a69865908559"
+    },
+    {
+      "path": "CLI/Tests/TritonKitCLITests/IOSRunnerAuthenticationTests.swift",
+      "sha256": "755747dda6a2c16b5fd91b945956af7a50602f58024679894aa117ac446ca918"
+    },
+    {
+      "path": "CLI/Tests/TritonKitCLITests/IOSRunnerResourcesTests.swift",
+      "sha256": "7518e225141512d57b4247348a58953446e4af1892613d1fb201c7fe8f71eb45"
+    },
+    {
+      "path": "CLI/Tests/TritonKitCLITests/IOSRunnerSecureIntegrationTests.swift",
+      "sha256": "7e8f223f7e24ff4dbab62106a79a617390f9466bf29c3060f0689ba58a60876c"
+    },
+    {
+      "path": "CLI/Tests/TritonKitCLITests/IOSRunnerTransportTests.swift",
+      "sha256": "463923fcaa47c12392c740c8de69a2d7b96227444ea3fbd685ef761cc1ec5779"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIIOSRunnerResources.swift",
+      "sha256": "153c8c2ef9e10b0a7653b5308b1beeea6266b8a99f0fad26886a171dad800f2d"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIIOSRunnerSecureChannel.swift",
+      "sha256": "5206112311b64fe6cf264e6fa157a7ca61f5b770830640df7d1590ec9cf53217"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIIOSRunnerTransport.swift",
+      "sha256": "5fcb3dd8584e120eedfd9778e7376f7ae465fd2be3d319fe83b5e4532b56a2d0"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIIOSRunnerWire.swift",
+      "sha256": "2660fa03cae95fc67ec8d4f91412022a23722172335790a07459c028f5b93382"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/FixtureApp/RunnerFixtureApp.swift",
+      "sha256": "abc5727472f1cfbd46db2e0bf824f07078f0f74d934bbc9848c4a0834503a5fb"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/Package.swift",
+      "sha256": "d97953dc57f53c9c8685bd5e76f303ce2a2101659b2590d96b82780c009002da"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/ProtocolTests/HTTPProtocolTests.swift",
+      "sha256": "dc6ad49a5f6c199b92481562bf7ec805c968d0fdf512383a442108e9a65cfc8e"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/ProtocolTests/RunnerServerTests.swift",
+      "sha256": "713296fc271dd33624f91c3e64942c61c0ff21be109bf784dbfe42b6bc51e819"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/README.md",
+      "sha256": "13e9ffdae8198006288b3e78b1f31379d05aebd6840ab5a2c8c7d9774c956ce5"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RUNNER_MANIFEST.json",
+      "sha256": "03aa3f3085454418f9acbac59d0c3305ad2adf98cd5a35d5b3134b82c665775d"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/HTTPProtocol.swift",
+      "sha256": "ecdfe9e4abff131e43a5516d75c2e31356e465867649e4d8972ea84d2b6f48dc"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/RunnerServer.swift",
+      "sha256": "12cacf785e5e80f1df533adfbd3f5ae61348cae5393129800e0e44187ef3e6e0"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/SecureChannel.swift",
+      "sha256": "5206112311b64fe6cf264e6fa157a7ca61f5b770830640df7d1590ec9cf53217"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/TritonIOSRunnerTests.swift",
+      "sha256": "1350f35e6297f45d457ed4e39cd0daaee19031708cc5a9485634e2c0b300e2fd"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/TritonIOSRunner.xcodeproj/project.pbxproj",
+      "sha256": "ac4e9c8fb7bd456831d0194095cbd68220787c7e13441fbbec1f9d046ab2590b"
+    },
+    {
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/TritonIOSRunner.xcodeproj/xcshareddata/xcschemes/TritonIOSRunner.xcscheme",
+      "sha256": "abffa54f6a5fdd8d2a74a501a55d149cad444b77b28318a7ba0b1896b9298d3a"
+    },
+    {
+      "path": "docs-linhay/dev/ios-runner-product.md",
+      "sha256": "6a8a5b3808d256728db1aad2c64561598ce436833703097e6c33bf770da762a8"
+    },
+    {
+      "path": "docs-linhay/scripts/package-ios-runner-resources.py",
+      "sha256": "418363c5e5bde29affa27aeb8e09351eb7fdb8dd1eef7a9090076e316fd8af20"
+    }
+  ]
+}

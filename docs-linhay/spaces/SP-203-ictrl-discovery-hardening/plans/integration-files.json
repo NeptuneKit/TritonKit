@@ -1,0 +1,168 @@
+{
+  "base": "dd613a994abe45aa14e072c381662a0e3d868f03",
+  "branch": "feat/SP-203-ictrl-discovery-hardening",
+  "phase": "implemented-and-validated-uncommitted-not-integrated",
+  "files": [
+    {
+      "path": "CLI/Tests/TritonKitCLITests/ServeCommandTests.swift",
+      "sha256": "ba22b6be615d3be89ec234782a91a4144cb2149d44b919f87da605bf903fc46f"
+    },
+    {
+      "path": "CLI/Tests/TritonKitCLITests/ServeDiscoveryTests.swift",
+      "sha256": "ba25ebcede6e8a0b822302433a969301e225137fed3b224205252de1e5767901"
+    },
+    {
+      "path": "README.md",
+      "sha256": "2846a72f3161c1753165c3c855411f4b466858dbe6169d2453fc622fddba5890"
+    },
+    {
+      "path": "Sources/TritonKit/TritonKit.swift",
+      "sha256": "380efadd78df20dddb75f672e229be11eaf3b34e9124911c461c377bc8e51992"
+    },
+    {
+      "path": "Sources/TritonKit/TritonKitDiscovery.swift",
+      "sha256": "78c2ec2584fa4e899419b78fe3a6b5d80e8e1b64d4791a3209097b8fdb3904f9"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIBonjourPublisher.swift",
+      "sha256": "a2ff22b60ada68a1961b6100f824de50af48c56c93e06306526c957084b962f5"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLICoreCommands.swift",
+      "sha256": "bee2fbc976d5bcea44b6bfc8700c5ee3088846853fb9e34fc61e4a17680bc956"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLICoreModels.swift",
+      "sha256": "5bb88f3819aa48c64fd2056ba752bc026c66876aea74df5c5ca748e1418a72bf"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLISchemaBootstrapCommands.swift",
+      "sha256": "56f628cf41eeccb543947bd28fb5820eae25bf82c50a1f30b32bc66b6fd5067f"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLISchemaOutputContracts.swift",
+      "sha256": "9319e5c57760a4d4503c4b80cfe61ee8f8f168b56bc1c37e9d9fdbd2b092fb9c"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIServeCommand.swift",
+      "sha256": "03fb8285ee97441410728d98039e1f158a70cc27f5ec4159e9844205b771ace4"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIServeStatus.swift",
+      "sha256": "4d9ac6fa45dbe6f15d13a394a1a8b119375fa1256c174e8d29628fa065685ddc"
+    },
+    {
+      "path": "Sources/TritonKitShared/TKCLITransportModels.swift",
+      "sha256": "be70b045c0967f968b5c61fd52c347c1f5e5776e7f0edcacb4032cab0c683d6f"
+    },
+    {
+      "path": "Sources/TritonKitShared/TKDiscoveryStatus.swift",
+      "sha256": "2b8bab8cff21d5028765fef8beec6d84ab465a909689dc52837fc0e187b2aad6"
+    },
+    {
+      "path": "Tests/TritonKitTests/TKDiscoveryTests.swift",
+      "sha256": "e56ff4a4d1ec8be900f84addffc8dd30df217c368c6924879701d7aa25b262be"
+    },
+    {
+      "path": "Tests/TritonKitTests/TKPlatformFallbackTests.swift",
+      "sha256": "4cbf97f45bbdd9fb34e6574634f2883b4158da62537e8083eac76658caf11bd2"
+    },
+    {
+      "path": "TritonKit.skills/tritonkit-dev-feedback/SKILL.md",
+      "sha256": "11526674ef4a9070b9f4c61a4331435873e3bc18de83e5d25d1574f3e7cd770e"
+    },
+    {
+      "path": "TritonKit.skills/tritonkit-real-project-regression/SKILL.md",
+      "sha256": "e608d9003fdcc12edbcea24e1884755169ebef85cb48dcb809d0c79588b59eb6"
+    },
+    {
+      "path": "docs-linhay/dev/20260519-debug-only-pm-runtime.md",
+      "sha256": "9a7e1dd6cb2fb846490a4a588b263079fcb2a7312e28b831ee7be6889528a02b"
+    },
+    {
+      "path": "docs-linhay/dev/20260519-ios-integration-guide.md",
+      "sha256": "f19d6364cbf3d6f99f2e94ed29d246bacbf40981909ea0eb2adad9140c5caa3b"
+    },
+    {
+      "path": "docs-linhay/dev/ai-cli-readable-control.md",
+      "sha256": "6677bcc90edd0e1e406decd07cb4f5232a422b72426ae00ce465de7a0942545c"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/README.md",
+      "sha256": "326276e7e84356e44ccbc08ae3336f08311e610835363b800cf549de92abab61"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/plans/20261016-debug-smoke.json",
+      "sha256": "62a8358514a1bd2acd1caccb4ffd97172590f1de8c2c6672297ce2613bdc0478"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/plans/20261016-delivery.md",
+      "sha256": "58fc7da8fee179d97d3301f8e4bbaaa785efd4dca4470ea178d127b447c025c8"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/plans/20261016-gate-context.json",
+      "sha256": "0734e268a4c9f0dc4b5b1d16ba92d42b49a35fe762708706cb5282e9a767ffc2"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/plans/20261016-implementation.md",
+      "sha256": "43fc9c5e4f19b0958ef04b7e86e41fbedd7409a8dafbcf077fab919034564365"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/plans/20261016-release-smoke.json",
+      "sha256": "c44e3b4a98bbf4ddb4ac87b433e1fe68e3ca58fb90676f64f5013332a7393da0"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/plans/verify-serve-discovery.py",
+      "sha256": "9fc90a8ca7b9016a95893fc192701ec3a70ff546e27ee71baaf0ce7fca352016"
+    }
+  ],
+  "excludeGateContext": [
+    "docs-linhay/spaces/INDEX.md",
+    "docs-linhay/spaces/README.md",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/README.md",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/picker-design.html",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-browser-check.js",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-design-validation.md",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-implementation-validation.md",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/candidate-summary.json",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/gesture-revision-summary.json",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/guarded-tap.json",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/live-preview-summary.json",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/reject-wrong-revision.json",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/reject-wrong-runtime.json",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/selection.json",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/summary.json",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/verify-after-rejections.json",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/plans/20261015-runtime-evidence/verify-no-business-click.json",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-desktop-selected-v01.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-idle-design-v01.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-business-only-v01.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-clicked-v01.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-clicked-v02.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-dragged-v01.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-dragged-v02.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-idle-v01.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-idle-v02.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-selected-v01.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-ios-selected-v02.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-mobile-selected-v01.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-style-selected-v01.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261015-picker-toolbar-avoids-selection-v01.png",
+    "docs-linhay/spaces/SP-201-sdk-floating-picker/screenshots/20261016-picker-compass-selected-v01.png",
+    "docs-linhay/spaces/SP-202-ictrl-security-assessment/README.md",
+    "docs-linhay/spaces/SP-202-ictrl-security-assessment/plans/20261016-assessment.md",
+    "docs-linhay/spaces/SP-204-ictrl-log-privacy/README.md",
+    "docs-linhay/spaces/SP-205-ios-runner-auth-hardening/README.md"
+  ],
+  "manifestSelfExcluded": true,
+  "candidateBinaries": [
+    {
+      "path": "CLI/.build/debug/triton",
+      "sha256": "9e8ddd7bca945074e7265da9f0f0fbacd8d3980845b3b06fd82392b1519c62dd"
+    },
+    {
+      "path": ".build/cli/release/triton",
+      "sha256": "c13d059488ed428b21ae667efaaa35d588a9e4bd51922e10c43b124846f6a041"
+    }
+  ]
+}

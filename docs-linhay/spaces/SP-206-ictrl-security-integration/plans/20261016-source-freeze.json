@@ -1,0 +1,325 @@
+{
+  "baseline": "dd613a994abe45aa14e072c381662a0e3d868f03",
+  "files": [
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "CLI/Tests/TritonKitCLITests/ServeCommandTests.swift",
+      "sha256": "ba22b6be615d3be89ec234782a91a4144cb2149d44b919f87da605bf903fc46f"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "CLI/Tests/TritonKitCLITests/ServeDiscoveryTests.swift",
+      "sha256": "ba25ebcede6e8a0b822302433a969301e225137fed3b224205252de1e5767901"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "README.md",
+      "sha256": "2846a72f3161c1753165c3c855411f4b466858dbe6169d2453fc622fddba5890"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "Sources/TritonKit/TritonKit.swift",
+      "sha256": "380efadd78df20dddb75f672e229be11eaf3b34e9124911c461c377bc8e51992"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "Sources/TritonKit/TritonKitDiscovery.swift",
+      "sha256": "78c2ec2584fa4e899419b78fe3a6b5d80e8e1b64d4791a3209097b8fdb3904f9"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "Sources/TritonKitCLI/CLIBonjourPublisher.swift",
+      "sha256": "a2ff22b60ada68a1961b6100f824de50af48c56c93e06306526c957084b962f5"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "Sources/TritonKitCLI/CLICoreCommands.swift",
+      "sha256": "bee2fbc976d5bcea44b6bfc8700c5ee3088846853fb9e34fc61e4a17680bc956"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "Sources/TritonKitCLI/CLICoreModels.swift",
+      "sha256": "5bb88f3819aa48c64fd2056ba752bc026c66876aea74df5c5ca748e1418a72bf"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "Sources/TritonKitCLI/CLISchemaBootstrapCommands.swift",
+      "sha256": "56f628cf41eeccb543947bd28fb5820eae25bf82c50a1f30b32bc66b6fd5067f"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "Sources/TritonKitCLI/CLISchemaOutputContracts.swift",
+      "sha256": "9319e5c57760a4d4503c4b80cfe61ee8f8f168b56bc1c37e9d9fdbd2b092fb9c"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "Sources/TritonKitCLI/CLIServeCommand.swift",
+      "sha256": "03fb8285ee97441410728d98039e1f158a70cc27f5ec4159e9844205b771ace4"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "Sources/TritonKitCLI/CLIServeStatus.swift",
+      "sha256": "4d9ac6fa45dbe6f15d13a394a1a8b119375fa1256c174e8d29628fa065685ddc"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "Sources/TritonKitShared/TKCLITransportModels.swift",
+      "sha256": "be70b045c0967f968b5c61fd52c347c1f5e5776e7f0edcacb4032cab0c683d6f"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "Sources/TritonKitShared/TKDiscoveryStatus.swift",
+      "sha256": "2b8bab8cff21d5028765fef8beec6d84ab465a909689dc52837fc0e187b2aad6"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "Tests/TritonKitTests/TKDiscoveryTests.swift",
+      "sha256": "e56ff4a4d1ec8be900f84addffc8dd30df217c368c6924879701d7aa25b262be"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "Tests/TritonKitTests/TKPlatformFallbackTests.swift",
+      "sha256": "4cbf97f45bbdd9fb34e6574634f2883b4158da62537e8083eac76658caf11bd2"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "TritonKit.skills/tritonkit-dev-feedback/SKILL.md",
+      "sha256": "11526674ef4a9070b9f4c61a4331435873e3bc18de83e5d25d1574f3e7cd770e"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "TritonKit.skills/tritonkit-real-project-regression/SKILL.md",
+      "sha256": "e608d9003fdcc12edbcea24e1884755169ebef85cb48dcb809d0c79588b59eb6"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "docs-linhay/dev/20260519-debug-only-pm-runtime.md",
+      "sha256": "9a7e1dd6cb2fb846490a4a588b263079fcb2a7312e28b831ee7be6889528a02b"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "docs-linhay/dev/20260519-ios-integration-guide.md",
+      "sha256": "f19d6364cbf3d6f99f2e94ed29d246bacbf40981909ea0eb2adad9140c5caa3b"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "docs-linhay/dev/ai-cli-readable-control.md",
+      "sha256": "6677bcc90edd0e1e406decd07cb4f5232a422b72426ae00ce465de7a0942545c"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/README.md",
+      "sha256": "326276e7e84356e44ccbc08ae3336f08311e610835363b800cf549de92abab61"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/plans/20261016-debug-smoke.json",
+      "sha256": "62a8358514a1bd2acd1caccb4ffd97172590f1de8c2c6672297ce2613bdc0478"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/plans/20261016-delivery.md",
+      "sha256": "58fc7da8fee179d97d3301f8e4bbaaa785efd4dca4470ea178d127b447c025c8"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/plans/20261016-gate-context.json",
+      "sha256": "0734e268a4c9f0dc4b5b1d16ba92d42b49a35fe762708706cb5282e9a767ffc2"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/plans/20261016-implementation.md",
+      "sha256": "43fc9c5e4f19b0958ef04b7e86e41fbedd7409a8dafbcf077fab919034564365"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/plans/20261016-release-smoke.json",
+      "sha256": "c44e3b4a98bbf4ddb4ac87b433e1fe68e3ca58fb90676f64f5013332a7393da0"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/plans/verify-serve-discovery.py",
+      "sha256": "9fc90a8ca7b9016a95893fc192701ec3a70ff546e27ee71baaf0ce7fca352016"
+    },
+    {
+      "source": "SP-203-ictrl-discovery-hardening",
+      "path": "docs-linhay/spaces/SP-203-ictrl-discovery-hardening/plans/integration-files.json",
+      "sha256": "93ee0a695ee8937e61323d25c37b5ab6e60251a80348620766cc618062663727"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "CLI/Package.swift",
+      "sha256": "6be9b2123620c2837d0634bdd26ae6c78b54de58fd5c3aa52be4a69865908559"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "CLI/Tests/TritonKitCLITests/IOSRunnerAuthenticationTests.swift",
+      "sha256": "755747dda6a2c16b5fd91b945956af7a50602f58024679894aa117ac446ca918"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "CLI/Tests/TritonKitCLITests/IOSRunnerResourcesTests.swift",
+      "sha256": "7518e225141512d57b4247348a58953446e4af1892613d1fb201c7fe8f71eb45"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "CLI/Tests/TritonKitCLITests/IOSRunnerSecureIntegrationTests.swift",
+      "sha256": "7e8f223f7e24ff4dbab62106a79a617390f9466bf29c3060f0689ba58a60876c"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "CLI/Tests/TritonKitCLITests/IOSRunnerTransportTests.swift",
+      "sha256": "463923fcaa47c12392c740c8de69a2d7b96227444ea3fbd685ef761cc1ec5779"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/CLIIOSRunnerResources.swift",
+      "sha256": "153c8c2ef9e10b0a7653b5308b1beeea6266b8a99f0fad26886a171dad800f2d"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/CLIIOSRunnerSecureChannel.swift",
+      "sha256": "5206112311b64fe6cf264e6fa157a7ca61f5b770830640df7d1590ec9cf53217"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/CLIIOSRunnerTransport.swift",
+      "sha256": "5fcb3dd8584e120eedfd9778e7376f7ae465fd2be3d319fe83b5e4532b56a2d0"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/CLIIOSRunnerWire.swift",
+      "sha256": "2660fa03cae95fc67ec8d4f91412022a23722172335790a07459c028f5b93382"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/FixtureApp/RunnerFixtureApp.swift",
+      "sha256": "abc5727472f1cfbd46db2e0bf824f07078f0f74d934bbc9848c4a0834503a5fb"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/Package.swift",
+      "sha256": "d97953dc57f53c9c8685bd5e76f303ce2a2101659b2590d96b82780c009002da"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/ProtocolTests/HTTPProtocolTests.swift",
+      "sha256": "dc6ad49a5f6c199b92481562bf7ec805c968d0fdf512383a442108e9a65cfc8e"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/ProtocolTests/RunnerServerTests.swift",
+      "sha256": "713296fc271dd33624f91c3e64942c61c0ff21be109bf784dbfe42b6bc51e819"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/README.md",
+      "sha256": "13e9ffdae8198006288b3e78b1f31379d05aebd6840ab5a2c8c7d9774c956ce5"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RUNNER_MANIFEST.json",
+      "sha256": "03aa3f3085454418f9acbac59d0c3305ad2adf98cd5a35d5b3134b82c665775d"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/HTTPProtocol.swift",
+      "sha256": "ecdfe9e4abff131e43a5516d75c2e31356e465867649e4d8972ea84d2b6f48dc"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/RunnerServer.swift",
+      "sha256": "12cacf785e5e80f1df533adfbd3f5ae61348cae5393129800e0e44187ef3e6e0"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/SecureChannel.swift",
+      "sha256": "5206112311b64fe6cf264e6fa157a7ca61f5b770830640df7d1590ec9cf53217"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/TritonIOSRunnerTests.swift",
+      "sha256": "1350f35e6297f45d457ed4e39cd0daaee19031708cc5a9485634e2c0b300e2fd"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/TritonIOSRunner.xcodeproj/project.pbxproj",
+      "sha256": "ac4e9c8fb7bd456831d0194095cbd68220787c7e13441fbbec1f9d046ab2590b"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "Sources/TritonKitCLI/Resources/ios-runner/TritonIOSRunner.xcodeproj/xcshareddata/xcschemes/TritonIOSRunner.xcscheme",
+      "sha256": "abffa54f6a5fdd8d2a74a501a55d149cad444b77b28318a7ba0b1896b9298d3a"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "docs-linhay/dev/ios-runner-product.md",
+      "sha256": "6a8a5b3808d256728db1aad2c64561598ce436833703097e6c33bf770da762a8"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "docs-linhay/scripts/package-ios-runner-resources.py",
+      "sha256": "418363c5e5bde29affa27aeb8e09351eb7fdb8dd1eef7a9090076e316fd8af20"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "docs-linhay/spaces/SP-205-ios-runner-auth-hardening/README.md",
+      "sha256": "261140a820cfa3ab0ff2cd2447a0e669c8a4487d5943ebd389148b3c0fd49c4c"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "docs-linhay/spaces/SP-205-ios-runner-auth-hardening/plans/candidate-files.json",
+      "sha256": "3e9b328178792c5047ea2a46faf88cab5b5f0533ea066bfffa15ab582238826d"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "docs-linhay/spaces/SP-205-ios-runner-auth-hardening/plans/20261016-implementation.md",
+      "sha256": "3dc07bce69a314ac294982488f5b371a0bfc51cf47214e1c30db28b0f9e28faf"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "docs-linhay/spaces/SP-205-ios-runner-auth-hardening/plans/20261016-legacy-expiry-red.txt",
+      "sha256": "1abd5e7b10c8788a42d7077dbfe5f4346c6faedbd70ef16086cb54f9774a105a"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "docs-linhay/spaces/SP-205-ios-runner-auth-hardening/plans/20261016-legacy-listener-red.txt",
+      "sha256": "512fe1884c21638a26798403e3c7db4ebc420ee8b16cb9c69544ade9cc859f0e"
+    },
+    {
+      "source": "SP-205-ios-runner-auth-hardening",
+      "path": "docs-linhay/spaces/SP-205-ios-runner-auth-hardening/plans/20261016-delivery.md",
+      "sha256": "f4f3f0c00e96843b1b7dc30e1cc92b773252dc78bc986b673ccf9a6789841a2a"
+    },
+    {
+      "source": "SP-204-ictrl-log-privacy",
+      "path": "Sources/TritonKitCLI/CLIServerRuntime.swift",
+      "sha256": "663de356391bbcc4c4c139f397af4cb654d4f75163aa84db8cbe4c0f090e6f14"
+    },
+    {
+      "source": "SP-204-ictrl-log-privacy",
+      "path": "Sources/TritonKitCLI/CLIServerResponseLogger.swift",
+      "sha256": "1806eb77ec5f7885bcebff7c29f7acd2ffda041e52bf552df4da6626aab4cab0"
+    },
+    {
+      "source": "SP-204-ictrl-log-privacy",
+      "path": "CLI/Tests/TritonKitCLITests/ServerResponseLoggingTests.swift",
+      "sha256": "5a6c05cbdecdb38c696853a01e599a53d522f5b8929916c94a51e043286c8620"
+    },
+    {
+      "source": "SP-204-ictrl-log-privacy",
+      "path": "docs-linhay/spaces/SP-204-ictrl-log-privacy/README.md",
+      "sha256": "b9bb9a6d23108a9496f55f6b117f18cf3687a4a5c7c4d471683979e12596c51f"
+    },
+    {
+      "source": "SP-204-ictrl-log-privacy",
+      "path": "docs-linhay/spaces/SP-204-ictrl-log-privacy/plans/20261016-implementation.md",
+      "sha256": "f5624cc4946d74cfc69d17bb3e7aff9f5e9b195888c7742c78c0faca17ec4531"
+    },
+    {
+      "source": "SP-204-ictrl-log-privacy",
+      "path": "docs-linhay/spaces/SP-204-ictrl-log-privacy/plans/20261016-delivery.md",
+      "sha256": "ce5442642a6c97a39d0af092bce6c7cadf1010aa87472fdd08f590f31fc4d583"
+    }
+  ]
+}

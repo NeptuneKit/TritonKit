@@ -51,7 +51,13 @@ triton status --json
 triton list --json
 ```
 
-也可在 Xcode Debug scheme 设置上述环境，或通过 `config.endpoint = .device(...)` / Debug 配置的 `TritonKitDefaultHost`、`TritonKitDefaultPort` 固定 endpoint；固定 bootstrap endpoint 不会被环境自动覆盖。Bonjour 是可选发现路径，不保证 USB 自动转发或跨网段发现，诊断优先显式 LAN endpoint。
+也可在 Xcode Debug scheme 设置上述环境，或通过 `config.endpoint = .device(...)` / Debug 配置的 `TritonKitDefaultHost`、`TritonKitDefaultPort` 固定 endpoint；固定 bootstrap endpoint 不会被环境自动覆盖。默认 `.environment()` 不浏览 Bonjour；没有显式 host 时使用 loopback。旧版依赖自动发现的 Debug bootstrap 应优先迁移到显式 host；如仍需发现，使用 `.environment(discoveryPolicy: .bonjour(timeout: 0.15))`，或在 **App 进程**设置 `TRITON_DISCOVERY=bonjour`。`TRITON_DISCOVERY=disabled` 为默认值，超时由 `TRITON_DISCOVERY_TIMEOUT_SECONDS` 控制（默认 0.15，必须有限且 `0 < t <= 5`），非法值拒绝发现。环境/bundle host 仍优先，显式 `.disabled` 可覆盖环境发现。发现失败或多候选时 `start()` 返回 false 并报告 `discoveryRejected`，不再回退默认地址。
+
+Bonjour 发现须等待完整有界窗口且仅有一个已解析服务；第二个未解析或已移除服务也导致拒绝。`.bonjourDiscovery(timeout:)` 可读候选与拒绝状态，`.bonjour(timeout:)` 保留显式可空 endpoint 的兼容入口。候选、公开 TXT ID、同名 host 或 TCP ready 均不代表身份认证，`isAuthenticated` 始终 false；歧义通过显式 host 处理。本期不增加认证机制，不保证 USB 自动转发或跨网段发现。Release SDK 的默认参数与显式发现 API 均不触发浏览/连接。
+
+CLI 默认和显式 LAN bind 均不广播；`--advertise` 或 `TRITON_ADVERTISE=true|1` 才开启，`--no-advertise` 覆盖环境。环境关闭值为 `false|0`，非法值在监听前失败。`triton status --json` / `GET /status` 的 `discovery` 提供 wanted 与 wanted/publishing/advertising/failed/stopped 状态；只有真实成功回调才能 advertising。`identityVerified=false` 明确其不能证明端点身份或 LAN 可达。
+
+SP-203 解码边界：`discovery.identityVerified` 仅能为 false，消费服务响应时也不能透传对方自报的 true。该协议没有服务认证机制；公开 metadata、字段名和对方声明都不能制造信任证据。已用 forged HTTP status JSON 先失败再修复的回归保护。
 
 5. 从 `triton list --json` 确认目标 App 的 runtime 已连接，核对设备与 bundle identity 后使用返回的 runtime id。`--device` 选择 host 真机，`--target` 选择 embedded runtime；它们不是同一 id。不要依赖默认 local target 证明选中真机的业务状态。然后运行：
 

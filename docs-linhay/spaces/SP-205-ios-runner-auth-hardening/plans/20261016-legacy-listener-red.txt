@@ -1,0 +1,10 @@
+Build complete! (2.35秒)
+Test Case '-[LegacyTests.IOSRunnerAuthenticationTests testMaliciousListenerCannotCaptureCredentialOrForgeReady]' started.
+<worktree>/.build/auth-baseline/Tests/LegacyTests/AuthenticationTests.swift:44: error: -[LegacyTests.IOSRunnerAuthenticationTests testMaliciousListenerCannotCaptureCredentialOrForgeReady] : XCTAssertNil failed: "67..<131" - Must not disclose reusable session credential
+<worktree>/.build/auth-baseline/Tests/LegacyTests/AuthenticationTests.swift:45: error: -[LegacyTests.IOSRunnerAuthenticationTests testMaliciousListenerCannotCaptureCredentialOrForgeReady] : XCTAssertNil failed: "60..<67"
+<worktree>/.build/auth-baseline/Tests/LegacyTests/AuthenticationTests.swift:29: error: -[LegacyTests.IOSRunnerAuthenticationTests testMaliciousListenerCannotCaptureCredentialOrForgeReady] : XCTAssertFalse failed - Echo identifiers are not server authentication
+<worktree>/.build/auth-baseline/Tests/LegacyTests/AuthenticationTests.swift:30: error: -[LegacyTests.IOSRunnerAuthenticationTests testMaliciousListenerCannotCaptureCredentialOrForgeReady] : XCTAssertEqual failed: ("nil") is not equal to ("Optional(false)")
+Test Case '-[LegacyTests.IOSRunnerAuthenticationTests testMaliciousListenerCannotCaptureCredentialOrForgeReady]' failed (1.571 seconds).
+	 Executed 1 test, with 4 failures (0 unexpected) in 1.571 (1.571) seconds
+	 Executed 1 test, with 4 failures (0 unexpected) in 1.571 (1.571) seconds
+	 Executed 1 test, with 4 failures (0 unexpected) in 1.571 (1.574) seconds

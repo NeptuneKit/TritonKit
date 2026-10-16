@@ -1,0 +1,9 @@
+Build complete! (10.99秒)
+Test Case '-[RunnerProtocolTests.RunnerServerTests testExpiredRealRouteCannotExecuteUI]' started.
+<worktree>/Sources/TritonKitCLI/Resources/ios-runner/ProtocolTests/RunnerServerTests.swift:22: error: -[RunnerProtocolTests.RunnerServerTests testExpiredRealRouteCannotExecuteUI] : XCTAssertEqual failed: ("Optional(true)") is not equal to ("Optional(false)")
+<worktree>/Sources/TritonKitCLI/Resources/ios-runner/ProtocolTests/RunnerServerTests.swift:23: error: -[RunnerProtocolTests.RunnerServerTests testExpiredRealRouteCannotExecuteUI] : XCTAssertEqual failed: ("nil") is not equal to ("Optional("session_expired")")
+<worktree>/Sources/TritonKitCLI/Resources/ios-runner/ProtocolTests/RunnerServerTests.swift:24: error: -[RunnerProtocolTests.RunnerServerTests testExpiredRealRouteCannotExecuteUI] : XCTAssertEqual failed: ("1") is not equal to ("0") - Expired authenticated request must never reach the actual UI dispatch
+Test Case '-[RunnerProtocolTests.RunnerServerTests testExpiredRealRouteCannotExecuteUI]' failed (0.071 seconds).
+	 Executed 1 test, with 3 failures (0 unexpected) in 0.071 (0.072) seconds
+	 Executed 1 test, with 3 failures (0 unexpected) in 0.071 (0.072) seconds
+	 Executed 1 test, with 3 failures (0 unexpected) in 0.071 (0.073) seconds
