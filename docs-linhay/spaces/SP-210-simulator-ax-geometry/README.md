@@ -2,7 +2,7 @@
 
 ## 范围与状态
 
-- 2026-10-17参考增量评估后立项，状态：模型校验失败，待重试分派。影响层为 macOS CLI host Simulator AX；不改 embedded SDK、Web/Wails、真机或远端产品面。
+- 2026-10-17参考增量评估后立项，状态：实现与 focused 验证通过，待主控整合。影响层为 macOS CLI host Simulator AX；不改 embedded SDK、Web/Wails、真机或远端产品面。
 - 实际产品基线为 `main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec`。主目录当前另在 `codex/wip-main-before-sp209@0a0aec02`，不能将其当作main或整分支合并；相关AX实现blob与main一致。
 - branch：`feat/SP-210-simulator-ax-geometry`；worktree：`../TritonKit-worktrees/SP-210-simulator-ax-geometry/`。本期主控：[SP-211](../SP-211-reference-adoption-integration/README.md)。
 - 用户已授权参考评估可纳入项直接开发、独立验证、必要本地提交与本地main合并；无推送/发布、安装依赖、第三方执行或设备操作授权。
@@ -32,3 +32,18 @@
 ## 2026-10-17 分派结果
 
 独立branch/worktree创建成功；`create_thread` 显式指定 `model="gpt-6.1-sol"` 后返回 `could not validate model`，未产生thread ID。保留待重试，不省略模型、不回退、不冒称开发或主控已启动。下一次先核对登记并补缺会话，不重复建space/worktree。
+
+## 2026-10-19 实现切片
+
+- 消除393×852和scale=3猜测；deviceType/mainScreenSize/mainScreenScale读取前检查getter，NSValue校验CGSize类型后取值。缺失、零、负、非finite和计算溢出返回`ios_host_ax_geometry_unavailable`，接入原有HostSimulatorAXError detail/hint映射。
+- AXFrameTransform初始化校验root origin/size和point size；map/unmap拒绝非finite、负child size及overflow，press在native action前完成校验。允许child零尺寸，保留真实不可见节点；root必须正尺寸。
+- geometry读取逐阶段使用原collector deadline；过期返回nil并保留deadline partial，不继续读取root、不增加探测。现有语义press也返回含frame DTO，故与树/坐标命令共同要求可信几何；未引入无frame的新语义产品契约。
+- 测试：SimulatorAXGeometryTests；证据目录`.build/sp210-evidence/`。原版AXFrameTransform独立提取后先红（red-transform.log，非法root透传断言exit133），CLI首次构建期间源文件变化导致red.log编译失败，该日志不作为行为红证据。
+- 未执行真实Simulator/Xcode设备验收，无设备动作、依赖安装或远端写入；schema整合、完整CLI/根包/local门禁及索引memory由主控执行。
+- 自动沉淀检查：本期可复用边界为Objective-C未知KVC不能依靠Swift optional/do-catch；已落实在本space与geometry reader注释，公共skill升级由主控统一处理。
+
+### Focused 验证冻结
+
+`swift test --package-path CLI --scratch-path .build/sp210-scratch --no-parallel --filter 'SimulatorAXGeometryTests|SimulatorAXBudgetTests'` 最终候选通过：10项geometry XCTest、6项budget Swift Testing，0失败，日志`.build/sp210-evidence/green-final.log`。`git diff --check`通过。
+
+真实press使用`submitValidatedPress`生产编排边界；离线注入context/selected frame几何错误时native submit计数0，合法选择计数1。`cliErrorDetail → TKCLIErrorResponse → encodeJSON`断言单一JSON envelope的`ok=false`和稳定error code/hint/nextAction；这是映射/编码证明，不是真实CLI进程失败或设备动作证明。
