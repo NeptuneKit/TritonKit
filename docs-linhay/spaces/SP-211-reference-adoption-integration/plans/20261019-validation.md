@@ -2,7 +2,7 @@
 
 ## 请求与候选
 
-用户要求已实现内容合main、未实现内容完成实现和验收后合main。本轮本地操作，不推送/发布/清理worktree，保留原主目录WIP及CLAUDE.md。已完成参考资料经文档门禁后以`b1d20af9`进入main。
+用户要求已实现内容合main、未实现内容完成实现和验收后合main。合并阶段仅本地操作，不推送/发布；worktree后续按追加指令清理，保留原主目录WIP及CLAUDE.md。已完成参考资料经文档门禁后以`b1d20af9`进入main。
 
 实现候选：SP-210 `c80f06c6`，SP-212 `618e9e9a`；schema/public说明`4d38c044`；联合产品候选`a8848036`。原始产品基线`d51403a6`。README add/add冲突逐文件保留实现候选的BDD/验收，索引按真实main增补。
 
@@ -31,3 +31,5 @@
 ## 最终状态
 
 SP-209～213所有feature分支均为本地main祖先；五个feature worktree干净，未删除。主目录仍保留原codex/wip-main-before-sp209及14个已跟踪修改、35个未跟踪文件（status折叠目录后47条），未修改CLAUDE或回灌旧产品；可交付参考资料已按manifest进入main，WIP分支不做整分支merge。未推送、发布或真实设备验收。最终状态、采用登记、memory、经验索引均回写，main文档收口提交后保持干净。
+
+后续用户追加“清理”：五个已合并feature worktree及本地分支已移除，原始日志迁移归档；详见[清理记录](20261019-cleanup.md)。上述“未删除”为合并时快照。

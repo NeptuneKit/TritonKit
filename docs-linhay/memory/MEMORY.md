@@ -50,3 +50,5 @@
 - 2026-10-19：本聊天已启动指定模型的SP-210与SP-212执行subagent，主控承担SP-211/SP-213；历史桌面会话创建失败保留，当前推进状态以采用登记为准。
 
 - 2026-10-19：[SP-210～213联合验收](../spaces/SP-211-reference-adoption-integration/plans/20261019-validation.md)已完成离线AX可信几何、Android前台身份与legacy输入转义，经7a8e9f56合本地main；资料b1d20af9先行整合，未推送/发布。历史模型分派阻塞已由本聊天subagent交付接替。
+
+- 2026-10-19追加清理：SP-209～213五个已合并worktree及本地分支普通删除；309份原始证据复制并SHA校验，仅保留实际main和原用户WIP。见[清理记录](../spaces/SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。未推送，复用现有治理规则无新增经验。

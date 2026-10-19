@@ -1,5 +1,7 @@
 # TritonKit Space 编号索引
 
+
+2026-10-19：SP-209～213已合并分支及worktree清理完成，仅保留实际main与原用户WIP；见[清理记录](./SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-10-19（参考采用资料集成；SP-210～213已验收合入本地main）
 > 覆盖范围：213/213 个已存在 space
@@ -250,13 +252,13 @@
 
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 
-| `SP-209-picker-runtime-toggle` | [`SP-209-picker-runtime-toggle`](./SP-209-picker-runtime-toggle/README.md) | v0.2.30已发布 | 系统半屏Modal五路由、选择器二级配置与独立显隐；0e296783已合入main，发布安装验收通过 |
+| `SP-209-picker-runtime-toggle` | [`SP-209-picker-runtime-toggle`](./SP-209-picker-runtime-toggle/README.md) | v0.2.30已发布 | 系统半屏Modal五路由、选择器二级配置与独立显隐；0e296783已合入main，发布安装验收通过；分支/worktree已清理 |
 
 
-| `SP-210-simulator-ax-geometry` | [`SP-210-simulator-ax-geometry`](./SP-210-simulator-ax-geometry/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布 |
+| `SP-210-simulator-ax-geometry` | [`SP-210-simulator-ax-geometry`](./SP-210-simulator-ax-geometry/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
 
-| `SP-211-reference-adoption-integration` | [`SP-211-reference-adoption-integration`](./SP-211-reference-adoption-integration/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布 |
+| `SP-211-reference-adoption-integration` | [`SP-211-reference-adoption-integration`](./SP-211-reference-adoption-integration/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
 
-| `SP-212-mobile-mcp-android-contracts` | [`SP-212-mobile-mcp-android-contracts`](./SP-212-mobile-mcp-android-contracts/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布 |
+| `SP-212-mobile-mcp-android-contracts` | [`SP-212-mobile-mcp-android-contracts`](./SP-212-mobile-mcp-android-contracts/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
 
-| `SP-213-mobile-mcp-contracts-integration` | [`SP-213-mobile-mcp-contracts-integration`](./SP-213-mobile-mcp-contracts-integration/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布 |
+| `SP-213-mobile-mcp-contracts-integration` | [`SP-213-mobile-mcp-contracts-integration`](./SP-213-mobile-mcp-contracts-integration/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |

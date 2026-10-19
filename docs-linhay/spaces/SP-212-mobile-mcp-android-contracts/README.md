@@ -1,5 +1,7 @@
 # SP-212 — mobile-mcp Android 契约采用
 
+2026-10-19清理状态：本space历史分支/worktree已在验收合入main后移除；原始证据已迁移，详见[清理记录](../SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。下文工作区路径保留为历史定位。
+
 ## 边界与状态
 
 - 2026-10-19 根据 mobile-next/mobile-mcp `c659f8ee34873a832adea7daca9c69172d887e70` 与 `1.0.12` 增量评估立项，状态：已完成本期离线验收并合入本地 main（7a8e9f56），合后完整CLI与local门禁复验通过；影响层为 macOS CLI/HTTP 的 Android host adapter 与 shared ADB command builder。

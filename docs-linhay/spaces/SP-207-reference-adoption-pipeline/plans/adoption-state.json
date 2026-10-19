@@ -119,7 +119,10 @@
       "execution_model": "gpt-6.1-sol",
       "last_verified_on": "2026-10-19",
       "acceptance_candidate_sha": "f9760a17",
-      "verification_note": "Offline contract acceptance passed; actual main post-merge full CLI (1480 Swift Testing + 69 XCTest), root (401 Swift Testing + 7 XCTest), local gate, release CLI process (7 cases + 5 schemas), docs and diff checks passed. No device actions, remote push or release."
+      "verification_note": "Offline contract acceptance passed; actual main post-merge full CLI (1480 Swift Testing + 69 XCTest), root (401 Swift Testing + 7 XCTest), local gate, release CLI process (7 cases + 5 schemas), docs and diff checks passed. No device actions, remote push or release.",
+      "worktree_status": "removed_after_local_merge",
+      "controller_worktree_status": "removed_after_local_merge",
+      "cleanup_evidence": "docs-linhay/spaces/SP-211-reference-adoption-integration/plans/20261019-cleanup.md"
     },
     {
       "key": "mobile-next/mobile-mcp:android-focused-activity-identity",
@@ -157,7 +160,10 @@
       "execution_model": "gpt-6.1-sol",
       "last_verified_on": "2026-10-19",
       "acceptance_candidate_sha": "f9760a17",
-      "verification_note": "Offline contract acceptance passed; actual main post-merge full CLI (1480 Swift Testing + 69 XCTest), root (401 Swift Testing + 7 XCTest), local gate, release CLI process (7 cases + 5 schemas), docs and diff checks passed. No device actions, remote push or release."
+      "verification_note": "Offline contract acceptance passed; actual main post-merge full CLI (1480 Swift Testing + 69 XCTest), root (401 Swift Testing + 7 XCTest), local gate, release CLI process (7 cases + 5 schemas), docs and diff checks passed. No device actions, remote push or release.",
+      "worktree_status": "removed_after_local_merge",
+      "controller_worktree_status": "removed_after_local_merge",
+      "cleanup_evidence": "docs-linhay/spaces/SP-211-reference-adoption-integration/plans/20261019-cleanup.md"
     },
     {
       "key": "mobile-next/mobile-mcp:android-adb-legacy-text-escaping",
@@ -195,7 +201,10 @@
       "execution_model": "gpt-6.1-sol",
       "last_verified_on": "2026-10-19",
       "acceptance_candidate_sha": "f9760a17",
-      "verification_note": "Offline contract acceptance passed; actual main post-merge full CLI (1480 Swift Testing + 69 XCTest), root (401 Swift Testing + 7 XCTest), local gate, release CLI process (7 cases + 5 schemas), docs and diff checks passed. No device actions, remote push or release."
+      "verification_note": "Offline contract acceptance passed; actual main post-merge full CLI (1480 Swift Testing + 69 XCTest), root (401 Swift Testing + 7 XCTest), local gate, release CLI process (7 cases + 5 schemas), docs and diff checks passed. No device actions, remote push or release.",
+      "worktree_status": "removed_after_local_merge",
+      "controller_worktree_status": "removed_after_local_merge",
+      "cleanup_evidence": "docs-linhay/spaces/SP-211-reference-adoption-integration/plans/20261019-cleanup.md"
     }
   ],
   "new_thread_policy": {

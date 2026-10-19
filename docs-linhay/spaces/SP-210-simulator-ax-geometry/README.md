@@ -1,5 +1,7 @@
 # SP-210 — Simulator AX 几何可信度
 
+2026-10-19清理状态：本space历史分支/worktree已在验收合入main后移除；原始证据已迁移，详见[清理记录](../SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。下文工作区路径保留为历史定位。
+
 ## 范围与状态
 
 - 2026-10-17参考增量评估后立项，状态：已验收并合入本地main（7a8e9f56），合后完整CLI与local门禁复验通过。影响层为 macOS CLI host Simulator AX；不改 embedded SDK、Web/Wails、真机或远端产品面。

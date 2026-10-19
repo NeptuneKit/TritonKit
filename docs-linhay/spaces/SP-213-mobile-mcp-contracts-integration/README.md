@@ -1,5 +1,7 @@
 # SP-213 — mobile-mcp Android 契约采用主控
 
+2026-10-19清理状态：本space历史分支/worktree已在验收合入main后移除；原始证据已迁移，详见[清理记录](../SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。下文工作区路径保留为历史定位。
+
 ## 边界与状态
 
 branch：`feat/SP-213-mobile-mcp-contracts-integration`；worktree：`/Users/linhey/.codex/worktrees/mobile-mcp-contracts-integration/TritonKit`。

@@ -1,5 +1,7 @@
 # TritonKit Spaces Index
 
+
+2026-10-19：SP-209～213已合并分支及worktree清理完成，仅保留实际main与原用户WIP；见[清理记录](./SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。
 > 固定入口：`docs-linhay/spaces/README.md`
 >
 > 编号登记册：[INDEX.md](./INDEX.md)（213/213 个 space 已登记；历史目录物理迁移 0/125）
@@ -322,13 +324,13 @@
 
 | 状态 | Space | 范围 | 下一步 |
 | --- | --- | --- | --- |
-| v0.2.30已发布 | [SP-209-picker-runtime-toggle](./SP-209-picker-runtime-toggle/README.md) | SDK运行时开关与原生半屏Modal | 0e296783已合入main并发布v0.2.30；原始证据保留于worktree |
+| v0.2.30已发布 | [SP-209-picker-runtime-toggle](./SP-209-picker-runtime-toggle/README.md) | SDK运行时开关与原生半屏Modal | 0e296783已合入main并发布v0.2.30；原始证据已迁移归档；分支/worktree已清理 |
 
 ## 2026-10-19 参考采用当前队列
 
 | 状态 | Space | 范围 | 下一步 |
 | --- | --- | --- | --- |
-| 已合入本地main | [SP-210-simulator-ax-geometry](./SP-210-simulator-ax-geometry/README.md) | Simulator AX缺失/非法几何不再猜测坐标 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布 |
-| 已合入本地main | [SP-211-reference-adoption-integration](./SP-211-reference-adoption-integration/README.md) | 本批主控验证与本地合并 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布 |
-| 已合入本地main | [SP-212-mobile-mcp-android-contracts](./SP-212-mobile-mcp-android-contracts/README.md) | Android 前台 activity 身份与 ADB legacy 文本转义 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布 |
-| 已合入本地main | [SP-213-mobile-mcp-contracts-integration](./SP-213-mobile-mcp-contracts-integration/README.md) | SP-212 主控验证与本地main合并 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布 |
+| 已合入本地main | [SP-210-simulator-ax-geometry](./SP-210-simulator-ax-geometry/README.md) | Simulator AX缺失/非法几何不再猜测坐标 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
+| 已合入本地main | [SP-211-reference-adoption-integration](./SP-211-reference-adoption-integration/README.md) | 本批主控验证与本地合并 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
+| 已合入本地main | [SP-212-mobile-mcp-android-contracts](./SP-212-mobile-mcp-android-contracts/README.md) | Android 前台 activity 身份与 ADB legacy 文本转义 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
+| 已合入本地main | [SP-213-mobile-mcp-contracts-integration](./SP-213-mobile-mcp-contracts-integration/README.md) | SP-212 主控验证与本地main合并 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
