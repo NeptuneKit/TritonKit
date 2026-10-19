@@ -35,6 +35,7 @@ let schemaIOSHostAXFailureCodes = [
     "ios_host_ax_frontmost_unavailable",
     "ios_host_ax_platform_element_unavailable",
     "ios_host_ax_tree_unavailable",
+    "ios_host_ax_geometry_unavailable",
     "ios_host_ax_action_unavailable",
     "ios_host_ax_unsupported_platform",
 ]

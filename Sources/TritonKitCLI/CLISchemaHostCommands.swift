@@ -793,6 +793,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "ios_host_ax_frontmost_unavailable",
                 "ios_host_ax_platform_element_unavailable",
                 "ios_host_ax_tree_unavailable",
+                "ios_host_ax_geometry_unavailable",
                 "ios_host_ax_unsupported_platform",
                 "sim_runtime_failed",
                 "sim_personalization_failed",
@@ -948,7 +949,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                         "triton device doctor --platform ios --json",
                     ],
                     outputSelectors: ["host.simulator-ax"],
-                    failureCodes: ["ios_host_ax_unavailable", "ios_host_ax_frontmost_unavailable", "ios_host_ax_platform_element_unavailable", "ios_host_ax_tree_unavailable", "ios_host_ax_unsupported_platform", "simulator_not_found"]
+                    failureCodes: ["ios_host_ax_unavailable", "ios_host_ax_frontmost_unavailable", "ios_host_ax_platform_element_unavailable", "ios_host_ax_tree_unavailable", "ios_host_ax_geometry_unavailable", "ios_host_ax_unsupported_platform", "simulator_not_found"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "proxy",
