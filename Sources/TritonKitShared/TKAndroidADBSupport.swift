@@ -775,7 +775,11 @@ public extension TKAndroidADBCommand {
     static func inputText(serial: String, text: String, executable: String = "adb") -> TKHostCommand {
         TKHostCommand(
             executable: executable,
-            arguments: ["-s", serial, "shell", "input", "text", text],
+            // adb joins remote arguments into a shell script, even when the
+            // local runner uses Process argv. Quote the complete text once for
+            // that shell; preserve input's existing %s/Unicode limitations.
+            arguments: ["-s", serial, "shell", "input", "text", "'" + text.replacingOccurrences(of: "'", with: "'\\''") + "'"],
+            redactedArgumentIndexes: [5],
             riskLevel: .automation,
             requiredConfig: [.target, .timeout, .auditRecord]
         )

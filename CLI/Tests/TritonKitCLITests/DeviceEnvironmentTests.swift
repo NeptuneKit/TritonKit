@@ -24,6 +24,44 @@ struct DeviceEnvironmentTests {
         #expect(parseAndroidForeground("mCurrentFocus=Window{aa u0 com.stale/.Dialog}") == nil)
         #expect(parseAndroidForeground("topResumedActivity=ActivityRecord{aa u0 com.example/.Main t9}") == "com.example")
     }
+    @Test func foregroundCarriesTrustedComponentAndFailsClosed() throws {
+        for marker in ["topResumedActivity=", "mResumedActivity:"] {
+            let output = try makeDeviceEnvironmentOutput(target: target(), operation: .foreground, runner: { command in
+                result(command, "\(marker) ActivityRecord{abc u0 com.example/.Main$Nested t9}")
+            })
+            #expect(output.verified)
+            #expect(output.observed?["bundleIdentifier"] == "com.example")
+            #expect(output.observed?["component"] == "com.example/.Main$Nested")
+            #expect(output.observed?["activity"] == "com.example.Main$Nested")
+            #expect(output.observed?["scope"] == "resumed-activity")
+        }
+        for text in ["mCurrentFocus=Window{aa u0 com.stale/.Dialog}", "mResumedActivity: ActivityRecord{aa u0 com.example/.Main", "mResumedActivity: ActivityRecord{aa u0 com.example/??? t9}", "notopResumedActivity=ActivityRecord{aa u0 com.example/.Main t9}"] {
+            let output = try makeDeviceEnvironmentOutput(target: target(), operation: .foreground, runner: { result($0, text) })
+            #expect(!output.verified)
+            #expect(output.observed?["identityState"] == "unknown")
+            #expect(output.observed?["component"] == nil)
+            #expect(output.observed?["activity"] == nil)
+        }
+    }
+    @Test func foregroundDoesNotGuessBareClassPackage() {
+        #expect(parseAndroidForegroundIdentity("mResumedActivity: ActivityRecord{aa u0 com.example/Main t1}")?.activity == "Main")
+        #expect(parseAndroidForegroundIdentity("mResumedActivity: ActivityRecord{aa u0 com.example/org.other.Main t1}")?.activity == "org.other.Main")
+    }
+    @Test func foregroundPrefersTopAndDoesNotFallbackFromMalformedTop() throws {
+        for text in [
+            "topResumedActivity=null\nmResumedActivity: ActivityRecord{aa u0 com.stale/.Main t1}",
+            "topResumedActivity=ActivityRecord{broken}\nmResumedActivity: ActivityRecord{aa u0 com.stale/.Main t1}",
+            "mResumedActivity: ActivityRecord{aa u0 com.one/.Main t1}\nmResumedActivity: ActivityRecord{bb u0 com.two/.Main t2}"
+        ] {
+            #expect(parseAndroidForeground(text) == nil)
+        }
+        let text = "mResumedActivity: ActivityRecord{aa u0 com.stale/.Main t1}\ntopResumedActivity=ActivityRecord{bb u0 com.current/com.current.Main t2}"
+        #expect(parseAndroidForeground(text) == "com.current")
+    }
+    @Test func androidInputSourceRedactsOriginalAndEscapedText() {
+        let command = TKAndroidADBCommand.inputText(serial: "fixture", text: "SECRET '#~")
+        #expect(!hostSourceCommand(command).contains("SECRET"))
+    }
     @Test func rotationsDoNotTreatStoredUserPreferenceAsDisplay() {
         #expect(parseAndroidDisplayRotation("mRotation=ROTATION_90") == 1)
         #expect(parseAndroidDisplayRotation("SurfaceOrientation: 3") == 3)

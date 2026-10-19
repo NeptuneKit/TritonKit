@@ -481,7 +481,7 @@ struct TKHostAdapterModelsTests {
         #expect(TKAndroidADBCommand.tapCoordinate(serial: "emulator-5554", x: 10, y: 20).argv == ["-s", "emulator-5554", "shell", "input", "tap", "10", "20"])
         #expect(TKAndroidADBCommand.swipeCoordinate(serial: "emulator-5554", startX: 10, startY: 20, endX: 100, endY: 200).argv == ["-s", "emulator-5554", "shell", "input", "swipe", "10", "20", "100", "200"])
         #expect(TKAndroidADBCommand.swipeCoordinate(serial: "emulator-5554", startX: 10, startY: 20, endX: 100, endY: 200, durationMs: 350).argv == ["-s", "emulator-5554", "shell", "input", "swipe", "10", "20", "100", "200", "350"])
-        #expect(TKAndroidADBCommand.inputText(serial: "emulator-5554", text: "hello%sworld").argv == ["-s", "emulator-5554", "shell", "input", "text", "hello%sworld"])
+        #expect(TKAndroidADBCommand.inputText(serial: "emulator-5554", text: "hello%sworld").argv == ["-s", "emulator-5554", "shell", "input", "text", "'hello%sworld'"])
         #expect(TKAndroidADBCommand.keyEvent(serial: "emulator-5554", keyCode: "KEYCODE_BACK").argv == ["-s", "emulator-5554", "shell", "input", "keyevent", "KEYCODE_BACK"])
         #expect(TKAndroidADBCommand.wmSize(serial: "emulator-5554").argv == ["-s", "emulator-5554", "shell", "wm", "size"])
     }
