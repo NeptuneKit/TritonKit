@@ -2,7 +2,7 @@
 
 ## 范围与状态
 
-- 2026-10-17参考增量评估后立项，状态：实现与 focused 验证通过，待主控整合。影响层为 macOS CLI host Simulator AX；不改 embedded SDK、Web/Wails、真机或远端产品面。
+- 2026-10-17参考增量评估后立项，状态：已验收并合入本地main（7a8e9f56），合后完整CLI与local门禁复验通过。影响层为 macOS CLI host Simulator AX；不改 embedded SDK、Web/Wails、真机或远端产品面。
 - 实际产品基线为 `main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec`。主目录当前另在 `codex/wip-main-before-sp209@0a0aec02`，不能将其当作main或整分支合并；相关AX实现blob与main一致。
 - branch：`feat/SP-210-simulator-ax-geometry`；worktree：`../TritonKit-worktrees/SP-210-simulator-ax-geometry/`。本期主控：[SP-211](../SP-211-reference-adoption-integration/README.md)。
 - 用户已授权参考评估可纳入项直接开发、独立验证、必要本地提交与本地main合并；无推送/发布、安装依赖、第三方执行或设备操作授权。
@@ -51,4 +51,7 @@
 
 ## 联合验收（2026-10-19）
 
-主控候选`a8848036`已整合本实现；完整CLI复跑1480 Swift Testing +69 XCTest通过，根包108+293 Swift Testing及7 XCTest通过，fake-adb真实CLI进程7场景和5组schema通过。Release构建与本地门禁通过，完成记录统一见[SP-211验收报告](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。候选已验收，待本地main合入、未设备实测或发布。
+主控候选`a8848036`已整合本实现；完整CLI复跑1480 Swift Testing +69 XCTest通过，根包108+293 Swift Testing及7 XCTest通过，fake-adb真实CLI进程7场景和5组schema通过。Release构建与本地门禁通过，完成记录统一见[SP-211验收报告](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。本期已验收并经7a8e9f56合入本地main、未设备实测或发布。
+
+
+本期联合候选`f9760a17`经`7a8e9f56`合入本地main；产品tree与候选完全一致。本期离线验收已完成，合后main完整CLI与local门禁复验通过，未推送/发布。详细门禁、首次失败及未验边界见[联合验收](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。

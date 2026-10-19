@@ -21,3 +21,13 @@
 本期space明确为离线契约验收。TRITON_VERIFY_XCODE=0，未执行真实Simulator/Android、旧新Xcode/Resize矩阵、签名、依赖升级、安装或发布。Android shared变更没有新增API依赖。独立审查发现纯几何测试不足以支持动作前拒绝声明，已补实际生产提交边界测试；bare activity不补猜测包名。经验回写原SP-210/SP-212说明、public skills与EXPERIENCE索引。
 
 原始日志保留各worktree `.build/sp210-evidence`、`.build/sp212-evidence`、集成worktree `.build/sp211-evidence`。合并完成后在本报告追加main SHA、最终门禁与日志hash摘要。
+
+
+## 本地main整合
+
+合并提交`7a8e9f56`；`git diff --exit-code f9760a17 HEAD`通过，主线tree与已验收候选完全一致。SP-213分支已同步f9760a17，所有四个feature分支均在main祖先链。main独立完整CLI1480+69、根包401+7、本地门禁、Release实际CLI进程7场景+5schema、文档门禁全部复验通过。
+
+
+## 最终状态
+
+SP-209～213所有feature分支均为本地main祖先；五个feature worktree干净，未删除。主目录仍保留原codex/wip-main-before-sp209及14个已跟踪修改、35个未跟踪文件（status折叠目录后47条），未修改CLAUDE或回灌旧产品；可交付参考资料已按manifest进入main，WIP分支不做整分支merge。未推送、发布或真实设备验收。最终状态、采用登记、memory、经验索引均回写，main文档收口提交后保持干净。

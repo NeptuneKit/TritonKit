@@ -4,7 +4,7 @@
 >
 > 编号登记册：[INDEX.md](./INDEX.md)（213/213 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-19（实际main与WIP分支分离；参考采用实现及集成进行中）
+> 最近审计：2026-10-19（实际main与WIP分支分离；参考采用已验收合入本地main）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -328,7 +328,7 @@
 
 | 状态 | Space | 范围 | 下一步 |
 | --- | --- | --- | --- |
-| implementing | [SP-210-simulator-ax-geometry](./SP-210-simulator-ax-geometry/README.md) | Simulator AX缺失/非法几何不再猜测坐标 | /root/implement_sp210 执行中；thread仍为空 |
-| integration_in_progress | [SP-211-reference-adoption-integration](./SP-211-reference-adoption-integration/README.md) | 本批主控验证与本地合并 | 当前聊天主控整合；保留主目录分支WIP |
-| implementing | [SP-212-mobile-mcp-android-contracts](./SP-212-mobile-mcp-android-contracts/README.md) | Android 前台 activity 身份与 ADB legacy 文本转义 | /root/implement_sp212 执行中；指定gpt-6.1-sol
-| integration_in_progress | [SP-213-mobile-mcp-contracts-integration](./SP-213-mobile-mcp-contracts-integration/README.md) | SP-212 主控验证与本地main合并 | 当前聊天主控整合；不新建聊天
+| 已合入本地main | [SP-210-simulator-ax-geometry](./SP-210-simulator-ax-geometry/README.md) | Simulator AX缺失/非法几何不再猜测坐标 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布 |
+| 已合入本地main | [SP-211-reference-adoption-integration](./SP-211-reference-adoption-integration/README.md) | 本批主控验证与本地合并 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布 |
+| 已合入本地main | [SP-212-mobile-mcp-android-contracts](./SP-212-mobile-mcp-android-contracts/README.md) | Android 前台 activity 身份与 ADB legacy 文本转义 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布 |
+| 已合入本地main | [SP-213-mobile-mcp-contracts-integration](./SP-213-mobile-mcp-contracts-integration/README.md) | SP-212 主控验证与本地main合并 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布 |

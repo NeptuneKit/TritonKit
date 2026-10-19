@@ -69,5 +69,29 @@
     "local_gate": "passed",
     "xcode_device_build": "skipped (TRITON_VERIFY_XCODE=0; offline contract scope)",
     "first_cli_failure": "FramebufferHelperTests fixture marker absent; focused 11 and full rerun passed without code change; exact scheduling cause unknown"
-  }
+  },
+  "main_merge_sha": "7a8e9f56d168810908b6e3a0792a7934ab408e5d",
+  "main_verification": "passed",
+  "main_logs": [
+    {
+      "path": ".build/sp211-main-evidence/cli-full.log",
+      "bytes": 347569,
+      "sha256": "d6772cac7b4e6f5bacc7e7d2ecf8d8b6b22e01a2c984e3dd523e57cf96ac9c84"
+    },
+    {
+      "path": ".build/sp211-main-evidence/docs-closeout.log",
+      "bytes": 1731,
+      "sha256": "2e5e5584cb943e4d21671133736fb73145b404d9580a02a4de8d6b9e1b7882e3"
+    },
+    {
+      "path": ".build/sp211-main-evidence/local-gate.log",
+      "bytes": 103693,
+      "sha256": "71e03c6bb14a8ad84237ac6217b7c5d6b7e74d62ec294533acef37d7001709f3"
+    },
+    {
+      "path": ".build/sp211-main-evidence/release-cli-acceptance-summary.log",
+      "bytes": 77,
+      "sha256": "32d1a9d7219107916606d2a55738aa5ea716345d2731a0fd5259bf881933cb74"
+    }
+  ]
 }

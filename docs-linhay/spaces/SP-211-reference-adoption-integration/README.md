@@ -2,7 +2,7 @@
 
 ## 边界与状态
 
-原批次负责 [SP-210](../SP-210-simulator-ax-geometry/README.md) 和本次SP-207追踪资料的有限集成；2026-10-19用户要求全部未完成worktree推进验收并合main，本聊天同时承担SP-213对应的SP-212联合验证，状态：integration_in_progress（当前聊天主控）；不复用已收口SP-206，不无限追加后续参考批次。用户授权主控协调本批执行、审查真实候选、修复冲突、联合门禁、必要本地提交及本地main合并；不推送/tag/release，不运行上游代码/安装/签名/DDI/设备动作。
+原批次负责 [SP-210](../SP-210-simulator-ax-geometry/README.md) 和本次SP-207追踪资料的有限集成；2026-10-19用户要求全部未完成worktree推进验收并合main，本聊天同时承担SP-213对应的SP-212联合验证，状态：已验收并合入本地main（7a8e9f56），合后完整CLI与local门禁复验通过；不复用已收口SP-206，不无限追加后续参考批次。用户授权主控协调本批执行、审查真实候选、修复冲突、联合门禁、必要本地提交及本地main合并；不推送/tag/release，不运行上游代码/安装/签名/DDI/设备动作。
 
 branch：`feat/SP-211-reference-adoption-integration`；worktree：`../TritonKit-worktrees/SP-211-reference-adoption-integration/`；基线 `main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec`。实际main在 `../TritonKit-worktrees/main-integrated/`，主目录另在 `codex/wip-main-before-sp209@0a0aec02` 且存在用户CLAUDE.md变更，禁止切换/重置/全分支合并或混入该WIP。
 
@@ -28,4 +28,7 @@ branch：`feat/SP-211-reference-adoption-integration`；worktree：`../TritonKit
 
 ## 2026-10-19 当前执行接替
 
-当前聊天主控承担本space整合，不新建聊天。SP-210、SP-212分别由`/root/implement_sp210`、`/root/implement_sp212`按指定`gpt-6.1-sol`执行；历史桌面会话失败保留，thread ID仍为null，subagent身份单独登记。当前为integration_in_progress，尚未宣称产品验证或main合并。
+当前聊天主控承担本space整合，不新建聊天。SP-210、SP-212分别由`/root/implement_sp210`、`/root/implement_sp212`按指定`gpt-6.1-sol`执行；历史桌面会话失败保留，thread ID仍为null，subagent身份单独登记。联合候选已通过离线验收并经7a8e9f56合入本地main；历史会话阻塞已退出当前待办。
+
+
+本期联合候选`f9760a17`经`7a8e9f56`合入本地main；产品tree与候选完全一致。本期离线验收已完成，合后main完整CLI与local门禁复验通过，未推送/发布。详细门禁、首次失败及未验边界见[联合验收](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。

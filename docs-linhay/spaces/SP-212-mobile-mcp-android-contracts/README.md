@@ -2,7 +2,7 @@
 
 ## 边界与状态
 
-- 2026-10-19 根据 mobile-next/mobile-mcp `c659f8ee34873a832adea7daca9c69172d887e70` 与 `1.0.12` 增量评估立项，状态：已实现并完成 focused 离线验收，待主控联合门禁与本地 main 集成；影响层为 macOS CLI/HTTP 的 Android host adapter 与 shared ADB command builder。
+- 2026-10-19 根据 mobile-next/mobile-mcp `c659f8ee34873a832adea7daca9c69172d887e70` 与 `1.0.12` 增量评估立项，状态：已完成本期离线验收并合入本地 main（7a8e9f56），合后完整CLI与local门禁复验通过；影响层为 macOS CLI/HTTP 的 Android host adapter 与 shared ADB command builder。
 - 实际产品基线：`main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec`。branch：`feat/SP-212-mobile-mcp-android-contracts`；worktree：`/Users/linhey/.codex/worktrees/mobile-mcp-android-contracts/TritonKit`。主目录另有用户 WIP，执行会话使用独立 worktree；不把主目录分支当作 main，不整分支回灌。
 - 参考来源：[mobile-mcp commit](https://github.com/mobile-next/mobile-mcp/commit/c659f8ee34873a832adea7daca9c69172d887e70)、[Release 1.0.12](https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.12)。许可证 Apache-2.0；完整官方证据在 `.build/reference-monitor/20261019/research/mobile-next__mobile-mcp/`。
 - 用户已授权对评估可纳入项直接建立执行/主控会话、独立验证、必要本地提交和本地 main 合并；不包含 push/tag/release、安装升级依赖、运行第三方代码、签名、DDI 或设备动作。
@@ -47,4 +47,7 @@
 
 ## 联合验收（2026-10-19）
 
-主控候选`a8848036`已整合本实现；完整CLI复跑1480 Swift Testing +69 XCTest通过，根包108+293 Swift Testing及7 XCTest通过，fake-adb真实CLI进程7场景和5组schema通过。Release构建与本地门禁通过，完成记录统一见[SP-211验收报告](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。候选已验收，待本地main合入、未设备实测或发布。
+主控候选`a8848036`已整合本实现；完整CLI复跑1480 Swift Testing +69 XCTest通过，根包108+293 Swift Testing及7 XCTest通过，fake-adb真实CLI进程7场景和5组schema通过。Release构建与本地门禁通过，完成记录统一见[SP-211验收报告](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。本期已验收并经7a8e9f56合入本地main、未设备实测或发布。
+
+
+本期联合候选`f9760a17`经`7a8e9f56`合入本地main；产品tree与候选完全一致。本期离线验收已完成，合后main完整CLI与local门禁复验通过，未推送/发布。详细门禁、首次失败及未验边界见[联合验收](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。

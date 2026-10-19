@@ -1,7 +1,7 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-19（参考采用资料集成；SP-210/212实现中，SP-211/213整合中）
+> 最近同步：2026-10-19（参考采用资料集成；SP-210～213已验收合入本地main）
 > 覆盖范围：213/213 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
@@ -253,10 +253,10 @@
 | `SP-209-picker-runtime-toggle` | [`SP-209-picker-runtime-toggle`](./SP-209-picker-runtime-toggle/README.md) | v0.2.30已发布 | 系统半屏Modal五路由、选择器二级配置与独立显隐；0e296783已合入main，发布安装验收通过 |
 
 
-| `SP-210-simulator-ax-geometry` | [`SP-210-simulator-ax-geometry`](./SP-210-simulator-ax-geometry/README.md) | implementing | AX可信几何fail-closed；/root/implement_sp210 执行中；历史失败另存 |
+| `SP-210-simulator-ax-geometry` | [`SP-210-simulator-ax-geometry`](./SP-210-simulator-ax-geometry/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布 |
 
-| `SP-211-reference-adoption-integration` | [`SP-211-reference-adoption-integration`](./SP-211-reference-adoption-integration/README.md) | integration_in_progress | 本批主控；实际main与主目录分支区分，验证与本地合并；当前聊天主控整合 |
+| `SP-211-reference-adoption-integration` | [`SP-211-reference-adoption-integration`](./SP-211-reference-adoption-integration/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布 |
 
-| `SP-212-mobile-mcp-android-contracts` | [`SP-212-mobile-mcp-android-contracts`](./SP-212-mobile-mcp-android-contracts/README.md) | implementing | mobile-mcp Android 前台 activity 身份与 ADB legacy 文本转义；独立执行 worktree，显式 gpt-6.1-sol |
+| `SP-212-mobile-mcp-android-contracts` | [`SP-212-mobile-mcp-android-contracts`](./SP-212-mobile-mcp-android-contracts/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布 |
 
-| `SP-213-mobile-mcp-contracts-integration` | [`SP-213-mobile-mcp-contracts-integration`](./SP-213-mobile-mcp-contracts-integration/README.md) | integration_in_progress | SP-212 主控验证与本地main合并；显式 gpt-6.1-sol |
+| `SP-213-mobile-mcp-contracts-integration` | [`SP-213-mobile-mcp-contracts-integration`](./SP-213-mobile-mcp-contracts-integration/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布 |

@@ -48,3 +48,5 @@
 - 2026-10-18参考日检：[SP-207第二轮日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261018-reference-update-report.md)固定了19个完整、14个partial的结果；GitHub API 403不能伪装无变化，SKProcessRunner无许可证状态纠正为待复核，iCTRL仍由SP-193独立维护。SP-210/SP-211显式`gpt-6.1-sol`会话重试仍失败且无thread，不回退模型。
 
 - 2026-10-19：本聊天已启动指定模型的SP-210与SP-212执行subagent，主控承担SP-211/SP-213；历史桌面会话创建失败保留，当前推进状态以采用登记为准。
+
+- 2026-10-19：[SP-210～213联合验收](../spaces/SP-211-reference-adoption-integration/plans/20261019-validation.md)已完成离线AX可信几何、Android前台身份与legacy输入转义，经7a8e9f56合本地main；资料b1d20af9先行整合，未推送/发布。历史模型分派阻塞已由本聊天subagent交付接替。
