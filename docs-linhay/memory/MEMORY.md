@@ -39,3 +39,12 @@
 - [SP-209 SDK hub 与选择器运行时开关](../spaces/SP-209-picker-runtime-toggle/README.md)：圆球单击进入系统 pageSheet 的首页连接摘要与连接/选择器/SDK功能/应用/入口五路由；iOS 15+ medium/large detents，旧系统 pageSheet 降级。选择辅助二级配置，能力为宿主配置只读，隐藏仅入口页确认。宿主自行通过独立API唤回，不重连；modal 期间圆球/选择提示暂隐藏且系统遮罩整窗拦截，关闭/下拉恢复有效上下文；内部使用系统导航与分组列表。已随v0.2.30发布，最终回归范围见space。
 
 - v0.2.30已发布：CLI双架构/Homebrew/skills/Web/podspec统一；更新误报修复、原生SDK hub与安全整合已交付。[发布证据](../spaces/SP-208-update-version-alignment/plans/20261016-release.md)。
+
+## 参考采用补充（2026-10-19）
+
+- 新会话模型锁定（2026-10-16）：本项目由agent创建的新会话（含执行和主控）在 `create_thread` 中显式指定 `model: "gpt-6.1-sol"`；不依赖默认值或自动回退。后续主控分派遵守同一约束，既有会话与推理强度保持原设置。
+- 全部参考项目采用授权（2026-10-16）：用户明确从iCTRL扩至所有参考；[SP-207](../spaces/SP-207-reference-adoption-pipeline/README.md) / [正式流程](../dev/reference-project-adoption-workflow.md)为当前事实源。评估可纳入项直接独立开发会话/worktree，由主控验证、必要本地提交与main合并，不逐项重问。原 `ictrl` 自动任务扩大范围并复用每日10:00计划；当前33仓（24参考+9研究候选），新正式登记项目后续加入，按机制/本地需求去重。push/发版、设备等按各自授权。
+- 2026-10-17参考采用批次：[日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261017-reference-update-report.md)；SP-210 AX可信几何与SP-211主控已立项/worktree已建，但桌面新会话接口无法校验显式gpt-6.1-sol，执行/主控thread均不存在，采用登记待重试。主目录HEAD不等于真实main，恢复集成按SP-211精确文件清单，不回灌旧产品或覆盖用户WIP。
+- 2026-10-18参考日检：[SP-207第二轮日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261018-reference-update-report.md)固定了19个完整、14个partial的结果；GitHub API 403不能伪装无变化，SKProcessRunner无许可证状态纠正为待复核，iCTRL仍由SP-193独立维护。SP-210/SP-211显式`gpt-6.1-sol`会话重试仍失败且无thread，不回退模型。
+
+- 2026-10-19：本聊天已启动指定模型的SP-210与SP-212执行subagent，主控承担SP-211/SP-213；历史桌面会话创建失败保留，当前推进状态以采用登记为准。

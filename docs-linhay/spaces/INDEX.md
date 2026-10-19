@@ -1,8 +1,8 @@
 # TritonKit Space 编号索引
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-16（本地分支整合与worktree收口；仅保留main）
-> 覆盖范围：209/209 个已存在 space
+> 最近同步：2026-10-19（参考采用资料集成；SP-210/212实现中，SP-211/213整合中）
+> 覆盖范围：213/213 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 209/209 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 209/209 | 每条记录链接到现有 space README |
+| 编号登记 | 213/213 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 213/213 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -251,3 +251,12 @@
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 
 | `SP-209-picker-runtime-toggle` | [`SP-209-picker-runtime-toggle`](./SP-209-picker-runtime-toggle/README.md) | v0.2.30已发布 | 系统半屏Modal五路由、选择器二级配置与独立显隐；0e296783已合入main，发布安装验收通过 |
+
+
+| `SP-210-simulator-ax-geometry` | [`SP-210-simulator-ax-geometry`](./SP-210-simulator-ax-geometry/README.md) | implementing | AX可信几何fail-closed；/root/implement_sp210 执行中；历史失败另存 |
+
+| `SP-211-reference-adoption-integration` | [`SP-211-reference-adoption-integration`](./SP-211-reference-adoption-integration/README.md) | integration_in_progress | 本批主控；实际main与主目录分支区分，验证与本地合并；当前聊天主控整合 |
+
+| `SP-212-mobile-mcp-android-contracts` | [`SP-212-mobile-mcp-android-contracts`](./SP-212-mobile-mcp-android-contracts/README.md) | implementing | mobile-mcp Android 前台 activity 身份与 ADB legacy 文本转义；独立执行 worktree，显式 gpt-6.1-sol |
+
+| `SP-213-mobile-mcp-contracts-integration` | [`SP-213-mobile-mcp-contracts-integration`](./SP-213-mobile-mcp-contracts-integration/README.md) | integration_in_progress | SP-212 主控验证与本地main合并；显式 gpt-6.1-sol |

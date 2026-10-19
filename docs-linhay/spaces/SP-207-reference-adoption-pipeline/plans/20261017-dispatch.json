@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-17",
+  "model": "gpt-6.1-sol",
+  "actual_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+  "cwd_branch": "codex/wip-main-before-sp209",
+  "cwd_head": "0a0aec02a0918ffbf6c04e7d338b3ba368aba6c5",
+  "attempts": [
+    {
+      "role": "execution",
+      "space": "SP-210-simulator-ax-geometry",
+      "model_argument": "gpt-6.1-sol",
+      "worktree_created": true,
+      "thread_created": false,
+      "thread_id": null,
+      "status": "model_validation_failed",
+      "error": "create_thread could not validate model \"gpt-6.1-sol\". Use a model listed in the tool description, or omit model."
+    },
+    {
+      "role": "controller",
+      "space": "SP-211-reference-adoption-integration",
+      "model_argument": "gpt-6.1-sol",
+      "worktree_created": true,
+      "thread_created": false,
+      "thread_id": null,
+      "status": "model_validation_failed",
+      "error": "create_thread could not validate model \"gpt-6.1-sol\". Use a model listed in the tool description, or omit model."
+    }
+  ],
+  "fallback_used": false,
+  "next_step": "Retry real missing sessions when specified model is accepted; do not create a verification-only session or omit explicit model."
+}

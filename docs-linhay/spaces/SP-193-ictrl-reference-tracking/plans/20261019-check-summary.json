@@ -1,0 +1,28 @@
+{
+  "repository": "OpenMinis/iCTRL",
+  "checked_at": "2026-10-19T02:08:00Z",
+  "old_head": "d88bbf0b3a5addead31b4298d605d7ac7a87d6e7",
+  "head_sha": "d88bbf0b3a5addead31b4298d605d7ac7a87d6e7",
+  "default_branch": "main",
+  "head_committed_at": "2026-10-15T04:04:18Z",
+  "release": {
+    "tag": "v1.98.12",
+    "published_at": "2026-10-15T04:05:24Z",
+    "url": "https://github.com/OpenMinis/iCTRL/releases/tag/v1.98.12",
+    "prerelease": false
+  },
+  "license_spdx": "Apache-2.0",
+  "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+  "changed": false,
+  "complete": true,
+  "comparison_count": 0,
+  "errors": [],
+  "recovery": {
+    "initial_failure": "gh api repos/OpenMinis/iCTRL failed with x509 certificate verification error",
+    "recovered_by": "official GitHub API via system curl",
+    "failure_evidence": ".build/reference-monitor/20261019/ictrl/failure.json",
+    "recovery_evidence": ".build/reference-monitor/20261019/ictrl/result.json"
+  },
+  "coverage": "Official repository metadata, main HEAD, complete non-draft Release page and fixed HEAD license text were read after transport recovery; no HEAD delta from SP193 prior success.",
+  "source": "https://github.com/OpenMinis/iCTRL"
+}

@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-19",
+  "batch": "SP-212-mobile-mcp-android-contracts",
+  "controller_space": "SP-213-mobile-mcp-contracts-integration",
+  "model": "gpt-6.1-sol",
+  "model_explicit": true,
+  "baseline": "main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+  "execution_worktree": "/Users/linhey/.codex/worktrees/mobile-mcp-android-contracts/TritonKit",
+  "controller_worktree": "/Users/linhey/.codex/worktrees/mobile-mcp-contracts-integration/TritonKit",
+  "tasks": [
+    {
+      "key": "mobile-next/mobile-mcp:android-focused-activity-identity",
+      "status": "dispatch_blocked_model",
+      "execution_thread_id": null,
+      "controller_thread_id": null
+    },
+    {
+      "key": "mobile-next/mobile-mcp:android-adb-legacy-text-escaping",
+      "status": "dispatch_blocked_model",
+      "execution_thread_id": null,
+      "controller_thread_id": null
+    }
+  ],
+  "attempts": [
+    {
+      "role": "execution",
+      "model": "gpt-6.1-sol",
+      "status": "model_validation_failed",
+      "error": "create_thread could not validate reasoning effort high; retry without thinking also could not validate model",
+      "thread_id": null
+    },
+    {
+      "role": "controller",
+      "model": "gpt-6.1-sol",
+      "status": "model_validation_failed",
+      "error": "create_thread could not validate model",
+      "thread_id": null
+    },
+    {
+      "role": "execution",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "omitted",
+      "status": "model_validation_failed",
+      "error": "create_thread could not validate model gpt-6.1-sol on retry with existing SP-212 branch",
+      "thread_id": null
+    }
+  ],
+  "notes": [
+    "候选由20261019 research完整增量与实际main blob复核后登记。",
+    "只读追踪与开发分派独立；未运行上游、依赖、设备或远端动作。"
+  ]
+}

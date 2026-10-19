@@ -17,3 +17,4 @@
 | 删除、路径保护或并发安全修复 | 精确根白名单与只读 preview；核对当前 fail-closed 边界；恢复删除前证明排他、根身份及 partial 审计，隔离负例抓旧错 | [安全清理与剩余风险](../spaces/SP-179-issue-214-derived-data-cleanup/README.md)、[CLI 清理契约](../dev/ai-cli-readable-control.md) |
 | 外部资料、归档会话、多 agent 结论或旧计划引用 | 区分纠正/方案/最终结论/实际落地；只继承事实线索；核对当前授权、真实 diff 与后续替代证据 | [治理流程](../dev/20260619-agent-workflow-skill-governance.md)、[监督审计](../../.agents/skills/tritonkit-subagent-supervision/SKILL.md) |
 | 文档入口、内部 skill 接线或经验校验器调整 | 核对普通任务默认自动沉淀与收尾证据；可见规则/链接才算接线，示例/注释不算；隔离正负例防回退；并行登记前重查编号 | [治理闭环与校验边界](../dev/20260619-agent-workflow-skill-governance.md)、[本轮校验证据](../spaces/SP-198-agent-experience-loop/README.md) |
+| 参考上游增量、采用分派或跨分支资料整合 | 先区分主目录HEAD与真实main；完整读取后独立推进检查点；采用与读取去重分离；模型失败不伪造thread；按清单保留较新授权与main产品历史 | [参考采用流程](../dev/reference-project-adoption-workflow.md)、[采用登记](../spaces/SP-207-reference-adoption-pipeline/README.md) |

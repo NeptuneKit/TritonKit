@@ -1,0 +1,20 @@
+{
+  "assessed_at": "2026-10-17T02:29:10.241553+00:00",
+  "actual_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+  "file": "Sources/TritonKitCLI/CLIHostSimulatorAXDriver.swift",
+  "main_blob": "8f1702f792ea60dddad8610199a24b4ba2ef2687",
+  "cwd_head_blob": "8f1702f792ea60dddad8610199a24b4ba2ef2687",
+  "blob_equal": true,
+  "observed": {
+    "devicePointSize_missing_size_fallback": "393x852",
+    "missing_scale_fallback": 3,
+    "positive_scale_check_only": true,
+    "invalid_transform_passthrough": true
+  },
+  "adoption_boundary": "Remove fabricated geometry and fail closed on missing/nonfinite/invalid geometry in coordinate-dependent paths; no live native invocation/caching in this slice.",
+  "upstream_revision": "452e7d77326f9fc0e5b003ecbf6cec5fc499e4bf",
+  "scope": "static_source_assessment_only",
+  "implemented": false,
+  "tests_run": false,
+  "reason_tests_not_run": "No product candidate; execution/controller thread creation failed model validation."
+}

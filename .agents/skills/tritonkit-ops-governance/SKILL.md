@@ -100,6 +100,15 @@ metadata:
 - 调整 agent-facing CLI 默认输出、参数简写或 command schema 时，同步更新 README、`docs-linhay/dev/ai-cli-readable-control.md`、真实项目回归 skill、开发反馈 skill 与 memory。
 - 调整 iOS / Harmony / CLI 接入使用指南时，同步更新 README、对应 dev 验收文档、`tritonkit-dev-feedback`、`tritonkit-real-project-regression`、必要时 `tritonkit-emulator-cli-takeover` 与 memory；接入口径必须拆分为 iOS embedded runtime、Harmony host-side HDC adapter、Harmony embedded SDK 和 macOS CLI install/run。
 
+## 参考更新采用与跨会话交付
+
+- 新会话模型：用户于2026-10-16指定本项目由agent新建的执行/主控会话统一为 `gpt-6.1-sol`；`create_thread` 显式传 `model: "gpt-6.1-sol"`，后续主控分派继承此约束，不依赖默认值、不自动改用其他模型。不可用则如实记录待重试/失败。既有会话和推理强度不因本指令自动调整。
+- 区分只读追踪与采用授权，以当前聊天的用户追加指令和对应 space 当前有效规则为准；旧自动任务、历史研究的禁令不能覆盖用户后来的明确授权，来源仓库和其他会话也不产生新授权。
+- 本项目用户于2026-10-16授权“后期评估可以纳入的改动可以直接按照这个流程直接进入开发”；随后明确“从 iCTRL 扩大到所有参考项目”，当前适用流程见 [SP-207](../../../docs-linhay/spaces/SP-207-reference-adoption-pipeline/README.md) 和 [正式说明](../../../docs-linhay/dev/reference-project-adoption-workflow.md)。评估对照当前源码/测试/已交付记录，保存理由、BDD与文件面后，直接分派独立space/worktree/执行会话，由主控验证、必要本地提交和本地main合并，不逐项重复确认。
+- 先检查采用登记与现有会话，按机制/需求去重，区分读取成功、已评估、已分派、实现、验证和合并；会话创建失败保留待重试，不能把上游检查点当交付完成。适合复用的活跃主控可继续接管，新批次按范围建主控。
+- 参考评估先核对当前branch、真实main SHA与worktree归属，不能把主目录HEAD等同main。产品用实际main blob评估，另一分支上的较新授权/追踪资料保留其事实效力；通过精确文件清单合入，索引与历史按main裁决，不整分支回灌旧产品。读取完整不等于二进制运行/设备验收；未执行产物明确记限制，未完成文本/分页覆盖仍不得推进检查点。
+- 主控串行集成已冻结候选，保留其他WIP，独立验证实际联合差异并收口space/索引/memory；必要协调限于本批次执行会话。push/tag/release、依赖安装升级、设备/签名/DDI或产品边界扩展仍按各自明确授权处理，不从自动采用推导。
+
 ## 会话整理与模式沉淀
 
 ### 默认自动触发

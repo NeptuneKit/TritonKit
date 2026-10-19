@@ -1,0 +1,2186 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-17",
+  "actual_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+  "cwd_branch": "codex/wip-main-before-sp209",
+  "cwd_head": "0a0aec02a0918ffbf6c04e7d338b3ba368aba6c5",
+  "baseline_note": "Imported observations remain historical, not a completed prior incremental review. iCTRL delegates to SP193.",
+  "counts": {
+    "repositories": 33,
+    "complete": 32,
+    "partial": 1,
+    "changed": 9,
+    "unchanged": 24
+  },
+  "repositories": [
+    {
+      "repository": "tddworks/baguette",
+      "checked_at": "2026-10-17T02:16:24.389334+00:00",
+      "old_head": "8930ac601e38e04540cb3cad9547347c160882e4",
+      "head_sha": "14b39834fef663c2eca868db98422e4eaa8e2bb3",
+      "default_branch": "main",
+      "release": {
+        "url": "https://api.github.com/repos/tddworks/baguette/releases/413537221",
+        "assets_url": "https://api.github.com/repos/tddworks/baguette/releases/413537221/assets",
+        "upload_url": "https://uploads.github.com/repos/tddworks/baguette/releases/413537221/assets{?name,label}",
+        "html_url": "https://github.com/tddworks/baguette/releases/tag/v0.2.7",
+        "id": 413537221,
+        "node_id": "RE_kwDOSRfta84YphPF",
+        "tag_name": "v0.2.7",
+        "target_commitish": "main",
+        "name": "baguette v0.2.7",
+        "draft": false,
+        "immutable": false,
+        "prerelease": false,
+        "created_at": "2026-10-15T04:16:13Z",
+        "updated_at": "2026-10-15T07:41:32Z",
+        "published_at": "2026-10-15T07:41:32Z",
+        "tarball_url": "https://api.github.com/repos/tddworks/baguette/tarball/v0.2.7",
+        "zipball_url": "https://api.github.com/repos/tddworks/baguette/zipball/v0.2.7",
+        "mentions_count": 1
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "sha256": "0509ebb2d8d399fb183d1973d3f6ad585e209ca4c2c42a90f3c22c0f32c1ab3e",
+        "path": "LICENSE",
+        "html_url": "https://github.com/tddworks/baguette/blob/14b39834fef663c2eca868db98422e4eaa8e2bb3/LICENSE"
+      },
+      "complete": false,
+      "changed": true,
+      "comparison_count": 9,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "total_commits": 9,
+        "files": 67,
+        "compare_status": "ahead",
+        "binary_notes": [
+          "binary metadata only: docs/features/companion-screens/DiPlay.apk git_blob=f11ccff52a5a65c0a4df4ed27bb428d2d73f4460"
+        ],
+        "source_review": "Text source fetched; APK/key/certificate/binary payload not audited. License covers repository only.",
+        "release_selection": "All release pages, non-draft including prerelease, maximum published_at/created_at",
+        "license_baseline": "Historical imported observation has SPDX but no full-text hash; current hash establishes first observation, not proof of unchanged license.",
+        "binary_observation": {
+          "official_fixed_blob_bytes": "complete",
+          "APK_sha256": "27b434462da7e78b1ff0987d129ed0a4b0a0e56beceaf8ec221d47150d4675bd",
+          "source_association": "not established for APK/certificate/identity distribution",
+          "executed": false,
+          "manifest": "binary-source-manifest.json"
+        }
+      },
+      "evidence": [
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/LICENSE.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/commit-0e2af73dd8b1ccbdaccf59bb21444b49247aebfa.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/commit-1347994f7fb8140652e9794a84c2872fc8fd47ed.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/commit-14b39834fef663c2eca868db98422e4eaa8e2bb3.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/commit-2c864abda1a7b391a4cabf9a616d450385c8c542.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/commit-7790384c5e020d94ac288f0d695d48dbcbc5b4e4.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/commit-8a65e97f7e6c8976d95b42a82bf6fcd1af74b01b.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/commit-aa0c7746566314a2da4f2d703be72f5d8620d586.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/commit-abe5311c36cf93775f82bae0bc6f8860d32cf1f8.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/commit-e50715c1063b518f879f214a048aa0cc821e3dc1.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/compare-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/head.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/license.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/releases-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/repository.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-0.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-0.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-1.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-10.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-10.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-11.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-11.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-12.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-12.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-13.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-13.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-14.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-14.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-15.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-15.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-16.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-16.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-17.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-17.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-18.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-18.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-19.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-19.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-2.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-2.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-20.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-20.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-21.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-21.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-22.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-22.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-23.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-23.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-24.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-24.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-25.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-25.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-26.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-26.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-27.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-27.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-28.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-28.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-29.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-29.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-3.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-3.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-30.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-30.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-31.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-31.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-32.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-32.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-33.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-33.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-34.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-34.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-35.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-35.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-36.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-36.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-37.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-37.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-38.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-38.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-39.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-39.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-4.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-4.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-40.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-40.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-41.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-41.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-42.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-42.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-43.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-43.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-44.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-44.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-45.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-45.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-46.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-46.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-47.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-47.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-48.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-48.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-49.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-49.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-5.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-5.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-50.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-50.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-51.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-51.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-52.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-52.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-53.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-53.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-54.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-54.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-55.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-55.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-56.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-56.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-57.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-58.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-58.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-59.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-59.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-6.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-6.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-60.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-60.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-61.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-61.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-62.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-62.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-63.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-63.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-64.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-64.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-65.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-65.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-66.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-66.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-7.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-7.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-8.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-8.json",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-9.full",
+        ".build/reference-monitor/20261017/sim-runtime/tddworks__baguette/source-9.json"
+      ],
+      "errors": [
+        "partial source association: fixed official APK/certificate/identity bytes are retained, but corresponding APK build source/manifest provenance is not established; no binary behavior executed or asserted"
+      ],
+      "assessment": {
+        "decision": "observe",
+        "reason": "defaults lookup/unset/live与按需relaunch的完整相关源码显示typed磁盘prefs之外的真实缺口；guest hinge需注入helper/私有ABI。67个当前增量文件已保存，官方APK字节完整但关联构建源码未证实，因此仓库整体仍partial，不推进成功点。",
+        "local_context": [
+          "SP-192",
+          "SP-196",
+          "SP-200",
+          "SP-203",
+          "SP-204",
+          "SP-205",
+          "SP-206"
+        ],
+        "candidates": [
+          {
+            "mechanism": "runtime preference lookup and delivery",
+            "decision": "observe",
+            "benefit": "发现新装App尚未落盘的设置；区分live与需重启，避免把磁盘写入当App消费",
+            "boundary": "只限本机Simulator、明确opt-in、限定App，不扩Web控制面；现有Bool relaunch兼容；注入/自定义device set与PID身份需验证",
+            "license": "Apache-2.0 repository; binary APK/identity licensing not audited, must not copy those assets",
+            "source": "https://github.com/tddworks/baguette/blob/14b39834fef663c2eca868db98422e4eaa8e2bb3/Sources/Baguette/Domain/Defaults/PreferenceLookups.swift",
+            "files": [
+              "Sources/TritonKitCLI/CLIHostPreferencesRuntime.swift",
+              "Sources/TritonKitCLI/CLIHostPreferencesModels.swift",
+              "Sources/TritonKitCLI/CLIHostPreferencesCommands.swift"
+            ],
+            "tests": [
+              "CLI/Tests/TritonKitCLITests/HostPreferencesDeliveryTests.swift",
+              "CLI/Tests/TritonKitCLITests/HostPreferencesSetTests.swift"
+            ],
+            "bdd": [
+              "Given unset key read by running app, lookup returns observed type with persisted=false and source/PID, never guesses Swift default.",
+              "Given stale/foreign/partial lookup, fail closed/answered=false, never reuse old process facts.",
+              "Given when-needed and unknown/live/startup key, distinguish relaunch decision and disk verification from actual App consumption."
+            ]
+          },
+          {
+            "mechanism": "iOS Duo guest hinge",
+            "decision": "observe",
+            "local_file": "Sources/TritonKitCLI/CLIDeviceEnvironmentRuntime.swift:85",
+            "test": "CLI/Tests/TritonKitCLITests/DeviceEnvironmentTests.swift",
+            "reason": "当前iOS fold明确unsupported；需版本门禁、受控helper及真实设备验收，不以Android既有fold为已覆盖。"
+          }
+        ],
+        "local_main_sha": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+        "local_main_verification": "main-source-check.json: compared cited source/test blobs with cwd HEAD; all same"
+      }
+    },
+    {
+      "repository": "EvanBacon/serve-sim",
+      "checked_at": "2026-10-17T02:16:24.391431+00:00",
+      "old_head": "6d009686ed08f7d8bd19bca9f9f67a9237931f44",
+      "head_sha": "c47a468b600362d14960504bfb4f222101ead634",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": "Apache-2.0",
+        "sha256": "9024cdf56dfe7e66523698a9f63d3a0061eb15f43bd5ea8e3833a56017ae37fd",
+        "path": "LICENSE",
+        "html_url": "https://github.com/EvanBacon/serve-sim/blob/c47a468b600362d14960504bfb4f222101ead634/LICENSE"
+      },
+      "complete": true,
+      "changed": true,
+      "comparison_count": 3,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "total_commits": 3,
+        "files": 82,
+        "compare_status": "ahead",
+        "release_selection": "All release pages, non-draft including prerelease, maximum published_at/created_at",
+        "license_baseline": "Historical imported observation has SPDX but no full-text hash; current hash establishes first observation, not proof of unchanged license.",
+        "semantic_review": "All 82 changed files reviewed by mechanism; see reading-manifest.json; full changed source bodies retained; static observation only"
+      },
+      "evidence": [
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/LICENSE.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/commit-2effb5b612495a9f617d4ee37b5b7babd982c02e.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/commit-948212b4e395708ee86aa49b5952663e26aa160b.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/commit-c47a468b600362d14960504bfb4f222101ead634.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/compare-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/head.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/license.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/releases-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/repository.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-0.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-0.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-1.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-10.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-10.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-11.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-11.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-12.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-12.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-13.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-13.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-14.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-14.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-15.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-15.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-16.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-16.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-17.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-17.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-18.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-18.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-19.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-19.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-2.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-2.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-20.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-20.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-21.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-21.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-22.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-22.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-23.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-23.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-24.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-24.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-25.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-25.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-26.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-26.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-27.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-27.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-28.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-28.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-29.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-29.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-3.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-3.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-30.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-30.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-31.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-31.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-32.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-32.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-33.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-33.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-34.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-34.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-35.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-35.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-36.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-36.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-37.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-37.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-38.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-38.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-39.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-39.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-4.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-4.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-40.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-40.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-41.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-41.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-42.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-42.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-43.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-43.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-44.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-44.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-45.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-45.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-46.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-46.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-47.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-47.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-48.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-48.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-49.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-49.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-5.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-5.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-50.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-50.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-51.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-51.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-52.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-52.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-53.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-53.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-54.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-54.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-55.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-55.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-56.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-56.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-57.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-57.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-58.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-58.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-59.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-59.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-6.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-6.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-60.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-60.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-61.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-61.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-62.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-62.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-63.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-63.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-64.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-64.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-65.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-65.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-66.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-66.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-67.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-67.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-68.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-68.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-69.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-69.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-7.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-7.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-70.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-70.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-71.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-71.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-72.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-72.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-73.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-73.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-74.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-74.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-75.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-75.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-76.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-76.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-77.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-77.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-78.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-78.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-79.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-79.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-8.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-8.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-80.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-80.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-81.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-81.json",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-9.full",
+        ".build/reference-monitor/20261017/sim-runtime/EvanBacon__serve-sim/source-9.json",
+        "reading-manifest.json"
+      ],
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "82个增量文件已按鉴权/typed RPC、CLI坐标、native编码诊断、doctor与读流/UI恢复分组读完。Web/远端shell写面不采用；SP196/205已有受控helper与持密Runner。诊断快照与首帧分阶段错误可观察，不作为性能或运行验收。",
+        "local_context": [
+          "SP-192",
+          "SP-196",
+          "SP-200",
+          "SP-203",
+          "SP-204",
+          "SP-205",
+          "SP-206"
+        ],
+        "mechanisms": [
+          {
+            "decision": "reject",
+            "name": "Web shell/remote exec and remote preview",
+            "reason": "不属于现有产品边界，不能因上游安全修复引入Web写控制面。"
+          },
+          {
+            "decision": "covered",
+            "name": "explicit opt-in, unknown fail-closed, protected Runner",
+            "local_files": [
+              "Sources/TritonKitCLI/CLIIOSRunnerRuntime.swift",
+              "Sources/TritonKitCLI/CLIFramebufferHelper.swift"
+            ],
+            "evidence": "SP-196 helper bounded cancellation / SP-205 authenticated encrypted Runner; these are mechanism-level coverage, not proof all HTTP endpoints secure."
+          },
+          {
+            "decision": "observe",
+            "name": "framebuffer/encoder phase diagnostics and read-stream cleanup",
+            "local_file": "Sources/TritonKitCLI/CLIHostSimulatorFramebufferService.swift",
+            "tests": [
+              "CLI/Tests/TritonKitCLITests/FramebufferHelperTests.swift"
+            ],
+            "bdd": "Given no native surface or encoder error, doctor emits bounded source/selection reason/age/error counts without device identity or pixels; diagnostics failure cannot trigger input or indefinite capture.",
+            "source": "https://github.com/EvanBacon/serve-sim/blob/c47a468b600362d14960504bfb4f222101ead634/packages/serve-sim/src/doctor.ts",
+            "benefit": "区分无surface、encoder失败、首帧超时与断流，避免doctor为了诊断创建capture session",
+            "boundary": "只消费现有本机CLI/HTTP只读事实；TTL/in-flight去重、每probe截止和输出大小、错误key总量上限及隐私字段需本地独立设计；Apache-2.0来源署名"
+          }
+        ],
+        "local_main_sha": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+        "local_main_verification": "main-source-check.json: compared cited source/test blobs with cwd HEAD; all same",
+        "limitations": [
+          "host-rpc execFile默认有16MiB maxBuffer但无timeout，不能照搬为有界进程实现",
+          "encoder errors唯一key字典及renderer不同日志Set无全局上限；诊断仅home路径脱敏，不代表完全匿名",
+          "CLI配置401/403可继续未映射触控；Triton必须保留geometry fail-closed",
+          "只读MJPEG指数退避500ms到10s与reader/abort清理不构成动作重试授权",
+          "Web相机/权限/location/media改typed RPC是上游自身收敛；Triton不新增Web写控制面或remote exec"
+        ]
+      }
+    },
+    {
+      "repository": "lycorp-jp/sim-use",
+      "checked_at": "2026-10-17T02:16:24.390720+00:00",
+      "old_head": "ca90b0540aaa58f9edff71be50313dfb5fd740f5",
+      "head_sha": "81c3089331aa0004fc97cd5330e2b32ca79dd6ce",
+      "default_branch": "main",
+      "release": {
+        "url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/412410901",
+        "assets_url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/412410901/assets",
+        "upload_url": "https://uploads.github.com/repos/lycorp-jp/sim-use/releases/412410901/assets{?name,label}",
+        "html_url": "https://github.com/lycorp-jp/sim-use/releases/tag/v0.15.0",
+        "id": 412410901,
+        "node_id": "RE_kwDOTFpbmc4YlOQV",
+        "tag_name": "v0.15.0",
+        "target_commitish": "main",
+        "name": "v0.15.0",
+        "draft": false,
+        "immutable": false,
+        "prerelease": false,
+        "created_at": "2026-10-14T06:39:42Z",
+        "updated_at": "2026-10-14T06:42:12Z",
+        "published_at": "2026-10-14T06:42:12Z",
+        "tarball_url": "https://api.github.com/repos/lycorp-jp/sim-use/tarball/v0.15.0",
+        "zipball_url": "https://api.github.com/repos/lycorp-jp/sim-use/zipball/v0.15.0",
+        "mentions_count": 4
+      },
+      "license": {
+        "spdx": "NOASSERTION",
+        "sha256": "8c0fe2892344358b49aa07d9a184bd8d0891832baf642f19161f271acc075d32",
+        "path": "LICENSE",
+        "html_url": "https://github.com/lycorp-jp/sim-use/blob/81c3089331aa0004fc97cd5330e2b32ca79dd6ce/LICENSE"
+      },
+      "complete": true,
+      "changed": true,
+      "comparison_count": 7,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "total_commits": 7,
+        "files": 23,
+        "compare_status": "ahead",
+        "release_selection": "All release pages, non-draft including prerelease, maximum published_at/created_at",
+        "license_baseline": "Historical imported observation has SPDX but no full-text hash; current hash establishes first observation, not proof of unchanged license."
+      },
+      "evidence": [
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/LICENSE.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/commit-024faca899a77cf20124699ab6be7a0126fd6b3d.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/commit-2331d951d7457d92b4684e2aed65dec40ec16cf8.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/commit-5fa9bd2c9b3b8f6888259e052cf727eb4f5dc551.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/commit-66f1721cecd542d0601c766a3a0027df298d4423.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/commit-81c3089331aa0004fc97cd5330e2b32ca79dd6ce.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/commit-9f5a1603ee5f0f31b33775eb1c5a08087ef91af8.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/commit-ecc29416e1eb74b15cfb5cd1aca10456850e1d09.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/compare-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/head.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/license.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/releases-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/repository.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-0.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-0.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-1.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-10.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-10.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-11.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-11.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-12.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-12.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-13.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-13.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-14.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-14.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-15.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-15.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-16.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-16.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-17.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-17.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-18.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-18.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-19.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-19.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-2.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-2.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-20.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-20.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-21.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-21.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-22.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-22.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-3.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-3.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-4.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-4.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-5.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-5.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-6.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-6.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-7.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-7.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-8.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-8.json",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-9.full",
+        ".build/reference-monitor/20261017/sim-runtime/lycorp-jp__sim-use/source-9.json"
+      ],
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "新增同一真机session的null AX root最多5次只读重试，500ms间隔/2秒只控制调度，非取消在途DTX；malformed root/transport/cancel不重试。Triton不使用该AXAudit私有真机后端，观察而不移植；禁止把动作unknown重发。",
+        "local_context": [
+          "SP-192",
+          "SP-196",
+          "SP-200",
+          "SP-203",
+          "SP-204",
+          "SP-205",
+          "SP-206"
+        ],
+        "source": "https://github.com/lycorp-jp/sim-use/blob/81c3089331aa0004fc97cd5330e2b32ca79dd6ce/Sources/iOSDeviceBackend/AXAudit/AXAuditClient.swift",
+        "local_main_sha": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+        "local_main_verification": "main-source-check.json: compared cited source/test blobs with cwd HEAD; all same"
+      }
+    },
+    {
+      "repository": "MobAI-App/simslim",
+      "checked_at": "2026-10-17T02:16:24.397207+00:00",
+      "old_head": "6518ba7eab1123d7e1d7797b0e05f51043b42a5b",
+      "head_sha": "6518ba7eab1123d7e1d7797b0e05f51043b42a5b",
+      "default_branch": "main",
+      "release": {
+        "url": "https://api.github.com/repos/MobAI-App/simslim/releases/408072899",
+        "assets_url": "https://api.github.com/repos/MobAI-App/simslim/releases/408072899/assets",
+        "upload_url": "https://uploads.github.com/repos/MobAI-App/simslim/releases/408072899/assets{?name,label}",
+        "html_url": "https://github.com/MobAI-App/simslim/releases/tag/v0.12.2",
+        "id": 408072899,
+        "node_id": "RE_kwDOTePLYM4YUrLD",
+        "tag_name": "v0.12.2",
+        "target_commitish": "main",
+        "name": "v0.12.2",
+        "draft": false,
+        "immutable": false,
+        "prerelease": false,
+        "created_at": "2026-10-09T15:49:51Z",
+        "updated_at": "2026-10-09T15:51:52Z",
+        "published_at": "2026-10-09T15:51:52Z",
+        "tarball_url": "https://api.github.com/repos/MobAI-App/simslim/tarball/v0.12.2",
+        "zipball_url": "https://api.github.com/repos/MobAI-App/simslim/zipball/v0.12.2",
+        "mentions_count": 2
+      },
+      "license": {
+        "spdx": "MIT",
+        "sha256": "8b65667572b02a584c03c2977372eeb5fe8de0e228211b6f83033c458cc10b4e",
+        "path": "LICENSE",
+        "html_url": "https://github.com/MobAI-App/simslim/blob/6518ba7eab1123d7e1d7797b0e05f51043b42a5b/LICENSE"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "total_commits": 0,
+        "files": 0,
+        "head_unchanged": true,
+        "release_selection": "All release pages, non-draft including prerelease, maximum published_at/created_at",
+        "license_baseline": "Historical imported observation has SPDX but no full-text hash; current hash establishes first observation, not proof of unchanged license."
+      },
+      "evidence": [
+        ".build/reference-monitor/20261017/sim-runtime/MobAI-App__simslim/LICENSE.full",
+        ".build/reference-monitor/20261017/sim-runtime/MobAI-App__simslim/head.json",
+        ".build/reference-monitor/20261017/sim-runtime/MobAI-App__simslim/license.json",
+        ".build/reference-monitor/20261017/sim-runtime/MobAI-App__simslim/releases-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/MobAI-App__simslim/repository.json"
+      ],
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "HEAD与最新非draft release无变化；不重新排期既有采用项。",
+        "local_context": [
+          "SP-192",
+          "SP-196",
+          "SP-200",
+          "SP-203",
+          "SP-204",
+          "SP-205",
+          "SP-206"
+        ],
+        "local_main_sha": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+        "local_main_verification": "main-source-check.json: compared cited source/test blobs with cwd HEAD; all same"
+      }
+    },
+    {
+      "repository": "Mastersam07/OpenDeviceHub",
+      "checked_at": "2026-10-17T02:16:24.398178+00:00",
+      "old_head": "e50f07f1f4480cb14d57f192df7bf598ca26e708",
+      "head_sha": "e50f07f1f4480cb14d57f192df7bf598ca26e708",
+      "default_branch": "dev",
+      "release": {
+        "url": "https://api.github.com/repos/Mastersam07/OpenDeviceHub/releases/397851591",
+        "assets_url": "https://api.github.com/repos/Mastersam07/OpenDeviceHub/releases/397851591/assets",
+        "upload_url": "https://uploads.github.com/repos/Mastersam07/OpenDeviceHub/releases/397851591/assets{?name,label}",
+        "html_url": "https://github.com/Mastersam07/OpenDeviceHub/releases/tag/v0.2.0",
+        "id": 397851591,
+        "node_id": "RE_kwDOUjOvDs4XtrvH",
+        "tag_name": "v0.2.0",
+        "target_commitish": "dev",
+        "name": "0.2.0",
+        "draft": false,
+        "immutable": false,
+        "prerelease": false,
+        "created_at": "2026-09-27T23:10:17Z",
+        "updated_at": "2026-09-27T23:14:49Z",
+        "published_at": "2026-09-27T23:14:49Z",
+        "tarball_url": "https://api.github.com/repos/Mastersam07/OpenDeviceHub/tarball/v0.2.0",
+        "zipball_url": "https://api.github.com/repos/Mastersam07/OpenDeviceHub/zipball/v0.2.0",
+        "mentions_count": 1
+      },
+      "license": {
+        "spdx": "MIT",
+        "sha256": "327d9a7d16c78d62abbdbbcd9a48c3334b6d8a0e3e4da11ac5be3a40645a7584",
+        "path": "LICENSE",
+        "html_url": "https://github.com/Mastersam07/OpenDeviceHub/blob/e50f07f1f4480cb14d57f192df7bf598ca26e708/LICENSE"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "total_commits": 0,
+        "files": 0,
+        "head_unchanged": true,
+        "release_selection": "All release pages, non-draft including prerelease, maximum published_at/created_at",
+        "license_baseline": "Historical imported observation has SPDX but no full-text hash; current hash establishes first observation, not proof of unchanged license."
+      },
+      "evidence": [
+        ".build/reference-monitor/20261017/sim-runtime/Mastersam07__OpenDeviceHub/LICENSE.full",
+        ".build/reference-monitor/20261017/sim-runtime/Mastersam07__OpenDeviceHub/head.json",
+        ".build/reference-monitor/20261017/sim-runtime/Mastersam07__OpenDeviceHub/license.json",
+        ".build/reference-monitor/20261017/sim-runtime/Mastersam07__OpenDeviceHub/releases-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/Mastersam07__OpenDeviceHub/repository.json"
+      ],
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "HEAD与最新非draft release无变化；不重新排期既有采用项。",
+        "local_context": [
+          "SP-192",
+          "SP-196",
+          "SP-200",
+          "SP-203",
+          "SP-204",
+          "SP-205",
+          "SP-206"
+        ],
+        "local_main_sha": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+        "local_main_verification": "main-source-check.json: compared cited source/test blobs with cwd HEAD; all same"
+      }
+    },
+    {
+      "repository": "JaviSoto/device-hub-ios",
+      "checked_at": "2026-10-17T02:16:28.846106+00:00",
+      "old_head": "9ea14d11e492ae289f2f92e47da6d1b9044adee0",
+      "head_sha": "b5994ff72d8c75d68370ae80aa3efaa4e590686d",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": "MIT",
+        "sha256": "4410cda18cd6959d53106c0ed799b3bc483993f5e44f4457a6d9baa1b1f43dfe",
+        "path": "LICENSE",
+        "html_url": "https://github.com/JaviSoto/device-hub-ios/blob/b5994ff72d8c75d68370ae80aa3efaa4e590686d/LICENSE"
+      },
+      "complete": true,
+      "changed": true,
+      "comparison_count": 2,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "total_commits": 2,
+        "files": 27,
+        "compare_status": "ahead",
+        "release_selection": "All release pages, non-draft including prerelease, maximum published_at/created_at",
+        "license_baseline": "Historical imported observation has SPDX but no full-text hash; current hash establishes first observation, not proof of unchanged license."
+      },
+      "evidence": [
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/LICENSE.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/commit-40d709427d424143877d284970fe71fed207789a.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/commit-b5994ff72d8c75d68370ae80aa3efaa4e590686d.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/compare-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/head.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/license.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/releases-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/repository.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-0.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-0.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-1.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-10.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-10.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-11.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-11.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-12.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-12.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-13.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-13.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-14.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-14.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-15.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-15.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-16.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-16.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-17.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-17.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-18.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-18.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-19.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-19.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-2.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-2.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-20.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-20.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-21.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-21.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-22.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-22.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-23.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-23.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-24.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-24.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-25.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-25.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-26.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-26.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-3.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-3.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-4.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-4.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-5.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-5.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-6.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-6.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-7.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-7.json",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-9.full",
+        ".build/reference-monitor/20261017/sim-runtime/JaviSoto__device-hub-ios/source-9.json"
+      ],
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "测试进程检查2→10秒并保留清理错误；远程UI操作统一corner menu并更新AX契约。正式Web/远程控制不在本轮范围；本项目已有有界process/helper，未出现对应失败证据，不直接放宽timeout。",
+        "local_context": [
+          "SP-192",
+          "SP-196",
+          "SP-200",
+          "SP-203",
+          "SP-204",
+          "SP-205",
+          "SP-206"
+        ],
+        "source": "https://github.com/JaviSoto/device-hub-ios/commit/b5994ff72d8c75d68370ae80aa3efaa4e590686d",
+        "local_main_sha": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+        "local_main_verification": "main-source-check.json: compared cited source/test blobs with cwd HEAD; all same"
+      }
+    },
+    {
+      "repository": "heoblitz/Loupe",
+      "checked_at": "2026-10-17T02:16:29.107459+00:00",
+      "old_head": "ff1351242e6dbaba4a0b4de40d10350a668f03b8",
+      "head_sha": "ff1351242e6dbaba4a0b4de40d10350a668f03b8",
+      "default_branch": "main",
+      "release": {
+        "url": "https://api.github.com/repos/heoblitz/Loupe/releases/412454803",
+        "assets_url": "https://api.github.com/repos/heoblitz/Loupe/releases/412454803/assets",
+        "upload_url": "https://uploads.github.com/repos/heoblitz/Loupe/releases/412454803/assets{?name,label}",
+        "html_url": "https://github.com/heoblitz/Loupe/releases/tag/v0.5.1",
+        "id": 412454803,
+        "node_id": "RE_kwDOSgBin84YlY-T",
+        "tag_name": "v0.5.1",
+        "target_commitish": "main",
+        "name": "Loupe v0.5.1",
+        "draft": false,
+        "immutable": false,
+        "prerelease": false,
+        "created_at": "2026-10-14T07:41:11Z",
+        "updated_at": "2026-10-14T08:42:28Z",
+        "published_at": "2026-10-14T08:42:28Z",
+        "tarball_url": "https://api.github.com/repos/heoblitz/Loupe/tarball/v0.5.1",
+        "zipball_url": "https://api.github.com/repos/heoblitz/Loupe/zipball/v0.5.1"
+      },
+      "license": {
+        "spdx": "NOASSERTION",
+        "sha256": "0d7ebd755456885dba28523a5c468e59d06a26c8df2b896938632c9322c9e7e3",
+        "path": "LICENSE",
+        "html_url": "https://github.com/heoblitz/Loupe/blob/ff1351242e6dbaba4a0b4de40d10350a668f03b8/LICENSE"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "total_commits": 0,
+        "files": 0,
+        "head_unchanged": true,
+        "release_selection": "All release pages, non-draft including prerelease, maximum published_at/created_at",
+        "license_baseline": "Historical imported observation has SPDX but no full-text hash; current hash establishes first observation, not proof of unchanged license."
+      },
+      "evidence": [
+        ".build/reference-monitor/20261017/sim-runtime/heoblitz__Loupe/LICENSE.full",
+        ".build/reference-monitor/20261017/sim-runtime/heoblitz__Loupe/head.json",
+        ".build/reference-monitor/20261017/sim-runtime/heoblitz__Loupe/license.json",
+        ".build/reference-monitor/20261017/sim-runtime/heoblitz__Loupe/releases-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/heoblitz__Loupe/repository.json"
+      ],
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "HEAD与最新非draft release无变化；不重新排期既有采用项。",
+        "local_context": [
+          "SP-192",
+          "SP-196",
+          "SP-200",
+          "SP-203",
+          "SP-204",
+          "SP-205",
+          "SP-206"
+        ],
+        "local_main_sha": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+        "local_main_verification": "main-source-check.json: compared cited source/test blobs with cwd HEAD; all same"
+      }
+    },
+    {
+      "repository": "jfarcand/mirroir-mcp",
+      "checked_at": "2026-10-17T02:16:33.436466+00:00",
+      "old_head": "845a981163aa6d40999d343fee26778df8627843",
+      "head_sha": "845a981163aa6d40999d343fee26778df8627843",
+      "default_branch": "main",
+      "release": {
+        "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/403242400",
+        "assets_url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/403242400/assets",
+        "upload_url": "https://uploads.github.com/repos/jfarcand/mirroir-mcp/releases/403242400/assets{?name,label}",
+        "html_url": "https://github.com/jfarcand/mirroir-mcp/releases/tag/v0.40.1",
+        "id": 403242400,
+        "node_id": "RE_kwDORKZYrs4YCP2g",
+        "tag_name": "v0.40.1",
+        "target_commitish": "main",
+        "name": "v0.40.1",
+        "draft": false,
+        "immutable": true,
+        "prerelease": false,
+        "created_at": "2026-10-04T22:50:02Z",
+        "updated_at": "2026-10-04T22:50:07Z",
+        "published_at": "2026-10-04T22:50:07Z",
+        "tarball_url": "https://api.github.com/repos/jfarcand/mirroir-mcp/tarball/v0.40.1",
+        "zipball_url": "https://api.github.com/repos/jfarcand/mirroir-mcp/zipball/v0.40.1"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "sha256": "52327c57e955a3e63f872960938e814acc19eb1b77c501999f5fd1e543b21346",
+        "path": "LICENSE",
+        "html_url": "https://github.com/jfarcand/mirroir-mcp/blob/845a981163aa6d40999d343fee26778df8627843/LICENSE"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "total_commits": 0,
+        "files": 0,
+        "head_unchanged": true,
+        "release_selection": "All release pages, non-draft including prerelease, maximum published_at/created_at",
+        "license_baseline": "Historical imported observation has SPDX but no full-text hash; current hash establishes first observation, not proof of unchanged license."
+      },
+      "evidence": [
+        ".build/reference-monitor/20261017/sim-runtime/jfarcand__mirroir-mcp/LICENSE.full",
+        ".build/reference-monitor/20261017/sim-runtime/jfarcand__mirroir-mcp/head.json",
+        ".build/reference-monitor/20261017/sim-runtime/jfarcand__mirroir-mcp/license.json",
+        ".build/reference-monitor/20261017/sim-runtime/jfarcand__mirroir-mcp/releases-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/jfarcand__mirroir-mcp/repository.json"
+      ],
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "HEAD与最新非draft release无变化；不重新排期既有采用项。",
+        "local_context": [
+          "SP-192",
+          "SP-196",
+          "SP-200",
+          "SP-203",
+          "SP-204",
+          "SP-205",
+          "SP-206"
+        ],
+        "local_main_sha": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+        "local_main_verification": "main-source-check.json: compared cited source/test blobs with cwd HEAD; all same"
+      }
+    },
+    {
+      "repository": "RockxyApp/Rockxy",
+      "checked_at": "2026-10-17T02:16:38.316923+00:00",
+      "old_head": "de791b63e7f9b5df49f127524a5c9320e675eb23",
+      "head_sha": "de791b63e7f9b5df49f127524a5c9320e675eb23",
+      "default_branch": "main",
+      "release": {
+        "url": "https://api.github.com/repos/RockxyApp/Rockxy/releases/406523524",
+        "assets_url": "https://api.github.com/repos/RockxyApp/Rockxy/releases/406523524/assets",
+        "upload_url": "https://uploads.github.com/repos/RockxyApp/Rockxy/releases/406523524/assets{?name,label}",
+        "html_url": "https://github.com/RockxyApp/Rockxy/releases/tag/v0.41.0",
+        "id": 406523524,
+        "node_id": "RE_kwDORxf6684YOw6E",
+        "tag_name": "v0.41.0",
+        "target_commitish": "main",
+        "name": "Rockxy 0.41.0 (build 62)",
+        "draft": false,
+        "immutable": false,
+        "prerelease": false,
+        "created_at": "2026-10-08T07:05:15Z",
+        "updated_at": "2026-10-08T07:05:42Z",
+        "published_at": "2026-10-08T07:05:42Z",
+        "tarball_url": "https://api.github.com/repos/RockxyApp/Rockxy/tarball/v0.41.0",
+        "zipball_url": "https://api.github.com/repos/RockxyApp/Rockxy/zipball/v0.41.0"
+      },
+      "license": {
+        "spdx": "NOASSERTION",
+        "sha256": "73312c21c21d7ab7fa66c300993f3dd0dcbd53cfa62dded2fa7e6d4adf69c552",
+        "path": "LICENSE",
+        "html_url": "https://github.com/RockxyApp/Rockxy/blob/de791b63e7f9b5df49f127524a5c9320e675eb23/LICENSE"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "total_commits": 0,
+        "files": 0,
+        "head_unchanged": true,
+        "release_selection": "All release pages, non-draft including prerelease, maximum published_at/created_at",
+        "license_baseline": "Historical imported observation has SPDX but no full-text hash; current hash establishes first observation, not proof of unchanged license."
+      },
+      "evidence": [
+        ".build/reference-monitor/20261017/sim-runtime/RockxyApp__Rockxy/LICENSE.full",
+        ".build/reference-monitor/20261017/sim-runtime/RockxyApp__Rockxy/head.json",
+        ".build/reference-monitor/20261017/sim-runtime/RockxyApp__Rockxy/license.json",
+        ".build/reference-monitor/20261017/sim-runtime/RockxyApp__Rockxy/releases-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/RockxyApp__Rockxy/repository.json"
+      ],
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "HEAD与最新非draft release无变化；不重新排期既有采用项。",
+        "local_context": [
+          "SP-192",
+          "SP-196",
+          "SP-200",
+          "SP-203",
+          "SP-204",
+          "SP-205",
+          "SP-206"
+        ],
+        "local_main_sha": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+        "local_main_verification": "main-source-check.json: compared cited source/test blobs with cwd HEAD; all same"
+      }
+    },
+    {
+      "repository": "ProxymanApp/atlantis",
+      "checked_at": "2026-10-17T02:16:44.523941+00:00",
+      "old_head": "cc059013de8778072b4fea6453b45e964e4202fe",
+      "head_sha": "cc059013de8778072b4fea6453b45e964e4202fe",
+      "default_branch": "main",
+      "release": {
+        "url": "https://api.github.com/repos/ProxymanApp/atlantis/releases/412553840",
+        "assets_url": "https://api.github.com/repos/ProxymanApp/atlantis/releases/412553840/assets",
+        "upload_url": "https://uploads.github.com/repos/ProxymanApp/atlantis/releases/412553840/assets{?name,label}",
+        "html_url": "https://github.com/ProxymanApp/atlantis/releases/tag/2.0.0",
+        "id": 412553840,
+        "node_id": "RE_kwDOEkFaEM4YlxJw",
+        "tag_name": "2.0.0",
+        "target_commitish": "main",
+        "name": "Atlantis 2.0.0: Support APIs for iOS 26 and iOS 27",
+        "draft": false,
+        "immutable": false,
+        "prerelease": false,
+        "created_at": "2026-10-14T09:41:58Z",
+        "updated_at": "2026-10-14T09:43:13Z",
+        "published_at": "2026-10-14T09:43:13Z",
+        "tarball_url": "https://api.github.com/repos/ProxymanApp/atlantis/tarball/2.0.0",
+        "zipball_url": "https://api.github.com/repos/ProxymanApp/atlantis/zipball/2.0.0"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "path": "LICENSE",
+        "html_url": "https://github.com/ProxymanApp/atlantis/blob/cc059013de8778072b4fea6453b45e964e4202fe/LICENSE"
+      },
+      "complete": true,
+      "changed": true,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "total_commits": 0,
+        "files": 0,
+        "head_unchanged": true,
+        "release_selection": "All release pages, non-draft including prerelease, maximum published_at/created_at",
+        "license_baseline": "Historical imported observation has SPDX but no full-text hash; current hash establishes first observation, not proof of unchanged license."
+      },
+      "evidence": [
+        ".build/reference-monitor/20261017/sim-runtime/ProxymanApp__atlantis/LICENSE.full",
+        ".build/reference-monitor/20261017/sim-runtime/ProxymanApp__atlantis/head.json",
+        ".build/reference-monitor/20261017/sim-runtime/ProxymanApp__atlantis/license.json",
+        ".build/reference-monitor/20261017/sim-runtime/ProxymanApp__atlantis/releases-1.json",
+        ".build/reference-monitor/20261017/sim-runtime/ProxymanApp__atlantis/repository.json"
+      ],
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "HEAD完全未变但Release由历史1.36.0变为2.0.0，notes仅声明兼容iOS26/27；未提供新源码差异，不把版本兼容声明当本地证明；SP196网络完整性/header-only边界继续有效。",
+        "local_context": [
+          "SP-192",
+          "SP-196",
+          "SP-200",
+          "SP-203",
+          "SP-204",
+          "SP-205",
+          "SP-206"
+        ],
+        "source": "https://github.com/ProxymanApp/atlantis/releases/tag/2.0.0",
+        "local_main_sha": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+        "local_main_verification": "main-source-check.json: compared cited source/test blobs with cwd HEAD; all same"
+      }
+    },
+    {
+      "repository": "OpenMinis/iCTRL",
+      "checked_at": "2026-10-17T02:16:40.418753+00:00",
+      "old_head": "d88bbf0b3a5addead31b4298d605d7ac7a87d6e7",
+      "head_sha": "d88bbf0b3a5addead31b4298d605d7ac7a87d6e7",
+      "default_branch": "main",
+      "release": {
+        "tag_name": "v1.98.12",
+        "published_at": "2026-10-15T04:05:24Z",
+        "html_url": "https://github.com/OpenMinis/iCTRL/releases/tag/v1.98.12",
+        "prerelease": false,
+        "target_commitish": "d88bbf0b3a5addead31b4298d605d7ac7a87d6e7"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": "No HEAD/release/license delta from SP193 successful checkpoint.",
+      "assessment": {
+        "decision": "covered",
+        "reason": "No new upstream delta; existing SP203-205 local merge verified independently."
+      },
+      "evidence": "docs-linhay/spaces/SP-193-ictrl-reference-tracking/plans/20261017-check-summary.json",
+      "errors": []
+    },
+    {
+      "repository": "getsentry/MobileBuildMCP",
+      "checked_at": "2026-10-17T02:16:41.285391+00:00",
+      "old_head": "d13ff0c707b0681769cf31da0eb42c4f94ceafff",
+      "head_sha": "d13ff0c707b0681769cf31da0eb42c4f94ceafff",
+      "default_branch": "main",
+      "release": {
+        "tag_name": "v2.7.1",
+        "published_at": "2026-09-23T20:18:31Z",
+        "prerelease": false,
+        "html_url": "https://github.com/getsentry/MobileBuildMCP/releases/tag/v2.7.1"
+      },
+      "license": {
+        "spdx": "NOASSERTION",
+        "hash": "fef28fc4165c72b1f0e4ce94654ba44ad7ff7d5d2538b3d01e66e9cc5be3c4f6",
+        "status": "retrieved",
+        "manual_identification": "MIT; canonical text copyright 2025 Cameron Cooke; API identification NOASSERTION retained"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "commit_details": 0,
+        "comparison_files": 0,
+        "release_pages": 1,
+        "history_audit": false
+      },
+      "evidence": ".build/reference-monitor/20261017/agents-revyl/getsentry__MobileBuildMCP",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "默认分支HEAD与导入观察相同，最新non-draft Release同tag；无新增机制采用结论。不声称导入前历史已审计。",
+        "local_comparison": "SP192/196/200/203-206历史边界已读；本次无新增源码差异。"
+      },
+      "local_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec"
+    },
+    {
+      "repository": "awizemann/harness",
+      "checked_at": "2026-10-17T02:16:40.738109+00:00",
+      "old_head": "3f58c077ded131cca71d75efb05c5d325f0ed18f",
+      "head_sha": "3f58c077ded131cca71d75efb05c5d325f0ed18f",
+      "default_branch": "main",
+      "release": {
+        "tag_name": "v0.8.4",
+        "published_at": "2026-09-02T19:54:12Z",
+        "prerelease": false,
+        "html_url": "https://github.com/awizemann/harness/releases/tag/v0.8.4"
+      },
+      "license": {
+        "spdx": "MIT",
+        "hash": "e92a5a769096faed8e22dea8d940ce64a6a00638f0f0a4f74a056eb61c52549c",
+        "status": "retrieved"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "commit_details": 0,
+        "comparison_files": 0,
+        "release_pages": 1,
+        "history_audit": false
+      },
+      "evidence": ".build/reference-monitor/20261017/agents-revyl/awizemann__harness",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "默认分支HEAD与导入观察相同，最新non-draft Release同tag；无新增机制采用结论。不声称导入前历史已审计。",
+        "local_comparison": "SP192/196/200/203-206历史边界已读；本次无新增源码差异。"
+      },
+      "local_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec"
+    },
+    {
+      "repository": "dongxinsuperman/ai-phone",
+      "checked_at": "2026-10-17T02:21:29.861207+00:00",
+      "old_head": "38ef0c4fd81975195f37bb4ceead9efaaeaeb141",
+      "head_sha": "bd2781c17a9ad35cacae1049bfbd0975adbc758f",
+      "default_branch": "main",
+      "release": {
+        "tag_name": "v0.8.0",
+        "published_at": "2026-10-13T10:48:23Z",
+        "prerelease": false,
+        "html_url": "https://github.com/dongxinsuperman/ai-phone/releases/tag/v0.8.0"
+      },
+      "license": {
+        "spdx": "MIT",
+        "hash": "b825925aa35feb626875db9db2afc4f71e8cf0abeb1f1bcecfa23efa307a17ce",
+        "status": "retrieved"
+      },
+      "complete": true,
+      "changed": true,
+      "comparison_count": 18,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "commit_details": 18,
+        "comparison_files": 300,
+        "release_pages": 1,
+        "history_audit": false,
+        "commit_detail_pages": 24,
+        "unique_changed_files_from_commit_pages": 984,
+        "compare_files_limit_hit": true,
+        "missing_commits": [],
+        "full_patch_and_related_source_review": false,
+        "note": "提交详情/分页证据已保存，但全部文件patch和源码未逐一完整人工读取；不能建立完整成功点。",
+        "pagination_complete": true,
+        "exact_missing_review": "coverage-manifest.json enumerates every collected file; human full review not performed for all entries, only geometry and selected Revyl safety/CLI patches."
+      },
+      "evidence": ".build/reference-monitor/20261017/agents-revyl/dongxinsuperman__ai-phone",
+      "errors": [],
+      "assessment": {
+        "decision": "adopt",
+        "scope": "仅452e7d77326f9fc0e5b003ecbf6cec5fc499e4bf几何安全机制具备独立采用依据；整仓增量仍partial",
+        "source": "https://github.com/dongxinsuperman/ai-phone/blob/452e7d77326f9fc0e5b003ecbf6cec5fc499e4bf/backend/ai_phone/agent/drivers/simctl.py",
+        "mechanism": "在线LCD实例尺寸和scale校验；拒绝无效几何，避免静态机型字段失效后猜坐标。",
+        "local_gap": {
+          "file": "Sources/TritonKitCLI/CLIHostSimulatorAXDriver.swift:461",
+          "fact": "main与当前该文件blob相同，devicePointSize缺失deviceType/mainScreenSize使用393x852，scale缺失使用3；未找到该函数fixture。",
+          "tests": "CLI/Tests/TritonKitCLITests/SimulatorAdvancedControlsTests.swift已有显示metadata测试，但无devicePointSize缺失字段fixture。"
+        },
+        "bdd": [
+          "Given缺失/零/负/非有限尺寸或scale When构造AX转换 Then拒绝确定坐标，不用固定机型猜值。",
+          "Given实例LCD与外部TVOut/CarPlay共存 When解析 Then只接受唯一有效LCD和可证明scale；解析失败无动作。",
+          "Given旋转/boot/实例变化 When使用几何 Then不得跨身份复用陈旧缓存。"
+        ],
+        "license": "geometry-LICENSE.raw固定452e7d MIT，需保留复制代码通知；独立实现记录机制来源。",
+        "other_mechanisms": "VM状态/端口/资源所有权大量涉及云/远端Agent与Web调度，observe/reject产品边界扩展；visual enhancement仅候选展示不可升级为点击验证。",
+        "performance": "上游97/934等测试、20/20触点与366ms均未经本地复验。"
+      },
+      "local_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+      "supplemental_review": "20261017-ai-phone-review.json",
+      "prior_complete_before_supplement": false,
+      "supplemental_coverage": {
+        "commits": 18,
+        "commit_messages_read": 18,
+        "release_notes_read": 9,
+        "file_occurrences": 1105,
+        "unique_paths": 984,
+        "group_counts": {
+          "product": 124,
+          "test": 100,
+          "specification_or_narrative": 61,
+          "generated_or_raw_evidence": 820
+        },
+        "product_occurrences": 124,
+        "related_product_occurrences_reviewed": 112,
+        "web_page_occurrences_scope_excluded": 12,
+        "related_product_patch_lines_including_page_diffs": 21489,
+        "remaining_related_source_files": 0,
+        "remaining_related_source_lines": 0,
+        "manual_status_counts": {
+          "full_patch_manual": 114,
+          "inventory_and_fixed_blob_only": 961,
+          "full_fixed_source_and_corrective_patch_manual": 3,
+          "full_head_specification_manual": 7,
+          "scope_excluded_page_implementation": 12,
+          "full_readme_patch_manual": 8
+        },
+        "original_evidence_files": 223,
+        "decoded_source_blobs": 186,
+        "decoded_source_bytes": 11656728,
+        "supplemental_image_blobs": 62,
+        "supplemental_image_bytes": 6395621,
+        "all_decoded_lengths_match": true,
+        "ledger": "file-review-ledger.json",
+        "read_mode": "相关产品通过完整增量patch或注明的固定source+修正patch审阅；不要求无关旧源全文。"
+      },
+      "remaining_items": [
+        {
+          "kind": "nonblocking_scope_exclusion",
+          "items": "12个Web页面文件次的业务实现；上游测试与重复实验叙事、生成日志/XML/NDJSON/截图",
+          "reason": "公开契约和本机生命周期/身份集成已审阅；范围排除不掩盖相关产品源缺失。"
+        },
+        {
+          "kind": "runtime_unverified",
+          "items": "上游真实三端行为、竞争、权限失败、僵死I/O和性能；本地迁移实现",
+          "reason": "只读静态参考审阅，不运行第三方或设备；不属于本次完成条件。"
+        },
+        {
+          "kind": "source_missing",
+          "items": [],
+          "reason": "相关产品增量patch/主规格无缺失；剩余待读相关产品源码0文件、0行。"
+        }
+      ],
+      "coverage_resolution": "Initial partial is superseded by saved supplemental review: complete per-commit pagination/file manifest plus related-product reading; generated/non-product exclusions explicit. Aggregate compare cap and initial display truncation do not remain the success basis."
+    },
+    {
+      "repository": "karminski/eyes-on-my-phone",
+      "checked_at": "2026-10-17T02:16:41.269029+00:00",
+      "old_head": "eef71926e613c3242643923bb21c92beab439990",
+      "head_sha": "eef71926e613c3242643923bb21c92beab439990",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": null,
+        "hash": null,
+        "status": "official_license_endpoint_404_no_reuse_permission_established"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "commit_details": 0,
+        "comparison_files": 0,
+        "release_pages": 1,
+        "history_audit": false
+      },
+      "evidence": ".build/reference-monitor/20261017/agents-revyl/karminski__eyes-on-my-phone",
+      "errors": [
+        "repos/karminski/eyes-on-my-phone/license?ref=eef71926e613c3242643923bb21c92beab439990: gh: Not Found (HTTP 404)"
+      ],
+      "assessment": {
+        "decision": "observe",
+        "reason": "默认分支HEAD与导入观察相同，最新non-draft Release同tag；无新增机制采用结论。不声称导入前历史已审计。",
+        "local_comparison": "SP192/196/200/203-206历史边界已读；本次无新增源码差异。"
+      },
+      "local_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec"
+    },
+    {
+      "repository": "RevylAI/revyl-cli",
+      "checked_at": "2026-10-17T02:18:10.764438+00:00",
+      "old_head": "ac35cd88e6f122b9e956069d6f170380a419d3d1",
+      "head_sha": "86de7c9797f98060cf465792367b3a662cd59cf4",
+      "default_branch": "main",
+      "release": {
+        "tag_name": "v0.1.167",
+        "published_at": "2026-10-16T06:44:13Z",
+        "prerelease": false,
+        "html_url": "https://github.com/RevylAI/revyl-cli/releases/tag/v0.1.167"
+      },
+      "license": {
+        "spdx": null,
+        "hash": null,
+        "status": "no_repository_wide_license_file; scoped_plugins_declare_MIT",
+        "tree_truncated": false,
+        "declared_license_paths": [],
+        "scoped_declarations": [
+          "plugins/revyl-claude/README.md: License MIT",
+          "plugins/revyl-grok/README.md: License MIT and plugin manifest license MIT"
+        ]
+      },
+      "complete": true,
+      "changed": true,
+      "comparison_count": 16,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "commit_details": 16,
+        "comparison_files": 161,
+        "release_pages": 1,
+        "history_audit": false,
+        "commit_detail_pages": 17,
+        "unique_changed_files_from_commit_pages": 161,
+        "compare_files_limit_hit": false,
+        "missing_commits": [],
+        "full_patch_and_related_source_review": false,
+        "note": "提交详情/分页证据已保存，但全部文件patch和源码未逐一完整人工读取；不能建立完整成功点。",
+        "pagination_complete": true,
+        "exact_missing_review": "coverage-manifest.json enumerates every collected file; human full review not performed for all entries, only geometry and selected Revyl safety/CLI patches.",
+        "review_groups": ".build/reference-monitor/20261017/agents-revyl/RevylAI__revyl-cli/review-groups.json",
+        "remaining_review": [
+          "tests full assertions: collected433849bytes, semantic-index reviewed only",
+          "aggregate generated/config/web reads had displayed truncation; full raw files stored",
+          "36 nontext entries: pyc binaries and one-line openapi; blob evidence stored but semantic diff not fully reconstructed"
+        ]
+      },
+      "evidence": ".build/reference-monitor/20261017/agents-revyl/RevylAI__revyl-cli",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "16条同步增量主要为托管Web build/session、云workflow与MCP；不引入现有产品排除的云/Web控制面。text-env隐私输入、screen token、阶段耗时可研究但许可未建立，不能复制。",
+        "local_comparison": "main CLIActionCommands.Input已有stdin NDJSON；SP192已有alias新鲜度、视觉settle和unknown不重放；SP204日志元数据隐私、SP205安全通道已合入。上述覆盖机制方向，未宣称等价覆盖Revyl Web实现。",
+        "release": "v0.1.167 2026-10-16T06:44:13Z；notes为安装/分发说明，无详细功能变更日志。",
+        "performance": "未验证上游性能/测试自述。",
+        "extra_review": "已补审config/Web/hotreload/生成类型的语义组和边界，见review-groups.json；完整逐patch/测试与nontext语义仍未完成，因此继续保留partial，原因是审阅覆盖未完成而非网络阻塞。",
+        "groups": [
+          {
+            "mechanism": "云Web build/session/签名登录/Capy proof/hosted plugins",
+            "decision": "reject",
+            "reason": "增加远端云/Web控制面或外部执行器，超出当前本机产品边界。"
+          },
+          {
+            "mechanism": "Web config presence、URL-only、env/secret名称分离、SSRed bundle安全打包",
+            "decision": "observe",
+            "reason": "配置健壮性思想可借鉴，现产品无托管Web build/session入口。"
+          },
+          {
+            "mechanism": "hotreload WS取消、握手deadline、subprotocol验证",
+            "decision": "observe",
+            "reason": "当前Triton无该云relay入口，不新增relay；不可据通用机制直接排开发。"
+          },
+          {
+            "mechanism": "输入不确定/已执行但settle或publication超时不得重放、stale screen token",
+            "decision": "covered",
+            "reason": "SP192 alias新鲜度/视觉settle/unknown不重放和Runner受控协议覆盖安全方向，不声称Web实现等价。"
+          },
+          {
+            "mechanism": "text-env敏感输入",
+            "decision": "observe",
+            "reason": "本地已有stdin NDJSON入口；env专用参数尚无需求证据，不因上游增加而直接采用。"
+          },
+          {
+            "mechanism": "sanitizer/CoreData/crash findings去重/符号化元数据",
+            "decision": "observe",
+            "reason": "本地日志/崩溃证据不等于sanitizer finding分类器；主体许可未建立，先机制研究。"
+          }
+        ]
+      },
+      "local_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+      "supplemental_review": "20261017-revyl-review.json",
+      "prior_complete_before_supplement": false,
+      "supplemental_coverage": {
+        "commits": 16,
+        "commit_file_records": 245,
+        "unique_paths": 161,
+        "commit_pagination_complete": true,
+        "nontext_records": 36,
+        "pyc_records": 32,
+        "pyc_git_blob_and_size_verified": 32,
+        "openapi_changed_snapshots": 4,
+        "openapi_parent_snapshot": 1,
+        "openapi_structural_change_counts": [
+          5,
+          42,
+          3,
+          3
+        ],
+        "tests_group_dispositions": {
+          "binary_identity_only": 16,
+          "full_changed_text_read": 30,
+          "fixture_projection_excluded": 2,
+          "cloud_web_workflow_plugin_or_redundant_test_indexed_excluded": 34
+        },
+        "release_records_queried": 89,
+        "latest_stable_release": "v0.1.167",
+        "latest_stable_release_published": "2026-10-16T06:44:13Z",
+        "head_version": "0.1.170"
+      },
+      "coverage_resolution": "Initial partial is superseded by saved supplemental review: complete per-commit pagination/file manifest plus related-product reading; generated/non-product exclusions explicit. Aggregate compare cap and initial display truncation do not remain the success basis."
+    },
+    {
+      "repository": "RevylAI/app-explorer",
+      "checked_at": "2026-10-17T02:16:41.269348+00:00",
+      "old_head": "b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e",
+      "head_sha": "b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": null,
+        "hash": null,
+        "status": "official_license_endpoint_404_no_reuse_permission_established"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "commit_details": 0,
+        "comparison_files": 0,
+        "release_pages": 1,
+        "history_audit": false
+      },
+      "evidence": ".build/reference-monitor/20261017/agents-revyl/RevylAI__app-explorer",
+      "errors": [
+        "repos/RevylAI/app-explorer/license?ref=b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e: gh: Not Found (HTTP 404)"
+      ],
+      "assessment": {
+        "decision": "observe",
+        "reason": "默认分支HEAD与导入观察相同，最新non-draft Release同tag；无新增机制采用结论。不声称导入前历史已审计。",
+        "local_comparison": "SP192/196/200/203-206历史边界已读；本次无新增源码差异。"
+      },
+      "local_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec"
+    },
+    {
+      "repository": "RevylAI/greenlight",
+      "checked_at": "2026-10-17T02:16:45.122195+00:00",
+      "old_head": "fcb36e395bd4ae20448f2535382baecba9396fd9",
+      "head_sha": "fcb36e395bd4ae20448f2535382baecba9396fd9",
+      "default_branch": "main",
+      "release": {
+        "tag_name": "v0.2.0",
+        "published_at": "2026-07-28T20:17:16Z",
+        "prerelease": false,
+        "html_url": "https://github.com/RevylAI/greenlight/releases/tag/v0.2.0"
+      },
+      "license": {
+        "spdx": "MIT",
+        "hash": "960890e59731cd6468788d6045407429c1c6ff1e1508d1c8bd77dd0b1a5807ca",
+        "status": "retrieved"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "commit_details": 0,
+        "comparison_files": 0,
+        "release_pages": 1,
+        "history_audit": false
+      },
+      "evidence": ".build/reference-monitor/20261017/agents-revyl/RevylAI__greenlight",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "默认分支HEAD与导入观察相同，最新non-draft Release同tag；无新增机制采用结论。不声称导入前历史已审计。",
+        "local_comparison": "SP192/196/200/203-206历史边界已读；本次无新增源码差异。"
+      },
+      "local_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec"
+    },
+    {
+      "repository": "RevylAI/mobile-devtools",
+      "checked_at": "2026-10-17T02:16:46.355538+00:00",
+      "old_head": "efc1dae5da089ec08108a39f1ead39324c11b410",
+      "head_sha": "efc1dae5da089ec08108a39f1ead39324c11b410",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": null,
+        "hash": null,
+        "status": "official_license_endpoint_404_no_reuse_permission_established"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "commit_details": 0,
+        "comparison_files": 0,
+        "release_pages": 1,
+        "history_audit": false
+      },
+      "evidence": ".build/reference-monitor/20261017/agents-revyl/RevylAI__mobile-devtools",
+      "errors": [
+        "repos/RevylAI/mobile-devtools/license?ref=efc1dae5da089ec08108a39f1ead39324c11b410: gh: Not Found (HTTP 404)"
+      ],
+      "assessment": {
+        "decision": "observe",
+        "reason": "默认分支HEAD与导入观察相同，最新non-draft Release同tag；无新增机制采用结论。不声称导入前历史已审计。",
+        "local_comparison": "SP192/196/200/203-206历史边界已读；本次无新增源码差异。"
+      },
+      "local_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec"
+    },
+    {
+      "repository": "RevylAI/mobile-pr-reviewer",
+      "checked_at": "2026-10-17T02:16:46.383293+00:00",
+      "old_head": "ba1250c72f56a08f3718aefc82dc911c1b3a2f23",
+      "head_sha": "ba1250c72f56a08f3718aefc82dc911c1b3a2f23",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": null,
+        "hash": null,
+        "status": "official_license_endpoint_404_no_reuse_permission_established"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "commit_details": 0,
+        "comparison_files": 0,
+        "release_pages": 1,
+        "history_audit": false
+      },
+      "evidence": ".build/reference-monitor/20261017/agents-revyl/RevylAI__mobile-pr-reviewer",
+      "errors": [
+        "repos/RevylAI/mobile-pr-reviewer/license?ref=ba1250c72f56a08f3718aefc82dc911c1b3a2f23: gh: Not Found (HTTP 404)"
+      ],
+      "assessment": {
+        "decision": "observe",
+        "reason": "默认分支HEAD与导入观察相同，最新non-draft Release同tag；无新增机制采用结论。不声称导入前历史已审计。",
+        "local_comparison": "SP192/196/200/203-206历史边界已读；本次无新增源码差异。"
+      },
+      "local_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec"
+    },
+    {
+      "repository": "RevylAI/visual-regression",
+      "checked_at": "2026-10-17T02:16:46.373484+00:00",
+      "old_head": "2758e8a88f4efb3a251b675e0984c091bf8abeb8",
+      "head_sha": "2758e8a88f4efb3a251b675e0984c091bf8abeb8",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": null,
+        "hash": null,
+        "status": "official_license_endpoint_404_no_reuse_permission_established"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "commit_details": 0,
+        "comparison_files": 0,
+        "release_pages": 1,
+        "history_audit": false
+      },
+      "evidence": ".build/reference-monitor/20261017/agents-revyl/RevylAI__visual-regression",
+      "errors": [
+        "repos/RevylAI/visual-regression/license?ref=2758e8a88f4efb3a251b675e0984c091bf8abeb8: gh: Not Found (HTTP 404)"
+      ],
+      "assessment": {
+        "decision": "observe",
+        "reason": "默认分支HEAD与导入观察相同，最新non-draft Release同tag；无新增机制采用结论。不声称导入前历史已审计。",
+        "local_comparison": "SP192/196/200/203-206历史边界已读；本次无新增源码差异。"
+      },
+      "local_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec"
+    },
+    {
+      "repository": "RevylAI/figma-design-checker",
+      "checked_at": "2026-10-17T02:16:49.931395+00:00",
+      "old_head": "8b4e5cea045dcff5c30aa723b923e514d2cdc07a",
+      "head_sha": "8b4e5cea045dcff5c30aa723b923e514d2cdc07a",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": null,
+        "hash": null,
+        "status": "official_license_endpoint_404_no_reuse_permission_established"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "commit_details": 0,
+        "comparison_files": 0,
+        "release_pages": 1,
+        "history_audit": false
+      },
+      "evidence": ".build/reference-monitor/20261017/agents-revyl/RevylAI__figma-design-checker",
+      "errors": [
+        "repos/RevylAI/figma-design-checker/license?ref=8b4e5cea045dcff5c30aa723b923e514d2cdc07a: gh: Not Found (HTTP 404)"
+      ],
+      "assessment": {
+        "decision": "observe",
+        "reason": "默认分支HEAD与导入观察相同，最新non-draft Release同tag；无新增机制采用结论。不声称导入前历史已审计。",
+        "local_comparison": "SP192/196/200/203-206历史边界已读；本次无新增源码差异。"
+      },
+      "local_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec"
+    },
+    {
+      "repository": "RevylAI/CogniSim",
+      "checked_at": "2026-10-17T02:16:50.192984+00:00",
+      "old_head": "3d8902e011981b93cb0ebfafba1794eab93b053e",
+      "head_sha": "3d8902e011981b93cb0ebfafba1794eab93b053e",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": "MIT",
+        "hash": "0b62f99f70ef4368aa74efec94d64c4dca5f31d7f5eb8261f4166160fe1ee93d",
+        "status": "retrieved"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": {
+        "baseline": "imported_observation_not_full_history_audit",
+        "commit_details": 0,
+        "comparison_files": 0,
+        "release_pages": 1,
+        "history_audit": false
+      },
+      "evidence": ".build/reference-monitor/20261017/agents-revyl/RevylAI__CogniSim",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "默认分支HEAD与导入观察相同，最新non-draft Release同tag；无新增机制采用结论。不声称导入前历史已审计。",
+        "local_comparison": "SP192/196/200/203-206历史边界已读；本次无新增源码差异。"
+      },
+      "local_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec"
+    },
+    {
+      "repository": "hughkli/Lookin",
+      "checked_at": "2026-10-17T02:16:44.656762+00:00",
+      "old_head": "95e30fdcc8151092678387c5262bce790a0d9530",
+      "head_sha": "95e30fdcc8151092678387c5262bce790a0d9530",
+      "default_branch": "Develop",
+      "release": {
+        "tag_name": "1.0.7",
+        "name": "update to 1.0.7",
+        "published_at": "2024-03-03T17:49:34Z",
+        "prerelease": false,
+        "html_url": "https://github.com/hughkli/Lookin/releases/tag/1.0.7"
+      },
+      "license": {
+        "spdx": "GPL-3.0",
+        "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+        "path": "LICENSE"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": "Imported observation to current HEAD only; not full historical audit. No commit delta.",
+      "evidence": ".build/reference-monitor/20261017/research/hughkli__Lookin",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "本次HEAD及最新Release tag均未变化；首次完整许可证观察不等同完整历史审计。无增量采用项。"
+      },
+      "local_comparison_ref": "main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+      "release_observation": {
+        "status": "found",
+        "selection": "latest published_at among all non-draft releases; prereleases included",
+        "pagination_complete": true
+      },
+      "change_observation": {
+        "head_changed": false,
+        "release_tag_changed": false,
+        "license_hash_changed": null,
+        "license_note": "No prior full-text hash; establishes observation only."
+      },
+      "comparison_complete": true
+    },
+    {
+      "repository": "OSU-NLP-Group/UGround",
+      "checked_at": "2026-10-17T02:16:44.314370+00:00",
+      "old_head": "8974f95b0685f139a6257f82d6b13895db3356cf",
+      "head_sha": "8974f95b0685f139a6257f82d6b13895db3356cf",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": "MIT",
+        "sha256": "93b43d692b033b76129504448695bfe76ef22d18b11e51352bfab4b5622e5aaa",
+        "path": "LICENSE.txt"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": "Imported observation to current HEAD only; not full historical audit. No commit delta.",
+      "evidence": ".build/reference-monitor/20261017/research/OSU-NLP-Group__UGround",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "本次HEAD及最新Release tag均未变化；首次完整许可证观察不等同完整历史审计。无增量采用项。"
+      },
+      "local_comparison_ref": "main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+      "release_observation": {
+        "status": "none",
+        "selection": "latest published_at among all non-draft releases; prereleases included",
+        "pagination_complete": true
+      },
+      "change_observation": {
+        "head_changed": false,
+        "release_tag_changed": false,
+        "license_hash_changed": null,
+        "license_note": "No prior full-text hash; establishes observation only."
+      },
+      "comparison_complete": true
+    },
+    {
+      "repository": "bytedance/UI-TARS",
+      "checked_at": "2026-10-17T02:16:44.297080+00:00",
+      "old_head": "582f3a7ea5d285ee8ed9e2e84048d1ab01453c49",
+      "head_sha": "582f3a7ea5d285ee8ed9e2e84048d1ab01453c49",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": "Apache-2.0",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "path": "LICENSE"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": "Imported observation to current HEAD only; not full historical audit. No commit delta.",
+      "evidence": ".build/reference-monitor/20261017/research/bytedance__UI-TARS",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "本次HEAD及最新Release tag均未变化；首次完整许可证观察不等同完整历史审计。无增量采用项。"
+      },
+      "local_comparison_ref": "main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+      "release_observation": {
+        "status": "none",
+        "selection": "latest published_at among all non-draft releases; prereleases included",
+        "pagination_complete": true
+      },
+      "change_observation": {
+        "head_changed": false,
+        "release_tag_changed": false,
+        "license_hash_changed": null,
+        "license_note": "No prior full-text hash; establishes observation only."
+      },
+      "comparison_complete": true
+    },
+    {
+      "repository": "OpenBMB/AgentCPM-GUI",
+      "checked_at": "2026-10-17T02:16:44.405981+00:00",
+      "old_head": "2168ae21b1bed1cdb88736d422934825795a9fd7",
+      "head_sha": "2168ae21b1bed1cdb88736d422934825795a9fd7",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": "Apache-2.0",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "path": "LICENSE"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": "Imported observation to current HEAD only; not full historical audit. No commit delta.",
+      "evidence": ".build/reference-monitor/20261017/research/OpenBMB__AgentCPM-GUI",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "本次HEAD及最新Release tag均未变化；首次完整许可证观察不等同完整历史审计。无增量采用项。"
+      },
+      "local_comparison_ref": "main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+      "release_observation": {
+        "status": "none",
+        "selection": "latest published_at among all non-draft releases; prereleases included",
+        "pagination_complete": true
+      },
+      "change_observation": {
+        "head_changed": false,
+        "release_tag_changed": false,
+        "license_hash_changed": null,
+        "license_note": "No prior full-text hash; establishes observation only."
+      },
+      "comparison_complete": true
+    },
+    {
+      "repository": "X-PLUG/MobileAgent",
+      "checked_at": "2026-10-17T02:16:44.269596+00:00",
+      "old_head": "11cea575561fb7800b5fb6b6cafa56f7a91de11f",
+      "head_sha": "11cea575561fb7800b5fb6b6cafa56f7a91de11f",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": "MIT",
+        "sha256": "961819a89dacd1f4f161e1d2ebf616b538bf095a2eecfa3ef40b7ccec633fac4",
+        "path": "LICENSE"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": "Imported observation to current HEAD only; not full historical audit. No commit delta.",
+      "evidence": ".build/reference-monitor/20261017/research/X-PLUG__MobileAgent",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "本次HEAD及最新Release tag均未变化；首次完整许可证观察不等同完整历史审计。无增量采用项。"
+      },
+      "local_comparison_ref": "main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+      "release_observation": {
+        "status": "none",
+        "selection": "latest published_at among all non-draft releases; prereleases included",
+        "pagination_complete": true
+      },
+      "change_observation": {
+        "head_changed": false,
+        "release_tag_changed": false,
+        "license_hash_changed": null,
+        "license_note": "No prior full-text hash; establishes observation only."
+      },
+      "comparison_complete": true
+    },
+    {
+      "repository": "njucckevin/SeeClick",
+      "checked_at": "2026-10-17T02:16:48.318489+00:00",
+      "old_head": "0ef37ac4d7aaf37ba7b990e3e3c3ca77e1fb8f93",
+      "head_sha": "0ef37ac4d7aaf37ba7b990e3e3c3ca77e1fb8f93",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": "Apache-2.0",
+        "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
+        "path": "LICENSE"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": "Imported observation to current HEAD only; not full historical audit. No commit delta.",
+      "evidence": ".build/reference-monitor/20261017/research/njucckevin__SeeClick",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "本次HEAD及最新Release tag均未变化；首次完整许可证观察不等同完整历史审计。无增量采用项。"
+      },
+      "local_comparison_ref": "main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+      "release_observation": {
+        "status": "none",
+        "selection": "latest published_at among all non-draft releases; prereleases included",
+        "pagination_complete": true
+      },
+      "change_observation": {
+        "head_changed": false,
+        "release_tag_changed": false,
+        "license_hash_changed": null,
+        "license_note": "No prior full-text hash; establishes observation only."
+      },
+      "comparison_complete": true
+    },
+    {
+      "repository": "google-research/android_world",
+      "checked_at": "2026-10-17T02:16:52.708454+00:00",
+      "old_head": "e54ed4f279c9fe0f7b8336040f03482ce67efda4",
+      "head_sha": "30583e22b9fbb8f32f109d3214153517b6f9b8e4",
+      "default_branch": "main",
+      "release": null,
+      "license": {
+        "spdx": "Apache-2.0",
+        "sha256": "b09fcaf4fbc265223c2479c410beef2b98c5e687c78ecedf3452aa12ffc465f1",
+        "path": "LICENSE"
+      },
+      "complete": true,
+      "changed": true,
+      "comparison_count": 1,
+      "coverage": "Imported observation to current HEAD only; not full historical audit. 1 commits, 2 compare files; raw commit details and HEAD source saved.",
+      "evidence": ".build/reference-monitor/20261017/research/google-research__android_world",
+      "errors": [],
+      "assessment": {
+        "decision": "reject",
+        "reason": "30583e22仅在infer.py/user_data_generation.py加入4处Pyrefly类型抑制，不改变运行机制；TritonKit为Swift实现，不引入Python静态检查器对应注释。",
+        "source_commit": "30583e22b9fbb8f32f109d3214153517b6f9b8e4"
+      },
+      "local_comparison_ref": "main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+      "release_observation": {
+        "status": "none",
+        "selection": "latest published_at among all non-draft releases; prereleases included",
+        "pagination_complete": true
+      },
+      "change_observation": {
+        "head_changed": true,
+        "release_tag_changed": false,
+        "license_hash_changed": null,
+        "license_note": "No prior full-text hash; establishes observation only."
+      },
+      "comparison_complete": true
+    },
+    {
+      "repository": "mobile-dev-inc/Maestro",
+      "checked_at": "2026-10-17T02:17:37.361129+00:00",
+      "old_head": "df40dea5dee0b8639aade6e80b558950e982e8a2",
+      "head_sha": "028c18b9ce7441c117f161da4dfe8007e46fa61d",
+      "default_branch": "main",
+      "release": {
+        "tag_name": "cli-2.11.0",
+        "name": "CLI 2.11.0",
+        "published_at": "2026-09-29T13:36:34Z",
+        "prerelease": false,
+        "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.11.0"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "path": "LICENSE"
+      },
+      "complete": true,
+      "changed": true,
+      "comparison_count": 7,
+      "coverage": "Imported observation to current HEAD only; not full historical audit. 7 commits, 32 compare files; raw commit details and HEAD source saved.",
+      "evidence": ".build/reference-monitor/20261017/research/mobile-dev-inc__Maestro",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "7 commits共32文件，已读提交、patch、HEAD文本源码及latest Release notes。无需引入上游JVM依赖/隐式Android API。详见report逐机制裁决。",
+        "mechanisms": [
+          {
+            "decision": "covered",
+            "mechanism": "animation-independent Android text/key injection",
+            "local_files": [
+              "Sources/TritonKitCLI/CLIActionCommands.swift",
+              "Sources/TritonKitShared/TKAndroidADBSupport.swift"
+            ],
+            "reason": "本地走adb shell input text/keyevent；不走上游UiAutomation同步动画注入路径。未运行slow-splash性能验证。"
+          },
+          {
+            "decision": "covered",
+            "mechanism": "bounded subprocess output and readiness polling",
+            "local_files": [
+              "Sources/TritonKitCLI/CLIHostProcessRuntime.swift",
+              "Sources/TritonKitCLI/CLIHostDeviceRuntime.swift"
+            ],
+            "reason": "已有stdout/stderr并行drain、命令deadline与wait-ready deadline；不使用dadb线程池。未证明每次poll严格共享总deadline，保留观察。"
+          },
+          {
+            "decision": "observe",
+            "mechanism": "Tab focus key alias",
+            "local_files": [
+              "Sources/TritonKitCLI/CLIAndroidActionRuntime.swift",
+              "Sources/TritonKitCLI/CLIDeviceActionsCommands.swift"
+            ],
+            "reason": "本地支持KEYCODE_TAB原样传递；简写tab目前原样传递，未证实adb对tab的处理，不冒充bug或已覆盖。需先固定adb真实语义/fixture再判断是否新增显式alias。"
+          },
+          {
+            "decision": "reject",
+            "mechanism": "unlimited ZIP expansion ratio and symlink preservation",
+            "local_files": [
+              "Sources/TritonKitCLI/CLIAppArchiveRuntime.swift",
+              "CLI/Tests/TritonKitCLITests/AppArchiveTests.swift"
+            ],
+            "reason": "本地已有明确最大展开字节/1000倍率/禁止symlink边界；上游cloud上传保留symlink不适用于本地install安全契约；没有失败真实app证据不放松预算。"
+          },
+          {
+            "decision": "reject",
+            "mechanism": "Selenium CDP v155 / JUnit5 / Java Iterable Path recursion",
+            "local_files": [
+              "CLI/Tests/TritonKitCLITests/ReplayCommandTests.swift"
+            ],
+            "reason": "本地无Selenium/JUnit/反射遍历java.nio.Path依赖；Swift typed Codable流程无需移植。"
+          }
+        ],
+        "performance_claims": "上游slow splash输入耗时/成功率仅源码描述，本地未验证。"
+      },
+      "local_comparison_ref": "main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+      "release_observation": {
+        "status": "found",
+        "selection": "latest published_at among all non-draft releases; prereleases included",
+        "pagination_complete": true
+      },
+      "change_observation": {
+        "head_changed": true,
+        "release_tag_changed": false,
+        "license_hash_changed": null,
+        "license_note": "No prior full-text hash; establishes observation only."
+      },
+      "comparison_complete": true
+    },
+    {
+      "repository": "linhay/SKProcessRunner",
+      "checked_at": "2026-10-17T02:16:49.234673+00:00",
+      "old_head": "24e036604b9e2b28e14c3f55e75a686be1a8bd8a",
+      "head_sha": "24e036604b9e2b28e14c3f55e75a686be1a8bd8a",
+      "default_branch": "master",
+      "release": {
+        "tag_name": "0.0.17",
+        "name": "0.0.17",
+        "published_at": "2026-02-25T10:12:52Z",
+        "prerelease": false,
+        "html_url": "https://github.com/linhay/SKProcessRunner/releases/tag/0.0.17"
+      },
+      "license": {
+        "spdx": null,
+        "sha256": null,
+        "status": "not_declared",
+        "evidence": [
+          "repo.json:license=null",
+          "tree.json:no LICENSE/COPYING/NOTICE at fixed HEAD; truncated=false"
+        ],
+        "api_status": 404
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": "Imported observation to current HEAD only; not full historical audit. No commit delta.",
+      "evidence": ".build/reference-monitor/20261017/research/linhay__SKProcessRunner",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "HEAD/Release不变；固定HEAD完整tree及官方repo metadata确认未声明许可，不采用代码。404已通过替代官方证据消歧。"
+      },
+      "local_comparison_ref": "main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+      "release_observation": {
+        "status": "found",
+        "selection": "latest published_at among all non-draft releases; prereleases included",
+        "pagination_complete": true
+      },
+      "change_observation": {
+        "head_changed": false,
+        "release_tag_changed": false,
+        "license_hash_changed": null,
+        "license_note": "No prior full-text hash; establishes observation only."
+      },
+      "comparison_complete": true
+    },
+    {
+      "repository": "mobile-next/mobile-mcp",
+      "checked_at": "2026-10-17T02:16:48.841434+00:00",
+      "old_head": "d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023",
+      "head_sha": "d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023",
+      "default_branch": "main",
+      "release": {
+        "tag_name": "1.0.11",
+        "name": "Version 1.0.11",
+        "published_at": "2026-10-14T15:53:00Z",
+        "prerelease": false,
+        "html_url": "https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.11"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "path": "LICENSE"
+      },
+      "complete": true,
+      "changed": false,
+      "comparison_count": 0,
+      "coverage": "Imported observation to current HEAD only; not full historical audit. No commit delta.",
+      "evidence": ".build/reference-monitor/20261017/research/mobile-next__mobile-mcp",
+      "errors": [],
+      "assessment": {
+        "decision": "observe",
+        "reason": "本次HEAD及最新Release tag均未变化；首次完整许可证观察不等同完整历史审计。无增量采用项。"
+      },
+      "local_comparison_ref": "main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+      "release_observation": {
+        "status": "found",
+        "selection": "latest published_at among all non-draft releases; prereleases included",
+        "pagination_complete": true
+      },
+      "change_observation": {
+        "head_changed": false,
+        "release_tag_changed": false,
+        "license_hash_changed": null,
+        "license_note": "No prior full-text hash; establishes observation only."
+      },
+      "comparison_complete": true
+    }
+  ]
+}
