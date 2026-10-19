@@ -113,6 +113,16 @@ GitHub Release：<https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.18>�
 
 发布验收必须分别记录远端Release、远端formula、本地formula、实际CLI及每个skills根目录，不能以维护机、命令exit 0、checksum或plan单独证明用户版本一致。源码修复、公开发布、安装接替与用户确认分开记录。
 
+### 2026-10-16 更新检查误报审计
+
+用户截图出现 CLI/skills `0.2.19`、tap `0.2.24`、GitHub Release `0.2.29`。本轮仅诊断与经验写回，未修改产品代码或安装状态，未发布。
+
+- 在源码 HEAD `3000be92` 与历史 `v0.2.19` 中，`CLIUpdateRuntime.swift` 的 Homebrew 默认路径（未传 `--version`、未启用 `--include-skills`）直接将 release target 设为 nil；计划把未知 target 转为 `updateAvailable=false`。`--check` 立即返回，既未查询 GitHub latest，也未读取/刷新 tap。`UpdateCommandTests.homebrewUpdateWithoutExplicitVersionDoesNotRequireGitHubLatest` 还固定了这一行为。因此这个 false 不能证明已是最新版；这是该次审计时尚未修复的 CLI 状态契约缺口；后续修复见下述 SP-208。
+- CLI 和 skills 分开更新：默认 CLI 更新不安装 skills；skills 需要显式 `--include-skills --skills-dir <dir>` 并核对安装后的 `BUILD_INFO.json`。Homebrew 更新执行成功后，当前实现也未重读实际 CLI 版本，不能以 `updated=true` 单独证明版本对齐。
+- 只读核验：GitHub latest 为 `v0.2.29`；[Release workflow 38611166159](https://github.com/NeptuneKit/TritonKit/actions/runs/38611166159) 成功；远端 tap 提交 `4df6208669b30829ed32c3b56d64f942b6e28c73` 的 formula 为 `0.2.29`（UTC 2026-10-14 18:14:05）。当前维护机 Homebrew CLI、本地 tap 与 Codex/Agents 两处 skills BUILD_INFO 均为 `0.2.29`。安装版 `triton update --check --json` 仍返回 false 且无 target/latest 字段，符合源码分支。
+- 截图环境与时间未独立确认，不能据当前维护机状态宣称截图用户已经更新，也不能仅凭截图判定远端漏发；其中 tap `0.2.24` 的具体来源仍未知。
+- 下次先分别记录远端 Release、远端 formula、本地 formula、实际可执行文件及各 skills bundle 版本。检查输出没有明确 target/latest 时按“未查询/未知”处理；修复应补 Homebrew check 查询与失败分支、升级后实际版本核验的行为测试，再实现状态契约。此次只读审计不运行 Swift 测试；后续用户委托修复已在 [SP-208](../spaces/SP-208-update-version-alignment/README.md) 独立worktree通过完整CLI与本地门禁，已按SHA一致候选回写主工作区，并随 v0.2.30 发布。修复新增实际安装版本核验、skills元数据版本拒绝，以及部分失败保留已完成状态；完整发布证据见 [SP-208 发布验收](../spaces/SP-208-update-version-alignment/plans/20261016-release.md)。
+
 新增 Homebrew 二进制安装链路：
 
 1. `.github/homebrew/triton.rb.template` 定义 `triton` formula 模板。

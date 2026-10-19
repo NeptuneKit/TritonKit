@@ -10,8 +10,8 @@
 
 ## Memory Rules
 
-- [OpenMinis/iCTRL](https://github.com/OpenMinis/iCTRL) 是长期参考项目：正式档案见 [iCTRL 参考与追踪](../dev/ictrl-reference-tracking.md)，持续追踪见 [SP-193](../spaces/SP-193-ictrl-reference-tracking/README.md)，已有借鉴实现见 SP-192。自动化 `ictrl` 每天北京时间 10:00 检查上游，有价值变化通知；不自动采用、提交或操作设备。
-- [mobile-next/mobile-mcp](https://github.com/mobile-next/mobile-mcp) 已列为参考项目：正式档案与能力差距见 [Mobile MCP 参考](../dev/mobile-mcp-reference.md) / [SP-199](../spaces/SP-199-mobile-mcp-reference/README.md)。固定源码与外部 mobilecli backend 分开核对；计入现有 iOS Runner。仅登记研究，未启用周期追踪或采用功能。
+- [OpenMinis/iCTRL](https://github.com/OpenMinis/iCTRL) 是长期参考项目：正式档案见 [iCTRL 参考与追踪](../dev/ictrl-reference-tracking.md)，持续追踪见 [SP-193](../spaces/SP-193-ictrl-reference-tracking/README.md)，已有借鉴实现见 SP-192。自动化 `ictrl` 每天北京时间 10:00 检查上游，有价值变化通知；后续已按SP-207扩展为评估可纳入项直接独立开发、验证与本地合并，设备/远端写入仍依明确授权。
+- [mobile-next/mobile-mcp](https://github.com/mobile-next/mobile-mcp) 已列为参考项目：正式档案与能力差距见 [Mobile MCP 参考](../dev/mobile-mcp-reference.md) / [SP-199](../spaces/SP-199-mobile-mcp-reference/README.md)。固定源码与外部 mobilecli backend 分开核对；计入现有 iOS Runner。原登记研究阶段已结束，现由SP-207统一周期追踪与采用；SP-212契约切片已完成离线验收并合入本地main。
 - 参考项目清单和2026-10-14上游更新统一入口：[参考项目更新报告](../dev/20261014-reference-project-updates.md) / [SP-194](../spaces/SP-194-reference-project-updates/README.md)，覆盖主要仓库与专题候选；后续比较优先使用其中固定SHA/Release证据，区分默认分支与已发布能力。
 
 - 长期稳定的项目入口和跨会话约定记录在本文件。
@@ -44,7 +44,7 @@
 
 - 新会话模型锁定（2026-10-16）：本项目由agent创建的新会话（含执行和主控）在 `create_thread` 中显式指定 `model: "gpt-6.1-sol"`；不依赖默认值或自动回退。后续主控分派遵守同一约束，既有会话与推理强度保持原设置。
 - 全部参考项目采用授权（2026-10-16）：用户明确从iCTRL扩至所有参考；[SP-207](../spaces/SP-207-reference-adoption-pipeline/README.md) / [正式流程](../dev/reference-project-adoption-workflow.md)为当前事实源。评估可纳入项直接独立开发会话/worktree，由主控验证、必要本地提交与main合并，不逐项重问。原 `ictrl` 自动任务扩大范围并复用每日10:00计划；当前33仓（24参考+9研究候选），新正式登记项目后续加入，按机制/本地需求去重。push/发版、设备等按各自授权。
-- 2026-10-17参考采用批次：[日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261017-reference-update-report.md)；SP-210 AX可信几何与SP-211主控已立项/worktree已建，但桌面新会话接口无法校验显式gpt-6.1-sol，执行/主控thread均不存在，采用登记待重试。主目录HEAD不等于真实main，恢复集成按SP-211精确文件清单，不回灌旧产品或覆盖用户WIP。
+- 2026-10-17参考采用批次：[日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261017-reference-update-report.md)；当时SP-210/SP-211已立项但桌面模型校验失败；该历史阻塞已由10月19日本聊天交付接替，当前均已验收合main。主目录HEAD不等于真实main，恢复集成按SP-211精确文件清单，不回灌旧产品或覆盖用户WIP。
 - 2026-10-18参考日检：[SP-207第二轮日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261018-reference-update-report.md)固定了19个完整、14个partial的结果；GitHub API 403不能伪装无变化，SKProcessRunner无许可证状态纠正为待复核，iCTRL仍由SP-193独立维护。SP-210/SP-211显式`gpt-6.1-sol`会话重试仍失败且无thread，不回退模型。
 
 - 2026-10-19：本聊天已启动指定模型的SP-210与SP-212执行subagent，主控承担SP-211/SP-213；历史桌面会话创建失败保留，当前推进状态以采用登记为准。
@@ -52,3 +52,5 @@
 - 2026-10-19：[SP-210～213联合验收](../spaces/SP-211-reference-adoption-integration/plans/20261019-validation.md)已完成离线AX可信几何、Android前台身份与legacy输入转义，经7a8e9f56合本地main；资料b1d20af9先行整合，未推送/发布。历史模型分派阻塞已由本聊天subagent交付接替。
 
 - 2026-10-19追加清理：SP-209～213五个已合并worktree及本地分支普通删除；309份原始证据复制并SHA校验，仅保留实际main和原用户WIP。见[清理记录](../spaces/SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。未推送，复用现有治理规则无新增经验。
+
+- 原主目录WIP完整收口：49份文件快照1131b183，补回遗漏历史并修正共享入口及采用状态，保留已验收产品；按用户新授权合入main。见[WIP合并记录](../spaces/SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。此前“保留未提交WIP”为清理时快照，已被本次完整集成接替。

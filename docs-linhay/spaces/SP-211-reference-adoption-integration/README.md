@@ -34,3 +34,7 @@ branch：`feat/SP-211-reference-adoption-integration`；worktree：`../TritonKit
 
 
 本期联合候选`f9760a17`经`7a8e9f56`合入本地main；产品tree与候选完全一致。本期离线验收已完成，合后main完整CLI与local门禁复验通过，未推送/发布。详细门禁、首次失败及未验边界见[联合验收](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。
+
+## 原主目录WIP后续收口
+
+用户追加授权完整合并codex/wip-main-before-sp209；49份原文件快照1131b183后补齐历史与状态，保持已验收产品。此前保护原WIP的阶段限制由本次明确授权接替，见[完整合并记录](plans/20261019-wip-closeout.md)。

@@ -220,7 +220,7 @@
 
 | `SP-191-default-xcode-deriveddata` | [`SP-191-default-xcode-deriveddata`](./SP-191-default-xcode-deriveddata/README.md) | 已发布 | 默认使用 Xcode 全局 DerivedData；`v0.2.26` 已发布，CLI/root tests、schema smoke、docs 门禁与远端 CI 通过；`--derived-data-path` 仅显式隔离/恢复，可能造成高磁盘占用 |
 | `SP-192-ictrl-adoption-feasibility` | [`SP-192-ictrl-adoption-feasibility`](./SP-192-ictrl-adoption-feasibility/README.md) | 已合入本地 main | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12及真实只读AX/alias/OCR/settle通过；iOS115、Android52与完整APK通过，本地门禁复跑通过；源码已合入本地main，worktree已清理 |
-| `SP-193-ictrl-reference-tracking` | [`SP-193-ictrl-reference-tracking`](./SP-193-ictrl-reference-tracking/README.md) | 长期追踪已启用 | 正式参考档案、基线与本聊天每日 10:00 自动化已登记；有价值变化通知，采用另立项 |
+| `SP-193-ictrl-reference-tracking` | [`SP-193-ictrl-reference-tracking`](./SP-193-ictrl-reference-tracking/README.md) | 长期追踪已启用 | 正式参考档案、基线与本聊天每日 10:00 自动化已登记；有价值变化通知；采用按SP-207独立立项并验证合并 |
 | `SP-194-reference-project-updates` | [`SP-194-reference-project-updates`](./SP-194-reference-project-updates/README.md) | 已归档 | 23主要仓库+9候选，上游版本/增量/限制与借鉴建议已汇总；docs门禁与来源校验通过 |
 
 | `SP-195-ios-runner-product` | [`SP-195-ios-runner-product`](./SP-195-ios-runner-product/README.md) | 已引入本地main | Runner统一CLI/HTTP/随包；CLI1297+36、完整门禁与真机/Simulator通过；主仓门禁exit0；参考文档与产品分别提交，未push/release；已完成worktree收口见SP195计划；本地完成分支已清理/归档 |
@@ -232,7 +232,7 @@
 
 | `SP-198-agent-experience-loop` | [`SP-198-agent-experience-loop`](./SP-198-agent-experience-loop/README.md) | 本地提交归档 | Agent默认自动沉淀、主题索引与原权威资料修订退出；28隔离用例通过，远端CI未运行 |
 
-| `SP-199-mobile-mcp-reference` | [`SP-199-mobile-mcp-reference`](./SP-199-mobile-mcp-reference/README.md) | 已归档 | 参考档案与当前源码差距完成；199 space docs门禁通过，不采用功能或启用自动追踪 |
+| `SP-199-mobile-mcp-reference` | [`SP-199-mobile-mcp-reference`](./SP-199-mobile-mcp-reference/README.md) | 已归档 | 参考档案与当前源码差距完成；历史199-space研究门禁通过；后由SP-207统一追踪，SP-212采用切片已合main |
 
 | `SP-200-mobile-device-parity` | [`SP-200-mobile-device-parity`](./SP-200-mobile-device-parity/README.md) | 已合入本地main | 10acfae6已进入main，worktree/分支已清理；排除云预订/MCP |
 
@@ -248,7 +248,7 @@
 
 | `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30已发布 | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
 
-| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 最小登记 | 完整流程资料作为主工作区并行WIP保留；本轮仅确保编号连续 |
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 33仓统一流程及追踪资料已合入main；SP-210～213已验收合并并清理分支/worktree |
 
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 
@@ -262,3 +262,5 @@
 | `SP-212-mobile-mcp-android-contracts` | [`SP-212-mobile-mcp-android-contracts`](./SP-212-mobile-mcp-android-contracts/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
 
 | `SP-213-mobile-mcp-contracts-integration` | [`SP-213-mobile-mcp-contracts-integration`](./SP-213-mobile-mcp-contracts-integration/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
+
+2026-10-19追加：原主目录WIP已原样保存为1131b183并完成差异裁决，资料状态与本地main一致；[完整合并记录](./SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。

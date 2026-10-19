@@ -100,7 +100,7 @@
       "worktree": "../TritonKit-worktrees/SP-210-simulator-ax-geometry",
       "controller_worktree": "../TritonKit-worktrees/SP-211-reference-adoption-integration",
       "state_evidence": "docs-linhay/spaces/SP-211-reference-adoption-integration/plans/20261019-validation.md",
-      "retry_policy": "Historical desktop thread failures retained; active scoped subagents proceed in current authorized chat. No fabricated thread ID.",
+      "retry_policy": "Historical dispatch failures retained; accepted and locally merged. Do not retry completed work.",
       "last_dispatch_failure_notice": {
         "reported_on": "2026-10-17",
         "fingerprint": "create_thread:model_validation_failed:gpt-6.1-sol:execution+controller",
@@ -115,7 +115,7 @@
       },
       "execution_agent": "/root/implement_sp210",
       "controller_agent": "/root",
-      "controller_state": "integration_in_progress",
+      "controller_state": "local_merged",
       "execution_model": "gpt-6.1-sol",
       "last_verified_on": "2026-10-19",
       "acceptance_candidate_sha": "f9760a17",
@@ -138,10 +138,10 @@
       "host_id": "local",
       "state": "local_merged",
       "local_merge_sha": "7a8e9f56",
-      "worktree": "../TritonKit-worktrees/SP-212-mobile-mcp-android-contracts",
-      "controller_worktree": "../TritonKit-worktrees/SP-211-reference-adoption-integration",
+      "worktree": "/Users/linhey/.codex/worktrees/mobile-mcp-android-contracts/TritonKit",
+      "controller_worktree": "/Users/linhey/.codex/worktrees/mobile-mcp-contracts-integration/TritonKit",
       "state_evidence": "docs-linhay/spaces/SP-211-reference-adoption-integration/plans/20261019-validation.md",
-      "retry_policy": "Historical desktop thread failures retained; active scoped subagents proceed in current authorized chat. No fabricated thread ID.",
+      "retry_policy": "Historical dispatch failures retained; accepted and locally merged. Do not retry completed work.",
       "last_dispatch_attempt": {
         "reported_on": "2026-10-19",
         "model_argument": "gpt-6.1-sol",
@@ -156,14 +156,15 @@
       },
       "execution_agent": "/root/implement_sp212",
       "controller_agent": "/root",
-      "controller_state": "integration_in_progress",
+      "controller_state": "local_merged",
       "execution_model": "gpt-6.1-sol",
       "last_verified_on": "2026-10-19",
       "acceptance_candidate_sha": "f9760a17",
       "verification_note": "Offline contract acceptance passed; actual main post-merge full CLI (1480 Swift Testing + 69 XCTest), root (401 Swift Testing + 7 XCTest), local gate, release CLI process (7 cases + 5 schemas), docs and diff checks passed. No device actions, remote push or release.",
       "worktree_status": "removed_after_local_merge",
       "controller_worktree_status": "removed_after_local_merge",
-      "cleanup_evidence": "docs-linhay/spaces/SP-211-reference-adoption-integration/plans/20261019-cleanup.md"
+      "cleanup_evidence": "docs-linhay/spaces/SP-211-reference-adoption-integration/plans/20261019-cleanup.md",
+      "integration_worktree": "../TritonKit-worktrees/SP-211-reference-adoption-integration"
     },
     {
       "key": "mobile-next/mobile-mcp:android-adb-legacy-text-escaping",
@@ -179,10 +180,10 @@
       "host_id": "local",
       "state": "local_merged",
       "local_merge_sha": "7a8e9f56",
-      "worktree": "../TritonKit-worktrees/SP-212-mobile-mcp-android-contracts",
-      "controller_worktree": "../TritonKit-worktrees/SP-211-reference-adoption-integration",
+      "worktree": "/Users/linhey/.codex/worktrees/mobile-mcp-android-contracts/TritonKit",
+      "controller_worktree": "/Users/linhey/.codex/worktrees/mobile-mcp-contracts-integration/TritonKit",
       "state_evidence": "docs-linhay/spaces/SP-211-reference-adoption-integration/plans/20261019-validation.md",
-      "retry_policy": "Historical desktop thread failures retained; active scoped subagents proceed in current authorized chat. No fabricated thread ID.",
+      "retry_policy": "Historical dispatch failures retained; accepted and locally merged. Do not retry completed work.",
       "last_dispatch_attempt": {
         "reported_on": "2026-10-19",
         "model_argument": "gpt-6.1-sol",
@@ -197,14 +198,15 @@
       },
       "execution_agent": "/root/implement_sp212",
       "controller_agent": "/root",
-      "controller_state": "integration_in_progress",
+      "controller_state": "local_merged",
       "execution_model": "gpt-6.1-sol",
       "last_verified_on": "2026-10-19",
       "acceptance_candidate_sha": "f9760a17",
       "verification_note": "Offline contract acceptance passed; actual main post-merge full CLI (1480 Swift Testing + 69 XCTest), root (401 Swift Testing + 7 XCTest), local gate, release CLI process (7 cases + 5 schemas), docs and diff checks passed. No device actions, remote push or release.",
       "worktree_status": "removed_after_local_merge",
       "controller_worktree_status": "removed_after_local_merge",
-      "cleanup_evidence": "docs-linhay/spaces/SP-211-reference-adoption-integration/plans/20261019-cleanup.md"
+      "cleanup_evidence": "docs-linhay/spaces/SP-211-reference-adoption-integration/plans/20261019-cleanup.md",
+      "integration_worktree": "../TritonKit-worktrees/SP-211-reference-adoption-integration"
     }
   ],
   "new_thread_policy": {

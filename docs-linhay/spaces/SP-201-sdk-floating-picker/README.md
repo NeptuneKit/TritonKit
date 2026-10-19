@@ -66,7 +66,7 @@ stateDiagram-v2
 - [SDK接入指南](../../dev/20260519-ios-integration-guide.md)
 - [初版HTML原型](picker-design.html)与[浏览器验证](plans/20261015-design-validation.md)只作为历史设计证据；固定圆球/菜单切移动模式/横向工具条均已退出当前方案。
 - [SP-197属性高亮](../SP-197-view-annotation/README.md)是修改/恢复真实属性的独立能力，本功能使用浮层预览。
-- 下一步：用户体验验收；已授权并完成本地main整合，不执行推送或发布。
+- 下一步：用户体验验收；已随v0.2.30发布，用户原机仍需单独验收。
 
 ## 2026-10-16 工作区收口
 

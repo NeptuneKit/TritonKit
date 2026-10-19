@@ -25,20 +25,20 @@
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
 | v0.2.30已发布 | [SP-208-update-version-alignment](./SP-208-update-version-alignment/README.md) | 修复更新误报、安装版本核验与skills对齐 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
-| 最小登记 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 参考采用流程占号，完整资料保留主工作区WIP | 不随本次产品合并提交完整流程资料 |
-| v0.2.30已发布 | [SP-206-ictrl-security-integration](./SP-206-ictrl-security-integration/README.md) | 负责 SP-203～205 交付审查、集成与联合验证 | 057d1012补齐收口历史；worktree/分支已清理，不推送发布 |
-| v0.2.30已发布 | [SP-203-ictrl-discovery-hardening](./SP-203-ictrl-discovery-hardening/README.md) | 发现与连接安全，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，不推送发布；worktree/分支已清理 |
-| v0.2.30已发布 | [SP-204-ictrl-log-privacy](./SP-204-ictrl-log-privacy/README.md) | 日志脱敏与降噪，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，不推送发布；worktree/分支已清理 |
-| v0.2.30已发布 | [SP-205-ios-runner-auth-hardening](./SP-205-ios-runner-auth-hardening/README.md) | Runner 鉴权强化，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，不推送发布；worktree/分支已清理 |
-| 评估完成 | [SP-202-ictrl-security-assessment](./SP-202-ictrl-security-assessment/README.md) | 静态评估归档；采用已在SP-203～205实施 | 通过SP-206联合验证并本地整合；未发布 |
-| v0.2.30已发布 | [SP-201-sdk-floating-picker](./SP-201-sdk-floating-picker/README.md) | 原生直接拖选实时预览/长按移位，标记身份与CLI操作；手势、稳定罗盘、导航记忆及拖动放大镜验证通过，模拟器试用中 | 3f1b500a已整合；worktree/分支已清理，未推送发布 |
+| 持续追踪与采用 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 33仓统一追踪与采用流程已合入main | 本批SP-210～213已验收合并；后续增量独立评估 |
+| v0.2.30已发布 | [SP-206-ictrl-security-integration](./SP-206-ictrl-security-integration/README.md) | 负责 SP-203～205 交付审查、集成与联合验证 | 057d1012补齐收口历史；worktree/分支已清理，已随v0.2.30发布，用户原机另验 |
+| v0.2.30已发布 | [SP-203-ictrl-discovery-hardening](./SP-203-ictrl-discovery-hardening/README.md) | 发现与连接安全，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，已随v0.2.30发布，用户原机另验；worktree/分支已清理 |
+| v0.2.30已发布 | [SP-204-ictrl-log-privacy](./SP-204-ictrl-log-privacy/README.md) | 日志脱敏与降噪，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，已随v0.2.30发布，用户原机另验；worktree/分支已清理 |
+| v0.2.30已发布 | [SP-205-ios-runner-auth-hardening](./SP-205-ios-runner-auth-hardening/README.md) | Runner 鉴权强化，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，已随v0.2.30发布，用户原机另验；worktree/分支已清理 |
+| 评估完成 | [SP-202-ictrl-security-assessment](./SP-202-ictrl-security-assessment/README.md) | 静态评估归档；采用已在SP-203～205实施 | 通过SP-206联合验证并本地整合，并随v0.2.30发布 |
+| v0.2.30已发布 | [SP-201-sdk-floating-picker](./SP-201-sdk-floating-picker/README.md) | 原生直接拖选实时预览/长按移位，标记身份与CLI操作；手势、稳定罗盘、导航记忆及拖动放大镜验证通过，模拟器试用中 | 3f1b500a已整合；worktree/分支已清理，已随v0.2.30发布，用户原机另验 |
 | 已合入本地main | [SP-200-mobile-device-parity](./SP-200-mobile-device-parity/README.md) | Mobile设备环境/录屏/诊断/归档安装/动作/终端镜像已实现并完成本地回归 | 10acfae6已进入main，worktree/分支已清理；排除云预订/MCP |
-| 已归档 | [SP-199-mobile-mcp-reference](./SP-199-mobile-mcp-reference/README.md) | Mobile MCP 参考与差距报告已完成 | docs门禁通过；功能采用另立项，未启用自动追踪 |
+| 已归档 | [SP-199-mobile-mcp-reference](./SP-199-mobile-mcp-reference/README.md) | Mobile MCP 参考与差距报告已完成 | 研究docs门禁通过；已由SP-207追踪，SP-212采用切片已验收合main |
 | 已合入本地main | [SP-197-view-annotation](./SP-197-view-annotation/README.md) | 独立可选UIKit高亮与条件恢复；真实模拟器截图、CLI/HTTP与skills已验收 | 7b1a2f76完成集成；P1截图消费者与跨端另行实施；worktree/分支已清理 |
 | 本地提交归档 | [SP-198-agent-experience-loop](./SP-198-agent-experience-loop/README.md) | 按主题读取与默认自动沉淀已接线；28用例通过 | 后续任务按命中主题执行；CI配置已接入、远端未运行 |
 | 已发布v0.2.28 | [SP-196-upstream-optimization-delivery](./SP-196-upstream-optimization-delivery/README.md) | 主线集成与双架构/Homebrew验收完成 | active Resize/跨OS专项证明与性能量测另行推进；worktree/分支已清理 |
-| 已归档 | [SP-194-reference-project-updates](./SP-194-reference-project-updates/README.md) | 23主要仓库+9候选更新报告与分组来源已完成；文档门禁与来源结构校验通过 | 按报告建议另立实施切片；不自动采用 |
-| 长期追踪 | [SP-193-ictrl-reference-tracking](./SP-193-ictrl-reference-tracking/README.md) | 正式列为长期参考；基线 main@99dbfec / v1.97.1；本聊天每日北京时间 10:00 追踪 | 有价值变化通知，增量归档后更新检查点；后续采用另立项 |
+| 已归档 | [SP-194-reference-project-updates](./SP-194-reference-project-updates/README.md) | 23主要仓库+9候选更新报告与分组来源已完成；文档门禁与来源结构校验通过 | 后续可纳入项按SP-207独立实施、验收与本地合并 |
+| 长期追踪 | [SP-193-ictrl-reference-tracking](./SP-193-ictrl-reference-tracking/README.md) | 正式列为长期参考；初始基线 main@99dbfec / v1.97.1；本聊天每日北京时间 10:00 追踪 | 有价值变化通知，增量归档后更新检查点；后续按SP-207直接评估、独立立项与验收合并 |
 | 已集成（本地 main） | [SP-192-ictrl-adoption-feasibility](./SP-192-ictrl-adoption-feasibility/README.md) | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12、iOS115、Android52与完整APK及真实只读AX/alias/OCR/settle通过 | `e308a2eb` / merge `da76a708`，main总门禁通过；真实设备与OCR输入坐标边界见限制收口计划；worktree已清理 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-190-open-issues-integration](./SP-190-open-issues-integration/README.md) | #214–#220 本地集成与统一验收；保留各项证据边界，#215～220 已关闭，#214 继续开放 | main CI / Release / Homebrew 通过，已回复关闭 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-189-issue-220-package-result-path](./SP-189-issue-220-package-result-path/README.md) | #220：package result 路径与 inline parser 一致；49 + 2 focused tests 通过，夹具贯通执行结果路径解析，非实际 Xcode test | main CI / Release / Homebrew 通过，已回复关闭 |
@@ -334,3 +334,5 @@
 | 已合入本地main | [SP-211-reference-adoption-integration](./SP-211-reference-adoption-integration/README.md) | 本批主控验证与本地合并 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
 | 已合入本地main | [SP-212-mobile-mcp-android-contracts](./SP-212-mobile-mcp-android-contracts/README.md) | Android 前台 activity 身份与 ADB legacy 文本转义 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
 | 已合入本地main | [SP-213-mobile-mcp-contracts-integration](./SP-213-mobile-mcp-contracts-integration/README.md) | SP-212 主控验证与本地main合并 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
+
+2026-10-19追加：原主目录WIP已原样保存为1131b183并完成差异裁决，资料状态与本地main一致；[完整合并记录](./SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。
