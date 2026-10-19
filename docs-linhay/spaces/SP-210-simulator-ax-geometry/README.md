@@ -11,7 +11,7 @@
 
 参考 [ai-phone 452e7d7](https://github.com/dongxinsuperman/ai-phone/commit/452e7d77326f9fc0e5b003ecbf6cec5fc499e4bf) 的 [实例LCD几何与无效值拒绝](https://github.com/dongxinsuperman/ai-phone/blob/452e7d77326f9fc0e5b003ecbf6cec5fc499e4bf/backend/ai_phone/agent/drivers/simctl.py)。该机制源码、测试和该revision MIT许可证已完整读取，原文证据位于 `.build/reference-monitor/20261017/agents-revyl/dongxinsuperman__ai-phone/geometry-*`；整个仓库的完整增量检查状态另见SP-207，不以单机制完整性推进仓库检查点。
 
-本地 `Sources/TritonKitCLI/CLIHostSimulatorAXDriver.swift` 的 `devicePointSize` 在缺少机型尺寸时静默使用393×852、缺scale时默认3，且未拒绝NaN/Infinity/负尺寸；`AXFrameTransform` 在无效几何时直接透传输入坐标。读不到可信几何不应包装成可用坐标。现有SimulatorAXBudget等测试没有直接证明这些边界。SP-196 resize gate处理当前resize会话与display路由，不能代替本切片的基础几何校验。
+立项时 `Sources/TritonKitCLI/CLIHostSimulatorAXDriver.swift` 的 `devicePointSize` 在缺少机型尺寸时静默使用393×852、缺scale时默认3，且未拒绝NaN/Infinity/负尺寸；`AXFrameTransform` 在无效几何时直接透传输入坐标。读不到可信几何不应包装成可用坐标。现有SimulatorAXBudget等测试没有直接证明这些边界。SP-196 resize gate处理当前resize会话与display路由，不能代替本切片的基础几何校验。
 
 采用范围仅为独立实现可信几何校验、消除虚构fallback、稳定机器可读失败及离线回归。不复制Python代码，不新增依赖；引用MIT来源，如复制片段必须保留相应许可通知。上游性能未在本地验证。
 
@@ -47,3 +47,8 @@
 `swift test --package-path CLI --scratch-path .build/sp210-scratch --no-parallel --filter 'SimulatorAXGeometryTests|SimulatorAXBudgetTests'` 最终候选通过：10项geometry XCTest、6项budget Swift Testing，0失败，日志`.build/sp210-evidence/green-final.log`。`git diff --check`通过。
 
 真实press使用`submitValidatedPress`生产编排边界；离线注入context/selected frame几何错误时native submit计数0，合法选择计数1。`cliErrorDetail → TKCLIErrorResponse → encodeJSON`断言单一JSON envelope的`ok=false`和稳定error code/hint/nextAction；这是映射/编码证明，不是真实CLI进程失败或设备动作证明。
+
+
+## 联合验收（2026-10-19）
+
+主控候选`a8848036`已整合本实现；完整CLI复跑1480 Swift Testing +69 XCTest通过，根包108+293 Swift Testing及7 XCTest通过，fake-adb真实CLI进程7场景和5组schema通过。Release构建与本地门禁通过，完成记录统一见[SP-211验收报告](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。候选已验收，待本地main合入、未设备实测或发布。

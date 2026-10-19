@@ -9,7 +9,7 @@
 
 ## 采用机制与本地缺口
 
-1. **Android 前台 activity 身份**：当前 `triton device foreground --platform android --json` 的 `observed` 仅返回 `bundleIdentifier`、`identityState` 和 `scope`，缺少 component/activity。采用 mobile-mcp 的 focused activity 可观测性，但保留 `resumed-activity` 来源、unknown/fail-closed 和现有单 envelope。
+1. **Android 前台 activity 身份**：立项时 `triton device foreground --platform android --json` 的 `observed` 仅返回 `bundleIdentifier`、`identityState` 和 `scope`，缺少 component/activity。采用 mobile-mcp 的 focused activity 可观测性，但保留 `resumed-activity` 来源、unknown/fail-closed 和现有单 envelope。
 2. **ADB 文本 `#`/`~` 转义**：当前 `TKAndroidADBCommand.inputText` 直接将原文作为 `adb shell input text` 参数；Android legacy shell 的二次解析会让 `#`/`~` 等字符丢失或解释错误。只改命令构造与 fake-adb/argv 契约测试，不做真实设备验证。
 
 本期不引入 mobilewright、不升级依赖、不复制上游 TypeScript、不开启远端 adb/真机范围；UI dump 缓冲、swipe 成对校验已由当前产品覆盖或另行观察。
@@ -43,3 +43,8 @@
 - 本切片未操作设备、安装依赖、调用上游代码或远端写入；全 CLI / 根包 / 联合门禁、公共索引与 memory 由主控整合验收。经验检查将 shell 二次解析与 component 展开边界沉淀于本节，无需提交锁文件/生成文件。
 
 - `git diff --check` 通过；`check-docs.sh` 当前仅因独立基线缺少 SP-212 全局索引登记失败（`space index must contain exactly one link for SP-212-mobile-mcp-android-contracts`），主控合并space与索引后重跑；本切片未改公共索引。
+
+
+## 联合验收（2026-10-19）
+
+主控候选`a8848036`已整合本实现；完整CLI复跑1480 Swift Testing +69 XCTest通过，根包108+293 Swift Testing及7 XCTest通过，fake-adb真实CLI进程7场景和5组schema通过。Release构建与本地门禁通过，完成记录统一见[SP-211验收报告](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。候选已验收，待本地main合入、未设备实测或发布。

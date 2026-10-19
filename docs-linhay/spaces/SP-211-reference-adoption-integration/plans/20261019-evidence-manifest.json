@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "product_candidate": "a884803661a20990e972e95e475c52a8b767a5ce",
+  "date": "2026-10-19",
+  "device_actions": false,
+  "logs": [
+    {
+      "path": ".build/sp211-evidence/check-docs-candidate.log",
+      "bytes": 213,
+      "sha256": "d5b0c8f7d0e1e3416761cf9ab68b8343667ad722a5d25fbf2701c7fc3830c654"
+    },
+    {
+      "path": ".build/sp211-evidence/cli-acceptance-summary.log",
+      "bytes": 77,
+      "sha256": "32d1a9d7219107916606d2a55738aa5ea716345d2731a0fd5259bf881933cb74"
+    },
+    {
+      "path": ".build/sp211-evidence/cli-full-recheck.log",
+      "bytes": 336190,
+      "sha256": "bfacec88348c7a3ad4bf935c735f83b561e715272af0c6912c24a53bf1010a8c"
+    },
+    {
+      "path": ".build/sp211-evidence/cli-full.log",
+      "bytes": 347922,
+      "sha256": "11387879fb24d7301a66a7ea179c99f96e7339ad27047e55c43d7126e0af12c7"
+    },
+    {
+      "path": ".build/sp211-evidence/docs-candidate.log",
+      "bytes": 1731,
+      "sha256": "f9a791e28866ee7efb4de6bc3ae5d9539d6e7e1572fe9220876acd23b467d1cd"
+    },
+    {
+      "path": ".build/sp211-evidence/docs-premerge.log",
+      "bytes": 1731,
+      "sha256": "56361d370b54448f232774ffd5d4de7bd59f1330a6e1fa89e0bea7e2d3e4ad2a"
+    },
+    {
+      "path": ".build/sp211-evidence/framebuffer-recheck.log",
+      "bytes": 2734,
+      "sha256": "44dc26e59c7a8a7b16c5808a385168b35cacc24553ad288c4e01b8450cde2959"
+    },
+    {
+      "path": ".build/sp211-evidence/local-gate.log",
+      "bytes": 107400,
+      "sha256": "2357addc2f34fea1674ebfcac0fbd9337b8e7edefcf286f58e1e03faa9b137b2"
+    },
+    {
+      "path": ".build/sp211-evidence/release-cli-acceptance-summary.log",
+      "bytes": 77,
+      "sha256": "32d1a9d7219107916606d2a55738aa5ea716345d2731a0fd5259bf881933cb74"
+    },
+    {
+      "path": ".build/sp211-evidence/schema-tests.log",
+      "bytes": 55754,
+      "sha256": "f56526e842ab271c92b9b4230598d84178300c55b2d65e365b887efe00b6a4a1"
+    }
+  ],
+  "verification": {
+    "cli_swift_testing": 1480,
+    "cli_xctest": 69,
+    "root_swift_testing": 401,
+    "root_xctest": 7,
+    "cli_process_cases_per_configuration": 7,
+    "schema_cases_per_configuration": 5,
+    "configurations": [
+      "debug",
+      "release"
+    ],
+    "local_gate": "passed",
+    "xcode_device_build": "skipped (TRITON_VERIFY_XCODE=0; offline contract scope)",
+    "first_cli_failure": "FramebufferHelperTests fixture marker absent; focused 11 and full rerun passed without code change; exact scheduling cause unknown"
+  }
+}
