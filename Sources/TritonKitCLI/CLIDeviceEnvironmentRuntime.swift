@@ -26,8 +26,31 @@ func parseAndroidDisplayRotation(_ text: String) -> Int? {
     if let degrees = environmentMatch(text, pattern: #"mRotation=ROTATION_(0|90|180|270)\b"#).flatMap(Int.init) { return degrees / 90 }
     return environmentMatch(text, pattern: #"(?:SurfaceOrientation:\s*|mRotation=)([0-3])\b"#).flatMap(Int.init)
 }
+struct AndroidForegroundIdentity {
+    let bundleIdentifier: String
+    /// Component exactly as reported by ActivityRecord (including shorthand).
+    let component: String
+    /// Activity class as reported, expanding only Android’s explicit leading-dot shorthand.
+    let activity: String
+}
+func parseAndroidForegroundIdentity(_ text: String) -> AndroidForegroundIdentity? {
+    let lines = text.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }
+    // A present but malformed top record must never fall back to an older resumed record.
+    let top = lines.filter { $0.range(of: #"^topResumedActivity\s*[:=]"#, options: .regularExpression) != nil }
+    let records = top.isEmpty ? lines.filter { $0.range(of: #"^mResumedActivity\s*[:=]"#, options: .regularExpression) != nil } : top
+    guard !records.isEmpty else { return nil }
+    var components = Set<String>()
+    for record in records {
+        guard let component = environmentMatch(record, pattern: #"^(?:topResumedActivity|mResumedActivity)\s*[:=]\s*ActivityRecord\{[^\s{}]+\s+u[0-9]+\s+([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*/(?:\.?[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*))(?:\s+[^{}]*)?\}\s*$"#) else { return nil }
+        components.insert(component)
+    }
+    guard components.count == 1, let component = components.first else { return nil }
+    let parts = component.split(separator: "/", maxSplits: 1).map(String.init)
+    let activity = parts[1].hasPrefix(".") ? parts[0] + parts[1] : parts[1]
+    return AndroidForegroundIdentity(bundleIdentifier: parts[0], component: component, activity: activity)
+}
 func parseAndroidForeground(_ text: String) -> String? {
-    environmentMatch(text, pattern: #"(?:topResumedActivity|mResumedActivity)\s*[:=]\s*ActivityRecord\{[^\n]*?\s([A-Za-z0-9_.]+)/[^\s}]+"#)
+    parseAndroidForegroundIdentity(text)?.bundleIdentifier
 }
 private func environmentClipboardText(_ text: String) throws -> String {
     guard let line = text.components(separatedBy: .newlines).first(where: { $0.hasPrefix("TRITON_CLIPBOARD:") }), let data = Data(base64Encoded: String(line.dropFirst("TRITON_CLIPBOARD:".count))), data.count <= 65536, let value = String(data: data, encoding: .utf8) else { throw DeviceEnvironmentFailure(code: "clipboard_invalid_response", message: "Clipboard helper returned no bounded text observation") }
@@ -121,9 +144,13 @@ func makeDeviceEnvironmentOutput(target: HostDeviceTarget, operation: DeviceEnvi
         case .foreground:
             if target.platform == "android" {
                 let text = try android(["dumpsys", "activity", "activities"])
-                let bundle = parseAndroidForeground(text)
-                output.observed = ["bundleIdentifier": bundle ?? "unknown", "identityState": bundle == nil ? "unknown" : "current", "scope": "resumed-activity"]
-                output.verified = bundle != nil
+                let identity = parseAndroidForegroundIdentity(text)
+                output.observed = ["bundleIdentifier": identity?.bundleIdentifier ?? "unknown", "identityState": identity == nil ? "unknown" : "current", "scope": "resumed-activity"]
+                if let identity {
+                    output.observed?["component"] = identity.component
+                    output.observed?["activity"] = identity.activity
+                }
+                output.verified = identity != nil
             } else if target.platform == "harmony" {
                 let identity = TKHarmonyForegroundAppParser.parse(try run(TKHarmonyHDCCommand.foregroundApp(target: target.target, executable: hdc)))
                 output.observed = ["bundleIdentifier": identity.bundleIdentifier ?? "unknown", "identityState": identity.identityState, "scope": "foreground-ability"]
