@@ -803,6 +803,10 @@ triton act tap --platform android --target emulator-5554 "Network & internet" --
 triton smoke android --device android-a --package com.android.settings --wait-text "Settings" --tap-text "Network & internet" --post-tap-wait-text "Internet" --screenshot /tmp/android-smoke.png --evidence /tmp/android-smoke.tritonevidence --json
 ```
 
+`triton device foreground --platform android --device <selector> --json` reports `observed.bundleIdentifier`, the resolved `observed.activity` (only a leading `.` expands to the package), and the original package/activity `observed.component` from a trustworthy resumed ActivityRecord. Missing or conflicting identity stays `unknown`; window focus is not a fallback. A foreground identity is not business readiness. Legacy ADB text input now quotes the text for the remote shell and redacts it from the command ledger; Android `input text` Unicode/keymap and `%s` behavior remain platform limitations.
+
+Host Simulator AX rejects missing or non-finite display/root geometry with `ios_host_ax_geometry_unavailable`; it never substitutes a guessed screen size or scale. Inspect the target with `triton device doctor --platform ios --scope simulator --json` before retrying. Offline geometry tests do not establish old/new Xcode or live Resize Mode compatibility.
+
 Android `app inspect` uses `adb shell dumpsys package` and returns `host.android-app-inspect`. Android host-side `observe tree` / `ax` / `wait` / `tap` currently rely on `adb shell uiautomator dump` followed by `adb shell cat` of the dumped XML. `observe tree --outline` writes repo-local `.triton/node-aliases.json` aliases for immediate `node resolve @N` follow-up; refresh the outline when `node resolve` returns `stale_node_alias`. Parse `ax --platform android` as `host.android-ax`, and keep UIAutomator-backed commands serialized per emulator target during smoke or evidence capture; concurrent dump/read-back flows on the same emulator have previously produced host command exits before the XML was fully available.
 
 HarmonyOS NEXT / DevEco Emulator host-side discovery does not require a running TritonKit embedded runtime:

@@ -107,7 +107,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton observe tree --platform harmony --target 127.0.0.1:10100 --json",
             ],
             successShape: "{ ok, action, platform, capturedAt, partial, target, sources[], nodes[], outline?[], aliasCache?, artifacts[], sourceCommands[], note }",
-            failureShape: "{ ok:false, error:{ code: server_unavailable|target_unavailable|target_not_found|simulator_not_found|ambiguous_target|host_command_failed|validation_failed|ios_host_ax_unavailable, message, hint, nextAction? }, candidates?[] }",
+            failureShape: "{ ok:false, error:{ code: server_unavailable|target_unavailable|target_not_found|simulator_not_found|ambiguous_target|host_command_failed|validation_failed|ios_host_ax_unavailable|ios_host_ax_geometry_unavailable, message, hint, nextAction? }, candidates?[] }",
             outputSemantics: "Use observe to read native visible surface state across iOS embedded runtime, iOS Simulator host AX, Android layout, and Harmony host layout before choosing tap, WebView, route, screenshot, or evidence commands. Add --outline to create schema2 @N aliases with a 30 second lifetime and live fingerprint revalidation. Truncated collections cannot validate aliases. OCR returns candidates only; visual settle never proves a business postcondition.",
             artifacts: ["harmony-layout"],
             nextCommands: [

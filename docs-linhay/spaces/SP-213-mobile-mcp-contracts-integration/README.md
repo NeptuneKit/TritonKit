@@ -4,9 +4,9 @@
 
 branch：`feat/SP-213-mobile-mcp-contracts-integration`；worktree：`/Users/linhey/.codex/worktrees/mobile-mcp-contracts-integration/TritonKit`。
 
-本期主控负责 [SP-212](../SP-212-mobile-mcp-android-contracts/README.md) 的冻结候选审查、focused/full CLI 与 shared 测试、文档/索引/memory 写回及必要本地 main 合并。状态：integration_in_progress（当前聊天主控）；不扩展到 SP-210/211，不推送/tag/release，不安装依赖、不运行上游代码、不操作设备。
+本期主控负责 [SP-212](../SP-212-mobile-mcp-android-contracts/README.md) 的冻结候选审查、focused/full CLI 与 shared 测试、文档/索引/memory 写回及必要本地 main 合并。状态：integration_in_progress（当前聊天主控）；按2026-10-19用户统一收口要求，与SP-211共享联合验收候选，需求和证据仍分别登记，不推送/tag/release，不安装依赖、不运行上游代码、不操作设备。
 
-产品基线为 `main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec`；主目录存在用户 WIP，主控使用 `/Users/linhey/.codex/worktrees/mobile-mcp-contracts-integration/TritonKit`，并以实际 main worktree 事实核对，不切换或重置主目录。
+产品基线为 `main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec`；主目录存在用户 WIP，预留主控目录为 `/Users/linhey/.codex/worktrees/mobile-mcp-contracts-integration/TritonKit`；本轮统一在SP-211 worktree验证后同步本分支，并以实际 main worktree 事实核对，不切换或重置主目录。
 
 ## 主控合同
 

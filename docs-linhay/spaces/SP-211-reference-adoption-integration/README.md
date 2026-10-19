@@ -2,7 +2,7 @@
 
 ## 边界与状态
 
-本期只负责 [SP-210](../SP-210-simulator-ax-geometry/README.md) 和本次SP-207追踪资料的有限集成，状态：integration_in_progress（当前聊天主控）；不复用已收口SP-206，不无限追加后续参考批次。用户授权主控协调本批执行、审查真实候选、修复冲突、联合门禁、必要本地提交及本地main合并；不推送/tag/release，不运行上游代码/安装/签名/DDI/设备动作。
+原批次负责 [SP-210](../SP-210-simulator-ax-geometry/README.md) 和本次SP-207追踪资料的有限集成；2026-10-19用户要求全部未完成worktree推进验收并合main，本聊天同时承担SP-213对应的SP-212联合验证，状态：integration_in_progress（当前聊天主控）；不复用已收口SP-206，不无限追加后续参考批次。用户授权主控协调本批执行、审查真实候选、修复冲突、联合门禁、必要本地提交及本地main合并；不推送/tag/release，不运行上游代码/安装/签名/DDI/设备动作。
 
 branch：`feat/SP-211-reference-adoption-integration`；worktree：`../TritonKit-worktrees/SP-211-reference-adoption-integration/`；基线 `main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec`。实际main在 `../TritonKit-worktrees/main-integrated/`，主目录另在 `codex/wip-main-before-sp209@0a0aec02` 且存在用户CLAUDE.md变更，禁止切换/重置/全分支合并或混入该WIP。
 
@@ -10,7 +10,7 @@ branch：`feat/SP-211-reference-adoption-integration`；worktree：`../TritonKit
 
 1. 新建会话必须显式 `model="gpt-6.1-sol"`，后续分派同样遵守；不自动回退。收到执行thread ID后允许仅与该执行会话及当前追踪会话协调本期事项。
 2. 核对SP-210失败测试、实现diff、冻结SHA、失败输出合法envelope、非finite/缺失几何、预算与合法路径回归。子会话“完成”不代替主控证据。
-3. 主目录已有SP-207完整流程与授权资料尚未进入真实main（main只保留最小占号页），且主目录HEAD不是main。追踪会话会提供本期文档提交/精确manifest；以该提交逐文件提取批准的流程/追踪文件，不能整分支merge或覆盖main的SP-209/发布历史。共享索引/memory/治理文件按实际main人工合并，只追加本期内容。
+3. 启动时主目录SP-207完整流程与授权资料尚未进入真实main；2026-10-19已按清单经b1d20af9进入main，且主目录HEAD不是main。追踪会话会提供本期文档提交/精确manifest；以该提交逐文件提取批准的流程/追踪文件，不能整分支merge或覆盖main的SP-209/发布历史。共享索引/memory/治理文件按实际main人工合并，只追加本期内容。
 4. 在独立候选worktree串行集成、冻结并独立跑受影响focused/full CLI、根包与适用local门禁；docs-only门禁不能代替产品验证。受限制的设备/签名步骤明确未执行。禁止同scratch并发、禁止stash。
 5. 完成后检查真实main worktree状态与是否有其他写入者，串行将验证候选合入本地main，复核合后产品blob/受影响检查，写回SP-210/211、SP-207 adoption-state、索引/memory。遇main共享占用则等待协调，不强行覆盖，不伪称合并。
 

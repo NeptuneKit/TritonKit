@@ -193,3 +193,8 @@ Debug App 预先授权 `.inspector` 后，在 MainActor 通过 `TritonKit.shared
 圆球单击以系统 pageSheet 打开 SDK hub：首页真实连接摘要，连接、选择器、SDK 功能、应用、入口五路由。放大镜、辅助框、触感在选择器二级配置。SDK 功能是宿主配置的只读展示，不代表平台支持、provider 就绪或业务可执行；不展示未被消费的隐私配置或硬编码 SDK 版本，不为填充菜单添加无效按钮。
 
 系统 modal 内部使用 UINavigationController 与 insetGrouped UITableViewController；iOS 15+ 使用 medium/large detents、grabber，iOS 13/14 降级系统 pageSheet，不承诺半屏。验收 modal 打开暂隐藏圆球、全部选择提示与罗盘，下拉或关闭恢复有效选择上下文；系统遮罩拦截整个窗口业务触摸，外围透传仅适用于 modal 关闭后。罗盘只保留节点导航和清除。隐藏操作仅在入口页经系统 UIAlertController 确认后执行，取消保持状态；确认后旧 selection guard 失效，宿主 API 恢复从空选择开始。分别核对隐藏/恢复前后连接与业务计数不变、Release 不能开启，以及浅深色、小屏滚动和子页面返回。SP-209 为未发布候选，使用前核对匹配源码/版本与实际验证记录；自绘卡片通过记录不能代替系统 modal 验收。
+
+
+### Host geometry and Android foreground evidence
+
+For Simulator host AX, `ios_host_ax_geometry_unavailable` rejects missing/invalid geometry before coordinate-dependent work; preserve that failure and inspect `triton device doctor --platform ios --scope simulator --json`, rather than guessing dimensions. Android `device foreground` adds `observed.activity` and `observed.component` from trustworthy resumed activity records; unknown omits them, and foreground identity does not prove business readiness. Legacy ADB text input quotes remote-shell literals and redacts source commands; distinguish shell safety from device Unicode/keymap and `%s` input support. Record offline fixture acceptance separately from real-device input.

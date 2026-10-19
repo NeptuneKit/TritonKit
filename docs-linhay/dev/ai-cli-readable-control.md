@@ -598,3 +598,10 @@ spec支持OID或唯一identifier以及withinOID，保存borderColor/borderWidth�
 `triton update --check --json` 和 `--dry-run` 对 Homebrew 也解析 GitHub latest（或显式目标），不刷新/升级brew；查询失败返回失败，不以无target的false表示已最新。执行先确认，再刷新tap、核对formula版本、升级并用brew实际prefix下的CLI读取版本；只有实际版本等于目标才可安装同版本skills。`currentVersion`保留更新前进程版本，`installedVersion`是执行后的核验值；检查/预览不提供安装证明。执行失败仍保留`cliUpdateAttempted`、已核验的`installedVersion`和`updated`，不能将CLI已更新但skills失败重置成全部未更新。
 
 formula不匹配返回`homebrew_version_mismatch`，安装版不匹配返回`installed_version_mismatch`，降级返回`downgrade_unsupported`，skills元数据缺失或版本不匹配返回`skills_version_mismatch`。网络查询失败保留`release_resolution_failed`。均为单一失败JSON并非零退出。skills默认独立更新，仅显式`--include-skills --skills-dir`启用。发布前不将源码实现描述为用户已有安装能力。
+
+
+## 2026-10-19 参考采用契约
+
+- Simulator host AX 只接受明确、有限、正尺寸的屏幕与 root 几何；缺失/非法值返回 `ios_host_ax_geometry_unavailable`，不得猜测393×852或scale=3。错误进入 sim.ax、observe、wait、node 与 act 的 schema/hint 链路；到期仍保留原预算语义。本期为离线契约验收，未运行真实Simulator/resize矩阵。
+- Android `device foreground` 在 `observed` 保留 bundleIdentifier/identityState/scope，同时提供可信 resumed ActivityRecord 的 `activity`（仅展开以`.`开头的相对类名，其余保留原值）和 `component`（原package/activity）。缺失或冲突时unknown并省略新增字段；不使用mCurrentFocus回退，不声明业务就绪。
+- Android legacy `adb shell input text` 对完整文本做远端shell单引号引用，内嵌单引号转义，且source command脱敏。离线shell夹具只证明字面量安全，不证明设备键盘可输入所有Unicode或改变Android `%s` 既有语义。

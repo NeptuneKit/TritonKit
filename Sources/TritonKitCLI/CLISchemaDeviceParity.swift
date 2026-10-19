@@ -11,7 +11,12 @@ func deviceEnvironmentOutputContract() -> TKCommandOutputContract {
         ("verified", "Bool", true, "Whether the requested host state was read back"),
         ("previous", "[String:String]?", false, "Bounded before state"),
         ("requested", "[String:String]?", false, "Requested state"),
-        ("observed", "[String:String]?", false, "Bounded after state"),
+        ("observed", "[String:String]?", false, "Bounded after state; Android foreground uses resumed-activity identity, never window-focus fallback"),
+        ("observed.bundleIdentifier", "String?", false, "Foreground bundle identity, or unknown when no trustworthy resumed ActivityRecord exists"),
+        ("observed.identityState", "String?", false, "current or unknown for Android foreground; does not establish business readiness"),
+        ("observed.scope", "String?", false, "Android foreground identity source: resumed-activity"),
+        ("observed.activity", "String?", false, "Android foreground activity class from a trustworthy resumed ActivityRecord; omitted when unknown"),
+        ("observed.component", "String?", false, "Android foreground package/activity component from a trustworthy resumed ActivityRecord; omitted when unknown"),
         ("sourceCommands", "[String]", true, "Redacted host command ledger"),
         ("businessReadinessVerified", "Bool", true, "Always false for environment controls"),
     ]))

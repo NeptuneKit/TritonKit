@@ -18,3 +18,5 @@
 | 外部资料、归档会话、多 agent 结论或旧计划引用 | 区分纠正/方案/最终结论/实际落地；只继承事实线索；核对当前授权、真实 diff 与后续替代证据 | [治理流程](../dev/20260619-agent-workflow-skill-governance.md)、[监督审计](../../.agents/skills/tritonkit-subagent-supervision/SKILL.md) |
 | 文档入口、内部 skill 接线或经验校验器调整 | 核对普通任务默认自动沉淀与收尾证据；可见规则/链接才算接线，示例/注释不算；隔离正负例防回退；并行登记前重查编号 | [治理闭环与校验边界](../dev/20260619-agent-workflow-skill-governance.md)、[本轮校验证据](../spaces/SP-198-agent-experience-loop/README.md) |
 | 参考上游增量、采用分派或跨分支资料整合 | 先区分主目录HEAD与真实main；完整读取后独立推进检查点；采用与读取去重分离；模型失败不伪造thread；按清单保留较新授权与main产品历史 | [参考采用流程](../dev/reference-project-adoption-workflow.md)、[采用登记](../spaces/SP-207-reference-adoption-pipeline/README.md) |
+
+| Simulator AX几何、Android前台身份或legacy文本输入 | AX拒绝猜测并测试生产提交边界；前台只展开ComponentName前导点且无效top不回退；shell字面量安全与设备输入能力分开验收 | [AX几何](../spaces/SP-210-simulator-ax-geometry/README.md)、[Android契约](../spaces/SP-212-mobile-mcp-android-contracts/README.md) |

@@ -232,3 +232,10 @@ triton device tap|double-tap|swipe|press|type ... --platform <ios|android|harmon
 ```
 
 These commands are local CLI/HTTP contracts. Cloud-device reservation/release and standard MCP server transport remain intentionally outside TritonKit's scope.
+
+
+### Trusted geometry and Android foreground identity
+
+Simulator host AX reports `ios_host_ax_geometry_unavailable` when screen/root geometry is missing or invalid. Do not retry with invented dimensions or coordinates; inspect `triton device doctor --platform ios --scope simulator --json` and obtain fresh trusted geometry. This contract does not establish live Resize Mode compatibility.
+
+`triton device foreground --platform android --device <selector> --json` exposes `observed.activity` (reported class, with only a leading `.` expanded to the package) and `observed.component` (original package/activity), alongside bundleIdentifier/identityState/scope. Only trustworthy resumed activity records establish current identity; unknown omits activity/component, and window-focus records are not a fallback. This is not business readiness. Legacy ADB text quoting protects remote-shell literals and redacts source commands; device Unicode/keymap and `%s` limitations remain.
