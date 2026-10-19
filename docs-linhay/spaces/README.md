@@ -2,9 +2,9 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（209/209 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（211/211 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-17（v0.2.30发布收口；SP-207流程沉淀）
+> 最近审计：2026-10-17（参考日检；SP-210/211模型分派待重试）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -22,8 +22,12 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 待重试分派 | [SP-210-simulator-ax-geometry](./SP-210-simulator-ax-geometry/README.md) | Simulator AX缺失/非法几何不再猜测坐标 | branch/worktree已建；gpt-6.1-sol校验失败，无执行thread |
+| 待重试分派 | [SP-211-reference-adoption-integration](./SP-211-reference-adoption-integration/README.md) | 本批主控验证与本地合并 | branch/worktree已建；gpt-6.1-sol校验失败；不混入主目录分支WIP |
+| 模型校验阻塞 | [SP-212-mobile-mcp-android-contracts](./SP-212-mobile-mcp-android-contracts/README.md) | Android 前台 activity 身份与 ADB legacy 文本转义 | 候选已由实际main复核；执行worktree已建，等待显式模型会话
+| 模型校验阻塞 | [SP-213-mobile-mcp-contracts-integration](./SP-213-mobile-mcp-contracts-integration/README.md) | SP-212 主控验证与本地main合并 | 独立主控worktree已建，等待显式模型会话
 | v0.2.30已发布 | [SP-208-update-version-alignment](./SP-208-update-version-alignment/README.md) | 修复更新误报、安装版本核验与skills对齐 | 6c120ccd已整合；main门禁、CLI1474+59、双架构、Homebrew、skills与安装验收通过 |
-| 流程启用 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 覆盖24参考+9研究候选，复用原自动任务 | 可纳入项直接开发→主控验证→本地合并，任务去重；不自动推送发版 |
+| 流程启用 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 覆盖24参考+9研究候选，复用原自动任务 | 首轮33仓32完整/1partial、9变化；SP-210/211已建worktree，指定模型校验失败待重试 |
 | v0.2.30已发布 | [SP-206-ictrl-security-integration](./SP-206-ictrl-security-integration/README.md) | 负责 SP-203～205 交付审查、集成与联合验证 | 057d1012补齐收口历史；联合候选与发布安装验收通过，worktree/分支已清理 |
 | v0.2.30已发布 | [SP-203-ictrl-discovery-hardening](./SP-203-ictrl-discovery-hardening/README.md) | 发现与连接安全，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；真实App接入另验；worktree/分支已清理 |
 | v0.2.30已发布 | [SP-204-ictrl-log-privacy](./SP-204-ictrl-log-privacy/README.md) | 日志脱敏与降噪，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；发布安装验收通过；worktree/分支已清理 |

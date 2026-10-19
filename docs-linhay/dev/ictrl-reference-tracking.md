@@ -57,3 +57,12 @@ iCTRL 以长期运行的 XCUITest Runner 提供 agent 可发现的 HTTP JSON-RPC
 ## 2026-10-16：本地采用后的复核
 
 SP-202 的静态建议已由 SP-203/204/205 实现，联合候选由 [SP-206](../spaces/SP-206-ictrl-security-integration/README.md) 审查验证。默认广播/自动发现策略、响应日志元数据白名单、Runner会话持密证明与加密通道分别解决其明确边界；不能继续把这些作为“尚未实施”待办，也不能将它们升级为embedded服务认证、物理设备身份或防透明转发。证据区分冻结候选、真实socket、UIKit spy、SDK编译与实际设备验收；SP-206未改动自动任务；后续监控授权由其独立会话的最新记录决定。
+
+
+## 2026-10-18：全量流程日检与完整性纠正
+
+SP-207 第二轮全量检查见 [日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261018-reference-update-report.md)：iCTRL 仍无变化；serve-sim 与 Atlantis 保持观察；Baguette、agent/Revyl API 403 和 SKProcessRunner 许可证问题均未推进检查点。本轮特别将 SKProcessRunner 先前过强的“完整”标签纠正为待复核，避免无许可证据形成可复用成功点。
+
+## 2026-10-19：检查恢复与无变化
+
+[SP-193 检查摘要](../spaces/SP-193-ictrl-reference-tracking/plans/20261019-check-summary.json)确认 iCTRL `main@d88bbf0b3a5addead31b4298d605d7ac7a87d6e7`、`v1.98.12` 与 Apache-2.0 许可证 hash 均未变化。首次 `gh api` 因本机 TLS 证书校验失败，随后使用官方 GitHub API 的系统 curl 完整读取 repository、HEAD、Release 分页和固定 HEAD 许可证；失败与恢复分别留有原始证据。未发现新的安全、兼容或 SP-192 机制变化，不重复排期。

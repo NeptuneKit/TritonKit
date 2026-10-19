@@ -1,0 +1,121 @@
+{
+  "repository": "RevylAI/revyl-cli",
+  "complete": true,
+  "source_head": "86de7c9797f98060cf465792367b3a662cd59cf4",
+  "local_comparison_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+  "completion_scope": "16提交完整增量查询、变更清单、最新稳定Release及与本机CLI/HTTP接管相关的源码机制适用性审阅；不是上游全仓功能审计或全部测试逐行审计。",
+  "coverage": {
+    "commits": 16,
+    "commit_file_records": 245,
+    "unique_paths": 161,
+    "commit_pagination_complete": true,
+    "nontext_records": 36,
+    "pyc_records": 32,
+    "pyc_git_blob_and_size_verified": 32,
+    "openapi_changed_snapshots": 4,
+    "openapi_parent_snapshot": 1,
+    "openapi_structural_change_counts": [
+      5,
+      42,
+      3,
+      3
+    ],
+    "tests_group_dispositions": {
+      "binary_identity_only": 16,
+      "full_changed_text_read": 30,
+      "fixture_projection_excluded": 2,
+      "cloud_web_workflow_plugin_or_redundant_test_indexed_excluded": 34
+    },
+    "release_records_queried": 89,
+    "latest_stable_release": "v0.1.167",
+    "latest_stable_release_published": "2026-10-16T06:44:13Z",
+    "head_version": "0.1.170"
+  },
+  "reviewed_groups": [
+    {
+      "name": "config",
+      "commit_file_records": 9,
+      "method": "无截断小页完整文本patch阅读"
+    },
+    {
+      "name": "web",
+      "commit_file_records": 10,
+      "method": "无截断小页完整文本patch阅读"
+    },
+    {
+      "name": "hotreload",
+      "commit_file_records": 1,
+      "method": "无截断小页完整文本patch阅读"
+    },
+    {
+      "name": "mcp",
+      "commit_file_records": 9,
+      "method": "无截断小页完整文本patch阅读"
+    },
+    {
+      "name": "docs",
+      "commit_file_records": 26,
+      "method": "无截断小页完整文本patch阅读"
+    },
+    {
+      "name": "generated",
+      "commit_file_records": 32,
+      "method": "无截断小页完整文本patch阅读"
+    },
+    {
+      "name": "other",
+      "commit_file_records": 76,
+      "method": "全部新增/删除行阅读；关键文件完整patch补读；旧context不重复全读"
+    },
+    {
+      "name": "tests",
+      "commit_file_records": 82,
+      "method": "相关关键测试完整patch阅读，其他明确排除；见逐项inventory"
+    }
+  ],
+  "errors": [],
+  "remaining_items": [],
+  "bounded_exclusions": [
+    "旧history与未变化全仓源码不重新审计；前agent主要HEAD机制全文阅读作为继承证据，不冒称本补审重复全文阅读。",
+    "纯云Web/build/sign-in/workflow/hosted插件测试与重复显示测试仅语义索引；compiler_cases.json预期投影不逐行人工阅读，不作为机制正确性证据。",
+    "pyc仅固定Git blob、字节大小、SHA256及源文件关联；未执行、未反编译，不声称字节行为验证。",
+    "OpenAPI完整递归结构比较；42项Web结构值不逐行人工审计，以对应手写源码及生成DTO全文patch判定当前产品不采用。"
+  ],
+  "decisions": [
+    {
+      "topic": "云Web/hosted插件/Capy proof",
+      "decision": "observe、不自动采用；超出现有本机CLI/HTTP接管范围。"
+    },
+    {
+      "topic": "secret text-env",
+      "decision": "observe；本地已有stdin JSON input，未证实新增缺口。"
+    },
+    {
+      "topic": "screen token/uncertain/no replay",
+      "decision": "保留机制对照；本地main已有unknown/not_started不得验证与重放约束，不重复立项。"
+    },
+    {
+      "topic": "runtime checker/crash summaries",
+      "decision": "上游增量只证明云报告DTO/展示与符号化身份，不证明本地采集解析；无确定新缺口。"
+    },
+    {
+      "topic": "timing/env/native normalization",
+      "decision": "观察其安全解析与按平台归一化，不从不同云架构推定本地缺陷。"
+    }
+  ],
+  "unknowns": [
+    "上游云后端实现、真实服务/设备行为、全仓许可证授权未证实；不属于此轮可采用机制验证。"
+  ],
+  "license": {
+    "repository_license": "未发现全仓LICENSE，官方端点404；README MIT badge不构成核实",
+    "plugin_mit_scope": "仅两份插件README声明，不外推主体"
+  },
+  "validation": {
+    "upstream_execution": "未执行",
+    "device": "未执行",
+    "dependency_install": "未执行",
+    "git_write": "未执行",
+    "evidence": "change-reading-inventory.json、binary-classification.json、openapi-structural-diff.json及原始官方API归档"
+  },
+  "governance": "仅写入指定review目录；共享checkpoint、space及经验权威回写交由root裁决，无新增独立经验文件。"
+}

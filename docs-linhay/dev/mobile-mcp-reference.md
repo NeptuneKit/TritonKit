@@ -4,11 +4,17 @@
 
 [mobile-next/mobile-mcp](https://github.com/mobile-next/mobile-mcp) 自 2026-10-14 列为 TritonKit 参考项目，需求及验收入口为 [SP-199](../spaces/SP-199-mobile-mcp-reference/README.md)。2026-10-14本次只登记并比较；2026-10-16用户将全部参考纳入 [SP-207统一追踪与采用流程](../spaces/SP-207-reference-adoption-pipeline/README.md)，可纳入项直接独立实施/主控验证本地合并；安装与设备动作仍按单独授权。
 
-- 上游固定 revision：`d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023`；[README](https://github.com/mobile-next/mobile-mcp/blob/d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023/README.md)、[工具注册](https://github.com/mobile-next/mobile-mcp/blob/d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023/src/server.ts)、[设备命令包装](https://github.com/mobile-next/mobile-mcp/blob/d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023/src/mobile-device.ts)。
-- 当次 GitHub 官方 API 最新 release：[`1.0.11`](https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.11)，`published_at=2026-10-14T15:53:00Z`；与源码 changelog 一致。浏览器 latest 页面缓存曾返回 1.0.10，采用官方 API 观测值；不以仓库 `package.json` 的占位版本 0.0.1 判断发布状态。
+- 上游当前固定 revision：`c659f8ee34873a832adea7daca9c69172d887e70`；[README](https://github.com/mobile-next/mobile-mcp/blob/c659f8ee34873a832adea7daca9c69172d887e70/README.md)、[工具注册](https://github.com/mobile-next/mobile-mcp/blob/c659f8ee34873a832adea7daca9c69172d887e70/src/server.ts)、[设备命令包装](https://github.com/mobile-next/mobile-mcp/blob/c659f8ee34873a832adea7daca9c69172d887e70/src/mobile-device.ts)。前一成功点为 `d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023`。
+- 当次 GitHub 官方 API 最新 release：[`1.0.12`](https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.12)，`published_at=2026-10-18T20:48:46Z`；Release notes 与固定增量一致。浏览器 latest 页面缓存曾返回 1.0.10，采用官方 API 观测值；不以仓库 `package.json` 的占位版本 0.0.1 判断发布状态。
 - 本地浅克隆：`docs-linhay/references/mobile-mcp/`；上游源码仓保持只读，沿用 references 忽略规则；持久事实源是本文件。
-- 许可证：本仓 [Apache-2.0](https://github.com/mobile-next/mobile-mcp/blob/d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023/LICENSE)。设备核心实现委派外部依赖 `mobilewright@0.0.66` 和其分发的 `mobilecli` binary，不在此参考仓；不能推导所有底层实现均按本仓许可证开源，或可以直接迁移。
-- TritonKit 比较基线：主仓 `main@8abe76db06cf9b1e6c550fe52ac103209c458e4e`，计入 SP-195 Runner 与 SP-196 优化。源码/契约存在只证明实现面；本轮未运行任一设备或上游程序，不给跨设备成功率或性能结论。
+- 许可证：本仓 [Apache-2.0](https://github.com/mobile-next/mobile-mcp/blob/c659f8ee34873a832adea7daca9c69172d887e70/LICENSE)，固定 HEAD 文本 hash 为 `c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4`。设备核心实现委派外部依赖 `mobilewright@0.0.67` 和其分发的 `mobilecli` binary，不在此参考仓；不能推导所有底层实现均按本仓许可证开源，或可以直接迁移。
+- TritonKit 比较基线：实际产品 `main@d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec`，计入 SP-195 Runner、SP-196 优化与 SP-200 Mobile parity。源码/契约存在只证明实现面；本轮未运行任一设备或上游程序，不给跨设备成功率或性能结论。
+
+## 2026-10-19 增量与采用结论
+
+`1.0.12` 新增 `mobile_get_foreground_app` 的 Android focused activity / iOS view controller 输出；Android legacy adb 输入对 `#`、`~` 做转义；另有 UI dump `maxBuffer`、swipe x/y 成对校验、`get_more_tools` 提示和 `mobilewright` 升级。前台 activity 与 legacy 文本转义是当前 main 的真实缺口，已立项 [SP-212](../spaces/SP-212-mobile-mcp-android-contracts/README.md)；仅修改 CLI/HTTP 机器可读契约和 fake-adb 离线测试，不引入 mobilewright、不运行设备。其余变更由当前有界输出、动作 schema 或既有反馈边界覆盖/观察。
+
+BDD 要求：Android foreground 只信 `topResumedActivity`/`mResumedActivity`，malformed 或仅 `mCurrentFocus` 时保持 unknown；ADB 输入 fixture 覆盖 `#`、`~`、空白、引号、反斜杠、Unicode 与换行，source command 不泄漏敏感文本。上游性能/兼容性数字未经本地验证。
 
 ## 明确缺少或尚未统一的能力
 
@@ -61,7 +67,7 @@
 
 ## 上游规划与我们的其他覆盖
 
-固定版本 [ROADMAP](https://github.com/mobile-next/mobile-mcp/blob/d4a83fa45b9ce7551dba1d1f5e7bdf7400b1b023/ROADMAP.md) 仍将文件 list/push/pull、App launch arguments、pinch、WebView、Flutter widget tree、独立浏览器控制、dark mode/timezone/network settings、clear storage 标成 Planned。这些不属于“对方有而我们没有”。Triton 已有部分文件/容器访问、launch env/args、WebView、embedded gesture、环境配置与 evidence/test plan 能力；各自 scope 和真实验证边界不同，不宣称全平台领先。Harmony/ArkUI/ArkWeb 是 Triton 的额外覆盖，上游当前平台模型仅 ios/android。
+当前固定版本 [ROADMAP](https://github.com/mobile-next/mobile-mcp/blob/c659f8ee34873a832adea7daca9c69172d887e70/ROADMAP.md) 仍将文件 list/push/pull、App launch arguments、pinch、WebView、Flutter widget tree、独立浏览器控制、dark mode/timezone/network settings、clear storage 标成 Planned。这些不属于“对方有而我们没有”。Triton 已有部分文件/容器访问、launch env/args、WebView、embedded gesture、环境配置与 evidence/test plan 能力；各自 scope 和真实验证边界不同，不宣称全平台领先。Harmony/ArkUI/ArkWeb 是 Triton 的额外覆盖，上游当前平台模型仅 ios/android。
 
 上游 README 的多宿主声明也不能推导 Linux 可本机启动 iOS Simulator：同一 README 仍要求 Xcode，桌面扩展 manifest 仅 darwin。Windows/Linux 的 Android 与远端访问、Mac/Xcode 的 iOS 路径应分别研究。
 

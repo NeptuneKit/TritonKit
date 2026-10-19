@@ -49,3 +49,12 @@
 2026-10-16核对：[v1.98.12增量报告](./plans/20261016-v1-98-12-update.md)，main由99dbfec推进至d88bbf0，完整27提交/30文件；最新非draft Release v1.98.12，Apache-2.0不变。重点是附近发现与配对安全，SP-192五项机制边界保持；重大结论已写回正式参考档案和当日memory。此记录仅代表研究完成，不代表采用、运行或兼容性验证；机器可读检查点与门禁结果见[检查摘要](./plans/20261016-check-summary.json)。长期追踪状态不变。
 
 用户后续要求的本地采用评估已独立归档至 [SP-202](../SP-202-ictrl-security-assessment/README.md)：按当前源码重排广播/发现、日志、Runner 强化的优先级；评估未推进额外上游检查点；其后自动采用权限由本页“采用边界”的用户追加授权更新。
+
+2026-10-17：[检查摘要](./plans/20261017-check-summary.json)确认main@d88bbf0、v1.98.12与Apache-2.0全文hash均未变化；无新增机制，不重复通知。SP-203～205采用状态在SP-207按已有本地合并证据刷新，不新建同机制任务。
+
+
+2026-10-18：[检查摘要](./plans/20261018-check-summary.json)确认 main@d88bbf0、v1.98.12 与 Apache-2.0 全文 hash 均未变化；按去重规则不重复通知、不新建采用项。
+
+## 2026-10-19 检查
+
+[检查摘要](./plans/20261019-check-summary.json)显示 `main@d88bbf0b3a5addead31b4298d605d7ac7a87d6e7`、`v1.98.12`、Apache-2.0 与前次成功点一致。首次 `gh api` 请求遇到本机 TLS 证书校验失败，随后使用官方 GitHub API 的系统 curl 完整读取 repository、main HEAD、Release 分页和固定 HEAD 许可证；故障记录与恢复证据均已保存，不将首次失败伪装为无变化。

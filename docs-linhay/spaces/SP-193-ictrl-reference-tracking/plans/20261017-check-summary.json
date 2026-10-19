@@ -1,0 +1,35 @@
+{
+  "repository": "OpenMinis/iCTRL",
+  "checked_at": "2026-10-17T02:16:40.418753+00:00",
+  "old_head": "d88bbf0b3a5addead31b4298d605d7ac7a87d6e7",
+  "head_sha": "d88bbf0b3a5addead31b4298d605d7ac7a87d6e7",
+  "default_branch": "main",
+  "head_committed_at": "2026-10-15T04:04:18Z",
+  "archived": false,
+  "release": {
+    "tag_name": "v1.98.12",
+    "published_at": "2026-10-15T04:05:24Z",
+    "html_url": "https://github.com/OpenMinis/iCTRL/releases/tag/v1.98.12",
+    "prerelease": false,
+    "target_commitish": "d88bbf0b3a5addead31b4298d605d7ac7a87d6e7"
+  },
+  "license_spdx": "Apache-2.0",
+  "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+  "changed": false,
+  "complete": true,
+  "summary": "HEAD、最新非draft Release与LICENSE全文hash均与2026-10-16成功点相同；无增量，不重复立项/通知。",
+  "evidence": {
+    "directory": ".build/reference-monitor/20261017/ictrl",
+    "repository": "https://github.com/OpenMinis/iCTRL",
+    "head": "https://github.com/OpenMinis/iCTRL/commit/d88bbf0b3a5addead31b4298d605d7ac7a87d6e7",
+    "release": "https://github.com/OpenMinis/iCTRL/releases/tag/v1.98.12",
+    "license": "https://github.com/OpenMinis/iCTRL/blob/d88bbf0b3a5addead31b4298d605d7ac7a87d6e7/LICENSE"
+  },
+  "existing_adoption": "SP203/204/205已由0a246d00本地合并；当前main祖先关系验证通过，登记独立刷新，不等同今天新增交付。",
+  "documentation_validation": {
+    "verify_ci_docs": "passed",
+    "check_docs": "passed",
+    "diff_check": "passed",
+    "spaces_registered": 211
+  }
+}

@@ -45,3 +45,26 @@
 ## 验证与经验沉淀
 
 本轮仅配置和文档；Swift/设备/上游运行不适用。本次使用既有ops治理skill沉淀跨会话流程，强调用户最新授权优先、独立检查点、去重与主控复核，不新增重复skill或AGENTS规则。2026-10-16：`verify.sh --ci-docs`、独立 `check-docs.sh`、`git diff --check` 通过（207 spaces）。33仓唯一性、24参考/9候选分类、40位导入SHA、既有3任务去重及新增文档链接校验通过。已从保存的自动配置确认原id/heartbeat/ACTIVE/每日10:00/原thread均保留，名称与prompt扩围成功；没有在本轮执行33仓完整读取或新功能开发。
+
+## 2026-10-17 首轮全量日检与采用跟进
+
+[日报](./plans/20261017-reference-update-report.md)和[观察记录](./plans/20261017-observations.json)：33仓查询，32仓在明确的相关机制审阅范围内完整，Baguette的APK关联源码未证实，保留partial和旧点；9仓相对导入观察出现HEAD/Release变化。ai-phone/Revyl的比较分页、相关源码与生成记录缺口已补齐，范围排除/未运行限制见补审；导入不是完整历史审计，首次全文许可hash不倒推历史变化。iCTRL专项SHA/tag/许可无变，成功点仍只在SP-193更新。
+
+SP-203～205按既有联合验证与main祖先证据刷新为local_merged，不重复立项。新增SP-210可信AX几何切片及SP-211有限主控，独立branch/worktree已建；两次create_thread显式gpt-6.1-sol均被桌面接口拒绝校验，无真实thread，登记dispatch_blocked_model。后续先补缺会话，不重新建space/worktree、不换模型。当前主目录HEAD不是实际main，产品评估已绑定main@d51403a6；流程资料和main集成按SP-211精确清单处理，保留用户WIP。
+
+本期无产品实现/运行验证，文档门禁结果见日报收口段。经验回写正式流程、ops skill与经验索引；通知指纹与成功检查点分离，未完成项不因去重而前移成功点。
+
+2026-10-17收口：docs-only、独立check-docs、diff whitespace与登记一致性通过（211 spaces）；实现/主控分派仍受桌面接口模型校验阻塞，不标完成。
+
+
+## 2026-10-18 第二轮全量日检
+
+[日报](./plans/20261018-reference-update-report.md)与[观察记录](./plans/20261018-observations.json)保存了 33 仓的独立结果：19 仓完整、14 仓 partial，观察到 5 个 HEAD/Release 变化。serve-sim 与 Atlantis 仅列观察；Baguette 保持 APK 来源 partial；ai-phone/revyl-cli 因 GitHub API 403 无法闭合 Release/增量阅读，旧点不推进；SKProcessRunner 的许可缺失纠正为 partial。iCTRL 由 SP-193 成功检查点更新，SHA/tag/许可未变。
+
+本轮无新采用项。SP-210/SP-211 的显式 `gpt-6.1-sol` 会话重试仍被接口模型校验拒绝；没有 thread ID、没有回退模型。
+
+## 2026-10-19 第三轮全量日检与 mobile-mcp 采用登记
+
+[日报](./plans/20261019-reference-update-report.md)与[观察记录](./plans/20261019-observations.json)保存了 33 仓独立结果：28 仓完整、5 仓 partial，观察到 5 个相对记录点变化，其中 4 个完整仓、1 个 partial 仓。Baguette 的 APK provenance、SKProcessRunner 的许可证与 RevylAI 三仓 API rate limit 继续保留旧检查点；iCTRL 在首次 gh TLS 失败后由官方 curl 完整恢复，SP-193 无变化检查点已更新。
+
+mobile-mcp `c659f8e`/`1.0.12` 的 Android focused activity 身份与 legacy ADB `#`/`~` 转义经实际 main 复核为可纳入项，建立 [SP-212](../SP-212-mobile-mcp-android-contracts/README.md) 与 [SP-213](../SP-213-mobile-mcp-contracts-integration/README.md)，执行/主控 worktree 已建。三次 `create_thread` 均显式使用 `gpt-6.1-sol`，其中执行省略 reasoning 重试仍失败；`list_threads` 未发现 SP-212/SP-213 thread，保留 `dispatch_blocked_model`，不回退、不伪称开发完成。

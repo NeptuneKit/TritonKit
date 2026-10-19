@@ -1,0 +1,141 @@
+{
+  "repository": "dongxinsuperman/ai-phone",
+  "complete": true,
+  "completion_boundary": "18提交增量机制静态人工审阅及明确范围排除完成；不表示全仓旧历史逐行审计、上游机制正确或本地运行验收完成。",
+  "baseline": "38ef0c4fd81975195f37bb4ceead9efaaeaeb141",
+  "source_head": "bd2781c17a9ad35cacae1049bfbd0975adbc758f",
+  "local_main": "d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec",
+  "coverage": {
+    "commits": 18,
+    "commit_messages_read": 18,
+    "release_notes_read": 9,
+    "file_occurrences": 1105,
+    "unique_paths": 984,
+    "group_counts": {
+      "product": 124,
+      "test": 100,
+      "specification_or_narrative": 61,
+      "generated_or_raw_evidence": 820
+    },
+    "product_occurrences": 124,
+    "related_product_occurrences_reviewed": 112,
+    "web_page_occurrences_scope_excluded": 12,
+    "related_product_patch_lines_including_page_diffs": 21489,
+    "remaining_related_source_files": 0,
+    "remaining_related_source_lines": 0,
+    "manual_status_counts": {
+      "full_patch_manual": 114,
+      "inventory_and_fixed_blob_only": 961,
+      "full_fixed_source_and_corrective_patch_manual": 3,
+      "full_head_specification_manual": 7,
+      "scope_excluded_page_implementation": 12,
+      "full_readme_patch_manual": 8
+    },
+    "original_evidence_files": 223,
+    "decoded_source_blobs": 186,
+    "decoded_source_bytes": 11656728,
+    "supplemental_image_blobs": 62,
+    "supplemental_image_bytes": 6395621,
+    "all_decoded_lengths_match": true,
+    "ledger": "file-review-ledger.json",
+    "read_mode": "相关产品通过完整增量patch或注明的固定source+修正patch审阅；不要求无关旧源全文。"
+  },
+  "errors": [],
+  "reviewed_groups": [
+    {
+      "group": "LCD与JEV几何",
+      "decision": "covered / observe",
+      "evidence": [
+        "jev/review.json",
+        "native/review.json"
+      ],
+      "conclusion": "LCD实际运行尺寸修正对应本地main固定393×852回退缺口，父agent已建SP210，不重复立项。JEV分离绘制几何与点击候选、不可变ID、单帧来源和独立开关可观察；本地现有VLM overlay没有同类候选修改缺陷证据。"
+    },
+    {
+      "group": "VM身份、所有权、数据保留",
+      "decision": "observe",
+      "evidence": [
+        "native/review.json",
+        "server/review.json"
+      ],
+      "conclusion": "持久实例身份、运行地址、installation owner分离；只允许有本次创建证据的首绑回滚，旧实例重启不重建。d7cb修正foreign-copy自动清理为冲突报告；不得孤立采用0e版本。Triton本机main没有云VM账本或多Agent所有权面，未证明相同缺口。"
+    },
+    {
+      "group": "观察、请求历史、人工恢复",
+      "decision": "observe / reject cloud control plane",
+      "evidence": [
+        "server/review.json",
+        "native/review.json"
+      ],
+      "conclusion": "running/stopped/missing/unknown及资源释放与操作失败历史分离；完整清单才证明缺席，晚结果不能改写失败请求。新草稿失败后允许下一次显式dispatch。拒绝导入云Agent调度、Web写控制面。"
+    },
+    {
+      "group": "退出预算、隔离与有限并发",
+      "decision": "observe",
+      "evidence": [
+        "native/review.json"
+      ],
+      "conclusion": "从收件起扣排队、锁、进度发送和原生命令预算；晚线程继续占用lease/临时资源到真实完成；限制lane、probe池和outbox。main使用同步Process终止/kill/drain，未证明同一Python线程取消缺陷。"
+    },
+    {
+      "group": "候选公开契约",
+      "decision": "observe / reject page implementation",
+      "evidence": [
+        "file-review-ledger.json"
+      ],
+      "conclusion": "完整读vm_probe、API/service和四个Web库：NDJSON snapshot/agent/done、request ID、abort和轮次隔离、显式选择优先；Web页面12文件次按当前产品范围排除业务实现审计。"
+    },
+    {
+      "group": "规格与Release",
+      "decision": "reviewed",
+      "evidence": [
+        "vm-lifecycle-contract.md.json",
+        "vm-lifecycle-upgrade-guide.md.json",
+        "file-review-ledger.json"
+      ],
+      "conclusion": "18提交文本、9条Release notes、HEAD生命周期契约/升级指南、8个相关README文件次已读；历史Release不是本次新增机制。"
+    },
+    {
+      "group": "生成证据及测试",
+      "decision": "scope excluded from behavioral inference",
+      "evidence": [
+        "raw-evidence-manifest.json",
+        "source-byte-manifest.json",
+        "supplemental-blob-manifest.json"
+      ],
+      "conclusion": "逐项保留文件清单、固定blob、字节及SHA256；不声称逐行人工审阅日志/XML/NDJSON或截图视觉验收，不把上游通过/性能声明算本地证据。"
+    }
+  ],
+  "important_counterevidence": [
+    "6fd9 Harmony observe_instance仍调用非strict hdc_list_targets；HdcError可能变成空列表。bd278严格查询只接入显式stop/_wait_removed，不能宣称所有观察均区分失败与空清单。",
+    "first-start维护锁可能先用VM占位地址；真实serial维护互斥需要运行竞争场景核实，未证明缺陷。",
+    "iOS活跃WDA复用分支只显式校验device_type；runtime一致性依赖服务端字段锁定，不能脱离集成复制。",
+    "同步第三方close/window_size、psutil及文件系统前后deadline检查不构成全部故障下硬wall-clock上限。",
+    "JEV Harmony原生capture异常可缓存unsupported；端口reserve-close有TOCTOU；safe-region不是全面类型/有限数验证。"
+  ],
+  "remaining_items": [
+    {
+      "kind": "nonblocking_scope_exclusion",
+      "items": "12个Web页面文件次的业务实现；上游测试与重复实验叙事、生成日志/XML/NDJSON/截图",
+      "reason": "公开契约和本机生命周期/身份集成已审阅；范围排除不掩盖相关产品源缺失。"
+    },
+    {
+      "kind": "runtime_unverified",
+      "items": "上游真实三端行为、竞争、权限失败、僵死I/O和性能；本地迁移实现",
+      "reason": "只读静态参考审阅，不运行第三方或设备；不属于本次完成条件。"
+    },
+    {
+      "kind": "source_missing",
+      "items": [],
+      "reason": "相关产品增量patch/主规格无缺失；剩余待读相关产品源码0文件、0行。"
+    }
+  ],
+  "validation": {
+    "static_review": "completed",
+    "upstream_tests": "not executed",
+    "local_tests": "not executed: no product changes; scratch review artifacts only",
+    "device_or_install": "not executed",
+    "upstream_performance": "not independently verified"
+  },
+  "governance": "仅写授权scratch目录；可复用反证与主main边界交父agent归入SP207日报/治理，不改共享资料或Git。"
+}

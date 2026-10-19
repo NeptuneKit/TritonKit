@@ -41,9 +41,11 @@
       "controller_space": "SP-206-ictrl-security-integration",
       "controller_thread_id": "01a142ac-b6e1-7db1-87ad-e0e10935ae69",
       "host_id": "local",
-      "state": "dispatched",
-      "state_evidence": "Existing successful task creation; current implementation/merge status must be refreshed from controller evidence.",
-      "local_merge_sha": null
+      "state": "local_merged",
+      "state_evidence": "docs-linhay/spaces/SP-206-ictrl-security-integration/plans/20261016-validation-summary.json",
+      "local_merge_sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
+      "last_verified_on": "2026-10-17",
+      "verification_note": "Merge is ancestor of actual main d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec; frozen-candidate and main post-merge gates passed in saved evidence. This tracker does not infer device runtime acceptance or perform a new release."
     },
     {
       "key": "OpenMinis/iCTRL:response-log-privacy",
@@ -57,9 +59,11 @@
       "controller_space": "SP-206-ictrl-security-integration",
       "controller_thread_id": "01a142ac-b6e1-7db1-87ad-e0e10935ae69",
       "host_id": "local",
-      "state": "dispatched",
-      "state_evidence": "Existing successful task creation; current implementation/merge status must be refreshed from controller evidence.",
-      "local_merge_sha": null
+      "state": "local_merged",
+      "state_evidence": "docs-linhay/spaces/SP-206-ictrl-security-integration/plans/20261016-validation-summary.json",
+      "local_merge_sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
+      "last_verified_on": "2026-10-17",
+      "verification_note": "Merge is ancestor of actual main d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec; frozen-candidate and main post-merge gates passed in saved evidence. This tracker does not infer device runtime acceptance or perform a new release."
     },
     {
       "key": "OpenMinis/iCTRL:runner-service-authentication",
@@ -73,9 +77,104 @@
       "controller_space": "SP-206-ictrl-security-integration",
       "controller_thread_id": "01a142ac-b6e1-7db1-87ad-e0e10935ae69",
       "host_id": "local",
-      "state": "dispatched",
-      "state_evidence": "Existing successful task creation; current implementation/merge status must be refreshed from controller evidence.",
-      "local_merge_sha": null
+      "state": "local_merged",
+      "state_evidence": "docs-linhay/spaces/SP-206-ictrl-security-integration/plans/20261016-validation-summary.json",
+      "local_merge_sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
+      "last_verified_on": "2026-10-17",
+      "verification_note": "Merge is ancestor of actual main d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec; frozen-candidate and main post-merge gates passed in saved evidence. This tracker does not infer device runtime acceptance or perform a new release."
+    },
+    {
+      "key": "dongxinsuperman/ai-phone:simulator-ax-trusted-geometry",
+      "requirement_key": "simulator-ax-trusted-geometry",
+      "repository": "dongxinsuperman/ai-phone",
+      "source_revision": "452e7d77326f9fc0e5b003ecbf6cec5fc499e4bf",
+      "decision": "adopt",
+      "assessment": "docs-linhay/spaces/SP-210-simulator-ax-geometry/README.md",
+      "space": "SP-210-simulator-ax-geometry",
+      "execution_thread_id": null,
+      "controller_space": "SP-211-reference-adoption-integration",
+      "controller_thread_id": null,
+      "host_id": "local",
+      "state": "dispatch_blocked_model",
+      "local_merge_sha": null,
+      "worktree": "../TritonKit-worktrees/SP-210-simulator-ax-geometry",
+      "controller_worktree": "../TritonKit-worktrees/SP-211-reference-adoption-integration",
+      "state_evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261017-dispatch.json",
+      "retry_policy": "Retry missing execution/controller with explicit gpt-6.1-sol only; reuse existing spaces/branches/worktrees; no fallback or duplicate task.",
+      "last_dispatch_failure_notice": {
+        "reported_on": "2026-10-17",
+        "fingerprint": "create_thread:model_validation_failed:gpt-6.1-sol:execution+controller",
+        "reason": "Desktop create_thread rejected the explicit model argument; no fallback and no thread IDs."
+      },
+      "last_dispatch_attempt": {
+        "reported_on": "2026-10-18",
+        "role": "execution",
+        "model_argument": "gpt-6.1-sol",
+        "status": "model_validation_failed",
+        "evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261018-dispatch.json"
+      }
+    },
+    {
+      "key": "mobile-next/mobile-mcp:android-focused-activity-identity",
+      "requirement_key": "android-foreground-activity-identity",
+      "repository": "mobile-next/mobile-mcp",
+      "source_revision": "c659f8ee34873a832adea7daca9c69172d887e70",
+      "decision": "adopt",
+      "assessment": "docs-linhay/spaces/SP-212-mobile-mcp-android-contracts/README.md",
+      "space": "SP-212-mobile-mcp-android-contracts",
+      "execution_thread_id": null,
+      "controller_space": "SP-213-mobile-mcp-contracts-integration",
+      "controller_thread_id": null,
+      "host_id": "local",
+      "state": "dispatch_blocked_model",
+      "local_merge_sha": null,
+      "worktree": "/Users/linhey/.codex/worktrees/mobile-mcp-android-contracts/TritonKit",
+      "controller_worktree": "/Users/linhey/.codex/worktrees/mobile-mcp-contracts-integration/TritonKit",
+      "state_evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261019-dispatch.json",
+      "retry_policy": "Create execution/controller with explicit gpt-6.1-sol only; no fallback or fake thread IDs.",
+      "last_dispatch_attempt": {
+        "reported_on": "2026-10-19",
+        "model_argument": "gpt-6.1-sol",
+        "reasoning_effort": "omitted",
+        "status": "model_validation_failed",
+        "evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261019-dispatch.json"
+      },
+      "last_dispatch_failure_notice": {
+        "reported_on": "2026-10-19",
+        "fingerprint": "create_thread:model_validation_failed:gpt-6.1-sol:execution+controller",
+        "reason": "Desktop create_thread still rejects explicit model on retry; list_threads confirms no execution/controller thread IDs."
+      }
+    },
+    {
+      "key": "mobile-next/mobile-mcp:android-adb-legacy-text-escaping",
+      "requirement_key": "android-adb-legacy-text-escaping",
+      "repository": "mobile-next/mobile-mcp",
+      "source_revision": "c659f8ee34873a832adea7daca9c69172d887e70",
+      "decision": "adopt",
+      "assessment": "docs-linhay/spaces/SP-212-mobile-mcp-android-contracts/README.md",
+      "space": "SP-212-mobile-mcp-android-contracts",
+      "execution_thread_id": null,
+      "controller_space": "SP-213-mobile-mcp-contracts-integration",
+      "controller_thread_id": null,
+      "host_id": "local",
+      "state": "dispatch_blocked_model",
+      "local_merge_sha": null,
+      "worktree": "/Users/linhey/.codex/worktrees/mobile-mcp-android-contracts/TritonKit",
+      "controller_worktree": "/Users/linhey/.codex/worktrees/mobile-mcp-contracts-integration/TritonKit",
+      "state_evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261019-dispatch.json",
+      "retry_policy": "Create execution/controller with explicit gpt-6.1-sol only; no fallback or fake thread IDs.",
+      "last_dispatch_attempt": {
+        "reported_on": "2026-10-19",
+        "model_argument": "gpt-6.1-sol",
+        "reasoning_effort": "omitted",
+        "status": "model_validation_failed",
+        "evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261019-dispatch.json"
+      },
+      "last_dispatch_failure_notice": {
+        "reported_on": "2026-10-19",
+        "fingerprint": "create_thread:model_validation_failed:gpt-6.1-sol:execution+controller",
+        "reason": "Desktop create_thread still rejects explicit model on retry; list_threads confirms no execution/controller thread IDs."
+      }
     }
   ],
   "new_thread_policy": {
