@@ -230,9 +230,10 @@
       "controller_agent": "/root",
       "last_verified_on": "2026-10-21",
       "acceptance_candidate_sha": "bee3d609",
-      "worktree_status": "pending_cleanup",
-      "controller_worktree_status": "pending_cleanup",
-      "verification_note": "Offline display topology parser, fresh devicectl command wiring and screenshot/AX fail-closed gates passed focused 7 tests. Real Simulator/Xcode topology was not executed; no push or release."
+      "worktree_status": "removed_after_local_merge",
+      "controller_worktree_status": "removed_after_local_merge",
+      "verification_note": "Offline display topology parser, fresh devicectl command wiring and screenshot/AX fail-closed gates passed focused 7 tests. Real Simulator/Xcode topology was not executed; no push or release.",
+      "cleanup_evidence": ".build/worktree-archives/20261021-sp214-sp218/MANIFEST.sha256"
     },
     {
       "key": "lycorp-jp/sim-use:simulator-display-topology-controller",
@@ -254,8 +255,9 @@
       "controller_agent": "/root",
       "last_verified_on": "2026-10-21",
       "acceptance_candidate_sha": "fd08b3e6",
-      "worktree_status": "pending_cleanup",
-      "verification_note": "Controller review accepted SP-214 actual diff and focused evidence; real Simulator/Xcode validation remains unexecuted."
+      "worktree_status": "removed_after_local_merge",
+      "verification_note": "Controller review accepted SP-214 actual diff and focused evidence; real Simulator/Xcode validation remains unexecuted.",
+      "cleanup_evidence": ".build/worktree-archives/20261021-sp214-sp218/MANIFEST.sha256"
     },
     {
       "key": "dongxinsuperman/ai-phone:harmony-forward-ownership-cleanup",
@@ -278,9 +280,10 @@
       "controller_agent": "/root",
       "last_verified_on": "2026-10-21",
       "acceptance_candidate_sha": "5d5647b5",
-      "worktree_status": "pending_cleanup",
-      "controller_worktree_status": "pending_cleanup",
-      "verification_note": "Fake-HDC/offline ownership and cleanup serialization passed 37 focused tests. Real HDC and cross-process race were not executed."
+      "worktree_status": "removed_after_local_merge",
+      "controller_worktree_status": "removed_after_local_merge",
+      "verification_note": "Fake-HDC/offline ownership and cleanup serialization passed 37 focused tests. Real HDC and cross-process race were not executed.",
+      "cleanup_evidence": ".build/worktree-archives/20261021-sp214-sp218/MANIFEST.sha256"
     },
     {
       "key": "dongxinsuperman/ai-phone:harmony-forward-ownership-controller",
@@ -302,8 +305,9 @@
       "controller_agent": "/root",
       "last_verified_on": "2026-10-21",
       "acceptance_candidate_sha": "8ae12a03",
-      "worktree_status": "pending_cleanup",
-      "verification_note": "Controller acceptance passed offline/fake-HDC evidence; real HDC and cross-process race remain explicit boundaries."
+      "worktree_status": "removed_after_local_merge",
+      "verification_note": "Controller acceptance passed offline/fake-HDC evidence; real HDC and cross-process race remain explicit boundaries.",
+      "cleanup_evidence": ".build/worktree-archives/20261021-sp214-sp218/MANIFEST.sha256"
     },
     {
       "key": "TritonKit:simulator-device-hub-native-input",
@@ -323,8 +327,9 @@
       "worktree": "../TritonKit-worktrees/SP-218-issue-222-device-hub-input",
       "last_verified_on": "2026-10-20",
       "acceptance_candidate_sha": "5fc2a600",
-      "worktree_status": "pending_cleanup",
-      "verification_note": "CLI/Web/root/release and smoke checks passed in the completed task; real guest touch, dual-arch packaging and user-device acceptance remain unexecuted."
+      "worktree_status": "removed_after_local_merge",
+      "verification_note": "CLI/Web/root/release and smoke checks passed in the completed task; real guest touch, dual-arch packaging and user-device acceptance remain unexecuted.",
+      "cleanup_evidence": ".build/worktree-archives/20261021-sp214-sp218/MANIFEST.sha256"
     }
   ],
   "new_thread_policy": {

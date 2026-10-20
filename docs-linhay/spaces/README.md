@@ -339,10 +339,10 @@
 2026-10-19追加：原主目录WIP已原样保存为1131b183并完成差异裁决，资料状态与本地main一致；[完整合并记录](./SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。
 
 
-| 已合入本地main | [SP-214-simulator-display-safety](./SP-214-simulator-display-safety/README.md) | Simulator主屏拓扑未知/非主屏时拒绝动作与捕获 | `0d35e95e`；focused 7 tests通过；真实Simulator未执行；合并后清理 |
+| 已合入本地main | [SP-214-simulator-display-safety](./SP-214-simulator-display-safety/README.md) | Simulator主屏拓扑未知/非主屏时拒绝动作与捕获 | `0d35e95e`；focused 7 tests通过；真实Simulator未执行；worktree/分支已清理 |
 
-| 已合入本地main | [SP-215-simulator-display-integration](./SP-215-simulator-display-integration/README.md) | SP-214独立主控验证、本地合并 | `b782c192`；离线联合验收通过；真实Simulator未执行；合并后清理 |
+| 已合入本地main | [SP-215-simulator-display-integration](./SP-215-simulator-display-integration/README.md) | SP-214独立主控验证、本地合并 | `b782c192`；离线联合验收通过；真实Simulator未执行；worktree/分支已清理 |
 
-| 已合入本地main | [SP-216-harmony-forward-cleanup](./SP-216-harmony-forward-cleanup/README.md) | ArkWeb HDC清理当前归属复核与进程内互斥 | `34f713c7`；focused 37 tests通过；真实HDC未执行；合并后清理 |
+| 已合入本地main | [SP-216-harmony-forward-cleanup](./SP-216-harmony-forward-cleanup/README.md) | ArkWeb HDC清理当前归属复核与进程内互斥 | `34f713c7`；focused 37 tests通过；真实HDC未执行；worktree/分支已清理 |
 
-| 已合入本地main | [SP-217-harmony-forward-integration](./SP-217-harmony-forward-integration/README.md) | SP-216独立主控验收、本地合并 | `36145c62`；离线联合验收通过；真实HDC/跨进程竞态未执行；合并后清理 |
+| 已合入本地main | [SP-217-harmony-forward-integration](./SP-217-harmony-forward-integration/README.md) | SP-216独立主控验收、本地合并 | `36145c62`；离线联合验收通过；真实HDC/跨进程竞态未执行；worktree/分支已清理 |

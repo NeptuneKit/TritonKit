@@ -266,12 +266,12 @@
 2026-10-19追加：原主目录WIP已原样保存为1131b183并完成差异裁决，资料状态与本地main一致；[完整合并记录](./SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。
 
 
-| `SP-214-simulator-display-safety` | [`SP-214-simulator-display-safety`](./SP-214-simulator-display-safety/README.md) | 已合入本地main | `0d35e95e`；displayTopology fresh probe、主屏安全门禁；focused 7 tests通过；未执行真实Simulator；worktree/分支待清理 |
+| `SP-214-simulator-display-safety` | [`SP-214-simulator-display-safety`](./SP-214-simulator-display-safety/README.md) | 已合入本地main | `0d35e95e`；displayTopology fresh probe、主屏安全门禁；focused 7 tests通过；未执行真实Simulator；worktree/分支已清理 |
 
-| `SP-215-simulator-display-integration` | [`SP-215-simulator-display-integration`](./SP-215-simulator-display-integration/README.md) | 已合入本地main | `b782c192`；SP-214 主控离线验收完成；未执行真实Simulator；worktree/分支待清理 |
+| `SP-215-simulator-display-integration` | [`SP-215-simulator-display-integration`](./SP-215-simulator-display-integration/README.md) | 已合入本地main | `b782c192`；SP-214 主控离线验收完成；未执行真实Simulator；worktree/分支已清理 |
 
-| `SP-216-harmony-forward-cleanup` | [`SP-216-harmony-forward-cleanup`](./SP-216-harmony-forward-cleanup/README.md) | 已合入本地main | `34f713c7`；forward ownership fail-closed、进程内清理互斥；focused 37 tests通过；未执行真实HDC；worktree/分支待清理 |
+| `SP-216-harmony-forward-cleanup` | [`SP-216-harmony-forward-cleanup`](./SP-216-harmony-forward-cleanup/README.md) | 已合入本地main | `34f713c7`；forward ownership fail-closed、进程内清理互斥；focused 37 tests通过；未执行真实HDC；worktree/分支已清理 |
 
-| `SP-217-harmony-forward-integration` | [`SP-217-harmony-forward-integration`](./SP-217-harmony-forward-integration/README.md) | 已合入本地main | `36145c62`；SP-216 主控离线验收完成；未执行真实HDC/跨进程竞态；worktree/分支待清理 |
+| `SP-217-harmony-forward-integration` | [`SP-217-harmony-forward-integration`](./SP-217-harmony-forward-integration/README.md) | 已合入本地main | `36145c62`；SP-216 主控离线验收完成；未执行真实HDC/跨进程竞态；worktree/分支已清理 |
 
 | `SP-218-issue-222-device-hub-input` | [`SP-218-issue-222-device-hub-input`](./SP-218-issue-222-device-hub-input/README.md) | 已合入本地main | merge `c2f4bdd1`；#222 内置Simulator HID、HID-only、AX receipt及Baguette运行依赖清零；CLI1501/Web78通过；联合 docs 门禁已复验；未推送 |
