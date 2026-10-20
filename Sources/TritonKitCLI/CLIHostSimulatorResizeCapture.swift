@@ -1,7 +1,8 @@
 import Foundation
 import TritonKitShared
 
-func resizeAwareSimulatorScreenshotCommand(_ command: TKHostCommand, simulator: String, probe: IOSSimulatorResizeProbe? = nil) throws -> TKHostCommand {
+func resizeAwareSimulatorScreenshotCommand(_ command: TKHostCommand, simulator: String, probe: IOSSimulatorResizeProbe? = nil, displayProbe: IOSSimulatorDisplayProbe? = { probeIOSSimulatorDisplay(target: $0, environment: $1) }) throws -> TKHostCommand {
+    if let displayProbe { try assertIOSSimulatorMainDisplayAllowed(target: simulator, environment: command.environment, probe: displayProbe) }
     let query = probe ?? { probeIOSSimulatorResize(target: $0, environment: $1) }
     let state = query(simulator, command.environment)
     guard let display = try iosSimulatorResizeScreenshotDisplay(state) else { return command }
@@ -25,11 +26,12 @@ func resizeAwareSimulatorScreenshotCommand(_ command: TKHostCommand, simulator: 
         capturesArtifacts: command.capturesArtifacts, sensitiveOutput: command.sensitiveOutput, stdinData: command.stdinData)
 }
 
-func assertIOSSimulatorAXActivationAllowed(target: String, probe: IOSSimulatorResizeProbe? = nil) throws {
+func assertIOSSimulatorAXActivationAllowed(target: String, probe: IOSSimulatorResizeProbe? = nil, displayProbe: IOSSimulatorDisplayProbe? = { probeIOSSimulatorDisplay(target: $0, environment: $1) }) throws {
     let query = probe ?? { probeIOSSimulatorResize(target: $0, environment: $1) }
     switch query(target, [:]) {
-    case .inactive: return
+    case .inactive: break
     case .active: throw IOSSimulatorResizeError.activeSession
     case .unknown(let reason): throw IOSSimulatorResizeError.stateUnknown(reason)
     }
+    if let displayProbe { try assertIOSSimulatorMainDisplayAllowed(target: target, probe: displayProbe) }
 }
