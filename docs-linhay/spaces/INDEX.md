@@ -4,7 +4,7 @@
 2026-10-19：SP-209～213已合并分支及worktree清理完成，仅保留实际main与原用户WIP；见[清理记录](./SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-10-19（参考采用资料集成；SP-210～213已验收合入本地main）
-> 覆盖范围：213/213 个已存在 space
+> 覆盖范围：214/214 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -19,8 +19,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 213/213 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 213/213 | 每条记录链接到现有 space README |
+| 编号登记 | 214/214 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 214/214 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -264,3 +264,5 @@
 | `SP-213-mobile-mcp-contracts-integration` | [`SP-213-mobile-mcp-contracts-integration`](./SP-213-mobile-mcp-contracts-integration/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
 
 2026-10-19追加：原主目录WIP已原样保存为1131b183并完成差异裁决，资料状态与本地main一致；[完整合并记录](./SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。
+
+| `SP-218-issue-222-device-hub-input` | [`SP-218-issue-222-device-hub-input`](./SP-218-issue-222-device-hub-input/README.md) | 实现完成，局部门禁通过 | #222 内置Simulator HID、HID-only、AX receipt及Baguette运行依赖清零；CLI1501/Web78通过；全局docs编号缺214～217待联合复验，独立worktree未合并 |

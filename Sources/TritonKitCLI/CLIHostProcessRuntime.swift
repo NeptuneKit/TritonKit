@@ -166,17 +166,6 @@ func configureHostProcessExecutable(_ process: Process, command: TKHostCommand) 
         }
         process.environment = environment
     }
-    let inheritedEnvironment = process.environment ?? ProcessInfo.processInfo.environment
-    if isBaguetteHostExecutable(command.executable, environment: inheritedEnvironment) {
-        let frameworkEnvironment = baguetteFrameworkEnvironment(
-            executable: command.executable,
-            environment: inheritedEnvironment,
-            developerDirectory: baguetteDeveloperDirectory(environment: inheritedEnvironment)
-        )
-        if frameworkEnvironment != inheritedEnvironment {
-            process.environment = frameworkEnvironment
-        }
-    }
     if command.executable.contains("/") {
         process.executableURL = URL(fileURLWithPath: command.executable)
         process.arguments = command.processArguments
@@ -230,10 +219,8 @@ func runHostCommandDetached(
 func runHostCommand(
     _ command: TKHostCommand,
     interruptAfter: Double? = nil,
-    maximumOutputBytes: Int? = 1_048_576,
-    simulatorResizeProbe: IOSSimulatorResizeProbe? = nil
+    maximumOutputBytes: Int? = 1_048_576
 ) throws -> HostProcessResult {
-    try assertIOSSimulatorResizeTouchAllowed(command, probe: simulatorResizeProbe ?? { probeIOSSimulatorResize(target: $0, environment: $1) })
     let timeoutSeconds = command.defaultTimeoutSeconds
     let process = Process()
     configureHostProcessExecutable(process, command: command)
@@ -1051,6 +1038,10 @@ func failHostCommand(
             message: "\(error)",
             hint: "Keep the sanitized devicectl JSON fixture and update the parser for this Xcode/CoreDevice shape."
         )
+    case let error as NativeHIDControlError:
+        detail = error.detail
+    case let error as NativeDigitizerError:
+        detail = error.detail
     case HostCommandRunError.nonZeroExit(let command, let result):
         let code: String
         let hint: String
@@ -1059,12 +1050,7 @@ func failHostCommand(
         let isADB = command.executable == "adb" || command.executable.hasSuffix("/adb")
         let stderr = result.stderr.lowercased()
         let simctlSubcommand = command.arguments.dropFirst().first
-        if isBaguetteHostExecutable(command.executable, environment: ProcessInfo.processInfo.environment),
-           let hidCode = iosHostHIDFailureCode(stderr: result.stderr + "\n" + result.stdout) {
-            code = hidCode
-            hint = "Selected Xcode SimulatorKit HID bootstrap failed. Run triton device doctor --platform ios --device <simulator> --json; inventory/layout readiness is not touch availability. No alternate input backend was attempted."
-            nextAction = TKCLINextAction(command: "device", args: ["doctor", "--platform", "ios", "--device", "<simulator>", "--json"], category: "diagnose")
-        } else if isHarmonyEmulatorStopFailureCommand(command) {
+        if isHarmonyEmulatorStopFailureCommand(command) {
             code = "harmony_emulator_stop_failed"
             hint = "Check the Harmony HVD name/path, DevEco Emulator process, and launchd label/domain. If no Triton launchd job exists, retry with --skip-launchd, then verify with triton device list --platform harmony --json."
         } else if command.executable == "xcodebuild" {

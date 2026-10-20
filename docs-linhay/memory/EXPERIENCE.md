@@ -20,3 +20,5 @@
 | 文档入口、内部 skill 接线或经验校验器调整 | 核对普通任务默认自动沉淀与收尾证据；可见规则/链接才算接线，示例/注释不算；隔离正负例防回退；并行登记前重查编号 | [治理闭环与校验边界](../dev/20260619-agent-workflow-skill-governance.md)、[本轮校验证据](../spaces/SP-198-agent-experience-loop/README.md) |
 
 | Simulator AX几何、Android前台身份或legacy文本输入 | AX拒绝猜测并测试生产提交边界；前台只展开ComponentName前导点且无效top不回退；shell字面量安全与设备输入能力分开验收 | [AX几何](../spaces/SP-210-simulator-ax-geometry/README.md)、[Android契约](../spaces/SP-212-mobile-mcp-android-contracts/README.md) |
+
+| Simulator HID、Device Hub输入或外部adapter替换 | 内置隔离driver；退出外部依赖同时清编译死代码/runner hook/override/旧测试与指引，保留许可；AX/HID权限分明；严格geometry与guest ownership，初始化后/发送后重检非原子锁；deadline覆盖预检/发送/释放，partial不可自动replay；固定SHA许可随产物 | [host skill](../../.agents/skills/tritonkit-host-simulator-takeover/SKILL.md)、[内置HID契约](../spaces/SP-218-issue-222-device-hub-input/plans/20261020-native-hid-contract.md) |

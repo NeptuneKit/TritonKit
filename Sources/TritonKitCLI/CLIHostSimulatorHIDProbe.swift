@@ -22,6 +22,9 @@ struct IOSHostHIDProbe: Encodable, Equatable {
     let frameworkLayout: String?
     let sourceCommands: [String]
     var toolchainSource: String? = nil
+    var hostChromeLayout: String? = nil
+    let chromeLookupVerified = false
+    var inputSurfaceCode: String? = nil
 
     var errorDetail: TKCLIErrorDetail {
         TKCLIErrorDetail(
@@ -156,28 +159,51 @@ func probeIOSHostHID(
     }
     let environment = ProcessInfo.processInfo.environment
     let selectionSource = developerDirectory != nil ? "provided" : (environment["DEVELOPER_DIR"] == nil ? "xcode-select" : "DEVELOPER_DIR")
-    let selectedDirectory = developerDirectory ?? baguetteDeveloperDirectory(environment: environment)
+    let selectedDirectory = developerDirectory ?? selectedXcodeDeveloperDirectory(environment: environment)
     let framework = probeIOSHostHIDFramework(developerDirectory: selectedDirectory, fileExists: fileExists, loader: loader)
     var commands = selectionSource == "xcode-select" ? ["xcode-select -p"] : []
     if framework.frameworkLayout != nil { commands.append("triton device hid-bootstrap --framework <selected-SimulatorKit>") }
+    let chromeLayout = simulatorHostChromeLayout(developerDirectory: selectedDirectory, fileExists: fileExists)
+    let chromeHint = chromeLayout == "device-hub-only"
+        ? " Device Hub is present without classic Simulator.app. Native tap/swipe do not use chrome lookup. Device Hub may own the HID surface; no guest ownership or input dispatch was tested. AX activation and screenshots do not prove HID delivery."
+        : " Host application presence does not verify target chrome lookup or input dispatch."
     return IOSHostHIDProbe(
         target: trimmed,
         compatible: framework.compatible,
         code: framework.code,
         message: framework.message,
-        hint: framework.hint,
+        hint: framework.hint + chromeHint,
         backend: framework.backend,
         frameworkLayout: framework.frameworkLayout,
         sourceCommands: commands,
-        toolchainSource: selectionSource
+        toolchainSource: selectionSource,
+        hostChromeLayout: chromeLayout
     )
+}
+
+/// Selected-toolchain bundle presence only; never inspect or open another Xcode.
+func simulatorHostChromeLayout(developerDirectory: String?, fileExists: (String) -> Bool) -> String {
+    guard let developerDirectory else { return "unknown" }
+    let raw = developerDirectory.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard raw.hasPrefix("/") else { return "unknown" }
+    let selected = URL(fileURLWithPath: raw, isDirectory: true)
+    let developer = selected.pathExtension == "app" ? selected.appendingPathComponent("Contents/Developer") : selected
+    guard developer.lastPathComponent == "Developer" else { return "unknown" }
+    let classic = fileExists(developer.appendingPathComponent("Applications/Simulator.app").path)
+    let hub = fileExists(developer.deletingLastPathComponent().appendingPathComponent("Applications/DeviceHub.app").path)
+    switch (classic, hub) {
+    case (true, true): return "classic-and-device-hub"
+    case (true, false): return "classic-simulator"
+    case (false, true): return "device-hub-only"
+    case (false, false): return "not-found"
+    }
 }
 
 /// Runs private framework loading only in a bounded child process. ObjC classes
 /// must never pollute a long-lived CLI/HTTP server or another selected Xcode.
 private func loadIOSHostHIDFramework(path: String) -> IOSHostHIDFrameworkLoadResult {
     let environment = ProcessInfo.processInfo.environment
-    let childEnvironment = baguetteFrameworkEnvironment(executable: "baguette", environment: environment, developerDirectory: baguetteDeveloperDirectory(environment: environment))
+    let childEnvironment = selectedSimulatorFrameworkEnvironment(environment: environment, developerDirectory: selectedXcodeDeveloperDirectory(environment: environment))
     let command = TKHostCommand(executable: CommandLine.arguments[0], arguments: ["device", "hid-bootstrap", "--framework", path], environment: childEnvironment, defaultTimeoutSeconds: 15)
     do {
         let result = try runHostCommand(command, maximumOutputBytes: 16384)
@@ -193,19 +219,8 @@ struct DeviceHIDBootstrap: ParsableCommand {
 
     func run() throws {
         let loaded = dlopen(framework, RTLD_LAZY | RTLD_LOCAL) != nil
-        let legacy = loaded && (NSClassFromString("SimulatorKit.SimDeviceLegacyHIDClient") != nil || NSClassFromString("SimDeviceLegacyHIDClient") != nil)
+        let legacy = loaded && (NSClassFromString("_TtC12SimulatorKit24SimDeviceLegacyHIDClient") != nil || NSClassFromString("SimulatorKit.SimDeviceLegacyHIDClient") != nil || NSClassFromString("SimDeviceLegacyHIDClient") != nil)
         let modern = loaded && (NSClassFromString("SimulatorKit.SimDeviceHIDClient") != nil || NSClassFromString("SimDeviceHIDClient") != nil)
         print(try encodeJSON(IOSHostHIDFrameworkLoadResult(loaded: loaded, legacyClientAvailable: legacy, modernClientAvailable: modern, error: loaded ? nil : "dlopen_failed")))
     }
-}
-
-func iosHostHIDFailureCode(stderr: String) -> String? {
-    let text = stderr.lowercased()
-    if text.contains("simdevicelegacyhidclient") && (text.contains("class not found") || text.contains("not found")) {
-        return "ios_host_hid_legacy_backend_unavailable"
-    }
-    if text.contains("simulatorkit") && (text.contains("dlopen") || text.contains("image not found") || text.contains("library not loaded")) {
-        return "ios_host_hid_simulator_kit_load_failed"
-    }
-    return nil
 }

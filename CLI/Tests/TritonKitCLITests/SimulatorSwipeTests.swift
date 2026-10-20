@@ -14,11 +14,11 @@ import TritonKitShared
         let result = try runSimulatorSwipe(selected: target(), input: request) { id, input in
             calls += 1
             #expect(id == "host:ios:SIM-1")
-            let lifecycle = try webIOSBaguetteSwipeLifecycle(input: input, udid: "SIM-1", screen: .init(width: 400, height: 800))
-            #expect(lifecycle.events.first?.x == 300)
-            #expect(lifecycle.events.last?.x == 67)
-            #expect(lifecycle.events.last?.type == "touch1-up")
-            return .success(action: "swipe", strategy: "host-hid-swipe", source: "host-hid", sourceCommands: [hostSourceCommand(lifecycle.command)])
+            let gesture = try nativeHIDContacts(input: input, screen: .init(pointSize: CGSize(width: 400, height: 800)))
+            #expect(gesture.contacts.first?.point.x == 0.75)
+            #expect(gesture.contacts.last?.point.x == 1.0 / 6)
+            #expect(gesture.contacts.last?.phase == .up)
+            return .success(action: "swipe", strategy: "native-hid-swipe", source: "host-hid")
         }
         #expect(calls == 1)
         #expect(result.ok)
@@ -47,7 +47,7 @@ import TritonKitShared
         for action in ["tap", "swipe"] {
             let leaf = try #require(sim.subcommands.first { $0.name == action })
             #expect(leaf.outputSelectors == ["input.result"])
-            for code in ["ios_host_hid_legacy_backend_unavailable", "ios_host_hid_simulator_kit_load_failed"] {
+            for code in schemaIOSNativeHIDFailureCodes {
                 #expect(leaf.failureCodes.contains(code))
                 #expect(sim.failureCodes.contains(code))
             }

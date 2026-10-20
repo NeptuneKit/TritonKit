@@ -248,14 +248,6 @@ async function handleIosSimulatorMjpeg(url, req, res, tritonPath, hostInputBaseU
     active = false;
     if (cache) {
       cache.activeListeners.delete(listenerId);
-      if (cache.activeListeners.size === 0 && cache.baguetteProcess) {
-        try {
-          cache.baguetteProcess.kill();
-        } catch {
-          // ignore
-        }
-        cache.baguetteProcess = null;
-      }
     }
   });
 
@@ -403,7 +395,6 @@ function createSimulatorFrameCache() {
     contentType: "image/png",
     lastFetchTime: 0,
     activeListeners: new Map(),
-    baguetteProcess: null,
     currentFps: 0,
     loopActive: false,
   };

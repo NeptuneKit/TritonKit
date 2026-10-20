@@ -180,6 +180,9 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         default: break
         }
         if let categories = residentRunnerRecoveryCategories(forFailureCode: failureCode) { return categories }
+        // HID failures can follow partial delivery. Inspect and plan; never
+        // suggest automatic input replay, even when transport did not ACK.
+        if failureCode.hasPrefix("ios_host_hid_") { return ["diagnose", "observe", "plan"] }
         if ["screenshot_deadline_exceeded", "insufficient_visual_samples", "visual_motion_timeout", "runtime_ui_timeout", "runtime_ui_busy", "runtime_ui_circuit_open"].contains(failureCode) {
             return ["diagnose", "observe", "plan"]
         }

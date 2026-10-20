@@ -203,7 +203,7 @@ struct DeviceCrossPlatformTests {
         let availableProbes = iosStrongControlProbes(idbProbe: available)
         #expect(availableProbes[0].available)
         #expect(!availableProbes[1].available)
-        #expect(availableProbes[1].dependency == "Baguette/SimulatorKit")
+        #expect(availableProbes[1].dependency == "TritonKit native SimulatorKit digitizer")
     }
 
     @Test("Android bridge contract returns plan-only ledgers before APK runner exists")

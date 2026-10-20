@@ -124,7 +124,7 @@ Bonjour 发现/认证 → pair verify → TLS-PSK CoreDevice tunnel
 | 设备发现与平台 adapter | [CLIHostDeviceRuntime](../../Sources/TritonKitCLI/CLIHostDeviceRuntime.swift#L27-L130) | iOS simctl / devicectl real 两条发现；scope=all 直接拼接，错误时退回simulator | Xcode27 unified devicectl fixture先行；显式kind/标识映射/去重，不猜对象类型 |
 | 语义观察 | [CLIObservationModels](../../Sources/TritonKitCLI/CLIObservationModels.swift#L19-L33)、[TKObservationModels](../../Sources/TritonKitShared/TKObservationModels.swift#L38-L83) | node来源、confidence、candidateOnly已存在；跨源帧/geometry一致性未由此证明 | 保留 embedded 高语义路径；补观察关联/失效契约，不只截图+VLM |
 | Host HID | [CLISimulatorInputCommands](../../Sources/TritonKitCLI/CLISimulatorInputCommands.swift#L18-L61) | sim tap走host helper；type仍typed unsupported；不是全输入覆盖 | 策略选择与执行receipt统一；输入ACK与verify分账 |
-| Xcode27兼容 | [框架子进程适配](../../Sources/TritonKitCLI/CLIBaguetteFrameworkEnvironment.swift#L3-L40)、[SP-180](../spaces/SP-180-xcode27-simulator-frameworks/README.md#L24-L30) | 修复仅选中baguette子进程；host navigation未封口 | P0先解决真实几何/后置条件，不称已全面兼容 |
+| Xcode27兼容 | [框架子进程适配](../../Sources/TritonKitCLI/CLIHostSimulatorFrameworkEnvironment.swift#L3-L40)、[SP-180](../spaces/SP-180-xcode27-simulator-frameworks/README.md#L24-L30) | 修复仅选中baguette子进程；host navigation未封口 | P0先解决真实几何/后置条件，不称已全面兼容 |
 | 流式画面 | [CLIHostSimulatorFramebufferService](../../Sources/TritonKitCLI/CLIHostSimulatorFramebufferService.swift#L21-L75) | 硬编码默认Xcode和旧SimulatorKit路径；不受baguette子进程修复自动覆盖 | shared resolver、per-capability probes；不要把本机偶然能加载当支持矩阵 |
 | evidence | [CLIEvidenceCaptureRuntime](../../Sources/TritonKitCLI/CLIEvidenceCaptureRuntime.swift#L350-L524) | 已区分host full-screen与runtime app-layer，失效有partial/error；不是确定性回放保证 | 放大这项优势：输入前后、环境、来源、目标与verification成一条trace |
 | target lease | [CLITargetLeaseGate](../../Sources/TritonKitCLI/CLITargetLeaseGate.swift#L4-L24) | opt-in；不传lease不检查；只读免门禁；不是设备排他锁 | lease（并发授权）与generation（连接正确性）必须分开；外部Device Hub操作不受现有lease控制 |
@@ -198,3 +198,5 @@ DevelopmentSession（建议模型，不是已有schema）
 未完成且不冒称：Device Hub真机控制实测、官方MCP tool schema/权限PoC、Xcode27 unified devicectl JSON fixtures、跨平台case对比、HEVC性能、OpenDeviceHub或device-hub-ios测试执行、host HID真实命中收口、市场采用验证。
 
 下一步推荐：**先实施P0的“明确目标+几何一致性+独立verify”纵切，再做两平台同case的可验证会话。** 官方agent backend的只读契约调查可作为另一独立研究；真机私有协议暂不进入默认依赖。
+
+2026-10-20 后续：本页保留当时调研语义；原 Baguette resolver 已由 [SP-218](../spaces/SP-218-issue-222-device-hub-input/README.md) 的 Triton 内置 helper 与中性 framework resolver 接替，外部执行器/override/hook 已删除，源码链接改为现行替代位置。

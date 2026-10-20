@@ -290,3 +290,13 @@ func renderSchema(_ response: TKCLISchemaResponse, language: CLILanguage = effec
         return lines.joined(separator: "\n")
     }.joined(separator: "\n\n")
 }
+
+let schemaIOSNativeHIDFailureCodes = [
+    "ios_host_hid_device_hub_attached", "ios_host_hid_attachment_unknown",
+    "ios_host_hid_display_unsupported", "ios_host_hid_helper_failed", "ios_host_hid_framework_unavailable",
+    "ios_host_hid_framework_load_failed", "ios_host_hid_legacy_backend_unavailable", "ios_host_hid_client_init_failed",
+    "ios_host_hid_symbol_unavailable", "ios_host_hid_message_invalid", "ios_host_hid_send_failed",
+    "ios_host_hid_send_timeout", "ios_host_hid_geometry_unavailable", "ios_host_hid_invalid_point",
+    "ios_host_hid_target_unavailable", "ios_host_hid_target_not_booted",
+    "ios_host_hid_surface_changed",
+]

@@ -1,0 +1,14 @@
+TritonKit native Simulator HID adapter
+
+Portions adapted from tddworks/baguette, Copyright 2026 tddworks.
+Licensed under Apache License 2.0 (LICENSE.baguette).
+Pinned source: 51f8ea2e0ee6d81523e8a85165f9abe0f899a9df
+https://github.com/tddworks/baguette/tree/51f8ea2e0ee6d81523e8a85165f9abe0f899a9df
+Sources/Baguette/Infrastructure/Input/IOHIDDigitizerDispatch.swift
+Sources/Baguette/Infrastructure/Input/IndigoHIDInput.swift
+Sources/Baguette/Infrastructure/Input/IndigoHIDMessage.swift
+
+TritonKit changes: native Swift driver inside an isolated triton child process;
+selected toolchain only; main portrait screen and Device Hub ownership guards;
+strict allocation bounds; mandatory finger child; bounded completion; static
+error contracts; no chrome, pointer/mouse warm-up, external CLI, or automatic heal.

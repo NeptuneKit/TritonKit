@@ -46,7 +46,7 @@ struct FramebufferLiveIntegrationTests {
         let target = ownedUUID.uuidString
         let inherited = ProcessInfo.processInfo.environment
         guard let plan = framebufferFrameworkPlan(
-            developerDirectory: baguetteDeveloperDirectory(environment: inherited)
+            developerDirectory: selectedXcodeDeveloperDirectory(environment: inherited)
         ) else { throw FramebufferLiveIntegrationError.selectedXcodeUnavailable }
 
         // Bind both readonly checks to the same selected Xcode as the service.

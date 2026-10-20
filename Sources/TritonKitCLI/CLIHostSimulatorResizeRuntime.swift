@@ -117,27 +117,6 @@ func probeIOSSimulatorResize(
     return classifyIOSSimulatorResize(data: data, target: target, exitCode: result.exitCode)
 }
 
-func assertIOSSimulatorResizeTouchAllowed(
-    _ command: TKHostCommand,
-    probe: IOSSimulatorResizeProbe = { probeIOSSimulatorResize(target: $0, environment: $1) }
-) throws {
-    var environment = ProcessInfo.processInfo.environment
-    environment.merge(command.environment, uniquingKeysWith: { _, child in child })
-    guard isBaguetteHostExecutable(command.executable, environment: environment),
-          let verb = command.arguments.first,
-          ["tap", "swipe", "long-press", "longPress", "touch", "gesture", "multi-touch", "input"].contains(verb) else { return }
-    let indices = command.arguments.indices.filter { command.arguments[$0] == "--udid" || command.arguments[$0].hasPrefix("--udid=") }
-    guard indices.count == 1, let index = indices.first, command.arguments[index] == "--udid",
-          command.arguments.indices.contains(index + 1), UUID(uuidString: command.arguments[index + 1]) != nil else { throw IOSSimulatorResizeError.invalidTarget }
-    // Freeze the selected toolchain for this query using the same child environment.
-    if let developer = baguetteDeveloperDirectory(environment: environment) { environment["DEVELOPER_DIR"] = developer }
-    switch probe(command.arguments[index + 1], environment) {
-    case .inactive: return
-    case .active: throw IOSSimulatorResizeError.activeSession
-    case .unknown(let reason): throw IOSSimulatorResizeError.stateUnknown(reason)
-    }
-}
-
 struct IOSSimulatorResizeAdvisory: Encodable, Equatable {
     let code: String
     let requestedSceneWidth: Double?

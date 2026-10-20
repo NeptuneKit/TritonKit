@@ -2,7 +2,7 @@ import Foundation
 import TritonKitShared
 
 /// The host runner is injectable so collection-cell fallback policy can be tested
-/// without starting a Simulator or invoking a real Baguette installation.
+/// without starting a Simulator or dispatching real native HID input.
 typealias CollectionCellHostHIDInputRunner = (String, TKInputRequest) throws -> TKInputResult
 
 let collectionCellEmbeddedUnsupportedStrategy = "ancestor-collection-cell-unsupported"

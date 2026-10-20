@@ -29,6 +29,7 @@ let package = Package(
             ],
             resources: [
                 .process("Resources/sim-camera"),
+                .copy("Resources/native-hid"),
                 .copy("Resources/ios-runner"),
                 .copy("Resources/android-environment"),
             ]

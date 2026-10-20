@@ -674,6 +674,9 @@ struct HostHarmonyTapOutput: Encodable {
 }
 
 struct HostIOSTapOutput: Encodable {
+    let source = "host-ax"
+    let strategy = "accessibility-perform-press"
+    let verification = HostIOSTapVerification()
     let ok: Bool
     let action: String
     let platform: String
@@ -684,6 +687,10 @@ struct HostIOSTapOutput: Encodable {
     let match: TKAXNode
     let sourceCommands: [String]
     let note: String
+}
+
+struct HostIOSTapVerification: Encodable {
+    let required = true
 }
 
 struct HostHarmonySwipeOutput: Encodable {

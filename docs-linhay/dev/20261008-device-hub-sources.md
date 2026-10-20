@@ -79,7 +79,7 @@ Revision：`1fcdfb0a6799b62f05625d0cbb359bec57256b94`；由GitHub目录HTML内cu
 
 - T01：[设备发现与scope拼接](../../Sources/TritonKitCLI/CLIHostDeviceRuntime.swift#L27-L130)。
 - T02：[devicectl旧字段parser](../../Sources/TritonKitShared/TKHostAdapterDevicectlModels.swift#L243-L339)。
-- T03：[baguette子进程framework resolver](../../Sources/TritonKitCLI/CLIBaguetteFrameworkEnvironment.swift#L3-L40)。
+- T03：[baguette子进程framework resolver](../../Sources/TritonKitCLI/CLIHostSimulatorFrameworkEnvironment.swift#L3-L40)。
 - T04：[Framebuffer framework loader](../../Sources/TritonKitCLI/CLIHostSimulatorFramebufferService.swift#L21-L75)。
 - T05：[target lease opt-in gate](../../Sources/TritonKitCLI/CLITargetLeaseGate.swift#L4-L24)。
 - T06：[observe source/confidence/candidateOnly](../../Sources/TritonKitCLI/CLIObservationModels.swift#L19-L33)。
@@ -100,3 +100,5 @@ Revision：`1fcdfb0a6799b62f05625d0cbb359bec57256b94`；由GitHub目录HTML内cu
 6. OpenDeviceHub有管理与控制原语，不只是窗口；但单个tap命令没有业务verify。
 7. device-hub-ios是非官方实现；MIT不等于Apple支持、私有接口不等于公有SDK。
 8. 本轮不存在性能、协议稳定性、跨平台成功率或用户需求实测数据。
+
+2026-10-20 后续：本页保留当时调研语义；原 Baguette resolver 已由 [SP-218](../spaces/SP-218-issue-222-device-hub-input/README.md) 的 Triton 内置 helper 与中性 framework resolver 接替，外部执行器/override/hook 已删除，源码链接改为现行替代位置。

@@ -1,14 +1,11 @@
 import Foundation
 
-/// Supplies compatibility search paths only to the selected Baguette child process.
-func baguetteFrameworkEnvironment(
-    executable: String,
-    environment: [String: String],
-    developerDirectory: String?,
+/// Explicit framework search paths for Triton native helper child processes.
+func selectedSimulatorFrameworkEnvironment(
+    environment: [String: String], developerDirectory: String?,
     fileExists: (String) -> Bool = { FileManager.default.fileExists(atPath: $0) }
 ) -> [String: String] {
-    guard isBaguetteHostExecutable(executable, environment: environment),
-          let directory = developerDirectory?.trimmingCharacters(in: .whitespacesAndNewlines),
+    guard let directory = developerDirectory?.trimmingCharacters(in: .whitespacesAndNewlines),
           directory.hasPrefix("/")
     else { return environment }
 
@@ -28,12 +25,7 @@ func baguetteFrameworkEnvironment(
     return result
 }
 
-func isBaguetteHostExecutable(_ executable: String, environment: [String: String]) -> Bool {
-    URL(fileURLWithPath: executable).lastPathComponent == "baguette"
-        || environment["TRITONKIT_BAGUETTE_BIN"] == executable
-}
-
-func baguetteDeveloperDirectory(
+func selectedXcodeDeveloperDirectory(
     environment: [String: String],
     querySelectedDeveloperDirectory: () -> String? = querySelectedXcodeDeveloperDirectory
 ) -> String? {
