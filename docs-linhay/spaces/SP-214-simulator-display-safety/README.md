@@ -41,3 +41,8 @@
 新增 `CLIHostSimulatorDisplayRuntime.swift`：对精确 target 绑定的 display topology JSON 做离线解析，仅允许唯一 active、primary、integrated display；缺字段、重复 ID、数字伪布尔、多 active、target 不匹配、截断均 unknown。AX/screenshot 接线提供 display probe seam，unknown 在 native action/输出前拒绝，且现有 Resize gate 优先执行。
 
 验证：`swift test --package-path CLI --scratch-path .build/sp214-scratch --no-parallel --filter SimulatorDisplaySafetyTests`；无真实 Simulator、设备操作或依赖安装。完整 CLI、根包及真实 topology 命令验收由主控执行。
+
+## 2026-10-21 完成实现与离线验收
+
+- 已接入真实 `xcrun devicectl device info displayTopology --device <uuid> --json-output ... --log-output ...` 查询；artifact、命令参数回显、目标 UUID、输出上限、超时/unsupported/非零结果均 fail-closed。截图路由与 AX press 默认先确认唯一 active primary integrated display，再执行既有 Resize/AX 几何门禁；测试仍可注入 display probe。
+- focused：`swift test --package-path CLI --scratch-path .build/sp214-scratch --no-parallel --filter 'SimulatorDisplaySafetyTests|SimulatorResizeCaptureRoutingTests'`，7 tests passed。未执行真实 Simulator/Xcode display topology，保留该运行验收边界。

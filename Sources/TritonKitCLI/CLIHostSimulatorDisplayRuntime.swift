@@ -51,6 +51,27 @@ func classifyIOSSimulatorDisplayTopology(data: Data, target: String, exitCode: I
 
 typealias IOSSimulatorDisplayProbe = (String, [String: String]) -> IOSSimulatorDisplayTopology
 
+func iosSimulatorDisplayTopologyQueryCommand(target: String, json: String, log: String, environment: [String: String]) -> TKHostCommand {
+    TKHostCommand(executable: "xcrun", arguments: ["devicectl", "device", "info", "displayTopology", "--device", target, "--json-output", json, "--log-output", log, "--timeout", "5", "--quiet"], environment: environment, redactedArgumentIndexes: [5, 7, 9], defaultTimeoutSeconds: 6, capturesArtifacts: true, sensitiveOutput: true)
+}
+
+func probeIOSSimulatorDisplay(target: String, environment: [String: String] = [:], artifactProvider: (String) throws -> (json: String, log: String) = freshDeviceInfoArtifactPaths, runner: (TKHostCommand) throws -> HostProcessResult = { try runHostCommand($0, maximumOutputBytes: 16_384) }, reader: (String, Int) throws -> Data = readBoundedDeviceFilesJSON) -> IOSSimulatorDisplayTopology {
+    guard UUID(uuidString: target) != nil else { return .unknown(.identityMismatch) }
+    let paths: (json: String, log: String)
+    do { paths = try artifactProvider("simulator-display-topology") } catch { return .unknown(.queryFailed) }
+    defer { for path in [paths.json, paths.log] { try? FileManager.default.removeItem(atPath: path) }; _ = rmdir(URL(fileURLWithPath: paths.json).deletingLastPathComponent().path) }
+    let command = iosSimulatorDisplayTopologyQueryCommand(target: target, json: paths.json, log: paths.log, environment: environment)
+    let result: HostProcessResult
+    do { result = try runner(command) } catch HostCommandRunError.timeout { return .unknown(.timedOut) } catch HostCommandRunError.nonZeroExit(_, let failure) { result = failure } catch { return .unknown(.queryFailed) }
+    let data: Data
+    do { data = try reader(paths.json, 1_048_576) } catch {
+        let stderr = result.stderr.lowercased()
+        if result.exitCode == 64 && (stderr.contains("displaytopology") || stderr.contains("display topology")) && (stderr.contains("unrecognized") || stderr.contains("unknown subcommand")) { return .unknown(.unsupported) }
+        return .unknown(.queryFailed)
+    }
+    return classifyIOSSimulatorDisplayTopology(data: data, target: target, exitCode: result.exitCode)
+}
+
 func assertIOSSimulatorMainDisplayAllowed(target: String, environment: [String: String] = [:], probe: IOSSimulatorDisplayProbe) throws {
     let result = probe(target, environment)
     guard case .primary = result else { if case .unknown(let reason) = result { throw IOSSimulatorDisplayError.topologyUnknown(reason) }; throw IOSSimulatorDisplayError.topologyUnknown(.queryFailed) }

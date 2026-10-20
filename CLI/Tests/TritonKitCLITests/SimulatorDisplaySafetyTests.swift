@@ -1,5 +1,7 @@
 import Foundation
 import Testing
+import TritonKit
+import TritonKitShared
 @testable import TritonKitCLI
 
 @Suite struct SimulatorDisplaySafetyTests {
@@ -24,5 +26,12 @@ import Testing
         try! assertIOSSimulatorMainDisplayAllowed(target: target, probe: { _, _ in .primary(IOSSimulatorDisplay(id: "main", primary: true, active: true, integrated: true)) })
         submits += 1
         #expect(submits == 1)
+    }
+    @Test func fakeToolProbeBindsCommandAndFailsClosedOnTimeout() {
+        var seen: [String] = []
+        let result = probeIOSSimulatorDisplay(target: target, artifactProvider: { _ in ("/tmp/no-display.json", "/tmp/no-display.log") }, runner: { command in seen = command.arguments; throw HostCommandRunError.timeout(command: command, timeoutSeconds: 1, stdoutLogPath: nil, stderrLogPath: nil) }, reader: { _, _ in Data() })
+        #expect(seen.contains("displayTopology"))
+        #expect(seen.contains(target))
+        #expect(result == IOSSimulatorDisplayTopology.unknown(.timedOut))
     }
 }
