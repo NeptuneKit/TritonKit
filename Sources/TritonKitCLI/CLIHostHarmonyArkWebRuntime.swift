@@ -29,6 +29,13 @@ struct HarmonyArkWebCDPEndpoint: Equatable {
     let socketSourceCommand: String
 }
 
+struct HarmonyArkWebForward: Equatable {
+    enum Direction: Equatable { case forward, reverse, unknown }
+    let localNode: String
+    let remoteNode: String
+    let direction: Direction
+}
+
 /// Host-side CDP session used to evaluate bridge scripts on one ArkWeb page.
 protocol HarmonyArkWebCDPSession {
     func evaluate(expression: String, timeoutSeconds: Double) async throws -> String?
@@ -148,6 +155,14 @@ struct HarmonyArkWebBridgeCallFailure: Error {
     let sourceCommands: [String]
 }
 
+private actor HarmonyArkWebForwardCleanupCoordinator {
+    func run<T>(_ operation: () async throws -> T) async rethrows -> T {
+        try await operation()
+    }
+}
+
+private let harmonyArkWebForwardCleanupCoordinator = HarmonyArkWebForwardCleanupCoordinator()
+
 // MARK: - Discovery
 
 /// Parses `webview_devtools_remote_<pid>` socket names from `/proc/net/unix` output.
@@ -178,6 +193,31 @@ func harmonyArkWebRemoveForwardCommand(target: String, localPort: Int, remoteNod
         requiredConfig: [.target, .timeout, .auditRecord],
         defaultTimeoutSeconds: 10
     )
+}
+
+func harmonyArkWebListForwardsCommand(target: String, hdc: String) -> TKHostCommand {
+    TKHostCommand(
+        executable: hdc,
+        arguments: ["-t", target, "fport", "ls"],
+        riskLevel: .readonly,
+        requiredConfig: [.target, .timeout],
+        defaultTimeoutSeconds: 10
+    )
+}
+
+func harmonyArkWebForwards(from output: String) -> [HarmonyArkWebForward] {
+    output.split(whereSeparator: \.isNewline).compactMap { line in
+        let tokens = line.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "|" })
+            .map { String($0).trimmingCharacters(in: CharacterSet(charactersIn: "[](),")) }
+        let nodes = tokens.filter { $0.hasPrefix("tcp:") || $0.hasPrefix("localabstract:") }
+        guard nodes.count >= 2 else { return nil }
+        let local = nodes[0], remote = nodes[1]
+        let direction: HarmonyArkWebForward.Direction
+        if tokens.contains("->") || tokens.contains("forward") { direction = .forward }
+        else if tokens.contains("<-" ) || tokens.contains("reverse") { direction = .reverse }
+        else { direction = .forward }
+        return HarmonyArkWebForward(localNode: local, remoteNode: remote, direction: direction)
+    }
 }
 
 func harmonyArkWebPageListURL(localPort: Int) -> URL {
@@ -257,23 +297,57 @@ func harmonyArkWebWithForward<T>(
     let outcome: Result<T, Error>
     do { outcome = .success(try await body(endpoint)) }
     catch { outcome = .failure(error) }
-    let removeCommand = harmonyArkWebRemoveForwardCommand(target: selected.target, localPort: resolvedLocalPort, remoteNode: remoteNode, hdc: hdc)
-    do {
-        let removed = try environment.runner(removeCommand)
-        if removed.exitCode != 0 || (removed.stdout + removed.stderr).contains("[Fail]") {
-            throw HarmonyArkWebBridgeCallError.providerMissing("HDC reported a failed forward removal")
+    // HDC local ports can be reused after the body returns. Query the current
+    // table immediately before removal and only remove the exact forward this
+    // invocation created. A failed/ambiguous query is intentionally fail-closed.
+    return try await harmonyArkWebForwardCleanupCoordinator.run {
+        let listCommand = harmonyArkWebListForwardsCommand(target: selected.target, hdc: hdc)
+        let currentForwards: [HarmonyArkWebForward]
+        do {
+            let listed = try environment.runner(listCommand)
+            guard listed.exitCode == 0, !(listed.stdout + listed.stderr).contains("[Fail]") else {
+                throw HarmonyArkWebBridgeCallError.providerMissing("HDC forward listing failed; ownership is unknown")
+            }
+            currentForwards = harmonyArkWebForwards(from: listed.stdout)
+        } catch {
+            if case .success = outcome {
+                throw HarmonyArkWebBridgeCallFailure(
+                    error: .providerMissing("HDC forward cleanup is uncertain; refusing to remove an unverified mapping. \(error)"),
+                    sourceCommands: [socketResult.sourceCommand, forwardResult.sourceCommand, hostSourceCommand(listCommand)]
+                )
+            }
+            return try outcome.get()
         }
-    } catch {
-        // Preserve a primary failure. A successful invocation with failed teardown
-        // must not silently claim clean delivery or invite an automatic retry.
-        if case .success = outcome {
-            throw HarmonyArkWebBridgeCallFailure(
-                error: .providerMissing("HDC forward cleanup failed; the bridge may already have executed. Remove the recorded forward before retrying. \(error)"),
-                sourceCommands: [socketResult.sourceCommand, forwardResult.sourceCommand, hostSourceCommand(removeCommand)]
-            )
+        let owned = currentForwards.filter {
+            $0.localNode == "tcp:\(resolvedLocalPort)" && $0.remoteNode == remoteNode && $0.direction == .forward
         }
+        guard owned.count == 1 else {
+            if case .success = outcome {
+                throw HarmonyArkWebBridgeCallFailure(
+                    error: .providerMissing("HDC forward cleanup is uncertain; expected exactly one owned mapping but found \(owned.count)."),
+                    sourceCommands: [socketResult.sourceCommand, forwardResult.sourceCommand, hostSourceCommand(listCommand)]
+                )
+            }
+            return try outcome.get()
+        }
+        let removeCommand = harmonyArkWebRemoveForwardCommand(target: selected.target, localPort: resolvedLocalPort, remoteNode: remoteNode, hdc: hdc)
+        do {
+            let removed = try environment.runner(removeCommand)
+            if removed.exitCode != 0 || (removed.stdout + removed.stderr).contains("[Fail]") {
+                throw HarmonyArkWebBridgeCallError.providerMissing("HDC reported a failed forward removal")
+            }
+        } catch {
+            // Preserve a primary failure. A successful invocation with failed teardown
+            // must not silently claim clean delivery or invite an automatic retry.
+            if case .success = outcome {
+                throw HarmonyArkWebBridgeCallFailure(
+                    error: .providerMissing("HDC forward cleanup failed; the bridge may already have executed. Remove the recorded forward before retrying. \(error)"),
+                    sourceCommands: [socketResult.sourceCommand, forwardResult.sourceCommand, hostSourceCommand(listCommand), hostSourceCommand(removeCommand)]
+                )
+            }
+        }
+        return try outcome.get()
     }
-    return try outcome.get()
 }
 
 /// Discovery-only helper used by `webview list` to attach ArkWeb provider state.

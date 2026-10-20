@@ -96,6 +96,9 @@ struct HarmonyArkWebBridgeCallTests {
                 if command.arguments.contains("cat") {
                     return hostProcessResult(stdout: socketOutput, sourceCommand: hostSourceCommand(command))
                 }
+                if command.arguments.contains("fport") && command.arguments.contains("ls") {
+                    return hostProcessResult(stdout: "tcp:41234 localabstract:webview_devtools_remote_12844\ntcp:45678 localabstract:webview_devtools_remote_12844\ntcp:41234 tcp:9333\n", sourceCommand: hostSourceCommand(command))
+                }
                 if command.arguments.contains("fport") && command.arguments.contains("rm") {
                     return hostProcessResult(stdout: "Remove forward success", sourceCommand: hostSourceCommand(command))
                 }
@@ -843,6 +846,37 @@ struct HarmonyArkWebBridgeCallTests {
             #expect(failure(error)?.error.code == .webViewProviderUnavailable)
             #expect(recorder.fportRemoveCount == 0)
             #expect(recorder.pageListLog.isEmpty)
+        }
+    }
+
+    @Test("forward parser distinguishes exact forward and reverse tuples")
+    func forwardParserIsDirectional() {
+        let forwards = harmonyArkWebForwards(from: "tcp:41234 localabstract:webview_devtools_remote_12844\nlocalabstract:webview_devtools_remote_12844 tcp:41234 <- reverse\n")
+        #expect(forwards.count == 2)
+        #expect(forwards[0] == HarmonyArkWebForward(localNode: "tcp:41234", remoteNode: "localabstract:webview_devtools_remote_12844", direction: .forward))
+        #expect(forwards[1].direction == .reverse)
+    }
+
+    @Test("unknown forward ownership never issues removal")
+    func unknownForwardOwnershipFailsClosed() async {
+        let recorder = Recorder()
+        var environment = makeEnvironment(recorder: recorder, socketOutput: devtoolsSocketOutput, pageListData: pageListJSON(pages: [singlePage]), sessionFactory: { _ in
+            FakeCDPSession(recorder: recorder, invokeAck: #"{"ok":true,"pending":true}"#, pollResponses: [#"{"ok":true,"result":200}"#])
+        })
+        let originalRunner = environment.runner
+        environment.runner = { command in
+            if command.arguments.contains("ls") {
+                recorder.append(command: command.arguments)
+                return hostProcessResult(stdout: "tcp:41234 localabstract:other_socket\n", sourceCommand: hostSourceCommand(command))
+            }
+            return try originalRunner(command)
+        }
+        do {
+            _ = try await callBridge(environment)
+            Issue.record("Expected cleanup uncertainty")
+        } catch {
+            #expect(failure(error)?.error.message.contains("uncertain") == true)
+            #expect(recorder.fportRemoveCount == 0)
         }
     }
 
