@@ -46,3 +46,7 @@
 
 - 已接入真实 `xcrun devicectl device info displayTopology --device <uuid> --json-output ... --log-output ...` 查询；artifact、命令参数回显、目标 UUID、输出上限、超时/unsupported/非零结果均 fail-closed。截图路由与 AX press 默认先确认唯一 active primary integrated display，再执行既有 Resize/AX 几何门禁；测试仍可注入 display probe。
 - focused：`swift test --package-path CLI --scratch-path .build/sp214-scratch --no-parallel --filter 'SimulatorDisplaySafetyTests|SimulatorResizeCaptureRoutingTests'`，7 tests passed。未执行真实 Simulator/Xcode display topology，保留该运行验收边界。
+
+### 2026-10-21 real probe接线
+
+新增 `iosSimulatorDisplayTopologyQueryCommand` 与 `probeIOSSimulatorDisplay`，沿用 devicectl file-JSON artifact、超时、非零结果和 unsupported 分支；每次调用 fresh query，严格校验 command echo/target/display 数组。截图与 AX activation 默认使用该 probe，同时保留注入 seam。focused 4 display tests + 3 resize routing tests 通过；无真实设备验收。
