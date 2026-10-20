@@ -2,7 +2,7 @@
 
 ## 状态与边界
 
-2026-10-20 由参考更新流程评估为可纳入，等待独立执行会话分派。影响层为 macOS CLI/HTTP 共用的本机 Simulator AX、host touch 与主屏采集安全门禁；不改 embedded SDK、Web/Wails、真机或远端产品面。
+2026-10-20 由参考更新流程评估为可纳入；2026-10-21 已完成实现并合入本地 `main`。影响层为 macOS CLI/HTTP 共用的本机 Simulator AX、host touch 与主屏采集安全门禁；不改 embedded SDK、Web/Wails、真机或远端产品面。
 
 产品基线 `main@f82872e2fa457431ee7cbc7df2bafecea7ca6f1c`。branch `feat/SP-214-simulator-display-safety`；worktree `../TritonKit-worktrees/SP-214-simulator-display-safety/`。本期独立主控 [SP-215](../SP-215-simulator-display-integration/README.md)。依据 SP-207 既有授权直接开发验证，允许必要本地提交和主控本地 main 合并；不推送或发布。
 

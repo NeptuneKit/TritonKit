@@ -24,7 +24,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 已合入本地 main | [SP-218-issue-222-device-hub-input](./SP-218-issue-222-device-hub-input/README.md) | #222 内置Simulator tap/swipe与HID-only、Baguette依赖清零；CLI1501/Web78、root/build/smoke通过 | merge c2f4bdd1 + docs ec595020；SP-214～217登记已补齐并通过 docs 门禁；未推送/发布 |
+| 已合入本地 main | [SP-218-issue-222-device-hub-input](./SP-218-issue-222-device-hub-input/README.md) | #222 内置Simulator tap/swipe与HID-only、Baguette依赖清零；CLI1501/Web78、root/build/smoke通过 | merge c2f4bdd1 + docs ec595020；SP-214～217 联合验收与 docs 门禁已复验；未推送/发布 |
 | v0.2.30已发布 | [SP-208-update-version-alignment](./SP-208-update-version-alignment/README.md) | 修复更新误报、安装版本核验与skills对齐 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 | 持续追踪与采用 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 33仓统一追踪与采用流程已合入main | 本批SP-210～213已验收合并；后续增量独立评估 |
 | v0.2.30已发布 | [SP-206-ictrl-security-integration](./SP-206-ictrl-security-integration/README.md) | 负责 SP-203～205 交付审查、集成与联合验证 | 057d1012补齐收口历史；worktree/分支已清理，已随v0.2.30发布，用户原机另验 |
@@ -339,10 +339,10 @@
 2026-10-19追加：原主目录WIP已原样保存为1131b183并完成差异裁决，资料状态与本地main一致；[完整合并记录](./SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。
 
 
-| 模型分派受阻 | [SP-214-simulator-display-safety](./SP-214-simulator-display-safety/README.md) | Simulator主屏拓扑未知/非主屏时拒绝动作与捕获 | 必要创建返回模型校验失败，保留工作区待重试 |
+| 已合入本地main | [SP-214-simulator-display-safety](./SP-214-simulator-display-safety/README.md) | Simulator主屏拓扑未知/非主屏时拒绝动作与捕获 | `0d35e95e`；focused 7 tests通过；真实Simulator未执行；合并后清理 |
 
-| 模型分派受阻 | [SP-215-simulator-display-integration](./SP-215-simulator-display-integration/README.md) | SP-214独立主控验证、本地合并 | 必要创建返回模型校验失败，保留工作区待重试 |
+| 已合入本地main | [SP-215-simulator-display-integration](./SP-215-simulator-display-integration/README.md) | SP-214独立主控验证、本地合并 | `b782c192`；离线联合验收通过；真实Simulator未执行；合并后清理 |
 
-| 待分派 | [SP-216-harmony-forward-cleanup](./SP-216-harmony-forward-cleanup/README.md) | ArkWeb HDC清理当前归属复核与进程内互斥 | 复用工作区，显式gpt-6.1-sol恢复后分派 |
+| 已合入本地main | [SP-216-harmony-forward-cleanup](./SP-216-harmony-forward-cleanup/README.md) | ArkWeb HDC清理当前归属复核与进程内互斥 | `34f713c7`；focused 37 tests通过；真实HDC未执行；合并后清理 |
 
-| 待分派 | [SP-217-harmony-forward-integration](./SP-217-harmony-forward-integration/README.md) | SP-216独立主控验收、本地合并 | 复用工作区，显式gpt-6.1-sol恢复后分派 |
+| 已合入本地main | [SP-217-harmony-forward-integration](./SP-217-harmony-forward-integration/README.md) | SP-216独立主控验收、本地合并 | `36145c62`；离线联合验收通过；真实HDC/跨进程竞态未执行；合并后清理 |
