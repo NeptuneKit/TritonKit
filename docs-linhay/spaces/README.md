@@ -4,7 +4,7 @@
 2026-10-19：SP-209～213已合并分支及worktree清理完成，仅保留实际main与原用户WIP；见[清理记录](./SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（213/213 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（214/214 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-10-19（实际main与WIP分支分离；参考采用已验收合入本地main）
 
@@ -24,6 +24,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 实现完成，局部门禁通过 | [SP-218-issue-222-device-hub-input](./SP-218-issue-222-device-hub-input/README.md) | #222 内置Simulator tap/swipe与HID-only、Baguette依赖清零；CLI1501/Web78、root/build/smoke通过 | docs编号依赖SP-214～217权威资料整合后联合复验；独立worktree未合并/发布 |
 | v0.2.30已发布 | [SP-208-update-version-alignment](./SP-208-update-version-alignment/README.md) | 修复更新误报、安装版本核验与skills对齐 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 | 持续追踪与采用 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 33仓统一追踪与采用流程已合入main | 本批SP-210～213已验收合并；后续增量独立评估 |
 | v0.2.30已发布 | [SP-206-ictrl-security-integration](./SP-206-ictrl-security-integration/README.md) | 负责 SP-203～205 交付审查、集成与联合验证 | 057d1012补齐收口历史；worktree/分支已清理，已随v0.2.30发布，用户原机另验 |

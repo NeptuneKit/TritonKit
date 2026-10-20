@@ -452,6 +452,9 @@ func hostDeviceDoctorOutputContract() -> TKCommandOutputContract {
             ("hidCompatibility.sourceCommands", "[String]", false, "Selected toolchain discovery provenance"),
             ("hidCompatibility.code", "String", false, "Stable selected toolchain compatibility diagnosis"),
             ("hidCompatibility.frameworkLayout", "String?", false, "Layout category without the private absolute path"),
+            ("hidCompatibility.hostChromeLayout", "String?", false, "Selected bundle presence only: classic-simulator, device-hub-only, classic-and-device-hub, not-found, or unknown"),
+            ("hidCompatibility.inputSurfaceCode", "String?", false, "Fresh selected-target resize/guest dtuhidd ownership/primary screen preflight; no input dispatch or client connection tested"),
+            ("hidCompatibility.chromeLookupVerified", "Bool", false, "Always false: no target lookup or input dispatch was performed"),
             ("artifactsSaved", "Bool", true, "Whether diagnostic artifacts were persisted"),
         ])
     )
@@ -1073,6 +1076,10 @@ func hostIOSTapOutputContract() -> TKCommandOutputContract {
         model: "HostIOSTapOutput",
         fields: schemaContractFields([
             ("ok", "Bool", true, "Whether the iOS host AX tap command succeeded"),
+            ("source", "String", true, "host-ax; host accessibility acknowledgement only"),
+            ("strategy", "String", true, "accessibility-perform-press; never a physical HID touch"),
+            ("verification", "HostIOSTapVerification", true, "Business-state verification requirement"),
+            ("verification.required", "Bool", true, "Always true; host AX acknowledgement does not prove business success"),
             ("action", "String", true, "Host action name"),
             ("platform", "String", true, "ios"),
             ("target", "HostDeviceTarget", true, "Resolved iOS simulator target"),

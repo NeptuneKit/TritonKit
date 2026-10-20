@@ -36,5 +36,5 @@ func runSimulatorSwipe(
 }
 
 private func unavailableSimulatorSwipeAdapter() -> TKInputResult {
-    .unsupported(action: "swipe", message: "The host HID adapter is unavailable.", error: TKCLIErrorDetail(code: "unsupported_host_input", message: "The host HID adapter is unavailable.", hint: "Install or configure Baguette with TRITONKIT_BAGUETTE_BIN, then retry; no embedded fallback was attempted."))
+    .unsupported(action: "swipe", message: "The host HID adapter is unavailable.", error: TKCLIErrorDetail(code: "unsupported_host_input", message: "The host HID adapter is unavailable.", hint: "The native HID helper ships inside triton. Run selected-device doctor; no external adapter installation or embedded fallback is used."))
 }

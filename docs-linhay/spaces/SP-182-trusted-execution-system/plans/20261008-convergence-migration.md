@@ -18,7 +18,7 @@
 | [TKInputResult](../../../../Sources/TritonKitShared/TKInputModels.swift#L199-L225) | wire保留，Receipt importer | primitive.ok直接变trusted；混用提交/验证 | source/strategy/geometry/verification boundary复用 |
 | [lease gate](../../../../Sources/TritonKitCLI/CLITargetLeaseGate.swift#L4-L24) | writer coordinator吸收租约与owned资源ledger | 入队后不重校验、入口自认排他 | 旧opt-in行为兼容但标出保证范围 |
 | [provider parser](../../../../Sources/TritonKitCLI/CLIActionProviderRuntime.swift#L67-L154) | 解析model格式为Candidate，不执行preview argv | model finished/status当run success；CLI字符串当IR | provider专属parse与normalized坐标声明 |
-| [host发现](../../../../Sources/TritonKitCLI/CLIHostDeviceRuntime.swift#L27-L130) / [framework resolver](../../../../Sources/TritonKitCLI/CLIBaguetteFrameworkEnvironment.swift#L3-L40) | Binding/AdapterRegistry统一探测 | 各feature硬编码开发目录/重复kind/ready判断 | 公共工具优先、helper隔离、失败typed |
+| [host发现](../../../../Sources/TritonKitCLI/CLIHostDeviceRuntime.swift#L27-L130) / [framework resolver](../../../../Sources/TritonKitCLI/CLIHostSimulatorFrameworkEnvironment.swift#L3-L40) | Binding/AdapterRegistry统一探测 | 各feature硬编码开发目录/重复kind/ready判断 | 公共工具优先、helper隔离、失败typed |
 | Web/Wails | Run/Observation/Evidence只读DTO投影 | 前端selector/缩放业务输入/重试/调度决定 | 用户可见解释与timeline，不新增写控制面 |
 
 设计期不删除旧函数。实施时每消融一项必须有调用方与测试证据，不能以文件更名/减少行数当完成。
@@ -124,3 +124,5 @@ BDD：
 - [x] 聚合、封装、消融裁决到具体入口与源码。
 - [x] 渐进迁移、compatibility、无双发与回退安全有门禁。
 - [x] docs-only门禁已通过并写回space/memory；产品TDD与真实设备未执行。
+
+2026-10-20 后续：原 Baguette resolver 已由 [SP-218](../../SP-218-issue-222-device-hub-input/README.md) 的中性 framework resolver 接替；旧外部执行器/override/hook 已移除，本表保留历史调研语义。

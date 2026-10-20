@@ -10,7 +10,7 @@ import TritonKit
 import TritonKitShared
 
 struct Tap: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(abstract: "Tap a UI target by text, coordinate, oid, or AX node")
+    static let configuration = CommandConfiguration(abstract: "Tap a UI target by text, coordinate, oid, or AX node", discussion: "Explicit --platform ios uses host AX accessibilityPerformPress by default, including coordinate taps. Pure coordinates with an explicit Simulator selector and no --platform use host HID. --hid-only forces the local iOS Simulator coordinate HID path without AX or embedded fallback; all acknowledgements require business-state verification.")
 
     @Option(help: "Selection id returned by inspect selection; requires revision and runtime instance") var selection: String?
     @Option(name: .customLong("selection-revision"), help: "Positive revision returned by inspect selection") var selectionRevision: UInt64?
@@ -19,7 +19,7 @@ struct Tap: AsyncParsableCommand {
     @Argument(help: "Text, label, identifier, or visible option title to tap") var query: String?
     @Option(help: "Alternate flag form for the text query; use either positional <query> or --text") var text: String?
     @Option(help: "Host platform adapter: ios, android, or harmony") var platform: HostPlatform?
-    @Option(name: [.long, .customLong("device")], help: "Runtime target id or host selector; pure coordinate taps with sim:<udid>, a raw Simulator UUID, booted, or current use iOS host HID. --device is an alias") var target: String = TKLocalTargetID
+    @Option(name: [.long, .customLong("device")], help: "Runtime target id or host selector; without --platform, pure coordinates with sim:<udid>, a raw Simulator UUID, booted, or current use built-in HID. Explicit --platform ios defaults to AX; add --hid-only to require HID. --device is an alias") var target: String = TKLocalTargetID
     @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
@@ -36,6 +36,7 @@ struct Tap: AsyncParsableCommand {
     @Option(help: "Unsupported for tap: press-and-hold returns a typed error without dispatch") var duration: Double?
     @Option(help: "Activation strategy for query or AX text matches: smart, exact, or ancestor") var strategy: TapStrategyOption?
     @Flag(name: .customLong("allow-host-hid-fallback"), help: "Explicitly allow an auditable iOS Simulator host-HID coordinate fallback after embedded UICollectionViewCell activation is rejected") var allowHostHIDFallback = false
+    @Flag(name: .customLong("hid-only"), help: "Force a pure iOS Simulator coordinate HID tap; requires --platform ios or an explicit Simulator selector, rejects semantic/WebView/embedded options, and never dispatches AX") var hidOnly = false
     @Option(help: "Select one matching query candidate by 1-based index") var index: Int?
     @Option(help: "Restrict query matching to bounds: x,y,width,height") var within: String?
     @Option(help: "Coordinate selector or query disambiguation point: x,y") var at: String?
@@ -49,6 +50,12 @@ struct Tap: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
+        let hidOnlyRequest: IOSHostCoordinateTapRequest?
+        do {
+            hidOnlyRequest = try hidOnlyCoordinateTapRequest()
+        } catch let error as HIDOnlyTapValidationError {
+            try failHostValidation(code: error.code, message: error.message, hint: error.hint, outputFormat: outputFormat)
+        }
         if duration != nil {
             try failHostValidation(
                 code: "unsupported_capability",
@@ -135,7 +142,7 @@ struct Tap: AsyncParsableCommand {
             throw RuntimeError("--strategy can only be used with <query>, --ax-oid, or --ax-label")
         }
 
-        if let simulatorSelector = implicitIOSHostCoordinateTapSelector(
+        let implicitSimulatorSelector = implicitIOSHostCoordinateTapSelector(
             platform: platform,
             target: target,
             query: query,
@@ -145,11 +152,12 @@ struct Tap: AsyncParsableCommand {
             oid: oid,
             axOID: axOID,
             axLabel: axLabel
-        ) {
+        )
+        if hidOnlyRequest != nil || implicitSimulatorSelector != nil {
             do {
                 let point = try at.map(parsePoint)
-                guard let tapX = point?.x ?? x,
-                      let tapY = point?.y ?? y,
+                guard let tapX = hidOnlyRequest?.x ?? point?.x ?? x,
+                      let tapY = hidOnlyRequest?.y ?? point?.y ?? y,
                       tapX.isFinite,
                       tapY.isFinite else {
                     try failHostValidation(
@@ -161,7 +169,7 @@ struct Tap: AsyncParsableCommand {
                 }
                 let selection = try resolveHostDeviceSelection(
                     request: HostDeviceSelectionRequest(
-                        device: simulatorSelector,
+                        device: hidOnlyRequest?.device ?? implicitSimulatorSelector,
                         platform: .ios,
                         scope: .simulator,
                         ready: true

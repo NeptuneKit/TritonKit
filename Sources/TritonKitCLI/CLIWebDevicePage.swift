@@ -29,7 +29,7 @@ func singleDeviceWebPageHTML(initialTarget: String? = nil) -> String {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Baguette-like device mirror">
+  <meta name="description" content="TritonKit device mirror">
   <title>TritonKit Device Mirror</title>
   <style>
     :root {

@@ -76,7 +76,20 @@ struct DeviceDoctor: AsyncParsableCommand {
                         hdc: hdc,
                         adb: adb
                     ).target
-                    hidProbe = probeIOSHostHID(selectedDevice: selected.rawTarget)
+                    var compatibility = probeIOSHostHID(selectedDevice: selected.rawTarget)
+                    do {
+                        var environment: [String: String] = [:]
+                        if let developer = selectedXcodeDeveloperDirectory(environment: ProcessInfo.processInfo.environment) { environment["DEVELOPER_DIR"] = developer }
+                        _ = try nativeHIDGuardSnapshot(target: selected.rawTarget, environment: environment)
+                        compatibility.inputSurfaceCode = "ios_host_hid_surface_preflight_passed"
+                    } catch let error as NativeHIDControlError {
+                        compatibility.inputSurfaceCode = error.detail.code
+                    } catch let error as IOSSimulatorResizeError {
+                        compatibility.inputSurfaceCode = error.detail.code
+                    } catch {
+                        compatibility.inputSurfaceCode = "ios_host_hid_attachment_unknown"
+                    }
+                    hidProbe = compatibility
                 } catch {
                     hidProbe = IOSHostHIDProbe(
                         target: device,
@@ -140,7 +153,7 @@ func iosStrongControlProbes(idbProbe: HostToolProbeOutput, hidProbe: IOSHostHIDP
             runtimeScope: "host-simulator",
             available: isHID ? false : idbProbe.available,
             reason: isHID ? (hidProbe?.compatible == false ? hidProbe?.code : "ios_host_hid_dispatch_not_probed") : (idbProbe.available ? nil : "idb_not_available"),
-            dependency: isHID ? "Baguette/SimulatorKit" : "idb/FBSimulatorControl",
+            dependency: isHID ? "TritonKit native SimulatorKit digitizer" : "idb/FBSimulatorControl",
             limitations: ["private_framework_dependency", "simulator_only", "xcode_version_coupled"] + (isHID ? ["input_dispatch_not_probed", "inventory_does_not_prove_hid"] : []),
             fallbackCapability: "embedded-runtime-or-public-simctl",
             sourceCommand: isHID ? hidProbe?.sourceCommands.first : idbProbe.sourceCommand,

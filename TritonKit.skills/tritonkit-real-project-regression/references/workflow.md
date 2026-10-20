@@ -26,7 +26,7 @@
    - `triton doctor --json`
    - `triton status --json`
    - `triton capabilities --json`
-   - before using `baguette`, raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild`, preserve Triton-first fallback gate evidence from `status`, `doctor`, `capabilities`, `schema`, or `plan`; fallback is allowed only after Triton reports failure, unsupported capability/scope, or missing schema/capability for the required local emulator action;
+   - before using raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild`, preserve Triton-first fallback gate evidence from `status`, `doctor`, `capabilities`, `schema`, or `plan`; fallback is allowed only after Triton reports failure, unsupported capability/scope, or missing schema/capability for the required local emulator action;
    - use `doctor.checks[]` first for ordered recovery, and preserve `doctor.nextWorkflows` plus each check's `workflowCategories` so the regression report keeps the affected workflow taxonomy without re-deriving it from capabilities;
    - `triton list --json`
    - use `capabilities[].group`, `requiredBy`, `nextAction`, and `evidence` to decide whether the next step is target selection, runtime connection, Xcode preparation, action execution, assertion, or evidence capture; if a schema-provided capability lacks those planning fields, treat that as a TritonKit contract bug before relying on it;

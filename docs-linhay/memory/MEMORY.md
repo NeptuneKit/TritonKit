@@ -54,3 +54,5 @@
 - 2026-10-19追加清理：SP-209～213五个已合并worktree及本地分支普通删除；309份原始证据复制并SHA校验，仅保留实际main和原用户WIP。见[清理记录](../spaces/SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。未推送，复用现有治理规则无新增经验。
 
 - 原主目录WIP完整收口：49份文件快照1131b183，补回遗漏历史并修正共享入口及采用状态，保留已验收产品；按用户新授权合入main。见[WIP合并记录](../spaces/SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。此前“保留未提交WIP”为清理时快照，已被本次完整集成接替。
+
+- 2026-10-20：[SP-218 #222](../spaces/SP-218-issue-222-device-hub-input/README.md)在独立worktree实现内置Simulator tap/swipe，生产不依赖Baguette/chrome；后续追加已移除全部旧executor/override/通用hook与Web死字段，许可与历史来源保留；新增`--hid-only`与明确AX receipt。Device Hub占用仍typed拒绝，未声称完整兼容/真实触控验收；未合并发布。细节和最终验证见space。

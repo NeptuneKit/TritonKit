@@ -45,30 +45,35 @@ struct SimulatorResizeTests {
         let data = try! JSONSerialization.data(withJSONObject: object)
         #expect(classifyIOSSimulatorResize(data: data, target: udid, exitCode: 1) == .unknown(.queryFailed))
     }
-    @Test func guardEachCommand() throws {
-        let tap = TKHostCommand(executable: "baguette", arguments: ["tap", "--udid", udid])
-        var calls = 0
-        let probe: IOSSimulatorResizeProbe = { target, environment in
-            #expect(target == udid)
-            calls += 1
-            return calls == 1 ? .inactive : .active(IOSSimulatorResizeSession(displayUniqueID: display, width: 560, height: 874))
+    @Test func nativeGuardChecksFreshResizeStateBeforeAnyQueryOrSend() {
+        for state in [IOSSimulatorResizeState.active(IOSSimulatorResizeSession(displayUniqueID: display, width: 560, height: 874)), .unknown(.unsupportedQuery)] {
+            var calls = 0
+            do {
+                _ = try nativeHIDGuardSnapshot(target: udid, environment: ["DEVELOPER_DIR": "/selected"], resizeProbe: { target, environment in
+                    calls += 1
+                    #expect(target == udid)
+                    #expect(environment["DEVELOPER_DIR"] == "/selected")
+                    return state
+                })
+                Issue.record("Active or unknown Resize Mode must refuse before host queries or input")
+            } catch let error as IOSSimulatorResizeError {
+                switch state {
+                case .active: #expect(error == .activeSession)
+                case .unknown(let reason): #expect(error == .stateUnknown(reason))
+                case .inactive: Issue.record("Fixture must not be inactive")
+                }
+            } catch { Issue.record("Unexpected native guard failure: \(error)") }
+            #expect(calls == 1)
         }
-        try assertIOSSimulatorResizeTouchAllowed(tap, probe: probe)
-        #expect(throws: IOSSimulatorResizeError.activeSession) { try assertIOSSimulatorResizeTouchAllowed(tap, probe: probe) }
-        #expect(calls == 2)
-        #expect(throws: IOSSimulatorResizeError.stateUnknown(.unsupportedQuery)) { try assertIOSSimulatorResizeTouchAllowed(tap, probe: { _, _ in .unknown(.unsupportedQuery) }) }
     }
-    @Test func keyboardAndObservationBypassTouchGuard() throws {
-        for verb in ["type", "key", "chrome", "layout"] {
-            let command = TKHostCommand(executable: "baguette", arguments: [verb, "--udid", udid])
-            try assertIOSSimulatorResizeTouchAllowed(command, probe: { _, _ in Issue.record("non-touch must not probe"); return .unknown(.queryFailed) })
-        }
-        let input = TKHostCommand(executable: "baguette", arguments: ["input", "--udid", udid])
-        #expect(throws: IOSSimulatorResizeError.activeSession) { try assertIOSSimulatorResizeTouchAllowed(input, probe: { _, _ in .active(IOSSimulatorResizeSession(displayUniqueID: display, width: 560, height: 874)) }) }
-    }
-    @Test func malformedTouchTargetCannotDispatch() {
-        for args in [["tap"], ["tap", "--udid", udid, "--udid", udid], ["tap", "--udid", "booted"]] {
-            #expect(throws: IOSSimulatorResizeError.invalidTarget) { try assertIOSSimulatorResizeTouchAllowed(TKHostCommand(executable: "baguette", arguments: args), probe: { _, _ in Issue.record("must not probe invalid target"); return .inactive }) }
+    @Test func malformedNativeTouchTargetCannotProbeOrDispatch() {
+        for target in ["", "booted", "sim:" + udid, "PRIVATE INVALID UUID"] {
+            #expect(throws: IOSSimulatorResizeError.invalidTarget) {
+                _ = try nativeHIDGuardSnapshot(target: target, environment: [:], resizeProbe: { _, _ in
+                    Issue.record("Invalid target must not probe")
+                    return .inactive
+                })
+            }
         }
     }
     @Test func fileJSONProbeAcceptsBoundNegativeErrorAndRejectsStaleReceipt() throws {
@@ -110,19 +115,17 @@ struct SimulatorResizeTests {
         #expect(try iosSimulatorResizeScreenshotDisplay(.inactive) == nil)
         #expect(iosSimulatorResizeAdvisory(.inactive) == nil)
     }
-    @Test func persistentGestureRefusalDoesNotStartRunner() throws {
-        let lifecycle = try webIOSBaguetteSwipeLifecycle(input: .swipe(startX: 1, startY: 1, endX: 2, endY: 2), udid: udid, screen: .init(width: 10, height: 10), executable: "/fake/baguette")
+    @Test func nativeGestureResizeRefusalNeverStartsContactOperation() throws {
+        let screen = NativeHIDScreen(pointSize: .init(width: 10, height: 10))
         var started = false
         #expect(throws: IOSSimulatorResizeError.activeSession) {
-            _ = try runWebIOSBaguetteLifecycle(lifecycle, resizeProbe: { _, _ in .active(IOSSimulatorResizeSession(displayUniqueID: display, width: 560, height: 874)) }, runner: { _ in started = true; throw RuntimeError("must not start") })
+            try executeGuardedNativeHIDGesture(expectedScreen: screen, snapshot: {
+                try nativeHIDGuardSnapshot(target: udid, environment: [:], resizeProbe: { _, _ in
+                    .active(IOSSimulatorResizeSession(displayUniqueID: display, width: 560, height: 874))
+                })
+            }) { started = true }
         }
         #expect(!started)
-    }
-    @Test func processRunnerRefusesBeforeLaunchingTap() {
-        let command = TKHostCommand(executable: "/nonexistent/baguette", arguments: ["tap", "--udid", udid])
-        #expect(throws: IOSSimulatorResizeError.activeSession) {
-            _ = try runHostCommand(command, simulatorResizeProbe: { _, _ in .active(IOSSimulatorResizeSession(displayUniqueID: display, width: 560, height: 874)) })
-        }
     }
     @Test func mainFramebufferCaptureRequiresKnownInactiveSession() throws {
         try assertIOSSimulatorResizeCaptureAllowed(target: udid, probe: { _, _ in .inactive })

@@ -15,7 +15,7 @@ struct SingleDeviceWebPageTests {
 
         #expect(html.contains(#"data-triton-page="single-device-detail""#))
         #expect(html.contains("device-mirror-workbench"))
-        #expect(html.contains("Baguette-like device mirror"))
+        #expect(html.contains("TritonKit device mirror"))
         #expect(html.contains("fetchJSON('/status')"))
         #expect(html.contains("fetchJSON('/web/targets')"))
         #expect(html.contains("fetchJSON(`/web/geometry?target=${encodeURIComponent(target.id)}`"))
@@ -36,8 +36,8 @@ struct SingleDeviceWebPageTests {
         #expect(html.contains("runRefresh('poll')"))
     }
 
-    @Test("single device web page renders Baguette style mirror chrome")
-    func singleDeviceWebPageRendersBaguetteMirrorChrome() {
+    @Test("single device web page renders TritonKit mirror chrome")
+    func singleDeviceWebPageRendersTritonKitMirrorChrome() {
         let html = singleDeviceWebPageHTML()
 
         #expect(html.contains("mirror-toolbar"))
@@ -414,232 +414,102 @@ struct SingleDeviceWebPageTests {
         ) == "triton:connection:2")
     }
 
-    @Test("iOS web host input normalizes framebuffer coordinates into host HID points")
-    func iOSWebHostInputNormalizesFramebufferCoordinatesIntoHostHIDPoints() {
-        let normalized = normalizeWebIOSSimulatorInput(
-            .tap(
-                x: 619,
-                y: 2338,
-                width: 1206,
-                height: 2622
-            ),
-            screen: WebIOSSimulatorScreenLayout(width: 400, height: 872)
+    @Test("native HID normalizes caller coordinates without pixel rounding")
+    func nativeHIDNormalizesCallerCoordinatesWithoutPixelRounding() throws {
+        let gesture = try nativeHIDContacts(
+            input: .tap(x: 619, y: 2338, width: 1206, height: 2622),
+            screen: .init(pointSize: CGSize(width: 400, height: 872))
         )
-
-        #expect(normalized.x == 205)
-        #expect(normalized.y == 778)
-        #expect(normalized.width == 400)
-        #expect(normalized.height == 872)
+        #expect(gesture.contacts.first?.point == CGPoint(x: 619.0 / 1206, y: 2338.0 / 2622))
+        #expect(gesture.contacts.last?.point == gesture.contacts.first?.point)
     }
 
-    @Test("iOS web host tap keeps Baguette-compatible host HID argv behind Triton")
-    func iOSWebHostTapKeepsBaguetteCompatibleHostHIDArgvBehindTriton() throws {
-        let command = try webIOSBaguetteCommand(
-            action: .tap(x: 603, y: 1311, width: 1206, height: 2622),
-            udid: "SIM-1",
-            screen: WebIOSSimulatorScreenLayout(width: 400, height: 872),
-            executable: "/opt/homebrew/bin/baguette"
+    @Test("native tap preserves the caller point space independently of framebuffer size")
+    func nativeTapPreservesCallerPointSpace() throws {
+        let gesture = try nativeHIDContacts(
+            input: .tap(x: 603, y: 1311, width: 1206, height: 2622),
+            screen: .init(pointSize: CGSize(width: 400, height: 872))
         )
-
-        #expect(command.executable == "/opt/homebrew/bin/baguette")
-        #expect(command.arguments == [
-            "tap",
-            "--udid", "SIM-1",
-            "--x", "200",
-            "--y", "436",
-            "--width", "400",
-            "--height", "872"
-        ])
+        #expect(gesture.contacts.map(\.phase) == [.down, .up])
+        #expect(gesture.contacts.allSatisfy { $0.point == CGPoint(x: 0.5, y: 0.5) })
     }
 
-    @Test("iOS web host tap derives point-space from simulator layout when dimensions are omitted")
-    func iOSWebHostTapDerivesPointSpaceFromSimulatorLayoutWhenDimensionsAreOmitted() throws {
-        let command = try webIOSBaguetteCommand(
-            action: .tap(x: 200, y: 436),
-            udid: "SIM-1",
-            screen: WebIOSSimulatorScreenLayout(width: 400, height: 872),
-            executable: "/opt/homebrew/bin/baguette"
-        )
-
-        #expect(command.executable == "/opt/homebrew/bin/baguette")
-        #expect(command.arguments == [
-            "tap",
-            "--udid", "SIM-1",
-            "--x", "200",
-            "--y", "436",
-            "--width", "400",
-            "--height", "872"
-        ])
+    @Test("native tap derives point space from selected simulator geometry when omitted")
+    func nativeTapDerivesPointSpaceWhenDimensionsAreOmitted() throws {
+        let gesture = try nativeHIDContacts(input: .tap(x: 200, y: 436),
+            screen: .init(pointSize: CGSize(width: 400, height: 872)))
+        #expect(gesture.contacts.first?.point == CGPoint(x: 0.5, y: 0.5))
     }
 
-    @Test("iOS web host swipe derives point-space from simulator layout when dimensions are omitted")
-    func iOSWebHostSwipeDerivesPointSpaceFromSimulatorLayoutWhenDimensionsAreOmitted() throws {
-        let lifecycle = try webIOSBaguetteSwipeLifecycle(
-            input: .swipe(
-                startX: 201,
-                startY: 700,
-                endX: 201,
-                endY: 200,
-                duration: 0.35
-            ),
-            udid: "SIM-1",
-            screen: WebIOSSimulatorScreenLayout(width: 402, height: 874),
-            executable: "/opt/homebrew/bin/baguette"
-        )
-
-        #expect(lifecycle.events.first == WebIOSBaguetteTouchEvent(type: "touch1-down", x: 201, y: 700, width: 402, height: 874))
-        #expect(lifecycle.events.last == WebIOSBaguetteTouchEvent(type: "touch1-up", x: 201, y: 200, width: 402, height: 874))
+    @Test("native swipe derives point space from selected simulator geometry when omitted")
+    func nativeSwipeDerivesPointSpaceWhenDimensionsAreOmitted() throws {
+        let gesture = try nativeHIDContacts(
+            input: .swipe(startX: 201, startY: 700, endX: 201, endY: 200, duration: 0.35),
+            screen: .init(pointSize: CGSize(width: 402, height: 874)))
+        #expect(gesture.contacts.first?.point == CGPoint(x: 0.5, y: 700.0 / 874))
+        #expect(gesture.contacts.last?.point == CGPoint(x: 0.5, y: 200.0 / 874))
     }
 
-    @Test("iOS web host swipe builds a complete touch lifecycle for vertical pagers")
-    func iOSWebHostSwipeBuildsCompleteTouchLifecycleForVerticalPagers() throws {
-        let lifecycle = try webIOSBaguetteSwipeLifecycle(
-            input: .swipe(
-                startX: 201,
-                startY: 700,
-                endX: 201,
-                endY: 200,
-                width: 402,
-                height: 874,
-                duration: 0.35
-            ),
-            udid: "SIM-1",
-            screen: WebIOSSimulatorScreenLayout(width: 402, height: 874),
-            executable: "/opt/homebrew/bin/baguette"
-        )
-
-        #expect(Array(lifecycle.command.arguments.suffix(3)) == ["input", "--udid", "SIM-1"])
-        #expect(lifecycle.duration == 0.35)
-        #expect(abs(lifecycle.cadence - (0.35 / 11)) < 0.000_001)
-        #expect(lifecycle.terminalLinger >= 0.1)
-        #expect(lifecycle.events.first == WebIOSBaguetteTouchEvent(type: "touch1-down", x: 201, y: 700, width: 402, height: 874))
-        #expect(lifecycle.events.last == WebIOSBaguetteTouchEvent(type: "touch1-up", x: 201, y: 200, width: 402, height: 874))
-        #expect(lifecycle.events.dropFirst().dropLast().allSatisfy { $0.type == "touch1-move" })
-
-        var pagerState = "idle"
-        for event in lifecycle.events.dropLast() {
-            pagerState = event.type == "touch1-down" ? "interactive" : pagerState
+    @Test("native swipe sends a complete continuous lifecycle through terminal up")
+    func nativeSwipeSendsCompleteLifecycleThroughTerminalUp() throws {
+        let gesture = try nativeHIDContacts(
+            input: .swipe(startX: 201, startY: 700, endX: 201, endY: 200, width: 402, height: 874, duration: 0.35),
+            screen: .init(pointSize: CGSize(width: 402, height: 874)))
+        var phases: [NativeDigitizerPhase] = []
+        var positions: [CGPoint] = []
+        var cadence: [Double] = []
+        try executeNativeHIDContacts(gesture.contacts, cadence: gesture.cadence, sleep: { cadence.append($0) }) { contact in
+            phases.append(contact.phase)
+            positions.append(contact.point)
         }
-        #expect(pagerState == "interactive", "down/move without terminal up reproduces the stuck UIPageViewController state")
-        if lifecycle.events.last?.type == "touch1-up" {
-            pagerState = "settled"
-        }
-        #expect(pagerState == "settled")
+        #expect(phases == [.down] + Array(repeating: .move, count: 10) + [.up])
+        #expect(positions.first == CGPoint(x: 0.5, y: 700.0 / 874))
+        #expect(positions.last == CGPoint(x: 0.5, y: 200.0 / 874))
+        #expect(zip(positions, positions.dropFirst()).allSatisfy { pair in pair.0.y >= pair.1.y })
+        #expect(abs(cadence.reduce(0, +) - 0.35) < 0.000_001)
+        // This fixture proves the sender lifecycle, not guest pager settlement.
     }
 
-    @Test("iOS web host swipe runner requires every lifecycle ack including terminal up")
-    func iOSWebHostSwipeRunnerRequiresEveryLifecycleAckIncludingTerminalUp() throws {
-        let lifecycle = try webIOSBaguetteSwipeLifecycle(
-            input: .swipe(
-                startX: 200,
-                startY: 700,
-                endX: 200,
-                endY: 180,
-                width: 400,
-                height: 872,
-                duration: 0.35
-            ),
-            udid: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
-            screen: WebIOSSimulatorScreenLayout(width: 400, height: 872),
-            executable: "/fake/baguette"
-        )
-        let missingTerminalAck = Array(repeating: #"{"ok":true}"#, count: lifecycle.events.count - 1)
-            .joined(separator: "\n") + "\n"
-
-        #expect(throws: (any Error).self) {
-            _ = try runWebIOSBaguetteLifecycle(lifecycle, resizeProbe: { _, _ in .inactive }) { fakeLifecycle in
-                HostProcessResult(
-                    stdoutData: Data(missingTerminalAck.utf8),
-                    stderrData: Data(),
-                    exitCode: 0,
-                    sourceCommand: hostSourceCommand(fakeLifecycle.command),
-                    stdoutTruncated: false,
-                    stderrTruncated: false,
-                    stdoutLogPath: nil,
-                    stderrLogPath: nil,
-                    stdoutBytes: missingTerminalAck.utf8.count,
-                    stderrBytes: 0
-                )
+    @Test("native swipe requires terminal transport completion and never replays")
+    func nativeSwipeRequiresTerminalTransportCompletionWithoutReplay() throws {
+        let gesture = try nativeHIDContacts(
+            input: .swipe(startX: 200, startY: 700, endX: 200, endY: 180, duration: 0.35),
+            screen: .init(pointSize: CGSize(width: 400, height: 872)))
+        var phases: [NativeDigitizerPhase] = []
+        #expect(throws: NativeDigitizerError.timeout) {
+            try executeNativeHIDContacts(gesture.contacts, cadence: gesture.cadence, sleep: { _ in }) { contact in
+                phases.append(contact.phase)
+                if contact.phase == .up { throw NativeDigitizerError.timeout }
             }
         }
+        #expect(phases == gesture.contacts.map(\.phase))
+        #expect(phases.filter { $0 == .down }.count == 1)
+        #expect(phases.filter { $0 == .up }.count == 1)
     }
 
-    @Test("iOS web host swipe default runner keeps one session alive through terminal flush")
-    func iOSWebHostSwipeDefaultRunnerKeepsOneSessionAliveThroughTerminalFlush() throws {
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("triton-fake-baguette-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let executable = directory.appendingPathComponent("baguette").path
-        let log = directory.appendingPathComponent("events.log").path
-        let script = """
-        #!/bin/sh
-        printf 'pid:%s\\n' "$$" >> "\(log)"
-        while IFS= read -r line; do
-          printf '%s\\n' "$line" >> "\(log)"
-          printf '%s\\n' '{"ok":true}'
-        done
-        """
-        try script.write(toFile: executable, atomically: true, encoding: .utf8)
-        chmod(executable, S_IRWXU)
-
-        let lifecycle = try webIOSBaguetteSwipeLifecycle(
-            input: .swipe(
-                startX: 200,
-                startY: 700,
-                endX: 200,
-                endY: 180,
-                width: 400,
-                height: 872,
-                duration: 0.11
-            ),
-            udid: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
-            screen: WebIOSSimulatorScreenLayout(width: 400, height: 872),
-            executable: executable
-        )
-        let started = Date()
-        let result = try runWebIOSBaguetteLifecycle(lifecycle, resizeProbe: { _, _ in .inactive })
-        let elapsed = Date().timeIntervalSince(started)
-        let lines = try String(contentsOfFile: log, encoding: .utf8)
-            .split(whereSeparator: \.isNewline)
-            .map(String.init)
-        let events = try lines.dropFirst().map {
-            try JSONDecoder().decode(WebIOSBaguetteTouchEvent.self, from: Data($0.utf8))
+    @Test("native helper acknowledgement preserves submission only verification")
+    func nativeHelperAcknowledgementPreservesSubmissionOnlyVerification() throws {
+        let input = TKInputRequest.swipe(startX: 1, startY: 8, endX: 1, endY: 2)
+        let expected = TKInputResult.success(action: "swipe", strategy: "native-hid-swipe", source: "host-hid",
+            verification: .init(hint: "Verify the settled guest business state separately.", suggestedCommands: []))
+        let result = try runNativeSimulatorInput(target: "SIM-1", input: input) { command in
+            #expect(Array(command.arguments.prefix(3)) == ["device", "hid-input", "--device"])
+            let data = try JSONEncoder().encode(expected)
+            return HostProcessResult(stdoutData: data, stderrData: Data(), exitCode: 0,
+                sourceCommand: "fixture native helper", stdoutTruncated: false, stderrTruncated: false,
+                stdoutLogPath: nil, stderrLogPath: nil, stdoutBytes: data.count, stderrBytes: 0)
         }
-
-        #expect(result.exitCode == 0)
-        #expect(lines.filter { $0.hasPrefix("pid:") }.count == 1)
-        #expect(events == lifecycle.events)
-        #expect(elapsed >= lifecycle.duration + lifecycle.terminalLinger)
+        #expect(result.ok)
+        #expect(result.verification?.required == true)
+        #expect(result.verification?.status == "not-verified")
     }
 
-    @Test("iOS web host long press uses same-point host HID swipe")
-    func iOSWebHostLongPressUsesSamePointHostHIDSwipe() throws {
-        let command = try webIOSBaguetteCommand(
-            action: .longPress(
-                x: 600,
-                y: 1200,
-                width: 1200,
-                height: 2400,
-                duration: 0.7
-            ),
-            udid: "SIM-1",
-            screen: WebIOSSimulatorScreenLayout(width: 400, height: 800),
-            executable: "/opt/homebrew/bin/baguette"
-        )
-
-        #expect(command.executable == "/opt/homebrew/bin/baguette")
-        #expect(command.arguments == [
-            "swipe",
-            "--udid", "SIM-1",
-            "--start-x", "200",
-            "--start-y", "400",
-            "--end-x", "200",
-            "--end-y", "400",
-            "--width", "400",
-            "--height", "800",
-            "--duration", "0.7"
-        ])
+    @Test("native HID refuses unaccepted press and hold instead of reusing legacy swipe argv")
+    func nativeHIDRefusesUnacceptedPressAndHold() {
+        #expect(throws: NativeHIDControlError.self) {
+            _ = try nativeHIDContacts(input: .longPress(x: 600, y: 1200, width: 1200, height: 2400, duration: 0.7),
+                screen: .init(pointSize: CGSize(width: 400, height: 800)))
+        }
     }
 
     @Test("non iOS web host input does not use runtime fallback")

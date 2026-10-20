@@ -20,7 +20,7 @@ metadata:
 - AI agent 首期只需要 CLI/HTTP 机器可读契约；能通过 CLI/HTTP 完成读取和控制时，不新增 Web/SSE 渲染入口。
 - CLI helper 若已经打印了机器可读错误 envelope 并通过 `ExitCode.failure` 终止，外层 catch 必须透传 `ExitCode`，不能再二次包装成另一个 `{ok:false,error:...}`。验证时要检查失败输出仍是单个合法 JSON 对象。
 - Emulator 接管当前产品边界是本机 CLI + 本机 iOS Simulator / Android Emulator / HarmonyOS DevEco Emulator；不要把该方向扩展成真机、远端 agent、设备云、Web/Wails UI、对外 HTTP 产品面或中台服务，除非另建 space 重新定边界。
-- 本机 emulator / simulator 动作必须 Triton-first：agent 在调用 `baguette`、裸 `xcrun` / `simctl`、`hdc`、`adb`、DevEco Emulator CLI、XcodeBuildMCP 或裸 `xcodebuild` 前，必须先保存 `triton status/doctor/capabilities/schema/plan` 的机器可读事实；只有 Triton 返回失败、unsupported 或 schema/capability 未覆盖时才 fallback，且报告中必须保留 Triton 命令、错误码或 unsupported 证据和 fallback 命令。
+- 本机 emulator / simulator 动作必须 Triton-first：agent 在调用裸 `xcrun` / `simctl`、`hdc`、`adb`、DevEco Emulator CLI、XcodeBuildMCP 或裸 `xcodebuild` 前，必须先保存 `triton status/doctor/capabilities/schema/plan` 的机器可读事实；只有 Triton 返回失败、unsupported 或 schema/capability 未覆盖时才 fallback，且报告中必须保留 Triton 命令、错误码或 unsupported 证据和 fallback 命令。
 - 真实项目回归或 issue 证据优先用 `triton evidence capture --case <case> --output <dir.tritonevidence> --json` 生成 manifest + artifacts；需要拆解时再单独跑 `status/list/ax/screenshot/export`。
 - `evidence capture --json` 的 stdout 必须是单一 manifest；消费方必须联合检查 `ok`、`partial`、顶层 `error` 与 `skipped[].error`。预期 unsupported 可返回 `ok:true, partial:true`；请求或写入失败返回 `ok:false, partial:true`、稳定 `evidence_capture_partial` 并以非零状态退出，不能只凭已存在的少量 artifacts 判断 capture 成功。
 - 完整回归报告优先用 `triton evidence capture --case <case> --output <dir.tritonevidence> --json`；最终 pass/fail 判断优先用 `triton verify text-exists|text-not-exists <text> --json`，重复文本用 `--within` / `--role` / `--count` 收敛。
@@ -28,7 +28,7 @@ metadata:
 - 同文案多目标点击先用 `triton act find "<text>" --all --json` 获取候选；已知目标点位时优先用 `triton act tap "<text>" --at x,y --json` 消歧，也可用 `--index <n>` 或 `--within x,y,width,height`。`--within` 表示区域过滤，只有一个点位时不要把 width/height 伪造成 0。
 - WebView 内 H5 控件命中问题优先保持 agent 高层入口：使用 `triton act tap --webview-aware --selector <css> --webview-id <id> --page-session-id <id> --expect-text <text> --json`，不要把 `webview tap/click` 暴露成主操作面。DOM click 为 `trusted=false`，没有 `--expect-text` 或其它显式验证时结果必须是 `uncertain`，不能宣称业务成功；`expect-request`、CDP/远程调试、任意 JS eval 和 trusted HID 合成需另建切片。
 - 面向 agent 的 action 命令统一走 `triton act find/tap/swipe/type/paste/clear/press/focus/set-text/select-segment/set-switch/input`，默认要求机器可读输出。旧 action root 不再作为兼容入口；raw layout / AX 排查走 `triton debug ax --json` 或 `triton debug hierarchy --json`。
-- 设备控制参考 Baguette 时，先区分 embedded TritonKit runtime 与 macOS host-side adapter：embedded runtime 只能承诺公开 UIKit API 可验证的 in-app 控制；SimulatorKit / HID / Home / App Switcher 等设备级动作必须等 host-side adapter，当前要返回明确 unsupported。
+- 设备控制先区分 embedded runtime 与 macOS host adapter：embedded 仅承诺公开 UIKit 可验证的 in-app 控制；Simulator tap/swipe 使用内置隔离 HID helper，不调用外部 Baguette、不保留其 override/通用进程hook。其它设备级动作按各自现有 provider/unsupported 契约判断，不能把上游工具的能力名当作已接入能力。
 - 新增 host-side fallback 时，默认 embedded 路径必须保持 fail-closed；只有显式 opt-in、目标 scope 和 geometry 校验通过后才能调用 adapter，并在结果中保留 source/strategy/geometry/sourceCommands 与 `verification.required` 边界，同时更新对外 public skill 的使用与验收说明。
 - 可安装 artifact discovery 必须遵守平台安装性约束：Harmony `assembleApp` 只选择可识别为 signed 的 HAP；没有 signed 候选时沿用单一 `hap_artifact_not_found` 失败 envelope，不把 unsigned 产物伪装成 real-device installable artifact；兼容性更宽的 emulator/debug build 路径要单独标注。
 - Wails 绑定先测绑定对象和 DTO；有真实 UI 后再补桌面窗口验收。

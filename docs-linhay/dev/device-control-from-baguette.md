@@ -12,9 +12,9 @@
 4. 每个动作都必须返回机器可读结果：`ok`、`action`、`message`、命中对象信息。
 5. 不支持的设备级动作必须显式返回 unsupported，不能伪装成功。
 
-## Triton 第一阶段边界
+## Triton 第一阶段边界（2026-05 历史）
 
-Triton 当前运行时在被测 iOS App 进程内，通过 WebSocket 接收 CLI 请求。它不能直接使用 Baguette 的 SimulatorKit / Indigo HID host-side 路径。因此第一阶段只落地可通过公开 UIKit API 验证的 in-app 控制：
+当时 Triton embedded 运行时在被测 iOS App 进程内，通过 WebSocket 接收 CLI 请求。它不能直接使用 Baguette 的 SimulatorKit / Indigo HID host-side 路径。因此第一阶段只落地可通过公开 UIKit API 验证的 in-app 控制：
 
 1. `tap`：支持坐标或 `oid`。命中 `UIControl` 时触发公开 control action；命中普通 view 时返回 unsupported。
 2. `swipe`：支持坐标路径。命中 `UIScrollView` 时调整 `contentOffset`，用于列表/滚动区域控制；命中非 scroll view 返回 unsupported。
@@ -60,7 +60,7 @@ Content-Type: application/json
 {"ok":false,"action":"button","message":"Host-side HID is not available in the embedded TritonKit runtime"}
 ```
 
-## 后续阶段
+## 当时的后续阶段规划
 
 若要接近 Baguette 的完整设备控制能力，需要新增 macOS host-side adapter，并明确它和 embedded TritonKit runtime 的关系：
 
@@ -80,3 +80,9 @@ Content-Type: application/json
 - `triton debug hit --at 270,300 --format json` 命中 `UIKitSmokeButton` 并返回 frame center。
 - `triton screenshot --output /tmp/triton-screenshot-smoke.png --metadata` 写出 PNG 截图。
 - `triton act input --format json < gestures.ndjson` 完成 tap、focus/type、swipe 批量动作，并由 XcodeBuildMCP UI 快照确认界面状态。
+
+## 2026-10-20：内置适配与依赖退出
+
+当前实现以 [SP-218](../spaces/SP-218-issue-222-device-hub-input/README.md) 为准：macOS CLI 内置选中 Xcode 的 CoreSimulator/SimulatorKit/IOHID digitizer，tap/swipe 不再调用 Baguette。旧外部 argv/NDJSON executor、stderr drain、自动 DYLD/Resize hook、override 环境变量与 Web 空进程字段全部移除；doctor/framebuffer/native helper 共用中性选中 Xcode resolver。
+
+本页保留来源与第一阶段设计历史。Baguette 的源码出处/Apache-2.0许可不属于安装依赖；没有导入该项目的全部命令。未实现的 host 手势仍按既有 unsupported 契约返回，Device Hub 占用仍拒绝，不从参考清单推导触控验收。

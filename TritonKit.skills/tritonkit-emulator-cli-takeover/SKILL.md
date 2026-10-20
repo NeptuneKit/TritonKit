@@ -33,7 +33,7 @@ triton schema --command <command> --json
 triton plan ... --json
 ```
 
-Fallback to `baguette`, raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild` only when Triton proves failure, unsupported scope/capability, or missing schema coverage. Keep the Triton command, error code or unsupported evidence, and fallback command in the report.
+Fallback to raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild` only when Triton proves failure, unsupported scope/capability, or missing schema coverage. Keep the Triton command, error code or unsupported evidence, and fallback command in the report.
 
 ## Device Hub routing
 
@@ -85,7 +85,7 @@ triton act tap --webview-aware --selector "#submit" --webview-id <webview-id> --
 triton wait text "成功" --platform <ios|android|harmony> --device <selector> --json
 ```
 
-The iOS coordinate-only form with `sim:<UDID>`, a raw Simulator UUID, `booted`, or `current` is a constrained host-HID path: it bypasses embedded target resolution so a stale/background runtime on the same Simulator cannot receive the action. Canonical `triton:ios-simulator:<UDID>` and `/app:<bundle-id>` selectors remain embedded-runtime targets. Treat host-HID success as submission-only and verify the business postcondition separately.
+Without `--platform`, the iOS coordinate-only form with `sim:<UDID>`, a raw Simulator UUID, `booted`, or `current` is a constrained host-HID path: it bypasses embedded target resolution so a stale/background runtime on the same Simulator cannot receive the action. Canonical `triton:ios-simulator:<UDID>` and `/app:<bundle-id>` selectors remain embedded-runtime targets. Treat host-HID success as submission-only and verify the business postcondition separately.
 
 Evidence:
 
@@ -145,8 +145,14 @@ Query the installed schema before selecting these capabilities; preserve unsuppo
 
 ## Offline Simulator swipe (#215)
 
-`triton sim swipe --simulator booted --start-x 360 --start-y 700 --end-x 80 --end-y 700 --duration 0.35 --json` 通过现有 Baguette host HID 适配器执行，不依赖 embedded server 或 Web 服务。默认坐标为 Simulator points；可成对传 `--width/--height` 表示源图坐标空间。duration 为有限正数且最多 10 秒。成功只证明 host submission，必须用同目标 `triton sim ax --device <udid> --json` / `triton sim screenshot` 检查 settled 后置条件。后端不可用时失败关闭，不自动落回 embedded runtime。
+`triton sim swipe --simulator booted --start-x 360 --start-y 700 --end-x 80 --end-y 700 --duration 0.35 --json` 通过TritonKit 内置 SimulatorKit/IOHID 适配器执行，不依赖 embedded server 或 Web 服务。默认坐标为 Simulator points；可成对传 `--width/--height` 表示源图坐标空间。duration 为有限正数且最多 10 秒。成功只证明 host submission，必须用同目标 `triton sim ax --device <udid> --json` / `triton sim screenshot` 检查 settled 后置条件。后端不可用时失败关闭，不自动落回 embedded runtime。
 
 ## Optional independent view highlight
 
 Implemented in the source tree: optional Debug UIKit border highlighting and conditional restoration. Use [view-highlight.md](references/view-highlight.md) for `highlight capabilities/apply/status/clear`. Ordinary screenshots retain their existing access requirements; no built-in SDK is mandatory. First provider is Debug UIKit. Capture and restoration are separate facts; preserve recovery IDs and verify clear receipts. Automatic screenshot composition and cross-platform providers remain future slices.
+
+## Device Hub host input authority
+
+Discover `triton schema --command act.tap --json` on the actual CLI before using `--hid-only`. Explicit `--platform ios` defaults to AX activation, including coordinates: `source=host-ax`, `strategy=accessibility-perform-press`, `verification.required=true`. For a touch-path regression use `triton act tap --platform ios --device sim:<UDID> --at 120,240 --hid-only --json`; only local Simulator coordinates are accepted, with no semantic/embedded/WebView fallback. Without `--platform`, existing explicit Simulator coordinate selectors retain host HID routing.
+
+Tap and `triton sim swipe` use the native digitizer bundled in triton, without an external Baguette executable or chrome lookup. Device Hub guest HID ownership returns `ios_host_hid_device_hub_attached`; unknown ownership and unsupported display topology fail closed. No automatic SpringBoard restart or heal occurs. Follow the selected-device doctor next step; `hidCompatibility.hostChromeLayout` is bundle presence only and `chromeLookupVerified=false`. Framework compatibility, booted state, AX activation, screenshots and ACKs do not prove HID delivery. Do not attribute an external native CUA drag/scroll failure to Triton. No verified host multi-tap/long-press primitive is supplied here; `act tap --duration` stays unsupported. App-owned semantic actions can check business state but cannot replace physical-touch regression proof. Report that boundary and preserve the typed error instead of claiming Device Hub HID support.

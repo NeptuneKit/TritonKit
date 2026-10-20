@@ -22,7 +22,7 @@ final class CLIHostSimulatorFramebufferService: @unchecked Sendable {
     func loadPrivateFrameworks() -> Bool {
         lock.lock()
         defer { lock.unlock() }
-        guard let plan = framebufferFrameworkPlan(developerDirectory: baguetteDeveloperDirectory(environment: ProcessInfo.processInfo.environment)),
+        guard let plan = framebufferFrameworkPlan(developerDirectory: selectedXcodeDeveloperDirectory(environment: ProcessInfo.processInfo.environment)),
               frameworkLoader.load(plan, load: { dlopen($0, RTLD_LAZY | RTLD_LOCAL) != nil }) else { return false }
         selectedDeveloperDirectory = plan.developerDirectory
         return true

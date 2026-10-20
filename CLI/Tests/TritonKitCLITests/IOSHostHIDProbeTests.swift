@@ -1,4 +1,3 @@
-import Darwin
 import Foundation
 import TritonKitShared
 import Testing
@@ -58,64 +57,25 @@ struct IOSHostHIDProbeTests {
         #expect(!json.contains("/fixture"))
     }
 
-    @Test func helperBootstrapFailureRetainsSpecificReason() {
-        #expect(iosHostHIDFailureCode(stderr: "SimulatorKit dlopen failed; SimDeviceLegacyHIDClient class not found") == "ios_host_hid_legacy_backend_unavailable")
-        #expect(iosHostHIDFailureCode(stderr: "SimulatorKit dlopen failed") == "ios_host_hid_simulator_kit_load_failed")
-        #expect(iosHostHIDFailureCode(stderr: "layout success") == nil)
-    }
-
     @Test func doctorParserAcceptsSelectedDevice() throws {
         let doctor = try DeviceDoctor.parse(["--platform", "ios", "--device", "SIM-1", "--json"])
         #expect(doctor.device == "SIM-1")
     }
-    @Test func swipeBootstrapEOFProducesTypedRedactedEnvelope() throws {
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("hid-bootstrap-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let executable = directory.appendingPathComponent("baguette")
-        let script = """
-        #!/bin/sh
-        IFS= read -r first
-        printf '%s\\n' 'SimulatorKit dlopen failed /private/secret; SimDeviceLegacyHIDClient class not found' >&2
-        i=0
-        while [ "$i" -lt 3000 ]; do
-          printf '%s\\n' 'private diagnostic payload' >&2
-          i=$((i+1))
-        done
-        exit 1
-        """
-        try script.write(to: executable, atomically: true, encoding: .utf8)
-        chmod(executable.path, S_IRWXU)
-        let lifecycle = try webIOSBaguetteSwipeLifecycle(input: .swipe(startX: 2, startY: 8, endX: 2, endY: 2), udid: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE", screen: .init(width: 10, height: 10), executable: executable.path)
-        let started = Date()
-        var failure: Error?
-        do { _ = try runWebIOSBaguetteLifecycle(lifecycle, resizeProbe: { _, _ in .inactive }) }
-        catch { failure = error }
-        let error = try #require(failure)
-        guard case HostCommandRunError.nonZeroExit(_, let result) = error else {
-            Issue.record("Bootstrap EOF discarded stderr: \(error)")
-            return
-        }
-        #expect(result.stderr.contains("SimDeviceLegacyHIDClient"))
-        #expect(result.stderrBytes > 16_384)
-        #expect(result.stderrData.count <= 16_384)
-        #expect(result.stderrTruncated)
-        #expect(Date().timeIntervalSince(started) < 5)
-        let pipe = Pipe()
-        let original = dup(STDOUT_FILENO)
-        fflush(stdout)
-        dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
-        do { try failHostCommand(error, outputFormat: .json) } catch { }
-        fflush(stdout)
-        dup2(original, STDOUT_FILENO)
-        close(original)
-        try pipe.fileHandleForWriting.close()
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let envelope = try JSONDecoder().decode(TKCLIErrorResponse.self, from: data)
-        #expect(!envelope.ok)
-        #expect(envelope.error.code == "ios_host_hid_legacy_backend_unavailable")
-        #expect(!String(decoding: data, as: UTF8.self).contains("/private/secret"))
-        #expect(!String(decoding: data, as: UTF8.self).contains("diagnostic payload"))
-    }
 
+    @Test func nativeHelperMalformedBootstrapFailsWithoutLeakingOutput() throws {
+        let input = TKInputRequest.tap(x: 1, y: 2)
+        do {
+            _ = try runNativeSimulatorInput(target: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE", input: input) { command in
+                let result = HostProcessResult(stdoutData: Data("PRIVATE MALFORMED ENVELOPE".utf8), stderrData: Data("/private/secret diagnostic payload".utf8), exitCode: 1, sourceCommand: "private command", stdoutTruncated: false, stderrTruncated: true, stdoutLogPath: nil, stderrLogPath: nil, stdoutBytes: 26, stderrBytes: 30)
+                throw HostCommandRunError.nonZeroExit(command: command, result: result)
+            }
+            Issue.record("Malformed native helper output must fail closed")
+        } catch let error as NativeHIDControlError {
+            #expect(error.code == "ios_host_hid_helper_failed")
+            let json = try encodeJSON(error.detail)
+            #expect(!json.contains("PRIVATE"))
+            #expect(!json.contains("/private/secret"))
+            #expect(!json.contains("diagnostic payload"))
+        }
+    }
 }

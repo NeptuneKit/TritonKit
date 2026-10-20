@@ -748,7 +748,6 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "ios_simulator_resize_target_invalid",
                 "ios_simulator_resize_capture_unroutable",
                 "ios_simulator_resize_capture_state_unknown",
-                "ios_host_hid_legacy_backend_unavailable",
                 "ios_host_hid_simulator_kit_load_failed",
                 "target_not_found",
                 "ambiguous_target",
@@ -813,7 +812,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "runtime_dyld_cache_selector_required",
                 "runtime_match_selector_required",
                 "validation_failed",
-            ],
+            ] + schemaIOSNativeHIDFailureCodes,
             subcommands: [
                 TKCommandSubcommandSchema(name: "pairs", summary: "Readonly native watch-phone pair relationships", optionalOptions: ["--format", "--json"], outputSelectors: ["host.simulator-pairs"]),
                 TKCommandSubcommandSchema(
@@ -868,7 +867,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                         "triton verify text-exists <expected> --json",
                     ],
                     outputSelectors: ["input.result"],
-                    failureCodes: ["ios_simulator_resize_touch_unroutable", "ios_simulator_resize_state_unknown", "ios_simulator_resize_target_invalid", "simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "ios_host_hid_legacy_backend_unavailable", "ios_host_hid_simulator_kit_load_failed", "unsupported_host_input", "host_command_timeout", "validation_failed"]
+                    failureCodes: ["ios_simulator_resize_touch_unroutable", "ios_simulator_resize_state_unknown", "ios_simulator_resize_target_invalid", "simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "ios_host_hid_simulator_kit_load_failed", "unsupported_host_input", "host_command_timeout", "validation_failed"] + schemaIOSNativeHIDFailureCodes
                 ),
                 TKCommandSubcommandSchema(
                     name: "swipe",
@@ -881,7 +880,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                         "triton sim ax --device <udid|booted> --json",
                     ],
                     outputSelectors: ["input.result"],
-                    failureCodes: ["ios_simulator_resize_touch_unroutable", "ios_simulator_resize_state_unknown", "ios_simulator_resize_target_invalid", "target_not_found", "ambiguous_target", "simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "ios_host_hid_legacy_backend_unavailable", "ios_host_hid_simulator_kit_load_failed", "unsupported_host_input", "host_command_timeout", "invalid_duration", "validation_failed"]
+                    failureCodes: ["ios_simulator_resize_touch_unroutable", "ios_simulator_resize_state_unknown", "ios_simulator_resize_target_invalid", "target_not_found", "ambiguous_target", "simulator_not_found", "simulator_not_booted", "host_action_failed", "host_input_failed", "ios_host_hid_simulator_kit_load_failed", "unsupported_host_input", "host_command_timeout", "invalid_duration", "validation_failed"] + schemaIOSNativeHIDFailureCodes
                 ),
                 TKCommandSubcommandSchema(
                     name: "type",

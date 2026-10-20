@@ -166,7 +166,7 @@ struct CollectionCellHostHIDFallbackTests {
                     message: "submitted",
                     strategy: collectionCellHostHIDStrategy,
                     source: "host-hid",
-                    sourceCommands: ["baguette tap --udid SIM-1 --x 140 --y 140 --width 390 --height 844"]
+                    sourceCommands: ["triton device hid-input --device <simulator> --request <coordinate-gesture>"]
                 )
             }
         )
