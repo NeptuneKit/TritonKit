@@ -265,4 +265,4 @@
 
 2026-10-19追加：原主目录WIP已原样保存为1131b183并完成差异裁决，资料状态与本地main一致；[完整合并记录](./SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。
 
-| `SP-218-issue-222-device-hub-input` | [`SP-218-issue-222-device-hub-input`](./SP-218-issue-222-device-hub-input/README.md) | 实现完成，局部门禁通过 | #222 内置Simulator HID、HID-only、AX receipt及Baguette运行依赖清零；CLI1501/Web78通过；全局docs编号缺214～217待联合复验，独立worktree未合并 |
+| `SP-218-issue-222-device-hub-input` | [`SP-218-issue-222-device-hub-input`](./SP-218-issue-222-device-hub-input/README.md) | 已合入本地main | merge 5fc2a600；#222 内置Simulator HID、HID-only、AX receipt及Baguette运行依赖清零；CLI1501/Web78通过；全局docs编号缺214～217待联合复验，未推送 |

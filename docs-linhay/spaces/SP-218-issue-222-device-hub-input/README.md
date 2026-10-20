@@ -1,6 +1,6 @@
 # SP-218 · Issue 222 Device Hub host input
 
-- 状态：已清除全部 Baguette 运行依赖与兼容层，CLI/Web/根包及 Release 验证通过；文档全局编号门禁受基线缺 SP-214～217 阻塞。独立 worktree，未合并、未提交、未发布。
+- 状态：已清除全部 Baguette 运行依赖与兼容层，CLI/Web/根包及 Release 验证通过；文档全局编号门禁受基线缺 SP-214～217 阻塞。已合入本地 main（merge commit 待下方记录）；未推送、未发布。
 - Issue：[222](https://github.com/NeptuneKit/TritonKit/issues/222)，含 [swipe 追加评论](https://github.com/NeptuneKit/TritonKit/issues/222#issuecomment-6285005107)。
 - 影响层：CLI host adapter、doctor/schema、tap receipt；不新增 HTTP/Web/Wails 控制面。
 - 分支：`feat/SP-218-issue-222-device-hub-input`；worktree：`../TritonKit-worktrees/SP-218-issue-222-device-hub-input/`；基线 main `f82872e2`。原工作区已有 SP-214～217 等资料，保持原样。
@@ -50,4 +50,4 @@
 - **通过**：最终 Release 在 PATH 仅含系统目录、旧 override 指向不存在路径时，只读 preflight 仍单一 `ios_host_hid_device_hub_attached` / exit1；doctor 为 compatible=true、inputDispatchVerified=false、Device Hub attached，未发送输入。非法 HID-only 混合 OID 为单一 validation_failed / exit1；schema 输出合法。旧 override、executor 和 resolver 的六个专属符号均不存在于 Release 二进制，Apache LICENSE/NOTICE 与源码资源逐字节一致。原始事实仅在忽略目录 `.build/sp218-facts/final-*`，不公开设备标识。
 - **通过**：public skills packaging 13 项、经验路由/索引及 28 项夹具、CI scope classifier、`git diff --check`；生产 Sources/Web bridge/manifest/发布脚本无外部 Baguette 调用、旧 override 或兼容 hook。
 - **失败，已归因**：最终 `verify.sh --local`、`verify.sh --ci-docs` 和 `check-docs.sh` 仍仅在上述 SP-214～217 物理编号缺口退出；须联合权威登记后复验，不宣称全局门禁通过。
-- **跳过/未执行**：iOS Simulator app build 使用 TRITON_VERIFY_XCODE=0；真实 guest 触控、Device Hub 所有权切换、双架构发布/安装与用户验收均未执行。本机 Device Hub 占用时正确拒绝，不能把此结果当作手势投递成功。独立 worktree 未提交、未合并、未发布。
+- **跳过/未执行**：iOS Simulator app build 使用 TRITON_VERIFY_XCODE=0；真实 guest 触控、Device Hub 所有权切换、双架构发布/安装与用户验收均未执行。本机 Device Hub 占用时正确拒绝，不能把此结果当作手势投递成功。独立 worktree 已提交并合入本地 main；未推送、未发布。
