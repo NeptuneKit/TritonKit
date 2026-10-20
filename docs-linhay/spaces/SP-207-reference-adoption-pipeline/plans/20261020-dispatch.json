@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-20",
+  "model": "gpt-6.1-sol",
+  "model_explicit": true,
+  "product_baseline": "f82872e2fa457431ee7cbc7df2bafecea7ca6f1c",
+  "attempts": [
+    {
+      "space": "SP-214-simulator-display-safety",
+      "role": "execution",
+      "status": "model_validation_failed",
+      "thread_id": null,
+      "raw_result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "create_thread could not validate model \"gpt-6.1-sol\". Use a model listed in the tool description, or omit model."
+          }
+        ],
+        "isError": true
+      }
+    },
+    {
+      "space": "SP-215-simulator-display-integration",
+      "role": "controller",
+      "status": "model_validation_failed",
+      "thread_id": null,
+      "raw_result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "create_thread could not validate model \"gpt-6.1-sol\". Use a model listed in the tool description, or omit model."
+          }
+        ],
+        "isError": true
+      }
+    }
+  ],
+  "deferred": [
+    {
+      "space": "SP-216-harmony-forward-cleanup",
+      "role": "execution",
+      "status": "not_attempted_due_confirmed_interface_failure",
+      "thread_id": null
+    },
+    {
+      "space": "SP-217-harmony-forward-integration",
+      "role": "controller",
+      "status": "not_attempted_due_confirmed_interface_failure",
+      "thread_id": null
+    }
+  ],
+  "notes": [
+    "两次均为真实必要分派；没有为测试模型额外创建会话，没有省略model/换模型。",
+    "SP-210/SP-212与旧主控已交付；历史失败不重新列为旧任务blocker。",
+    "本批四角色未启动；规划/工作区存在不等于分派成功。"
+  ]
+}

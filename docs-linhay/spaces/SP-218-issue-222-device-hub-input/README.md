@@ -1,6 +1,6 @@
 # SP-218 · Issue 222 Device Hub host input
 
-- 状态：已清除全部 Baguette 运行依赖与兼容层，CLI/Web/根包及 Release 验证通过；文档全局编号门禁受基线缺 SP-214～217 阻塞。已合入本地 main（merge commit 待下方记录）；未推送、未发布。
+- 状态：已清除全部 Baguette 运行依赖与兼容层，CLI/Web/根包及 Release 验证通过；文档全局编号门禁已在本地 main 补齐 SP-214～217 后通过。已合入本地 main（merge commit 待下方记录）；未推送、未发布。
 - Issue：[222](https://github.com/NeptuneKit/TritonKit/issues/222)，含 [swipe 追加评论](https://github.com/NeptuneKit/TritonKit/issues/222#issuecomment-6285005107)。
 - 影响层：CLI host adapter、doctor/schema、tap receipt；不新增 HTTP/Web/Wails 控制面。
 - 分支：`feat/SP-218-issue-222-device-hub-input`；worktree：`../TritonKit-worktrees/SP-218-issue-222-device-hub-input/`；基线 main `f82872e2`。原工作区已有 SP-214～217 等资料，保持原样。
