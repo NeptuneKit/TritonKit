@@ -15,7 +15,7 @@
 3. **合并前检查**：在实际 `main` worktree 中确认干净状态，使用 `git merge-tree --write-tree main <candidate>` 预检。多个候选按顺序合并；同一文档发生 add/add 冲突时保留已验证实现，并把最新验收事实合并到主线索引/space README，不能整分支回灌历史 WIP。
 4. **合并后门禁**：合并后重跑受影响的完整测试、根包测试（适用时）、`docs-linhay/scripts/verify.sh --ci-docs`、`docs-linhay/scripts/check-docs.sh`、`git diff --check` 和适用的 local/release/smoke 门禁。只有门禁与主控验收都通过，采用登记才可标记 `local_merged`。
 5. **资料回写**：同步 space README、`spaces/INDEX.md`、`spaces/README.md`、SP-207 `adoption-state.json`、正式技术文档和当日 memory；写明实现 SHA、合并 SHA、测试数量、跳过项、未执行边界和远端操作状态。
-6. **清理**：门禁通过后先把需要保留的 ignored build 日志、未跟踪证据和继承文档复制到带 manifest/hash 的本地归档，再正常移除已合并 worktree，最后用 `git branch -d` 删除已合并分支。原工作区有用户 WIP 时保持原样，不能用清理动作覆盖或重置。
+6. **清理**：门禁通过后先把需要保留的 ignored build 日志、未跟踪证据和继承文档复制到带 manifest/hash 的本地归档，再正常移除已合并 worktree，最后用 `git branch -d` 删除已合并分支。原工作区有用户 WIP 时保持原样，不能用清理动作覆盖或重置。 收尾还须核对原项目目录的分支：用户要求回归主线且目录干净时，先整合源分支独有提交并确认祖先关系，再解除临时 worktree 对 main 的占用，将原目录切回 main。归档 ignored 证据后正常移除临时 worktree，删除已合并分支；不能只因 main-integrated 已同步就宣称原目录收口完成。
 
 自动流程只做本地合并和本地清理；push、tag、release、依赖安装、第三方代码、设备动作、签名和 DDI 仍需单独明确授权。状态通知必须区分“实现完成”“验收通过”“已合并”“已清理”，不能把其中一个阶段冒充全部完成。
 

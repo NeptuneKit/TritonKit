@@ -58,3 +58,5 @@
 - 2026-10-20：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261020-reference-update-report.md)24完整/9 partial；新增SP-214主屏安全与SP-216 HDC清理归属、主控SP-215/SP-217。工作区与BDD就绪，桌面显式gpt-6.1-sol必要创建仍拒绝；仅新批次待分派，SP-210/SP-212旧交付保持完成。iCTRL HEAD874f528，Release仍v1.98.12。
 
 - 2026-10-21：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261021-reference-update-report.md)23完整/10 partial；扫描后SP-219候选`51cd20dd`经SP-220主控审查合入本地main `f9399e5e`，focused 5/5、合并后CLI 1509/1509通过。sim-use `42aa9a2` 的Resizable display录制路由已纳入，AX/HID/真实Simulator仍留边界；显式gpt-6.1-sol create_thread仍模型校验失败，thread ID保持null。
+
+- 2026-10-21 主目录收口：旧 WIP `3ebb29fd` 已经 `d642e80c` 正式合入 main，原 TritonKit 目录切回 main；旧分支与 main-integrated 临时 worktree 清理，ignored 证据整体归档。见[收口记录](../spaces/SP-211-reference-adoption-integration/plans/20261021-main-checkout-closeout.md)。

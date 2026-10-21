@@ -330,22 +330,22 @@
 
 | 状态 | Space | 范围 | 下一步 |
 | --- | --- | --- | --- |
-| 已合入本地main | [SP-210-simulator-ax-geometry](./SP-210-simulator-ax-geometry/README.md) | Simulator AX缺失/非法几何不再猜测坐标 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
-| 已合入本地main | [SP-211-reference-adoption-integration](./SP-211-reference-adoption-integration/README.md) | 本批主控验证与本地合并 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
-| 已合入本地main | [SP-212-mobile-mcp-android-contracts](./SP-212-mobile-mcp-android-contracts/README.md) | Android 前台 activity 身份与 ADB legacy 文本转义 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
-| 已合入本地main | [SP-213-mobile-mcp-contracts-integration](./SP-213-mobile-mcp-contracts-integration/README.md) | SP-212 主控验证与本地main合并 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
+| v0.2.32已发布 | [SP-210-simulator-ax-geometry](./SP-210-simulator-ax-geometry/README.md) | Simulator AX缺失/非法几何不再猜测坐标 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；已推送/发布；分支/worktree已清理 |
+| v0.2.32已发布 | [SP-211-reference-adoption-integration](./SP-211-reference-adoption-integration/README.md) | 本批主控验证与本地合并 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；已推送/发布；分支/worktree已清理 |
+| v0.2.32已发布 | [SP-212-mobile-mcp-android-contracts](./SP-212-mobile-mcp-android-contracts/README.md) | Android 前台 activity 身份与 ADB legacy 文本转义 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；已推送/发布；分支/worktree已清理 |
+| v0.2.32已发布 | [SP-213-mobile-mcp-contracts-integration](./SP-213-mobile-mcp-contracts-integration/README.md) | SP-212 主控验证与本地main合并 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；已推送/发布；分支/worktree已清理 |
 
 2026-10-19追加：原主目录WIP已原样保存为1131b183并完成差异裁决，资料状态与本地main一致；[完整合并记录](./SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。
 
-| 已合入本地main | [SP-214-simulator-display-safety](./SP-214-simulator-display-safety/README.md) | Simulator主屏拓扑未知/非主屏时拒绝动作与捕获 | `0d35e95e`；真实 Simulator/Xcode 仍未执行 |
+| v0.2.32已发布 | [SP-214-simulator-display-safety](./SP-214-simulator-display-safety/README.md) | Simulator主屏拓扑未知/非主屏时拒绝动作与捕获 | `0d35e95e`；主屏 fresh probe 与离线门禁通过，真实 Simulator 未执行；worktree/分支已清理 |
 
-| 已合入本地main | [SP-215-simulator-display-integration](./SP-215-simulator-display-integration/README.md) | SP-214独立主控验证、本地合并 | `b782c192`；离线验收通过，未推送/发布 |
+| v0.2.32已发布 | [SP-215-simulator-display-integration](./SP-215-simulator-display-integration/README.md) | SP-214独立主控验证、本地合并 | `b782c192`；SP-214 离线验收完成，真实 Simulator 未执行；worktree/分支已清理 |
 
-| 已合入本地main | [SP-216-harmony-forward-cleanup](./SP-216-harmony-forward-cleanup/README.md) | ArkWeb HDC清理当前归属复核与进程内互斥 | `34f713c7`；真实 HDC 与跨进程竞态仍未执行 |
+| v0.2.32已发布 | [SP-216-harmony-forward-cleanup](./SP-216-harmony-forward-cleanup/README.md) | ArkWeb HDC清理当前归属复核与进程内互斥 | `34f713c7`；HDC ownership 清理与 37 项 focused tests 通过，真实 HDC 未执行；worktree/分支已清理 |
 
-| 已合入本地main | [SP-217-harmony-forward-integration](./SP-217-harmony-forward-integration/README.md) | SP-216独立主控验收、本地合并 | `36145c62`；离线验收通过，未推送/发布 |
+| v0.2.32已发布 | [SP-217-harmony-forward-integration](./SP-217-harmony-forward-integration/README.md) | SP-216独立主控验收、本地合并 | `36145c62`；离线验收完成，真实 HDC/跨进程竞态未执行；worktree/分支已清理 |
 
-| 已合入本地main | [SP-218-issue-222-device-hub-input](./SP-218-issue-222-device-hub-input/README.md) | native Simulator HID 与 Device Hub 输入收口 | `c2f4bdd1`；真实 guest touch 与用户设备验收仍未执行 |
+| v0.2.32已发布 | [SP-218-issue-222-device-hub-input](./SP-218-issue-222-device-hub-input/README.md) | native Simulator HID 与 Device Hub 输入收口 | `c2f4bdd1`；真实 guest touch 与用户设备验收仍未执行 |
 
-| 已合并 | [SP-219-simulator-resizable-routing](./SP-219-simulator-resizable-routing/README.md) | 本机 Simulator Resize Mode 的 Resizable display 录制路由 | `f9399e5e`，真实 Simulator/AX/HID 仍待用户验收 |
-| 已合并 | [SP-220-simulator-resizable-integration](./SP-220-simulator-resizable-integration/README.md) | SP-219 主控验证、本地合并 | 候选 `51cd20dd` 已验收并合入 `f9399e5e` |
+| v0.2.32已发布 | [SP-219-simulator-resizable-routing](./SP-219-simulator-resizable-routing/README.md) | 本机 Simulator Resize Mode 的 Resizable display 录制路由 | `f9399e5e`，真实 Simulator/AX/HID 仍待用户验收；worktree已清理 |
+| v0.2.32已发布 | [SP-220-simulator-resizable-integration](./SP-220-simulator-resizable-integration/README.md) | SP-219 主控验证、本地合并 | 候选 `51cd20dd` 已验收并合入 `f9399e5e`；worktree已清理 |

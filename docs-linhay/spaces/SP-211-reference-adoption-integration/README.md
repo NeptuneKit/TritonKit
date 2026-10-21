@@ -38,3 +38,5 @@ branch：`feat/SP-211-reference-adoption-integration`；worktree：`../TritonKit
 ## 原主目录WIP后续收口
 
 用户追加授权完整合并codex/wip-main-before-sp209；49份原文件快照1131b183后补齐历史与状态，保持已验收产品。此前保护原WIP的阶段限制由本次明确授权接替，见[完整合并记录](plans/20261019-wip-closeout.md)。
+
+2026-10-21 追加：[主目录回归 main](plans/20261021-main-checkout-closeout.md)已整合旧分支最后两笔文档提交，保留发布状态并完成原目录接替与工作树清理。
