@@ -92,6 +92,6 @@ sim-use的可信主屏安全拒绝归SP-214/215，ai-phone的HDC forward清理�
 
 ## 2026-10-21 第五轮全量日检与 Resizable 路由采用
 
-[日报](./plans/20261021-reference-update-report.md)与[观察记录](./plans/20261021-observations.json)：33仓官方只读查询完成，23完整、10 partial；Baguette、sim-use、device-hub-ios、Revyl CLI相对昨日有新变化。sim-use的Xcode 27 Resize Mode在当前主线仍只有截图 display 选择，AX/触摸/视频保持拒绝，建立SP-219执行与SP-220主控，边界限定为本机Simulator确认后的display identity路由。Baguette/APK provenance、缺许可证和patch省略继续保留旧点；iCTRL由SP-193独立检查且无变化。
+[日报](./plans/20261021-reference-update-report.md)与[观察记录](./plans/20261021-observations.json)：33仓官方只读查询完成，23完整、10 partial；Baguette、sim-use、device-hub-ios、Revyl CLI相对昨日有新变化。扫描时 sim-use 的 Xcode 27 Resize Mode 在主线仍只有截图 display 选择，随后 SP-219/SP-220 已补齐并合入录制 display identity 路由；AX/触摸/视频保持拒绝或未验证边界。Baguette/APK provenance、缺许可证和patch省略继续保留旧点；iCTRL由SP-193独立检查且无变化。
 
 本轮不重复SP-214～SP-218；SP-219/SP-220 的实现、主控验收和本地合并已另存证据。未运行第三方代码、设备、依赖、签名/DDI、推送或发布；会话创建结果另记采用状态。
