@@ -56,4 +56,4 @@
 主控候选`a8848036`已整合本实现；完整CLI复跑1480 Swift Testing +69 XCTest通过，根包108+293 Swift Testing及7 XCTest通过，fake-adb真实CLI进程7场景和5组schema通过。Release构建与本地门禁通过，完成记录统一见[SP-211验收报告](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。本期已验收并经7a8e9f56合入本地main、未设备实测或发布。
 
 
-本期联合候选`f9760a17`经`7a8e9f56`合入本地main；产品tree与候选完全一致。本期离线验收已完成，合后main完整CLI与local门禁复验通过，未推送/发布。详细门禁、首次失败及未验边界见[联合验收](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。
+本期联合候选`f9760a17`经`7a8e9f56`合入本地main；产品tree与候选完全一致。本期离线验收已完成，合后main完整CLI与local门禁复验通过，已随 `v0.2.32` 推送并发布。详细门禁、首次失败及未验边界见[联合验收](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。

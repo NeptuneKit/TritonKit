@@ -27,4 +27,4 @@ branch：`feat/SP-213-mobile-mcp-contracts-integration`；worktree：`/Users/lin
 当前聊天主控承担本space整合，不新建聊天。SP-210、SP-212分别由`/root/implement_sp210`、`/root/implement_sp212`按指定`gpt-6.1-sol`执行；历史桌面会话失败保留，thread ID仍为null，subagent身份单独登记。联合候选已通过离线验收并经7a8e9f56合入本地main；历史会话阻塞已退出当前待办。
 
 
-本期联合候选`f9760a17`经`7a8e9f56`合入本地main；产品tree与候选完全一致。本期离线验收已完成，合后main完整CLI与local门禁复验通过，未推送/发布。详细门禁、首次失败及未验边界见[联合验收](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。
+本期联合候选`f9760a17`经`7a8e9f56`合入本地main；产品tree与候选完全一致。本期离线验收已完成，合后main完整CLI与local门禁复验通过，已随 `v0.2.32` 推送并发布。详细门禁、首次失败及未验边界见[联合验收](../SP-211-reference-adoption-integration/plans/20261019-validation.md)。
