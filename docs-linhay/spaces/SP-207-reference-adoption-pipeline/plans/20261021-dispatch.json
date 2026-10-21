@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-21",
+  "model": "gpt-6.1-sol",
+  "model_explicit": true,
+  "product_baseline": "e405af0cc59ae7736277be822ae74a1218c3f3b1",
+  "attempts": [
+    {
+      "space": "SP-219-simulator-resizable-routing",
+      "role": "execution",
+      "status": "model_validation_failed",
+      "thread_id": null,
+      "raw_result": "create_thread rejected model gpt-6.1-sol after retry without thinking; first attempt rejected reasoning=high"
+    }
+  ],
+  "deferred": [
+    {
+      "space": "SP-220-simulator-resizable-integration",
+      "role": "controller",
+      "status": "reused_current_root_controller_after_confirmed_interface_failure",
+      "thread_id": null
+    }
+  ],
+  "notes": [
+    "No fallback model, no fake thread IDs. Managed worktrees exist; execution handoff may use explicitly recorded task subagent.",
+    "SP-214 through SP-218 are already local_merged and were not re-dispatched."
+  ]
+}

@@ -5,7 +5,7 @@
 - 用户于2026-10-16要求“后期评估可以纳入的改动可以直接按照这个流程直接进入开发”，随后明确“从 iCTRL 扩大到所有参考项目”。本页是当前流程事实源，替代各历史研究中逐项等待采用授权的说明。
 - 范围：全部已登记参考仓库，及登记为研究线索的候选；候选身份不等于已经采用。当前登记由 SP-194 的23主要仓库+9候选及 SP-199 的 Mobile MCP 组成，合计33个去重仓库。
 - 影响层：参考资料、自动任务、开发分派和治理规则；本次配置不修改CLI/HTTP/SDK产品代码。
-- 状态：流程启用完成；原自动任务已扩围保存并回读确认，文档与登记校验通过。当天文档/配置任务在主工作区进行，保留 SP-201 及其他 WIP，不建立产品实现 worktree。
+- 状态：持续追踪与采用。既有 SP-203～205、SP-210、SP-212、SP-214～SP-219 已完成本地合并，SP-211/SP-213 与 SP-220 主控验收和清理均有独立证据；当前实际 main 为 `f9399e5e`。SP-219 仅覆盖本机 Simulator 的 fresh Resizable display 录制路由，AX/HID 未验证 transport 仍保持拒绝。
 - 正式说明：[参考项目追踪与采用](../../dev/reference-project-adoption-workflow.md)。
 - 仓库与读取状态：[reference-state.json](./plans/reference-state.json)；任务去重与授权：[adoption-state.json](./plans/adoption-state.json)。上游读取状态与采用交付状态分开。
 
@@ -22,7 +22,7 @@
 
 - [SP-194更新报告](../SP-194-reference-project-updates/README.md)、[SP-196已发布优化](../SP-196-upstream-optimization-delivery/README.md)、[SP-200 Mobile能力](../SP-200-mobile-device-parity/README.md)先核对，避免把旧差距重复实施。
 - iCTRL来源追踪与独立检查点保留在[SP-193](../SP-193-ictrl-reference-tracking/README.md)，本流程不降低其完整性要求。
-- 当前执行批次：[SP-203](../SP-203-ictrl-discovery-hardening/README.md)、[SP-204](../SP-204-ictrl-log-privacy/README.md)、[SP-205](../SP-205-ios-runner-auth-hardening/README.md)；主控[SP-206](../SP-206-ictrl-security-integration/README.md)。登记已有会话，不重复创建。
+- 已交付批次：[SP-203](../SP-203-ictrl-discovery-hardening/README.md)、[SP-204](../SP-204-ictrl-log-privacy/README.md)、[SP-205](../SP-205-ios-runner-auth-hardening/README.md)及主控[SP-206](../SP-206-ictrl-security-integration/README.md)；后续 SP-210/SP-212 及 SP-211/SP-213 也已验收合入本地 main。以采用登记核对历史会话与交付，不重复创建。
 
 ## 自动任务与边界
 
@@ -30,7 +30,7 @@
 
 2026-10-16用户指定：今后本项目由agent创建的新会话（执行和主控）锁定为 `gpt-6.1-sol`。调用 `create_thread` 必须显式传入 `model: "gpt-6.1-sol"`，后续主控分派同样遵守；不省略后依赖默认模型，不使用latest别名，不自动回退其他模型。模型不可用则记录创建失败/待重试并报告，不冒充创建成功。本次不切换既有会话，也不改变推理强度。
 
-复用当前聊天自动任务id `ictrl`，名称扩为“参考项目更新与采用推进”，沿用ACTIVE、每天北京时间10:00和当前thread绑定，不新增重叠定时任务。当前登记导入旧快照，只代表已知基线，不代表2026-10-16重新查询了全部33仓；除iCTRL已有成功证据外，新的完整检查点为空，首次实际检查才推进。
+复用当前聊天自动任务id `ictrl`，名称扩为“参考项目更新与采用推进”，沿用ACTIVE、每天北京时间10:00和当前thread绑定，不新增重叠定时任务。2026-10-16 导入旧快照时仅代表已知基线；此后逐日完整检查结果与 partial 分别保存在 plans，当前成功点以 reference-state.json 与 SP-193 独立状态为准。
 
 授权本工程内评估、分派开发、验证、必要本地提交及本地main合并；push/tag/release、自动安装升级依赖、运行第三方代码、签名、DDI、设备操作、扩大远端/设备云等产品边界不从本授权推导。有对应明确授权时按该授权执行，否则记录具体依赖，不以抽象风险反复打断用户。所有共享副作用串行，保留其他WIP，禁止stash和整目录混入。
 
@@ -77,3 +77,21 @@ mobile-mcp `c659f8e`/`1.0.12` 的 Android focused activity 身份与 legacy ADB 
 ## 2026-10-19 本地交付
 
 用户要求全部已实现worktree合main、未实现完成验收后合main。本聊天以指定模型subagent实施SP-210/SP-212并统一承担SP-211/SP-213；参考资料b1d20af9、产品联合候选f9760a17均已通过适用验收，经7a8e9f56合入本地main。历史create_thread失败退出当前待办，采用状态以登记为准。main合后完整CLI与local门禁复验通过，未设备操作、推送或发布。
+
+
+## 2026-10-20 第四轮检查与安全切片
+
+[日报](./plans/20261020-reference-update-report.md)与[机器观察](./plans/20261020-observations.json)：24/33完整、9 partial，6仓相对昨日真实新变化。7仓相对成功/导入点变化包含Baguette历史partial，不能重复称今日新增。8仓缺许可与Baguette来源保留旧点；CogniSim读取完整恢复，另两Revyl API恢复后转为缺许可。修正昨日无许可仍完整和figma观察SHA笔误，不倒推为上游许可删除/新提交。
+
+sim-use的可信主屏安全拒绝归SP-214/215，ai-phone的HDC forward清理归属归SP-216/217；两项均已对照实际main f82872e2及SP-192/196/200/210/212，保存固定来源、许可、BDD、文件面与独立工作区。SP-214执行和SP-215主控的两次必要create_thread均显式gpt-6.1-sol，实际仍返回模型校验失败；SP-216/217未重复探测，保留pending。没有新thread ID，没有产品开发/验证/合并；不重做已交付SP-210/SP-212。
+
+经验检查复用既有完整性与去重规则，修订原流程当前批次和顶部陈旧断言；没有新增重复skill/AGENTS规则。验证结果见日报收口。
+
+2026-10-20收口：docs-only、独立check-docs（217 spaces）、diff whitespace及JSON/链接/逐仓检查点/采用去重与真实祖先校验通过；仅规划和追踪完成，新批开发分派仍受阻。
+
+
+## 2026-10-21 第五轮全量日检与 Resizable 路由采用
+
+[日报](./plans/20261021-reference-update-report.md)与[观察记录](./plans/20261021-observations.json)：33仓官方只读查询完成，23完整、10 partial；Baguette、sim-use、device-hub-ios、Revyl CLI相对昨日有新变化。sim-use的Xcode 27 Resize Mode在当前主线仍只有截图 display 选择，AX/触摸/视频保持拒绝，建立SP-219执行与SP-220主控，边界限定为本机Simulator确认后的display identity路由。Baguette/APK provenance、缺许可证和patch省略继续保留旧点；iCTRL由SP-193独立检查且无变化。
+
+本轮不重复SP-214～SP-218；SP-219/SP-220 的实现、主控验收和本地合并已另存证据。未运行第三方代码、设备、依赖、签名/DDI、推送或发布；会话创建结果另记采用状态。

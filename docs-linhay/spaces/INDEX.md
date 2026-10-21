@@ -3,7 +3,7 @@
 
 2026-10-19：SP-209～213已合并分支及worktree清理完成，仅保留实际main与原用户WIP；见[清理记录](./SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-19（参考采用资料集成；SP-210～213已验收合入本地main）
+> 最近同步：2026-10-20（参考日检；新增SP-214～217规划，指定模型分派受阻）
 > 覆盖范围：213/213 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
@@ -264,3 +264,15 @@
 | `SP-213-mobile-mcp-contracts-integration` | [`SP-213-mobile-mcp-contracts-integration`](./SP-213-mobile-mcp-contracts-integration/README.md) | 已合入本地main | 7a8e9f56；本期离线验收通过，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
 
 2026-10-19追加：原主目录WIP已原样保存为1131b183并完成差异裁决，资料状态与本地main一致；[完整合并记录](./SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。
+
+| `SP-214-simulator-display-safety` | [`SP-214-simulator-display-safety`](./SP-214-simulator-display-safety/README.md) | 模型分派受阻 | Simulator主屏拓扑未知/非主屏时拒绝动作与捕获；已真实创建失败，无thread |
+
+| `SP-215-simulator-display-integration` | [`SP-215-simulator-display-integration`](./SP-215-simulator-display-integration/README.md) | 模型分派受阻 | SP-214独立主控验证、本地合并；已真实创建失败，无thread |
+
+| `SP-216-harmony-forward-cleanup` | [`SP-216-harmony-forward-cleanup`](./SP-216-harmony-forward-cleanup/README.md) | 待分派 | ArkWeb HDC清理当前归属复核与进程内互斥；同接口模型拒绝后保留待分派，未冒称启动 |
+
+| `SP-217-harmony-forward-integration` | [`SP-217-harmony-forward-integration`](./SP-217-harmony-forward-integration/README.md) | 待分派 | SP-216独立主控验收、本地合并；同接口模型拒绝后保留待分派，未冒称启动 |
+
+| `SP-218-issue-222-device-hub-input` | [`SP-218-issue-222-device-hub-input`](./SP-218-issue-222-device-hub-input/README.md) | 已合入本地main | native Simulator HID 与 Device Hub 输入收口；`c2f4bdd1`；未推送/发布 |
+| `SP-219-simulator-resizable-routing` | [`SP-219-simulator-resizable-routing`](./SP-219-simulator-resizable-routing/README.md) | 已合并 | sim-use Resizable display 的本机 Simulator 录制路由；`f9399e5e`，真实设备验收待后续 |
+| `SP-220-simulator-resizable-integration` | [`SP-220-simulator-resizable-integration`](./SP-220-simulator-resizable-integration/README.md) | 已合并 | SP-219 主控验证与本地合并；候选 `51cd20dd` → `f9399e5e` |

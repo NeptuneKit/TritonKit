@@ -6,6 +6,19 @@
 
 官方上游增量读取 → 当前main源码/测试/已交付差距评估 → 保存采用理由、BDD和文件面 → 独立space/worktree与执行会话开发验证 → 主控审查、修复冲突与联合验证 → 必要本地提交、本地main合并。可纳入且属于现有产品范围的变更无需逐项再次确认。现有明确授权持续有效，历史报告“不自动采用”只代表当时权限，不再作为当前阻断条件。
 
+## 自动推进、验收、合并与清理闭环
+
+当一个采用切片进入开发后，自动流程按以下阶段推进，并分别记录状态：读取、评估、分派、实现、验证、合并、清理。子会话完成只产生候选证据，不直接改变 `main` 状态。
+
+1. **隔离开发**：为每个 issue/机制使用独立 `SP-<三位序号>-<topic>`、branch 和 worktree；明确执行会话与主控会话的文件面，冻结后再交接。共享副作用串行执行，禁止 `git stash`，不得把其他 WIP 混入候选。
+2. **候选验收**：主控必须核对实际 diff、候选 SHA、BDD 场景、focused 测试、受影响层完整测试和错误/unknown 语义；真实设备、签名、DDI、跨进程竞态或发布验收若未执行，单独记录为边界，不用离线绿色替代。
+3. **合并前检查**：在实际 `main` worktree 中确认干净状态，使用 `git merge-tree --write-tree main <candidate>` 预检。多个候选按顺序合并；同一文档发生 add/add 冲突时保留已验证实现，并把最新验收事实合并到主线索引/space README，不能整分支回灌历史 WIP。
+4. **合并后门禁**：合并后重跑受影响的完整测试、根包测试（适用时）、`docs-linhay/scripts/verify.sh --ci-docs`、`docs-linhay/scripts/check-docs.sh`、`git diff --check` 和适用的 local/release/smoke 门禁。只有门禁与主控验收都通过，采用登记才可标记 `local_merged`。
+5. **资料回写**：同步 space README、`spaces/INDEX.md`、`spaces/README.md`、SP-207 `adoption-state.json`、正式技术文档和当日 memory；写明实现 SHA、合并 SHA、测试数量、跳过项、未执行边界和远端操作状态。
+6. **清理**：门禁通过后先把需要保留的 ignored build 日志、未跟踪证据和继承文档复制到带 manifest/hash 的本地归档，再正常移除已合并 worktree，最后用 `git branch -d` 删除已合并分支。原工作区有用户 WIP 时保持原样，不能用清理动作覆盖或重置。
+
+自动流程只做本地合并和本地清理；push、tag、release、依赖安装、第三方代码、设备动作、签名和 DDI 仍需单独明确授权。状态通知必须区分“实现完成”“验收通过”“已合并”“已清理”，不能把其中一个阶段冒充全部完成。
+
 每日任务复用id `ictrl`，名称“参考项目更新与采用推进”，保持当前聊天、ACTIVE与北京时间10:00；不新增重叠任务。现有iCTRL检查点仍由SP-193管理，其他仓库从SP-194/SP-199历史快照开始，首次完整读取后才建立对应成功点。本轮配置未重新查询全体仓库。
 
 ## 新会话模型
@@ -33,10 +46,21 @@
 - [SP-193 iCTRL专项](../spaces/SP-193-ictrl-reference-tracking/README.md)：保留原成功检查点、报告与更严格的完整性规则，采用入口统一到本流程。
 - [SP-206主控](../spaces/SP-206-ictrl-security-integration/README.md)：当前首批三个切片的验证与本地合并，不代表这次扩大流程已经执行所有参考更新或产生新产品交付。
 
-## 当前批次（2026-10-17）
+## 当前交付状态（2026-10-21）
 
-[首轮33仓日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261017-reference-update-report.md)记录32仓完整的有界机制观察、1仓partial；9仓变化。旧SP-203～205本地合并已核验，新的[SP-210](../spaces/SP-210-simulator-ax-geometry/README.md)/[SP-211](../spaces/SP-211-reference-adoption-integration/README.md)已规划并建立独立worktree。桌面create_thread无法校验显式gpt-6.1-sol，两角色均未创建；采用登记保留待重试，不能宣称开发/主控已启动。具体证据和重试去重以SP-207登记为准。
+SP-203～205、[SP-210](../spaces/SP-210-simulator-ax-geometry/README.md)、[SP-212](../spaces/SP-212-mobile-mcp-android-contracts/README.md) 与 SP-214～SP-219 均已完成本地合并；SP-211/SP-213 与 [SP-220](../spaces/SP-220-simulator-resizable-integration/README.md) 主控验收均有独立证据。这些已交付项无需重试。历史交付记录以当时 `f82872e2fa457431ee7cbc7df2bafecea7ca6f1c` 为基线；当前实际 main 已推进到 `f9399e5e`，SP-219 的真实 Simulator/Xcode 和 AX/HID transport 仍未执行。
+
+10月17～19日桌面 `create_thread` 拒绝显式模型参数的记录是历史事实；其后指定 `gpt-6.1-sol` 的执行 subagent 已实际交付，当前聊天完成主控验收和本地合并。桌面 thread ID 仍为 null，不能用 agent 名替造 thread ID，也不能把旧失败继续列为旧开发 blocker。
+
+2026-10-20 新批次：[SP-214](../spaces/SP-214-simulator-display-safety/README.md) 主屏路由安全与 [SP-216](../spaces/SP-216-harmony-forward-cleanup/README.md) HDC 清理归属已完成本地交付。2026-10-21 的 SP-219/SP-220 也已完成；桌面 `create_thread` 对显式 `gpt-6.1-sol` 仍返回模型校验失败，thread ID 保持 null，由当前主控在已授权范围内完成候选审查与本地合并，未使用回退模型。具体证据见 [2026-10-21 主控验证](../spaces/SP-220-simulator-resizable-integration/plans/validation-20261021.md)。
 
 ## 2026-10-18 完整性纠正
 
 第二轮全量检查发现，上一轮若把许可证 404、Release API 403 或固定二进制来源未闭合的结果标成“完整”，会让检查点看似成功但无法支持复核。本轮统一将这些结果记为 partial，保留旧 SHA/tag，不推进检查点；只有官方 HEAD、非 draft Release 分页、许可证全文和相关增量证据闭合后才可推进。SKProcessRunner 的历史标签已在 [20261018 日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261018-reference-update-report.md) 中纠正。
+
+
+## 2026-10-21 参考采用更新
+
+- [全量日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261021-reference-update-report.md)完成33仓官方只读查询：23完整、10 partial；Baguette、sim-use、device-hub-ios、Revyl CLI相对昨日有变化。iCTRL仍由SP-193独立维护且无变化。
+- sim-use `42aa9a2` 将Xcode 27 Resize Mode的`Resizable` display身份、前台应用路由和动作边界写实；SP-214提供未知拓扑拒绝底座，SP-219补齐已确认 display identity 的录制路由，候选 `51cd20dd` 已由 SP-220 审查并合入 `f9399e5e`。AX/HID/真实 Simulator transport 仍保持边界。
+- 会话创建仍必须显式`gpt-6.1-sol`；SP-219/SP-220 的桌面接口校验失败保留为事实，未记录虚假thread，当前主控按授权完成了离线验证与本地合并。

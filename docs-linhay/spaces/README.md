@@ -25,7 +25,7 @@
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
 | v0.2.30已发布 | [SP-208-update-version-alignment](./SP-208-update-version-alignment/README.md) | 修复更新误报、安装版本核验与skills对齐 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
-| 持续追踪与采用 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 33仓统一追踪与采用流程已合入main | 本批SP-210～213已验收合并；后续增量独立评估 |
+| 持续追踪与采用 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 33仓统一追踪与采用流程已合入main | SP-210～213已交付；新SP-214/216与主控215/217规划就绪、模型分派受阻 |
 | v0.2.30已发布 | [SP-206-ictrl-security-integration](./SP-206-ictrl-security-integration/README.md) | 负责 SP-203～205 交付审查、集成与联合验证 | 057d1012补齐收口历史；worktree/分支已清理，已随v0.2.30发布，用户原机另验 |
 | v0.2.30已发布 | [SP-203-ictrl-discovery-hardening](./SP-203-ictrl-discovery-hardening/README.md) | 发现与连接安全，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，已随v0.2.30发布，用户原机另验；worktree/分支已清理 |
 | v0.2.30已发布 | [SP-204-ictrl-log-privacy](./SP-204-ictrl-log-privacy/README.md) | 日志脱敏与降噪，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，已随v0.2.30发布，用户原机另验；worktree/分支已清理 |
@@ -336,3 +336,14 @@
 | 已合入本地main | [SP-213-mobile-mcp-contracts-integration](./SP-213-mobile-mcp-contracts-integration/README.md) | SP-212 主控验证与本地main合并 | 7a8e9f56；离线验收完成，main合后完整CLI与local门禁复验通过；未推送/发布；分支/worktree已清理 |
 
 2026-10-19追加：原主目录WIP已原样保存为1131b183并完成差异裁决，资料状态与本地main一致；[完整合并记录](./SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。
+
+| 模型分派受阻 | [SP-214-simulator-display-safety](./SP-214-simulator-display-safety/README.md) | Simulator主屏拓扑未知/非主屏时拒绝动作与捕获 | 必要创建返回模型校验失败，保留工作区待重试 |
+
+| 模型分派受阻 | [SP-215-simulator-display-integration](./SP-215-simulator-display-integration/README.md) | SP-214独立主控验证、本地合并 | 必要创建返回模型校验失败，保留工作区待重试 |
+
+| 待分派 | [SP-216-harmony-forward-cleanup](./SP-216-harmony-forward-cleanup/README.md) | ArkWeb HDC清理当前归属复核与进程内互斥 | 复用工作区，显式gpt-6.1-sol恢复后分派 |
+
+| 待分派 | [SP-217-harmony-forward-integration](./SP-217-harmony-forward-integration/README.md) | SP-216独立主控验收、本地合并 | 复用工作区，显式gpt-6.1-sol恢复后分派 |
+
+| 已合并 | [SP-219-simulator-resizable-routing](./SP-219-simulator-resizable-routing/README.md) | 本机 Simulator Resize Mode 的 Resizable display 录制路由 | `f9399e5e`，真实 Simulator/AX/HID 仍待用户验收 |
+| 已合并 | [SP-220-simulator-resizable-integration](./SP-220-simulator-resizable-integration/README.md) | SP-219 主控验证、本地合并 | 候选 `51cd20dd` 已验收并合入 `f9399e5e` |

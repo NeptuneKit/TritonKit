@@ -1,0 +1,94 @@
+{
+  "repository": "OpenMinis/iCTRL",
+  "checked_at": "2026-10-20T02:07:12.746841+00:00",
+  "old_head": "d88bbf0b3a5addead31b4298d605d7ac7a87d6e7",
+  "complete": true,
+  "changed": true,
+  "errors": [],
+  "head_sha": "874f528759b1b977971a06cc4a3594d169eb77b9",
+  "default_branch": "main",
+  "head_committed_at": "2026-10-19T08:28:30Z",
+  "archived": false,
+  "release": {
+    "tag_name": "v1.98.12",
+    "published_at": "2026-10-15T04:05:24Z",
+    "html_url": "https://github.com/OpenMinis/iCTRL/releases/tag/v1.98.12",
+    "prerelease": false,
+    "body": "An AI-friendly iOS/iPadOS automation service. Tell your agent *\"My iPhone is running iCTRL at <ip>:8200 — figure out how to drive it.\"* and it reads the on-device manual and takes it from there. Works with any agent that can make HTTP requests: OpenClaw, Hermes, Minis, Claude Code, Codex and others.\n\n## Downloads\n\n### Which IPA do I need?\n\n| File | Needed? | What it is |\n|---|---|---|\n| `iCTRLUITests-Runner.ipa` | **Required** | The automation engine. It serves the JSON-RPC API that agents and clients call, and must be running. |\n| `iCTRL.ipa` | Optional | A companion app for tasks on the phone itself: <br>• mount the Developer Disk Image without a Mac, and remount it after a reboot <br>• start and stop the runner <br>• choose who can reach the runner (this device only / LAN / LAN + nearby) <br>• see and revoke authorized clients <br>• read the runner's log live |\n\nSkip `iCTRL.ipa` if you mount the Developer Disk Image with Xcode or StikDebug, and manage the runner from its notification or a computer. With a free Apple ID you get three sideloaded apps, and SideStore uses one of them. Install StikDebug *or* the iCTRL app alongside the runner, not both.\n\nBoth IPAs are unsigned for distribution (ad-hoc, no provisioning profile). Sign them when you install:\n- **Free Apple ID:** the latest SideStore signs and installs them. Older SideStore releases skip the nested `.xctest`, and the runner then crashes on launch.\n- **Paid account:** `Scripts/sign-ipa.sh -i iCTRLUITests-Runner.ipa`\n\nThe runner also needs the Developer Disk Image mounted (Xcode, StikDebug or the iCTRL app). The [README](https://github.com/OpenMinis/iCTRL#installation) covers the whole setup.\n\n## What's new since 1.97.1\n\n### Nearby discovery: no address to type\n- **Reach the phone without an address.** Turn on **📡 Nearby Discovery** from the runner's notification or the iCTRL app (it needs Remote Access). Clients can then find the phone:\n  - on the LAN, from any OS;\n  - from a Mac over Apple peer-to-peer Wi-Fi (AWDL), with no shared network at all. The phone only needs Wi-Fi switched on, not joined to anything.\n- **New client commands:** `python3 ictrl_rpc.py scan` lists discovered phones, and `--nearby \"<name or id>\"` replaces `--host`. The first call pairs with the phone (approve once on the phone).\n- **Strict exposure:**\n  - Nothing is announced on the network unless nearby discovery is on.\n  - The AWDL listener accepts peer-to-peer connections only, and the main listener refuses them.\n  - Nearby discovery can be switched **on** only from the phone itself (notification, iCTRL app or USB).\n- **Self-healing:**\n  - Advertising follows Wi-Fi off and on, and recovers if the interface is recreated.\n  - A failed listener is rebuilt.\n  - The notification says why nearby discovery isn't ready yet (*turn on Wi-Fi*, *allow Local Network*).\n\n### Who can reach the phone, at a glance\n- **The status notification's first line** shows one of: 🔒 This device only, 🌐 LAN reachable, or 📡 Nearby discoverable.\n- **The iCTRL app has a Visibility menu:** 🟢 This device only · safe / 🟡 LAN / 🟡 LAN + nearby.\n- **LAN addresses are real interfaces only.** VPN or proxy tunnel addresses such as `198.18.0.1` are no longer shown as the phone's address.\n\n### Pairing and keys\n- **Every pairing is approved on the phone.** The \"trusted for 10 minutes\" shortcut is gone.\n- **Limits on requests:**\n  - An unanswered request is refused after 60 s.\n  - Only one request waits at a time, with a 15 s cooldown after a refusal.\n  - Requests from the phone itself have their own slot, so a remote caller can't lock them out.\n- **Check the key.** The prompt shows a key fingerprint that the client also prints; allow only if they match.\n- **One key per device.** Clients store keys per device, so a phone paired once works over USB, the LAN and nearby without pairing again. Keys stored under an address by older clients are picked up automatically.\n- **Local Network permission.** The runner asks for it at launch and reports it. The iCTRL app warns when it's missing; without it, nearby discovery can't work even though LAN clients may still connect.\n\n### iCTRL app\n- **Authorized Clients:** every key holder, where each last connected from (this device / USB, LAN, nearby, VPN), revoke one or all others.\n- **Runner Logs:** the runner's log, live, with pause, refresh and filter.\n- **Visibility menu** (above), and a warning when the runner lacks Local Network access.\n- **Share a pairing file to iCTRL** from Files, Mail, AirDrop or a chat app when the picker can't reach it. iCTRL confirms when it's stored, or says why it was refused.\n\n### Clients\n- **Python client:**\n  - Standard library only. LAN pairing no longer needs `pip install cryptography`.\n  - Never sends iCTRL requests through an `http_proxy`.\n  - If macOS Local Network privacy refuses the process, it relays nearby connections through the system `nc`.\n- **C CLI:** gets the same nearby support when built on macOS. The Linux static binary is rebuilt.\n\n### Server and API\n- `GET /whoami` and an `X-ICTRL-Device` header on every response identify the device.\n- `config` adds `nearby_discovery` and `device_name`, and reports nearby status and LAN addresses. Each client's last address and source appear in its session entry.\n- `config` now validates every parameter before changing any.\n- A change that restarts the listener replies first instead of returning an empty response.\n- Read-only polling (`logs`, plain `config`) no longer fills the log.\n\n### Known limitations\n- Nearby discovery over AWDL needs macOS on the client side. A phone whose screen is off may stop being discoverable over AWDL, as with AirDrop.\n- With nearby discovery on, iOS also announces the phone's own host name on the LAN, which often contains its owner's name.\n- Endpoints that need no key (`/schema`, `/skill`, `/remote`, `/whoami`, `/pair`) also answer over AWDL, and the screen stream is not encrypted on any channel.\n\nFull details: [#3](https://github.com/OpenMinis/iCTRL/pull/3).\n\n## SHA-256\n```\nd28fcb4775885a7161e8c7aa9f247aeb42fe1af1c7fcfc5ce1bbdb1b07b442f2  iCTRLUITests-Runner.ipa\n7d9ceaad8eeb486e67d81a688e661f2278113d4ba4f7d3d73cff2f9973881ac7  iCTRL.ipa\n```\n"
+  },
+  "license_spdx": "Apache-2.0",
+  "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+  "license": {
+    "spdx": "Apache-2.0",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "path": "LICENSE",
+    "html_url": "https://github.com/OpenMinis/iCTRL/blob/874f528759b1b977971a06cc4a3594d169eb77b9/LICENSE"
+  },
+  "head_changed": true,
+  "release_changed": false,
+  "license_changed": false,
+  "coverage": {
+    "release_pages": 1,
+    "head_unchanged": false,
+    "fixed_license": true,
+    "total_commits": 3,
+    "files": 9,
+    "compare_pages": 1,
+    "commit_pages": 3,
+    "all_commit_patches_match_statistics": true,
+    "changed_head_fulltexts": 9,
+    "related_head_fulltexts": 2,
+    "all_changed_head_blob_hashes_verified": true,
+    "tree_truncated": false,
+    "semantic_review": "bounded semantic scope: 全部compare/每commit patch及文件清单全读，变更机制及相关调用入口（URL通知/RunnerAdmin/Settings stop、whoami/schema、PairingFileStore/DDIMounter、LogBuffer）语义闭合；无关未改历史未全仓审计",
+    "completeness_manifest": "completeness.json",
+    "checkpoint_eligible": true
+  },
+  "assessment": {
+    "decision": "observe",
+    "reason": "本轮新增为上游入口鉴权/日志出口/RemotePairing兼容。现有Runner认证与日志原则由SP-204/205覆盖；iCTRL通知/URL scheme与DDI导入不属于Triton当前入口，没有发现可直接纳入的产品缺口。",
+    "items": [
+      {
+        "mechanism": "stop requires authority",
+        "decision": "covered",
+        "reason": "本地Runner /stop先经过服务持密证明、AES-GCM、session与TTL验证；SP205真实router负例含stop。iCTRL通知确认/深链面本地不存在。"
+      },
+      {
+        "mechanism": "copy logs redacted and unlocked",
+        "decision": "covered",
+        "reason": "Triton无该锁屏剪贴板通知出口；服务响应日志使用SP204元数据白名单和512字节上限，不复制上游正则脱敏。此结论不代表本项目所有日志出口普查。"
+      },
+      {
+        "mechanism": "whoami removes device name; schema sync",
+        "decision": "observe",
+        "reason": "iCTRL客户需容忍name消失；本地无whoami/附近配对key选择器，不能类推删除既有合法本机status字段。"
+      },
+      {
+        "mechanism": "callback address only companion scheme",
+        "decision": "reject",
+        "reason": "本地无该callback面，且scheme字符串并不构成调用方身份认证；不引入此控制面或视为完全可信。"
+      },
+      {
+        "mechanism": "RemotePairing parser equals consumer parser",
+        "decision": "observe",
+        "reason": "本地不导入配对文件、不自行挂载DDI；借鉴生产parser与预检一致的原则，不能导入IDevice依赖/签名/DDI能力。"
+      }
+    ],
+    "new_adoption_items": [],
+    "bdd_required_for_adoption": false
+  },
+  "evidence": "/Users/linhey/Desktop/linhay-open-sources/TritonKit/.build/reference-monitor/20261020/ictrl",
+  "local_baseline": {
+    "path": "../TritonKit-worktrees/main-integrated",
+    "sha": "f82872e2fa457431ee7cbc7df2bafecea7ca6f1c",
+    "main_directory_branch": "codex/wip-main-before-sp209"
+  },
+  "limitations": [
+    "未运行上游代码/二进制/设备/签名/DDI；上游修复效果非本地实测。",
+    "本次无预算/alias freshness/UI health增量；SP192/SP196/SP200已交付边界继续有效。",
+    "固定HEAD server/skill称1.98.13，但GitHub最新非draft Release仍v1.98.12。",
+    "DDIMounter primeCryptoProvider仍用lockdown parser，而performMount使用RemotePairing；实际影响未知，不能宣称全挂载兼容已证实。",
+    "完整指有界增量及相关机制来源阅读闭合，不代表全仓安全审计；下载全文不是单独的语义证据。"
+  ],
+  "summary": "20261020-reference-review.md"
+}
