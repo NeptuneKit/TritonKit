@@ -58,3 +58,8 @@
 ## 2026-10-19 检查
 
 [检查摘要](./plans/20261019-check-summary.json)显示 `main@d88bbf0b3a5addead31b4298d605d7ac7a87d6e7`、`v1.98.12`、Apache-2.0 与前次成功点一致。首次 `gh api` 请求遇到本机 TLS 证书校验失败，随后使用官方 GitHub API 的系统 curl 完整读取 repository、main HEAD、Release 分页和固定 HEAD 许可证；故障记录与恢复证据均已保存，不将首次失败伪装为无变化。
+
+
+## 2026-10-20 安全与配对兼容增量
+
+[专项审阅](./plans/20261020-reference-review.md)完整读取3提交/9文件，HEAD推进至874f528；源码版本称1.98.13，最新非draft Release仍v1.98.12。stop/日志/身份字段/RemotePairing导入变化分别对照SP-192/196/200与SP-203～205；Triton已覆盖日志/Runner认证原则，不引入URL通知或DDI边界，无新采用项。许可证Apache-2.0全文hash不变；[摘要](./plans/20261020-check-summary.json)写入后原子推进独立检查点。没有运行上游/设备或做产品验证。

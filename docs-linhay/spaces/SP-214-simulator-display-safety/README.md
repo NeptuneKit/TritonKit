@@ -2,7 +2,7 @@
 
 ## 状态与边界
 
-2026-10-20 由参考更新流程评估为可纳入；2026-10-21 已完成实现并合入本地 `main`。影响层为 macOS CLI/HTTP 共用的本机 Simulator AX、host touch 与主屏采集安全门禁；不改 embedded SDK、Web/Wails、真机或远端产品面。
+2026-10-20 由参考更新流程评估为可纳入，等待独立执行会话分派。影响层为 macOS CLI/HTTP 共用的本机 Simulator AX、host touch 与主屏采集安全门禁；不改 embedded SDK、Web/Wails、真机或远端产品面。
 
 产品基线 `main@f82872e2fa457431ee7cbc7df2bafecea7ca6f1c`。branch `feat/SP-214-simulator-display-safety`；worktree `../TritonKit-worktrees/SP-214-simulator-display-safety/`。本期独立主控 [SP-215](../SP-215-simulator-display-integration/README.md)。依据 SP-207 既有授权直接开发验证，允许必要本地提交和主控本地 main 合并；不推送或发布。
 
@@ -35,18 +35,3 @@
 ## 2026-10-20 分派结果
 
 必要创建请求显式 `model="gpt-6.1-sol"` 后被桌面接口以 `could not validate model` 拒绝，无真实 thread ID；未开发、未验证、未合并。保留独立工作区供后续仅补缺角色，记录见 [分派证据](../SP-207-reference-adoption-pipeline/plans/20261020-dispatch.json)。
-
-## 2026-10-21 implementation
-
-新增 `CLIHostSimulatorDisplayRuntime.swift`：对精确 target 绑定的 display topology JSON 做离线解析，仅允许唯一 active、primary、integrated display；缺字段、重复 ID、数字伪布尔、多 active、target 不匹配、截断均 unknown。AX/screenshot 接线提供 display probe seam，unknown 在 native action/输出前拒绝，且现有 Resize gate 优先执行。
-
-验证：`swift test --package-path CLI --scratch-path .build/sp214-scratch --no-parallel --filter SimulatorDisplaySafetyTests`；无真实 Simulator、设备操作或依赖安装。完整 CLI、根包及真实 topology 命令验收由主控执行。
-
-## 2026-10-21 完成实现与离线验收
-
-- 已接入真实 `xcrun devicectl device info displayTopology --device <uuid> --json-output ... --log-output ...` 查询；artifact、命令参数回显、目标 UUID、输出上限、超时/unsupported/非零结果均 fail-closed。截图路由与 AX press 默认先确认唯一 active primary integrated display，再执行既有 Resize/AX 几何门禁；测试仍可注入 display probe。
-- focused：`swift test --package-path CLI --scratch-path .build/sp214-scratch --no-parallel --filter 'SimulatorDisplaySafetyTests|SimulatorResizeCaptureRoutingTests'`，7 tests passed。未执行真实 Simulator/Xcode display topology，保留该运行验收边界。
-
-### 2026-10-21 real probe接线
-
-新增 `iosSimulatorDisplayTopologyQueryCommand` 与 `probeIOSSimulatorDisplay`，沿用 devicectl file-JSON artifact、超时、非零结果和 unsupported 分支；每次调用 fresh query，严格校验 command echo/target/display 数组。截图与 AX activation 默认使用该 probe，同时保留注入 seam。focused 4 display tests + 3 resize routing tests 通过；无真实设备验收。

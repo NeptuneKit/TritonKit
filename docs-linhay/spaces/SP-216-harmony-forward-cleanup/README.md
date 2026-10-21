@@ -2,7 +2,7 @@
 
 ## 状态与范围
 
-2026-10-20 参考增量评估为可纳入；2026-10-21 已完成 host 侧实现与 fake-HDC 离线验收。影响层仅为 macOS CLI/HTTP 现有 Harmony ArkWeb 临时 HDC forward 生命周期；不扩展 VM 管理、设备云、真机或新 Web 控制面。
+2026-10-20 参考增量评估为可纳入；等待 `gpt-6.1-sol` 会话分派，当前同接口真实创建失败，不冒称开发启动。影响层仅为 macOS CLI/HTTP 现有 Harmony ArkWeb 临时 HDC forward 生命周期；不扩展 VM 管理、设备云、真机或新 Web 控制面。
 
 基线 `main@f82872e2fa457431ee7cbc7df2bafecea7ca6f1c`；branch `feat/SP-216-harmony-forward-cleanup`；worktree `../TritonKit-worktrees/SP-216-harmony-forward-cleanup/`；独立主控 [SP-217](../SP-217-harmony-forward-integration/README.md)。按 SP-207 用户授权直接进入开发流程，必要本地提交/主控本地合并允许；未授权 push/tag/release、安装依赖、设备或第三方代码执行。
 
@@ -27,9 +27,3 @@ main `CLIHostHarmonyArkWebRuntime.swift` 的 `harmonyArkWebWithForward` 在 body
 执行会话拥有本 space、`CLIHostHarmonyArkWebRuntime.swift`、必要新增 `CLIHostHarmony*Forward*.swift`、对应 Harmony ArkWeb/fake-HDC 测试，以及真实契约所需的最小错误/schema 接线。不得修改 SP-214 Simulator 文件或 SP-207 共享追踪状态；共享入口/索引/memory 归主控。超长源文件按现有规范拆分。
 
 先失败测试，再最小实现；独立 scratch 跑 focused 和完整 CLI，按受影响层跑根包/local/docs 门禁。保留候选清单、SHA、红绿日志、确定性副作用计数和未验真实 HDC 语义。主控复核后必要本地合并，执行不自行合 main。后续新会话显式 `model="gpt-6.1-sol"`，不回退；你不是唯一开发者，不覆盖他人变更。
-
-## 2026-10-21 完成实现与离线验收
-
-- 候选 `5d5647b5`：新增 forward listing 解析和明确的 target/local/remote/direction 归属确认；`harmonyArkWebWithForward` 在同一进程内以 actor 串行分配、复核和清理，unknown、Reverse、重复、变更、listing 失败均 fail closed。
-- `HarmonyArkWebBridgeCallTests`：37 tests、0 failures。覆盖唯一归属删除、foreign/Reverse/changed/ambiguous/failed listing 零 rm、主错误与 cleanup uncertainty 保留，以及单一 envelope 语义。
-- 已合入本地 `main`；真实 HDC 与独立进程竞态未执行，跨进程 TOCTOU 仍是明确限制。

@@ -3,8 +3,8 @@
 
 2026-10-19：SP-209～213已合并分支及worktree清理完成，仅保留实际main与原用户WIP；见[清理记录](./SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-19（参考采用资料集成；SP-210～213已验收合入本地main）
-> 覆盖范围：214/214 个已存在 space
+> 最近同步：2026-10-20（参考日检；新增SP-214～217规划，指定模型分派受阻）
+> 覆盖范围：213/213 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -19,8 +19,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 214/214 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 214/214 | 每条记录链接到现有 space README |
+| 编号登记 | 213/213 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 213/213 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -265,13 +265,14 @@
 
 2026-10-19追加：原主目录WIP已原样保存为1131b183并完成差异裁决，资料状态与本地main一致；[完整合并记录](./SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。
 
+| `SP-214-simulator-display-safety` | [`SP-214-simulator-display-safety`](./SP-214-simulator-display-safety/README.md) | 模型分派受阻 | Simulator主屏拓扑未知/非主屏时拒绝动作与捕获；已真实创建失败，无thread |
 
-| `SP-214-simulator-display-safety` | [`SP-214-simulator-display-safety`](./SP-214-simulator-display-safety/README.md) | 已合入本地main | `0d35e95e`；displayTopology fresh probe、主屏安全门禁；focused 7 tests通过；未执行真实Simulator；worktree/分支已清理 |
+| `SP-215-simulator-display-integration` | [`SP-215-simulator-display-integration`](./SP-215-simulator-display-integration/README.md) | 模型分派受阻 | SP-214独立主控验证、本地合并；已真实创建失败，无thread |
 
-| `SP-215-simulator-display-integration` | [`SP-215-simulator-display-integration`](./SP-215-simulator-display-integration/README.md) | 已合入本地main | `b782c192`；SP-214 主控离线验收完成；未执行真实Simulator；worktree/分支已清理 |
+| `SP-216-harmony-forward-cleanup` | [`SP-216-harmony-forward-cleanup`](./SP-216-harmony-forward-cleanup/README.md) | 待分派 | ArkWeb HDC清理当前归属复核与进程内互斥；同接口模型拒绝后保留待分派，未冒称启动 |
 
-| `SP-216-harmony-forward-cleanup` | [`SP-216-harmony-forward-cleanup`](./SP-216-harmony-forward-cleanup/README.md) | 已合入本地main | `34f713c7`；forward ownership fail-closed、进程内清理互斥；focused 37 tests通过；未执行真实HDC；worktree/分支已清理 |
+| `SP-217-harmony-forward-integration` | [`SP-217-harmony-forward-integration`](./SP-217-harmony-forward-integration/README.md) | 待分派 | SP-216独立主控验收、本地合并；同接口模型拒绝后保留待分派，未冒称启动 |
 
-| `SP-217-harmony-forward-integration` | [`SP-217-harmony-forward-integration`](./SP-217-harmony-forward-integration/README.md) | 已合入本地main | `36145c62`；SP-216 主控离线验收完成；未执行真实HDC/跨进程竞态；worktree/分支已清理 |
-
-| `SP-218-issue-222-device-hub-input` | [`SP-218-issue-222-device-hub-input`](./SP-218-issue-222-device-hub-input/README.md) | 已合入本地main | merge `c2f4bdd1`；#222 内置Simulator HID、HID-only、AX receipt及Baguette运行依赖清零；CLI1501/Web78通过；联合 docs 门禁已复验；未推送 |
+| `SP-218-issue-222-device-hub-input` | [`SP-218-issue-222-device-hub-input`](./SP-218-issue-222-device-hub-input/README.md) | 已合入本地main | native Simulator HID 与 Device Hub 输入收口；`c2f4bdd1`；未推送/发布 |
+| `SP-219-simulator-resizable-routing` | [`SP-219-simulator-resizable-routing`](./SP-219-simulator-resizable-routing/README.md) | 已合并 | sim-use Resizable display 的本机 Simulator 录制路由；`f9399e5e`，真实设备验收待后续 |
+| `SP-220-simulator-resizable-integration` | [`SP-220-simulator-resizable-integration`](./SP-220-simulator-resizable-integration/README.md) | 已合并 | SP-219 主控验证与本地合并；候选 `51cd20dd` → `f9399e5e` |

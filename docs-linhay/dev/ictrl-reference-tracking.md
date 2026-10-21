@@ -66,3 +66,10 @@ SP-207 第二轮全量检查见 [日报](../spaces/SP-207-reference-adoption-pip
 ## 2026-10-19：检查恢复与无变化
 
 [SP-193 检查摘要](../spaces/SP-193-ictrl-reference-tracking/plans/20261019-check-summary.json)确认 iCTRL `main@d88bbf0b3a5addead31b4298d605d7ac7a87d6e7`、`v1.98.12` 与 Apache-2.0 许可证 hash 均未变化。首次 `gh api` 因本机 TLS 证书校验失败，随后使用官方 GitHub API 的系统 curl 完整读取 repository、HEAD、Release 分页和固定 HEAD 许可证；失败与恢复分别留有原始证据。未发现新的安全、兼容或 SP-192 机制变化，不重复排期。
+
+
+## 2026-10-20：认证入口、隐私与RemotePairing
+
+[3提交/9文件增量](https://github.com/OpenMinis/iCTRL/compare/d88bbf0b3a5addead31b4298d605d7ac7a87d6e7...874f528759b1b977971a06cc4a3594d169eb77b9)完成有界全文审阅与blob校验，见[专项报告](../spaces/SP-193-ictrl-reference-tracking/plans/20261020-reference-review.md)。上游stop深链要求解锁确认、日志出口改脱敏、whoami删除name、配对文件预检改用实际RemotePairing parser。SP-204/205已覆盖Triton当前日志/Runner入口的对应原则；SP-192五项机制无新增算法变化，SP-196/200不因此扩展DDI或通知面。callback scheme过滤并非调用方身份认证，未知动作不得照搬失败后重放。
+
+HEAD874f528源码称1.98.13，但GitHub最新非draft Release仍[v1.98.12](https://github.com/OpenMinis/iCTRL/releases/tag/v1.98.12)，不可报告新版本已发布。Apache-2.0全文hash未变。未运行上游或验证实际挂载兼容，本轮无新采用项。

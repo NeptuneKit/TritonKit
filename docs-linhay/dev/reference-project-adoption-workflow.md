@@ -46,10 +46,21 @@
 - [SP-193 iCTRL专项](../spaces/SP-193-ictrl-reference-tracking/README.md)：保留原成功检查点、报告与更严格的完整性规则，采用入口统一到本流程。
 - [SP-206主控](../spaces/SP-206-ictrl-security-integration/README.md)：当前首批三个切片的验证与本地合并，不代表这次扩大流程已经执行所有参考更新或产生新产品交付。
 
-## 当前批次（2026-10-17）
+## 当前交付状态（2026-10-21）
 
-[首轮33仓日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261017-reference-update-report.md)记录32仓完整的有界机制观察、1仓partial；9仓变化。旧SP-203～205本地合并已核验，新的[SP-210](../spaces/SP-210-simulator-ax-geometry/README.md)/[SP-211](../spaces/SP-211-reference-adoption-integration/README.md)已规划并建立独立worktree。桌面create_thread无法校验显式gpt-6.1-sol，两角色均未创建；采用登记保留待重试，不能宣称开发/主控已启动。具体证据和重试去重以SP-207登记为准。
+SP-203～205、[SP-210](../spaces/SP-210-simulator-ax-geometry/README.md)、[SP-212](../spaces/SP-212-mobile-mcp-android-contracts/README.md) 与 SP-214～SP-219 均已完成本地合并；SP-211/SP-213 与 [SP-220](../spaces/SP-220-simulator-resizable-integration/README.md) 主控验收均有独立证据。这些已交付项无需重试。历史交付记录以当时 `f82872e2fa457431ee7cbc7df2bafecea7ca6f1c` 为基线；当前实际 main 已推进到 `f9399e5e`，SP-219 的真实 Simulator/Xcode 和 AX/HID transport 仍未执行。
+
+10月17～19日桌面 `create_thread` 拒绝显式模型参数的记录是历史事实；其后指定 `gpt-6.1-sol` 的执行 subagent 已实际交付，当前聊天完成主控验收和本地合并。桌面 thread ID 仍为 null，不能用 agent 名替造 thread ID，也不能把旧失败继续列为旧开发 blocker。
+
+2026-10-20 新批次：[SP-214](../spaces/SP-214-simulator-display-safety/README.md) 主屏路由安全与 [SP-216](../spaces/SP-216-harmony-forward-cleanup/README.md) HDC 清理归属已完成本地交付。2026-10-21 的 SP-219/SP-220 也已完成；桌面 `create_thread` 对显式 `gpt-6.1-sol` 仍返回模型校验失败，thread ID 保持 null，由当前主控在已授权范围内完成候选审查与本地合并，未使用回退模型。具体证据见 [2026-10-21 主控验证](../spaces/SP-220-simulator-resizable-integration/plans/validation-20261021.md)。
 
 ## 2026-10-18 完整性纠正
 
 第二轮全量检查发现，上一轮若把许可证 404、Release API 403 或固定二进制来源未闭合的结果标成“完整”，会让检查点看似成功但无法支持复核。本轮统一将这些结果记为 partial，保留旧 SHA/tag，不推进检查点；只有官方 HEAD、非 draft Release 分页、许可证全文和相关增量证据闭合后才可推进。SKProcessRunner 的历史标签已在 [20261018 日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261018-reference-update-report.md) 中纠正。
+
+
+## 2026-10-21 参考采用更新
+
+- [全量日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261021-reference-update-report.md)完成33仓官方只读查询：23完整、10 partial；Baguette、sim-use、device-hub-ios、Revyl CLI相对昨日有变化。iCTRL仍由SP-193独立维护且无变化。
+- sim-use `42aa9a2` 将Xcode 27 Resize Mode的`Resizable` display身份、前台应用路由和动作边界写实；SP-214提供未知拓扑拒绝底座，SP-219补齐已确认 display identity 的录制路由，候选 `51cd20dd` 已由 SP-220 审查并合入 `f9399e5e`。AX/HID/真实 Simulator transport 仍保持边界。
+- 会话创建仍必须显式`gpt-6.1-sol`；SP-219/SP-220 的桌面接口校验失败保留为事实，未记录虚假thread，当前主控按授权完成了离线验证与本地合并。

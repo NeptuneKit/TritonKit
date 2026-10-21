@@ -4,7 +4,7 @@
 2026-10-19：SP-209～213已合并分支及worktree清理完成，仅保留实际main与原用户WIP；见[清理记录](./SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（214/214 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（213/213 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-10-19（实际main与WIP分支分离；参考采用已验收合入本地main）
 
@@ -24,9 +24,8 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 已合入本地 main | [SP-218-issue-222-device-hub-input](./SP-218-issue-222-device-hub-input/README.md) | #222 内置Simulator tap/swipe与HID-only、Baguette依赖清零；CLI1501/Web78、root/build/smoke通过 | merge c2f4bdd1 + docs ec595020；SP-214～217 联合验收与 docs 门禁已复验；未推送/发布 |
 | v0.2.30已发布 | [SP-208-update-version-alignment](./SP-208-update-version-alignment/README.md) | 修复更新误报、安装版本核验与skills对齐 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
-| 持续追踪与采用 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 33仓统一追踪与采用流程已合入main | 本批SP-210～213已验收合并；后续增量独立评估 |
+| 持续追踪与采用 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 33仓统一追踪与采用流程已合入main | SP-210～213已交付；新SP-214/216与主控215/217规划就绪、模型分派受阻 |
 | v0.2.30已发布 | [SP-206-ictrl-security-integration](./SP-206-ictrl-security-integration/README.md) | 负责 SP-203～205 交付审查、集成与联合验证 | 057d1012补齐收口历史；worktree/分支已清理，已随v0.2.30发布，用户原机另验 |
 | v0.2.30已发布 | [SP-203-ictrl-discovery-hardening](./SP-203-ictrl-discovery-hardening/README.md) | 发现与连接安全，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，已随v0.2.30发布，用户原机另验；worktree/分支已清理 |
 | v0.2.30已发布 | [SP-204-ictrl-log-privacy](./SP-204-ictrl-log-privacy/README.md) | 日志脱敏与降噪，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，已随v0.2.30发布，用户原机另验；worktree/分支已清理 |
@@ -338,11 +337,13 @@
 
 2026-10-19追加：原主目录WIP已原样保存为1131b183并完成差异裁决，资料状态与本地main一致；[完整合并记录](./SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。
 
+| 模型分派受阻 | [SP-214-simulator-display-safety](./SP-214-simulator-display-safety/README.md) | Simulator主屏拓扑未知/非主屏时拒绝动作与捕获 | 必要创建返回模型校验失败，保留工作区待重试 |
 
-| 已合入本地main | [SP-214-simulator-display-safety](./SP-214-simulator-display-safety/README.md) | Simulator主屏拓扑未知/非主屏时拒绝动作与捕获 | `0d35e95e`；focused 7 tests通过；真实Simulator未执行；worktree/分支已清理 |
+| 模型分派受阻 | [SP-215-simulator-display-integration](./SP-215-simulator-display-integration/README.md) | SP-214独立主控验证、本地合并 | 必要创建返回模型校验失败，保留工作区待重试 |
 
-| 已合入本地main | [SP-215-simulator-display-integration](./SP-215-simulator-display-integration/README.md) | SP-214独立主控验证、本地合并 | `b782c192`；离线联合验收通过；真实Simulator未执行；worktree/分支已清理 |
+| 待分派 | [SP-216-harmony-forward-cleanup](./SP-216-harmony-forward-cleanup/README.md) | ArkWeb HDC清理当前归属复核与进程内互斥 | 复用工作区，显式gpt-6.1-sol恢复后分派 |
 
-| 已合入本地main | [SP-216-harmony-forward-cleanup](./SP-216-harmony-forward-cleanup/README.md) | ArkWeb HDC清理当前归属复核与进程内互斥 | `34f713c7`；focused 37 tests通过；真实HDC未执行；worktree/分支已清理 |
+| 待分派 | [SP-217-harmony-forward-integration](./SP-217-harmony-forward-integration/README.md) | SP-216独立主控验收、本地合并 | 复用工作区，显式gpt-6.1-sol恢复后分派 |
 
-| 已合入本地main | [SP-217-harmony-forward-integration](./SP-217-harmony-forward-integration/README.md) | SP-216独立主控验收、本地合并 | `36145c62`；离线联合验收通过；真实HDC/跨进程竞态未执行；worktree/分支已清理 |
+| 已合并 | [SP-219-simulator-resizable-routing](./SP-219-simulator-resizable-routing/README.md) | 本机 Simulator Resize Mode 的 Resizable display 录制路由 | `f9399e5e`，真实 Simulator/AX/HID 仍待用户验收 |
+| 已合并 | [SP-220-simulator-resizable-integration](./SP-220-simulator-resizable-integration/README.md) | SP-219 主控验证、本地合并 | 候选 `51cd20dd` 已验收并合入 `f9399e5e` |

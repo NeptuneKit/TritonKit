@@ -330,6 +330,69 @@
       "worktree_status": "removed_after_local_merge",
       "verification_note": "CLI/Web/root/release and smoke checks passed in the completed task; real guest touch, dual-arch packaging and user-device acceptance remain unexecuted.",
       "cleanup_evidence": ".build/worktree-archives/20261021-sp214-sp218/MANIFEST.sha256"
+    },
+    {
+      "source_revision": "42aa9a244f4e20fdd97ef8dd738fd34bb91cf671",
+      "decision": "adopt",
+      "assessment": "docs-linhay/spaces/SP-219-simulator-resizable-routing/README.md",
+      "space": "SP-219-simulator-resizable-routing",
+      "execution_thread_id": null,
+      "controller_space": "SP-220-simulator-resizable-integration",
+      "controller_thread_id": null,
+      "host_id": "local",
+      "state": "local_merged",
+      "worktree": "/Users/linhey/.codex/worktrees/simulator-resizable-routing/TritonKit",
+      "controller_worktree": "/Users/linhey/.codex/worktrees/simulator-resizable-integration/TritonKit",
+      "controller_state": "local_merged",
+      "execution_model": "gpt-6.1-sol",
+      "controller_model": "gpt-6.1-sol",
+      "last_verified_on": "2026-10-21",
+      "key": "lycorp-jp/sim-use:simulator-resizable-display-routing",
+      "requirement_key": "simulator-resizable-display-routing",
+      "last_dispatch_attempt": {
+        "reported_on": "2026-10-21",
+        "role": "execution",
+        "model_argument": "gpt-6.1-sol",
+        "reasoning_effort": "omitted",
+        "status": "model_validation_failed",
+        "evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/2026-10-21-dispatch.json"
+      },
+      "last_dispatch_failure_notice": {
+        "reported_on": "2026-10-21",
+        "fingerprint": "create_thread:model_validation_failed:gpt-6.1-sol:execution",
+        "reason": "Desktop create_thread rejected explicit gpt-6.1-sol after retry without reasoning; no thread ID. Execution may be handed to current-task subagent only if explicitly recorded."
+      },
+      "controller_agent": "/root",
+      "execution_agent": "/root/implement_sp219",
+      "local_merge_sha": "f9399e5e",
+      "acceptance_candidate_sha": "51cd20ddb0139d09ac6464cdfb39f54aa9a63bfc",
+      "state_evidence": "docs-linhay/spaces/SP-220-simulator-resizable-integration/plans/validation-20261021.md",
+      "verification_note": "focused 5/5 与合并后 CLI 1509/1509 通过；真实 Simulator/Xcode、AX/HID 设备验收未执行；未推送或发布。",
+      "worktree_status": "retained_for_follow_up_user_acceptance"
+    },
+    {
+      "source_revision": "42aa9a244f4e20fdd97ef8dd738fd34bb91cf671",
+      "decision": "adopt",
+      "assessment": "docs-linhay/spaces/SP-220-simulator-resizable-integration/README.md",
+      "space": "SP-220-simulator-resizable-integration",
+      "execution_thread_id": null,
+      "controller_space": "SP-220-simulator-resizable-integration",
+      "controller_thread_id": null,
+      "host_id": "local",
+      "state": "local_merged",
+      "worktree": "/Users/linhey/.codex/worktrees/simulator-resizable-integration/TritonKit",
+      "controller_worktree": "/Users/linhey/.codex/worktrees/simulator-resizable-integration/TritonKit",
+      "controller_state": "local_merged",
+      "execution_model": "gpt-6.1-sol",
+      "controller_model": "gpt-6.1-sol",
+      "last_verified_on": "2026-10-21",
+      "key": "lycorp-jp/sim-use:simulator-resizable-display-controller",
+      "requirement_key": "simulator-resizable-display-controller",
+      "controller_agent": "/root",
+      "local_merge_sha": "f9399e5e",
+      "state_evidence": "docs-linhay/spaces/SP-220-simulator-resizable-integration/plans/validation-20261021.md",
+      "verification_note": "主控完成候选核对、本地合并与合并后 CLI 回归；create_thread 的显式模型仍被接口拒绝，thread ID 保持 null。",
+      "worktree_status": "retained_for_follow_up_user_acceptance"
     }
   ],
   "new_thread_policy": {
@@ -339,5 +402,7 @@
     "fallback_allowed": false,
     "existing_threads_changed": false,
     "reasoning_effort": "unchanged"
-  }
+  },
+  "last_updated_on": "2026-10-21",
+  "last_update_note": "SP-219 候选经主控离线验收后以 f9399e5e 合入本地 main；SP-220 完成本地整合，桌面显式 gpt-6.1-sol 模型校验失败保留为会话事实。"
 }

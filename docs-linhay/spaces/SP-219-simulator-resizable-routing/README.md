@@ -10,14 +10,14 @@
 
 ## BDD / TDD
 
-- Given fresh `appResize` 返回目标 UUID、`displayName=Resizable`、合法 display UUID 和 scene size，When 执行支持的 AX/触摸/视频动作，Then command 使用同一 fresh display identity，动作/捕获结果带可审计 route/display metadata。
+- Given fresh `appResize` 返回目标 UUID、`displayName=Resizable`、合法 display UUID 和 scene size，When 执行视频录制，Then command 使用同一 fresh display identity；AX/触摸仍走现有安全拒绝路径，直到 transport 有独立证据。
 - Given Resize Mode inactive，When 执行普通 Simulator 动作，Then 保持当前主 display 行为，不新增查询副作用以外的路由。
 - Given display identity 缺失、target 不匹配、查询超时/不支持、状态在动作前变化或输出截断，When 请求动作，Then 单一机器可读 unknown/fail-closed envelope，0 个 AX/HID/video side effect。
 - Given caller 伪造 `--display` 或跨目标复用缓存 display UUID，When 执行动作，Then 拒绝并报告 `ios_simulator_resize_display_identity_mismatch`。
 
 ## 文件面与验收
 
-执行会话负责：`Sources/TritonKitCLI/CLIHostSimulatorResizeRuntime.swift`、`CLIHostSimulatorResizeCapture.swift`、AX/触摸/视频调用方及对应 `CLI/Tests/TritonKitCLITests/*Resize*` / contract tests；如需新小型模型文件需在本 space 记录。先补失败测试，再最小实现。
+执行会话负责：`Sources/TritonKitCLI/CLIHostSimulatorResizeCapture.swift`、`Sources/TritonKitCLI/CLIHostSimulatorRecordingRuntime.swift` 及对应 `CLI/Tests/TritonKitCLITests/SimulatorResizeCaptureRoutingTests.swift`；AX/触摸调用方保持现状，不在本切片扩大。先补失败测试，再最小实现。
 
 验收必须包含 focused offline fixtures：fresh probe identity、route propagation、unknown zero-side-effect、普通主 display 回归、机器可读错误单 envelope；运行受影响 CLI tests、`swift test --package-path CLI --no-parallel`（或明确失败原因）和 docs/diff 门禁。真实 Simulator/Xcode 运行仍是后续用户验收边界，性能数字仅标上游自述、不得冒充本地验证。
 
@@ -27,4 +27,4 @@
 
 ## 状态
 
-评估可纳入，等待创建显式 `gpt-6.1-sol` 执行会话。主控 SP-220 负责真实 diff、测试证据、冲突处理和本地 main 合并；会话创建失败必须保留 pending，不回退模型。
+已完成实现与主控验收。执行候选提交 `51cd20ddb0139d09ac6464cdfb39f54aa9a63bfc`，focused 离线测试 5/5 通过；主控在当前 `main` 中本地合并为 `f9399e5e`，完整 CLI 回归 1509/1509 通过。真实 Simulator/Xcode、AX/HID 实机路由仍是后续用户验收边界；未推送、发布或操作设备。
