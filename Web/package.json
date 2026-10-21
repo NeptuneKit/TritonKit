@@ -1,7 +1,7 @@
 {
   "name": "tritonkit-web-mock",
   "private": true,
-  "version": "0.2.31",
+  "version": "0.2.32",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
