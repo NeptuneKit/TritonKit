@@ -48,7 +48,7 @@
 
 ## 当前交付状态（2026-10-21）
 
-SP-203～205、[SP-210](../spaces/SP-210-simulator-ax-geometry/README.md)、[SP-212](../spaces/SP-212-mobile-mcp-android-contracts/README.md) 与 SP-214～SP-219 均已完成本地合并；SP-211/SP-213 与 [SP-220](../spaces/SP-220-simulator-resizable-integration/README.md) 主控验收均有独立证据。这些已交付项无需重试。历史交付记录以当时 `f82872e2fa457431ee7cbc7df2bafecea7ca6f1c` 为基线；当前实际 main 已推进到 `f9399e5e`，SP-219 的真实 Simulator/Xcode 和 AX/HID transport 仍未执行。
+SP-203～205、[SP-210](../spaces/SP-210-simulator-ax-geometry/README.md)、[SP-212](../spaces/SP-212-mobile-mcp-android-contracts/README.md) 与 SP-214～SP-219 均已完成本地合并；SP-211/SP-213 与 [SP-220](../spaces/SP-220-simulator-resizable-integration/README.md) 主控验收均有独立证据。这些已交付项无需重试。历史交付记录以当时 `f82872e2fa457431ee7cbc7df2bafecea7ca6f1c` 为基线；当前实际 main 已推进到 `30628da5`（v0.2.32 本地准备），SP-219 的真实 Simulator/Xcode 和 AX/HID transport 仍未执行。
 
 10月17～19日桌面 `create_thread` 拒绝显式模型参数的记录是历史事实；其后指定 `gpt-6.1-sol` 的执行 subagent 已实际交付，当前聊天完成主控验收和本地合并。桌面 thread ID 仍为 null，不能用 agent 名替造 thread ID，也不能把旧失败继续列为旧开发 blocker。
 
