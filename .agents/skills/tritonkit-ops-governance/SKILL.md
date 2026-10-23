@@ -56,6 +56,7 @@ metadata:
 - 本仓库默认本地门禁入口是 `docs-linhay/scripts/verify.sh --local`；CI validate 先用 `docs-linhay/scripts/ci-validate-mode.sh` 分类，docs/skill-only 走 `docs-linhay/scripts/verify.sh --ci-docs`，CLI/test/SwiftPM-only 走 Swift tests、CLI release build 与 release/homebrew 契约检查并跳过 podspec lint，workflow/release 脚本类只跑契约检查，`Sources/TritonKit/` 与 `Sources/TritonKitShared/` 走 podkit，运行 Swift tests、`TritonKit.podspec` lint 和 release/homebrew 契约检查；本地仍用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
 - 用户明确要求“实现完成再测试 / 分段提交”时，每个切片先完成代码、测试、schema、文档与 memory 的一致性改动，再集中跑该切片的 focused tests、必要 schema tests、完整回归和文档门禁；不要在同一切片里每改几行就停下来跑测试，除非正在定位失败。
 - 有副作用或共享状态的命令必须单飞，不进入 `multi_tool_use.parallel`：`git add/commit/tag/push/merge`、会写同一 scratch path 的 SwiftPM build/test、会启动/停止服务或修改本机/模拟器状态的命令。只有只读检查或彼此独立的文件读取、搜索、不同 scratch path 的纯构建验证，才适合并行。
+- 跟踪长构建进度先绑定本任务的tool session、启动命令/cwd/scratch和实际父子PID；不能从同名swift-frontend、SWBBuildService、dsymutil或别会话产物推断本候选阶段。进程消失/CPU活跃不等于成功，最终以本命令退出码及同候选日志/产物核实。
 - CLI 全量测试若暴露 host command timeout、fake tool timeout 或 proxy serve `Connection refused`，先排查测试基础设施和并发资源竞态，不要只调大 timeout。`Process`/pipe runner 不应把阻塞式 `read`、`waitUntilExit` 大量投到 `DispatchQueue.global`；优先用专用 queue、`terminationHandler`、有界 pipe drain 和明确 cleanup。并发网络测试不要 `bind(0)` 取端口后无登记释放给多个用例抢用；同一 test runner 内应有 reservation 或其它唯一端口策略。
 - GitHub issue / PR 评论若包含 Markdown 命令片段，必须通过文件传给 `gh --body-file`，优先使用 `docs-linhay/scripts/gh-issue-comment-file.sh`，避免 shell 执行反引号内容。
 - 上报 GitHub issue 前必须脱敏工程和个人信息：真实工程名、App 名、bundle ID、team ID、组织名、用户名、账号、邮箱、手机号、内网域名、绝对私有路径、完整私有日志、未脱敏截图和证据包不得进入公开 issue；必要时使用 `<private-app>`、`<bundle-id>`、`<user>`、`<internal-host>`、`<repo-path>` 等占位符，并保留平台版本、TritonKit 版本、命令、错误码和最小可复现片段。
@@ -123,7 +124,7 @@ metadata:
 - 单并发验证默认使用项目默认 build/scratch（如 `swift test --package-path CLI --no-parallel`）；只有真实并行隔离或发布交叉编译等明确需要时才指定 scratch。同一 scratch 的测试与构建串行。
 - 递归 schema 必须逐层核对模型、解码/编码、规范化/复制转换、最终 CLI JSON 与真实 parser；补旧 JSON 兼容、嵌套 round-trip、子树非空和完整 argv 测试。不能只给模型加字段就声称端到端支持。
 - 不通过增加未使用父参数、删除真实错误码或跳过通用输出参数来换取测试绿色。测试应在实际参数所属命令验证，不能以放宽覆盖代替修复。
-- 缓存删除验收必须包含精确根目录白名单（不用字符串 contains）、symlink/路径逃逸、活动构建、权限、替换竞态、部分失败、dry-run 不变和 confirm 删除边界的临时 fixture。重解析路径不等于消除 TOCTOU；不跟随 symlink 不等于删除父目录时保留内部链接。
+- SP-179已取消通用自动删除，当前只维护inspect/preview与confirm fail-closed；不继续派发删除实现。未来若另行立项缓存生命周期，删除验收必须包含精确根目录白名单（不用字符串 contains）、symlink/路径逃逸、活动构建、权限、替换竞态、部分失败、dry-run 不变和 confirm 删除边界的临时 fixture。重解析路径不等于消除 TOCTOU；不跟随 symlink 不等于删除父目录时保留内部链接。
 - 报告区分 focused tests、完整 CLI、根包、local gate、发布资产和安装 smoke；局部绿色、发布脚本成功、资产存在均不替代删除安全验收。已发布后发现证据缺口应如实记入 space/memory，后续 patch 修复，不移动 tag。
 
 

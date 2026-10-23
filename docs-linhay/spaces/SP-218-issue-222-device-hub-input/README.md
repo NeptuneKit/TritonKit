@@ -1,9 +1,9 @@
 # SP-218 · Issue 222 Device Hub host input
 
-- 状态：已清除全部 Baguette 运行依赖与兼容层，CLI/Web/根包及 Release 验证通过；文档全局编号门禁已在本地 main 补齐 SP-214～217 后通过。已合入本地 main（merge commit `c2f4bdd1`，收口文档 `ec595020`/`af91bf80`）；已随 `v0.2.32` 推送并发布。
+- 状态：2026-10-24 本机真实 HID/占用拒绝/恢复/swipe 验收通过，按既定范围归档；证据见[真实验收与收口](plans/20261024-live-acceptance-closeout.md)。本轮兼容修复与收口差异纳入用户授权的独立源码提交，不包含二进制发布。历史发布：已清除全部 Baguette 运行依赖与兼容层，CLI/Web/根包及 Release 验证通过；文档全局编号门禁已在本地 main 补齐 SP-214～217 后通过。已合入本地 main（merge commit `c2f4bdd1`，收口文档 `ec595020`/`af91bf80`）；已随 `v0.2.32` 推送并发布。
 - Issue：[222](https://github.com/NeptuneKit/TritonKit/issues/222)，含 [swipe 追加评论](https://github.com/NeptuneKit/TritonKit/issues/222#issuecomment-6285005107)。
 - 影响层：CLI host adapter、doctor/schema、tap receipt；不新增 HTTP/Web/Wails 控制面。
-- 分支：`feat/SP-218-issue-222-device-hub-input`；worktree：`../TritonKit-worktrees/SP-218-issue-222-device-hub-input/`；基线 main `f82872e2`。原工作区已有 SP-214～217 等资料，保持原样。
+- 历史实现基线 main `f82872e2`；2026-10-24复验从 `409670ef` 新建同级 `../TritonKit-worktrees/SP-218-issue-222-device-hub-input/`（`feat/SP-218-issue-222-device-hub-input`），当前差异已按文件整合回原main工作区，原有参考追踪WIP保留；51份文件归档并逐字节校验后，临时worktree与基线分支已普通删除；后续按用户追加授权只提交并推送本轮差异。
 
 ## 边界与决策
 
@@ -24,7 +24,7 @@
 7. Given 安装环境没有 Baguette 或设置旧 override，Then 当前命令仍仅使用 triton 自身；通用 host runner 不识别旧 override、不隐式注入 framework，不存在旧外部 argv/NDJSON executor。有效生命周期/错误/Resize断言迁至 native helper；Web mock删除永远为空的外部进程字段，关闭 listener 不涉及外部进程。
 8. 当前安装、发布和使用入口不再推荐 Baguette；源头版权/许可证、固定 SHA 与历史研究保留，不能把参考资料误作运行依赖。
 
-## 前一切片验证（追加清理前）
+## 前一切片验证（历史，2026-10-24真实结果已接替未验项）
 
 - **通过**：最终 `swift test --package-path CLI --no-parallel`，1504 tests / 152 suites；失败前后的红绿及[实现契约](plans/20261020-native-hid-contract.md)已归档。原始日志 `/tmp/sp218-cli-full-3.log`。
 - **通过**：local gate 中 SwiftPM 依赖边界、Debug 隔离、根包测试（Swift Testing 108+293及既有XCTest）、release CLI build、release CLI smoke、Harmony host smoke、iOS runtime observe smoke。日志 `/tmp/sp218-local-gate.log`。
@@ -42,7 +42,7 @@
 用户追加“还有什么依赖 Baguette 吗？都集成进来”。全量审计覆盖 Sources、CLI tests、Web dev bridge、manifest、Homebrew/CI/发布脚本和当前技能文档：无 tap/swipe 之外仍真正调用 Baguette 的生产能力，也无包/安装/发布依赖。残留为旧编译执行器、进程hook、resolver命名、测试及Web死字段；本切片全部移除，复用中性选中Xcode resolver与内置driver。旧host longPress/pinch/button/type并非已有Baguette生产能力，本次不从上游功能清单凭空扩大承诺。最终候选验证如下。
 
 
-### 追加清理后的最终候选验证
+### 追加清理后的最终候选验证（历史发布切片）
 
 - **通过**：完整 CLI 1501 tests / 152 suites（`/tmp/sp218-no-external-cli-tests.log`）；旧适配器专属断言退出，坐标、完整手势、释放/不重放、单一 envelope、Resize 与框架隔离的有效断言已迁移保留。独立源码复核未发现新增确定性缺陷。
 - **通过**：同候选 CLI 明确绑定的 Web 78 tests、TypeScript/Vite 生产构建（`/tmp/sp218-no-external-web-tests-2.log`、`/tmp/sp218-no-external-web-build.log`）。首次缺本地 Vite 后按现有 lockfile 执行 npm ci，未改 manifest/lockfile。

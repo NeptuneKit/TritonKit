@@ -1,0 +1,12 @@
+{
+  "purpose": "Owned Release Demo screenshots; no raw device inventory or host logs",
+  "sha256": {
+    "docs-linhay/spaces/SP-218-issue-222-device-hub-input/screenshots/20261024-hid-before-ready-v1.png": "bd64a4cea6555075113a5c5c479aa71d719e4258fc5984fec5a8d95107dd1887",
+    "docs-linhay/spaces/SP-218-issue-222-device-hub-input/screenshots/20261024-hid-recovery-passed-v1.png": "60f0812a01f42a1ef2852193ac0298f1a4a05f3ced8cff067ccfe78bb08340ab",
+    "docs-linhay/spaces/SP-218-issue-222-device-hub-input/screenshots/20261024-hid-swipe-passed-v1.png": "354c3f6c7d8aefdb30b88e82748db802587450c847f0500c53f0f9204d8a629d",
+    "docs-linhay/spaces/SP-218-issue-222-device-hub-input/screenshots/20261024-hid-tap-passed-v1.png": "8fde84e69c3414db55c1d0162e425c7aff1a57fc94fd0a08455007fd365d5b57",
+    "docs-linhay/spaces/SP-219-simulator-resizable-routing/screenshots/20261024-record-normal-passed-v1.png": "ed6df0fd9e1a6220c5fdfb44a9f0d221f01b29a42c55d808c5b40746488a64be",
+    "docs-linhay/spaces/SP-219-simulator-resizable-routing/screenshots/20261024-record-resize-passed-v1.png": "5e8180b95ef9476ed3fcaa8b66e8b7cf16d0b6f03a0217e8eb329e9d337eda85",
+    "docs-linhay/spaces/SP-219-simulator-resizable-routing/screenshots/20261024-record-restored-passed-v1.png": "d959882e1d425b403fdafb831923d7dc37c8a17987d56d069d3f77a6cdcec1a1"
+  }
+}

@@ -1,5 +1,33 @@
 # SP-183 Device Hub 官方设备能力适配
 
+## 当前状态（2026-10-24）
+
+**范围收缩后归档；已交付能力继续维护。** `v0.2.24` 已正式发布，双架构、skills、checksum 和 Homebrew 验证见[发布结果](./plans/20261012-release-preparation.md#发布结果)。本次按用户批准的收口决策，结束“全 Device Hub 接入”的持续扩张队列；归档不表示所有 Apple 平台、设备输入或 Temporary 创建均已真实验收。
+
+当前事实源为[能力矩阵与归档决策](./plans/20261011-capability-matrix-closeout.md)。保留已有发现/身份/就绪、容器与 Crash metadata、管理与诊断、App 生命周期及兼容实现，不删除命令或提高未经验证能力的证据等级。
+
+| 能力边界 | 归档处置 |
+| --- | --- |
+| 已交付 iOS 发现、metadata、容器、pair/unpair、诊断与 App 生命周期 | 保留既有分项证据并继续维护；历史成功不等于当前设备状态或新的操作授权 |
+| watchOS / tvOS 专用 runner、Temporary 查询 | 保留实验性实现和未验收标记；退出主动开发队列，仅由具体真实项目需求触发独立范围、目标和验收，不为补齐能力表操作设备 |
+| visionOS 2D 方向 | 历史研究保留，取消本 space 后续实施排期；实际需求重新立项 |
+| watch 侧键、visionOS 空间输入、macOS Device Hub 控制 | 保持当前 unsupported 边界，不自动成为待办；macOS Xcode build/test 仍按其既有能力维护 |
+| Simulator HID 与 Resizable 录制 | 分别由 [SP-218](../SP-218-issue-222-device-hub-input/README.md) 和 [SP-219](../SP-219-simulator-resizable-routing/README.md) 承担，不以本 space 归档代替其验收 |
+
+### 历史操作遗留交接
+
+2026-10-12 记录原 iPhone 13 Pro Max 解除配对后未恢复、iPhone 16 Pro 的配对及测试 App 保留。本次只读检索未找到后续恢复/清理证据，**当前状态为 unknown**，不能断言设备今天仍处于该状态，也不能用另一目标成功覆盖原目标记录。该遗留作为人工交接保留，不继续驱动产品扩张任务。
+
+下次用户有同一目标的实际需求时，先核对身份、当前状态和保留意图，再记录“已恢复 / 按用户意图保留 / 待同一目标重连并交接”；只有当前授权覆盖的动作才执行。此次归档不默认解除配对、卸载 fixture 或恢复全量环境。证据见[历史执行](./plans/20261012-real-device-execution.md)、[诊断收口](./plans/20261012-diagnostic-closeout.md)与[发版遗留](./plans/20261012-release-preparation.md)。
+
+### 归档验收
+
+Given 已交付与未验收能力分列，When 收缩范围，Then 原有代码、命令和历史证据保留，实验项仅按真实需求重开，unsupported 不自动排期，历史操作状态诚实交接。本文及能力矩阵已按此更新；共享索引、路线总览、memory 与文档门禁由本轮主控统一整合。此次没有真机动作或新的平台实测，不把文档归档写成运行验收成功。
+
+## 历史实施记录（2026-10-08～12）
+
+以下按原阶段保留。“当前”“下一步”“未发布”“未授权”等均是当时快照，后续结果以本页当前状态、能力矩阵和所链接的追加证据为准，不重新产生开发排期或操作授权。
+
 当前正在[准备 v0.2.24](./plans/20261012-release-preparation.md)：代码已合入main，整理public/internal skills、对齐包版本和运行发布门禁；[发布说明](./plans/20261012-v0.2.24-release-notes.md)。正式推送/tag/Release尚未执行。
 
 2026-10-12 继续验收：[16 Pro诊断归档成功](./plans/20261012-diagnostic-closeout.md)，显式512MiB预算、约310MiB私有ZIP、权限/hash/防覆盖通过；原13 Pro Max恢复仍待设备重连。

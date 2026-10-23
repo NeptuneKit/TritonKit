@@ -1,7 +1,21 @@
 import Testing
+import TritonKitShared
 @testable import TritonKitCLI
 
 struct HostSimulatorRecordingTests {
+    @Test("record schema exposes Resizable routing and its actual failure contract")
+    func schemaDescribesResizableRecordingRoute() throws {
+        let sim = try #require(commandSchemaMap()["sim"])
+        let record = try #require(sim.subcommands.first { $0.name == "record" })
+
+        #expect(record.summary.contains("Resizable display"))
+        #expect(record.summary.contains("target-bound"))
+        #expect(record.failureCodes.contains(IOSSimulatorResizeCaptureError.stateUnknown(.identityMismatch).detail.code))
+        #expect(!record.failureCodes.contains(IOSSimulatorResizeCaptureError.activeSession.detail.code))
+        #expect(record.failureCodes.contains("sim_record_truncated"))
+        #expect(record.failureCodes.contains("sim_record_invalid_artifact"))
+    }
+
     @Test("bounded simulator recording validates video track instead of container timeline")
     func selectsVideoTrackDuration() throws {
         let actual = try simulatorRecordingActualDuration(

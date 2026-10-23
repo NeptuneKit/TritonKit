@@ -85,6 +85,9 @@ struct XcodeDefaultDerivedDataTests {
         let legacy = xcodeDerivedDataGuidance(path: ".triton/DerivedData")
         #expect(legacy.contains("ask the user whether it should be cleaned"))
         #expect(legacy.contains("derived-data inspect"))
+        #expect(legacy.contains("does not support cache deletion"))
+        #expect(legacy.contains("Do not automatically fall back"))
+        #expect(!legacy.contains("currently fails"))
         #expect(!xcodeDerivedDataGuidance(path: defaultXcodeDerivedDataPath).contains("ask the user whether it should be cleaned"))
     }
 }

@@ -8,7 +8,7 @@ func xcodeDerivedDataGuidance(path: String) -> String {
         return "Xcode default user-level DerivedData is active; Triton does not pass -derivedDataPath. Directory existence does not verify reuse; cleanup should preserve it by default. Use --derived-data-path only when isolation or recovery is explicitly required because it can consume substantial disk space."
     }
     if isRepoLocalLegacy {
-        return "Explicit legacy repo-local .triton/DerivedData is active. If this cache is using too much disk, ask the user whether it should be cleaned before any deletion; review it with `triton xcode derived-data inspect --root \(path) --json`. cleanup --confirm currently fails closed and deletes nothing."
+        return "Explicit legacy repo-local .triton/DerivedData is active. If this cache is using too much disk, ask the user whether it should be cleaned before any separate manual action; review it with `triton xcode derived-data inspect --root \(path) --json`. Triton does not support cache deletion; cleanup --confirm fails closed even when Xcode is idle. Do not automatically fall back to manual deletion."
     }
     return "Explicit DerivedData override \(path) is active; cleanup should not delete it by default. Directory existence does not verify reuse; incrementalExpected false means no verified expectation. If disk usage is high, ask the user before cleanup."
 }

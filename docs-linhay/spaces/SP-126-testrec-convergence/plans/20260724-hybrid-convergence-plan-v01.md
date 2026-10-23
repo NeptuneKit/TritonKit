@@ -2,9 +2,11 @@
 
 > 日期：2026-07-24
 >
-> 状态：已裁决，待按 P0 开始实现
+> 状态：已归档（2026-10-24；P0 importer、P1 单 flow 真实纵切与兼容边界已交付）
 >
 > 决策范围：Test Recorder Replay 的产品边界、执行归属与首个验证切片
+
+本文件保留 2026-07 的分阶段设计。P0 已由 SP-132、P1 已由 SP-133、兼容误导边界已由 SP-135 完成；主线整合见 [README](../README.md)。不再按本文重新启动 P0/P1。P2 与广泛采用指标不是本期欠项，统一受[唯一后续真实可靠性专项](../../SP-134-ios-simulator-reliability-gate/plans/20260727-reliability-gate-decision-v01.md#future-reliability-acceptance)的项目触发条件约束。
 
 ## 决策
 
@@ -37,7 +39,7 @@
 目标 CLI 为：
 
 ```text
-triton test import <case.tritontestcase> --output <plan.tritontest.yaml> --json
+triton test import <case.tritontestcase> --output <plan.tritontest.yaml> --bundle-id <bundle-id> --device-platform ios-simulator --json
 ```
 
 它属于 `test` 而不是 `testrec`，因为输出从此进入规范测试生命周期。初期不增加 Web 控制面；CLI 稳定后，如自动化确有需要，再由同一 service 增加对应本地 HTTP route。
@@ -54,29 +56,29 @@ triton test import <case.tritontestcase> --output <plan.tritontest.yaml> --json
 
 第一期只转换能一一映射到现有 `TKTestNormalizedPlan` 的 P0 action / assertion。无法保真表达的录制合同必须报告 `unmapped_contract_feature`，而不是降级为 `sleep`、坐标猜测或 simulated pass。页面 matcher 和 network map 继续作为导入前检查/未来工作流输入；不在本期启用 live network interception。
 
-## 分阶段执行
+## 分阶段设计与交付关系
 
-### P0 — Contract seam 与失败测试（第一个代码切片）
+### P0 — Contract seam 与失败测试（已由 SP-132 完成）
 
 1. 在 `test` surface 增加 importer 的纯函数与 CLI 壳，先写 fixture-based focused tests。
 2. 固定 import response、blocker taxonomy 和 provenance 结构；复用现有 JSON envelope，不二次包装错误。
 3. 先覆盖四类失败：缺 compiled contract、redaction 未审查、未知/不可映射 action、source identity 变化；再覆盖一个最小成功 case 的 deterministic output。
 4. 仅在 importer 的输出已能被 `test validate` 接受后，才接入 live run；不要先写 testrec executor 的 bridge。
 
-建议落点：`CLI/Sources/TritonKitCLI/CLITestCommands.swift` 增加 `import` 子命令；转换/验证代码靠近现有 `CLITestValidationRuntime.swift` 与 test model，而不是继续膨胀 `CLITestRecorderReplayRuntime.swift`。原 testrec runtime 只提供编译产物读取和 compatibility response。
+实际入口：`Sources/TritonKitCLI/CLITestCommands.swift` 的 `import` 子命令；转换/验证复用 test model。原 testrec runtime 只提供编译产物读取和 compatibility response。
 
-### P1 — 真实 iOS Simulator 单动作纵切
+### P1 — 真实 iOS Simulator 单动作纵切（已由 SP-133 完成）
 
 1. 选择一条现有 `test run` 已支持的动作类型和一个无敏感 fixture；首个 target 固定为 iOS Simulator / Debug embedded runtime，并先保存 `triton status/doctor/capabilities/schema/plan --json` 的 Triton-first 事实。
 2. 使用 importer 生成计划，依次运行 `test validate`、`test run --target <显式 iOS Simulator target> --evidence-dir ...`。
 3. 若 importer 发现 test plan 缺少动作/目标表达，只扩展 `test` 的 shared primitive adapter；不得在 `testrec` 中重建 resolve、observe、act 或 evidence writer。
 4. 验收 evidence 至少含 normalized/import provenance、run events、before/after observation、实际动作命令结果和最终 verdict；失败时保留单一 failure envelope 与恢复建议。
 
-### P2 — Workspace 编排接入
+### P2 — Workspace 编排接入（未来项目触发，不属本期欠项）
 
-在 P1 真实证据闭环后，让 workspace 复用 importer 和 `test run`：workspace 负责 lifecycle、target 和 Atlas 的上游上下文，测试 runtime 仍负责步骤执行和 verdict。Android 只有在明确 host primitive adapter 完成后才进入该路径；此阶段先增加读模型/导出衔接，不新增 Web 写入口。
+仅在明确项目需要 recorder/workspace 自动回归并完成后续可靠性专项的 Go/No-Go 后，另行裁决 workspace 复用 importer 和 `test run`：workspace 负责 lifecycle、target 和 Atlas 的上游上下文，测试 runtime 仍负责步骤执行和 verdict。Android 需另有显式 host primitive adapter 及其验收；不新增 Web 写入口。
 
-### P3 — 兼容迁移与淘汰评估
+### P3 — 兼容迁移与淘汰评估（诊断边界已由 SP-135 完成，删除另议）
 
 1. `testrec inspect/compile/proposals/match-page` 保持；`testrec replay` 和 matrix response 添加明确迁移提示、execution mode 和禁止误读的状态。
 2. 在 CLI/HTTP schema 中标注兼容期限与替代命令，但不删除 route，也不改写历史 `.tritontestcase` / evidence。
@@ -91,7 +93,7 @@ triton test import <case.tritontestcase> --output <plan.tritontest.yaml> --json
 | 保留 | `.tritontestcase`、deterministic compiler、quality/redaction、page matcher | 是录制来源与安全审查的独特价值 |
 | 拒绝 | 完成 `testrec local-device` 后再迁移 | 会先固化第二条 device/execution/evidence 管线 |
 | 拒绝 | 立即删除 testrec CLI/HTTP/包格式 | 已有兼容消费者、schema 与历史证据，破坏性过高 |
-| 后置 | 跨平台矩阵、真实网络策略、自动 proposal apply、系统级监听、真机 | 未通过单平台真实闭环，且会放大语义与安全风险 |
+| 后置 | 跨平台矩阵、真实网络策略、自动 proposal apply、系统级监听、真机 | 超出本期已验证的单 flow 边界，且会放大语义与安全风险 |
 
 ## 验证矩阵
 
@@ -103,6 +105,6 @@ triton test import <case.tritontestcase> --output <plan.tritontest.yaml> --json
 | 真机前模拟器 | iOS Simulator / Debug embedded runtime 实际 smoke | resolve → before observe → act → after observe → evidence，非 `local-simulated` verdict |
 | 回归 | `go test ./...`（如改动 Go 层）、Swift 对应 test target、`docs-linhay/scripts/verify.sh --local` | 与改动层匹配；环境不可用时保存事实和 blocker，不把缺证据当通过 |
 
-## 执行顺序与停止条件
+## 归档与未来停止条件
 
-接下来只启动 P0。P0 完成前，不开始 P1 设备动作，也不对 historical `testrec` 实现做删除、迁移或真实 executor 开发。P0 若发现 `.tritontest.yaml` 无法无损表达最小录制合同，先将差异写回本计划并重新裁决计划格式，不以隐式转换绕过问题。
+本期 P0/P1/兼容边界已完成，不再有“接下来启动 P0”的任务。未来若项目触发真实可靠性专项，先固定流程、版本、目标、reset 与私有 evidence 条件，再执行；失败应归因为产品、环境或 fixture，不降低阈值或删除困难样本。未形成可靠性 Go/No-Go 前不据此扩张 workspace，不删除兼容入口，也不恢复独立 testrec executor。

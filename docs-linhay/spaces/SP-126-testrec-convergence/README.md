@@ -2,12 +2,12 @@
 
 ## 状态
 
-- 状态：执行（路线已裁决；可信基线、SP-132 P0 importer、SP-133 P1 imported iOS Simulator proof、SP-134 离线 reliability gate 与 SP-135 simulated compatibility contract 均形成独立本地 checkpoint；真实采样与 workspace 扩张继续后置）。
+- 状态：已归档（2026-10-24；本期 Hybrid、bounded importer、真实单 flow 纵切和兼容边界已交付；不声明真实可靠性采样通过）。
 - 负责人：Codex。
-- Branch：`feat/SP-126-testrec-convergence`。
-- Worktree：`../TritonKit-worktrees/SP-126-testrec-convergence/`。
+- 历史 Branch：`feat/SP-126-testrec-convergence`。
+- 历史 Worktree：`../TritonKit-worktrees/SP-126-testrec-convergence/`（不作为恢复执行入口）。
 - 基线：`main@931645ed`（2026-07-24 建立）。
-- 前序 space：[SP-077 Test Recorder Replay](../20260622-test-recorder-replay/README.md)。SP-077 保留为历史需求与既有合同的兼容入口；本 space 是唯一继续推进的收敛入口。
+- 前序 space：[SP-077 Test Recorder Replay](../20260622-test-recorder-replay/README.md)。SP-077 保留为历史需求与既有合同的兼容入口；本 space 保留已交付的收敛决策与证据。
 
 ## 已裁决的产品方向
 
@@ -22,11 +22,13 @@
 
 因此：`testrec` 有价值的原始合同不会丢失，但其 `local-simulated` 只能作为兼容和诊断基线，不能再被包装成真实回放成功；真实设备动作、前后 observation、证据和最终判定一律落到现有 `test run`。
 
-## 可信基线本地集成（2026-07-24）
+## 可信基线集成历史与当前归档
 
 `SP-127`（#168 iOS 真机 terminate fail-closed）、`SP-128`（#167 Xcode 真机 target preflight）与 `SP-129`（`serve` 默认 loopback）已按编号纳入独立的 `codex/sp126-trusted-baseline-integration` worktree，并完成联合 focused、schema、CLI 与本地门禁验证。
 
-该分支只形成可审查的本地集成 checkpoint：未合入 `main`、未 push/PR/tag/release，也没有触碰 #164 dirty evidence worktree。真实设备 smoke、真实 Xcode build 与 Bonjour 广播语义仍按各自 space 的显式风险记录保留；它们不阻塞本期的 fail-closed / preflight / 默认绑定契约，但不能被误报为已验证能力。
+2026-07-24 的第一阶段仅形成可审查的本地 checkpoint，当时尚未合入 `main`。后续 SP-126～136 已由 `d0f09d3c` 进入主线；receipt-backed gate 的加固由 [SP-151](../SP-151-trusted-baseline-integration/README.md) / PR #177（`66f975d9`）整合。2026-10-24 文档收口核对这两个提交均为候选 `409670ef` 的祖先；本次未重新执行历史测试或设备验收。
+
+真实设备 smoke、真实 Xcode build 与 Bonjour 广播语义仍按各自 space 的证据边界记录；这些限制不重新打开已交付的 importer 或门禁切片。SP-140、SP-143～151 保持已完成/已归档，不能将同一次真实采样缺口拆回多项开发待办。
 
 ## 本期边界
 
@@ -57,10 +59,12 @@ SP-135 已通过本地 checkpoint `37d8f9c7` 把这条兼容边界写进 replay/
 
 ## 完成定义
 
-本 space 的第一个有限里程碑已完成：SP-132 P0 importer 的 focused tests 已通过，SP-131 提供手写 canonical iOS Simulator 真实动作证据闭环，SP-133 又以 imported plan（不是 hand-written fixture）复现了同一纵切并直接读取 provenance。SP-134 已把 ECR / FER / ORR 的离线 gate 收紧为 evidence/target/step 覆盖 fail-closed，SP-135 将 simulated compatibility 约束为 non-verdict，SP-136 已冻结真实 collection 的 target/reset/slot 前置合同。该结果仍只证明一条 iOS fixture flow，且尚无真实 3 flow × 20 样本；不证明可靠性矩阵、workspace 编排、Android/真机 parity 或对外项目采用。后续任一扩张必须另建有限 space、先写 BDD 与环境/隐私门禁，不能回填 `testrec` 的第二执行器；未有可审计门槛数据前，不启动 workspace 接入。
+本 space 按有限里程碑完成归档：SP-132 P0 importer 的 focused tests 已通过，SP-131 提供手写 canonical iOS Simulator 真实动作证据闭环，SP-133 又以 imported plan（不是 hand-written fixture）复现了同一纵切并直接读取 provenance。SP-134 已完成 ECR / FER / ORR 的离线 gate，SP-135 将 simulated compatibility 约束为 non-verdict，SP-136 已冻结真实 collection 的 target/reset/slot 前置合同。该结果仍只证明一条 iOS fixture flow，且尚无真实 3 flow × 20 + 1 negative 样本；不证明可靠性矩阵、workspace 编排、Android/真机 parity 或对外项目采用。
+
+后续只保留一项[条件触发的真实可靠性专项](../SP-134-ios-simulator-reliability-gate/plans/20260727-reliability-gate-decision-v01.md#future-reliability-acceptance)：有明确项目将使用 recorder 导入/workspace 自动回归，或准备对外承诺该执行路径可靠性时，另建有限 space。触发前不占 active queue，也不阻塞本 space 归档。可先做 1 supported + 1 negative 的真实接线 smoke，但这不降低 61 槽门槛；完整可靠性 Go/No-Go 和 workspace 接入仍需专项数据。不得恢复 `testrec` 第二执行器。
 
 详细方案见 [Hybrid Convergence Plan v01](./plans/20260724-hybrid-convergence-plan-v01.md)。
 
 项目级 12 个月路线、平台层级、Go/No-Go 门槛和明确不做项见 [Agent-Native Local Execution Roadmap v01](../../plans/20260724-agent-native-local-execution-roadmap-v01.md)。
 
-交接给后续执行者的起点、顺序、隔离要求和停止条件见 [Luna Execution Handoff v01](./plans/20260724-luna-execution-handoff-v01.md)。
+历史执行起点与阶段顺序见 [Luna Execution Handoff v01](./plans/20260724-luna-execution-handoff-v01.md)；该交接已失效，不是当前执行队列。

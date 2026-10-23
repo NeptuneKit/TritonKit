@@ -898,12 +898,12 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "record",
-                    summary: "Record a bounded simulator video; active or unverified Resize Mode fails before capture starts",
+                    summary: "Record a bounded simulator video; active Resize Mode routes to its fresh target-bound Resizable display, while unknown state or a conflicting display fails before capture starts",
                     requiredOptions: ["--output"],
                     optionalOptions: ["--simulator", "--duration", "--display", "--format", "--json"],
                     nextCommands: ["triton device doctor --platform ios --scope simulator --json", "triton sim screenshot --simulator <udid|booted> --output <new-path.png> --json"],
                     outputSelectors: ["host.simulator-recording"],
-                    failureCodes: ["ios_simulator_resize_capture_unroutable", "ios_simulator_resize_capture_state_unknown", "sim_record_failed", "sim_record_truncated", "sim_record_invalid_artifact", "invalid_duration", "host_command_timeout", "validation_failed"]
+                    failureCodes: ["ios_simulator_resize_capture_state_unknown", "sim_record_failed", "sim_record_truncated", "sim_record_invalid_artifact", "invalid_duration", "host_command_timeout", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "logs",

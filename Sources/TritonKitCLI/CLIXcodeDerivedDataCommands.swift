@@ -2,7 +2,7 @@ import ArgumentParser
 import Foundation
 
 struct XcodeDerivedData: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "derived-data", abstract: "Inspect or clean Xcode DerivedData", subcommands: [XcodeDerivedDataInspect.self, XcodeDerivedDataCleanup.self])
+    static let configuration = CommandConfiguration(commandName: "derived-data", abstract: "Inspect or preview Xcode DerivedData usage", subcommands: [XcodeDerivedDataInspect.self, XcodeDerivedDataCleanup.self])
 }
 
 struct XcodeDerivedDataInspect: AsyncParsableCommand {
@@ -22,9 +22,9 @@ struct XcodeDerivedDataInspect: AsyncParsableCommand {
 }
 
 struct XcodeDerivedDataCleanup: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "cleanup", abstract: "Preview DerivedData cleanup; confirmed deletion is temporarily unavailable")
+    static let configuration = CommandConfiguration(commandName: "cleanup", abstract: "Preview DerivedData cleanup; Triton does not support deletion")
     @Option(help: "DerivedData root; defaults to Xcode's user-level DerivedData folder") var root: String = defaultXcodeDerivedDataPath
-    @Flag(help: "Request deletion (currently fails closed until safe deletion is available)") var confirm = false
+    @Flag(help: "Compatibility option; fails closed because Triton does not support DerivedData deletion") var confirm = false
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     func run() async throws {
@@ -56,7 +56,7 @@ enum XcodeDerivedDataSafetyError: Error, CustomStringConvertible {
     var description: String {
         switch self {
         case .invalidRoot(let message), .missingRoot(let message), .activeBuild(let message): return message
-        case .cleanupUnavailable: return "Confirmed DerivedData deletion is unavailable until race-safe cleanup and build coordination are implemented. No cache entries were deleted."
+        case .cleanupUnavailable: return "Triton does not support DerivedData deletion. No cache entries were deleted."
         }
     }
 
@@ -64,8 +64,8 @@ enum XcodeDerivedDataSafetyError: Error, CustomStringConvertible {
         switch self {
         case .invalidRoot: return "Use an existing canonical path ending in /.triton/DerivedData or the user's Xcode DerivedData root."
         case .missingRoot: return "Run `triton xcode derived-data inspect --root <path> --json` after creating the DerivedData directory."
-        case .activeBuild: return "Wait for `triton xcode wait-idle --json` before retrying confirmed cleanup."
-        case .cleanupUnavailable: return "Use inspect or cleanup without --confirm to review cache usage. Track GitHub issue #214 for safe deletion support."
+        case .activeBuild: return "Use inspect or cleanup without --confirm to review cache usage. Waiting for Xcode to become idle does not enable deletion."
+        case .cleanupUnavailable: return "Use inspect or cleanup without --confirm to review cache usage. Do not automatically fall back to manual deletion."
         }
     }
 }

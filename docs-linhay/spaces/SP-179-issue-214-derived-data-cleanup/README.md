@@ -2,11 +2,15 @@
 
 ## 范围与当前状态
 
-新增 `triton xcode derived-data inspect` 与 `cleanup`。inspect 只读统计；cleanup 默认 dry-run。2026-10-12 安全补丁暂时禁用确认删除：`--confirm` 在任何删除前 fail closed。
+**2026-10-24 已归档：保留 inspect / dry-run，取消通用自动删除需求。** 这是范围裁决，不是原安全删除功能完成，也不宣称已证明删除竞态安全。
 
-**已集成并发布 v0.2.22；安全验收未收口，#214 仍 OPEN。** 本记录纠正先前会话中“全部完成”的过强结论。发布成功不是删除安全性得到证明。
+`triton xcode derived-data inspect` 只读统计；`cleanup` 仅提供预览。兼容参数 `--confirm` 继续接受，但在删除前 fail closed：活动或未知构建状态保留 `xcode_not_idle`，空闲仍为 `derived_data_cleanup_unavailable`。等待空闲不会启用删除，不建议重试 confirm 或自动回退手工删除；CLI flags、错误码和只读输出结构保持兼容。
 
-## 发布事实
+已发布的只读修复与禁删行为继续维护。通用用户级/legacy 缓存删除的独占协议、竞态删除实现和部分删除审计撤出当前队列；未来若需要 Triton 独占缓存生命周期管理，应另立明确范围，而不是恢复本 space 的通用删除承诺。帮助、schema 和恢复建议移除“暂时禁用/等待实现”的表述，新增边界测试由主控在当前联合候选统一验证。
+
+**远端 #214 的最后核实记录为 OPEN**（下文 v0.2.25 发布复查）；2026-10-24 本轮未查询、评论或关闭远端 issue，本地 space 归档不改变它的远端状态。发布成功不等于删除安全得到证明，取消需求也不应记成已实现删除。
+
+## v0.2.22 发布事实（历史）
 
 - 实现：`82fecb9c`；合并：`d8efddbe`；版本对齐：`468d2f13`。
 - [v0.2.22](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.22)：arm64、x86_64、public skills、checksum 四项资产已复核存在。
@@ -14,14 +18,18 @@
 - release.sh 返回 0，报告 Homebrew tap 就绪；本轮未独立执行 Homebrew upgrade/test、资产下载校验和 packaged Web smoke，未发布 CocoaPods trunk。
 - worktree `../TritonKit-worktrees/SP-179-issue-214-derived-data-cleanup` 保留；本次整理不删除分支/worktree，不移动已发布 tag。
 
-## 验证证据边界
+## v0.2.22 验证证据边界（历史）
+
+以下是当时证据缺口；后续只读/schema 修复和联合门禁见 2026-10-12 与 v0.2.25 记录，不将旧缺口重复列为当前待办。
 
 - 会话记录：XcodeCommandTests 47、SmokeRuntimeTests 5、XcodeSchemaParserContractTests 3 通过。
 - `verify.sh --local` 通过：根包 XCTest 7 + Swift Testing 269、release CLI build、smoke、iOS Simulator build、文档与 whitespace。**不能据此推断完整 nested CLI 测试通过。**
 - 最近完整 CLI 单并发记录为 984 tests / 77 suites、4 issues；后续局部修复没有完整 CLI 绿色复跑证据。
 - schema 测试最后跳过了顶层 `--format/--json`，需恢复有效覆盖；还需验证 schema 转换链没有丢失递归子命令，补 JSON round-trip 和树非空断言。
 
-## 待修与验收场景
+## 原待修与验收场景（历史，已修复或撤销）
+
+原清单 1/3 及单一错误、schema、只读 fixture 已在后续补丁修复；删除范围、竞态/排他、partial deletion 的实现与验收于 2026-10-24 撤销。下面保留原问题陈述，不再产生持续实施要求。
 
 1. 路径白名单目前用 `contains("/.triton/DerivedData")`，会接受近似名称及后代路径；改为精确路径组件和明确根目录约束，先补拒绝用例。
 2. 缺少活动构建保护；当前“重解析后 removeItem”不足以证明竞态安全。补活动构建拒绝、替换竞态、权限及部分删除失败测试。
@@ -30,13 +38,13 @@
 5. symlink 扫描跳过不等于删除时保留：递归删除父目录会移除其内部链接；文档须区分不跟随链接与不删除链接。
 6. 补正式 fixture 自动化：inspect 统计、dry-run 不变、confirm 删除范围、root 保留与外部数据不变。不在真实用户缓存上做破坏性验收。
 
-在上述安全项验证前，建议仅使用 inspect / dry-run，不推荐 `--confirm`。后续修复另发 patch，不重打 v0.2.22。issue 保持开放，不将此次整理视为关闭授权。
+当时的处置是仅使用 inspect / dry-run、不推荐 `--confirm`，后续 patch 不重打 v0.2.22，issue 保持开放。2026-10-24 已由上文的“取消自动删除、保留只读能力”裁决接替，不再以补齐安全删除为本 space 的完成条件。
 
 ## 会话沉淀
 
 见 [2026-09-16 memory](../../memory/2026-09-16.md)。单并发使用默认 build/scratch；共享 scratch 的构建串行。无需提交锁文件、生成文件或构建产物。
 
-## 2026-10-12 安全修复切片（本地待集成）
+## 2026-10-12 安全修复切片（历史，后续已集成发布）
 
 影响层仅 CLI；独立 worktree 为 `../TritonKit-worktrees/SP-179-issue-214-derived-data-cleanup-safety`。
 
@@ -50,7 +58,9 @@ BDD：近似/后代根目录被拒绝；dry-run 保持 cache/外部文件不变�
 
 验证：`XcodeDerivedDataSafetyTests` 8 项、`XcodeSchemaParserContractTests` 3 项与 `XcodeCommandTests.derivedDataCommandContracts` 1 项，合计 12 tests / 3 suites 通过。`verify.sh --ci-docs`、`check-docs.sh`、`git diff --check` 通过。真实本轮 CLI schema 空格/点分三层 lookup 与 confirm 单一失败 envelope、fixture 文件不变通过。没有操作真实用户缓存，没有运行完整 CLI / local gate，不关闭 issue。历史大目录的实际产生调用尚无证据；默认相对路径会受调用工作目录影响，不能据此声称根项目与子项目缓存重复。
 
-### 恢复删除前必须裁决的独占协议
+### 原恢复删除所需独占协议（历史目标，已撤销）
+
+这三项解释为何不能从只读成功推出可安全删除；它们已撤出本 space 当前队列。保留为未来另立缓存生命周期需求时的参考，不是本 space 尚待执行的计划。
 
 1. 确定允许清理的缓存是 Triton 专用且由所有生产者共同遵守的锁保护，还是用户明确移交的脱机缓存；普通 Xcode GUI/外部 xcodebuild 不能仅靠 ps 快照证明排他。
 2. 定义根目录身份固定、目录改名/替换与同用户并发写的威胁模型；采用 descriptor-relative nofollow 遍历时仍需处理已打开目录被移出根的问题。
@@ -60,10 +70,10 @@ schema 修复同时保留 normalization 各层 subcommands 递归复制，并验
 
 最终补验：parent `--format/--json` 不再跳过；为实际接受这两个参数的 Xcode 叶子子命令显式声明 scope，以 `--format json` 验真实 parser。父 `derived-data` 不增虚假 flag。第三个 public real-project-regression 指南同步禁止 confirm 自动回退删除。
 
-## 2026-10-12 本轮集成状态
+## 2026-10-12 集成状态（历史）
 
 安全止血已本地集成至 [SP-190](../SP-190-open-issues-integration/README.md)；完整门禁通过，远端操作待授权。保留本轮 12 tests / 3 suites 的临时 fixture 验证证据；未删除真实用户缓存。#214 仍 OPEN：本轮只禁用危险删除并修复只读检查，不能视为完整安全清理实现或竞态安全验收。
 
-## v0.2.25 安全补丁发布
+## v0.2.25 安全补丁发布与当时远端状态
 
-安全禁用删除及只读统计修复已发布，main CI、Release 与 Homebrew 通过。#214 保持 OPEN；merge commit 文案曾被 GitHub 识别为关闭关键字并自动关闭，发布复查已重新打开并解释安全删除仍未完成。
+安全禁用删除及只读统计修复已发布，main CI、Release 与 Homebrew 通过。当时复查 #214 为 OPEN；merge commit 文案曾被 GitHub 识别为关闭关键字并自动关闭，发布复查已重新打开并解释安全删除仍未完成。本条保留最后已核实远端事实，不代表 2026-10-24 做过新的远端查询或关闭。

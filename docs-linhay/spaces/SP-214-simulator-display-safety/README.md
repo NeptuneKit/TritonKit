@@ -1,5 +1,21 @@
 # SP-214 — Simulator 主显示器路由安全
 
+## 当前修正（2026-10-24）
+
+原切片已随 `v0.2.32` 发布；此前验收仅覆盖离线 fixture，未证明真实 Xcode 查询成立。SP-218 的本轮专用 Simulator 验收发现：选中 Xcode 27.1 的 `devicectl device info` 提供 `displays`，不存在实现曾使用的 `displayTopology`，该调用实际返回参数错误，使主显示器安全门禁阻止截图与 AX activation。只读 AX 树查询不是 activation，不能把该问题概括为所有 AX 均失败。
+
+本轮已在本地候选将查询修正为 `devicectl device info displays`，并按实际响应更新 parser 与回归：文件 JSON 的 `info.commandType=devicectl.device.info.displays`、success outcome 和完整 `info.arguments` 必须绑定此次 argv 与精确目标；读取非 Bool 整数 `displayId`、唯一 UUID `uniqueId`、严格 Bool `primary`、tagged `type.integrated/type.virtual` 和 `backlightState=activeOn|off`。唯一 active display 必须同时为唯一 primary 且 integrated；保留多屏歧义、坏记录、未知布局、重复身份、矛盾 error、超时与截断的 fail-closed，不以 `Connected Screens`、设备名称或最大 framebuffer 代替 active 证据。原来的 `{id, integrated, active}` 合成样本和假命令测试不是 Apple schema 依据，本轮真实返回已纠正这一假设。
+
+源码入口：[display query/parser](../../../Sources/TritonKitCLI/CLIHostSimulatorDisplayRuntime.swift)；回归入口：[SimulatorDisplaySafetyTests](../../../CLI/Tests/TritonKitCLITests/SimulatorDisplaySafetyTests.swift)。本地修改、主控集中测试与实际动作验收分别记录，最终结果跟随 [SP-218 本轮验收](../SP-218-issue-222-device-hub-input/plans/20261024-live-acceptance-closeout.md)；当前条目不声明修复已发布、全部 AX 已验收、Duo 路由已实现或 HID 触控已送达。
+
+SP-219 只增加 fresh、target-bound Resizable display 的 `sim record` 路由。Resize active/unknown 时 AX activation 与 HID 仍安全拒绝；录制成功不能扩张为输入支持。录制 identity 冲突沿用 `ios_simulator_resize_capture_state_unknown`（reason `identityMismatch`）；不存在独立的 `ios_simulator_resize_display_identity_mismatch` 错误码。
+
+补充 BDD：Given 本机 `displays` 响应及其脱敏 fixture，When 查询/解析，Then 使用真实命令与完整 argv 身份绑定，并拒绝假命令类型、重复 selector、跨目标/路径错配和任意坏 display；Given 仅修复门禁契约，Then 不将离线通过升级为 AX/HID 的真实动作验收。
+
+## 历史立项记录
+
+以下是 2026-10-20 的范围、分派和当时状态；“等待分派”“未开发”等不表示当前集成状态，也不覆盖本轮已授权的真实验收与修复。
+
 ## 状态与边界
 
 2026-10-20 由参考更新流程评估为可纳入，等待独立执行会话分派。影响层为 macOS CLI/HTTP 共用的本机 Simulator AX、host touch 与主屏采集安全门禁；不改 embedded SDK、Web/Wails、真机或远端产品面。

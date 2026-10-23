@@ -1,12 +1,14 @@
 # 20260622 Test Recorder Replay
 
+> 原研究方案为历史资料，自动扩张/executor基线判断已失效；当前交付与范围以文末2026-10-24归档裁决及SP-126/134后继证据为准，不据此新开Agent Runtime space。
+
 ## Space 目标
 
 定义一个面向测试的 TritonKit 产品面：录制一端真实执行中的动作、网络数据和页面状态，经过 LLM / VLM 辅助编译后生成测试合同，再在多端回放并产出可审计证据。
 
 核心一句话：**一端录制合同，多端证据化回放**。
 
-## 当前产品判断
+## 当时产品判断（历史）
 
 1. 录制产物不是最终测试，而是原始流；必须先编译成测试合同。
 2. 测试合同不是死脚本；跨端回放时需要 VLM / LLM 辅助迁移。
@@ -126,9 +128,14 @@ Exclude：
 
 ## 2026-07-24 后续收敛
 
-- 后继执行 space：[SP-126 Testrec Convergence](../SP-126-testrec-convergence/README.md)。
+- 后继收敛 space：[SP-126 Testrec Convergence](../SP-126-testrec-convergence/README.md)；该有限交付已于 2026-10-24 归档。
 - 裁决：采用 Hybrid；保留 `.tritontestcase`、确定性编译、质量/脱敏、proposal 与 page matcher 作为录制/导入兼容层，停止扩展独立 `local-device`、矩阵和真实 network executor。
 - 真实执行、步骤 observation、动作与最终 evidence/verdict 统一进入现有 `test` runtime；workspace 后续复用相同测试合同，`replay` 保持 `.tritonplan` 的低层 smoke 边界。
 - 已完成 `.tritontestcase -> test import -> test validate -> test run` 的受控 iOS Simulator 纵切；`testrec replay --dry-run`、`local-simulated` 与 matrix 仅是 `offline-diagnostic`，不能作为真实 verdict 或 reliability sample。
 - 已具备只读 ECR/FER/ORR reliability gate 与 3 flow × 20 collection preflight；`ready_to_collect` 只表示私有离线合同完整，真实采样仍要求独立 live-harness、专用 Simulator、自管 loopback server、逐样本 reset receipt 与私有 evidence。
-- 本历史 space 不再承接新实现；后续 BDD、计划、实现和证据必须写入 SP-126。
+- 本历史 space 与 SP-126 均不再承接旧路线扩张；保留已交付合同与证据，不恢复独立 testrec executor。
+
+## 2026-10-24 归档收口
+
+- 状态：已归档（后继收敛完成）。SP-126 的 bounded importer、真实单 flow 与兼容边界，以及 SP-134 的离线 gate 均已交付；SP-140/143～151 的后继 harness/加固保持完成，不因真实采样未做重新打开。
+- 后续只引用[唯一条件触发的真实可靠性专项](../SP-134-ios-simulator-reliability-gate/plans/20260727-reliability-gate-decision-v01.md#future-reliability-acceptance)：明确项目采用 recorder/workspace 自动回归或准备对外可靠性承诺时另立有限 space。可先 1 supported + 1 negative 接线 smoke，但完整 3 flow × 20 + 1 negative 未运行、gate 不得视为通过；触发前不占 active queue。

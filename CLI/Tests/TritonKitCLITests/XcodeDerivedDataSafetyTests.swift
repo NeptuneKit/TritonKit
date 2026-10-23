@@ -123,11 +123,33 @@ struct XcodeDerivedDataSafetyTests {
         #expect(cleanup.failureCodes.contains("derived_data_cleanup_unavailable"))
         #expect(cleanup.failureCodes.contains("xcode_not_idle"))
         #expect(cleanup.summary.contains("fails closed"))
+        #expect(cleanup.summary.contains("does not support deletion"))
+        #expect(!cleanup.summary.contains("pending"))
         #expect(cache.failureCodes.contains("derived_data_root_rejected"))
         let decoded = try JSONDecoder().decode(TKCommandSchema.self, from: JSONEncoder().encode(xcode))
         let nested = try #require(decoded.subcommands.first { $0.name == "derived-data" })
         #expect(nested.subcommands.map(\.name) == ["inspect", "cleanup"])
         #expect(nested.subcommands.last?.failureCodes.contains("derived_data_cleanup_unavailable") == true)
+    }
+
+    @Test("DerivedData recovery never promises deletion after a retry")
+    func recoveryKeepsDeletionUnsupported() {
+        let unavailable = XcodeDerivedDataSafetyError.cleanupUnavailable
+        let active = XcodeDerivedDataSafetyError.activeBuild("fixture")
+        #expect(unavailable.code == "derived_data_cleanup_unavailable")
+        #expect(active.code == "xcode_not_idle")
+        #expect(unavailable.description.contains("does not support"))
+        #expect(!unavailable.description.contains("until"))
+        #expect(!unavailable.hint.contains("#214"))
+        #expect(!active.hint.contains("wait-idle"))
+        #expect(!active.hint.contains("retry"))
+        #expect(active.hint.contains("does not enable deletion"))
+        for error in [unavailable, active] {
+            #expect(error.hint.contains("inspect"))
+            #expect(error.hint.contains("without --confirm"))
+        }
+        #expect(XcodeDerivedData.configuration.abstract.contains("preview"))
+        #expect(!XcodeDerivedDataCleanup.configuration.abstract.contains("temporarily"))
     }
 
     @Test("DerivedData scan counts regular bytes and includes empty directory mtime")

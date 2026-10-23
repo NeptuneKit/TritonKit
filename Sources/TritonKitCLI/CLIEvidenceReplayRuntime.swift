@@ -43,14 +43,27 @@ func parseReplayVariables(_ assignments: [String]) throws -> [String: String] {
     return result
 }
 
+struct ReplayResourceUnsupportedError: Error {
+    let code = "unsupported_capability"
+    let message = "Replay execution of simulator-resource is not supported. No replay steps were executed."
+    let hint = "Use `triton replay <file.tritonplan> --dry-run --json` to inspect the standalone resource command. Resource changes require separate, explicit execution and restoration."
+}
+
 func runReplayPlan(
     _ plan: TKReplayPlan,
     variables: [String: String],
     dryRun: Bool,
     target: String,
     host: String,
-    port: Int
+    port: Int,
+    runtimeClientResolver: (String, String, Int) async throws -> TritonKitHTTPClient = { target, host, port in
+        (try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)).client
+    }
 ) async throws -> TKReplayResult {
+    // Reject the whole plan before target resolution or any earlier step can run.
+    if !dryRun, plan.steps.contains(where: { $0.action == .simulatorResource }) {
+        throw ReplayResourceUnsupportedError()
+    }
     let start = Date()
     var steps: [TKReplayStepResult] = []
     var failedStepIndex: Int?
@@ -60,8 +73,7 @@ func runReplayPlan(
     var client = TritonKitHTTPClient(host: host, port: port)
 
     if !dryRun {
-        let resolved = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
-        client = resolved.client
+        client = try await runtimeClientResolver(target, host, port)
     }
 
     for (offset, step) in plan.steps.enumerated() {

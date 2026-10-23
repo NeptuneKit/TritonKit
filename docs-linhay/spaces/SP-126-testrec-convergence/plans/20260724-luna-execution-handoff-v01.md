@@ -4,7 +4,11 @@
 >
 > 接收者：Luna
 >
-> 状态：可执行；本文件所在提交是本次路线收口检查点（用 `git log -1 --oneline feat/SP-126-testrec-convergence` 取得 hash）
+> 状态：历史交接，已失效（2026-10-24；本期有限交付已完成，不按旧队列重新执行）
+
+当前结论以 [SP-126 README](../README.md) 为准：SP-132 importer、SP-133 单 flow 真实纵切、SP-134 离线 gate 与 SP-135 兼容边界已交付；后继 harness/receipt 加固已由 SP-140/143～151 完成并整合。本文件记录的是 2026-07-24 交接时的顺序、授权限制和当时平台判断，不代表当前能力矩阵，也不恢复已解决 issue 或历史 worktree 的任务。
+
+只保留[一项未来项目触发的真实可靠性专项](../../SP-134-ios-simulator-reliability-gate/plans/20260727-reliability-gate-decision-v01.md#future-reliability-acceptance)。明确项目采用 recorder/workspace 自动回归或准备对外可靠性承诺时才另立有限 space；可先 1 supported + 1 negative 接线 smoke，完整 3 flow × 20 + 1 negative 未运行且不因归档视为通过。以下各节均为原始交接历史，不是 active queue。
 
 ## 交接结论
 
@@ -31,7 +35,7 @@ Test Recorder Replay 采用 Hybrid 收敛：
 | 长期投资顺序 | 可信基线 → iOS Simulator → importer → agent workflow → Android adapter | [12 个月路线](../../../plans/20260724-agent-native-local-execution-roadmap-v01.md) |
 | 历史兼容边界 | SP-077 不再扩展真实 replay；仅保留历史合同与诊断资产 | [SP-077 README](../../20260622-test-recorder-replay/README.md) |
 
-本次为 docs/路线提交。已经执行并应在当前提交上复核的门禁：
+当时为 docs/路线提交；当时交接列出的门禁如下，不是本轮执行声明：
 
 ```text
 git diff --check
@@ -41,7 +45,7 @@ docs-linhay/scripts/verify.sh --ci-docs
 
 它不等同于代码实现、设备 smoke 或 release 验收。
 
-## 执行边界（不可改写）
+## 历史执行边界
 
 1. 首个平台是 **iOS Simulator + Debug embedded runtime**。Android 当前只有部分 host/discovery/observation 能力，不能表述成相同的 `test run` runtime；Android 需等共享的显式 host primitive adapter。
 2. 没有 target、动作结果、before/after observation、业务断言和 evidence manifest 的运行，不能称为 passed。
@@ -49,7 +53,7 @@ docs-linhay/scripts/verify.sh --ci-docs
 4. CLI/HTTP 是事实入口；不可因方便新增 Web/Wails 写控制面。
 5. 不承诺设备云、远端 agent、多租户、全量网络代理、完整真机 UI 自动化或平台对等。
 
-## 开始顺序
+## 历史开始顺序（不再执行）
 
 ### 0. 先做只读的风险定责
 
@@ -91,7 +95,7 @@ branch: codex/20260722-issue-164-evidence-simulator-screenshot-fidelity
 
 通过门槛：至少 10 个预登记 case 中 70% 无人工 YAML 修改即可 import + validate；至少 5 个已支持 iOS flow 各运行 10 次，ORR ≥ 80%。不达标则保留 testrec 的质量/脱敏/诊断资产，并把产品重心收回 evidence + hand-authored test workflow。
 
-## 后续队列与停止条件
+## 历史后续队列与停止条件（已由当前归档裁决替代）
 
 | 优先级 | 工作 | 进入条件 | 禁止的捷径 |
 | --- | --- | --- | --- |
@@ -112,7 +116,7 @@ Harmony 维持实验性 host adapter。iOS 真机只维护已验证的 lifecycle
 - 不覆盖主工作区的未提交文档；不触碰 #164 WIP；远端 push、PR、merge、tag、release、关闭 issue 都需要用户明确授权。
 - 每次向用户汇报：目标、改动文件、测试/证据、未验证项与风险、下一条 Go/Stop 判定。对 agent 价值的指标优先汇报 VRCR、ECR、FER、ORR、ZTTC、TFVE，而不是命令数或录制数。
 
-## 第一次回报应包含
+## 历史第一次回报要求
 
 1. #164 read-only 定责记录及是否需要 owner 决定。
 2. #166/#168/#167 和 serve/Web 的当前事实、独立 space 建议及无冲突的串行顺序。

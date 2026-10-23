@@ -847,14 +847,14 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "{ ok, dryRun, planName, stepCount, executedCount, failedStepIndex?, failureCode?, failureError?, failureWorkflowCategories[], failureRecoveryCategories[], failurePrimaryArtifacts[], recoveryCommands[]:{ command, category }, elapsedMs, steps[]:{ index, action, command, argv, category, requires, expectedArtifacts, stopConditions, failureCode?, error?, ... }, suggestedCommands[] }",
             failureShape: "Validation/request failures use { ok:false, error:{ code, message, hint } }; step failures return ok=false with failedStepIndex",
-            outputSemantics: "Use replay --dry-run before executing. Real replay stops at the first failed step and returns failure workflow lanes, primary diagnostic artifacts, and suggested follow-up commands before broader re-planning.",
+            outputSemantics: "Use replay --dry-run before executing. simulator-resource steps support offline command planning only; real replay rejects the entire plan with unsupported_capability before runtime resolution, host I/O, or any earlier step. Resource changes require separate explicit execution and restoration. Supported real replay stops at the first failed step and returns failure workflow lanes, primary diagnostic artifacts, and suggested follow-up commands before broader re-planning.",
             nextCommands: [
                 "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
                 "triton plan inspect <path.tritonplan> --json",
                 "triton schema --command replay --json",
             ],
             outputContracts: [replayResultOutputContract()],
-            failureCodes: ["validation_failed", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed", "step_failed", "action_failed", "timeout", "artifact_write_failed"],
+            failureCodes: ["validation_failed", "unsupported_capability", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed", "step_failed", "action_failed", "timeout", "artifact_write_failed"],
             providedCapabilities: ["replay", "replay-dry-run"]
         ),
         TKCommandSchema(

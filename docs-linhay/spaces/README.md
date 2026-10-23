@@ -6,9 +6,16 @@
 >
 > 编号登记册：[INDEX.md](./INDEX.md)（213/213 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-19（实际main与WIP分支分离；参考采用已验收合入本地main）
+> 最近审计：2026-10-24（SP-218/SP-219真实验收通过，有限任务归档与范围收口；保留既有参考追踪）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
+
+## 2026-10-24 · 有限任务与范围收口
+
+- SP-126/SP-134 按已交付的 importer、单 flow 真实纵切、兼容边界与离线 gate 归档；SP-140/143～151 保持完成。真实 3 flow × 20 + 1 negative 仍未采样，只保留[唯一条件触发专项](./SP-134-ios-simulator-reliability-gate/plans/20260727-reliability-gate-decision-v01.md#future-reliability-acceptance)：明确项目采用 recorder/workspace 自动回归或准备对外可靠性承诺时另立有限 space。可先 1 supported + 1 negative 接线 smoke，但完整 gate 仍 blocked，旧历史交接不再自动执行。
+- SP-177 的单设备资源工具已由 SP-196 交付；fleet、自动 replay/evidence 编排和量化性能目标撤出本期。SP-179 取消通用缓存自动删除，只维护 inspect / dry-run 和 confirm 拒绝边界；这不是安全删除功能完成，远端 #214 的最后核实状态仍为 OPEN，本轮未操作远端。
+- SP-183 收缩后归档，维护已交付能力；专门平台实验项只由具体项目需求触发，unsupported 不自动排期。历史真机恢复/清理缺后续证据，当前 unknown，仅保留同目标人工交接。SP-181/SP-182 保持研究/设计归档，无当前自动实施或立项任务。
+- SP-218 native HID点击/滑动、Hub占用拒绝与恢复，以及SP-219普通→Resize→普通视频已完成本机真实验收，按范围归档；见[联合报告](./SP-218-issue-222-device-hub-input/plans/20261024-live-acceptance-closeout.md)。完整CLI 1515项与本地/文档门禁通过，本轮修复和收口差异纳入独立源码提交，二进制未发布；本轮临时worktree已清理。SP-193/SP-207的长期追踪与监控保持原有安排；其他历史worktree路径不因文档归档而推断已物理删除。
 
 ## 状态定义
 
@@ -17,7 +24,7 @@
 | 执行 | 当前有边界明确、可验证、应继续完成的有限任务 |
 | 待定 | 暂停实现，必须先完成产品合并、范围取舍或环境条件判断 |
 | 废弃 | 不再作为独立 roadmap 推进；保留历史文档和仍有价值的既有代码 |
-| 已归档 | 本期验收已满足或原型已完成，不再追加远期设想 |
+| 已归档 | 本期有限交付已完成，或已明确取消/收缩未交付目标；保留证据边界，不表示原长期目标全部实现 |
 | v0.2.25 已发布／#215–220 已关闭 | 已进入本地 SP-190 集成分支；完整 CLI、本地门禁及线上 CI 通过；#215～220 已回复关闭，#214 继续开放 |
 
 ## 路线裁决
@@ -47,14 +54,14 @@
 | v0.2.25 已发布／#215–220 已关闭 | [SP-186-issue-217-xcode-run-exit](./SP-186-issue-217-xcode-run-exit/README.md) | #217：xcode run 构建失败非零退出与单一 final；2 focused tests 通过 | main CI / Release / Homebrew 通过，已回复关闭 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-185-issue-216-host-input-discovery](./SP-185-issue-216-host-input-discovery/README.md) | #216：type discovery 与 pasteboard guidance；37 focused tests 通过，输入仍 fail closed | main CI / Release / Homebrew 通过，已回复关闭 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-184-issue-215-host-swipe](./SP-184-issue-215-host-swipe/README.md) | #215：离线 Simulator swipe CLI；163 focused tests 通过，真实 swipe/pager 未验证 | main CI / Release / Homebrew 通过，已回复关闭 |
-| 研究已归档／实现待定 | [SP-181-device-hub-paradigm](./SP-181-device-hub-paradigm/README.md) | Device Hub 范式研究已归档；后续实现需独立立项 | 按该 space 的边界另行推进 |
-| 设计已归档／实施待立项 | [SP-182-trusted-execution-system](./SP-182-trusted-execution-system/README.md) | 可信执行系统双路径设计已归档；尚未进入产品实现 | 按该 space 的边界另行推进 |
-| v0.2.24已发布／双架构与Homebrew通过／专门平台输入未验收 | [SP-183-device-hub-official-adapter](./SP-183-device-hub-official-adapter/README.md) | 容器语义、Crash/Temporary 边界、管理执行后端、平台控制边界、兼容矩阵与 public schema 已实现；watchOS/tvOS runner 已实现并编译，真实输入未验收；visionOS 空间与 macOS Device Hub unsupported | 继续按能力矩阵推进专用 runner 与真实验收；真机 pair/unpair、安装启动、诊断发布已验收；Temporary 创建未验收，不称完整 Device Hub 接入 |
+| 研究已归档 | [SP-181-device-hub-paradigm](./SP-181-device-hub-paradigm/README.md) | Device Hub 范式研究交付保留 | 无当前自动实施队列；明确新需求时另行裁决 |
+| 设计已归档 | [SP-182-trusted-execution-system](./SP-182-trusted-execution-system/README.md) | 可信执行系统双路径设计交付保留；未进入产品实现 | 无当前自动立项任务；不按历史设计自行扩张 |
+| 已归档（范围收缩） | [SP-183-device-hub-official-adapter](./SP-183-device-hub-official-adapter/README.md) | v0.2.24 已交付发现/身份/容器/Crash metadata/管理诊断与 App 生命周期继续维护；不称完整 Device Hub 接入 | watchOS/tvOS runner 与 Temporary 查询保留实验/未验收，visionOS 2D 撤出排期；unsupported 不自动转待办，历史真机恢复状态 unknown 保留人工交接 |
 | 兼容修复验证／命中待补 | [SP-180-xcode27-simulator-frameworks](./SP-180-xcode27-simulator-frameworks/README.md) | 已选Xcode只读查询、仅适配器子进程补框架；8测试与加载器恢复验证 | 10-06 CLI993+14/本地门禁通过；业务bridge截图完成，host HID导航另补，不将ACK算命中 |
-| 安全补丁已发布／#214 保持开放 | [SP-179-issue-214-derived-data-cleanup](./SP-179-issue-214-derived-data-cleanup/README.md) | #214：v0.2.22 已发布，issue 仍 OPEN | 精确白名单与只读统计修复；confirm 暂时 fail closed，12 focused tests 通过；排他/竞态删除安全仍未收口 |
+| 已归档（取消自动删除） | [SP-179-issue-214-derived-data-cleanup](./SP-179-issue-214-derived-data-cleanup/README.md) | 保留 inspect / dry-run 与 confirm fail-closed，通用缓存自动删除需求取消 | 不宣称排他/竞态删除已实现；远端 #214 最后核实 OPEN，本轮未查询或关闭；未来专用缓存生命周期需独立明确范围 |
 | 已归档 | [SP-178-issue-213-real-device-runtime](./SP-178-issue-213-real-device-runtime/README.md) | #213：真机 runtime readiness 诊断、单一 smoke JSON 与可执行 setup；不自动注入 endpoint | v0.2.21 已发布并回复关闭；CLI 983/root 269、CocoaPods lint、双架构与 Homebrew 验证全过；真机端到端未复测 |
 | 已归档 | [SP-176-open-issues-integration](./SP-176-open-issues-integration/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |
-| 规划中 | [SP-177-ios-simulator-resource-management](./SP-177-ios-simulator-resource-management/README.md) | simslim 核心能力原生 Swift 迁移与 Simulator 资源管理 | 当前完成上游调研、能力地图和分阶段 BDD；尚未改实现 |
+| 已归档（范围收口） | [SP-177-ios-simulator-resource-management](./SP-177-ios-simulator-resource-management/README.md) | 单设备资源 plan/apply/verify/restore 已由 SP-196 随 v0.2.28 交付 | 维护显式单点工具；fleet、自动 replay/evidence 编排和量化性能目标撤出当前队列，不重复旧 mutation 待办 |
 | 已归档 | [SP-175-issue-212-xcode-cache-evidence](./SP-175-issue-212-xcode-cache-evidence/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |
 | 已归档 | [SP-174-issue-211-label-text-attributes](./SP-174-issue-211-label-text-attributes/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |
 | 已归档 | [SP-173-issue-207-harmony-arkweb-bridge-call](./SP-173-issue-207-harmony-arkweb-bridge-call/README.md) | 6 条 open issue 的隔离实现与验收 | CLI 977、root 269、UIKit 46 全过；CI 34179623896 通过，6 条 issue 已关闭 |
@@ -100,17 +107,17 @@
 | 已归档 | [20260720-issue-146-sim-record-duration](./20260720-issue-146-sim-record-duration/README.md) | `sim record` 已按 encoded sample 时长校验；一帧 MOV 返回 `sim_record_truncated`，成功契约暴露 requested/actual/container/track duration | 已合入 `main`；推送并关闭 #146 |
 | 已归档 | [20260521-ios-embedded-sdk-expansion](./20260521-ios-embedded-sdk-expansion/README.md) | S0-S4 与 WebView-aware `act tap` 已完成，真实 iOS Simulator 证明 `selector -> DOM dispatch -> expect-text` 返回 `status=passed` | 保留动态 smoke 证据；P1/P2 需求另建有限 space |
 | 已归档 | [20260525-simulator-target-simplification](./20260525-simulator-target-simplification/README.md) | 真实多开 iOS、Harmony alias、指定目标动作和多候选拒绝均通过；同时修复 observation alias 缺省 platform 被误判为 iOS | 不实现 `--bundle` 反向过滤；批量 fan-out 或新 selector 能力另建 space |
-| 执行 | [SP-126-testrec-convergence](./SP-126-testrec-convergence/README.md) | 已裁决 Hybrid：保留 `testrec` 的录制/编译/质量兼容价值，真实执行统一进入 `test run`，workspace 后续复用同一合同 | SP-126～136 已于本地 `main@d0f09d3c` 受控集成；真实采样前不接 workspace 或新平台 |
+| 已归档 | [SP-126-testrec-convergence](./SP-126-testrec-convergence/README.md) | Hybrid、bounded importer、单 flow 真实纵切与兼容边界已交付；SP-126～136 已由 d0f09d3c 进入主线 | 本期完成；后续可靠性只按本页收口段唯一入口条件触发，不恢复旧 Luna/P0 队列 |
 | 已发布（v0.2.16） | [SP-127-issue-168-ios-real-device-terminate-pid](./SP-127-issue-168-ios-real-device-terminate-pid/README.md) | #168 已采用安全 fallback：shared terminate 只接受显式 PID，iOS real bundle-ID terminate 无可证实 PID 时 fail closed；不实现猜测式 PID join | issue 已关闭；未声称真机 bundle-ID terminate 成功，真实设备 smoke 未运行 |
 | 已发布（v0.2.16） | [SP-128-issue-167-xcode-device-alias-preflight](./SP-128-issue-167-xcode-device-alias-preflight/README.md) | Xcode real-device run 已确定先做 target selection preflight，再进入昂贵 build；保持既有 build/install/launch 合同 | issue 已关闭；真实 Xcode/device 与 live alias store 验证缺口保留 |
 | 已完成（本地） | [SP-129-serve-loopback-default](./SP-129-serve-loopback-default/README.md) | `triton serve` 无 `--host` 时默认绑定 `127.0.0.1:19421`；显式非 loopback host 保持兼容；Bonjour publish 语义暂不改变 | 已进入本地 main；联合 docs/CLI 门禁通过，Bonjour 风险不变 |
 | 已发布（v0.2.16） | [SP-130-issue-166-runtime-jpeg-normalization](./SP-130-issue-166-runtime-jpeg-normalization/README.md) | #166 已将 legacy embedded JPEG 解码并统一规范化为 PNG，避免 CLI/evidence/replay/test-run 发布伪 PNG 或丢弃有效证据 | issue 已关闭；SP-149 follow-up 已随 PR #177 合并，物理设备 JPEG smoke 未运行 |
-| 已归档 | [SP-131-ios-simulator-canonical-proof](./SP-131-ios-simulator-canonical-proof/README.md) | 仓内 Debug fixture 已在 dedicated iOS Simulator 上真实完成 `test validate -> test run -> evidence`：6 steps、2 assertions、0 failures，证据含 runtime target、PNG、AX/hierarchy | local checkpoint 已完成；后续仅回到 SP-126 的 `.tritontestcase -> test import -> test validate`，不扩 Android/Web/Wails/真机；#164 WIP 继续隔离 |
-| 已归档 | [SP-132-testrec-import-seam](./SP-132-testrec-import-seam/README.md) | P0 已建立 `.tritontestcase -> test import -> test validate` 的 offline seam；bundle identity 与 `ios-simulator` target 均显式输入，映射不足一律 fail-closed | P1 才运行 imported plan；不扩 testrec executor、Android/Web/Wails/真机；#164 WIP 继续隔离 |
+| 已归档 | [SP-131-ios-simulator-canonical-proof](./SP-131-ios-simulator-canonical-proof/README.md) | 仓内 Debug fixture 已在 dedicated iOS Simulator 上真实完成 `test validate -> test run -> evidence`：6 steps、2 assertions、0 failures，证据含 runtime target、PNG、AX/hierarchy | importer已由SP-132、真实imported flow已由SP-133交付；本期归档，不重复派发 |
+| 已归档 | [SP-132-testrec-import-seam](./SP-132-testrec-import-seam/README.md) | P0 已建立 `.tritontestcase -> test import -> test validate` 的 offline seam；bundle identity 与 `ios-simulator` target 均显式输入，映射不足一律 fail-closed | imported plan真实执行已由SP-133完成；保留offline seam，不新建executor |
 | 已归档 | [SP-133-imported-ios-simulator-proof](./SP-133-imported-ios-simulator-proof/README.md) | imported AX plan 已在 dedicated iOS Simulator 经既有 `test run` 产生真实 passed verdict/evidence：6 steps、2 assertions、0 failures，并保留 normalized-plan provenance | 自管 server 已停止、Simulator 已恢复 Shutdown；sensitive evidence 仅作本机可恢复处置、不入 Git，不扩 executor/Android/Web/Wails/真机；#164 WIP 继续隔离 |
-| 执行 | [SP-134-ios-simulator-reliability-gate](./SP-134-ios-simulator-reliability-gate/README.md) | 纯离线 ECR / FER / ORR gate 已收紧为 duplicate、partial、逐 step 覆盖与 target binding 均 fail-closed；不把一条 fixture proof 放大为产品可靠性 | 真实 3 flow × 20 仅在初态 reset、专用 Simulator、self-managed server 与私有 evidence 门禁均满足时另立受控 harness 串行执行 |
-| 已完成（本地） | [SP-135-testrec-compatibility-guidance](./SP-135-testrec-compatibility-guidance/README.md) | testrec dry-run/local-simulated/matrix 保留兼容 status，但新增不可作为真实 verdict 或 reliability sample 的 machine-readable boundary | checkpoint `37d8f9c7`；不恢复 testrec executor，后继 collection preflight 需先有三条冻结 imported flow 与 reset/target contract |
-| 已完成（本地） | [SP-136-ios-simulator-reliability-collection-preflight](./SP-136-ios-simulator-reliability-collection-preflight/README.md) | 已离线冻结 3 flow × 20 的 imported-plan、canonical target、reset/negative-control 与 fresh evidence layout 合同 | 不启动或选择 Simulator/server/target，不生成样本/receipt/可靠性结论；真实 harness 仍须另立 space |
+| 已归档 | [SP-134-ios-simulator-reliability-gate](./SP-134-ios-simulator-reliability-gate/README.md) | 离线 ECR/FER/ORR gate 与后继 receipt-backed 加固已交付；legacy --samples 固定 diagnostic blocked | 真实 3×20+1 未执行；未来仅按本页收口段唯一专项验收，不挂起已完成实现 |
+| 已完成（本地） | [SP-135-testrec-compatibility-guidance](./SP-135-testrec-compatibility-guidance/README.md) | testrec dry-run/local-simulated/matrix 保留兼容 status，但新增不可作为真实 verdict 或 reliability sample 的 machine-readable boundary | compatibility已交付；collection preflight已由SP-136完成，不恢复testrec executor |
+| 已完成（本地） | [SP-136-ios-simulator-reliability-collection-preflight](./SP-136-ios-simulator-reliability-collection-preflight/README.md) | 已离线冻结 3 flow × 20 的 imported-plan、canonical target、reset/negative-control 与 fresh evidence layout 合同 | live harness已由SP-140及后继加固交付；真实采样仅按本页唯一条件专项启动 |
 | 已发布（v0.2.16） | [SP-137-issue-171-safe-collection-tap](./SP-137-issue-171-safe-collection-tap/README.md) | #171 已收紧 embedded `UICollectionViewCell` tap：无公开可证实 activation 时固定返回 `unsupported_capability`，且 accessibility gesture 候选不会越过当前 cell | issue 已关闭；真实 UIKit/Simulator route smoke 未运行 |
 | 已发布（v0.2.16） | [SP-138-issue-170-xcode-real-device-destination](./SP-138-issue-170-xcode-real-device-destination/README.md) | #170 已收紧 Xcode `--device` 的 settings/build/test/run preflight、exact raw execution destination 与 public-output redaction | issue 已关闭；真实 Xcode、签名、安装与启动 smoke 未运行 |
 | 已发布（v0.2.16） | [SP-139-issue-169-xcode-focused-testing](./SP-139-issue-169-xcode-focused-testing/README.md) | #169 已为 `triton xcode test` 增加 repeatable `--only-testing`，每项保持独立 xcodebuild argv，JSON/JSONL 可审计 sourceCommand | issue 已关闭；不实现 `--skip-testing`，真实 XCTest/xcodebuild 未运行 |
@@ -127,7 +134,7 @@
 | 已完成（本地） | [SP-150-reliability-failure-recovery-semantics](./SP-150-reliability-failure-recovery-semantics/README.md) | Stage 1 gate 已以 validated plan 绑定 terminal failure/recovery，阻断跨步骤与 generic/unknown 伪解释 | 纯离线 TDD、81 项关联回归和 release build 已通过；不改 runner taxonomy、anchor/identity、service/device 或 #164 |
 | 已归档（PR #177） | [SP-151-trusted-baseline-integration](./SP-151-trusted-baseline-integration/README.md) | SP-142～156 已由 merge `66f975d9` 进入 `main`；联合 focused 207/207、root 238/238、release build/smoke 与 docs gate 均通过 | CI `30515397742` 全绿；SP-151～156 source branch/worktree 已清理，#164 保持原样 |
 | 已合并（PR #177） | [SP-155-issue-175-ios-readiness-coredevice](./SP-155-issue-175-ios-readiness-coredevice/README.md) | #175 修复 CoreDevice `available (paired)` 真机被 stale tunnel/DDI flags 错判 offline 的 readiness 归一 | issue 已关闭；fixture/parser/selection 与 install plan 同源事实已验证，未执行真实 install/tunnel |
-| 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
+| 已归档（后继收敛完成） | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated 保留兼容，Hybrid 已由 SP-126 交付并归档 | 不新增独立 testrec executor / matrix / live network；未来只按本页收口段唯一可靠性专项的项目条件触发 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
 | 已归档 | [20260701-host-framebuffer-stream](./20260701-host-framebuffer-stream/README.md) | SimulatorKit/IOSurface host stream、MJPEG route 和历史高帧率测量已落地 | 作为实验性 Web mock 能力保留，不再承诺 `<15ms/120 FPS` 产品 SLA；正式 Web 恢复时重新立项 |
@@ -156,7 +163,7 @@
 | `SP-152-issue-172-runtime-reregistration` | `feat/SP-152-issue-172-runtime-reregistration`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #172 已合并并关闭；runtime lifecycle/compatibility 证据保留 |
 | `SP-153-issue-173-xcode-run-target-binding` | `feat/SP-153-issue-173-xcode-run-target-binding`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #173 已合并并关闭；单目标绑定证据保留 |
 | `SP-154-issue-174-simulator-swipe-lifecycle` | `feat/SP-154-issue-174-simulator-swipe-lifecycle`（已清理） | 已清理（历史由 PR #177 merge 可达） | `main@d2578089` | #174 已合并并关闭；persistent input lifecycle 证据保留 |
-| `SP-126-testrec-convergence` | `feat/SP-126-testrec-convergence` | `../TritonKit-worktrees/SP-126-testrec-convergence/` | `main@931645ed` | 路线、边界与 Luna 执行交接已收口；可信基线、importer、proof/gate/compatibility/preflight 已经由 `d0f09d3c` 进入本地 main |
+| `SP-126-testrec-convergence` | `feat/SP-126-testrec-convergence`（历史登记） | `../TritonKit-worktrees/SP-126-testrec-convergence/`（历史路径，本轮未清理） | `main@931645ed` | 本期已归档；可信基线/importer/单 flow proof/离线 gate/compatibility/preflight 已由 d0f09d3c 进入主线；不据旧分支路径恢复执行 |
 | `SP-127-issue-168-ios-real-device-terminate-pid` | `feat/SP-127-issue-168-ios-real-device-terminate-pid` | `../TritonKit-worktrees/SP-127-issue-168-ios-real-device-terminate-pid/` | `5f6c2f6f` | `cef52ea2` 已经由 `d0f09d3c` 进入本地 main；保留真机 smoke blocker |
 | `SP-128-issue-167-xcode-device-alias-preflight` | `feat/SP-128-issue-167-xcode-device-alias-preflight` | `../TritonKit-worktrees/SP-128-issue-167-xcode-device-alias-preflight/` | `feat/SP-126-testrec-convergence@5f6c2f6f` | `25f7e048` 已经由 `d0f09d3c` 进入本地 main；保留真实 Xcode/device 覆盖缺口 |
 | `SP-129-serve-loopback-default` | `feat/SP-129-serve-loopback-default` | `../TritonKit-worktrees/SP-129-serve-loopback-default/` | `feat/SP-126-testrec-convergence@5f6c2f6f` | `f0f3b0a0` 已经由 `d0f09d3c` 进入本地 main；保留 Bonjour 广播语义风险 |
@@ -164,7 +171,7 @@
 | `SP-131-ios-simulator-canonical-proof` | `feat/SP-131-ios-simulator-canonical-proof` | `../TritonKit-worktrees/SP-131-ios-simulator-canonical-proof/` | `feat/SP-130-issue-166-runtime-jpeg-normalization@a7404033` | local checkpoint 将记录真实 dedicated Simulator 的手写最小 plan proof；server 已停止、Simulator 已恢复 Shutdown；不读取或修改 #164 dirty WIP |
 | `SP-132-testrec-import-seam` | `feat/SP-132-testrec-import-seam` | `../TritonKit-worktrees/SP-132-testrec-import-seam/` | `feat/SP-131-ios-simulator-canonical-proof@6f700b13` | P0 local checkpoint：只读 compiled contract，显式 ios-simulator target，输出可 validate YAML 与 typed provenance；P1 才运行 device，#164 dirty WIP 未读取或修改 |
 | `SP-133-imported-ios-simulator-proof` | `feat/SP-133-imported-ios-simulator-proof` | `../TritonKit-worktrees/SP-133-imported-ios-simulator-proof/` | `feat/SP-132-testrec-import-seam@b065b3f0` | P1 local proof 已通过：新鲜 source/import/validate、专用 Simulator、self-managed 19421 server、Debug fixture、真实 `test run` 与 evidence/provenance 已串行验证；server 已停止、Simulator 已恢复 Shutdown，#164 dirty WIP 未读取或修改 |
-| `SP-134-ios-simulator-reliability-gate` | `feat/SP-134-ios-simulator-reliability-gate` | `../TritonKit-worktrees/SP-134-ios-simulator-reliability-gate/` | `feat/SP-133-imported-ios-simulator-proof@19e2c35f` | 本地 checkpoint 收口纯离线 reliability gate；不启动测试 runtime 或共享设备/server。真实 sampling 需要另行通过 dedicated/reset/privacy gate，#164 dirty WIP 不读取或修改 |
+| `SP-134-ios-simulator-reliability-gate` | `feat/SP-134-ios-simulator-reliability-gate`（历史登记） | `../TritonKit-worktrees/SP-134-ios-simulator-reliability-gate/`（历史路径，本轮未清理） | `feat/SP-133-imported-ios-simulator-proof@19e2c35f` | 离线 gate 已归档并入主线；真实采样仅保留条件触发专项，不表示已有61槽真实证据；本轮未执行设备/服务或物理 worktree 清理 |
 | `SP-135-testrec-compatibility-guidance` | `feat/SP-135-testrec-compatibility-guidance` | `../TritonKit-worktrees/SP-135-testrec-compatibility-guidance/` | `feat/SP-134-ios-simulator-reliability-gate@21a57399` | checkpoint `37d8f9c7`：只收紧 testrec offline diagnostic / migration contract；不启动 runtime 或设备，不修改 #164 WIP |
 | `SP-136-ios-simulator-reliability-collection-preflight` | `feat/SP-136-ios-simulator-reliability-collection-preflight` | `../TritonKit-worktrees/SP-136-ios-simulator-reliability-collection-preflight/` | `feat/SP-135-testrec-compatibility-guidance@107eac45` | 本地 checkpoint：纯离线 collection contract；只读 private plans，拒绝生成 sample/evidence/reset receipt 或占用 runtime/device/server，#164 WIP 持续隔离 |
 | `SP-137-issue-171-safe-collection-tap` | `feat/SP-137-issue-171-safe-collection-tap` | `../TritonKit-worktrees/SP-137-issue-171-safe-collection-tap/` | `main@0c2e38da` | 本地 checkpoint：collection cell fallback 只返回 unsupported，cell 外 gesture 不可越界激活；保留 cell 内 UIControl/accessibility 真实成功、table/host AX 语义，#164 WIP 持续隔离 |
@@ -337,15 +344,15 @@
 
 2026-10-19追加：原主目录WIP已原样保存为1131b183并完成差异裁决，资料状态与本地main一致；[完整合并记录](./SP-211-reference-adoption-integration/plans/20261019-wip-closeout.md)。
 
-| v0.2.32已发布 | [SP-214-simulator-display-safety](./SP-214-simulator-display-safety/README.md) | Simulator主屏拓扑未知/非主屏时拒绝动作与捕获 | `0d35e95e`；主屏 fresh probe 与离线门禁通过，真实 Simulator 未执行；worktree/分支已清理 |
+| v0.2.32已发布 | [SP-214-simulator-display-safety](./SP-214-simulator-display-safety/README.md) | Simulator主屏拓扑未知/非主屏时拒绝动作与捕获 | `0d35e95e`；2026-10-24由SP-218补真实displays响应修复与候选截图通过；其余AX/跨工具链未验；worktree/分支已清理 |
 
-| v0.2.32已发布 | [SP-215-simulator-display-integration](./SP-215-simulator-display-integration/README.md) | SP-214独立主控验证、本地合并 | `b782c192`；SP-214 离线验收完成，真实 Simulator 未执行；worktree/分支已清理 |
+| v0.2.32已发布 | [SP-215-simulator-display-integration](./SP-215-simulator-display-integration/README.md) | SP-214独立主控验证、本地合并 | `b782c192`；原离线集成已完成；2026-10-24真实截图与兼容修复由SP-218接替；worktree/分支已清理 |
 
 | v0.2.32已发布 | [SP-216-harmony-forward-cleanup](./SP-216-harmony-forward-cleanup/README.md) | ArkWeb HDC清理当前归属复核与进程内互斥 | `34f713c7`；HDC ownership 清理与 37 项 focused tests 通过，真实 HDC 未执行；worktree/分支已清理 |
 
 | v0.2.32已发布 | [SP-217-harmony-forward-integration](./SP-217-harmony-forward-integration/README.md) | SP-216独立主控验收、本地合并 | `36145c62`；离线验收完成，真实 HDC/跨进程竞态未执行；worktree/分支已清理 |
 
-| v0.2.32已发布 | [SP-218-issue-222-device-hub-input](./SP-218-issue-222-device-hub-input/README.md) | native Simulator HID 与 Device Hub 输入收口 | `c2f4bdd1`；真实 guest touch 与用户设备验收仍未执行 |
+| 已归档／真实验收通过 | [SP-218-issue-222-device-hub-input](./SP-218-issue-222-device-hub-input/README.md) | native HID tap/swipe、Device Hub占用拒绝与恢复均有本机业务后置证据 | 2026-10-24 Xcode27.1/iOS27.0通过；兼容修复与收口差异纳入独立源码提交，二进制未发布；用户项目另验 |
 
-| v0.2.32已发布 | [SP-219-simulator-resizable-routing](./SP-219-simulator-resizable-routing/README.md) | 本机 Simulator Resize Mode 的 Resizable display 录制路由 | `f9399e5e`，真实 Simulator/AX/HID 仍待用户验收；worktree已清理 |
+| 已归档／录制真实验收通过 | [SP-219-simulator-resizable-routing](./SP-219-simulator-resizable-routing/README.md) | 普通→Resize→普通录屏真实解码通过 | 2026-10-24；Resize AX/HID保持unsupported，不作为本space待办 |
 | v0.2.32已发布 | [SP-220-simulator-resizable-integration](./SP-220-simulator-resizable-integration/README.md) | SP-219 主控验证、本地合并 | 候选 `51cd20dd` 已验收并合入 `f9399e5e`；worktree已清理 |

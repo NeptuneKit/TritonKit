@@ -607,6 +607,8 @@ struct Replay: AsyncParsableCommand {
             if !result.ok {
                 throw ExitCode.failure
             }
+        } catch let error as ReplayResourceUnsupportedError {
+            try failHostValidation(code: error.code, message: error.message, hint: error.hint, outputFormat: outputFormat)
         } catch {
             if error is ExitCode { throw error }
             try failReplayValidation("\(error)", outputFormat: outputFormat)

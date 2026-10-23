@@ -1,5 +1,7 @@
 # TritonKit Project Memory
 
+- 2026-10-24：按用户裁决归档SP-126/134/177/179/183，SP-181/182维持研究设计归档；SP-193/207监控继续。真实可靠性专项仅由项目采用/公开可靠性承诺触发，自动DerivedData删除取消。当前裁决与验证见[本轮记录](2026-10-24.md)。
+
 ## Canonical Indexes
 
 - Spaces 的固定入口分为 [编号索引](../spaces/INDEX.md) 与 [路线总览](../spaces/README.md)：前者登记 SP 规范名、兼容目录与迁移进度，后者登记状态和队列。
@@ -26,7 +28,7 @@
 
 ## 上游优化交付入口
 
-- 参考更新的已实现采用项与验证边界见[SP-196验收报告](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-validation-report.md)及[工程说明](../dev/20261014-upstream-optimization-delivery.md)。已于2026-10-15完成主线集成及v0.2.28发布，详见[发布验收](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-release.md)；active Resize与跨OS私有行为仍需专项证明。后续复用按报告的模块/真实/跳过口径判断，不继承上游性能估计。
+- 参考更新的已实现采用项与验证边界见[SP-196验收报告](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-validation-report.md)及[工程说明](../dev/20261014-upstream-optimization-delivery.md)。已于2026-10-15完成主线集成及v0.2.28发布，详见[发布验收](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-release.md)；跨OS私有行为仍需专项证明，当前工具链的Resize录制证据见SP-219。后续复用按报告的模块/真实/跳过口径判断，不继承上游性能估计。
 
 - SP-200 Mobile 设备能力补齐：除云设备预订/释放与标准 MCP 接入外，已实现本机三平台环境、录屏、诊断、归档安装、动作、终端镜像及统一 HTTP command；真实证据和平台边界见 [SP-200](../spaces/SP-200-mobile-device-parity/README.md) / [实现说明](../dev/20261015-mobile-device-parity.md)。
 
@@ -57,6 +59,6 @@
 
 - 2026-10-20：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261020-reference-update-report.md)24完整/9 partial；新增SP-214主屏安全与SP-216 HDC清理归属、主控SP-215/SP-217。工作区与BDD就绪，桌面显式gpt-6.1-sol必要创建仍拒绝；仅新批次待分派，SP-210/SP-212旧交付保持完成。iCTRL HEAD874f528，Release仍v1.98.12。
 
-- 2026-10-21：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261021-reference-update-report.md)23完整/10 partial；扫描后SP-219候选`51cd20dd`经SP-220主控审查合入本地main `f9399e5e`，focused 5/5、合并后CLI 1509/1509通过。sim-use `42aa9a2` 的Resizable display录制路由已纳入，AX/HID/真实Simulator仍留边界；显式gpt-6.1-sol create_thread仍模型校验失败，thread ID保持null。
+- 2026-10-21：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261021-reference-update-report.md)23完整/10 partial；扫描后SP-219候选`51cd20dd`经SP-220主控审查合入本地main `f9399e5e`，focused 5/5、合并后CLI 1509/1509通过。sim-use `42aa9a2` 的Resizable display录制路由已纳入，该历史切片未验真实Simulator；后续录制证据见SP-219，Resize AX/HID仍不支持；显式gpt-6.1-sol create_thread仍模型校验失败，thread ID保持null。
 
 - 2026-10-21 主目录收口：旧 WIP `3ebb29fd` 已经 `d642e80c` 正式合入 main，原 TritonKit 目录切回 main；旧分支与 main-integrated 临时 worktree 清理，ignored 证据整体归档。见[收口记录](../spaces/SP-211-reference-adoption-integration/plans/20261021-main-checkout-closeout.md)。

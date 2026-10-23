@@ -30,29 +30,41 @@ private func displayBool(_ value: Any?) -> Bool? {
     return n.boolValue
 }
 
-func classifyIOSSimulatorDisplayTopology(data: Data, target: String, exitCode: Int32) -> IOSSimulatorDisplayTopology {
+func classifyIOSSimulatorDisplayTopology(data: Data, target: String, exitCode: Int32, expectedArguments: [String]) -> IOSSimulatorDisplayTopology {
     guard data.count <= 1_048_576 else { return .unknown(.truncated) }
+    guard UUID(uuidString: target) != nil, expectedArguments.count == 13,
+          Array(expectedArguments.prefix(6)) == ["devicectl", "device", "info", "displays", "--device", target],
+          expectedArguments[6] == "--json-output", !expectedArguments[7].isEmpty,
+          expectedArguments[8] == "--log-output", !expectedArguments[9].isEmpty,
+          Array(expectedArguments.suffix(3)) == ["--timeout", "5", "--quiet"] else { return .unknown(.identityMismatch) }
     guard exitCode == 0, let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-          let info = root["info"] as? [String: Any], info["commandType"] as? String == "devicectl.device.info.displayTopology",
-          info["outcome"] as? String == "success", let args = info["arguments"] as? [String],
-          let i = args.firstIndex(of: "--device"), args.indices.contains(i + 1), args[i + 1] == target,
-          let result = root["result"] as? [String: Any], let raw = result["displays"] as? [[String: Any]], !raw.isEmpty else { return .unknown(.invalidResponse) }
-    var ids = Set<String>(); var displays = [IOSSimulatorDisplay]()
+          root["error"] == nil, root["errors"] == nil,
+          let info = root["info"] as? [String: Any], info["commandType"] as? String == "devicectl.device.info.displays",
+          info["outcome"] as? String == "success", let args = info["arguments"] as? [String], args == expectedArguments,
+          let result = root["result"] as? [String: Any], result["error"] == nil, result["errors"] == nil,
+          let raw = result["displays"] as? [[String: Any]], !raw.isEmpty else { return .unknown(.invalidResponse) }
+    var ids = Set<Int>(); var uniqueIDs = Set<UUID>(); var displays = [IOSSimulatorDisplay]()
     for item in raw {
-        guard let id = item["id"] as? String, !id.isEmpty else { return .unknown(.missingField) }
-        guard ids.insert(id).inserted else { return .unknown(.duplicateID) }
-        guard let primary = displayBool(item["primary"]), let active = displayBool(item["active"]), let integrated = displayBool(item["integrated"]) else { return .unknown(.missingField) }
-        displays.append(IOSSimulatorDisplay(id: id, primary: primary, active: active, integrated: integrated))
+        guard let number = item["displayId"] as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+              let id = Int(number.stringValue), id >= 0,
+              let uniqueString = item["uniqueId"] as? String, let uniqueID = UUID(uuidString: uniqueString),
+              let primary = displayBool(item["primary"]), let state = item["backlightState"] as? String,
+              let type = item["type"] as? [String: Any], type.count == 1,
+              let kind = type.keys.first, let payload = type[kind] as? [String: Any], payload.isEmpty else { return .unknown(.missingField) }
+        guard ids.insert(id).inserted, uniqueIDs.insert(uniqueID).inserted else { return .unknown(.duplicateID) }
+        guard ["activeOn", "off"].contains(state), ["integrated", "virtual"].contains(kind) else { return .unknown(.invalidResponse) }
+        displays.append(IOSSimulatorDisplay(id: String(id), primary: primary, active: state == "activeOn", integrated: kind == "integrated"))
     }
     guard displays.filter({ $0.active }).count == 1 else { return .unknown(.multipleActive) }
-    guard let primary = displays.first(where: { $0.primary && $0.active && $0.integrated }) else { return .unknown(.missingField) }
+    guard displays.filter({ $0.primary }).count == 1,
+          let primary = displays.first(where: { $0.primary && $0.active && $0.integrated }) else { return .unknown(.missingField) }
     return .primary(primary)
 }
 
 typealias IOSSimulatorDisplayProbe = (String, [String: String]) -> IOSSimulatorDisplayTopology
 
 func iosSimulatorDisplayTopologyQueryCommand(target: String, json: String, log: String, environment: [String: String]) -> TKHostCommand {
-    TKHostCommand(executable: "xcrun", arguments: ["devicectl", "device", "info", "displayTopology", "--device", target, "--json-output", json, "--log-output", log, "--timeout", "5", "--quiet"], environment: environment, redactedArgumentIndexes: [5, 7, 9], defaultTimeoutSeconds: 6, capturesArtifacts: true, sensitiveOutput: true)
+    TKHostCommand(executable: "xcrun", arguments: ["devicectl", "device", "info", "displays", "--device", target, "--json-output", json, "--log-output", log, "--timeout", "5", "--quiet"], environment: environment, redactedArgumentIndexes: [5, 7, 9], defaultTimeoutSeconds: 6, capturesArtifacts: true, sensitiveOutput: true)
 }
 
 func probeIOSSimulatorDisplay(target: String, environment: [String: String] = [:], artifactProvider: (String) throws -> (json: String, log: String) = freshDeviceInfoArtifactPaths, runner: (TKHostCommand) throws -> HostProcessResult = { try runHostCommand($0, maximumOutputBytes: 16_384) }, reader: (String, Int) throws -> Data = readBoundedDeviceFilesJSON) -> IOSSimulatorDisplayTopology {
@@ -66,10 +78,10 @@ func probeIOSSimulatorDisplay(target: String, environment: [String: String] = [:
     let data: Data
     do { data = try reader(paths.json, 1_048_576) } catch {
         let stderr = result.stderr.lowercased()
-        if result.exitCode == 64 && (stderr.contains("displaytopology") || stderr.contains("display topology")) && (stderr.contains("unrecognized") || stderr.contains("unknown subcommand")) { return .unknown(.unsupported) }
+        if result.exitCode == 64 && stderr.contains("displays") && (stderr.contains("unrecognized") || stderr.contains("unknown subcommand")) { return .unknown(.unsupported) }
         return .unknown(.queryFailed)
     }
-    return classifyIOSSimulatorDisplayTopology(data: data, target: target, exitCode: result.exitCode)
+    return classifyIOSSimulatorDisplayTopology(data: data, target: target, exitCode: result.exitCode, expectedArguments: command.arguments)
 }
 
 func assertIOSSimulatorMainDisplayAllowed(target: String, environment: [String: String] = [:], probe: IOSSimulatorDisplayProbe) throws {

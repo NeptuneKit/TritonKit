@@ -5,6 +5,71 @@ import TritonKitShared
 
 @Suite
 struct ReplayCommandTests {
+    @Test("resource replay rejects the whole plan before runtime resolution", arguments: [false, true])
+    func resourceReplayRejectsBeforeRuntimeResolution(resourceAfterTap: Bool) async throws {
+        var steps: [TKReplayPlanStep] = resourceAfterTap ? [.init(action: .tap, text: "Continue")] : []
+        steps.append(.init(action: .simulatorResource, name: "ci", device: "fixture-simulator"))
+        var resolutionCount = 0
+        do {
+            _ = try await runReplayPlan(
+                TKReplayPlan(steps: steps), variables: [:], dryRun: false,
+                target: "fixture-runtime", host: "127.0.0.1", port: 1,
+                runtimeClientResolver: { _, _, _ in
+                    resolutionCount += 1
+                    throw RuntimeError("Unexpected runtime resolution")
+                }
+            )
+            Issue.record("Resource replay unexpectedly succeeded")
+        } catch let error as ReplayResourceUnsupportedError {
+            #expect(error.code == "unsupported_capability")
+            #expect(error.message.contains("No replay steps were executed"))
+        }
+        #expect(resolutionCount == 0)
+    }
+
+    @Test("resource replay dry-run preserves its standalone command without runtime resolution")
+    func resourceReplayDryRunRemainsCompatible() async throws {
+        var resolutionCount = 0
+        let response = try await runReplayPlan(
+            TKReplayPlan(steps: [.init(action: .simulatorResource, name: "ci", device: "fixture-simulator")]),
+            variables: [:], dryRun: true, target: "fixture-runtime", host: "127.0.0.1", port: 1,
+            runtimeClientResolver: { _, _, _ in
+                resolutionCount += 1
+                throw RuntimeError("Unexpected runtime resolution")
+            }
+        )
+        #expect(resolutionCount == 0)
+        #expect(response.ok)
+        #expect(response.dryRun)
+        #expect(response.steps.first?.argv == ["triton", "sim", "resource", "apply", "fixture-simulator", "--profile", "ci", "--json"])
+        #expect(response.steps.first?.dryRun == true)
+    }
+
+    @Test("resource replay CLI emits one unsupported envelope before any earlier step")
+    func resourceReplayCLIEmitsOneUnsupportedEnvelope() throws {
+        let temp = FileManager.default.temporaryDirectory.appendingPathComponent("triton-resource-replay-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: temp) }
+        let planURL = temp.appendingPathComponent("resource.tritonplan")
+        let plan = TKReplayPlan(steps: [
+            .init(action: .tap, text: "Continue"),
+            .init(action: .simulatorResource, name: "ci", device: "fixture-simulator"),
+        ])
+        try JSONEncoder().encode(plan).write(to: planURL)
+
+        let result = try runTriton(["replay", planURL.path, "--host", "127.0.0.1", "--port", "1", "--json"])
+        let response = try JSONDecoder().decode(TKCLIErrorResponse.self, from: Data(result.stdout.utf8))
+        #expect(result.exitCode != 0)
+        #expect(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        #expect(!response.ok)
+        #expect(response.error.code == "unsupported_capability")
+        #expect(response.error.message.contains("No replay steps were executed"))
+
+        let schema = try #require(commandSchemas().first { $0.name == "replay" })
+        #expect(schema.failureCodes.contains(response.error.code))
+        #expect(schema.outputSemantics?.contains("simulator-resource") == true)
+    }
+
     @Test("invalid dry-run JSON replay emits one error envelope")
     func invalidDryRunJSONReplayEmitsOneErrorEnvelope() throws {
         let temp = FileManager.default.temporaryDirectory
