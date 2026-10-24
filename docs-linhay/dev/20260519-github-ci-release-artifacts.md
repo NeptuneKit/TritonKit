@@ -188,3 +188,5 @@ main@ebfbb405全量推送，main CI38922511471/tag CI38924507762/Release38924507
 ## v0.2.33 发布边界
 
 本版发布SP-218真实显示查询兼容修复及其余已收口CLI契约，保留Resize AX/HID unsupported、DerivedData自动删除取消与resource replay提前拒绝边界。公开面仍为双架构CLI、Web、public skills、checksum和Homebrew，podspec/Web清单对齐0.2.33；CocoaPods仅lint。使用独立干净main检出发布，避免原工作区参考追踪WIP混入tag。结果见[发布验收](../spaces/SP-218-issue-222-device-hub-input/plans/20261024-v0.2.33-release.md)。
+
+2026-10-24已发布[v0.2.33](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.33)，tag指向 `e2b1d959564bc306308a283f73d8d5bc5cb6164f`；main CI40044736453、tag CI40046036564与Release40046036515全部成功，包含双架构与两次tap更新。公开资产完整下载后通过checksum/gzip、架构、Runner与skills元数据校验，双CLI实际版本均为0.2.33；Homebrew升级/test及仓库外packaged Web只读HTTP/浏览器验收通过。原最低iOS13的CI标准pod lint通过；本机标准失败与兼容lint通过分别留证，未推送trunk。自有验收Web已停止，其他任务服务保留。

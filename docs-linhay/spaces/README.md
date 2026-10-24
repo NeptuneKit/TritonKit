@@ -6,7 +6,7 @@
 >
 > 编号登记册：[INDEX.md](./INDEX.md)（213/213 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-24（SP-218/SP-219真实验收通过，有限任务归档与范围收口；保留既有参考追踪）
+> 最近审计：2026-10-24（SP-218/SP-219真实验收与v0.2.33发布通过，有限任务归档与范围收口；保留既有参考追踪）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -15,7 +15,7 @@
 - SP-126/SP-134 按已交付的 importer、单 flow 真实纵切、兼容边界与离线 gate 归档；SP-140/143～151 保持完成。真实 3 flow × 20 + 1 negative 仍未采样，只保留[唯一条件触发专项](./SP-134-ios-simulator-reliability-gate/plans/20260727-reliability-gate-decision-v01.md#future-reliability-acceptance)：明确项目采用 recorder/workspace 自动回归或准备对外可靠性承诺时另立有限 space。可先 1 supported + 1 negative 接线 smoke，但完整 gate 仍 blocked，旧历史交接不再自动执行。
 - SP-177 的单设备资源工具已由 SP-196 交付；fleet、自动 replay/evidence 编排和量化性能目标撤出本期。SP-179 取消通用缓存自动删除，只维护 inspect / dry-run 和 confirm 拒绝边界；这不是安全删除功能完成，远端 #214 的最后核实状态仍为 OPEN，本轮未操作远端。
 - SP-183 收缩后归档，维护已交付能力；专门平台实验项只由具体项目需求触发，unsupported 不自动排期。历史真机恢复/清理缺后续证据，当前 unknown，仅保留同目标人工交接。SP-181/SP-182 保持研究/设计归档，无当前自动实施或立项任务。
-- SP-218 native HID点击/滑动、Hub占用拒绝与恢复，以及SP-219普通→Resize→普通视频已完成本机真实验收，按范围归档；见[联合报告](./SP-218-issue-222-device-hub-input/plans/20261024-live-acceptance-closeout.md)。完整CLI 1515项与本地/文档门禁通过，本轮修复和收口差异已由c0ce0cc2推送且CI通过，v0.2.33发布准备；本轮临时worktree已清理。SP-193/SP-207的长期追踪与监控保持原有安排；其他历史worktree路径不因文档归档而推断已物理删除。
+- SP-218 native HID点击/滑动、Hub占用拒绝与恢复，以及SP-219普通→Resize→普通视频已完成本机真实验收，按范围归档；见[联合报告](./SP-218-issue-222-device-hub-input/plans/20261024-live-acceptance-closeout.md)。完整CLI 1515项与本地/文档门禁通过，本轮修复和收口差异已由c0ce0cc2推送且CI通过；v0.2.33已发布，双架构公开资产、Homebrew和仓库外只读Web验收通过，见[发布记录](./SP-218-issue-222-device-hub-input/plans/20261024-v0.2.33-release.md)。真实验收worktree已清理，发版使用独立检出。SP-193/SP-207的长期追踪与监控保持原有安排；其他历史worktree路径不因文档归档而推断已物理删除。
 
 ## 状态定义
 
@@ -352,7 +352,7 @@
 
 | v0.2.32已发布 | [SP-217-harmony-forward-integration](./SP-217-harmony-forward-integration/README.md) | SP-216独立主控验收、本地合并 | `36145c62`；离线验收完成，真实 HDC/跨进程竞态未执行；worktree/分支已清理 |
 
-| 已归档／真实验收通过 | [SP-218-issue-222-device-hub-input](./SP-218-issue-222-device-hub-input/README.md) | native HID tap/swipe、Device Hub占用拒绝与恢复均有本机业务后置证据 | 2026-10-24 Xcode27.1/iOS27.0通过；c0ce0cc2与CI已通过；v0.2.33发布准备，用户项目另验 |
+| 已归档／真实验收通过 | [SP-218-issue-222-device-hub-input](./SP-218-issue-222-device-hub-input/README.md) | native HID tap/swipe、Device Hub占用拒绝与恢复均有本机业务后置证据 | 2026-10-24 Xcode27.1/iOS27.0通过；c0ce0cc2与CI已通过；v0.2.33已发布并通过双架构/Homebrew/只读Web验收，用户项目另验 |
 
 | 已归档／录制真实验收通过 | [SP-219-simulator-resizable-routing](./SP-219-simulator-resizable-routing/README.md) | 普通→Resize→普通录屏真实解码通过 | 2026-10-24；Resize AX/HID保持unsupported，不作为本space待办 |
 | v0.2.32已发布 | [SP-220-simulator-resizable-integration](./SP-220-simulator-resizable-integration/README.md) | SP-219 主控验证、本地合并 | 候选 `51cd20dd` 已验收并合入 `f9399e5e`；worktree已清理 |

@@ -1,5 +1,7 @@
 # TritonKit Project Memory
 
+- 2026-10-24：v0.2.33已发布，tag `e2b1d959`；SP-218真实显示查询兼容修复及本轮CLI契约收口已交付，双架构公开资产、Homebrew和仓库外只读Web验收通过。原工作区其他WIP未混入发布；CocoaPods仅lint、未推送trunk。详见[发布证据](../spaces/SP-218-issue-222-device-hub-input/plans/20261024-v0.2.33-release.md)。
+
 - 2026-10-24：按用户裁决归档SP-126/134/177/179/183，SP-181/182维持研究设计归档；SP-193/207监控继续。真实可靠性专项仅由项目采用/公开可靠性承诺触发，自动DerivedData删除取消。当前裁决与验证见[本轮记录](2026-10-24.md)。
 
 ## Canonical Indexes

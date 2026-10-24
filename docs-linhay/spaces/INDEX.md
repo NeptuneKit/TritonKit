@@ -273,6 +273,6 @@
 
 | `SP-217-harmony-forward-integration` | [`SP-217-harmony-forward-integration`](./SP-217-harmony-forward-integration/README.md) | v0.2.32已发布 | `36145c62`；离线验收完成，真实 HDC/跨进程竞态未执行；worktree/分支已清理 |
 
-| `SP-218-issue-222-device-hub-input` | [`SP-218-issue-222-device-hub-input`](./SP-218-issue-222-device-hub-input/README.md) | 已归档／真实验收通过 | 2026-10-24 native HID tap/swipe、Hub占用拒绝及恢复通过；兼容修复/文档已由c0ce0cc2推送且CI通过；v0.2.33发布准备 |
+| `SP-218-issue-222-device-hub-input` | [`SP-218-issue-222-device-hub-input`](./SP-218-issue-222-device-hub-input/README.md) | 已归档／真实验收通过 | 2026-10-24 native HID tap/swipe、Hub占用拒绝及恢复通过；兼容修复/文档已由c0ce0cc2推送；v0.2.33已发布，双架构/Homebrew/只读Web验收通过 |
 | `SP-219-simulator-resizable-routing` | [`SP-219-simulator-resizable-routing`](./SP-219-simulator-resizable-routing/README.md) | 已归档／录制真实验收通过 | 2026-10-24普通→Resize→普通视频真实解码通过；Resize AX/HID保持unsupported |
 | `SP-220-simulator-resizable-integration` | [`SP-220-simulator-resizable-integration`](./SP-220-simulator-resizable-integration/README.md) | v0.2.32已发布 | SP-219 主控验证与本地合并；候选 `51cd20dd` → `f9399e5e`；worktree已清理 |
