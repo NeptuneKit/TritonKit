@@ -184,3 +184,7 @@ brew upgrade triton
 ## v0.2.30 发布完成
 
 main@ebfbb405全量推送，main CI38922511471/tag CI38924507762/Release38924507771全部成功；双架构、checksum、tap、Homebrew升级与test、两处skills同版receipt通过，packaged Web只读HTTP与真实浏览器通过。原最低iOS13标准pod lint在CI通过，未推送trunk。详见[发布验收](../spaces/SP-208-update-version-alignment/plans/20261016-release.md)。用户原机尚未代验，通知草稿未外发。
+
+## v0.2.33 发布边界
+
+本版发布SP-218真实显示查询兼容修复及其余已收口CLI契约，保留Resize AX/HID unsupported、DerivedData自动删除取消与resource replay提前拒绝边界。公开面仍为双架构CLI、Web、public skills、checksum和Homebrew，podspec/Web清单对齐0.2.33；CocoaPods仅lint。使用独立干净main检出发布，避免原工作区参考追踪WIP混入tag。结果见[发布验收](../spaces/SP-218-issue-222-device-hub-input/plans/20261024-v0.2.33-release.md)。

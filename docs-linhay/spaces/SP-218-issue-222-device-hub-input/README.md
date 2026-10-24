@@ -1,6 +1,6 @@
 # SP-218 · Issue 222 Device Hub host input
 
-- 状态：2026-10-24 本机真实 HID/占用拒绝/恢复/swipe 验收通过，按既定范围归档；证据见[真实验收与收口](plans/20261024-live-acceptance-closeout.md)。本轮兼容修复与收口差异纳入用户授权的独立源码提交，不包含二进制发布。历史发布：已清除全部 Baguette 运行依赖与兼容层，CLI/Web/根包及 Release 验证通过；文档全局编号门禁已在本地 main 补齐 SP-214～217 后通过。已合入本地 main（merge commit `c2f4bdd1`，收口文档 `ec595020`/`af91bf80`）；已随 `v0.2.32` 推送并发布。
+- 状态：2026-10-24 本机真实 HID/占用拒绝/恢复/swipe 验收通过，按既定范围归档；证据见[真实验收与收口](plans/20261024-live-acceptance-closeout.md)。本轮兼容修复与收口差异已由 `c0ce0cc2` 提交推送且CI通过；用户追加授权发布v0.2.33，见[发布验收](plans/20261024-v0.2.33-release.md)。历史发布：已清除全部 Baguette 运行依赖与兼容层，CLI/Web/根包及 Release 验证通过；文档全局编号门禁已在本地 main 补齐 SP-214～217 后通过。已合入本地 main（merge commit `c2f4bdd1`，收口文档 `ec595020`/`af91bf80`）；已随 `v0.2.32` 推送并发布。
 - Issue：[222](https://github.com/NeptuneKit/TritonKit/issues/222)，含 [swipe 追加评论](https://github.com/NeptuneKit/TritonKit/issues/222#issuecomment-6285005107)。
 - 影响层：CLI host adapter、doctor/schema、tap receipt；不新增 HTTP/Web/Wails 控制面。
 - 历史实现基线 main `f82872e2`；2026-10-24复验从 `409670ef` 新建同级 `../TritonKit-worktrees/SP-218-issue-222-device-hub-input/`（`feat/SP-218-issue-222-device-hub-input`），当前差异已按文件整合回原main工作区，原有参考追踪WIP保留；51份文件归档并逐字节校验后，临时worktree与基线分支已普通删除；后续按用户追加授权只提交并推送本轮差异。
