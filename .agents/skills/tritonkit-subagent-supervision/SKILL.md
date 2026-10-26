@@ -80,6 +80,8 @@ description: TritonKit 监督交付模式：任务可安全拆分或用户要求
 
 主控 agent 仍必须保留最终完成判断；subagent 的“完成”只能作为输入，不能替代 DoD。
 
+用户授权主控负责自己开启的会话全流程时，责任持续到实现、测试、验收、必要本地提交、合入main、证据与worktree清理及会话归档。依据真实thread ID与main合并证据关闭已完成执行/批次主控聊天；保留长期主控，归档失败单独记录，不能用idle或完成声明替代验收。该授权不扩大到push/tag/release或关闭远端issue；参考采用细则见[现有流程](../../../docs-linhay/dev/reference-project-adoption-workflow.md)。
+
 ## Handoff Packet
 
 分派 subagent 时使用紧凑但完整的任务包：

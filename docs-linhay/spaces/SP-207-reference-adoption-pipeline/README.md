@@ -5,11 +5,13 @@
 - 用户于2026-10-16要求“后期评估可以纳入的改动可以直接按照这个流程直接进入开发”，随后明确“从 iCTRL 扩大到所有参考项目”。本页是当前流程事实源，替代各历史研究中逐项等待采用授权的说明。
 - 范围：全部已登记参考仓库，及登记为研究线索的候选；候选身份不等于已经采用。当前登记由 SP-194 的23主要仓库+9候选及 SP-199 的 Mobile MCP 组成，合计33个去重仓库。
 - 影响层：参考资料、自动任务、开发分派和治理规则；本次配置不修改CLI/HTTP/SDK产品代码。
-- 状态：持续追踪与采用。既有 SP-203～205、SP-210、SP-212、SP-214～SP-219 已完成本地合并，SP-211/SP-213 与 SP-220 主控验收和清理均有独立证据；日检基线为 `24e7d0f2`；SP-221经主控验收后已合入本地main `a0eebff0`，当前已提交HEAD为 `8fcd856f`（仅后续文档收口）。`v0.2.33` 已由独立授权会话发布，未包含SP-221。SP-218普通native HID/占用拒绝恢复、SP-219普通→Resize→普通录制已有Xcode27.1/iOS27.0专用Simulator真实验收；Resize AX/HID仍unsupported，其他工具链及用户项目不外推。
+- 状态：持续追踪与采用。既有 SP-203～205、SP-210、SP-212、SP-214～SP-219 已完成本地合并，SP-211/SP-213 与 SP-220 主控验收和清理均有独立证据；日检基线为 `24e7d0f2`；SP-221经主控验收后已合入本地main `a0eebff0`，后续SP-223合并为 `9fbda1d5`，本轮会话收口核对基线为 `71ff9ae4`。`v0.2.33` 已由独立授权会话发布，未包含SP-221。SP-218普通native HID/占用拒绝恢复、SP-219普通→Resize→普通录制已有Xcode27.1/iOS27.0专用Simulator真实验收；Resize AX/HID仍unsupported，其他工具链及用户项目不外推。
 - 正式说明：[参考项目追踪与采用](../../dev/reference-project-adoption-workflow.md)。
 - 仓库与读取状态：[reference-state.json](./plans/reference-state.json)；任务去重与授权：[adoption-state.json](./plans/adoption-state.json)。上游读取状态与采用交付状态分开。
 - 最近检查：2026-10-26，22完整/11 partial，simslim/Revyl两仓HEAD变化，Release/许可不变；[日报](./plans/20261026-reference-update-report.md)。用户要求继续后，两仓文本缺口已闭合并独立推进，当前合并视图24完整/9 partial，见[补查记录](./plans/20261026-partial-recovery.md)；本次仅重新查询2仓，其他31仓沿用日检。新SP-223/224已验收合本地main9fbda1d5；独立与合后完整CLI XCTest91/SwiftTesting1527、fakeCLI4场景和适用local通过，源worktree/branch已归档清理。新[SP-221](../SP-221-simulator-resource-read-retry/README.md)经[SP-222](../SP-222-simulator-resource-retry-integration/README.md)验收，候选eb9539f4合本地main `a0eebff0`；focused37、独立与合后完整CLI、root、适用local/docs均通过。显式gpt-6.1-sol真实执行/主控会话创建成功。旧13条采用保持，11旧源码/许可缺口不推进；未push/tag/release或执行设备恢复验证。
-- 2026-10-22用户重申：开发验证完成须继续合入本地main并通过合并后门禁，不停在执行会话或候选分支完成；当前15条采用登记的合并提交已核对为main祖先（含SP-221；条目数不等于独立功能数）。
+- 2026-10-22用户重申：开发验证完成须继续合入本地main并通过合并后门禁，不停在执行会话或候选分支完成；当前15条采用登记的合并提交已核对为main祖先（含SP-221、SP-223；条目数不等于独立功能数）。
+
+- 2026-10-27主控接管自己开启会话的完整交付与关闭责任：15条合并提交再次确认在main，9个真实执行/主控会话已归档；本长期追踪聊天保留，见[关闭记录](./plans/20261027-session-closeout.md)。
 
 ## 执行流程
 

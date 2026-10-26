@@ -45,7 +45,11 @@
       "state_evidence": "docs-linhay/spaces/SP-206-ictrl-security-integration/plans/20261016-validation-summary.json",
       "local_merge_sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
       "last_verified_on": "2026-10-17",
-      "verification_note": "Merge is ancestor of actual main d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec; frozen-candidate and main post-merge gates passed in saved evidence. This tracker does not infer device runtime acceptance or perform a new release."
+      "verification_note": "Merge is ancestor of actual main d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec; frozen-candidate and main post-merge gates passed in saved evidence. This tracker does not infer device runtime acceptance or perform a new release.",
+      "execution_thread_status": "archived",
+      "execution_thread_closed_on": "2026-10-27",
+      "controller_thread_status": "archived",
+      "controller_thread_closed_on": "2026-10-27"
     },
     {
       "key": "OpenMinis/iCTRL:response-log-privacy",
@@ -63,7 +67,11 @@
       "state_evidence": "docs-linhay/spaces/SP-206-ictrl-security-integration/plans/20261016-validation-summary.json",
       "local_merge_sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
       "last_verified_on": "2026-10-17",
-      "verification_note": "Merge is ancestor of actual main d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec; frozen-candidate and main post-merge gates passed in saved evidence. This tracker does not infer device runtime acceptance or perform a new release."
+      "verification_note": "Merge is ancestor of actual main d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec; frozen-candidate and main post-merge gates passed in saved evidence. This tracker does not infer device runtime acceptance or perform a new release.",
+      "execution_thread_status": "archived",
+      "execution_thread_closed_on": "2026-10-27",
+      "controller_thread_status": "archived",
+      "controller_thread_closed_on": "2026-10-27"
     },
     {
       "key": "OpenMinis/iCTRL:runner-service-authentication",
@@ -81,7 +89,11 @@
       "state_evidence": "docs-linhay/spaces/SP-206-ictrl-security-integration/plans/20261016-validation-summary.json",
       "local_merge_sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
       "last_verified_on": "2026-10-17",
-      "verification_note": "Merge is ancestor of actual main d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec; frozen-candidate and main post-merge gates passed in saved evidence. This tracker does not infer device runtime acceptance or perform a new release."
+      "verification_note": "Merge is ancestor of actual main d51403a69afbafd9426bd5ed6bfe3eb81a0ff0ec; frozen-candidate and main post-merge gates passed in saved evidence. This tracker does not infer device runtime acceptance or perform a new release.",
+      "execution_thread_status": "archived",
+      "execution_thread_closed_on": "2026-10-27",
+      "controller_thread_status": "archived",
+      "controller_thread_closed_on": "2026-10-27"
     },
     {
       "key": "dongxinsuperman/ai-phone:simulator-ax-trusted-geometry",
@@ -355,7 +367,9 @@
       "followup_implementation_sha": "c0ce0cc2",
       "followup_validation_evidence": "docs-linhay/spaces/SP-218-issue-222-device-hub-input/plans/20261024-live-acceptance-closeout.md",
       "initial_release_tag": "v0.2.32",
-      "initial_release_evidence": "docs-linhay/spaces/SP-211-reference-adoption-integration/plans/20261021-main-checkout-closeout.md"
+      "initial_release_evidence": "docs-linhay/spaces/SP-211-reference-adoption-integration/plans/20261021-main-checkout-closeout.md",
+      "execution_thread_status": "archived",
+      "execution_thread_closed_on": "2026-10-27"
     },
     {
       "source_revision": "42aa9a244f4e20fdd97ef8dd738fd34bb91cf671",
@@ -470,7 +484,11 @@
       "controller_worktree_status": "removed_after_local_merge",
       "release_tag": null,
       "controller_history_merge_sha": "6271d24e",
-      "cleanup_evidence": "docs-linhay/spaces/SP-222-simulator-resource-retry-integration/plans/20261026-main-merge.md"
+      "cleanup_evidence": "docs-linhay/spaces/SP-222-simulator-resource-retry-integration/plans/20261026-main-merge.md",
+      "execution_thread_status": "archived",
+      "execution_thread_closed_on": "2026-10-27",
+      "controller_thread_status": "archived",
+      "controller_thread_closed_on": "2026-10-27"
     },
     {
       "key": "TritonKit:host-process-post-exit-drain-deadline",
@@ -503,7 +521,11 @@
       "state_evidence": "docs-linhay/spaces/SP-224-host-process-drain-integration/plans/20261026-main-closeout.md",
       "worktree_status": "removed_after_local_merge",
       "controller_worktree_status": "removed_after_local_merge",
-      "cleanup_evidence": "docs-linhay/spaces/SP-224-host-process-drain-integration/plans/20261026-main-closeout.md"
+      "cleanup_evidence": "docs-linhay/spaces/SP-224-host-process-drain-integration/plans/20261026-main-closeout.md",
+      "execution_thread_status": "archived",
+      "execution_thread_closed_on": "2026-10-27",
+      "controller_thread_status": "archived",
+      "controller_thread_closed_on": "2026-10-27"
     }
   ],
   "new_thread_policy": {
@@ -514,6 +536,23 @@
     "existing_threads_changed": false,
     "reasoning_effort": "unchanged"
   },
-  "last_updated_on": "2026-10-26",
-  "last_update_note": "SP223/224 accepted, merged9fbda1d5 and postmerge fullCLI/fakeCLI/offline local/docs passed. Source worktrees/branches normally removed after360-file hashed evidence archive; original directory restoration follows."
+  "last_updated_on": "2026-10-27",
+  "last_update_note": "15 adoption merge SHAs verified reachable from main; 9 registered execution/controller threads archived with successful tool responses. Local main clean before documentation update; no upstream checkpoint or product change.",
+  "session_closeout": {
+    "verified_main": "71ff9ae463f092c798ecc657410a52561124ead5",
+    "verified_on": "2026-10-27",
+    "archived_thread_ids": [
+      "01a14284-df87-7d13-8373-a4d3a56fd470",
+      "01a14285-3be0-7213-9433-374c139189bd",
+      "01a14285-3edd-7722-9c46-538e6f6066f4",
+      "01a142ac-b6e1-7db1-87ad-e0e10935ae69",
+      "01a1580b-39b2-7ba1-b360-564874c87f35",
+      "01a175fc-c9c4-7053-b91e-74c209d3f0ca",
+      "01a175fd-5c91-7b52-bc7c-683468efff9f",
+      "01a1773d-1703-7152-bfa0-a6e452491809",
+      "01a1773d-8556-7a01-a885-a0f5d0c68a6d"
+    ],
+    "evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261027-session-closeout.md",
+    "long_running_controller": "kept_open"
+  }
 }
