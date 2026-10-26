@@ -482,8 +482,8 @@
       "assessment": "docs-linhay/spaces/SP-223-host-process-drain-deadline/README.md",
       "space": "SP-223-host-process-drain-deadline",
       "controller_space": "SP-224-host-process-drain-integration",
-      "state": "implementing",
-      "controller_state": "static_review",
+      "state": "candidate_ready",
+      "controller_state": "validating",
       "execution_thread_id": "01a1773d-1703-7152-bfa0-a6e452491809",
       "controller_thread_id": "01a1773d-8556-7a01-a885-a0f5d0c68a6d",
       "execution_model": "gpt-6.1-sol",
@@ -494,10 +494,11 @@
       "worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-223-host-process-drain-deadline",
       "controller_worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-host-process-drain-integration",
       "last_verified_on": "2026-10-26",
-      "verification_note": "Original-function local probe reproduces inherited stdout/stderr drain delay after parent termination; production tests/fix and artifact path coverage pending. No remote/device execution.",
+      "verification_note": "Production baseline red6 parameter cases/18 assertion issues; review gap red6; execution focused50/2suites exit0. Frozen25205ea2 and3file hashes independently checked; controller independent full/CLI acceptance pending. Not merged.",
       "dispatch_evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261026-followup-dispatch.json",
       "local_merge_sha": null,
-      "release_tag": null
+      "release_tag": null,
+      "acceptance_candidate_sha": "25205ea2f0c1e549c0c6777b2e045e3a7f7088e0"
     }
   ],
   "new_thread_policy": {
