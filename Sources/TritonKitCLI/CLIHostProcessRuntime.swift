@@ -7,6 +7,7 @@ private struct HostPipeDrainResult {
     let data: Data
     let bytes: Int
     let truncated: Bool
+    var error: Error? = nil
 }
 
 private let hostCommandIOQueue = DispatchQueue(
@@ -15,52 +16,45 @@ private let hostCommandIOQueue = DispatchQueue(
     attributes: .concurrent
 )
 
-private func drainPipe(_ pipe: Pipe, maximumBytes: Int?) -> HostPipeDrainResult {
-    let handle = pipe.fileHandleForReading
+private func drainPipe(_ pipe: Pipe, maximumBytes: Int?, deadline: HostPipeDrainDeadline) -> HostPipeDrainResult {
     var data = Data()
     var bytes = 0
     var truncated = false
-    while true {
-        guard let chunk = try? handle.read(upToCount: 64 * 1024), !chunk.isEmpty else {
-            break
+    var error: Error?
+    do {
+        try drainHostPipe(pipe, deadline: deadline) { chunk in
+            bytes += chunk.count
+            if let maximumBytes {
+                let remaining = max(0, maximumBytes - data.count)
+                data.append(chunk.prefix(remaining))
+                if bytes > maximumBytes { truncated = true }
+            } else {
+                data.append(chunk)
+            }
         }
-        bytes += chunk.count
-        guard let maximumBytes else {
-            data.append(chunk)
-            continue
-        }
-        let remaining = maximumBytes - data.count
-        if remaining > 0 {
-            data.append(chunk.prefix(remaining))
-        }
-        if chunk.count > remaining || bytes > maximumBytes {
-            truncated = true
-        }
-    }
-    return HostPipeDrainResult(data: data, bytes: bytes, truncated: truncated)
+    } catch let failure { error = failure }
+    return HostPipeDrainResult(data: data, bytes: bytes, truncated: truncated, error: error)
 }
 
-private func drainPipeToFile(_ pipe: Pipe, outputPath: String) -> (bytes: Int, error: Error?) {
+private func drainPipeToFile(_ pipe: Pipe, outputPath: String, deadline: HostPipeDrainDeadline) -> (bytes: Int, error: Error?) {
     let flags = O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW
     let fd = open(outputPath, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
     guard fd >= 0 else {
         let message = String(cString: strerror(errno))
+        try? pipe.fileHandleForReading.close()
         return (0, HostArtifactOutputError.rejected(path: outputPath, reason: message))
     }
     let output = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
     defer { try? output.close() }
-    let input = pipe.fileHandleForReading
     var bytes = 0
-    while true {
-        guard let chunk = try? input.read(upToCount: 64 * 1024), !chunk.isEmpty else {
-            break
-        }
-        do {
+    do {
+        try drainHostPipe(pipe, deadline: deadline) { chunk in
             try output.write(contentsOf: chunk)
             bytes += chunk.count
-        } catch {
-            return (bytes, error)
         }
+        try output.close()
+    } catch {
+        return (bytes, error)
     }
     return (bytes, nil)
 }
@@ -68,40 +62,33 @@ private func drainPipeToFile(_ pipe: Pipe, outputPath: String) -> (bytes: Int, e
 private func drainPipeToBoundedFile(
     _ pipe: Pipe,
     outputPath: String,
-    maximumBytes: Int
+    maximumBytes: Int,
+    deadline: HostPipeDrainDeadline
 ) -> (observedBytes: Int, artifactBytes: Int, truncated: Bool, error: Error?) {
     let flags = O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW
     let fd = open(outputPath, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
     guard fd >= 0 else {
         let message = String(cString: strerror(errno))
+        try? pipe.fileHandleForReading.close()
         return (0, 0, false, HostArtifactOutputError.rejected(path: outputPath, reason: message))
     }
     let output = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
     defer { try? output.close() }
-    let input = pipe.fileHandleForReading
     var observedBytes = 0
     var artifactBytes = 0
     var truncated = false
-    while true {
-        guard let chunk = try? input.read(upToCount: 64 * 1024), !chunk.isEmpty else {
-            break
-        }
-        observedBytes += chunk.count
-        let remaining = maximumBytes - artifactBytes
-        guard remaining > 0 else {
-            truncated = true
-            continue
-        }
-        let writeData = chunk.prefix(remaining)
-        do {
+    do {
+        try drainHostPipe(pipe, deadline: deadline) { chunk in
+            observedBytes += chunk.count
+            let remaining = max(0, maximumBytes - artifactBytes)
+            let writeData = chunk.prefix(remaining)
             try output.write(contentsOf: writeData)
             artifactBytes += writeData.count
-        } catch {
-            return (observedBytes, artifactBytes, truncated, error)
+            if writeData.count < chunk.count { truncated = true }
         }
-        if writeData.count < chunk.count {
-            truncated = true
-        }
+        try output.close()
+    } catch {
+        return (observedBytes, artifactBytes, truncated, error)
     }
     return (observedBytes, artifactBytes, truncated, nil)
 }
@@ -260,19 +247,12 @@ func runHostCommand(
             }
         }
     }
-    let stdoutGroup = DispatchGroup()
-    let stderrGroup = DispatchGroup()
-    var stdoutRead = HostPipeDrainResult(data: Data(), bytes: 0, truncated: false)
-    var stderrRead = HostPipeDrainResult(data: Data(), bytes: 0, truncated: false)
-    stdoutGroup.enter()
-    hostCommandIOQueue.async {
-        stdoutRead = drainPipe(stdout, maximumBytes: maximumOutputBytes)
-        stdoutGroup.leave()
+    let drainDeadline = HostPipeDrainDeadline()
+    let stdoutDrain = HostPipeDrainTask(queue: hostCommandIOQueue) {
+        drainPipe(stdout, maximumBytes: maximumOutputBytes, deadline: drainDeadline)
     }
-    stderrGroup.enter()
-    hostCommandIOQueue.async {
-        stderrRead = drainPipe(stderr, maximumBytes: maximumOutputBytes)
-        stderrGroup.leave()
+    let stderrDrain = HostPipeDrainTask(queue: hostCommandIOQueue) {
+        drainPipe(stderr, maximumBytes: maximumOutputBytes, deadline: drainDeadline)
     }
 
     if semaphore.wait(timeout: .now() + timeoutSeconds) == .timedOut {
@@ -281,18 +261,14 @@ func runHostCommand(
             kill(process.processIdentifier, SIGKILL)
             _ = semaphore.wait(timeout: .now() + 2)
         }
-        if stdoutGroup.wait(timeout: .now() + 2) == .timedOut {
-            try? stdout.fileHandleForReading.close()
-            _ = stdoutGroup.wait(timeout: .now() + 1)
-        }
-        if stderrGroup.wait(timeout: .now() + 2) == .timedOut {
-            try? stderr.fileHandleForReading.close()
-            _ = stderrGroup.wait(timeout: .now() + 1)
-        }
+        drainDeadline.finish()
+        stdoutDrain.wait()
+        stderrDrain.wait()
         throw HostCommandRunError.timeout(command: command, timeoutSeconds: timeoutSeconds, stdoutLogPath: nil, stderrLogPath: nil)
     }
-    stdoutGroup.wait()
-    stderrGroup.wait()
+    drainDeadline.finish()
+    let stdoutRead = stdoutDrain.wait()
+    let stderrRead = stderrDrain.wait()
 
     let result = HostProcessResult(
         stdoutData: stdoutRead.data,
@@ -306,6 +282,12 @@ func runHostCommand(
         stdoutBytes: stdoutRead.bytes,
         stderrBytes: stderrRead.bytes
     )
+    if let error = stdoutRead.error ?? stderrRead.error {
+        if let cause = error as? HostProcessOutputError {
+            throw HostProcessOutputFailure(cause: cause, result: result)
+        }
+        throw error
+    }
     if result.exitCode != 0 || hostCommandHasSemanticFailure(command, result: result) {
         throw HostCommandRunError.nonZeroExit(command: command, result: result)
     }
@@ -333,22 +315,12 @@ func runHostCommandWritingStdoutArtifact(_ command: TKHostCommand, outputPath: S
         throw HostCommandRunError.launchFailed(error.localizedDescription)
     }
 
-    let stdoutGroup = DispatchGroup()
-    let stderrGroup = DispatchGroup()
-    var stdoutBytes = 0
-    var stdoutError: Error?
-    var stderrRead = HostPipeDrainResult(data: Data(), bytes: 0, truncated: false)
-    stdoutGroup.enter()
-    hostCommandIOQueue.async {
-        let result = drainPipeToFile(stdout, outputPath: outputPath)
-        stdoutBytes = result.bytes
-        stdoutError = result.error
-        stdoutGroup.leave()
+    let drainDeadline = HostPipeDrainDeadline()
+    let stdoutDrain = HostPipeDrainTask(queue: hostCommandIOQueue) {
+        drainPipeToFile(stdout, outputPath: outputPath, deadline: drainDeadline)
     }
-    stderrGroup.enter()
-    hostCommandIOQueue.async {
-        stderrRead = drainPipe(stderr, maximumBytes: 1_048_576)
-        stderrGroup.leave()
+    let stderrDrain = HostPipeDrainTask(queue: hostCommandIOQueue) {
+        drainPipe(stderr, maximumBytes: 1_048_576, deadline: drainDeadline)
     }
 
     if semaphore.wait(timeout: .now() + timeoutSeconds) == .timedOut {
@@ -357,22 +329,14 @@ func runHostCommandWritingStdoutArtifact(_ command: TKHostCommand, outputPath: S
             kill(process.processIdentifier, SIGKILL)
             _ = semaphore.wait(timeout: .now() + 2)
         }
-        if stdoutGroup.wait(timeout: .now() + 2) == .timedOut {
-            try? stdout.fileHandleForReading.close()
-            _ = stdoutGroup.wait(timeout: .now() + 1)
-        }
-        if stderrGroup.wait(timeout: .now() + 2) == .timedOut {
-            try? stderr.fileHandleForReading.close()
-            _ = stderrGroup.wait(timeout: .now() + 1)
-        }
+        drainDeadline.finish()
+        stdoutDrain.wait()
+        stderrDrain.wait()
         throw HostCommandRunError.timeout(command: command, timeoutSeconds: timeoutSeconds, stdoutLogPath: outputPath, stderrLogPath: nil)
     }
-    stdoutGroup.wait()
-    stderrGroup.wait()
-    if let stdoutError {
-        try? FileManager.default.removeItem(atPath: outputPath)
-        throw HostCommandRunError.launchFailed(stdoutError.localizedDescription)
-    }
+    drainDeadline.finish()
+    let stdoutRead = stdoutDrain.wait()
+    let stderrRead = stderrDrain.wait()
 
     let result = HostProcessResult(
         stdoutData: Data(),
@@ -383,9 +347,16 @@ func runHostCommandWritingStdoutArtifact(_ command: TKHostCommand, outputPath: S
         stderrTruncated: stderrRead.truncated,
         stdoutLogPath: outputPath,
         stderrLogPath: nil,
-        stdoutBytes: stdoutBytes,
+        stdoutBytes: stdoutRead.bytes,
         stderrBytes: stderrRead.bytes
     )
+    if let error = stdoutRead.error ?? stderrRead.error {
+        try? FileManager.default.removeItem(atPath: outputPath)
+        if let cause = error as? HostProcessOutputError {
+            throw HostProcessOutputFailure(cause: cause, result: result, artifactBytes: stdoutRead.bytes)
+        }
+        throw HostCommandRunError.launchFailed(error.localizedDescription)
+    }
     if result.exitCode != 0 || hostCommandHasSemanticFailure(command, result: result) {
         try? FileManager.default.removeItem(atPath: outputPath)
         throw HostCommandRunError.nonZeroExit(command: command, result: result)
@@ -416,12 +387,9 @@ func runHostCommandWritingCombinedOutputArtifact(
         throw HostCommandRunError.launchFailed(error.localizedDescription)
     }
 
-    let drainGroup = DispatchGroup()
-    var drainResult = (observedBytes: 0, artifactBytes: 0, truncated: false, error: Optional<Error>.none)
-    drainGroup.enter()
-    hostCommandIOQueue.async {
-        drainResult = drainPipeToBoundedFile(combined, outputPath: outputPath, maximumBytes: maximumBytes)
-        drainGroup.leave()
+    let drainDeadline = HostPipeDrainDeadline()
+    let drain = HostPipeDrainTask(queue: hostCommandIOQueue) {
+        drainPipeToBoundedFile(combined, outputPath: outputPath, maximumBytes: maximumBytes, deadline: drainDeadline)
     }
 
     var interruptionRequested = false
@@ -437,10 +405,8 @@ func runHostCommandWritingCombinedOutputArtifact(
                 kill(process.processIdentifier, SIGKILL)
                 _ = semaphore.wait(timeout: .now() + 2)
             }
-            if drainGroup.wait(timeout: .now() + 2) == .timedOut {
-                try? combined.fileHandleForReading.close()
-                _ = drainGroup.wait(timeout: .now() + 1)
-            }
+            drainDeadline.finish()
+            drain.wait()
             try? FileManager.default.removeItem(atPath: outputPath)
             throw HostCommandRunError.timeout(
                 command: command,
@@ -451,28 +417,32 @@ func runHostCommandWritingCombinedOutputArtifact(
         }
     }
 
-    drainGroup.wait()
+    drainDeadline.finish()
+    let drainResult = drain.wait()
+    let partialResult = HostProcessResult(
+        stdoutData: Data(),
+        stderrData: Data(),
+        exitCode: process.terminationStatus,
+        sourceCommand: hostSourceCommand(command),
+        stdoutTruncated: drainResult.truncated,
+        stderrTruncated: drainResult.truncated,
+        stdoutLogPath: outputPath,
+        stderrLogPath: outputPath,
+        stdoutBytes: drainResult.observedBytes,
+        stderrBytes: 0
+    )
     if let error = drainResult.error {
         try? FileManager.default.removeItem(atPath: outputPath)
+        if let cause = error as? HostProcessOutputError {
+            throw HostProcessOutputFailure(cause: cause, result: partialResult, artifactBytes: drainResult.artifactBytes)
+        }
         throw HostCommandRunError.launchFailed(error.localizedDescription)
     }
 
     let elapsedDurationSeconds = Date().timeIntervalSince(startedAt)
     if !interruptionRequested && process.terminationStatus != 0 {
-        let failure = HostProcessResult(
-            stdoutData: Data(),
-            stderrData: Data(),
-            exitCode: process.terminationStatus,
-            sourceCommand: hostSourceCommand(command),
-            stdoutTruncated: drainResult.truncated,
-            stderrTruncated: drainResult.truncated,
-            stdoutLogPath: outputPath,
-            stderrLogPath: outputPath,
-            stdoutBytes: drainResult.observedBytes,
-            stderrBytes: 0
-        )
         try? FileManager.default.removeItem(atPath: outputPath)
-        throw HostCommandRunError.nonZeroExit(command: command, result: failure)
+        throw HostCommandRunError.nonZeroExit(command: command, result: partialResult)
     }
 
     return HostCombinedArtifactProcessResult(
@@ -949,6 +919,18 @@ func failHostCommand(
             code: "harmony_layout_text_not_found",
             message: "\(error)",
             hint: "Run `triton debug ax --platform harmony --output <path> --json` and inspect the dumped attributes.text values."
+        )
+    case let error as HostProcessOutputFailure:
+        detail = TKCLIErrorDetail(
+            code: error.cause.code,
+            message: error.description,
+            hint: "Output capture is incomplete or failed. Inspect the exit status and observed output before deciding whether to retry."
+        )
+    case let error as HostProcessOutputError:
+        detail = TKCLIErrorDetail(
+            code: error.code,
+            message: error.description,
+            hint: "Inspect the command output and inherited output descriptors before deciding whether to retry."
         )
     case HostCommandRunError.timeout(let command, _, _, _):
         detail = hostCommandTimeoutErrorDetail(command: command, message: "\(error)")

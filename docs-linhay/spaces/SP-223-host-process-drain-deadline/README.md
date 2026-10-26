@@ -23,6 +23,18 @@ main@8fcd856f的runHostCommand正常退出后stdout/stderr group.wait无期限�
 
 ## 当前阶段
 
-已分派实现中，正式三runner红测试已复现；候选须经SP-224独立验收后才合main。
+执行候选已完成聚焦验证，待 SP-224 独立审查与主控整合；详见下方执行记录。
 
-真实thread `01a1773d-1703-7152-bfa0-a6e452491809`，显式gpt-6.1-sol；同级worktree/feat分支已建，已分派，尚未验收/合并。
+## 2026-10-26 执行候选
+
+实现与聚焦验证完成，待 SP-224 主控独立审查及整合；本目录不是 main 已交付声明。执行会话 `01a1773d-1703-7152-bfa0-a6e452491809`，基线 `8fcd856f2927fa81754bb3e10b80d066c0591f37`。共享索引、memory 与整合状态由 root 维护，本切片不写。
+
+- 三 runner 共用 0.25s post-exit drain budget，使用非阻塞 POSIX read + 最长 10ms poll；仅真实零字节读取判定 EOF。读端由其 worker 自行关闭，主线程等待 worker 完成，再读取加锁结果。
+- 未 EOF 返回 `host_output_incomplete`，读端错误返回 `host_output_read_failed`，沿现有 failHostCommand 输出单一 envelope；输出/关闭写入错误仍走既有 launchFailed 失败语义。不自动重放、不递归 kill 后代。
+- 正式旧生产函数红测：六个继承 stdout/stderr 场景共 18 条断言失败，约 18.176s；大输出与非零退出对照通过。红测中 holder 已自行结束，存活断言失败不代表 runner 曾 kill 后代。
+- 最终聚焦绿测：50 tests / 2 suites / 13.122s，其中新增 HostProcessDrainTests 为 12 个测试定义（含参数化场景），以及现有 SimulatorAdvancedControlsTests。保留了初次绿测和错误注入 fixture 崩溃的真实历史，不混计重复测试。
+- [验证报告](plans/20261026-candidate-validation.md)、[机器清单](plans/validation/manifest.json)、[正式红测](plans/validation/red.log)、[最终绿测](plans/validation/green.log)、[watchdog](plans/validation/run-focused.py)。
+
+经验沉淀限定本 space：截止必须在直接子进程退出后生效，区分 EOF / deadline / read error，不能通过另一线程 close 阻塞 FileHandle 读来保证截止；异常测试不要访问已关闭 Foundation FileHandle 的 fileDescriptor（macOS 会抛 Objective-C 异常）。下次复用本回归和 watchdog；公共流程推广由 root 判断。
+
+独立审查修正：初版 drain 失败会遮住直接子进程非零退出事实。新增 exit7+未EOF 与持续可读的三 runner 反例在初版产生 6 条实际断言失败；现内部 `HostProcessOutputFailure` 同时保留 cause、实际 exitCode、两 stream 的部分结果/观察计数及 artifactBytes，envelope 文本保留退出码与计数。普通 EOF 的非零退出仍使用原 nonZeroExit 语义。新加原始非 UTF-8 尾字节与未知 sink/error envelope 反例已通过。收尾预算只约束管道读取等待；同步 artifact open/write/close 及内核/文件系统延迟不受该预算硬截止约束。

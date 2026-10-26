@@ -1,0 +1,43 @@
+Build complete! (32.71秒)
+􀟈  Test run started.
+􀄵  Testing Library Version: 2084
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Suite HostProcessDrainTests started.
+􀟈  Test "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "memory", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "memory", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "stdout", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "stdout", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "combined", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "combined", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􁁛  Test "all production runners bound inherited stdout and stderr without killing their holder" with 6 test cases passed after 1.598 seconds.
+􀟈  Test "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "memory" to "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "combined" to "all runners retain large output and final bytes" started.
+􁁛  Test "all runners retain large output and final bytes" with 3 test cases passed after 0.064 seconds.
+􀟈  Test "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "memory" to "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "combined" to "all runners preserve nonzero exit" started.
+􁁛  Test "all runners preserve nonzero exit" with 3 test cases passed after 0.009 seconds.
+􀟈  Test "short-lived inherited writers reach real EOF and retain delayed tail" started.
+􀟈  Test case passing 1 argument runner → "memory" to "short-lived inherited writers reach real EOF and retain delayed tail" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "short-lived inherited writers reach real EOF and retain delayed tail" started.
+􀟈  Test case passing 1 argument runner → "combined" to "short-lived inherited writers reach real EOF and retain delayed tail" started.
+􁁛  Test "short-lived inherited writers reach real EOF and retain delayed tail" with 3 test cases passed after 0.179 seconds.
+􀟈  Test "bounded captures drain every byte while reporting truncation" started.
+􁁛  Test "bounded captures drain every byte while reporting truncation" passed after 0.009 seconds.
+􀟈  Test "execution timeout stays a failure for every runner" started.
+􀟈  Test case passing 1 argument runner → "memory" to "execution timeout stays a failure for every runner" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "execution timeout stays a failure for every runner" started.
+􀟈  Test case passing 1 argument runner → "combined" to "execution timeout stays a failure for every runner" started.
+􁁛  Test "execution timeout stays a failure for every runner" with 3 test cases passed after 6.257 seconds.
+􀟈  Test "intentional combined capture interruption retains its explicit status" started.
+􁁛  Test "intentional combined capture interruption retains its explicit status" passed after 0.056 seconds.
+􀟈  Test "read setup and sink write failures cannot become EOF success" started.
+􁁛  Test "read setup and sink write failures cannot become EOF success" passed after 0.005 seconds.
+􀟈  Test "output failure uses one JSON error envelope" started.
+􁁛  Test "output failure uses one JSON error envelope" passed after 0.001 seconds.
+􁁛  Suite HostProcessDrainTests passed after 8.183 seconds.
+􁁛  Test run with 9 tests in 1 suite passed after 8.183 seconds.
