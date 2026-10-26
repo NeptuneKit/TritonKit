@@ -51,7 +51,7 @@
 
 ## 当前交付状态（2026-10-26）
 
-用户要求继续后，[补查](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-partial-recovery.md)闭合sim-use/device-hub-ios两仓文本缺口，当前合并视图24完整/9 partial（仅2仓重查，31仓沿用日检）。原函数自有probe复现退出后继承pipe超预算等待；SP-223/SP-224已创建显式gpt-6.1-sol执行/主控会话，已验收合本地main9fbda1d5，独立/合后完整CLI与适用local通过，清理收尾中。既有14条采用记录不改。
+用户要求继续后，[补查](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-partial-recovery.md)闭合sim-use/device-hub-ios两仓文本缺口，当前合并视图24完整/9 partial（仅2仓重查，31仓沿用日检）。原函数自有probe复现退出后继承pipe超预算等待；SP-223/SP-224已创建显式gpt-6.1-sol执行/主控会话，已验收合本地main9fbda1d5，独立/合后完整CLI与适用local通过，源worktree/branch已清理。既有14条采用记录不改。
 
 2026-10-26 [日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-reference-update-report.md)22完整/11 partial，simslim/Revyl CLI两仓HEAD变化，Release与许可不变。新SP-221仅为同目标print-disabled明确launchd暂态提供有界只读重试；SP-222有限主控审查真实nonZeroExit throw、次数/总预算、取消和拒绝语义，不重放mutation。执行/主控均已通过create_thread显式gpt-6.1-sol创建真实会话（见分派记录），不将历史模型失败当当前阻塞。旧13条采用保持已合main，新批验证与合并分别记录；SP-221候选eb9539f4经SP-222独立验收后合actualmain a0eebff0，合后CLI/root/local/docs通过，当前标local_merged。真实恢复未执行，未push/tag/release。为原main干净，当前聊天自身跟踪资料可作本批必要的独立本地归档提交，与产品候选分开；不包含远端写入。
 

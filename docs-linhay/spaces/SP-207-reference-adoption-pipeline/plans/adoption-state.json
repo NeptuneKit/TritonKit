@@ -501,8 +501,9 @@
       "acceptance_candidate_sha": "25205ea2f0c1e549c0c6777b2e045e3a7f7088e0",
       "controller_validation_commit": "1c73578755963268b45ea4a739224ff132ef6d26",
       "state_evidence": "docs-linhay/spaces/SP-224-host-process-drain-integration/plans/20261026-main-closeout.md",
-      "worktree_status": "merged_cleanup_pending",
-      "controller_worktree_status": "merged_cleanup_pending"
+      "worktree_status": "removed_after_local_merge",
+      "controller_worktree_status": "removed_after_local_merge",
+      "cleanup_evidence": "docs-linhay/spaces/SP-224-host-process-drain-integration/plans/20261026-main-closeout.md"
     }
   ],
   "new_thread_policy": {
@@ -514,5 +515,5 @@
     "reasoning_effort": "unchanged"
   },
   "last_updated_on": "2026-10-26",
-  "last_update_note": "SP223 production and SP224 accepted evidence merged9fbda1d5; postmerge fullCLI/fakeCLI/local gates passed; cleanup pending. Prior14 records preserved."
+  "last_update_note": "SP223/224 accepted, merged9fbda1d5 and postmerge fullCLI/fakeCLI/offline local/docs passed. Source worktrees/branches normally removed after360-file hashed evidence archive; original directory restoration follows."
 }

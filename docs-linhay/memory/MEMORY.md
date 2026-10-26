@@ -1,6 +1,6 @@
 # TritonKit Project Memory
 
-- 2026-10-26继续：[SP-207补查](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-partial-recovery.md)恢复两仓文本完整性，当前24完整/9 partial（2仓重查、31沿用日检）。宿主退出后继承pipe超预算经自有原函数probe复现，SP-223执行/SP-224有限主控均gpt-6.1-sol；已验收合本地main9fbda1d5，独立及合后完整CLI/local通过，清理收尾中。
+- 2026-10-26继续：[SP-207补查](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-partial-recovery.md)恢复两仓文本完整性，当前24完整/9 partial（2仓重查、31沿用日检）。宿主退出后继承pipe超预算经自有原函数probe复现，SP-223执行/SP-224有限主控均gpt-6.1-sol；已验收合本地main9fbda1d5，独立及合后完整CLI/local通过，源worktree/branch已清理。
 
 - 2026-10-26：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-reference-update-report.md)22完整/11 partial、simslim/Revyl两仓HEAD变化。新增[SP-221](../spaces/SP-221-simulator-resource-read-retry/README.md)只读资源暂态有限重试及[SP-222](../spaces/SP-222-simulator-resource-retry-integration/README.md)有限主控，两个真实create_thread显式gpt-6.1-sol成功；候选eb9539f4经主控及合后门禁合本地main a0eebff0，未发布，旧模型失败不作为本批阻塞。
 

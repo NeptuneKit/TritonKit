@@ -279,5 +279,5 @@
 | `SP-221-simulator-resource-read-retry` | [`SP-221-simulator-resource-read-retry`](./SP-221-simulator-resource-read-retry/README.md) | 已合本地main | a0eebff0；focused37、完整CLI及合后root/local/docs通过；真实恢复未测；worktree/branch已清理 |
 | `SP-222-simulator-resource-retry-integration` | [`SP-222-simulator-resource-retry-integration`](./SP-222-simulator-resource-retry-integration/README.md) | 已验收合本地main | 独立候选4249bd26、报告95a1dc8f、真实合并a0eebff0；worktree/branch已清理、未push/tag/release |
 
-| `SP-223-host-process-drain-deadline` | [`SP-223-host-process-drain-deadline`](./SP-223-host-process-drain-deadline/README.md) | 已验收合本地main | 9fbda1d5；独立/合后完整CLI及local通过，清理收尾中 |
-| `SP-224-host-process-drain-integration` | [`SP-224-host-process-drain-integration`](./SP-224-host-process-drain-integration/README.md) | 已验收合本地main | 主控1c735787；独立/合后门禁通过，归档清理收尾中 |
+| `SP-223-host-process-drain-deadline` | [`SP-223-host-process-drain-deadline`](./SP-223-host-process-drain-deadline/README.md) | 已验收合本地main | 9fbda1d5；独立/合后完整CLI及local通过，源worktree/branch已清理 |
+| `SP-224-host-process-drain-integration` | [`SP-224-host-process-drain-integration`](./SP-224-host-process-drain-integration/README.md) | 已验收合本地main | 主控1c735787；独立/合后门禁通过，源worktree/branch已归档清理 |

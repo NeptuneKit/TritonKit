@@ -31,8 +31,8 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 已合本地main | [SP-223-host-process-drain-deadline](./SP-223-host-process-drain-deadline/README.md) | 宿主进程退出后的有界输出收尾 | 9fbda1d5；完整CLI/local合后通过，归档清理中 |
-| 已验收合本地main | [SP-224-host-process-drain-integration](./SP-224-host-process-drain-integration/README.md) | SP-223有限独立主控 | 主控1c735787验收、合后门禁通过，归档清理中 |
+| 已合本地main | [SP-223-host-process-drain-deadline](./SP-223-host-process-drain-deadline/README.md) | 宿主进程退出后的有界输出收尾 | 9fbda1d5；完整CLI/local合后通过，源worktree/branch已清理 |
+| 已验收合本地main | [SP-224-host-process-drain-integration](./SP-224-host-process-drain-integration/README.md) | SP-223有限独立主控 | 主控1c735787验收、合后门禁通过，源worktree/branch已清理 |
 | 已合本地main | [SP-221-simulator-resource-read-retry](./SP-221-simulator-resource-read-retry/README.md) | 同目标print-disabled明确launchd暂态有限只读重试 | a0eebff0；focused37/fullCLI/root/local/docs通过，mutation不重放 |
 | 已验收合本地main | [SP-222-simulator-resource-retry-integration](./SP-222-simulator-resource-retry-integration/README.md) | SP-221有限主控，真实runner失败路径与预算 | 独立报告95a1dc8f与actualmain合后门禁通过，未发布 |
 | v0.2.30已发布 | [SP-208-update-version-alignment](./SP-208-update-version-alignment/README.md) | 修复更新误报、安装版本核验与skills对齐 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
