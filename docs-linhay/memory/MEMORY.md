@@ -1,8 +1,18 @@
 # TritonKit Project Memory
 
+- 2026-10-26：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-reference-update-report.md)22完整/11 partial、simslim/Revyl两仓HEAD变化。新增[SP-221](../spaces/SP-221-simulator-resource-read-retry/README.md)只读资源暂态有限重试及[SP-222](../spaces/SP-222-simulator-resource-retry-integration/README.md)有限主控，两个真实create_thread显式gpt-6.1-sol成功；当前开发中，后续验收/合main独立记，旧模型失败不作为本批阻塞。
+
+- 2026-10-25：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261025-reference-update-report.md)22完整/11 partial、3仓HEAD变化；新增Revyl v0.1.188/Mobile MCP 1.0.13，无新本地采用。云优先级、托管Web说明、MCP依赖/描述无对应本地路径；既有13条采用均在main，不重排。
+
+- 2026-10-24：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261024-reference-update-report.md)22完整/11 partial、5仓HEAD变化，无新采用；按`main@24e7d0f2`及v0.2.33核对，采用登记补齐SP-214显示修复与SP-218/219真实验收，Resize AX/HID仍unsupported。本监控不重跑设备或发布。
+
 - 2026-10-24：v0.2.33已发布，tag `e2b1d959`；SP-218真实显示查询兼容修复及本轮CLI契约收口已交付，双架构公开资产、Homebrew和仓库外只读Web验收通过。原工作区其他WIP未混入发布；CocoaPods仅lint、未推送trunk。详见[发布证据](../spaces/SP-218-issue-222-device-hub-input/plans/20261024-v0.2.33-release.md)。
 
 - 2026-10-24：按用户裁决归档SP-126/134/177/179/183，SP-181/182维持研究设计归档；SP-193/207监控继续。真实可靠性专项仅由项目采用/公开可靠性承诺触发，自动DerivedData删除取消。当前裁决与验证见[本轮记录](2026-10-24.md)。
+
+- 2026-10-23：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261023-reference-update-report.md)22完整/11 partial、3仓变化，无新增采用。13仓首次连接故障经一次安全重试恢复，旧许可/源码缺口不推进；既有13条采用均已合main。
+
+- 2026-10-22：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261022-reference-update-report.md)22完整/11 partial、4仓变化，无新采用；SP-219许可按固定全文更正Apache-2.0，取证过滤规则写回[正式流程](../dev/reference-project-adoption-workflow.md)。现有采用均已交付，不重排旧任务。
 
 ## Canonical Indexes
 

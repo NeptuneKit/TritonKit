@@ -1,10 +1,10 @@
 # TritonKit Space 编号索引
 
 
-2026-10-19：SP-209～213已合并分支及worktree清理完成，仅保留实际main与原用户WIP；见[清理记录](./SP-211-reference-adoption-integration/plans/20261019-cleanup.md)。
+2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已创建，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-10-24（有限任务归档、真实验收与范围收口）
-> 覆盖范围：213/213 个已存在 space
+> 覆盖范围：222/222 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -248,7 +248,7 @@
 
 | `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30已发布 | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
 
-| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 33仓统一流程及追踪资料已合入main；SP-210～213已验收合并并清理分支/worktree |
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月26日22完整/11 partial，新SP-221/SP-222实际会话创建成功、开发中；旧13条采用已合main |
 
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 
@@ -276,3 +276,5 @@
 | `SP-218-issue-222-device-hub-input` | [`SP-218-issue-222-device-hub-input`](./SP-218-issue-222-device-hub-input/README.md) | 已归档／真实验收通过 | 2026-10-24 native HID tap/swipe、Hub占用拒绝及恢复通过；兼容修复/文档已由c0ce0cc2推送；v0.2.33已发布，双架构/Homebrew/只读Web验收通过 |
 | `SP-219-simulator-resizable-routing` | [`SP-219-simulator-resizable-routing`](./SP-219-simulator-resizable-routing/README.md) | 已归档／录制真实验收通过 | 2026-10-24普通→Resize→普通视频真实解码通过；Resize AX/HID保持unsupported |
 | `SP-220-simulator-resizable-integration` | [`SP-220-simulator-resizable-integration`](./SP-220-simulator-resizable-integration/README.md) | v0.2.32已发布 | SP-219 主控验证与本地合并；候选 `51cd20dd` → `f9399e5e`；worktree已清理 |
+| `SP-221-simulator-resource-read-retry` | [`SP-221-simulator-resource-read-retry`](./SP-221-simulator-resource-read-retry/README.md) | 执行中 | 显式gpt-6.1-sol真实执行会话已创建；同一目标只读重试，待红绿/focused验收，主控SP-222 |
+| `SP-222-simulator-resource-retry-integration` | [`SP-222-simulator-resource-retry-integration`](./SP-222-simulator-resource-retry-integration/README.md) | 主控审查中 | 显式gpt-6.1-sol真实主控会话已创建；核对真实runner与预算，待候选冻结验证合main |

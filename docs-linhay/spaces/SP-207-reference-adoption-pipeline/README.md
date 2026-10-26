@@ -5,9 +5,11 @@
 - 用户于2026-10-16要求“后期评估可以纳入的改动可以直接按照这个流程直接进入开发”，随后明确“从 iCTRL 扩大到所有参考项目”。本页是当前流程事实源，替代各历史研究中逐项等待采用授权的说明。
 - 范围：全部已登记参考仓库，及登记为研究线索的候选；候选身份不等于已经采用。当前登记由 SP-194 的23主要仓库+9候选及 SP-199 的 Mobile MCP 组成，合计33个去重仓库。
 - 影响层：参考资料、自动任务、开发分派和治理规则；本次配置不修改CLI/HTTP/SDK产品代码。
-- 状态：持续追踪与采用。既有 SP-203～205、SP-210、SP-212、SP-214～SP-219 已完成本地合并，SP-211/SP-213 与 SP-220 主控验收和清理均有独立证据；当前 main 已随 `v0.2.32` 推送并发布。SP-219 仅覆盖本机 Simulator 的 fresh Resizable display 录制路由，AX/HID 未验证 transport 仍保持拒绝。
+- 状态：持续追踪与采用。既有 SP-203～205、SP-210、SP-212、SP-214～SP-219 已完成本地合并，SP-211/SP-213 与 SP-220 主控验收和清理均有独立证据；当前 main 为 `24e7d0f2`，`v0.2.33` 已由独立授权会话发布。SP-218普通native HID/占用拒绝恢复、SP-219普通→Resize→普通录制已有Xcode27.1/iOS27.0专用Simulator真实验收；Resize AX/HID仍unsupported，其他工具链及用户项目不外推。
 - 正式说明：[参考项目追踪与采用](../../dev/reference-project-adoption-workflow.md)。
 - 仓库与读取状态：[reference-state.json](./plans/reference-state.json)；任务去重与授权：[adoption-state.json](./plans/adoption-state.json)。上游读取状态与采用交付状态分开。
+- 最近检查：2026-10-26，22完整/11 partial，simslim与Revyl CLI共2仓HEAD变化，Release/许可未变；[日报](./plans/20261026-reference-update-report.md)。新采纳[SP-221资源只读暂态重试](../SP-221-simulator-resource-read-retry/README.md)，由[SP-222主控](../SP-222-simulator-resource-retry-integration/README.md)验收合main；两个显式gpt-6.1-sol真实会话已创建，当前开发中，未冒充验收/合并。原13条采用仍已合main，11旧源码/许可缺口保留成功点。
+- 2026-10-22用户重申：开发验证完成须继续合入本地main并通过合并后门禁，不停在执行会话或候选分支完成；现有13条采用登记的合并提交已核对为main祖先。
 
 ## 执行流程
 

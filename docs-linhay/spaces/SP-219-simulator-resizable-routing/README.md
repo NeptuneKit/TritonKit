@@ -23,7 +23,7 @@
 
 ## 许可与风险
 
-上游为 MIT（固定 HEAD 许可证已在 SP-207 原始证据保存）。只借鉴显示身份与 fail-closed 机制；不复制托管 Device Hub 或第三方运行时。最大风险是 Apple `devicectl`/`simctl` 在不同 Xcode 版本的 display 参数差异，未知时必须拒绝。
+上游固定 HEAD 的 [LICENSE](https://github.com/lycorp-jp/sim-use/blob/42aa9a244f4e20fdd97ef8dd738fd34bb91cf671/LICENSE) 全文为 Apache-2.0；GitHub API 分类为 NOASSERTION，保留该原值并按全文识别。2026-10-22复核更正此前“MIT”误记；该版本与当前 c02295ed 许可全文 SHA256 均为 `8c0fe2892344358b49aa07d9a184bd8d0891832baf642f19161f271acc075d32`，不是上游许可变更。只借鉴显示身份与 fail-closed 机制；不复制托管 Device Hub 或第三方运行时。最大风险是 Apple `devicectl`/`simctl` 在不同 Xcode 版本的 display 参数差异，未知时必须拒绝。
 
 ## 状态
 

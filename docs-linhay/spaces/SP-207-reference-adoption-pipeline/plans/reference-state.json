@@ -9,7 +9,7 @@
     "docs-linhay/dev/20261014-reference-project-updates.md",
     "docs-linhay/dev/mobile-mcp-reference.md"
   ],
-  "coverage_note": "23/33 complete, 10 partial on 20261021; partial checkpoints preserved; iCTRL remains independently maintained by SP-193.",
+  "coverage_note": "22/33 complete, 11 partial on 20261026; partial checkpoints preserved; iCTRL independent SP-193.",
   "repositories": [
     {
       "repository": "tddworks/baguette",
@@ -32,25 +32,41 @@
           "binary_source_provenance",
           "incremental_review_incomplete"
         ],
-        "observed_at": "2026-10-21T02:38:56.292415+00:00",
-        "head_sha": "70ea82c395d2a8f1ddb96c054f150531b9b405e3",
+        "observed_at": "2026-10-26T02:05:57.394324+00:00",
+        "head_sha": "458044cceadd25a1366619b3747311ad7d959f94",
         "details": [
-          "source unavailable docs/features/companion-screens/DiPlay.apk"
+          "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
+          "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: docs/features/companion-screens/DiPlay.apk",
+          "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: docs/features/companion-screens/identity/offline-mfi/certificate.p7b",
+          "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: docs/features/companion-screens/identity/offline-mfi/identity.pk8",
+          "commit patch omitted ec5a3defe15f6199aa6b0e3ce2092d02f2a00d88: docs/features/chrome-bezel/assets/crown-device-hub-vs-model.png",
+          "commit patch omitted ec5a3defe15f6199aa6b0e3ce2092d02f2a00d88: docs/features/chrome-bezel/assets/device-hub-watch4-1x.png",
+          "commit patch omitted ec5a3defe15f6199aa6b0e3ce2092d02f2a00d88: docs/features/chrome-bezel/assets/watch-device-hub-vs-baguette.png",
+          "commit patch omitted 2c864abda1a7b391a4cabf9a616d450385c8c542: docs/features/companion-screens/DiPlay.apk",
+          "commit patch omitted 2c864abda1a7b391a4cabf9a616d450385c8c542: docs/features/companion-screens/identity/offline-mfi/certificate.p7b",
+          "commit patch omitted 2c864abda1a7b391a4cabf9a616d450385c8c542: docs/features/companion-screens/identity/offline-mfi/identity.pk8",
+          "commit patch omitted d98c6cc76422486f91dc9ac19e527b9adde8f70a: Sources/Baguette/Resources/HingeControl/HingeControl",
+          "commit patch omitted 0e2af73dd8b1ccbdaccf59bb21444b49247aebfa: Sources/Baguette/Resources/HingeControl/HingeControl",
+          "commit patch omitted 7790384c5e020d94ac288f0d695d48dbcbc5b4e4: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
+          "commit patch omitted 7b0e8aab104321be00f15d2d7bde539798a6316e: Sources/Baguette/Resources/HingeControl/HingeControl",
+          "commit patch omitted 14b39834fef663c2eca868db98422e4eaa8e2bb3: Sources/Baguette/Resources/HingeControl/HingeControl",
+          "commit patch omitted 8a65e97f7e6c8976d95b42a82bf6fcd1af74b01b: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
+          "binary source provenance incomplete; sensitive/binary retrieval filter corrected; content removed"
         ],
-        "summary": "20261021-reference-update-report.md"
+        "summary": "20261026-reference-update-report.md"
       },
       "last_notified_observation": {
-        "head_sha": "70ea82c395d2a8f1ddb96c054f150531b9b405e3",
-        "release_tag": "v0.2.9",
+        "head_sha": "458044cceadd25a1366619b3747311ad7d959f94",
+        "release_tag": "v0.2.10",
         "license_sha256": "0509ebb2d8d399fb183d1973d3f6ad585e209ca4c2c42a90f3c22c0f32c1ab3e",
         "coverage": "upstream_read_incomplete",
         "fault_classes": [
           "binary_source_provenance",
           "incremental_review_incomplete"
         ],
-        "fingerprint": "5d69bff6885bb8872a0441952a41f9eb9aaced862dceb376a4ab2cd8ef85c457",
-        "reported_on": "20261021",
-        "summary": "20261021-reference-update-report.md"
+        "fingerprint": "67636ddae7a4e57bda2cae1007f25786f675ee206b45071822bbeeeb4d4fbf6d",
+        "reported_on": "20261022",
+        "summary": "20261022-reference-update-report.md"
       }
     },
     {
@@ -68,9 +84,9 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:38:56.292796+00:00",
-        "last_successful_check_at": "2026-10-21T02:38:56.292796+00:00",
-        "head_sha": "a30d70a55e05654d974c86803b68d4f675be77e3",
+        "checked_at": "2026-10-26T02:05:57.396268+00:00",
+        "last_successful_check_at": "2026-10-26T02:05:57.396268+00:00",
+        "head_sha": "0193e65c481fc9b64a62427f32fcf143dbc3d2c0",
         "default_branch": "main",
         "release_tag": null,
         "latest_release": {},
@@ -80,21 +96,22 @@
           "spdx": "Apache-2.0",
           "sha256": "9024cdf56dfe7e66523698a9f63d3a0061eb15f43bd5ea8e3833a56017ae37fd",
           "path": "LICENSE",
-          "html_url": "https://github.com/EvanBacon/serve-sim/blob/a30d70a55e05654d974c86803b68d4f675be77e3/LICENSE"
+          "html_url": "https://github.com/EvanBacon/serve-sim/blob/0193e65c481fc9b64a62427f32fcf143dbc3d2c0/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
       "last_notified_observation": {
-        "head_sha": "a30d70a55e05654d974c86803b68d4f675be77e3",
+        "head_sha": "0193e65c481fc9b64a62427f32fcf143dbc3d2c0",
         "release_tag": null,
         "license_sha256": "9024cdf56dfe7e66523698a9f63d3a0061eb15f43bd5ea8e3833a56017ae37fd",
         "coverage": "complete",
-        "fingerprint": "c5e938b6ed23254fdfe3ca6e4b7e118d7688f540f530a6106d6cc167bcc18f87",
-        "reported_on": "2026-10-18",
-        "summary": "20261018-reference-update-report.md"
+        "fault_classes": [],
+        "fingerprint": "d55456c41a80b90e4c715a5a58fcfcf4f2699a9109b940ed38f0b0fc12fc016f",
+        "reported_on": "20261024",
+        "summary": "20261024-reference-update-report.md"
       }
     },
     {
@@ -250,25 +267,25 @@
         "fault_classes": [
           "incremental_review_incomplete"
         ],
-        "observed_at": "2026-10-21T02:38:56.292740+00:00",
-        "head_sha": "42aa9a244f4e20fdd97ef8dd738fd34bb91cf671",
+        "observed_at": "2026-10-26T02:05:57.397947+00:00",
+        "head_sha": "c02295edfd2f442249b869096dda3dc7bfcd308d",
         "details": [
-          "commit file pagination may be incomplete a16d30e30d38e5235eef4c32429c0080900bf57b",
-          "commit patch omitted 42aa9a244f4e20fdd97ef8dd738fd34bb91cf671"
+          "commit patch omitted 42aa9a244f4e20fdd97ef8dd738fd34bb91cf671: CHANGELOG.md",
+          "Changed source semantic review limited to release/signature mechanism; previous omitted patch remains partial"
         ],
-        "summary": "20261021-reference-update-report.md"
+        "summary": "20261026-reference-update-report.md"
       },
       "last_notified_observation": {
-        "head_sha": "42aa9a244f4e20fdd97ef8dd738fd34bb91cf671",
-        "release_tag": "v0.15.0",
+        "head_sha": "c02295edfd2f442249b869096dda3dc7bfcd308d",
+        "release_tag": "v0.16.0",
         "license_sha256": "8c0fe2892344358b49aa07d9a184bd8d0891832baf642f19161f271acc075d32",
         "coverage": "upstream_read_incomplete",
         "fault_classes": [
           "incremental_review_incomplete"
         ],
-        "fingerprint": "1ce82f194a06f2b86b2d05217667059b07ab94dbf6de87756f6397b31f098912",
-        "reported_on": "20261021",
-        "summary": "20261021-reference-update-report.md"
+        "fingerprint": "9574bdf3305f95191e1327c87a9aadc3b942f857eb15ade0bdb1f0222929d239",
+        "reported_on": "20261022",
+        "summary": "20261022-reference-update-report.md"
       }
     },
     {
@@ -286,9 +303,9 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:38:56.294150+00:00",
-        "last_successful_check_at": "2026-10-21T02:38:56.294150+00:00",
-        "head_sha": "6518ba7eab1123d7e1d7797b0e05f51043b42a5b",
+        "checked_at": "2026-10-26T02:05:57.400784+00:00",
+        "last_successful_check_at": "2026-10-26T02:05:57.400784+00:00",
+        "head_sha": "2c68da93700aa1a1c45ce31a7ea9f7cac2174ddc",
         "default_branch": "main",
         "release_tag": "v0.12.2",
         "latest_release": {
@@ -310,13 +327,23 @@
           "spdx": "MIT",
           "sha256": "8b65667572b02a584c03c2977372eeb5fe8de0e228211b6f83033c458cc10b4e",
           "path": "LICENSE",
-          "html_url": "https://github.com/MobAI-App/simslim/blob/6518ba7eab1123d7e1d7797b0e05f51043b42a5b/LICENSE"
+          "html_url": "https://github.com/MobAI-App/simslim/blob/2c68da93700aa1a1c45ce31a7ea9f7cac2174ddc/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
-      "last_error": null
+      "last_error": null,
+      "last_notified_observation": {
+        "head_sha": "2c68da93700aa1a1c45ce31a7ea9f7cac2174ddc",
+        "release_tag": "v0.12.2",
+        "license_sha256": "8b65667572b02a584c03c2977372eeb5fe8de0e228211b6f83033c458cc10b4e",
+        "coverage": "complete",
+        "fault_classes": [],
+        "fingerprint": "6f17fb1a047122f9e34aae91624311110473577fd2f7e4b1dcd9a955a4ce7dc7",
+        "reported_on": "20261026",
+        "summary": "20261026-reference-update-report.md"
+      }
     },
     {
       "repository": "Mastersam07/OpenDeviceHub",
@@ -333,8 +360,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:38:56.294463+00:00",
-        "last_successful_check_at": "2026-10-21T02:38:56.294463+00:00",
+        "checked_at": "2026-10-26T02:05:57.402903+00:00",
+        "last_successful_check_at": "2026-10-26T02:05:57.402903+00:00",
         "head_sha": "e50f07f1f4480cb14d57f192df7bf598ca26e708",
         "default_branch": "dev",
         "release_tag": "v0.2.0",
@@ -359,9 +386,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/Mastersam07/OpenDeviceHub/blob/e50f07f1f4480cb14d57f192df7bf598ca26e708/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
     },
@@ -398,16 +425,30 @@
         "observation": "20261021-observations.json",
         "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
       },
-      "last_error": null,
+      "last_error": {
+        "kind": "upstream_read_incomplete",
+        "fault_classes": [
+          "incremental_review_incomplete"
+        ],
+        "observed_at": "2026-10-26T02:06:02.313867+00:00",
+        "head_sha": "3779e12aa00c08bb34805fef8ffe375838cbe815",
+        "details": [
+          "commit patch omitted c76fa335e5da4b24d96fe9026ef5921a7105507a: Rust/DeviceHubFFI/src/protocol.rs",
+          "Refactor source patch omitted; no runtime validation"
+        ],
+        "summary": "20261026-reference-update-report.md"
+      },
       "last_notified_observation": {
-        "head_sha": "7cb1104775d9a1e63bb3fe2c0be6d8afbad095f9",
+        "head_sha": "3779e12aa00c08bb34805fef8ffe375838cbe815",
         "release_tag": null,
         "license_sha256": "4410cda18cd6959d53106c0ed799b3bc483993f5e44f4457a6d9baa1b1f43dfe",
-        "coverage": "complete",
-        "fault_classes": [],
-        "fingerprint": "38b3e6d2979f48010b6919327e1eee798263bce766e5bdc04f0df7d78e43e27d",
-        "reported_on": "20261021",
-        "summary": "20261021-reference-update-report.md"
+        "coverage": "upstream_read_incomplete",
+        "fault_classes": [
+          "incremental_review_incomplete"
+        ],
+        "fingerprint": "2d0dc4992848337892fc19fb2c9cb71ebcd1bda3c53406f85e54ee871ca087e0",
+        "reported_on": "20261022",
+        "summary": "20261022-reference-update-report.md"
       }
     },
     {
@@ -425,8 +466,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:00.415270+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:00.415270+00:00",
+        "checked_at": "2026-10-26T02:06:02.526888+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:02.526888+00:00",
         "head_sha": "ff1351242e6dbaba4a0b4de40d10350a668f03b8",
         "default_branch": "main",
         "release_tag": "v0.5.1",
@@ -451,9 +492,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/heoblitz/Loupe/blob/ff1351242e6dbaba4a0b4de40d10350a668f03b8/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
     },
@@ -472,9 +513,9 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:00.497445+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:00.497445+00:00",
-        "head_sha": "845a981163aa6d40999d343fee26778df8627843",
+        "checked_at": "2026-10-26T02:06:03.561932+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:03.561932+00:00",
+        "head_sha": "502c5e466da4d82df8f65ffa9a598c01e152b56b",
         "default_branch": "main",
         "release_tag": "v0.40.1",
         "latest_release": {
@@ -496,13 +537,23 @@
           "spdx": "Apache-2.0",
           "sha256": "52327c57e955a3e63f872960938e814acc19eb1b77c501999f5fd1e543b21346",
           "path": "LICENSE",
-          "html_url": "https://github.com/jfarcand/mirroir-mcp/blob/845a981163aa6d40999d343fee26778df8627843/LICENSE"
+          "html_url": "https://github.com/jfarcand/mirroir-mcp/blob/502c5e466da4d82df8f65ffa9a598c01e152b56b/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
-      "last_error": null
+      "last_error": null,
+      "last_notified_observation": {
+        "head_sha": "502c5e466da4d82df8f65ffa9a598c01e152b56b",
+        "release_tag": "v0.40.1",
+        "license_sha256": "52327c57e955a3e63f872960938e814acc19eb1b77c501999f5fd1e543b21346",
+        "coverage": "complete",
+        "fault_classes": [],
+        "fingerprint": "95971093b90b09a05ddaaeec26f0a47e82f41f10393fc53ee20d792fee2abbed",
+        "reported_on": "20261024",
+        "summary": "20261024-reference-update-report.md"
+      }
     },
     {
       "repository": "RockxyApp/Rockxy",
@@ -519,8 +570,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:04.674530+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:04.674530+00:00",
+        "checked_at": "2026-10-26T02:06:03.735421+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:03.735421+00:00",
         "head_sha": "de791b63e7f9b5df49f127524a5c9320e675eb23",
         "default_branch": "main",
         "release_tag": "v0.41.0",
@@ -545,9 +596,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/RockxyApp/Rockxy/blob/de791b63e7f9b5df49f127524a5c9320e675eb23/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
     },
@@ -566,8 +617,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:04.676847+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:04.676847+00:00",
+        "checked_at": "2026-10-26T02:06:03.747676+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:03.747676+00:00",
         "head_sha": "cc059013de8778072b4fea6453b45e964e4202fe",
         "default_branch": "main",
         "release_tag": "2.0.0",
@@ -592,9 +643,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/ProxymanApp/atlantis/blob/cc059013de8778072b4fea6453b45e964e4202fe/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -643,9 +694,9 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:09.621991+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:09.621991+00:00",
-        "head_sha": "d13ff0c707b0681769cf31da0eb42c4f94ceafff",
+        "checked_at": "2026-10-26T02:06:31.149543+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:31.149543+00:00",
+        "head_sha": "2998ac77ebbca59544e88a27f34bfb830db9d924",
         "default_branch": "main",
         "release_tag": "v2.7.1",
         "latest_release": {
@@ -667,21 +718,22 @@
           "spdx": "NOASSERTION",
           "sha256": "fef28fc4165c72b1f0e4ce94654ba44ad7ff7d5d2538b3d01e66e9cc5be3c4f6",
           "path": "LICENSE",
-          "html_url": "https://github.com/getsentry/MobileBuildMCP/blob/d13ff0c707b0681769cf31da0eb42c4f94ceafff/LICENSE"
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/blob/2998ac77ebbca59544e88a27f34bfb830db9d924/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
       "last_notified_observation": {
-        "head_sha": "d13ff0c707b0681769cf31da0eb42c4f94ceafff",
-        "release_tag": null,
+        "head_sha": "2998ac77ebbca59544e88a27f34bfb830db9d924",
+        "release_tag": "v2.7.1",
         "license_sha256": "fef28fc4165c72b1f0e4ce94654ba44ad7ff7d5d2538b3d01e66e9cc5be3c4f6",
-        "coverage": "upstream_read_incomplete_api_403",
-        "fingerprint": "e0019b733f01abbe605a54574ae15f185379320a1c3c165cf5798b73d88c0c8c",
-        "reported_on": "2026-10-18",
-        "summary": "20261018-reference-update-report.md"
+        "coverage": "complete",
+        "fault_classes": [],
+        "fingerprint": "6f91c1de08b4e947d3fa00dc846b391ed0df6faae3c6f7ee3c5c6cde8314fee1",
+        "reported_on": "20261023",
+        "summary": "20261023-reference-update-report.md"
       }
     },
     {
@@ -699,8 +751,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:12.766464+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:12.766464+00:00",
+        "checked_at": "2026-10-26T02:06:30.220699+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:30.220699+00:00",
         "head_sha": "3f58c077ded131cca71d75efb05c5d325f0ed18f",
         "default_branch": "main",
         "release_tag": "v0.8.4",
@@ -725,9 +777,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/awizemann/harness/blob/3f58c077ded131cca71d75efb05c5d325f0ed18f/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -755,8 +807,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:14.292397+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:14.292397+00:00",
+        "checked_at": "2026-10-26T02:06:29.770660+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:29.770660+00:00",
         "head_sha": "d339057bc64aa85002570765e2a20d45e0391bae",
         "default_branch": "main",
         "release_tag": "v0.8.0",
@@ -781,9 +833,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/dongxinsuperman/ai-phone/blob/d339057bc64aa85002570765e2a20d45e0391bae/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -834,12 +886,13 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-21T02:39:16.881111+00:00",
+        "observed_at": "2026-10-26T02:06:29.930417+00:00",
         "head_sha": "eef71926e613c3242643923bb21c92beab439990",
         "details": [
-          "license_full_text_unavailable: gh: Not Found (HTTP 404)"
+          "license: gh: Not Found (HTTP 404)",
+          "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261021-reference-update-report.md"
+        "summary": "20261026-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "eef71926e613c3242643923bb21c92beab439990",
@@ -898,30 +951,27 @@
           "incremental_review_incomplete",
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-21T02:39:18.235416+00:00",
-        "head_sha": "5db4b2cc1aace3f2e8c90d7b7993bb427f80b9d2",
+        "observed_at": "2026-10-26T02:06:41.792729+00:00",
+        "head_sha": "ecbe45690fe4605acf7faa62dac7afcccd3690a9",
         "details": [
-          "license_full_text_unavailable: gh: Not Found (HTTP 404)",
-          "commit patch omitted 1ff32c0d2540ce62c044442b8cd36a53c698f24d",
-          "commit patch omitted 2f71e34072a2859af9aeb629905f1af39be6cbc9",
-          "commit patch omitted 50bc6caffeeedbe1d1504262dd317c0dc932f186",
-          "commit file pagination may be incomplete 370a1be92a4d3f9ea00cfcc728ed3ca954efac0e",
-          "commit patch omitted ba72597eed4e6817dae3a77bac9e13f29c44f1cd"
+          "license: gh: Not Found (HTTP 404)",
+          "prior_large_increment_generated_hosted_and_binary_provenance_not_closed",
+          "4_changed_pyc_paths_not_requested"
         ],
-        "summary": "20261021-reference-update-report.md"
+        "summary": "20261026-reference-update-report.md"
       },
       "last_notified_observation": {
-        "head_sha": "5db4b2cc1aace3f2e8c90d7b7993bb427f80b9d2",
-        "release_tag": "v0.1.179",
+        "head_sha": "ecbe45690fe4605acf7faa62dac7afcccd3690a9",
+        "release_tag": "v0.1.188",
         "license_sha256": null,
         "coverage": "upstream_read_incomplete",
         "fault_classes": [
           "incremental_review_incomplete",
           "license_full_text_unavailable"
         ],
-        "fingerprint": "0eb1485510660db397cbf6a5e0b0038e1b3706f17206fc33b068f7c6155aa67f",
-        "reported_on": "20261021",
-        "summary": "20261021-reference-update-report.md"
+        "fingerprint": "6e904a8df0f6f55fda84865ed0a87806fa2b49f34bb6162cb93ee5462d09d7fb",
+        "reported_on": "20261026",
+        "summary": "20261026-reference-update-report.md"
       },
       "checkpoint_integrity": "Historical SHA/tag retained; license text unverified. Not a current complete success checkpoint."
     },
@@ -962,12 +1012,13 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-21T02:39:20.327519+00:00",
+        "observed_at": "2026-10-26T02:06:36.257700+00:00",
         "head_sha": "b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e",
         "details": [
-          "license_full_text_unavailable: gh: Not Found (HTTP 404)"
+          "license: gh: Not Found (HTTP 404)",
+          "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261021-reference-update-report.md"
+        "summary": "20261026-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e",
@@ -998,8 +1049,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:24.163437+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:24.163437+00:00",
+        "checked_at": "2026-10-26T02:06:34.441230+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:34.441230+00:00",
         "head_sha": "fcb36e395bd4ae20448f2535382baecba9396fd9",
         "default_branch": "main",
         "release_tag": "v0.2.0",
@@ -1024,9 +1075,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/RevylAI/greenlight/blob/fcb36e395bd4ae20448f2535382baecba9396fd9/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -1076,12 +1127,13 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-21T02:39:24.877561+00:00",
+        "observed_at": "2026-10-26T02:06:36.140561+00:00",
         "head_sha": "efc1dae5da089ec08108a39f1ead39324c11b410",
         "details": [
-          "license_full_text_unavailable: gh: Not Found (HTTP 404)"
+          "license: gh: Not Found (HTTP 404)",
+          "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261021-reference-update-report.md"
+        "summary": "20261026-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "efc1dae5da089ec08108a39f1ead39324c11b410",
@@ -1134,12 +1186,13 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-21T02:39:28.196261+00:00",
+        "observed_at": "2026-10-26T02:06:41.443631+00:00",
         "head_sha": "ba1250c72f56a08f3718aefc82dc911c1b3a2f23",
         "details": [
-          "license_full_text_unavailable: gh: Not Found (HTTP 404)"
+          "license: gh: Not Found (HTTP 404)",
+          "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261021-reference-update-report.md"
+        "summary": "20261026-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "ba1250c72f56a08f3718aefc82dc911c1b3a2f23",
@@ -1192,12 +1245,13 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-21T02:39:28.459317+00:00",
+        "observed_at": "2026-10-26T02:06:40.492497+00:00",
         "head_sha": "2758e8a88f4efb3a251b675e0984c091bf8abeb8",
         "details": [
-          "license_full_text_unavailable: gh: Not Found (HTTP 404)"
+          "license: gh: Not Found (HTTP 404)",
+          "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261021-reference-update-report.md"
+        "summary": "20261026-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "2758e8a88f4efb3a251b675e0984c091bf8abeb8",
@@ -1250,12 +1304,13 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-21T02:39:31.786837+00:00",
+        "observed_at": "2026-10-26T02:06:40.408157+00:00",
         "head_sha": "8b4e5cea045dcff5c30aa723b923e514d2cdc07a",
         "details": [
-          "license_full_text_unavailable: gh: Not Found (HTTP 404)"
+          "license: gh: Not Found (HTTP 404)",
+          "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261021-reference-update-report.md"
+        "summary": "20261026-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "8b4e5cea045dcff5c30aa723b923e514d2cdc07a",
@@ -1286,8 +1341,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:32.088361+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:32.088361+00:00",
+        "checked_at": "2026-10-26T02:06:45.904426+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:45.904426+00:00",
         "head_sha": "3d8902e011981b93cb0ebfafba1794eab93b053e",
         "default_branch": "main",
         "release_tag": null,
@@ -1300,9 +1355,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/RevylAI/CogniSim/blob/3d8902e011981b93cb0ebfafba1794eab93b053e/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -1331,8 +1386,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:35.348232+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:35.348232+00:00",
+        "checked_at": "2026-10-26T02:06:42.009362+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:42.009362+00:00",
         "head_sha": "95e30fdcc8151092678387c5262bce790a0d9530",
         "default_branch": "Develop",
         "release_tag": "1.0.7",
@@ -1357,9 +1412,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/hughkli/Lookin/blob/95e30fdcc8151092678387c5262bce790a0d9530/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
     },
@@ -1378,8 +1433,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:36.484062+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:36.484062+00:00",
+        "checked_at": "2026-10-26T02:06:42.011207+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:42.011207+00:00",
         "head_sha": "8974f95b0685f139a6257f82d6b13895db3356cf",
         "default_branch": "main",
         "release_tag": null,
@@ -1392,9 +1447,9 @@
           "path": "LICENSE.txt",
           "html_url": "https://github.com/OSU-NLP-Group/UGround/blob/8974f95b0685f139a6257f82d6b13895db3356cf/LICENSE.txt"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
     },
@@ -1413,8 +1468,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:39.131855+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:39.131855+00:00",
+        "checked_at": "2026-10-26T02:06:42.011101+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:42.011101+00:00",
         "head_sha": "582f3a7ea5d285ee8ed9e2e84048d1ab01453c49",
         "default_branch": "main",
         "release_tag": null,
@@ -1427,9 +1482,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/bytedance/UI-TARS/blob/582f3a7ea5d285ee8ed9e2e84048d1ab01453c49/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
     },
@@ -1448,8 +1503,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:40.210323+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:40.210323+00:00",
+        "checked_at": "2026-10-26T02:06:42.012946+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:42.012946+00:00",
         "head_sha": "2168ae21b1bed1cdb88736d422934825795a9fd7",
         "default_branch": "main",
         "release_tag": null,
@@ -1462,9 +1517,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/OpenBMB/AgentCPM-GUI/blob/2168ae21b1bed1cdb88736d422934825795a9fd7/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
     },
@@ -1483,8 +1538,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:42.742317+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:42.742317+00:00",
+        "checked_at": "2026-10-26T02:06:47.403948+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:47.403948+00:00",
         "head_sha": "11cea575561fb7800b5fb6b6cafa56f7a91de11f",
         "default_branch": "main",
         "release_tag": null,
@@ -1497,9 +1552,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/X-PLUG/MobileAgent/blob/11cea575561fb7800b5fb6b6cafa56f7a91de11f/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
     },
@@ -1518,8 +1573,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:43.833782+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:43.833782+00:00",
+        "checked_at": "2026-10-26T02:06:47.857961+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:47.857961+00:00",
         "head_sha": "0ef37ac4d7aaf37ba7b990e3e3c3ca77e1fb8f93",
         "default_branch": "main",
         "release_tag": null,
@@ -1532,9 +1587,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/njucckevin/SeeClick/blob/0ef37ac4d7aaf37ba7b990e3e3c3ca77e1fb8f93/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
     },
@@ -1553,9 +1608,9 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:47.520544+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:47.520544+00:00",
-        "head_sha": "f8e78c0ab0bb8b5daa681afd0296ed0193a98f1f",
+        "checked_at": "2026-10-26T02:06:48.069092+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:48.069092+00:00",
+        "head_sha": "55ddaf5edc6f6c25673aed343907d5b9dca66f84",
         "default_branch": "main",
         "release_tag": null,
         "latest_release": {},
@@ -1565,22 +1620,22 @@
           "spdx": "Apache-2.0",
           "sha256": "b09fcaf4fbc265223c2479c410beef2b98c5e687c78ecedf3452aa12ffc465f1",
           "path": "LICENSE",
-          "html_url": "https://github.com/google-research/android_world/blob/f8e78c0ab0bb8b5daa681afd0296ed0193a98f1f/LICENSE"
+          "html_url": "https://github.com/google-research/android_world/blob/55ddaf5edc6f6c25673aed343907d5b9dca66f84/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
       "last_notified_observation": {
-        "head_sha": "f8e78c0ab0bb8b5daa681afd0296ed0193a98f1f",
+        "head_sha": "55ddaf5edc6f6c25673aed343907d5b9dca66f84",
         "release_tag": null,
         "license_sha256": "b09fcaf4fbc265223c2479c410beef2b98c5e687c78ecedf3452aa12ffc465f1",
         "coverage": "complete",
         "fault_classes": [],
-        "fingerprint": "31602b43b13f188049f4c2d813381e6ed9dfb357fc9669ed03ca90fb9d96572f",
-        "reported_on": "2026-10-20",
-        "summary": "20261020-reference-update-report.md"
+        "fingerprint": "804bf20710f0a2f1c5b0bfdc4bf35d805968b40a883c17af25fc954c70155107",
+        "reported_on": "20261024",
+        "summary": "20261024-reference-update-report.md"
       }
     },
     {
@@ -1598,9 +1653,9 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:47.843407+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:47.843407+00:00",
-        "head_sha": "028c18b9ce7441c117f161da4dfe8007e46fa61d",
+        "checked_at": "2026-10-26T02:06:50.419419+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:50.419419+00:00",
+        "head_sha": "da0f0f2b7ad32fc6f9b0b66cd3a36424892dd3e4",
         "default_branch": "main",
         "release_tag": "cli-2.11.0",
         "latest_release": {
@@ -1622,21 +1677,22 @@
           "spdx": "Apache-2.0",
           "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
           "path": "LICENSE",
-          "html_url": "https://github.com/mobile-dev-inc/Maestro/blob/028c18b9ce7441c117f161da4dfe8007e46fa61d/LICENSE"
+          "html_url": "https://github.com/mobile-dev-inc/Maestro/blob/da0f0f2b7ad32fc6f9b0b66cd3a36424892dd3e4/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
       "last_notified_observation": {
-        "head_sha": "028c18b9ce7441c117f161da4dfe8007e46fa61d",
+        "head_sha": "da0f0f2b7ad32fc6f9b0b66cd3a36424892dd3e4",
         "release_tag": "cli-2.11.0",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
         "coverage": "complete",
-        "fingerprint": "945a6cce8598fe805c9ea08faff20542b8eae14ec29a2755b50ce74784e5ee11",
-        "reported_on": "2026-10-17",
-        "summary": "20261017-reference-update-report.md"
+        "fault_classes": [],
+        "fingerprint": "81c817ea60fdcbd4d37b369235ce1402a0912843c7c3ba91ab38e224c5767e06",
+        "reported_on": "20261025",
+        "summary": "20261025-reference-update-report.md"
       }
     },
     {
@@ -1687,12 +1743,12 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-21T02:39:51.322709+00:00",
+        "observed_at": "2026-10-26T02:06:53.143745+00:00",
         "head_sha": "24e036604b9e2b28e14c3f55e75a686be1a8bd8a",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)"
         ],
-        "summary": "20261021-reference-update-report.md"
+        "summary": "20261026-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "24e036604b9e2b28e14c3f55e75a686be1a8bd8a",
@@ -1720,23 +1776,23 @@
         "coverage": "historical_reference_snapshot"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:53.533226+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:53.533226+00:00",
-        "head_sha": "c659f8ee34873a832adea7daca9c69172d887e70",
+        "checked_at": "2026-10-26T02:06:53.156313+00:00",
+        "last_successful_check_at": "2026-10-26T02:06:53.156313+00:00",
+        "head_sha": "294f403f2fe94ae86fc086181ebc1c1ec5b5c990",
         "default_branch": "main",
-        "release_tag": "1.0.12",
+        "release_tag": "1.0.13",
         "latest_release": {
-          "id": 416705505,
-          "tag_name": "1.0.12",
+          "id": 422974571,
+          "tag_name": "1.0.13",
           "target_commitish": "main",
-          "name": "Version 1.0.12",
+          "name": "Version 1.0.13",
           "draft": false,
           "prerelease": false,
-          "created_at": "2026-10-18T18:46:05Z",
-          "updated_at": "2026-10-18T20:48:46Z",
-          "published_at": "2026-10-18T20:48:46Z",
-          "html_url": "https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.12",
-          "body": "* Feat: `mobile_get_foreground_app` reports the focused activity on Android and the view controller on iOS ([#512](https://github.com/mobile-next/mobile-mcp/pull/512))\r\n* Fix: Large UI dumps no longer fail with `ENOBUFS` when reading mobilecli's output ([#518](https://github.com/mobile-next/mobile-mcp/pull/518)), thanks to [@whitelancefly](https://github.com/whitelancefly) and [@DanielMcSheehy](https://github.com/DanielMcSheehy)\r\n* Fix: `mobile_swipe_on_screen` rejects a swipe that gives only one of `x` and `y`, instead of silently swiping from the center ([#477](https://github.com/mobile-next/mobile-mcp/pull/477))\r\n* Fix(Android): Typed text starting with `#` or `~` is no longer dropped or expanded by the device shell for legacy adb ([#502](https://github.com/mobile-next/mobile-mcp/pull/502)), thanks to [@sxh313](https://github.com/sxh313)\r\n* Chore: Upgrade mobilewright to 0.0.67 ([#517](https://github.com/mobile-next/mobile-mcp/pull/517))\r\n"
+          "created_at": "2026-10-24T19:22:16Z",
+          "updated_at": "2026-10-24T20:49:49Z",
+          "published_at": "2026-10-24T20:49:49Z",
+          "html_url": "https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.13",
+          "body": "* Fix: `get_more_tools` is only offered when no other tool fits a mobile device, testing or development task, instead of on any task that might benefit from it ([#519](https://github.com/mobile-next/mobile-mcp/pull/519))\r\n* Chore: Upgrade `@modelcontextprotocol/server` to 2.4.0 and `@modelcontextprotocol/express` to 2.0.2 ([#528](https://github.com/mobile-next/mobile-mcp/pull/528))\r\n"
         },
         "license_spdx": "Apache-2.0",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -1744,24 +1800,31 @@
           "spdx": "Apache-2.0",
           "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
           "path": "LICENSE",
-          "html_url": "https://github.com/mobile-next/mobile-mcp/blob/c659f8ee34873a832adea7daca9c69172d887e70/LICENSE"
+          "html_url": "https://github.com/mobile-next/mobile-mcp/blob/294f403f2fe94ae86fc086181ebc1c1ec5b5c990/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
+        "summary": "20261026-reference-update-report.md",
+        "observation": "20261026-observations.json",
+        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
       "last_notified_observation": {
-        "head_sha": "c659f8ee34873a832adea7daca9c69172d887e70",
-        "release_tag": "1.0.12",
+        "head_sha": "294f403f2fe94ae86fc086181ebc1c1ec5b5c990",
+        "release_tag": "1.0.13",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
-        "coverage": "complete_incremental_review",
-        "fingerprint": "5f8ed8c68c312d8dcf9631c9261b54cab0e33afd87fb8a1c35a700bed56741c0",
-        "reported_on": "2026-10-19",
-        "summary": "20261019-reference-update-report.md"
+        "coverage": "complete",
+        "fault_classes": [],
+        "fingerprint": "1c56ba9d77ef6c3014d951de1119a3bd1ab07368f4cf2fc231ac927d5ed63d02",
+        "reported_on": "20261025",
+        "summary": "20261025-reference-update-report.md"
       }
     }
   ],
-  "latest_summary": "20261021-reference-update-report.md",
-  "latest_observation": "20261021-observations.json"
+  "latest_summary": "20261026-reference-update-report.md",
+  "latest_observation": "20261026-observations.json",
+  "latest_transport_event": {
+    "observed_on": "2026-10-23",
+    "first_attempt_failed_repositories": 13,
+    "bounded_secure_retry_recovered": 13,
+    "summary": "20261023-read-failures.json"
+  }
 }
