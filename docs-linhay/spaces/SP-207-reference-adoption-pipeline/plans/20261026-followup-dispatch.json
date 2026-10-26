@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-26",
+  "execution": {
+    "space": "SP-223-host-process-drain-deadline",
+    "branch": "feat/SP-223-host-process-drain-deadline",
+    "worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-223-host-process-drain-deadline",
+    "execution_thread_id": "01a1773d-1703-7152-bfa0-a6e452491809",
+    "execution_model": "gpt-6.1-sol"
+  },
+  "controller": {
+    "controller_space": "SP-224-host-process-drain-integration",
+    "controller_branch": "feat/SP-224-host-process-drain-integration",
+    "controller_worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-host-process-drain-integration",
+    "controller_thread_id": "01a1773d-8556-7a01-a885-a0f5d0c68a6d",
+    "controller_model": "gpt-6.1-sol"
+  },
+  "state": "dispatched",
+  "completed": false,
+  "baseline_main": "8fcd856f2927fa81754bb3e10b80d066c0591f37"
+}

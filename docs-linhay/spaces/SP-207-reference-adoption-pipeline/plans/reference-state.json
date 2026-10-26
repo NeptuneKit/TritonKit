@@ -9,7 +9,7 @@
     "docs-linhay/dev/20261014-reference-project-updates.md",
     "docs-linhay/dev/mobile-mcp-reference.md"
   ],
-  "coverage_note": "22/33 complete, 11 partial on 20261026; partial checkpoints preserved; iCTRL independent SP-193.",
+  "coverage_note": "24/33 complete, 9 partial after 20261026 two-repository text recovery; other31 daily observations reused, remaining partial checkpoints preserved; iCTRL independent SP193.",
   "repositories": [
     {
       "repository": "tddworks/baguette",
@@ -129,17 +129,17 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-20T02:05:56.449230+00:00",
-        "last_successful_check_at": "2026-10-20T02:05:56.449230+00:00",
-        "head_sha": "dc58fe8ea2353cde5cb15944eaee16105ad27b4d",
+        "checked_at": "2026-10-26T08:06:10.028248+00:00",
+        "last_successful_check_at": "2026-10-26T08:06:10.028248+00:00",
+        "head_sha": "c02295edfd2f442249b869096dda3dc7bfcd308d",
         "default_branch": "main",
-        "release_tag": "v0.15.0",
+        "release_tag": "v0.16.0",
         "latest_release": {
-          "url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/412410901",
-          "assets_url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/412410901/assets",
-          "upload_url": "https://uploads.github.com/repos/lycorp-jp/sim-use/releases/412410901/assets{?name,label}",
-          "html_url": "https://github.com/lycorp-jp/sim-use/releases/tag/v0.15.0",
-          "id": 412410901,
+          "url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/419104775",
+          "assets_url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/419104775/assets",
+          "upload_url": "https://uploads.github.com/repos/lycorp-jp/sim-use/releases/419104775/assets{?name,label}",
+          "html_url": "https://github.com/lycorp-jp/sim-use/releases/tag/v0.16.0",
+          "id": 419104775,
           "author": {
             "login": "onevcat",
             "id": 1019875,
@@ -161,22 +161,22 @@
             "user_view_type": "public",
             "site_admin": false
           },
-          "node_id": "RE_kwDOTFpbmc4YlOQV",
-          "tag_name": "v0.15.0",
+          "node_id": "RE_kwDOTFpbmc4Y-wgH",
+          "tag_name": "v0.16.0",
           "target_commitish": "main",
-          "name": "v0.15.0",
+          "name": "v0.16.0",
           "draft": false,
           "immutable": false,
           "prerelease": false,
-          "created_at": "2026-10-14T06:39:42Z",
-          "updated_at": "2026-10-14T06:42:12Z",
-          "published_at": "2026-10-14T06:42:12Z",
+          "created_at": "2026-10-21T03:08:19Z",
+          "updated_at": "2026-10-21T03:11:08Z",
+          "published_at": "2026-10-21T03:11:08Z",
           "assets": [
             {
-              "url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/assets/639501033",
-              "id": 639501033,
-              "node_id": "RA_kwDOTFpbmc4mHgLp",
-              "name": "sim-use-v0.15.0.tar.gz",
+              "url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/assets/661202310",
+              "id": 661202310,
+              "node_id": "RA_kwDOTFpbmc4naSWG",
+              "name": "sim-use-v0.16.0.tar.gz",
               "label": "",
               "uploader": {
                 "login": "onevcat",
@@ -201,18 +201,18 @@
               },
               "content_type": "application/x-gtar",
               "state": "uploaded",
-              "size": 11155747,
-              "digest": "sha256:441ad454d5de88fb8bb1ec4a311baae187601cc271accfa30f0ec47b805f0abc",
-              "download_count": 284,
-              "created_at": "2026-10-14T06:42:10Z",
-              "updated_at": "2026-10-14T06:42:11Z",
-              "browser_download_url": "https://github.com/lycorp-jp/sim-use/releases/download/v0.15.0/sim-use-v0.15.0.tar.gz"
+              "size": 11828674,
+              "digest": "sha256:1cab866e83cde89bcac5bcd77554a5c687c8b85a27ec1c5e8222ef826411e906",
+              "download_count": 499,
+              "created_at": "2026-10-21T03:11:06Z",
+              "updated_at": "2026-10-21T03:11:07Z",
+              "browser_download_url": "https://github.com/lycorp-jp/sim-use/releases/download/v0.16.0/sim-use-v0.16.0.tar.gz"
             },
             {
-              "url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/assets/639501023",
-              "id": 639501023,
-              "node_id": "RA_kwDOTFpbmc4mHgLf",
-              "name": "sim-use-v0.15.0.tar.gz.sha256",
+              "url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/assets/661202302",
+              "id": 661202302,
+              "node_id": "RA_kwDOTFpbmc4naSV-",
+              "name": "sim-use-v0.16.0.tar.gz.sha256",
               "label": "",
               "uploader": {
                 "login": "onevcat",
@@ -238,54 +238,51 @@
               "content_type": "application/octet-stream",
               "state": "uploaded",
               "size": 89,
-              "digest": "sha256:613f91c4c4e5d95e0ac759655ee407841420188b03564cef07c9a1cc218147b4",
-              "download_count": 9,
-              "created_at": "2026-10-14T06:42:09Z",
-              "updated_at": "2026-10-14T06:42:10Z",
-              "browser_download_url": "https://github.com/lycorp-jp/sim-use/releases/download/v0.15.0/sim-use-v0.15.0.tar.gz.sha256"
+              "digest": "sha256:cb1e3e069fbd63f3484c55ea5245123b53c297fa16bec72e7b82cb3b62c67665",
+              "download_count": 26,
+              "created_at": "2026-10-21T03:11:06Z",
+              "updated_at": "2026-10-21T03:11:06Z",
+              "browser_download_url": "https://github.com/lycorp-jp/sim-use/releases/download/v0.16.0/sim-use-v0.16.0.tar.gz.sha256"
             }
           ],
-          "tarball_url": "https://api.github.com/repos/lycorp-jp/sim-use/tarball/v0.15.0",
-          "zipball_url": "https://api.github.com/repos/lycorp-jp/sim-use/zipball/v0.15.0",
-          "body": "### Added\n\n- iOS: Xcode 27 **Resize Mode** (a \"resizable app session\", started from Device Hub or `xcrun devicectl device appResize start`) is now detected, and every affected verb is honest about it instead of pretending to work. During a session the frontmost app renders on a virtual `Resizable` display while the main display shows only the wallpaper; every simulator primitive sim-use drives — HID touch, the framebuffer, the accessibility point hit-test — is bound to the main display. `ui` now carries a `resizable_app_session` advisory (`[i] …` in text, top-level `advisory` in `--json`) naming the scene size and the device size; `screenshot` captures the `Resizable` display (the app, at the scene's size) and says so in the same advisory; `tap`, `long-press`, `swipe`, `touch`, `gesture`, `multi-touch`, `paste --via-menu` (a long-press plus menu taps) and a `batch` containing a touch step **fail** with an explanation and a hint instead of reporting a tap that was never delivered; a `batch` re-checks before every touch step, so a session that begins mid-batch, or inside the cache window, stops the batch at its first touch step with nothing sent. `record-video` and `stream-video` fail the same way, before creating a file or emitting a byte — both capture only the main display, and the hint gives the `xcrun simctl io <udid> recordVideo --display=<uuid>` form that records the `Resizable` one. `type`, Cmd+V `paste` and the key verbs are untouched — keyboard HID does reach the resized app. The check is one `xcrun devicectl device info appResize` per device per 5 s (~0.3 s, cached in the daemon) — re-run early when `ui` or a selector tap sees a scene size that is neither the device's own size nor its landscape swap and that it has not probed before, so a session that just started is caught at once while a display whose accessibility size never matches its framebuffer (iPhone mini) pays no more than anyone else; only a scene at exactly the device's own size, and standalone raw `-x/-y` taps, wait out the window. The check runs on every toolchain whose `devicectl` knows the query (Xcode 26.6 does), since another Xcode or Device Hub may own the session; `SIM_USE_RESIZE_SESSION_CHECK=0` disables it (the per-device daemon reads it at spawn). The bundled skill's preflight now requires sim-use 0.15.0 or newer, because its Resize Mode guidance relies on this detection. Real touch routing to the `Resizable` display is a separate, larger piece of work (upstream idb's multi-display plumbing plus the scene geometry) — see `docs/ai/xxxx-resizable-app-session/README.md`. (#143, #150 — thanks @iXerol!)\n- Linux build, Android only: `Package.swift` now declares an `#if os(Linux)` target graph (`SimUseCore`, `AndroidBackend`, and a new `SimUseLinux` executable) that builds with a Swift 6 toolchain and drives Android devices exactly as the macOS build does — `ui`, `tap`, `long-press`, `type`, `swipe`, `screenshot`, `app-state`, the `android` namespace and the per-device daemon. `long-press` and `app-state` share their Android implementation with the macOS commands, so flags and JSON match. iOS verbs, video capture, the Viewer and `init` stay macOS-only; on Linux, invoking one prints an error naming the verb instead of a misleading parse error. The macOS manifest is unchanged. `scripts/install-linux.sh` builds and installs it; see `docs/linux.md`. (#141, #147 — thanks @iopass4!)\n- Remote adb servers: when `ADB_SERVER_SOCKET` points at another machine (`tcp:<host>:<port>`, e.g. WSL using the Windows host's adb), or `ANDROID_ADB_SERVER_ADDRESS` does when no socket is set, the bridge is reached on that host — where `adb forward` actually listens — instead of `127.0.0.1`. `SIM_USE_BRIDGE_HOST` overrides the host. The cached forward and bridge token are scoped to that connection: switching adb servers restarts the device's daemon and re-creates them, and a session restored from disk is reused only while `adb forward --list` still lists its forward, so a restored token is not sent to another host or to an unrelated listener on the old port. A session that a running daemon already holds is not rechecked before each request, so a forward that another tool changes under it goes unnoticed until a request fails. Each daemon request also carries the client's connection, and a daemon started for another connection refuses the request without running it; this covers a daemon that is too busy with another client's command to answer the restart check in time. This covers every adb serial, including wireless-debugging serials too long for the Android UDID heuristic, and a failed `adb forward --list` is reported instead of opening another forward and leaving the old one registered. Equivalent spellings of the default server (no variables, `ANDROID_ADB_SERVER_PORT=5037`, `tcp:localhost:5037`) count as one connection, so switching between them neither restarts the daemon nor leaves a forward behind; when only the bridge host changes, the old forward is removed before a new one is opened. A forward on a different adb server is left in place (see `docs/linux.md`). `android init` reports the host it reached the bridge on as `http_endpoint` (and `bridgeHost` in `--json`) instead of always printing `localhost`. (#141, #147 — thanks @iopass4!)\n- `sim-use android describe-ui` accepts `ui`, matching the top-level verb. (#141, #147 — thanks @iopass4!)\n- `tap` accepts `--coordinate-space` for explicit `-x/-y` / `--point` coordinates, matching `swipe` and `touch`. `ui` transforms outline (visual-space) coordinates through the same orientation calibration selector taps already ride, so a coordinate read off `describe-ui` lands where it was read on a rotated device; `native` (device-native portrait, the default) is unchanged and stays zero-cost. Aliases and selectors are already resolved in ui space and reject the flag rather than silently ignoring it. Batch `tap` steps ride the batch-wide calibration, and `android tap` accepts the flag for parity and ignores it. The bundled skill's Act table and pitfalls row now name `tap` alongside `swipe`/`touch`. (#142, #144 — thanks @iXerol!)\n- `stream-video --format h264` now works on iOS, not just Android: a native `FBVideoStream` H.264 stream, carried in MPEG-TS, copied straight to stdout with no host-side codec pass. On a booted iPhone 17 Pro this delivers ~24 fps at ~1.3 MB per 6 s, against the screenshot loop's ~4.1 fps at ~11 MB — roughly 5.9x the frame rate for an eighth of the bytes. Preview it with `sim-use stream-video --format h264 --device $UDID | ffplay -f mpegts -probesize 32768 -i -`. It streams at a constant `--fps`, default 30 (the screenshot formats keep their default of 10). MPEG-TS rather than the Android leg's bare Annex B on purpose: Annex B carries no presentation timestamps, so a player paces on a guessed frame rate (ffprobe reads a bare stream as 25 fps regardless of `--fps`) and a 30 fps capture drifts ~5 frames further behind every second, unbounded — minutes of lag within a few minutes of viewing. MPEG-TS carries PTS/DTS, and the player's queue measured empty across a 60 s run. The top-level `stream-video` no longer rejects `h264` for iOS targets, so the only platform-exclusive format left is the experimental iOS-only `bgra`. (#132, #133)\n\n### Changed\n\n- iOS `stream-video --format mjpeg` / `raw` / `ffmpeg` are deprecated and now warn once on stderr, pointing at `--format h264`. On a simulator the screenshot loop has no remaining advantage — `h264` measured 144 frames in 1.33 MB against `mjpeg`'s 24 in 11.2 MB over the same 6 s — and it is available on every booted simulator, so these will be removed in a later release. **Android keeps its equivalents and does not warn**: `adb screenrecord` is unavailable on some devices, and there the `screencap` loop is the only way to stream at all. `bgra` is unaffected (raw unencoded pixels are not something H.264 substitutes for). (#134, #138)\n\n- Android `stream-video --format h264` is now carried in MPEG-TS instead of the bare Annex B `screenrecord` produces, matching the iOS surface — one `ffplay -f mpegts -probesize 32768 -i -` works on both platforms. An elementary stream carries no presentation timestamps, so a player guesses the frame rate (ffprobe reads it as 25 fps regardless of the real rate) and, when the device encodes faster, drains slower than sim-use fills: the lag grew without bound instead of settling, measured at 578 KB of queued video after 20 s and 1376 KB after 30 s of interaction, and observed in practice as a picture minutes behind the device. Frames are re-containered, never re-encoded — a new `MPEGTSMuxer` wraps them with a PTS taken from host arrival time (`screenrecord` is genuinely variable-frame-rate, so wall-clock arrival is the honest timeline). The player's queue now measures empty across a 30 s run. Program tables are emitted up front and re-announced every 100 ms, so a consumer attaching mid-stream can start decoding and a closed pipe is noticed even on a still screen; each picture carries its own clock reference, and a picture resuming after an idle stretch declares a transport discontinuity, since the timeline skipped real elapsed time rather than advancing through it; `--format h264` now reports a frame count in its summary because re-containering parses the stream. End-to-end latency measures ~0.6 s on an emulator, essentially all of it `screenrecord`'s own encode delay (0.58 s measured with sim-use out of the path).\n\n  The stream's timeline advances by the real inter-frame gap but never by more than 0.2 s, which deliberately makes it *not* a reproduction of the wall clock. Capture is variable-frame-rate, so a still screen produces no frames; stamping the next picture with its true arrival time would open a hole in the timeline as long as the pause, and a player has to play through that hole before reaching the new picture — seen as a preview running minutes behind after the screen had been idle. Measured after the fix, time for the picture to catch up once interaction resumes: 0.45 s after 10 s idle, 0.51 s after 30 s, 1.20 s after 60 s; previously this tracked the idle duration. Reproducing the wall clock remains `record-video`'s job, and it keeps real arrival times for exactly that reason. (#135, #136)\n\n- `--format h264`'s documented preview command is `ffplay -f mpegts -probesize 32768 -i -`. The previous `-probesize 32 -fflags nobuffer` never opened an Android stream: 32 bytes cannot identify the codec, and `-fflags nobuffer` starves the probe. `-probesize 32768` bounds the open by bytes, which is what matters on a variable-frame-rate source whose still screen sends only program tables — ffplay's default budget is measured in seconds of *media* and can take arbitrarily long in wall-clock terms to fill. `-analyzeduration 0` is deliberately not part of the command: zero selects ffmpeg's default analysis window rather than disabling it, and the open measured identically with and without it. A still Android screen produces no pictures at all, so the player opens once the device moves; iOS is constant-frame-rate and opens at once. (#136)\n\n- iOS `record-video` and `stream-video` now share one set of H.264 encoder settings, built by `FBVideoStreamConfiguration.h264Capture(fps:quality:scale:transport:)`, so the two verbs cannot drift apart on how the picture is encoded. They still differ downstream in transport and sink — `record-video` into the shared `H264MuxingPipeline` → MP4 (the muxer Android has always used, and which was written for both), `stream-video` into stdout. Recording no longer goes through idb's separate in-process file writer. Output is equivalent: the MP4 stays a regular non-fragmented file that QuickTime, Finder and `GIFTranscoder` all read, `--fps` is still honoured as a constant rate, and the finalize path still survives a 100 ms-grace SIGTERM across repeated runs. Frame timestamps now come from host arrival time rather than the encoder's sample clock, which measures as ~6 ms of inter-frame jitter against the previous ~3 ms — both far inside a 33 ms frame at 30 fps. (#132, #133)\n\n### Fixed\n\n- iOS: with Device Hub open (Xcode 27), `batch --stdin`, `batch --file`, `type --stdin` and `paste --stdin` reported success but delivered nothing. These modes ran the command in the CLI process instead of the per-device daemon, because the daemon cannot read the caller's stdin. With Device Hub open, HID input goes through CoreDevice's `dtuhidd`, which takes about 0.4 s to set up each new connection before it reads any event. The CLI process exited first, and `dtuhidd` dropped the queued taps and keys. The client now reads the input and forwards it to the daemon inline, as `--step` arguments or as the text, so every event comes from the daemon's long-lived connection. For `type --file` and `paste --file`, a relative path now resolves against the caller's directory. Before, the path went to the daemon, which resolved it against its own directory. `SIM_USE_NO_DAEMON=1` still runs in-process and can drop input with Device Hub open. (#154)\n- iOS: during an Xcode 27 resizable app session, `ui` no longer splices SpringBoard elements (home-screen widgets, the Dynamic Island, a 402x874 `Group`) into the app's tree, and no longer reports `Screen orientation could not be confirmed …` — or a confident `(landscape-right)` on an upright device — for a scene whose size merely differs from the device's. Both came from the accessibility point hit-test resolving on the main display, where SpringBoard is frontmost, while the tree fetch follows the app: the collapsed-children recovery walk adopted those hits as children, and the orientation calibrator read them as probe evidence. Under a session the tree is now returned as fetched, in identity calibration, with the `resizable_app_session` advisory explaining why. `ui --point` carries the same advisory, since its answer describes SpringBoard rather than the app. (#143, #150 — thanks @iXerol!)\n- Android: a command that cannot reach the bridge even after reconnecting (wrong `SIM_USE_BRIDGE_HOST`, a firewall, an un-initialised device) now removes the forward it opened before reporting the error. No session had been saved for that forward, so nothing ever removed it and each failing attempt left one more forward on the adb server. (#147)\n- Android: dropping a stale bridge forward now names the device (`adb -s <serial> forward --remove`). With more than one device on the adb server, the old command was rejected with \"more than one device/emulator\" and the error was swallowed, so every reconnect left another forward behind. (#147)\n- iOS `stream-video --format h264` / `bgra`: a consumer that stops reading (ffplay paused, a wedged downstream tool) no longer makes Ctrl-C hang. The native stream went through idb's blocking file writer, which sat in `write(2)` on the encoder thread with `stopStreaming()` waiting behind it, so the command could not end short of SIGKILL. It now writes through the same interruptible stdout sink as Android — one that waits for room and checks cancellation between waits, and leaves the descriptor's flags untouched so the terminal (or stderr under `2>&1`) is never switched into non-blocking mode. A consumer that closes the pipe now ends the stream in an orderly way (stop messages, exit 0) instead of the process dying of SIGPIPE. (#138)\n- The bundled skill preflight now reports a content warning instead of an unqualified pass when `ui` succeeds with a `remote_content_recovery` advisory or with an empty outline on a simulator, emulator or Android device. These reads still exit successfully. The warning points at a new *Missing app controls in the outline* pitfall, which covers the iOS simulator `ApplicationAccessibilityEnabled` launch-time setting. (#139, #145 — thanks @SunsetWan!)\n- The bundled skill preflight now rejects an older `sim-use` CLI before device discovery and prints the Homebrew upgrade command, instead of misdiagnosing newly documented device types as disconnected. (#127 — thanks @BoWuGit!)\n- iOS simulator selector-ambiguity errors now give advice an agent can act on. The `multipleMatches` hint de-duplicated labels, so three matches that share one label were reported as `matches (1)`; it now lists one `'label' [Type] #id` entry per match — the shape the physical-device backend already uses — and the count is the real number of matches, also past the 10-entry display cap. An ambiguous `--id` no longer recommends `--id`, and every ambiguity message now names `--element-type` / `--frame` to narrow the match. The `describe-ui` recovery tip and the missing outline-cache error recommend `--device` instead of the deprecated `--udid`. (#146)\n",
-          "mentions_count": 4
+          "tarball_url": "https://api.github.com/repos/lycorp-jp/sim-use/tarball/v0.16.0",
+          "zipball_url": "https://api.github.com/repos/lycorp-jp/sim-use/zipball/v0.16.0",
+          "body": "Control the iPhone Duo's inner and cover displays and apps in Xcode Resize Mode, with new fold and rotation commands. iOS coordinates now match the `ui` outline by default; scripts that use device-native portrait coordinates must add `--coordinate-space native`. Unicode paste works again with Simulator.app and Device Hub, with safeguards against duplicate or misplaced input.\n\n### Added\n\n- iOS: interact with apps on the iPhone Duo's inner display or in Xcode Resize Mode. Touches, UI queries and screenshots follow the app's display, including after rotation; the bundled skill now requires sim-use 0.16.0. (#157, #158, #164, #165, #170)\n- `sim-use ios fold closed|open|half|<degrees>` folds or unfolds an iPhone Duo simulator. Run it without an argument to read the current posture; `open` and `closed` confirm that the expected display becomes active. (#157, #165)\n- `sim-use ios rotate <orientation>` rotates a simulator and reports whether the app accepted the change. Fold and rotation commands clear old `@N` references so they cannot target the previous layout. (#157, #165)\n- iOS: record and stream the app's display on an unfolded iPhone Duo or in Resize Mode with `record-video` and `stream-video --format h264|bgra`. Capture stays on its starting display and warns if the app moves or resizes; older screenshot-based stream formats still require the main display. (#164, #165)\n- iOS: the `ui` outline groups vertical navigation and tab bars into `Leading` or `Trailing` regions on iPhone Duo apps built with the iOS 27.1 SDK, making controls easier to find. (#163, #169, #171)\n\n### Changed\n\n- **Breaking — iOS coordinates now use the same space as the `ui` outline.** Taps, swipes, touches, multi-touch, gesture geometry, menu-paste targets and batch steps follow this default. Add `--coordinate-space native` if your scripts use device-native portrait points; the flag is not valid with selectors, aliases or directional gesture presets. (#161, #163)\n- iOS: touch commands and menu-based paste now work in Xcode Resize Mode instead of refusing to run. The outline identifies the resized display, and commands return to the main display when the session ends. (#143, #158, #164, #165 — thanks @iXerol!)\n- iOS: `ui`, `ios fold` and `ios rotate` call the iPhone Duo's screens `inner display` and `cover display`, rather than showing system names. Raw display names in JSON are unchanged. (#170)\n- iOS: when screen probes cannot confirm orientation, commands use the rotation reported by the simulator instead of guessing or showing an unnecessary warning. (#158)\n- iOS: `ui --point` now checks the app's current layout before identifying a control. The first query after Resize Mode starts describes the app rather than the home screen, at the cost of an extra UI read. (#158)\n\n### Fixed\n\n- iOS: Unicode `paste` works again with Simulator.app and Device Hub in either keyboard mode, preserving the caret and selection. `--replace` waits for Select All before pasting; shared clipboard sync can still affect the Mac and other devices. (#172)\n- iOS: menu-based paste no longer retries after a potentially delivered action or taps unrelated app controls. Replacement requires a confirmed selection or an empty field, and localized Paste and Select All menus are recognized, including Russian and Portuguese. (#172)\n- iOS: a failed batch no longer automatically repeats completed steps, which could paste text twice. Check the completed steps before retrying a failed batch yourself. (#172)\n- iOS: batch paste steps now use the same clipboard checks and safe replacement as standalone paste, including `--via-menu`. Text starting with `-` is preserved, and a step cannot change the batch's target device. (#172)\n- iOS: typing and keyboard commands keep working after folding or rotating an iPhone Duo with Device Hub closed. Touches on the inner display or in Resize Mode also work without opening Device Hub first. (#165)\n- iOS: pinch and rotate gestures in `ios batch` now perform the requested two-finger gesture and honor its settings, rather than sending a single-finger swipe. (#161, #163)\n- Physical iOS: `ui` and `tap` briefly retry when an app's UI is not ready just after launch, instead of immediately suggesting that the device is locked or the app lacks development permissions. (#110, #156 — thanks @mvanhorn!)\n- iOS: the outline recognizes iPhone Duo side bars beside narrow cards or small content elements, rather than mixing navigation controls into the content. (#171)\n- iOS: content that extends beyond its pane no longer hides an iPhone Duo side bar from the outline or gets grouped into that bar. (#169)\n- iOS: a failed `ui` read now explains that the app's UI could not be read and gives recovery advice, including how to restart the simulator's accessibility service when it stops responding. (#168)\n- iOS: `stream-video --format bgra` produces correctly sized pixel frames on displays such as the iPhone Duo cover, including with `--scale`, so raw-video players can decode them. (#164, #165)\n- Viewer: errors and recovery hints are no longer lost when a command exits immediately. (#165)\n",
+          "reactions": {
+            "url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/419104775/reactions",
+            "total_count": 2,
+            "+1": 0,
+            "-1": 0,
+            "laugh": 0,
+            "hooray": 0,
+            "confused": 0,
+            "heart": 2,
+            "rocket": 0,
+            "eyes": 0
+          },
+          "mentions_count": 2
         },
-        "license_spdx": "NOASSERTION",
+        "license_spdx": "Apache-2.0",
         "license_sha256": "8c0fe2892344358b49aa07d9a184bd8d0891832baf642f19161f271acc075d32",
         "license": {
-          "spdx": "NOASSERTION",
+          "spdx": "Apache-2.0",
           "sha256": "8c0fe2892344358b49aa07d9a184bd8d0891832baf642f19161f271acc075d32",
           "path": "LICENSE",
-          "html_url": "https://github.com/lycorp-jp/sim-use/blob/dc58fe8ea2353cde5cb15944eaee16105ad27b4d/LICENSE"
+          "html_url": "https://github.com/lycorp-jp/sim-use/blob/c02295edfd2f442249b869096dda3dc7bfcd308d/LICENSE"
         },
-        "summary": "20261020-reference-update-report.md",
-        "observation": "20261020-observations.json",
-        "coverage": "Official metadata, all release pages, fixed-HEAD license text/hash and complete changed patches/relevant mechanism source review; not runtime/history-wide audit."
-      },
-      "last_error": {
-        "kind": "upstream_read_incomplete",
-        "fault_classes": [
-          "incremental_review_incomplete"
-        ],
-        "observed_at": "2026-10-26T02:05:57.397947+00:00",
-        "head_sha": "c02295edfd2f442249b869096dda3dc7bfcd308d",
-        "details": [
-          "commit patch omitted 42aa9a244f4e20fdd97ef8dd738fd34bb91cf671: CHANGELOG.md",
-          "Changed source semantic review limited to release/signature mechanism; previous omitted patch remains partial"
-        ],
-        "summary": "20261026-reference-update-report.md"
+        "summary": "20261026-partial-recovery.md",
+        "observation": "20261026-recovery-observations.json",
+        "coverage": "Official metadata/all non-draft release pages including prerelease/fixed full license; all commit files, reconstructed omitted parent-child text, mechanism review against actualmain; runtime not executed."
       },
       "last_notified_observation": {
         "head_sha": "c02295edfd2f442249b869096dda3dc7bfcd308d",
         "release_tag": "v0.16.0",
         "license_sha256": "8c0fe2892344358b49aa07d9a184bd8d0891832baf642f19161f271acc075d32",
-        "coverage": "upstream_read_incomplete",
-        "fault_classes": [
-          "incremental_review_incomplete"
-        ],
-        "fingerprint": "9574bdf3305f95191e1327c87a9aadc3b942f857eb15ade0bdb1f0222929d239",
-        "reported_on": "20261022",
-        "summary": "20261022-reference-update-report.md"
+        "coverage": "complete_text_review",
+        "fault_classes": [],
+        "fingerprint": "b59976f84cf201d0e5a98ad63aab921d0e582fb065450a7d740549ba772c181c",
+        "reported_on": "20261026",
+        "summary": "20261026-partial-recovery.md"
       }
     },
     {
@@ -407,9 +404,9 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-21T02:39:00.082838+00:00",
-        "last_successful_check_at": "2026-10-21T02:39:00.082838+00:00",
-        "head_sha": "7cb1104775d9a1e63bb3fe2c0be6d8afbad095f9",
+        "checked_at": "2026-10-26T08:06:10.028248+00:00",
+        "last_successful_check_at": "2026-10-26T08:06:10.028248+00:00",
+        "head_sha": "3779e12aa00c08bb34805fef8ffe375838cbe815",
         "default_branch": "main",
         "release_tag": null,
         "latest_release": {},
@@ -419,36 +416,21 @@
           "spdx": "MIT",
           "sha256": "4410cda18cd6959d53106c0ed799b3bc483993f5e44f4457a6d9baa1b1f43dfe",
           "path": "LICENSE",
-          "html_url": "https://github.com/JaviSoto/device-hub-ios/blob/7cb1104775d9a1e63bb3fe2c0be6d8afbad095f9/LICENSE"
+          "html_url": "https://github.com/JaviSoto/device-hub-ios/blob/3779e12aa00c08bb34805fef8ffe375838cbe815/LICENSE"
         },
-        "summary": "20261021-reference-update-report.md",
-        "observation": "20261021-observations.json",
-        "coverage": "Official metadata, all non-draft release pages, fixed-HEAD license text/hash and complete changed source review; not runtime/history-wide audit."
-      },
-      "last_error": {
-        "kind": "upstream_read_incomplete",
-        "fault_classes": [
-          "incremental_review_incomplete"
-        ],
-        "observed_at": "2026-10-26T02:06:02.313867+00:00",
-        "head_sha": "3779e12aa00c08bb34805fef8ffe375838cbe815",
-        "details": [
-          "commit patch omitted c76fa335e5da4b24d96fe9026ef5921a7105507a: Rust/DeviceHubFFI/src/protocol.rs",
-          "Refactor source patch omitted; no runtime validation"
-        ],
-        "summary": "20261026-reference-update-report.md"
+        "summary": "20261026-partial-recovery.md",
+        "observation": "20261026-recovery-observations.json",
+        "coverage": "Official metadata/all non-draft release pages including prerelease/fixed full license; all commit files, reconstructed omitted parent-child text, mechanism review against actualmain; runtime not executed."
       },
       "last_notified_observation": {
         "head_sha": "3779e12aa00c08bb34805fef8ffe375838cbe815",
         "release_tag": null,
         "license_sha256": "4410cda18cd6959d53106c0ed799b3bc483993f5e44f4457a6d9baa1b1f43dfe",
-        "coverage": "upstream_read_incomplete",
-        "fault_classes": [
-          "incremental_review_incomplete"
-        ],
-        "fingerprint": "2d0dc4992848337892fc19fb2c9cb71ebcd1bda3c53406f85e54ee871ca087e0",
-        "reported_on": "20261022",
-        "summary": "20261022-reference-update-report.md"
+        "coverage": "complete_text_review",
+        "fault_classes": [],
+        "fingerprint": "a72f38bcf0f2c77aa3bfa10fb4a134bb1b819c0ed7ad9843cf9e7f7751728a3b",
+        "reported_on": "20261026",
+        "summary": "20261026-partial-recovery.md"
       }
     },
     {
@@ -1819,12 +1801,13 @@
       }
     }
   ],
-  "latest_summary": "20261026-reference-update-report.md",
-  "latest_observation": "20261026-observations.json",
+  "latest_summary": "20261026-partial-recovery.md",
+  "latest_observation": "20261026-recovery-observations.json",
   "latest_transport_event": {
     "observed_on": "2026-10-23",
     "first_attempt_failed_repositories": 13,
     "bounded_secure_retry_recovered": 13,
     "summary": "20261023-read-failures.json"
-  }
+  },
+  "latest_full_inventory_observation": "20261026-observations.json"
 }

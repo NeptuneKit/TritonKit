@@ -471,6 +471,33 @@
       "release_tag": null,
       "controller_history_merge_sha": "6271d24e",
       "cleanup_evidence": "docs-linhay/spaces/SP-222-simulator-resource-retry-integration/plans/20261026-main-merge.md"
+    },
+    {
+      "key": "TritonKit:host-process-post-exit-drain-deadline",
+      "requirement_key": "host-process-post-exit-drain-deadline",
+      "repository": "lycorp-jp/sim-use",
+      "source_revision": "c065434be4fddceea59024fc74d79b5a8f8f1f32",
+      "related_source_revision": "923415fbf0fc066edfb7695e4a408189d47351a7",
+      "decision": "adopt",
+      "assessment": "docs-linhay/spaces/SP-223-host-process-drain-deadline/README.md",
+      "space": "SP-223-host-process-drain-deadline",
+      "controller_space": "SP-224-host-process-drain-integration",
+      "state": "implementing",
+      "controller_state": "static_review",
+      "execution_thread_id": "01a1773d-1703-7152-bfa0-a6e452491809",
+      "controller_thread_id": "01a1773d-8556-7a01-a885-a0f5d0c68a6d",
+      "execution_model": "gpt-6.1-sol",
+      "controller_model": "gpt-6.1-sol",
+      "host_id": "local",
+      "branch": "feat/SP-223-host-process-drain-deadline",
+      "controller_branch": "feat/SP-224-host-process-drain-integration",
+      "worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-223-host-process-drain-deadline",
+      "controller_worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-host-process-drain-integration",
+      "last_verified_on": "2026-10-26",
+      "verification_note": "Original-function local probe reproduces inherited stdout/stderr drain delay after parent termination; production tests/fix and artifact path coverage pending. No remote/device execution.",
+      "dispatch_evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261026-followup-dispatch.json",
+      "local_merge_sha": null,
+      "release_tag": null
     }
   ],
   "new_thread_policy": {
@@ -482,5 +509,5 @@
     "reasoning_effort": "unchanged"
   },
   "last_updated_on": "2026-10-26",
-  "last_update_note": "SP-221 merged a0eebff0 and verified on actualmain; SP-222 evidence integrated f3d06523, history-only identical-tree merge6271d24e. Both sibling worktrees and merged branches normally removed after40-file hashed evidence archive. No push/tag/release."
+  "last_update_note": "SP223/224 model-locked real execution/controller threads and sibling worktrees created; implementation/static review active. 14 old adopted records preserved."
 }

@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "date": "20261026",
+  "unresolved": [
+    {
+      "repository": "tddworks/baguette",
+      "errors": [
+        "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
+        "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: docs/features/companion-screens/DiPlay.apk",
+        "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: docs/features/companion-screens/identity/offline-mfi/certificate.p7b",
+        "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: docs/features/companion-screens/identity/offline-mfi/identity.pk8",
+        "commit patch omitted ec5a3defe15f6199aa6b0e3ce2092d02f2a00d88: docs/features/chrome-bezel/assets/crown-device-hub-vs-model.png",
+        "commit patch omitted ec5a3defe15f6199aa6b0e3ce2092d02f2a00d88: docs/features/chrome-bezel/assets/device-hub-watch4-1x.png",
+        "commit patch omitted ec5a3defe15f6199aa6b0e3ce2092d02f2a00d88: docs/features/chrome-bezel/assets/watch-device-hub-vs-baguette.png",
+        "commit patch omitted 2c864abda1a7b391a4cabf9a616d450385c8c542: docs/features/companion-screens/DiPlay.apk",
+        "commit patch omitted 2c864abda1a7b391a4cabf9a616d450385c8c542: docs/features/companion-screens/identity/offline-mfi/certificate.p7b",
+        "commit patch omitted 2c864abda1a7b391a4cabf9a616d450385c8c542: docs/features/companion-screens/identity/offline-mfi/identity.pk8",
+        "commit patch omitted d98c6cc76422486f91dc9ac19e527b9adde8f70a: Sources/Baguette/Resources/HingeControl/HingeControl",
+        "commit patch omitted 0e2af73dd8b1ccbdaccf59bb21444b49247aebfa: Sources/Baguette/Resources/HingeControl/HingeControl",
+        "commit patch omitted 7790384c5e020d94ac288f0d695d48dbcbc5b4e4: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
+        "commit patch omitted 7b0e8aab104321be00f15d2d7bde539798a6316e: Sources/Baguette/Resources/HingeControl/HingeControl",
+        "commit patch omitted 14b39834fef663c2eca868db98422e4eaa8e2bb3: Sources/Baguette/Resources/HingeControl/HingeControl",
+        "commit patch omitted 8a65e97f7e6c8976d95b42a82bf6fcd1af74b01b: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
+        "binary source provenance incomplete; sensitive/binary retrieval filter corrected; content removed"
+      ],
+      "fault_classes": [
+        "binary_source_provenance",
+        "incremental_review_incomplete"
+      ],
+      "evidence": [
+        ".build/reference-monitor/20261026/sim-runtime/tddworks__baguette/LICENSE.full",
+        ".build/reference-monitor/20261026/sim-runtime/tddworks__baguette/result.json",
+        ".build/reference-monitor/20261026/sim-runtime/tddworks__baguette/releases-1.json",
+        ".build/reference-monitor/20261026/sim-runtime/tddworks__baguette/head.json",
+        ".build/reference-monitor/20261026/sim-runtime/tddworks__baguette/repository.json",
+        ".build/reference-monitor/20261026/sim-runtime/tddworks__baguette/license.json",
+        ".build/reference-monitor/20261026/sim-runtime/main-coverage.json",
+        ".build/reference-monitor/20261026/sim-runtime/main-resource-comparison.json"
+      ]
+    },
+    {
+      "repository": "karminski/eyes-on-my-phone",
+      "errors": [
+        "license: gh: Not Found (HTTP 404)",
+        "previous_partial_source_evidence_retained_not_recovered"
+      ],
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "evidence": [
+        ".build/reference-monitor/20261026/agents-revyl/raw/karminski_eyes-on-my-phone",
+        "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261025-observations.json"
+      ]
+    },
+    {
+      "repository": "RevylAI/revyl-cli",
+      "errors": [
+        "license: gh: Not Found (HTTP 404)",
+        "prior_large_increment_generated_hosted_and_binary_provenance_not_closed",
+        "4_changed_pyc_paths_not_requested"
+      ],
+      "fault_classes": [
+        "incremental_review_incomplete",
+        "license_full_text_unavailable"
+      ],
+      "evidence": [
+        ".build/reference-monitor/20261026/agents-revyl/raw/RevylAI_revyl-cli",
+        "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261025-observations.json",
+        ".build/reference-monitor/20261026/agents-revyl/source-request-allowlist.json",
+        ".build/reference-monitor/20261026/agents-revyl/raw/RevylAI_revyl-cli/compare-yesterday.json",
+        ".build/reference-monitor/20261026/agents-revyl/raw/RevylAI_revyl-cli/sources"
+      ]
+    },
+    {
+      "repository": "RevylAI/app-explorer",
+      "errors": [
+        "license: gh: Not Found (HTTP 404)",
+        "previous_partial_source_evidence_retained_not_recovered"
+      ],
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "evidence": [
+        ".build/reference-monitor/20261026/agents-revyl/raw/RevylAI_app-explorer",
+        "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261025-observations.json"
+      ]
+    },
+    {
+      "repository": "RevylAI/mobile-devtools",
+      "errors": [
+        "license: gh: Not Found (HTTP 404)",
+        "previous_partial_source_evidence_retained_not_recovered"
+      ],
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "evidence": [
+        ".build/reference-monitor/20261026/agents-revyl/raw/RevylAI_mobile-devtools",
+        "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261025-observations.json"
+      ]
+    },
+    {
+      "repository": "RevylAI/mobile-pr-reviewer",
+      "errors": [
+        "license: gh: Not Found (HTTP 404)",
+        "previous_partial_source_evidence_retained_not_recovered"
+      ],
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "evidence": [
+        ".build/reference-monitor/20261026/agents-revyl/raw/RevylAI_mobile-pr-reviewer",
+        "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261025-observations.json"
+      ]
+    },
+    {
+      "repository": "RevylAI/visual-regression",
+      "errors": [
+        "license: gh: Not Found (HTTP 404)",
+        "previous_partial_source_evidence_retained_not_recovered"
+      ],
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "evidence": [
+        ".build/reference-monitor/20261026/agents-revyl/raw/RevylAI_visual-regression",
+        "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261025-observations.json"
+      ]
+    },
+    {
+      "repository": "RevylAI/figma-design-checker",
+      "errors": [
+        "license: gh: Not Found (HTTP 404)",
+        "previous_partial_source_evidence_retained_not_recovered"
+      ],
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "evidence": [
+        ".build/reference-monitor/20261026/agents-revyl/raw/RevylAI_figma-design-checker",
+        "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261025-observations.json"
+      ]
+    },
+    {
+      "repository": "linhay/SKProcessRunner",
+      "errors": [
+        "license_full_text_unavailable: gh: Not Found (HTTP 404)"
+      ],
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "evidence": ".build/reference-monitor/20261026/research/linhay__SKProcessRunner"
+    }
+  ],
+  "new_transport_failure": false,
+  "note": "旧许可/源码缺口不因本轮身份查询成功恢复；无当前网络错误时不重复昨日TLS故障通知。",
+  "recovered_repositories": [
+    "lycorp-jp/sim-use",
+    "JaviSoto/device-hub-ios"
+  ],
+  "scope": "followup; original daily failure snapshot preserved"
+}

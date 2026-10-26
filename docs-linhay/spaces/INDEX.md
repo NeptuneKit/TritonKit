@@ -4,7 +4,7 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-10-24（有限任务归档、真实验收与范围收口）
-> 覆盖范围：222/222 个已存在 space
+> 覆盖范围：224/224 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -19,8 +19,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 213/213 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 213/213 | 每条记录链接到现有 space README |
+| 编号登记 | 224/224 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 224/224 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -248,7 +248,7 @@
 
 | `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30已发布 | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
 
-| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月26日22完整/11 partial，新SP-221/SP-222已通过主控与合后门禁，合本地main a0eebff0；旧13条采用已合main |
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月26日补查后24完整/9 partial；SP-221/222已合main，新SP-223/224开发审查中 |
 
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 
@@ -278,3 +278,6 @@
 | `SP-220-simulator-resizable-integration` | [`SP-220-simulator-resizable-integration`](./SP-220-simulator-resizable-integration/README.md) | v0.2.32已发布 | SP-219 主控验证与本地合并；候选 `51cd20dd` → `f9399e5e`；worktree已清理 |
 | `SP-221-simulator-resource-read-retry` | [`SP-221-simulator-resource-read-retry`](./SP-221-simulator-resource-read-retry/README.md) | 已合本地main | a0eebff0；focused37、完整CLI及合后root/local/docs通过；真实恢复未测；worktree/branch已清理 |
 | `SP-222-simulator-resource-retry-integration` | [`SP-222-simulator-resource-retry-integration`](./SP-222-simulator-resource-retry-integration/README.md) | 已验收合本地main | 独立候选4249bd26、报告95a1dc8f、真实合并a0eebff0；worktree/branch已清理、未push/tag/release |
+
+| `SP-223-host-process-drain-deadline` | [`SP-223-host-process-drain-deadline`](./SP-223-host-process-drain-deadline/README.md) | 评估可纳入／待分派 | 原函数继承FD超预算已复现，正式三runner回归待实现 |
+| `SP-224-host-process-drain-integration` | [`SP-224-host-process-drain-integration`](./SP-224-host-process-drain-integration/README.md) | 待分派主控 | 复核SP-223实际候选/红绿/完整门禁，再合本地main |
