@@ -1,0 +1,38 @@
+==> Validate CI scope classifier
+ci validate mode verification passed
+==> Docs structure
+agent experience index and routes ok
+............................
+----------------------------------------------------------------------
+Ran 28 tests in 0.075s
+
+OK
+docs-linhay structure ok (224 spaces registered)
+==> Git diff whitespace check
+==> Validate version stamping scripts
+version stamping verification passed
+==> Validate skill package script
+.............
+----------------------------------------------------------------------
+Ran 13 tests in 0.750s
+
+OK
+skill package verification passed
+==> Validate release automation contract
+test_archive_symlink_rejected (__main__.PackagingTests.test_archive_symlink_rejected) ... ok
+test_duplicate_archive_member_rejected (__main__.PackagingTests.test_duplicate_archive_member_rejected) ... ok
+test_extra_private_file_rejected (__main__.PackagingTests.test_extra_private_file_rejected) ... ok
+test_missing_packaged_file_rejected (__main__.PackagingTests.test_missing_packaged_file_rejected) ... ok
+test_missing_required_file_rejected (__main__.PackagingTests.test_missing_required_file_rejected) ... ok
+test_portable_archive_is_complete (__main__.PackagingTests.test_portable_archive_is_complete) ... ok
+test_symlink_rejected (__main__.PackagingTests.test_symlink_rejected) ... ok
+test_tampered_file_rejected (__main__.PackagingTests.test_tampered_file_rejected) ... ok
+test_version_mismatch_rejected (__main__.PackagingTests.test_version_mismatch_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.039s
+
+OK
+{"ok": true, "sourceVersion": "0.1.0-dev", "fileCount": 11}
+release automation verification passed
+verification passed: --ci-docs

@@ -1,0 +1,140 @@
+Build complete! (88.35秒)
+􀟈  Test run started.
+􀄵  Testing Library Version: 2084
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Suite HostProcessDrainTests started.
+􀟈  Test "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "memory", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "memory", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "stdout", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "stdout", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "combined", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "combined", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􁁛  Test "all production runners bound inherited stdout and stderr without killing their holder" with 6 test cases passed after 1.603 seconds.
+􀟈  Test "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "memory" to "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "combined" to "all runners retain large output and final bytes" started.
+􁁛  Test "all runners retain large output and final bytes" with 3 test cases passed after 0.040 seconds.
+􀟈  Test "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "memory" to "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "combined" to "all runners preserve nonzero exit" started.
+􁁛  Test "all runners preserve nonzero exit" with 3 test cases passed after 0.008 seconds.
+􀟈  Test "short-lived inherited writers reach real EOF and retain delayed tail" started.
+􀟈  Test case passing 1 argument runner → "memory" to "short-lived inherited writers reach real EOF and retain delayed tail" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "short-lived inherited writers reach real EOF and retain delayed tail" started.
+􀟈  Test case passing 1 argument runner → "combined" to "short-lived inherited writers reach real EOF and retain delayed tail" started.
+􁁛  Test "short-lived inherited writers reach real EOF and retain delayed tail" with 3 test cases passed after 0.195 seconds.
+􀟈  Test "bounded captures drain every byte while reporting truncation" started.
+􁁛  Test "bounded captures drain every byte while reporting truncation" passed after 0.008 seconds.
+􀟈  Test "execution timeout stays a failure for every runner" started.
+􀟈  Test case passing 1 argument runner → "memory" to "execution timeout stays a failure for every runner" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "execution timeout stays a failure for every runner" started.
+􀟈  Test case passing 1 argument runner → "combined" to "execution timeout stays a failure for every runner" started.
+􁁛  Test "execution timeout stays a failure for every runner" with 3 test cases passed after 6.252 seconds.
+􀟈  Test "intentional combined capture interruption retains its explicit status" started.
+􁁛  Test "intentional combined capture interruption retains its explicit status" passed after 0.053 seconds.
+􀟈  Test "read setup and sink write failures cannot become EOF success" started.
+􁁛  Test "read setup and sink write failures cannot become EOF success" passed after 0.001 seconds.
+􀟈  Test "output failure uses one JSON error envelope" started.
+􀟈  Test case passing 1 argument kind → "incomplete" to "output failure uses one JSON error envelope" started.
+􀟈  Test case passing 1 argument kind → "read" to "output failure uses one JSON error envelope" started.
+􀟈  Test case passing 1 argument kind → "unknown" to "output failure uses one JSON error envelope" started.
+􁁛  Test "output failure uses one JSON error envelope" with 3 test cases passed after 0.008 seconds.
+􀟈  Test "incomplete capture preserves exit 7 and both stream facts" started.
+􀟈  Test case passing 1 argument runner → "memory" to "incomplete capture preserves exit 7 and both stream facts" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "incomplete capture preserves exit 7 and both stream facts" started.
+􀟈  Test case passing 1 argument runner → "combined" to "incomplete capture preserves exit 7 and both stream facts" started.
+􁁛  Test "incomplete capture preserves exit 7 and both stream facts" with 3 test cases passed after 0.800 seconds.
+􀟈  Test "continuously readable descendants cannot extend the post-exit budget" started.
+􀟈  Test case passing 1 argument runner → "memory" to "continuously readable descendants cannot extend the post-exit budget" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "continuously readable descendants cannot extend the post-exit budget" started.
+􀟈  Test case passing 1 argument runner → "combined" to "continuously readable descendants cannot extend the post-exit budget" started.
+􁁛  Test "continuously readable descendants cannot extend the post-exit budget" with 3 test cases passed after 0.767 seconds.
+􀟈  Test "all runners preserve raw non-UTF8 tail bytes" started.
+􀟈  Test case passing 1 argument runner → "memory" to "all runners preserve raw non-UTF8 tail bytes" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "all runners preserve raw non-UTF8 tail bytes" started.
+􀟈  Test case passing 1 argument runner → "combined" to "all runners preserve raw non-UTF8 tail bytes" started.
+􁁛  Test "all runners preserve raw non-UTF8 tail bytes" with 3 test cases passed after 0.007 seconds.
+􁁛  Suite HostProcessDrainTests passed after 9.748 seconds.
+􀟈  Suite SimulatorAdvancedControlsTests started.
+􀟈  Test "sim type help exposes its failure-only host input boundary" started.
+􁁛  Test "sim type help exposes its failure-only host input boundary" passed after 0.002 seconds.
+􀟈  Test "sim type schema points to clipboard staging and verification without claiming a paste" started.
+􁁛  Test "sim type schema points to clipboard staging and verification without claiming a paste" passed after 0.009 seconds.
+􀟈  Test "sim tap parser exposes an explicit host Simulator HID recovery command" started.
+􁁛  Test "sim tap parser exposes an explicit host Simulator HID recovery command" passed after 0.001 seconds.
+􀟈  Test "sim swipe parser exposes host Simulator HID coordinates and duration" started.
+􁁛  Test "sim swipe parser exposes host Simulator HID coordinates and duration" passed after 0.001 seconds.
+􀟈  Test "host command forwards stdin into child process" started.
+􁁛  Test "host command forwards stdin into child process" passed after 0.001 seconds.
+􀟈  Test "host artifact capture writes full stdout without truncating the artifact" started.
+/var/folders/rk/yj_4tlx92sz7t5k73kxppyl80000gn/T/triton-large-artifact-D6AC97DE-D967-4073-A100-D600849E93C3.txt
+􁁛  Test "host artifact capture writes full stdout without truncating the artifact" passed after 0.002 seconds.
+􀟈  Test "host artifact capture refuses to overwrite an existing output file" started.
+􁁛  Test "host artifact capture refuses to overwrite an existing output file" passed after 0.001 seconds.
+􀟈  Test "host artifact capture refuses symlink output paths" started.
+􁁛  Test "host artifact capture refuses symlink output paths" passed after 0.001 seconds.
+􀟈  Test "xctrace output path rejects accidental overwrite but allows explicit append" started.
+􁁛  Test "xctrace output path rejects accidental overwrite but allows explicit append" passed after 0.001 seconds.
+􀟈  Test "host artifact capture removes partial output when command fails" started.
+􁁛  Test "host artifact capture removes partial output when command fails" passed after 0.005 seconds.
+􀟈  Test "bounded combined artifact capture merges stdout and stderr" started.
+􁁛  Test "bounded combined artifact capture merges stdout and stderr" passed after 0.060 seconds.
+􀟈  Test "bounded combined artifact capture truncates by max bytes while draining" started.
+􁁛  Test "bounded combined artifact capture truncates by max bytes while draining" passed after 0.002 seconds.
+􀟈  Test "combined artifact capture removes output on early command failure" started.
+􁁛  Test "combined artifact capture removes output on early command failure" passed after 0.002 seconds.
+􀟈  Test "process console source command redacts launch environment" started.
+􁁛  Test "process console source command redacts launch environment" passed after 0.001 seconds.
+􀟈  Test "process console output encodes metadata without inline console body" started.
+􁁛  Test "process console output encodes metadata without inline console body" passed after 0.001 seconds.
+􀟈  Test "host command drains large stdout while keeping only a bounded sample" started.
+􁁛  Test "host command drains large stdout while keeping only a bounded sample" passed after 0.002 seconds.
+􀟈  Test "host command treats HDC fail marker on stdout as failure even with zero exit" started.
+􁁛  Test "host command treats HDC fail marker on stdout as failure even with zero exit" passed after 0.385 seconds.
+􀟈  Test "host command treats Harmony aa start error code as failure even with zero exit" started.
+􁁛  Test "host command treats Harmony aa start error code as failure even with zero exit" passed after 0.265 seconds.
+􀟈  Test "host command treats Harmony bm dump semantic errors as failure even with zero exit" started.
+􁁛  Test "host command treats Harmony bm dump semantic errors as failure even with zero exit" passed after 0.266 seconds.
+􀟈  Test "host command timeout terminates process and leaves later commands usable" started.
+􁁛  Test "host command timeout terminates process and leaves later commands usable" passed after 2.230 seconds.
+􀟈  Test "simctl diagnose uses current output and data-container flags" started.
+􁁛  Test "simctl diagnose uses current output and data-container flags" passed after 0.001 seconds.
+􀟈  Test "sim create builds schema-backed simctl create command" started.
+􁁛  Test "sim create builds schema-backed simctl create command" passed after 0.001 seconds.
+􀟈  Test "host command timeout override is reusable for install and screenshot" started.
+􁁛  Test "host command timeout override is reusable for install and screenshot" passed after 0.001 seconds.
+􀟈  Test "shutdown simulator wait-ready error exposes boot next action" started.
+􁁛  Test "shutdown simulator wait-ready error exposes boot next action" passed after 0.001 seconds.
+􀟈  Test "sim schema exposes advanced simulator maintenance commands" started.
+􁁛  Test "sim schema exposes advanced simulator maintenance commands" passed after 0.019 seconds.
+􀟈  Test "sim swipe schema requires endpoints and exposes host verification boundary" started.
+􁁛  Test "sim swipe schema requires endpoints and exposes host verification boundary" passed after 0.014 seconds.
+􀟈  Test "sim tap schema requires only x/y and declares inferred point-space failure codes" started.
+􁁛  Test "sim tap schema requires only x/y and declares inferred point-space failure codes" passed after 0.011 seconds.
+􀟈  Test "sim proxy alias reuses the host device proxy output contract" started.
+􁁛  Test "sim proxy alias reuses the host device proxy output contract" passed after 0.001 seconds.
+􀟈  Test "iOS proxy override command plan sets HTTP and HTTPS then disables SOCKS" started.
+􁁛  Test "iOS proxy override command plan sets HTTP and HTTPS then disables SOCKS" passed after 0.001 seconds.
+􀟈  Test "iOS proxy restore command plan restores original HTTP HTTPS and SOCKS state" started.
+􁁛  Test "iOS proxy restore command plan restores original HTTP HTTPS and SOCKS state" passed after 0.001 seconds.
+􀟈  Test "iOS proxy snapshot parser captures networksetup original service state" started.
+􁁛  Test "iOS proxy snapshot parser captures networksetup original service state" passed after 0.001 seconds.
+􀟈  Test "sim screenshot metadata parser preserves CoreSimulator display details" started.
+􁁛  Test "sim screenshot metadata parser preserves CoreSimulator display details" passed after 0.001 seconds.
+􀟈  Test "host screenshot artifact metadata exposes bytes dimensions hash and capture time" started.
+􁁛  Test "host screenshot artifact metadata exposes bytes dimensions hash and capture time" passed after 0.001 seconds.
+􀟈  Test "sim screenshot schema exposes raw framebuffer orientation metadata" started.
+􁁛  Test "sim screenshot schema exposes raw framebuffer orientation metadata" passed after 0.009 seconds.
+􀟈  Test "sim ax schema exposes host-side AX contract and stable failures" started.
+􁁛  Test "sim ax schema exposes host-side AX contract and stable failures" passed after 0.009 seconds.
+􀟈  Test "host simulator AX errors expose machine-readable recovery" started.
+􁁛  Test "host simulator AX errors expose machine-readable recovery" passed after 0.001 seconds.
+􀟈  Test "schema exposes xctrace and coverage artifact commands" started.
+􁁛  Test "schema exposes xctrace and coverage artifact commands" passed after 0.032 seconds.
+􀟈  Test "sim privacy accepts camera service" started.
+􁁛  Test "sim privacy accepts camera service" passed after 0.001 seconds.
+􁁛  Suite SimulatorAdvancedControlsTests passed after 3.342 seconds.
+􁁛  Test run with 50 tests in 2 suites passed after 13.091 seconds.
