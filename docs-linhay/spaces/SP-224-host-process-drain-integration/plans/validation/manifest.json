@@ -1,0 +1,34 @@
+{
+  "candidate": "25205ea2f0c1e549c0c6777b2e045e3a7f7088e0",
+  "main_docs_base": "f86e9cb1434a8c658a9b0575803b3dcec7ba71a6",
+  "joint_head": "80922842f64f8a24ce49902d3ecac54c18a1a63e",
+  "joint_tree": "1dc074cc8273fb9279820c1bb503ddcc127a18f9",
+  "system": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "swift": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.0.0",
+  "focused_log_raw_sha256": "ec6ef132368dd241974db766f307fcb0e3add394ac33500e2b307deee151cdad",
+  "focused_log_committed_sha256": "9f7d01565aa30cf6ab7d5052e8f2d3e0650024f6587732834260f281b6488b1b",
+  "focused_raw_archive": ".build/sp224-validation/focused-raw.log",
+  "source_sha256": {
+    "Sources/TritonKitCLI/CLIHostProcessRuntime.swift": "0ff47ac683b1c5d8f7f17f155671bfdd897ad5619f7a53d072eca9185925cf0a",
+    "Sources/TritonKitCLI/CLIHostProcessDrain.swift": "670d71fd2ead492c2c1494dec45a605b2e9fcc0deb1e5994e8dff26e887d9285",
+    "CLI/Tests/TritonKitCLITests/HostProcessDrainTests.swift": "b6f198b62dddf281ea3631578cfacfdd41ffb46b77c3898cd6521229ccd1fd5c"
+  },
+  "cli_binary_sha256": "90885e967f223de6eebbef514658135bc7f9458a8c131ab941a76ec62112c19f",
+  "cli_build_symlink_removed": true,
+  "evidence_sha256": {
+    "check-cli-envelope.py": "9bbe7f5533509fd2ce58190d46590d437e48ad637bfa1660381c741f8853d4d7",
+    "check-docs.json": "a674ee836e5ad95bc866333b52431eeea670569b859988907f603ff82db3154b",
+    "check-docs.log": "4b0d0d44e872bf7e46b091ba93843ef9d33d179bcdc1e1dd27c3db298abb9b37",
+    "ci-docs.json": "f61f4c90ab192099a665087d5fcc62d4b8d190acbe7a11e362519e0c10ca3df8",
+    "ci-docs.log": "2fc4a9d634fa9378493ac7fb8d434a9ab1a6e3331732930fc0e9ad97930b8884",
+    "cli-envelope-cases.json": "c4c4fd9c312c3b20e4bbb16b9c52b5edbed06ec158dc8377b87351b5ae3766dd",
+    "cli-envelope.json": "2a26caa75ceb2aade88ac3f88db5551032f144ddf14fc7c16c995b2f0904c4ae",
+    "cli-envelope.log": "ca2a442668ec5c52c17c40c1d271c44f4138892e82510077fe3cea8b695475e9",
+    "focused.json": "b3a9d90a7a5c65cbab28ced27411d3770490cded8630dcc0d7bc30e891733c37",
+    "focused.log": "9f7d01565aa30cf6ab7d5052e8f2d3e0650024f6587732834260f281b6488b1b",
+    "full-cli.json": "ff4eef18e77aae01b4c1c1657441cf123d9be638a5bd2b877bb445508f83d334",
+    "full-cli.log": "1b08f0e1b8a4e5a24ac3ccefb98ccbaa5857c11297ae05dff02bd8d1f8a35f4a",
+    "owned-process-groups.json": "5986db8e090ce9943be8e7abf07544b652dc450537c1538ed71cd273e7fe896d",
+    "run-watchdog.py": "aaffd73e17ebf1615373f6df5b388c25cd42ae61a2966d25250f4dd437ad4d45"
+  }
+}

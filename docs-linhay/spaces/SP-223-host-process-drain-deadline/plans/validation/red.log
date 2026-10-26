@@ -1,0 +1,93 @@
+Build complete! (166.81秒)
+􀟈  Test run started.
+􀄵  Testing Library Version: 2084
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Suite HostProcessDrainTests started.
+􀟈  Test "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "memory", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "memory", stream → "stdout" at HostProcessDrainTests.swift:41:9: Expectation failed: Date().timeIntervalSince(start) < 1.5
+􀄵  Date().timeIntervalSince(start) < 1.5 → false
+􀄵    Date().timeIntervalSince(start) → 3.007194995880127
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "memory", stream → "stdout" at HostProcessDrainTests.swift:42:9: Expectation failed: failure != nil
+􀄵  An inherited open descriptor must not be reported as complete success
+􀄵  failure != nil → false
+􀄵    failure → nil
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "memory", stream → "stdout" at HostProcessDrainTests.swift:44:9: Expectation failed: kill(pid, 0) == 0
+􀄵  Runner must not kill the descendant holding the pipe
+􀄵  kill(pid, 0) == 0 → false
+􀄵    kill(pid, 0) → -1
+􀟈  Test case passing 2 arguments runner → "memory", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "memory", stream → "stderr" at HostProcessDrainTests.swift:41:9: Expectation failed: Date().timeIntervalSince(start) < 1.5
+􀄵  Date().timeIntervalSince(start) < 1.5 → false
+􀄵    Date().timeIntervalSince(start) → 3.0199838876724243
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "memory", stream → "stderr" at HostProcessDrainTests.swift:42:9: Expectation failed: failure != nil
+􀄵  An inherited open descriptor must not be reported as complete success
+􀄵  failure != nil → false
+􀄵    failure → nil
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "memory", stream → "stderr" at HostProcessDrainTests.swift:44:9: Expectation failed: kill(pid, 0) == 0
+􀄵  Runner must not kill the descendant holding the pipe
+􀄵  kill(pid, 0) == 0 → false
+􀄵    kill(pid, 0) → -1
+􀟈  Test case passing 2 arguments runner → "stdout", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "stdout", stream → "stdout" at HostProcessDrainTests.swift:41:9: Expectation failed: Date().timeIntervalSince(start) < 1.5
+􀄵  Date().timeIntervalSince(start) < 1.5 → false
+􀄵    Date().timeIntervalSince(start) → 3.012010931968689
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "stdout", stream → "stdout" at HostProcessDrainTests.swift:42:9: Expectation failed: failure != nil
+􀄵  An inherited open descriptor must not be reported as complete success
+􀄵  failure != nil → false
+􀄵    failure → nil
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "stdout", stream → "stdout" at HostProcessDrainTests.swift:44:9: Expectation failed: kill(pid, 0) == 0
+􀄵  Runner must not kill the descendant holding the pipe
+􀄵  kill(pid, 0) == 0 → false
+􀄵    kill(pid, 0) → -1
+􀟈  Test case passing 2 arguments runner → "stdout", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "stdout", stream → "stderr" at HostProcessDrainTests.swift:41:9: Expectation failed: Date().timeIntervalSince(start) < 1.5
+􀄵  Date().timeIntervalSince(start) < 1.5 → false
+􀄵    Date().timeIntervalSince(start) → 3.0202860832214355
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "stdout", stream → "stderr" at HostProcessDrainTests.swift:42:9: Expectation failed: failure != nil
+􀄵  An inherited open descriptor must not be reported as complete success
+􀄵  failure != nil → false
+􀄵    failure → nil
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "stdout", stream → "stderr" at HostProcessDrainTests.swift:44:9: Expectation failed: kill(pid, 0) == 0
+􀄵  Runner must not kill the descendant holding the pipe
+􀄵  kill(pid, 0) == 0 → false
+􀄵    kill(pid, 0) → -1
+􀟈  Test case passing 2 arguments runner → "combined", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "combined", stream → "stdout" at HostProcessDrainTests.swift:41:9: Expectation failed: Date().timeIntervalSince(start) < 1.5
+􀄵  Date().timeIntervalSince(start) < 1.5 → false
+􀄵    Date().timeIntervalSince(start) → 3.0176960229873657
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "combined", stream → "stdout" at HostProcessDrainTests.swift:42:9: Expectation failed: failure != nil
+􀄵  An inherited open descriptor must not be reported as complete success
+􀄵  failure != nil → false
+􀄵    failure → nil
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "combined", stream → "stdout" at HostProcessDrainTests.swift:44:9: Expectation failed: kill(pid, 0) == 0
+􀄵  Runner must not kill the descendant holding the pipe
+􀄵  kill(pid, 0) == 0 → false
+􀄵    kill(pid, 0) → -1
+􀟈  Test case passing 2 arguments runner → "combined", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "combined", stream → "stderr" at HostProcessDrainTests.swift:41:9: Expectation failed: Date().timeIntervalSince(start) < 1.5
+􀄵  Date().timeIntervalSince(start) < 1.5 → false
+􀄵    Date().timeIntervalSince(start) → 3.018188953399658
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "combined", stream → "stderr" at HostProcessDrainTests.swift:42:9: Expectation failed: failure != nil
+􀄵  An inherited open descriptor must not be reported as complete success
+􀄵  failure != nil → false
+􀄵    failure → nil
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" recorded an issue with 2 arguments runner → "combined", stream → "stderr" at HostProcessDrainTests.swift:44:9: Expectation failed: kill(pid, 0) == 0
+􀄵  Runner must not kill the descendant holding the pipe
+􀄵  kill(pid, 0) == 0 → false
+􀄵    kill(pid, 0) → -1
+􀢄  Test "all production runners bound inherited stdout and stderr without killing their holder" with 6 test cases failed after 18.110 seconds with 18 issues.
+􀟈  Test "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "memory" to "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "combined" to "all runners retain large output and final bytes" started.
+􁁛  Test "all runners retain large output and final bytes" with 3 test cases passed after 0.056 seconds.
+􀟈  Test "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "memory" to "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "combined" to "all runners preserve nonzero exit" started.
+􁁛  Test "all runners preserve nonzero exit" with 3 test cases passed after 0.008 seconds.
+􀢄  Suite HostProcessDrainTests failed after 18.176 seconds with 18 issues.
+􀢄  Test run with 3 tests in 1 suite failed after 18.176 seconds with 18 issues.
+Note: Some test targets reported failures:
+  - TritonKitCLITests (Swift Testing)

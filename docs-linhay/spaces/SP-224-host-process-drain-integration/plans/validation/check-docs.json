@@ -1,0 +1,15 @@
+{
+  "command": [
+    "bash",
+    "docs-linhay/scripts/check-docs.sh"
+  ],
+  "cwd": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-host-process-drain-integration",
+  "pid": 75053,
+  "exit": 0,
+  "watchdog_seconds": 120.0,
+  "timed_out": false,
+  "wall_seconds": 1.635,
+  "candidate_head": "80922842f64f8a24ce49902d3ecac54c18a1a63e",
+  "triton_cli_path": null,
+  "log_sha256": "4b0d0d44e872bf7e46b091ba93843ef9d33d179bcdc1e1dd27c3db298abb9b37"
+}

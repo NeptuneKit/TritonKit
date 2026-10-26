@@ -1,0 +1,61 @@
+Build complete! (31.80秒)
+􀟈  Test run started.
+􀄵  Testing Library Version: 2084
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Suite HostProcessDrainTests started.
+􀟈  Test "incomplete capture preserves exit 7 and both stream facts" started.
+􀟈  Test case passing 1 argument runner → "memory" to "incomplete capture preserves exit 7 and both stream facts" started.
+􀢄  Test "incomplete capture preserves exit 7 and both stream facts" recorded an issue with 1 argument runner → "memory" at HostProcessDrainTests.swift:190:31: Expectation failed: caught as? HostProcessOutputFailure
+􀄵  caught as? HostProcessOutputFailure → <not evaluated>
+􀄵    caught → Host output did not reach EOF within the 0.25s post-exit drain budget (observed 4 bytes on this stream). Command was not replayed.
+􀄵      some → Host output did not reach EOF within the 0.25s post-exit drain budget (observed 4 bytes on this stream). Command was not replayed.
+􀄵        incomplete → (observedBytes: 4)
+􀄵          observedBytes → 4
+􀄵    HostProcessOutputFailure → Optional<Error>
+􀟈  Test case passing 1 argument runner → "stdout" to "incomplete capture preserves exit 7 and both stream facts" started.
+􀢄  Test "incomplete capture preserves exit 7 and both stream facts" recorded an issue with 1 argument runner → "stdout" at HostProcessDrainTests.swift:190:31: Expectation failed: caught as? HostProcessOutputFailure
+􀄵  caught as? HostProcessOutputFailure → <not evaluated>
+􀄵    caught → Host output did not reach EOF within the 0.25s post-exit drain budget (observed 4 bytes on this stream). Command was not replayed.
+􀄵      some → Host output did not reach EOF within the 0.25s post-exit drain budget (observed 4 bytes on this stream). Command was not replayed.
+􀄵        incomplete → (observedBytes: 4)
+􀄵          observedBytes → 4
+􀄵    HostProcessOutputFailure → Optional<Error>
+􀟈  Test case passing 1 argument runner → "combined" to "incomplete capture preserves exit 7 and both stream facts" started.
+􀢄  Test "incomplete capture preserves exit 7 and both stream facts" recorded an issue with 1 argument runner → "combined" at HostProcessDrainTests.swift:190:31: Expectation failed: caught as? HostProcessOutputFailure
+􀄵  caught as? HostProcessOutputFailure → <not evaluated>
+􀄵    caught → Host output did not reach EOF within the 0.25s post-exit drain budget (observed 7 bytes on this stream). Command was not replayed.
+􀄵      some → Host output did not reach EOF within the 0.25s post-exit drain budget (observed 7 bytes on this stream). Command was not replayed.
+􀄵        incomplete → (observedBytes: 7)
+􀄵          observedBytes → 7
+􀄵    HostProcessOutputFailure → Optional<Error>
+􀢄  Test "incomplete capture preserves exit 7 and both stream facts" with 3 test cases failed after 0.795 seconds with 3 issues.
+􀟈  Test "continuously readable descendants cannot extend the post-exit budget" started.
+􀟈  Test case passing 1 argument runner → "memory" to "continuously readable descendants cannot extend the post-exit budget" started.
+􀢄  Test "continuously readable descendants cannot extend the post-exit budget" recorded an issue with 1 argument runner → "memory" at HostProcessDrainTests.swift:218:31: Expectation failed: caught as? HostProcessOutputFailure
+􀄵  caught as? HostProcessOutputFailure → <not evaluated>
+􀄵    caught → Host output did not reach EOF within the 0.25s post-exit drain budget (observed 1756384 bytes on this stream). Command was not replayed.
+􀄵      some → Host output did not reach EOF within the 0.25s post-exit drain budget (observed 1756384 bytes on this stream). Command was not replayed.
+􀄵        incomplete → (observedBytes: 1756384)
+􀄵          observedBytes → 1756384
+􀄵    HostProcessOutputFailure → Optional<Error>
+􀟈  Test case passing 1 argument runner → "stdout" to "continuously readable descendants cannot extend the post-exit budget" started.
+􀢄  Test "continuously readable descendants cannot extend the post-exit budget" recorded an issue with 1 argument runner → "stdout" at HostProcessDrainTests.swift:218:31: Expectation failed: caught as? HostProcessOutputFailure
+􀄵  caught as? HostProcessOutputFailure → <not evaluated>
+􀄵    caught → Host output did not reach EOF within the 0.25s post-exit drain budget (observed 2013488 bytes on this stream). Command was not replayed.
+􀄵      some → Host output did not reach EOF within the 0.25s post-exit drain budget (observed 2013488 bytes on this stream). Command was not replayed.
+􀄵        incomplete → (observedBytes: 2013488)
+􀄵          observedBytes → 2013488
+􀄵    HostProcessOutputFailure → Optional<Error>
+􀟈  Test case passing 1 argument runner → "combined" to "continuously readable descendants cannot extend the post-exit budget" started.
+􀢄  Test "continuously readable descendants cannot extend the post-exit budget" recorded an issue with 1 argument runner → "combined" at HostProcessDrainTests.swift:218:31: Expectation failed: caught as? HostProcessOutputFailure
+􀄵  caught as? HostProcessOutputFailure → <not evaluated>
+􀄵    caught → Host output did not reach EOF within the 0.25s post-exit drain budget (observed 2011648 bytes on this stream). Command was not replayed.
+􀄵      some → Host output did not reach EOF within the 0.25s post-exit drain budget (observed 2011648 bytes on this stream). Command was not replayed.
+􀄵        incomplete → (observedBytes: 2011648)
+􀄵          observedBytes → 2011648
+􀄵    HostProcessOutputFailure → Optional<Error>
+􀢄  Test "continuously readable descendants cannot extend the post-exit budget" with 3 test cases failed after 0.764 seconds with 3 issues.
+􀢄  Suite HostProcessDrainTests failed after 1.560 seconds with 6 issues.
+􀢄  Test run with 2 tests in 1 suite failed after 1.560 seconds with 6 issues.
+Note: Some test targets reported failures:
+  - TritonKitCLITests (Swift Testing)

@@ -1,0 +1,25 @@
+Build complete! (53.73秒)
+􀟈  Test run started.
+􀄵  Testing Library Version: 2084
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Suite HostProcessDrainTests started.
+􀟈  Test "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "memory", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "memory", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "stdout", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "stdout", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "combined", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "combined", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􁁛  Test "all production runners bound inherited stdout and stderr without killing their holder" with 6 test cases passed after 1.629 seconds.
+􀟈  Test "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "memory" to "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "combined" to "all runners retain large output and final bytes" started.
+􁁛  Test "all runners retain large output and final bytes" with 3 test cases passed after 0.068 seconds.
+􀟈  Test "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "memory" to "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "combined" to "all runners preserve nonzero exit" started.
+􁁛  Test "all runners preserve nonzero exit" with 3 test cases passed after 0.008 seconds.
+􁁛  Suite HostProcessDrainTests passed after 1.708 seconds.
+􁁛  Test run with 3 tests in 1 suite passed after 1.708 seconds.
