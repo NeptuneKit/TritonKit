@@ -1,0 +1,110 @@
+{
+  "time": "2026-10-26T16:00:55+0800",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "command_timeout_seconds": 0.25,
+  "descendant_seconds": 2.5,
+  "supervisor_timeout_seconds": 8,
+  "results": [
+    {
+      "variant": "control",
+      "case": "normal",
+      "probe_pid": 35434,
+      "elapsed_seconds": 0.2884604160208255,
+      "supervisor_timeout": false,
+      "returncode": 0,
+      "stdout": "launched-pid-35437 0.0014749765396118164\npipe-eof 0.0072519779205322266\npipe-eof 0.0072519779205322266\ntermination-handler-exit-0 0.0072820186614990234\nhandler-before-timeout 0.007292985916137695\ndone 0.007296919822692871\n",
+      "stderr": "",
+      "fixture_pids": "shell=35437 parent=35434\n"
+    },
+    {
+      "variant": "control",
+      "case": "stdout",
+      "probe_pid": 35438,
+      "elapsed_seconds": 2.5250162499723956,
+      "supervisor_timeout": false,
+      "returncode": 0,
+      "stdout": "launched-pid-35439 0.0021889209747314453\npipe-eof 0.009840011596679688\ntermination-handler-exit-0 0.00984799861907959\nhandler-before-timeout 0.009866952896118164\npipe-eof 2.51741099357605\ndone 2.5178639888763428\n",
+      "stderr": "",
+      "fixture_pids": "shell=35439 parent=35438\nchild=35440\n"
+    },
+    {
+      "variant": "control",
+      "case": "stderr",
+      "probe_pid": 35660,
+      "elapsed_seconds": 2.522593458998017,
+      "supervisor_timeout": false,
+      "returncode": 0,
+      "stdout": "launched-pid-35661 0.0014930963516235352\npipe-eof 0.009472012519836426\ntermination-handler-exit-0 0.009605050086975098\nhandler-before-timeout 0.009633064270019531\npipe-eof 2.5134871006011963\ndone 2.51356303691864\n",
+      "stderr": "",
+      "fixture_pids": "shell=35661 parent=35660\nchild=35662\n"
+    },
+    {
+      "variant": "control",
+      "case": "nonzero",
+      "probe_pid": 35791,
+      "elapsed_seconds": 2.548710042028688,
+      "supervisor_timeout": false,
+      "returncode": 0,
+      "stdout": "launched-pid-35792 0.0007770061492919922\npipe-eof 0.01080310344696045\ntermination-handler-exit-7 0.010830998420715332\nhandler-before-timeout 0.010886073112487793\npipe-eof 2.518854022026062\ndone 2.5189210176467896\n",
+      "stderr": "",
+      "fixture_pids": "shell=35792 parent=35791\nchild=35793\n"
+    },
+    {
+      "variant": "exact",
+      "case": "normal",
+      "probe_pid": 35803,
+      "elapsed_seconds": 0.0331334579968825,
+      "supervisor_timeout": false,
+      "returncode": 0,
+      "stdout": "start 2.9802322387695312e-06\nreturned-exit-0 0.022024035453796387\n",
+      "stderr": "",
+      "fixture_pids": "shell=35804 parent=35803\n"
+    },
+    {
+      "variant": "exact",
+      "case": "stdout",
+      "probe_pid": 35807,
+      "elapsed_seconds": 2.5465030000777915,
+      "supervisor_timeout": false,
+      "returncode": 0,
+      "stdout": "start 4.0531158447265625e-06\nreturned-exit-0 2.5200010538101196\n",
+      "stderr": "",
+      "fixture_pids": "shell=35808 parent=35807\nchild=35809\n"
+    },
+    {
+      "variant": "exact",
+      "case": "stderr",
+      "probe_pid": 35828,
+      "elapsed_seconds": 2.5192281249910593,
+      "supervisor_timeout": false,
+      "returncode": 0,
+      "stdout": "start 2.0265579223632812e-06\nreturned-exit-0 2.511968970298767\n",
+      "stderr": "",
+      "fixture_pids": "shell=35829 parent=35828\nchild=35830\n"
+    },
+    {
+      "variant": "exact",
+      "case": "nonzero",
+      "probe_pid": 35839,
+      "elapsed_seconds": 2.5201879589585587,
+      "supervisor_timeout": false,
+      "returncode": 0,
+      "stdout": "start 2.0265579223632812e-06\nthrew-nonZeroExit(command: probe.TKHostCommand(executable: \"/bin/sh\", arguments: [\"/Users/linhey/Desktop/linhay-open-sources/TritonKit/.build/reference-monitor/20261026-followup/host-drain/fixture.sh\", \"nonzero\", \"/Users/linhey/Desktop/linhay-open-sources/TritonKit/.build/reference-monitor/20261026-followup/host-drain/exact-nonzero.pids\"], defaultTimeoutSeconds: 0.25, workingDirectory: nil, environment: [:], stdinData: nil), result: probe.HostProcessResult(stdoutData: 11 bytes, stderrData: 11 bytes, exitCode: 7, sourceCommand: \"/bin/sh\", stdoutTruncated: false, stderrTruncated: false, stdoutLogPath: nil, stderrLogPath: nil, stdoutBytes: 11, stderrBytes: 11)) 2.514732003211975\n",
+      "stderr": "",
+      "fixture_pids": "shell=35840 parent=35839\nchild=35841\n"
+    }
+  ],
+  "conclusion": "reproduced extracted main runHostCommand post-exit inherited pipe FD wait beyond command timeout",
+  "limitations": [
+    "not shipped CLI binary integration",
+    "artifact functions static only",
+    "finite descendant lifetime; no permanent hang attempted"
+  ],
+  "source": {
+    "main": "8fcd856f2927fa81754bb3e10b80d066c0591f37",
+    "blob": "c687c082306c3bf6da63148f6276306740691d99",
+    "sha256": "f1b7d4edf4e61f2f9ff7c783a88531e71c25019e4b613b952b951da40d5b9c3c",
+    "extraction": "HostPipeDrainResult, hostCommandIOQueue, drainPipe, hostCommandHasSemanticFailure, configureHostProcessExecutable, runHostCommand copied verbatim; wire models/error/source formatter stubbed; separate instrumented Foundation control"
+  },
+  "probe_sha256": "561d4ac977ab8d78ef960be0ce922c442596f3257b6f3d2c23912903ca381eef"
+}

@@ -1,0 +1,6 @@
+==> Validate CI scope classifier
+ci validate mode verification passed
+==> Docs structure
+space index must contain exactly one link for SP-223-host-process-drain-deadline
+
+exit=1

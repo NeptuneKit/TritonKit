@@ -1,0 +1,6 @@
+{
+  "main": "8fcd856f2927fa81754bb3e10b80d066c0591f37",
+  "blob": "c687c082306c3bf6da63148f6276306740691d99",
+  "sha256": "f1b7d4edf4e61f2f9ff7c783a88531e71c25019e4b613b952b951da40d5b9c3c",
+  "extraction": "HostPipeDrainResult, hostCommandIOQueue, drainPipe, hostCommandHasSemanticFailure, configureHostProcessExecutable, runHostCommand copied verbatim; wire models/error/source formatter stubbed; separate instrumented Foundation control"
+}

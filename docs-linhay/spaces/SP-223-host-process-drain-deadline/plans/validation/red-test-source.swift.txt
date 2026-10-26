@@ -1,0 +1,70 @@
+import Darwin
+import Foundation
+import Testing
+import TritonKitShared
+@testable import TritonKitCLI
+
+@Suite(.serialized)
+struct HostProcessDrainTests {
+    private func invoke(_ runner: String, _ command: TKHostCommand, output: String) throws -> (Data, Int) {
+        switch runner {
+        case "stdout":
+            let result = try runHostCommandWritingStdoutArtifact(command, outputPath: output)
+            return (try Data(contentsOf: URL(fileURLWithPath: output)), result.stdoutBytes)
+        case "combined":
+            let result = try runHostCommandWritingCombinedOutputArtifact(command, outputPath: output, interruptAfter: 5, maximumBytes: 2_000_000)
+            return (try Data(contentsOf: URL(fileURLWithPath: output)), result.observedBytes)
+        default:
+            let result = try runHostCommand(command, maximumOutputBytes: nil)
+            return (result.stdoutData, result.stdoutBytes)
+        }
+    }
+
+    @Test("all production runners bound inherited stdout and stderr without killing their holder", arguments: ["memory", "stdout", "combined"], ["stdout", "stderr"])
+    func inheritedDescriptor(_ runner: String, _ stream: String) throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("triton-drain-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let pidPath = directory.appendingPathComponent("holder.pid").path
+        defer {
+            if let text = try? String(contentsOfFile: pidPath), let pid = Int32(text.trimmingCharacters(in: .whitespacesAndNewlines)), pid > 1 {
+                _ = kill(pid, SIGKILL) // Only the exact fixture PID recorded by our shell.
+            }
+            try? FileManager.default.removeItem(at: directory)
+        }
+        let redirect = stream == "stdout" ? "2>/dev/null" : ">/dev/null"
+        let script = "(/bin/sleep 3) \(redirect) & echo $! > \(shellEscaped(pidPath)); printf tail; printf err >&2; exit 0"
+        let command = TKHostCommand(executable: "/bin/sh", arguments: ["-c", script], defaultTimeoutSeconds: 1)
+        let start = Date()
+        var failure: Error?
+        do { _ = try invoke(runner, command, output: directory.appendingPathComponent("output").path) }
+        catch { failure = error }
+        #expect(Date().timeIntervalSince(start) < 1.5)
+        #expect(failure != nil, "An inherited open descriptor must not be reported as complete success")
+        let pid = try #require(Int32(try String(contentsOfFile: pidPath).trimmingCharacters(in: .whitespacesAndNewlines)))
+        #expect(kill(pid, 0) == 0, "Runner must not kill the descendant holding the pipe")
+    }
+
+    @Test("all runners retain large output and final bytes", arguments: ["memory", "stdout", "combined"])
+    func completeOutput(_ runner: String) throws {
+        let output = FileManager.default.temporaryDirectory.appendingPathComponent("triton-drain-output-\(UUID().uuidString)").path
+        defer { try? FileManager.default.removeItem(atPath: output) }
+        let command = TKHostCommand(executable: "/usr/bin/perl", arguments: ["-e", "print 'x' x 1200000; print 'TAIL';"], defaultTimeoutSeconds: 5)
+        let (data, bytes) = try invoke(runner, command, output: output)
+        #expect(bytes == 1_200_004)
+        #expect(data == Data((String(repeating: "x", count: 1_200_000) + "TAIL").utf8))
+    }
+
+    @Test("all runners preserve nonzero exit", arguments: ["memory", "stdout", "combined"])
+    func nonzeroExit(_ runner: String) throws {
+        let output = FileManager.default.temporaryDirectory.appendingPathComponent("triton-drain-nonzero-\(UUID().uuidString)").path
+        defer { try? FileManager.default.removeItem(atPath: output) }
+        let command = TKHostCommand(executable: "/bin/sh", arguments: ["-c", "printf tail; printf error >&2; exit 7"], defaultTimeoutSeconds: 1)
+        do {
+            _ = try invoke(runner, command, output: output)
+            Issue.record("nonzero exit succeeded")
+        } catch HostCommandRunError.nonZeroExit(_, let result) {
+            #expect(result.exitCode == 7)
+            #expect(result.stdoutBytes + result.stderrBytes == 9)
+        }
+    }
+}

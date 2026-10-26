@@ -1,0 +1,65 @@
+Build complete! (36.39秒)
+􀟈  Test run started.
+􀄵  Testing Library Version: 2084
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Suite HostProcessDrainTests started.
+􀟈  Test "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "memory", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "memory", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "stdout", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "stdout", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "combined", stream → "stdout" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􀟈  Test case passing 2 arguments runner → "combined", stream → "stderr" to "all production runners bound inherited stdout and stderr without killing their holder" started.
+􁁛  Test "all production runners bound inherited stdout and stderr without killing their holder" with 6 test cases passed after 1.611 seconds.
+􀟈  Test "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "memory" to "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "all runners retain large output and final bytes" started.
+􀟈  Test case passing 1 argument runner → "combined" to "all runners retain large output and final bytes" started.
+􁁛  Test "all runners retain large output and final bytes" with 3 test cases passed after 0.063 seconds.
+􀟈  Test "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "memory" to "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "all runners preserve nonzero exit" started.
+􀟈  Test case passing 1 argument runner → "combined" to "all runners preserve nonzero exit" started.
+􁁛  Test "all runners preserve nonzero exit" with 3 test cases passed after 0.008 seconds.
+􀟈  Test "short-lived inherited writers reach real EOF and retain delayed tail" started.
+􀟈  Test case passing 1 argument runner → "memory" to "short-lived inherited writers reach real EOF and retain delayed tail" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "short-lived inherited writers reach real EOF and retain delayed tail" started.
+􀟈  Test case passing 1 argument runner → "combined" to "short-lived inherited writers reach real EOF and retain delayed tail" started.
+􁁛  Test "short-lived inherited writers reach real EOF and retain delayed tail" with 3 test cases passed after 0.192 seconds.
+􀟈  Test "bounded captures drain every byte while reporting truncation" started.
+􁁛  Test "bounded captures drain every byte while reporting truncation" passed after 0.009 seconds.
+􀟈  Test "execution timeout stays a failure for every runner" started.
+􀟈  Test case passing 1 argument runner → "memory" to "execution timeout stays a failure for every runner" started.
+􀟈  Test case passing 1 argument runner → "stdout" to "execution timeout stays a failure for every runner" started.
+􀟈  Test case passing 1 argument runner → "combined" to "execution timeout stays a failure for every runner" started.
+􁁛  Test "execution timeout stays a failure for every runner" with 3 test cases passed after 6.262 seconds.
+􀟈  Test "intentional combined capture interruption retains its explicit status" started.
+􁁛  Test "intentional combined capture interruption retains its explicit status" passed after 0.061 seconds.
+􀟈  Test "read setup and sink write failures cannot become EOF success" started.
+*** Terminating app due to uncaught exception 'NSFileHandleOperationException', reason: '*** -[NSConcreteFileHandle fileDescriptor]: Resource temporarily unavailable'
+*** First throw call stack:
+(
+	0   CoreFoundation                      0x000000019c2da8c0 __exceptionPreprocess + 176
+	1   libobjc.A.dylib                     0x000000019bd3860c objc_exception_throw + 88
+	2   Foundation                          0x000000019da74e34 -[NSConcreteFileHandle readDataUpToLength:error:] + 0
+	3   Foundation                          0x000000019d9be1e8 __51-[NSBackgroundActivityScheduler scheduleWithBlock:]_block_invoke + 0
+	4   TritonKitCLITests                   0x0000000115f2bac8 $s12TritonKitCLI13drainHostPipe_8deadline7consumeySo6NSPipeC_AA0eF13DrainDeadlineCy10Foundation4DataVKXEtKF + 192
+	5   TritonKitCLITests                   0x00000001136b3638 $s17TritonKitCLITests21HostProcessDrainTestsV19readAndSinkFailuresyyKF + 912
+	6   TritonKitCLITests                   0x00000001136b3078 $s17TritonKitCLITests21HostProcessDrainTestsV04$s17ab10CLITests21defG53V19readAndSinkFailures4TestfMp_16aae9fd515ecdd565fMu_33_2B522CC4CCACD1C062162ADFCAE826B3LLyyYaYbKFZ0habidefgjklmnO14_7__loca	7   TritonKitCLITests                   0x00000001136b2d25 $s17TritonKitCLITests21HostProcessDrainTestsV04$s17ab10CLITests21defG53V19readAndSinkFailures4TestfMp_16aae9fd515ecdd565fMu_33_2B522CC4CCACD1C062162ADFCAE826B3LLyyYaYbKFZTQ1_ + 1
+	8   TritonKitCLITests                   0x00000001136b4725 $s17TritonKitCLITests21HostProcessDrainTestsV04$s17ab10CLITests21defG62V19readAndSinkFailures4TestfMp_25generatoraae9fd515ecdd565fMu_33_2B522CC4CCACD1C062162ADFCAE826B3LL7Testing4TestVyYaYbFZyyYa	9   TritonKitCLITests                   0x00000001136b74a9 $s17TritonKitCLITests21HostProcessDrainTestsV04$s17ab10CLITests21defG62V19readAndSinkFailures4TestfMp_25generatoraae9fd515ecdd565fMu_33_2B522CC4CCACD1C062162ADFCAE826B3LL7Testing4TestVyYaYbFZyyYa	10  Testing                             0x000000010a0cee91 $s7Testing6RunnerV19_applyScopingTraits33_E393D8EDD5AFFA0BF3AEFD347B81DFDFLL3for8testCase_yAA4TestV_AI0P0VSgyyYaYbKctYaKFZ011$s7Testing6b13V27_runSingleqp12Iteration33_fghijkL86DFDFLL_6withinyAA0	11  Testing                             0x000000010a0d0f89 $s7Testing6RunnerV27_runSingleTestCaseIteration33_E393D8EDD5AFFA0BF3AEFD347B81DFDFLL_6withinyAA0E0V0F0V_AC4PlanV4StepVtYaFZyyYaXEfU_yyYaKXEfU_yyYaYbKcfU_Tf4dnn_nTQ1_ + 1
+	12  Testing                             0x000000010a0c57c9 $s7Testing6RunnerV27_runSingleTestCaseIteration33_E393D8EDD5AFFA0BF3AEFD347B81DFDFLL_6withinyAA0E0V0F0V_AC4PlanV4StepVtYaFZyyYaXEfU_yyYaKXEfU_TQ2_ + 1
+	13  Testing                             0x000000010a018cb5 $s7Testing18__checkClosureCall6throws10performing10expression8comments10isRequired14sourceLocations6ResultOyyts5Error_pGx_q_yYaKXEAA12__ExpressionVSayAA7CommentVGyXKSbAA06SourceL0VtYaSQRzsAKRzr0_	14  Testing                             0x000000010a09e1dd $s7Testing5IssueV18withErrorRecording2at13configuration9isolation_s0D0_pSgAA14SourceLocationVSg_AA13ConfigurationVSgScA_pSgYiyyYaKXEtYaFZTf4nnnnd_nTQ1_ + 1
+	15  Testing                             0x000000010a0c51bd $s7Testing6RunnerV27_runSingleTestCaseIteration33_E393D8EDD5AFFA0BF3AEFD347B81DFDFLL_6withinyAA0E0V0F0V_AC4PlanV4StepVtYaFZyyYaXEfU_TQ1_ + 1
+	16  Testing                             0x000000010a018cb5 $s7Testing18__checkClosureCall6throws10performing10expression8comments10isRequired14sourceLocations6ResultOyyts5Error_pGx_q_yYaKXEAA12__ExpressionVSayAA7CommentVGyXKSbAA06SourceL0VtYaSQRzsAKRzr0_	17  Testing                             0x000000010a0df705 $s7Testing15TestCancellablePAAE24withCancellationHandlingyqd__qd__yYaKXEYaKlFqd__yYaKXEfU_AA0B0V4CaseV_ytTg5TQ0_ + 1
+	18  Testing                             0x000000010a0db041 $s7Testing15TestCancellablePAAE24withCancellationHandlingyqd__qd__yYaKXEYaKlFAA0B0V4CaseV_ytTB5TQ1_ + 1
+	19  Testing                             0x000000010a0c5fad $s7Testing4TestV4CaseV11withCurrent_7performxAE_xyYaKXEtYaKlFZyt_Tt2B5TQ1_ + 1
+	20  Testing                             0x0000error: Process '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper --test-bundle-path /Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-223-host-process-drain-deadline/CLI/.build/out/Products/Debug/TritonKitCLITests.xctest/Contents/MacOS/TritonKitCLITests --package-path CLI --no-parallel --disable-automatic-resolution --skip-update --filter HostProcessDrainTests /Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-223-host-process-drain-deadline/CLI/.build/out/Products/Debug/TritonKitCLITests.xctest/Contents/MacOS/TritonKitCLITests --testing-library swift-testing' exited with unexpected signal code 6
+00010a0c4c21 $s7Testing6RunnerV27_runSingleTestCaseIteration33_E393D8EDD5AFFA0BF3AEFD347B81DFDFLL_6withinyAA0E0V0F0V_AC4PlanV4StepVtYaFZTQ1_ + 1
+	21  Testing                             0x000000010a0d0a49 $s7Testing6RunnerV12_runTestCase33_E393D8EDD5AFFA0BF3AEFD347B81DFDFLL_6within2inyAA0D0V0E0V_AC4PlanV4StepVAC8_ContextAELLVtYaFZTf4nnxn_nTQ2_ + 1
+	22  Testing                             0x000000010a0c4325 $s7Testing6RunnerV13_runTestCases33_E393D8EDD5AFFA0BF3AEFD347B81DFDFLL_6within7contextyx_AC4PlanV4StepVAC8_ContextAELLVtYaSTRzAA0D0V4CaseV7ElementRtzlFZySi_AQtYaYbcfU2_TQ1_ + 1
+	23  Testing                             0x000000010a018cb5 $s7Testing18__checkClosureCall6throws10performing10expression8comments10isRequired14sourceLocations6ResultOyyts5Error_pGx_q_yYaKXEAA12__ExpressionVSayAA7CommentVGyXKSbAA06SourceL0VtYaSQRzsAKRzr0_	24  Testing                             0x000000010a021b29 $sSi7Testing4TestV4CaseVIeghHyn_Si6offset_AE7elementts5Error_pIeghHnzo_TRTQ0_ + 1
+	25  Testing                             0x000000010a018cb5 $s7Testing18__checkClosureCall6throws10performing10expression8comments10isRequired14sourceLocations6ResultOyyts5Error_pGx_q_yYaKXEAA12__ExpressionVSayAA7CommentVGyXKSbAA06SourceL0VtYaSQRzsAKRzr0_	26  Testing                             0x000000010a0cd909 $s7Testing6RunnerV8_forEach33_E393D8EDD5AFFA0BF3AEFD347B81DFDFLL2in15namingTasksWith_yq__SS8taskName_SSSg6actiontSgxXEyxYaYbKctYaKs8SendableRz7ElementQy_RszSTR_r0_lFZyScgyyts5Error_pGzYaKXEfU_yyY	27  Testing                             0x000000010a018cb5 $s7Testing18__checkClosureCall6throws10performing10expression8comments10isRequired14sourceLocations6ResultOyyts5Error_pGx_q_yYaKXEAA12__ExpressionVSayAA7CommentVGyXKSbAA06SourceL0VtYaSQRzsAKRzr0_	28  libswift_Concurrency.dylib          0x00000002c8aa6d41 _ZL23completeTaskWithClosurePN5swift12AsyncContextEPNS_10SwiftErrorE + 1
+)
+libc++abi: terminating due to uncaught exception of type NSException
+Note: Some test targets reported failures:
+  - TritonKitCLITests (Swift Testing)

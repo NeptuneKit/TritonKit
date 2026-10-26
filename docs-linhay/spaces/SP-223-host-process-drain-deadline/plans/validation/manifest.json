@@ -1,0 +1,98 @@
+{
+  "base_sha": "8fcd856f2927fa81754bb3e10b80d066c0591f37",
+  "candidate_file_sha256": {
+    "Sources/TritonKitCLI/CLIHostProcessRuntime.swift": "0ff47ac683b1c5d8f7f17f155671bfdd897ad5619f7a53d072eca9185925cf0a",
+    "Sources/TritonKitCLI/CLIHostProcessDrain.swift": "670d71fd2ead492c2c1494dec45a605b2e9fcc0deb1e5994e8dff26e887d9285",
+    "CLI/Tests/TritonKitCLITests/HostProcessDrainTests.swift": "b6f198b62dddf281ea3631578cfacfdd41ffb46b77c3898cd6521229ccd1fd5c"
+  },
+  "log_hashes": {
+    "red.log": {
+      "raw_sha256": "c082be86e02f999039c504cb45dea81b368c39af682df56c63c8682cfde2f8f5",
+      "committed_sha256": "bfddc9b4ba24130940f1f54807db30847492d3f06b324df3e3b56ff7ae17d0d1"
+    },
+    "green-initial.log": {
+      "raw_sha256": "1200e628bbf76b2fda1fb107a7ada19e391de9f66cf9e62941d30c8e24876fb3",
+      "committed_sha256": "8e64a907dee39e51c08c6de52d059af25c2c90a421427de9d3c01f445ea06b3b"
+    },
+    "fixture-crash.log": {
+      "raw_sha256": "a7e037884d812426ce604be093d13abc3d0beb2f38c8495303929dc7b07f3245",
+      "committed_sha256": "6153e78a1ab314a32610f7209e2d213941e531249374500613fb698ecb541d65"
+    },
+    "green-expanded.log": {
+      "raw_sha256": "638bd34a0d61efd34f5a8b3a43dd92f9c73859d4ba0fccf38360879dd3c1efe7",
+      "committed_sha256": "cd34efe744154ebbc7e36a9db61ade9472ed69fdfc5861f9e2de0c12ed70b78a"
+    },
+    "green.log": {
+      "raw_sha256": "c93e032e4d4df386bff38ee1b4ce138179d3d6d960182c8bdd57285042e8e078",
+      "committed_sha256": "ffaa3ecab3d7f3d3e4de08e21bd7a90a15d6640d35ac5373400bd920b4c267b9"
+    },
+    "check-docs.log": {
+      "raw_sha256": "e589202d7ef0af5d3a882ed01fdbe4b03805376d1d6a46f1372d9897a2d84c27",
+      "committed_sha256": "e589202d7ef0af5d3a882ed01fdbe4b03805376d1d6a46f1372d9897a2d84c27"
+    },
+    "docs-gate.log": {
+      "raw_sha256": "40e60319df4edd6261569d811066cecff14d7f7c80210afb70d56130db014de8",
+      "committed_sha256": "40e60319df4edd6261569d811066cecff14d7f7c80210afb70d56130db014de8"
+    },
+    "green-pre-review.log": {
+      "raw_sha256": "a77d594b11bd78d02ba87a0cc8a418fdaf5eead63aeb0a821331bf5a22e2dbc3",
+      "committed_sha256": "76894af6c64e76fcb36eb6027ef86b0afc371f7627e5bb91b5035f3f180e4c75"
+    },
+    "review-gap-red.log": {
+      "raw_sha256": "e083d009638d78f1cf6e0e6001ce7e6c74cb5d255eeed372e0e1d25ad6e7140a",
+      "committed_sha256": "b377ae77c7076e70737029cf29ed31fc636754b4b8e9e5b61eb990284784541f"
+    }
+  },
+  "red": {
+    "exit": 1,
+    "wall_seconds": 196.737,
+    "test_seconds": 18.176,
+    "tests": 3,
+    "inherited_cases": 6,
+    "assertion_issues": 18,
+    "swift_pid": 43481
+  },
+  "green": {
+    "exit": 0,
+    "wall_seconds": 36.319,
+    "test_seconds": 13.122,
+    "tests": 50,
+    "suites": [
+      "HostProcessDrainTests",
+      "SimulatorAdvancedControlsTests"
+    ],
+    "swift_pid": 63527,
+    "new_test_definitions": 12
+  },
+  "command": [
+    "swift",
+    "test",
+    "--package-path",
+    "CLI",
+    "--no-parallel",
+    "--disable-automatic-resolution",
+    "--skip-update",
+    "--filter",
+    "HostProcessDrainTests|SimulatorAdvancedControlsTests"
+  ],
+  "filter_note": "Final run matches both named suites. Older pre-review green run also specified a nonmatching ApplePlatformRunnerTests name; only its actual two suites were counted.",
+  "watchdog_seconds": 240,
+  "docs_gate_exit": 1,
+  "docs_blocker": "SP-223 index registration is owned by root and absent from this old-base branch.",
+  "pre_review_candidate_file_sha256": {
+    "Sources/TritonKitCLI/CLIHostProcessRuntime.swift": "c20045c6335cdd87cf7a4d16397d8bf5c138d04dd6005495c18c3b18fc2e6cb6",
+    "Sources/TritonKitCLI/CLIHostProcessDrain.swift": "ddf796cbd21710d7bf1ea96af87797d0f0fac14c9c8d348d4d399058d4140973",
+    "CLI/Tests/TritonKitCLITests/HostProcessDrainTests.swift": "2c239b1bfb46bad427c61b56d4001465c7023cb28241b9950ca9e1458b65362a"
+  },
+  "review_gap_red": {
+    "exit": 1,
+    "wall_seconds": 41.6,
+    "test_seconds": 1.56,
+    "tests": 2,
+    "assertion_issues": 6,
+    "swift_pid": 61153,
+    "filter": "incompleteNonzero|continuousWriter",
+    "note": "Pre-review implementation plus HostProcessOutputFailure type scaffold; production behavior unchanged until failures were observed."
+  },
+  "red_source_note": "red-test-source.swift.txt preserves the original 3-test assertion version used before implementation. Final source strengthens incomplete type assertions and adds 9 test definitions; old 18 assertion failures are historical, not cumulative green coverage."
+}
