@@ -1,70 +1,38 @@
 # SP-221 — Simulator资源状态只读重试
 
-## 边界与来源
+## 当前状态与范围
 
-2026-10-26由SP-207日检评估采用；来源[simslim 2c68da93](https://github.com/MobAI-App/simslim/commit/2c68da93700aa1a1c45ce31a7ea9f7cac2174ddc)，固定MIT许可全文hash `8b65667572b02a584c03c2977372eeb5fe8de0e228211b6f83033c458cc10b4e`。独立实现，不复制Go源码。基线main@24e7d0f2。影响CLI/host资源状态reader，HTTP/shared/Web无新契约；不扩大SP-177已归档资源管理范围。
+2026-10-26：已完成离线实现、独立验收、main合后门禁和证据归档；本地main合并 `a0eebff0`，执行候选 `eb9539f4`。原执行worktree与分支已正常清理，未push/tag/release。最终结果见[SP-222主线验收与清理](../SP-222-simulator-resource-retry-integration/plans/20261026-main-merge.md)。本切片没有开发或整合待办；真实运行未验证边界继续保留。
 
-本地readOverrides对明确launchd boot/teardown拒绝只读一次就失败；apply/restore/verify的状态读取可受影响。这是静态可复现可靠性差异，未在本机设备重现。只重试同一精确UDID的print-disabled；不重放enable/disable/boot、动作未知或全局runner。
+来源为[simslim 2c68da93](https://github.com/MobAI-App/simslim/commit/2c68da93700aa1a1c45ce31a7ea9f7cac2174ddc)，MIT许可全文hash `8b65667572b02a584c03c2977372eeb5fe8de0e228211b6f83033c458cc10b4e`。独立实现，未复制或运行Go源码；产品基线 `24e7d0f2`。仅影响CLI host资源状态reader，HTTP/shared/Web/schema无新增契约，不扩大SP-177资源管理范围。
 
-## BDD与验收
+## 已实现的契约与BDD验收
 
-- Given同一有效UDID，首次明确launchd_sim124或Domain is tearing down，When读override，Then有限次数/总预算内只读重试，第二次严格有效结果才成功；argv/目标不变。
-- Given真实runner抛HostCommandRunError.nonZeroExit（而非fixture只返回result），When可识别暂态，Then同一生产reader路径重试；错误命令目标/argv不匹配不重试。
-- Given权限/永久错误、截断stdout/stderr、畸形/重复payload、超时/cancel/任意throw，Then立即保留原失败语义，不将它们作为暂态重试。
-- Given持续暂态或耗尽预算，Then有界失败；不无限等待、不输出成功map；无mutation命令。
-- Givenapply/restore处于查询失败或mutation错误，Then有副作用命令从不自动重放，保持现有拒绝和三方恢复语义。
+| 场景 | 最终行为 |
+| --- | --- |
+| 同一有效精确UDID出现明确launchd启动/teardown暂态 | 仅重试同一 `xcrun simctl spawn <UDID> launchctl print-disabled system`，最多3次；30秒配置执行预算覆盖命令耗时及0.1/0.2秒退避，各次timeout不超过剩余预算 |
+| 返回非零result或生产形式的typed nonZeroExit | 两路径均覆盖；typed error.command完整匹配当次issued command（含timeout、环境等），失败及成功结果均绑定sourceCommand |
+| 截断、权限/永久/未知错误、timeout、取消、任意其他throw | 立即保留失败；非零暂态须空白stdout、有效UTF-8、完整诊断白名单，未知/复合上下文不重试 |
+| 成功读取 | 严格解析payload，畸形/重复label不得变成成功map；合法非空stderr不单独判失败 |
+| 持续暂态或预算耗尽 | 有界失败，保留返回失败的commandFailed或typed nonZeroExit语义 |
+| apply/restore读失败或mutation失败 | enable/disable/boot等mutation不自动重放，保留原三方恢复语义 |
 
-文件面：Sources/TritonKitCLI/CLISimulatorResourceState.swift、CLI/Tests/TritonKitCLITests/SimulatorResourceStateTests.swift；需要其他实现文件先交主控。先失败测试，再最小实现；保留真实非零throw和返回result两路径、预算/不可重试反例。focused/full CLI与适用root/docs门禁串行。真实Simulator/跨进程竞态不执行；离线通过不证明设备恢复概率。
+唯一生产文件为 `Sources/TritonKitCLI/CLISimulatorResourceState.swift`；State测试补22项、保留原7项，Mutation测试仅一行来源fixture对齐，不削弱原断言。完整诊断白名单：exit124的 `Failed to start launchd_sim: could not bind to session, launchd_sim may have crashed or quit responding`，或非零的 `Domain is tearing down`；可带唯一、同exitCode的NSPOSIXErrorDomain前导行。
 
-状态：已验收合本地main；真实执行thread `01a175fc-c9c4-7053-b91e-74c209d3f0ca`，branch `feat/SP-221-simulator-resource-read-retry`，worktree `../TritonKit-worktrees/SP-221-simulator-resource-read-retry`。主控[SP-222](../SP-222-simulator-resource-retry-integration/README.md)真实thread `01a175fd-5c91-7b52-bc7c-683468efff9f`。两会话create_thread均显式gpt-6.1-sol且创建成功；不再沿用旧模型校验失败作为本批阻塞。已形成离线通过候选并合入main a0eebff0；合后CLI/root通过，合后local/docs门禁已通过，现标local_merged，不push/tag/release。
+## 验收与证据
 
-2026-10-26候选冻结：`eb9539f48df4ea6a0e1cf3de6828b8d8177c8017`，生产reader与State测试、Mutation测试来源fixture对齐共3文件；先红10项/3失败，最后focused37/37通过。主控先后拒绝substring诊断、成功来源未绑定及tracked patch证据不一致，已修复，产品hash与最终日志绑定。完整CLI与合main尚待SP-222；候选完成不等同验收合并。
+- [首轮红证据](plans/20261026-red-evidence.md)与[精确红测试快照](plans/20261026-red-tests.swift.txt)：旧实现10项/3失败，exit1；exit130中止不计。
+- [执行阶段交接快照](plans/20261026-candidate-handoff.md)：最终focused37/37，完整文件和日志hash。
+- [独立候选验收](../SP-222-simulator-resource-retry-integration/plans/20261026-validation-report.md)与[证据清单](../SP-222-simulator-resource-retry-integration/plans/20261026-evidence-manifest.json)：联合4249bd26/tree3a1e130e、报告95a1dc8f；完整CLI XCTest91、SwiftTesting1515/153 suites，明确3项skip，不累加focused。
+- [历史审查与修正](../SP-222-simulator-resource-retry-integration/plans/20261026-audit-history.md)：诊断误识别、来源绑定、fixture修正、索引及冻结patch不一致均已关闭。
+- main合后根包、local/docs门禁和40份日志归档，以主线验收与清理记录为准。
 
+## 真实运行未验证边界
 
-## 冻结执行证据与后续主控
+诊断样本来自上游文本和离线fixture；typed throw证明reader处理生产错误类型，未在本机实际launchd故障中复现，不证明Simulator恢复概率、跨进程稳定或跨Xcode兼容。未知诊断形状保持fail-closed，扩展需实际捕获和负例。
 
-# SP-221 — Simulator资源状态只读重试
+30秒为runner配置执行预算，terminate/kill/drain清理可额外耗时，非硬墙钟上限。同步在途Process不由本层Task取消立即结束；取消只保证返回后不再重试。未执行真实Simulator/设备恢复、签名/DDI或依赖升级；本地Release构建不代表发布或安装接替。
 
-## 边界与来源
+## 经验入口
 
-2026-10-26由SP-207日检评估采用；来源[simslim 2c68da93](https://github.com/MobAI-App/simslim/commit/2c68da93700aa1a1c45ce31a7ea9f7cac2174ddc)，固定MIT许可全文hash `8b65667572b02a584c03c2977372eeb5fe8de0e228211b6f83033c458cc10b4e`。独立实现，不复制Go源码。基线main@24e7d0f2。影响CLI/host资源状态reader，HTTP/shared/Web无新契约；不扩大SP-177已归档资源管理范围。
-
-基线readOverrides对明确launchd boot/teardown拒绝只读一次就失败；apply/restore/verify的状态读取可受影响。这是静态可复现可靠性差异，未在本机设备重现。只重试同一精确UDID的print-disabled；不重放enable/disable/boot、动作未知或全局runner。
-
-## BDD与验收
-
-- Given同一有效UDID，首次明确launchd_sim124或Domain is tearing down，When读override，Then有限次数/总预算内只读重试，第二次严格有效结果才成功；argv/目标不变。
-- Given真实runner抛HostCommandRunError.nonZeroExit（而非fixture只返回result），When可识别暂态，Then同一生产reader路径重试；错误命令目标/argv不匹配不重试。
-- Given权限/永久错误、截断stdout/stderr、畸形/重复payload、超时/cancel/任意throw，Then立即保留原失败语义，不将它们作为暂态重试。
-- Given持续暂态或耗尽预算，Then有界失败；不无限等待、不输出成功map；无mutation命令。
-- Givenapply/restore处于查询失败或mutation错误，Then有副作用命令从不自动重放，保持现有拒绝和三方恢复语义。
-
-文件面：Sources/TritonKitCLI/CLISimulatorResourceState.swift、CLI/Tests/TritonKitCLITests/SimulatorResourceStateTests.swift；主控追加授权 SimulatorResourceMutationTests.swift 仅对齐一处 fixture sourceCommand，不改断言。需要其他实现文件先交主控。先失败测试，再最小实现；保留真实非零throw和返回result两路径、预算/不可重试反例。focused/full CLI与适用root/docs门禁串行。真实Simulator/跨进程竞态不执行；离线通过不证明设备恢复概率。
-
-## 实现与候选边界（2026-10-26）
-
-已完成局部 reader 实现，待 SP-222 主控审查、完整门禁与 main 整合。执行 worktree 为 `/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-221-simulator-resource-read-retry`，分支 `feat/SP-221-simulator-resource-read-retry`。本会话不合 main、不写共享索引/memory/adoption-state、不做远端写入。
-
-- 最多三次相同 executable/argv/精确 UDID 的 `launchctl print-disabled system`；单调时钟覆盖命令耗时与 0.1/0.2 秒退避，30 秒配置执行预算，每次 timeout 收敛到剩余预算。
-- 只接受完整诊断行：exit124 的 `Failed to start launchd_sim: could not bind to session, launchd_sim may have crashed or quit responding` 或非零退出的 `Domain is tearing down`。可带唯一、同 code 的 `An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=<exitCode>):` 前导行；多余/未知上下文不重试。普通124、字符串子串、永久错误混入暂态文字均拒绝。
-- 重试要求空白 stdout、有效 UTF-8、stdout/stderr 都未截断，以及匹配的 sourceCommand。抛错路径还要求 error.command 完整等于本次 issued command（含 timeout、环境等字段）。成功也校验 sourceCommand 与严格 payload；合法成功允许非空 stderr。
-- 成功/错误 envelope 和 parser 不扩展；返回失败结果最终仍为 commandFailed，真实 nonZeroExit 保留原 command/result；其他 throw 原样退出。取消在读前、返回后、退避期间及再次执行前检查，不自动重放 mutation。
-- 30 秒是传给 runner 的执行预算，不是硬墙钟上限；既有 host runner 的 terminate/drain 清理可额外耗时。同步 runner 在途不会被本实现主动中断，取消可在返回后阻止后续重试；退避每不超过10ms检查取消。
-- 完整诊断白名单刻意保守；未捕获的新原生诊断形状保持失败，不能凭子串扩展。所有暂态测试为离线夹具，未在真实 Simulator 重现，不证明设备恢复概率或跨进程状态稳定。
-
-证据见[红测试](plans/20261026-red-evidence.md)、[精确首轮测试快照](plans/20261026-red-tests.swift.txt)和[候选交接](plans/20261026-candidate-handoff.md)。主控[SP-222](../SP-222-simulator-resource-retry-integration/README.md)拥有整合、共享文档与完整 CLI 时段。新会话显式 model=gpt-6.1-sol，不回退。
-
-## 本轮经验沉淀
-
-生产 runHostCommand 非零时直接抛 HostCommandRunError.nonZeroExit；只测 fake 返回结果会漏掉真正调用路径。先以旧reader取得实际断言失败，再分别测返回/抛错、完整命令绑定、严格诊断、预算与取消反例。成功来源绑定收紧后，旧 mutation fixture 固定字符串导致四个失败；获主控授权后只对齐 sourceCommand，未放宽产品规则或原断言。后续诊断匹配须保留“暂态文字出现在无关错误中”的反例，并明确配置预算与 runner 清理时间的区别。本轮沉淀留在本 space；共享 skill/memory/索引交主控整合。
-
-
-主控SP-222在联合候选4249bd26/tree3a1e130e验证focused37/37及完整CLI（XCTest91、SwiftTesting1515/153 suites，3个真实环境测试跳过）退出0。root整合本候选后仍须合后门禁；此处不提前标local_merged。
-
-
-## 最终整合验收
-
-实际main合并`a0eebff06564dcf68ccf728efc97ec2d4f3d9292`，SP222独立focused37/fullCLI通过；actualmain合后XCTest91、SwiftTesting1515/153 suites（3真实环境skip）、root5+108+293、适用local及ci-docs/check-docs/diff通过。30s为配置执行预算含退避与各次timeout，不含runner额外清理；真实设备恢复/跨Xcode未测。未push/tag/release。证据见SP-222/plans/20261026-main-merge.md；当前候选/历史开发段均为过程记录，以此最终验收接替未完成断言。
-
-
-清理：2026-10-26必要红/绿/完整/门禁日志与空间资料共40份已归档至`../TritonKit-worktrees/archives/20261026-sp221-sp222/`，MANIFEST逐文件hash复核后正常移除本批worktree及已合分支。主控history-only合并6271d24e与f3d06523树相同，保留已精确吸收的最新main文档，未回灌旧WIP；原目录仍为main。
+重试和诊断的可复用检查已进入[host simulator skill](../../../.agents/skills/tritonkit-host-simulator-takeover/SKILL.md)；候选冻结与当前/历史文档的分工见[ops治理](../../../.agents/skills/tritonkit-ops-governance/SKILL.md)。具体触发、修正及证据保留在历史审查与主线记录，不重复建立待办。

@@ -5,6 +5,7 @@
 | 触发条件 | 下次检查重点 | 权威链接 |
 | --- | --- | --- |
 | 构建、测试或交付结果声明 | 固定候选差异与实际二进制，长构建进度绑定本任务session/cwd/scratch及父子PID；代码冻结后重跑受影响检查；区分 fixture、真实运行与跳过，不累加重复测试 | [集成审计](../spaces/SP-190-open-issues-integration/plans/20261012-integration-review.md)、[缓存证据验证](../spaces/SP-175-issue-212-xcode-cache-evidence/README.md)、[上游优化真实验收与失败边界](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-validation-report.md) |
+| Simulator资源读取重试、launchd暂态或来源绑定 | typed nonZeroExit与返回result分别测；完整诊断/issued command/成功来源绑定；未知或复合错误不重试，mutation不重放；配置预算与清理耗时、fixture与真实恢复分开 | [host规则](../../.agents/skills/tritonkit-host-simulator-takeover/SKILL.md)、[修正与反例](../spaces/SP-222-simulator-resource-retry-integration/plans/20261026-audit-history.md) |
 | CLI 错误、递归 schema、replay 或 smoke 改动 | 实际进程输出仅一个合法 envelope；保留底层错误码；检查嵌套模型到最终 JSON 和真实 argv | [CLI 信息契约](../dev/agent-facing-cli-information-architecture.md)、[runtime smoke 修复](../spaces/SP-178-issue-213-real-device-runtime/README.md) |
 | SwiftPM manifest、CLI 构建或依赖调整 | 根包不引入 CLI-only 依赖；从 CLI manifest 构建；跑现有 dependency-boundary 检查，核对 package identity | [SwiftPM 依赖边界](../dev/20260521-spm-ios-cli-dependency-boundary.md)、[CLI 修复沉淀流程](../../.agents/skills/tritonkit-ops-governance/SKILL.md) |
 | 悬浮选择器、用户标记与 agent 操作 | 自有浮层统一排除；弱引用不证明复用身份；同一MainActor校验并执行；宿主测试和真实手势分开；拖球本身跟手，直接拖动实时预览并选取/长按移位，取消菜单移动模式；父子CLI连接参数做完整argv测试；罗盘保持空间稳定、父子路径记忆需弱身份复核、拖动中截图独立验收；独立显隐不重启连接，隐藏必须有外部恢复入口 | [选择器实现与经验](../dev/20261015-sdk-floating-picker.md)、[验证记录](../spaces/SP-201-sdk-floating-picker/plans/20261015-implementation-validation.md) |

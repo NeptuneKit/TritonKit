@@ -1,0 +1,135 @@
+{
+  "binary": "/Users/linhey/Desktop/linhay-open-sources/TritonKit/CLI/.build/out/Products/Debug/triton",
+  "binary_sha256": "4dc3260885f2951d7cf447dee82af635cc5e4aaa54e18178dd71d2cd9a8b51aa",
+  "candidate_head": "5c892e2e3c56d351e6ca589911cd24aa3a05c952",
+  "no_device_or_sdk": true,
+  "cases": [
+    {
+      "mode": "complete",
+      "command": [
+        "/Users/linhey/Desktop/linhay-open-sources/TritonKit/CLI/.build/out/Products/Debug/triton",
+        "device",
+        "list",
+        "--platform",
+        "android",
+        "--scope",
+        "emulator",
+        "--adb",
+        "/var/folders/rk/yj_4tlx92sz7t5k73kxppyl80000gn/T/triton-sp224-fake-u8xkjuoo/adb",
+        "--json"
+      ],
+      "exit": 0,
+      "wall_seconds": 0.411,
+      "stdout": {
+        "nextAction": {
+          "args": [
+            "doctor",
+            "--platform",
+            "android",
+            "--json"
+          ],
+          "category": "diagnose",
+          "command": "device",
+          "finalEvents": [],
+          "readyEvents": [],
+          "requiresLongRunningProcess": false,
+          "terminationSignals": []
+        },
+        "ok": true,
+        "platform": "android",
+        "sourceCommand": "/var/folders/rk/yj_4tlx92sz7t5k73kxppyl80000gn/T/triton-sp224-fake-u8xkjuoo/adb devices -l",
+        "sourceCommands": [
+          "/var/folders/rk/yj_4tlx92sz7t5k73kxppyl80000gn/T/triton-sp224-fake-u8xkjuoo/adb devices -l"
+        ],
+        "targets": []
+      },
+      "stderr": "",
+      "cli_pid": 31276
+    },
+    {
+      "mode": "nonzero",
+      "command": [
+        "/Users/linhey/Desktop/linhay-open-sources/TritonKit/CLI/.build/out/Products/Debug/triton",
+        "device",
+        "list",
+        "--platform",
+        "android",
+        "--scope",
+        "emulator",
+        "--adb",
+        "/var/folders/rk/yj_4tlx92sz7t5k73kxppyl80000gn/T/triton-sp224-fake-u8xkjuoo/adb",
+        "--json"
+      ],
+      "exit": 1,
+      "wall_seconds": 0.048,
+      "stdout": {
+        "error": {
+          "code": "host_action_failed",
+          "hint": "Check the simulator UDID, bundle id, Xcode selection, and underlying simctl availability.",
+          "message": "fixture-nonzero"
+        },
+        "ok": false
+      },
+      "stderr": "",
+      "cli_pid": 31278
+    },
+    {
+      "mode": "incomplete",
+      "command": [
+        "/Users/linhey/Desktop/linhay-open-sources/TritonKit/CLI/.build/out/Products/Debug/triton",
+        "device",
+        "list",
+        "--platform",
+        "android",
+        "--scope",
+        "emulator",
+        "--adb",
+        "/var/folders/rk/yj_4tlx92sz7t5k73kxppyl80000gn/T/triton-sp224-fake-u8xkjuoo/adb",
+        "--json"
+      ],
+      "exit": 1,
+      "wall_seconds": 0.289,
+      "stdout": {
+        "error": {
+          "code": "host_output_incomplete",
+          "hint": "Output capture is incomplete or failed. Inspect the exit status and observed output before deciding whether to retry.",
+          "message": "Host output did not reach EOF within the 0.25s post-exit drain budget (observed 25 bytes on this stream). Command was not replayed.\nexitCode: 0\nstdoutBytes: 25\nstderrBytes: 0"
+        },
+        "ok": false
+      },
+      "stderr": "",
+      "cli_pid": 31280,
+      "holder_pid": 31282,
+      "holder_alive_before_fixture_cleanup": true
+    },
+    {
+      "mode": "incomplete7",
+      "command": [
+        "/Users/linhey/Desktop/linhay-open-sources/TritonKit/CLI/.build/out/Products/Debug/triton",
+        "device",
+        "list",
+        "--platform",
+        "android",
+        "--scope",
+        "emulator",
+        "--adb",
+        "/var/folders/rk/yj_4tlx92sz7t5k73kxppyl80000gn/T/triton-sp224-fake-u8xkjuoo/adb",
+        "--json"
+      ],
+      "exit": 1,
+      "wall_seconds": 0.304,
+      "stdout": {
+        "error": {
+          "code": "host_output_incomplete",
+          "hint": "Output capture is incomplete or failed. Inspect the exit status and observed output before deciding whether to retry.",
+          "message": "Host output did not reach EOF within the 0.25s post-exit drain budget (observed 25 bytes on this stream). Command was not replayed.\nexitCode: 7\nstdoutBytes: 25\nstderrBytes: 0"
+        },
+        "ok": false
+      },
+      "stderr": "",
+      "cli_pid": 31284,
+      "holder_pid": 31286,
+      "holder_alive_before_fixture_cleanup": true
+    }
+  ]
+}

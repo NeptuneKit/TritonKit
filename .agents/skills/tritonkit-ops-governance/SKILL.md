@@ -109,7 +109,7 @@ metadata:
 - 本项目用户于2026-10-16授权“后期评估可以纳入的改动可以直接按照这个流程直接进入开发”；随后明确“从 iCTRL 扩大到所有参考项目”，当前适用流程见 [SP-207](../../../docs-linhay/spaces/SP-207-reference-adoption-pipeline/README.md) 和 [正式说明](../../../docs-linhay/dev/reference-project-adoption-workflow.md)。评估对照当前源码/测试/已交付记录，保存理由、BDD与文件面后，直接分派独立space/worktree/执行会话，由主控验证、必要本地提交和本地main合并，不逐项重复确认。
 - 先检查采用登记与现有会话，按机制/需求去重，区分读取成功、已评估、已分派、实现、验证和合并；会话创建失败保留待重试，不能把上游检查点当交付完成。适合复用的活跃主控可继续接管，新批次按范围建主控。
 - 参考评估先核对当前branch、真实main SHA与worktree归属，不能把主目录HEAD等同main。产品用实际main blob评估，另一分支上的较新授权/追踪资料保留其事实效力；通过精确文件清单合入，索引与历史按main裁决，不整分支回灌旧产品。读取完整不等于二进制运行/设备验收；未执行产物明确记限制，未完成文本/分页覆盖仍不得推进检查点。
-- 跨分支资料收口逐文件区分已完整吸收、较新主线替代与仍缺内容；源分支快照保留原文。共享索引/memory不能只追加完成段而保留顶部旧授权/旧待办；采用登记同时核对state、controller_state、真实历史worktree路径与清理状态。文档门禁只证明结构，不能代替这些语义检查；最终以产品路径blob一致性及分支祖先关系证明没有回灌旧实现。 用户要求主目录回归 main 时，结束前核对主目录 branch、源 tip 的祖先关系、远端 SHA 和剩余 worktree。干净源目录完成整合后解除临时 checkout 对 main 的占用，再切回原目录；先归档 ignored 证据后正常移除临时 worktree，不使用强制删除掩盖未归档文件。
+- 跨分支资料收口逐文件区分已完整吸收、较新主线替代与仍缺内容；源分支快照保留原文。共享索引/memory不能只追加完成段而保留顶部旧授权/旧待办；space README同样只保留一份当前状态与证据导航，add/add整合不重复嵌入整份README；独有审查事实移入明确标为历史的记录，原日志/hash/归档保持不变，旧交接报告指向最终验收（见[SP-222整理证据](../../../docs-linhay/spaces/SP-222-simulator-resource-retry-integration/plans/20261026-audit-history.md)）；采用登记同时核对state、controller_state、真实历史worktree路径与清理状态。文档门禁只证明结构，不能代替这些语义检查；最终以产品路径blob一致性及分支祖先关系证明没有回灌旧实现。 用户要求主目录回归 main 时，结束前核对主目录 branch、源 tip 的祖先关系、远端 SHA 和剩余 worktree。干净源目录完成整合后解除临时 checkout 对 main 的占用，再切回原目录；先归档 ignored 证据后正常移除临时 worktree，不使用强制删除掩盖未归档文件。
 - 主控串行集成已冻结候选，保留其他WIP，独立验证实际联合差异并收口space/索引/memory；必要协调限于本批次执行会话。push/tag/release、依赖安装升级、设备/签名/DDI或产品边界扩展仍按各自明确授权处理，不从自动采用推导。
 
 ## 会话整理与模式沉淀

@@ -21,7 +21,7 @@
 
 ## 归档清理与最终门禁
 
-360份固定来源/补查/原函数probe/红绿/独立及actualmain日志、原11份WIP精确副本已归档，MANIFEST逐文件大小/hash通过；归档为同级`archives/20261026-sp223-sp224/`。源执行与主控worktree已停止且clean，普通worktree remove完成；首次在旧detachedHEAD删除branch提示未合入，不改-D、不推送，改在真实main已验证祖先后普通branch-d成功。原目录已回main并保留既有docs整理WIP；最终只剩原目录。
+归档初始收尾快照为360份，原目录恢复证据加入后最终MANIFEST为394份；固定来源/补查/原函数probe/红绿/独立及actualmain日志、原11份WIP精确副本均已归档，2026-10-26再次逐文件大小/hash核对通过；归档为同级`archives/20261026-sp223-sp224/`。源执行与主控worktree已停止且clean，普通worktree remove完成；首次在旧detachedHEAD删除branch提示未合入，不改-D、不推送，改在真实main已验证祖先后普通branch-d成功。原目录已回main并保留既有docs整理WIP；最终只剩原目录。
 
 ci-docs和check-docs224spaces、range diff均通过。第一次收口日志名final-ci-docs触发既有可追溯命名门禁，改为日期明确的文件名后通过；产品不变未重复Swift。原编译日志空白通过raw/摘要分层纠正，manifest保持原hash，不伪造首次check通过。
 

@@ -1,10 +1,12 @@
 # SP-221 候选交接（2026-10-26）
 
+> 历史阶段说明：本文为执行阶段冻结交接快照，保留当时权限、测试范围与hash，不代表当前待办。候选最终为 `eb9539f48df4ea6a0e1cf3de6828b8d8177c8017`，已合main并清理；当前状态见[主线验收与清理](../../SP-222-simulator-resource-retry-integration/plans/20261026-main-merge.md)。下文“本会话未执行/交主控”只指执行阶段。原ignored日志现位于该记录列出的归档，不再依赖已删除worktree。
+
 ## Requested / Observed
 
 CLI-only 局部只读 launchd 暂态有限重试；HTTP/shared/Web无新增契约。已实现最多3次、30秒配置执行预算、0.1/0.2秒退避、每次剩余timeout、同UDID/argv；精确完整诊断白名单与命令/结果来源绑定；严格拒绝截断/畸形/权限/未知错误/timeout；取消阻止后续重试，mutation保持single-shot。
 
-基线 `24e7d0f21017c8ca7104b6f8e3912fc2c44be892`；分支 `feat/SP-221-simulator-resource-read-retry`；worktree `/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-221-simulator-resource-read-retry`。冻结候选为包含本文的本地提交，完整SHA见会话交付和 `git log -1`。不执行main合并或远端写入。
+基线 `24e7d0f21017c8ca7104b6f8e3912fc2c44be892`；分支 `feat/SP-221-simulator-resource-read-retry`；worktree `/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-221-simulator-resource-read-retry`。最终冻结提交为 `eb9539f48df4ea6a0e1cf3de6828b8d8177c8017`；此处路径/分支记录执行时身份，现已清理。执行会话未进行main合并或远端写入。
 
 ## 文件清单与实现diff
 
@@ -21,8 +23,8 @@ CLI-only 局部只读 launchd 暂态有限重试；HTTP/shared/Web无新增契�
 - 最终绿：`TRITON_CLI_PATH="$PWD/CLI/.build/debug/triton" swift test --package-path CLI --no-parallel --disable-automatic-resolution --skip-update --filter 'SimulatorResource(State|Mutation)Tests'`，exit0，37项（State29 + Mutation8）/0失败，2026-10-26 10:26:22 +08:00。早先28/33项绿色均被后续候选取代，不累加。
 - 中间失败：收紧成功sourceCommand后37项中4个旧Mutation用例抛commandFailed，State29全部通过；归因为固定fixture字符串而非生产来源。获root明确追加单文件单行授权，修正fixture后最终37项通过；未放宽产品guard。
 - `git diff --check`：产品差异通过；初次提交原始patch上下文空行触发尾随空格检查，已将原始patch归档为ignored日志并从候选文件移除；最终联合差异重新检查通过。
-- `docs-linhay/scripts/check-docs.sh`：exit1，`space index must contain exactly one link for SP-221-simulator-resource-read-retry`。执行基线无SP221共享登记，本任务禁止修改共享索引；SP222主控以最新文档基线整合后重跑，未绕过检查。
-- 完整CLI、root、local gate：本会话未执行，交主控串行；未执行设备、依赖安装升级、签名/DDI、第三方参考代码、远端写入、merge main。
+- `docs-linhay/scripts/check-docs.sh`：exit1，`space index must contain exactly one link for SP-221-simulator-resource-read-retry`。执行基线无SP221共享登记，当时禁止修改共享索引；此缺项已由SP222合入最新文档基线并重跑门禁解决，未绕过检查。
+- 完整CLI、root、local gate：执行会话未执行，后续已由SP222/root串行完成，见最终验收；未执行设备、依赖安装升级、签名/DDI、第三方参考代码、远端写入、merge main。
 - 环境：Apple Swift6.4 / Darwin27 arm64。仅复用已有离线依赖缓存，未修改Package.resolved/manifest，无新增依赖。
 
 ## Remaining risk / 沉淀

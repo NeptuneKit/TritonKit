@@ -1,5 +1,7 @@
 # SP-222 冻结候选联合验收
 
+> 历史阶段说明：本文为联合候选 `4249bd26` 的独立验收快照，测试数量和hash保留原阶段含义。后续实际main合后门禁、归档及清理已完成，见[主线验收与清理](20261026-main-merge.md)；下文root后续职责为当时交接，不是当前待办。原ignored日志已归档，原路径仅用于关联清单中的历史hash。
+
 ## Requested / Observed
 
 仅对同一精确 UDID 的 CLI `print-disabled system` 读取，在明确 launchd 暂态时有限重试。唯一生产变更为 state reader；两个测试文件为 state 覆盖与 mutation fixture 来源对齐，未改变 HTTP/shared/Web/schema。执行源 `eb9539f48df4ea6a0e1cf3de6828b8d8177c8017`，文档基线 `f0159b483fec90756f8a2d3361c7e8007a2f1010`；联合测试提交 `4249bd264ddc0e1745e414187dbfa51e05e0bcf9`，tree `3a1e130ef0f3af4b144ad4072fbeec67f984661c`。本报告后续自身文档提交不改变产品文件。
@@ -16,7 +18,7 @@
 - 完整 CLI：相同环境与命令去掉 `--filter`；exit0。XCTest最终91项零失败；Swift Testing最终报告1515项/153 suites通过，明确3项跳过。focused包含于完整回归，不能相加；日志中每suite重复计数不相加。原日志 `plans/full-cli.log` ignored。
 - 跳过：`selectedXcodeProducesRealJPEGAndBalancesTwoSubscriptions` 需要显式 `TRITON_SP196_OWNED_SIMULATOR`；两个 Real NetService 用例需要 `TRITON_TEST_BONJOUR=1`。本批不启用这些真实运行条件，不将跳过称通过。
 
-文档验收：在上述联合候选及本报告/清单上，`verify.sh --ci-docs`、`check-docs.sh`、`git diff --check` 与相对 `f0159b48` 的候选 whitespace 检查均 exit0；222 spaces。日志保留在本space ignored plans目录，root清理前归档。门禁仅证明相应文档/脚本契约，不升级为发布或设备验收。
+文档验收：在上述联合候选及本报告/清单上，`verify.sh --ci-docs`、`check-docs.sh`、`git diff --check` 与相对 `f0159b48` 的候选 whitespace 检查均 exit0；222 spaces。日志原位于本space ignored plans目录，已在清理前归档，现按主线记录定位。门禁仅证明相应文档/脚本契约，不升级为发布或设备验收。
 
 ## Gaps / Fixes made
 
@@ -24,7 +26,7 @@
 
 ## Remaining risk / 结论
 
-本切片离线契约验收通过，可由 root 按本批授权进行实际 main 集成及合后门禁；本报告不宣称已合main、发布、安装接替或用户场景验收。root tests/local gate由root安排，SP-222未执行。
+本报告在独立候选阶段判离线契约验收通过；后续root已完成实际main集成及合后门禁，见主线最终记录。SP-222未执行root tests/local gate，这些由root单独验证；本报告自身的证据范围不扩展为发布、安装接替或用户场景验收。
 
 暂态样本来自上游文本及离线fixture，typed throw覆盖生产错误类型，但未在本机实际launchd故障中复现；不证明真实Simulator恢复概率、跨进程状态稳定或原生诊断的所有版本兼容。未知诊断形状保持fail-closed。30秒是runner配置执行预算，终止/kill/drain可能额外耗时，非硬墙钟上限；同步在途Process不会由本层Task取消立即结束，取消证明返回后不再重放。mutation保持单次调用与现有恢复语义。未执行真实Simulator/设备/跨进程竞态、第三方参考代码、依赖升级、签名/DDI或远端写入。
 
