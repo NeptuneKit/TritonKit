@@ -17,3 +17,5 @@
 文件面：Sources/TritonKitCLI/CLISimulatorResourceState.swift、CLI/Tests/TritonKitCLITests/SimulatorResourceStateTests.swift；需要其他实现文件先交主控。先失败测试，再最小实现；保留真实非零throw和返回result两路径、预算/不可重试反例。focused/full CLI与适用root/docs门禁串行。真实Simulator/跨进程竞态不执行；离线通过不证明设备恢复概率。
 
 状态：执行中；真实执行thread `01a175fc-c9c4-7053-b91e-74c209d3f0ca`，branch `feat/SP-221-simulator-resource-read-retry`，worktree `../TritonKit-worktrees/SP-221-simulator-resource-read-retry`。主控[SP-222](../SP-222-simulator-resource-retry-integration/README.md)真实thread `01a175fd-5c91-7b52-bc7c-683468efff9f`。两会话create_thread均显式gpt-6.1-sol且创建成功；不再沿用旧模型校验失败作为本批阻塞。当前未形成通过验收候选；通过后继续必要本地提交并合main，不push/tag/release。
+
+2026-10-26候选冻结：`eb9539f48df4ea6a0e1cf3de6828b8d8177c8017`，生产reader与State测试、Mutation测试来源fixture对齐共3文件；先红10项/3失败，最后focused37/37通过。主控先后拒绝substring诊断、成功来源未绑定及tracked patch证据不一致，已修复，产品hash与最终日志绑定。完整CLI与合main尚待SP-222；候选完成不等同验收合并。
