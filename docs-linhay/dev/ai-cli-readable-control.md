@@ -620,3 +620,9 @@ formula不匹配返回`homebrew_version_mismatch`，安装版不匹配返回`ins
 - 只有 DeviceHub.app、没有 classic Simulator.app 是 fixture 覆盖的布局；本期内置无 chrome 的 native digitizer，同时检测 Device Hub guest ownership；不宣称完整 Device Hub 输入兼容。截图、AX 激活、嵌入 runtime offset swipe 均不能证明物理触控或分页缺陷。host ACK 仅表示提交，不能证明 UIKit delivery。多击和长按尚无已验收 host primitive；不推荐伪造 longPress 命令。业务替代需 App 自有 semantic DEBUG action，物理手势测试应等待兼容 adapter 并独立验证。
 
 验证与限制见 [SP-218](../spaces/SP-218-issue-222-device-hub-input/README.md)。
+
+## 宿主输出完整性（SP-223候选验收中）
+
+CLI三条host-process runner的输出完整性与直接子进程exit状态分别判断。直接子进程退出后采用共享0.25秒pipe收尾预算、非阻塞read和短poll；只有真实EOF才认为完整。未EOF的内部失败映射`host_output_incomplete`，读取错误映射`host_output_read_failed`，保持单一失败envelope且不自动重放。内部证据保留真实exitCode、sourceCommand、已观察部分字节/计数与artifact写入计数；正常EOF的既有字节截断不等于输出未知，保留原语义。
+
+范围仅pipe读取/worker join，文件系统open/write/close与既有执行terminate/kill预算分别保留限制；不承诺整个命令硬墙钟上限，不自动kill未拥有后代。同步大stdin旧路径未在此切片改动。当前实现/独立验收/main合并以[SP-224](../spaces/SP-224-host-process-drain-integration/README.md)为准，未验收不算已交付。
