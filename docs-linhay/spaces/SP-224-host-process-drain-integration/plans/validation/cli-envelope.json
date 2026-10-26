@@ -1,0 +1,15 @@
+{
+  "command": [
+    "python3",
+    "docs-linhay/spaces/SP-224-host-process-drain-integration/plans/validation/check-cli-envelope.py"
+  ],
+  "cwd": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-host-process-drain-integration",
+  "pid": 71046,
+  "exit": 0,
+  "watchdog_seconds": 60.0,
+  "timed_out": false,
+  "wall_seconds": 1.123,
+  "candidate_head": "80922842f64f8a24ce49902d3ecac54c18a1a63e",
+  "triton_cli_path": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-host-process-drain-integration/CLI/.build/debug/triton",
+  "log_sha256": "ca2a442668ec5c52c17c40c1d271c44f4138892e82510077fe3cea8b695475e9"
+}

@@ -1,0 +1,20 @@
+{
+  "command": [
+    "swift",
+    "test",
+    "--package-path",
+    "CLI",
+    "--no-parallel",
+    "--disable-automatic-resolution",
+    "--skip-update"
+  ],
+  "cwd": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-host-process-drain-integration",
+  "pid": 69346,
+  "exit": 0,
+  "watchdog_seconds": 1200.0,
+  "timed_out": false,
+  "wall_seconds": 46.124,
+  "candidate_head": "80922842f64f8a24ce49902d3ecac54c18a1a63e",
+  "triton_cli_path": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-host-process-drain-integration/CLI/.build/debug/triton",
+  "log_sha256": "1b08f0e1b8a4e5a24ac3ccefb98ccbaa5857c11297ae05dff02bd8d1f8a35f4a"
+}
