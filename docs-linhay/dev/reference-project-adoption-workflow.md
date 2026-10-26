@@ -6,6 +6,8 @@
 
 官方上游增量读取 → 当前main源码/测试/已交付差距评估 → 保存采用理由、BDD和文件面 → 独立space/worktree与执行会话开发验证 → 主控审查、修复冲突与联合验证 → 必要本地提交、本地main合并。可纳入且属于现有产品范围的变更无需逐项再次确认。现有明确授权持续有效，历史报告“不自动采用”只代表当时权限，不再作为当前阻断条件。
 
+2026-10-22用户再次明确“开发验证完成要合并到 main 分支”：开发验证通过后继续完成必要本地提交、合并与合并后门禁，不能停在候选分支或子会话完成状态；不逐项重问合并授权。仅有巡检报告或观察候选不算开发交付，未通过验收的候选继续修复，不提前合并。
+
 ## 自动推进、验收、合并与清理闭环
 
 当一个采用切片进入开发后，自动流程按以下阶段推进，并分别记录状态：读取、评估、分派、实现、验证、合并、清理。子会话完成只产生候选证据，不直接改变 `main` 状态。
@@ -32,6 +34,7 @@
 - 开始对照前同时核对 `git branch --show-current`、`git rev-parse main` 与 `git worktree list --porcelain`。主目录HEAD不一定是实际main；用实际main固定blob核对产品差距，较新的授权/追踪文档可能仍在另一分支，不因main占号页而丢弃。集成只按批准文件清单提取，索引/历史人工合并，不整分支回灌旧产品。
 - 会话创建成功才记录真实ID，部分失败先补缺项；建立实现/主控空间时串行登记编号。执行会话停止写入后冻结候选，不整目录复制其门禁上下文；测试绑定联合候选，主控复核后才能合并。
 - 通知去重另存 `last_notified_observation`（HEAD/tag/许可hash/覆盖状态指纹），不推进未完成仓库的成功点。相同未完成增量或模型校验故障不重复通知；覆盖恢复或故障变化再报告。采用登记的 `last_dispatch_failure_notice` 同样不代表会话创建成功。
+- 上游取证在请求 contents/blob 前检查路径用途和文本白名单；二进制、身份目录、密钥和证书只记录路径/来源缺口，不自动获取内容。仅靠扩展名黑名单会漏掉无扩展名二进制和身份材料。过滤失误须停止相应读取、移除意外内容、禁用原脚本并复核残留；不得因此把未审来源标为完整。许可证按固定 SHA 全文与 hash 核对，API NOASSERTION和人工识别分别保留，不沿用历史误记。
 - 新批次创建或复用范围适合的主控。现有SP-206负责SP-203～205，不因此无限扩张；后续若复用需明确更新其有限范围。允许主控协调本批次执行会话，但不授权外部消息。
 
 ## 边界与通知
@@ -46,11 +49,21 @@
 - [SP-193 iCTRL专项](../spaces/SP-193-ictrl-reference-tracking/README.md)：保留原成功检查点、报告与更严格的完整性规则，采用入口统一到本流程。
 - [SP-206主控](../spaces/SP-206-ictrl-security-integration/README.md)：当前首批三个切片的验证与本地合并，不代表这次扩大流程已经执行所有参考更新或产生新产品交付。
 
-## 当前交付状态（2026-10-21）
+## 当前交付状态（2026-10-26）
 
-SP-203～205、[SP-210](../spaces/SP-210-simulator-ax-geometry/README.md)、[SP-212](../spaces/SP-212-mobile-mcp-android-contracts/README.md) 与 SP-214～SP-219 均已完成本地合并；SP-211/SP-213 与 [SP-220](../spaces/SP-220-simulator-resizable-integration/README.md) 主控验收均有独立证据。这些已交付项无需重试。历史交付记录以当时 `f82872e2fa457431ee7cbc7df2bafecea7ca6f1c` 为基线；当前 main 已随 `v0.2.32` 推送并发布，SP-219 的真实 Simulator/Xcode 和 AX/HID transport 仍未执行。
+2026-10-26 [日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-reference-update-report.md)22完整/11 partial，simslim/Revyl CLI两仓HEAD变化，Release与许可不变。新SP-221仅为同目标print-disabled明确launchd暂态提供有界只读重试；SP-222有限主控审查真实nonZeroExit throw、次数/总预算、取消和拒绝语义，不重放mutation。执行/主控均已通过create_thread显式gpt-6.1-sol创建真实会话（见分派记录），不将历史模型失败当当前阻塞。旧13条采用保持已合main，新批验证与合并分别记录，完成开发验证后继续合main。为原main干净，当前聊天自身跟踪资料可作本批必要的独立本地归档提交，与产品候选分开；不包含远端写入。
+
+2026-10-25 [日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261025-reference-update-report.md)对照未变的 `main@24e7d0f2`：22完整/11 partial，Revyl CLI、Maestro、Mobile MCP共3仓HEAD变化，新增v0.1.188/1.0.13，无新增采用项。云上传优先级、托管Web说明、MCP依赖与工具描述不能推定本地缺口；Mobile MCP描述门控此前已实现，不把changelog提及当成本次代码新增。13条采用状态不变，已合入main；不重复分派旧完成项。
+
+2026-10-24 [日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261024-reference-update-report.md)以原目录 `main@24e7d0f2` 为基线：22完整/11 partial，5仓HEAD变化、Release/许可hash不变，无新采用项。录制预算、OCR/空帧、安装状态、UTF-8目录和托管fold schema分别对照实际入口，不把上游通用优化推成本地缺陷。当前网络读取正常，昨日故障不重复通知。
+
+2026-10-23 [日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261023-reference-update-report.md)以原目录 `main@409670ef` 为基线：22完整/11 partial，Maestro、MobileBuildMCP、Revyl CLI共3仓变化；实际锁/资源关闭、工具链与遥测路径对照后无新增本地缺口。13仓首次TLS/连接失败经一次安全重试恢复，原11个许可/源码缺口未恢复；不关闭TLS或将某组故障外推全部仓库。13条既有采用登记均已在main，跟踪资料保留未提交状态，不新建开发批次。
+
+SP-203～205、[SP-210](../spaces/SP-210-simulator-ax-geometry/README.md)、[SP-212](../spaces/SP-212-mobile-mcp-android-contracts/README.md) 与 SP-214～SP-219 均已完成本地合并；SP-211/SP-213 与 [SP-220](../spaces/SP-220-simulator-resizable-integration/README.md) 主控验收均有独立证据。这些已交付项无需重试。历史交付记录以当时 `f82872e2fa457431ee7cbc7df2bafecea7ca6f1c` 为基线；当前 `main@24e7d0f2` 已纳入真实displays修复并完成 `v0.2.33` 独立发布。2026-10-24 [SP-218联合报告](../spaces/SP-218-issue-222-device-hub-input/plans/20261024-live-acceptance-closeout.md)与[SP-219录制报告](../spaces/SP-219-simulator-resizable-routing/plans/20261024-live-recording-validation.md)已证明本机Xcode27.1/iOS27.0专用Simulator的普通native HID/占用拒绝恢复及普通→Resize→普通录制；替代此前真实验收未执行的当前断言。Resize AX/HID仍unsupported，其他工具链、全面AX和用户项目不外推。本监控仅核对已有证据，未执行设备。
 
 10月17～19日桌面 `create_thread` 拒绝显式模型参数的记录是历史事实；其后指定 `gpt-6.1-sol` 的执行 subagent 已实际交付，当前聊天完成主控验收和本地合并。桌面 thread ID 仍为 null，不能用 agent 名替造 thread ID，也不能把旧失败继续列为旧开发 blocker。
+
+2026-10-22 [全量日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261022-reference-update-report.md)以原目录 `main@409670ef` 为基线：22完整、11 partial，4仓有新变化，无新增采用缺口。sim-use v0.16.0 的 Homebrew 修复要求已公证产物，当前 Triton 无该签名前提，保留观察；SP-219许可证误记已按固定全文更正为 Apache-2.0。13条既有采用记录均有主线祖先证据，不重试旧分派、不扩大签名/设备范围。
 
 2026-10-20 新批次：[SP-214](../spaces/SP-214-simulator-display-safety/README.md) 主屏路由安全与 [SP-216](../spaces/SP-216-harmony-forward-cleanup/README.md) HDC 清理归属已完成本地交付。2026-10-21 的 SP-219/SP-220 也已完成；桌面 `create_thread` 对显式 `gpt-6.1-sol` 仍返回模型校验失败，thread ID 保持 null，由当前主控在已授权范围内完成候选审查与本地合并，未使用回退模型。具体证据见 [2026-10-21 主控验证](../spaces/SP-220-simulator-resizable-integration/plans/validation-20261021.md)。
 

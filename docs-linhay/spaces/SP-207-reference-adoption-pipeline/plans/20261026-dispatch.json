@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-26",
+  "model_argument": "gpt-6.1-sol",
+  "status": "both_threads_created",
+  "execution": {
+    "thread_id": "01a175fc-c9c4-7053-b91e-74c209d3f0ca",
+    "worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-221-simulator-resource-read-retry",
+    "branch": "feat/SP-221-simulator-resource-read-retry"
+  },
+  "controller": {
+    "thread_id": "01a175fd-5c91-7b52-bc7c-683468efff9f",
+    "worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-222-simulator-resource-retry-integration",
+    "branch": "feat/SP-222-simulator-resource-retry-integration"
+  },
+  "setup_note": "create_thread returned clientThreadId during setup; real IDs confirmed via list_threads; client IDs never stored as real thread IDs. Managed worktrees initially app path then normal git worktree move to AGENTS sibling paths with WIP retained; all subsequent commands explicit cwd."
+}

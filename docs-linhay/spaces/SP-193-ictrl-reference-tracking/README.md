@@ -46,6 +46,16 @@
 
 ## 最近成功追踪
 
+2026-10-26：[摘要](./plans/20261026-check-summary.json)与[专项记录](./plans/20261026-reference-review.md)确认官方读取正常，HEAD `874f528`、Release `v1.98.12`、许可全文hash未变。无新增采用或故障，成功时间独立更新；本日新开发项来自simslim而非iCTRL。
+
+2026-10-25：[摘要](./plans/20261025-check-summary.json)与[专项记录](./plans/20261025-reference-review.md)确认官方读取正常，HEAD `874f528`、Release `v1.98.12`、许可全文hash均未变。无新采用或故障；摘要保存后推进独立成功时间，不在SP-207复制。
+
+2026-10-24：[摘要](./plans/20261024-check-summary.json)与[专项记录](./plans/20261024-reference-review.md)确认官方读取正常，HEAD `874f528`、Release `v1.98.12` 与Apache-2.0/hash未变。无新增采用或网络故障；摘要先保存，再推进SP-193独立成功时间。
+
+2026-10-23：[摘要](./plans/20261023-check-summary.json)与[恢复记录](./plans/20261023-reference-review.md)确认一次安全重试后完整读取恢复，HEAD `874f528`、Release `v1.98.12` 和许可hash未变。初次TLS/连接失败单独保留；摘要保存后推进独立检查时间，不复制至SP-207。
+
+2026-10-22：[检查摘要](./plans/20261022-check-summary.json)与[专项记录](./plans/20261022-reference-review.md)确认 HEAD `874f528`、Release `v1.98.12` 和 Apache-2.0 全文hash未变；相对10月20日独立成功点无增量。本日完整查询和摘要保存后推进SP-193独立成功点，不回填昨日成功时间，不在SP-207复制。
+
 2026-10-16核对：[v1.98.12增量报告](./plans/20261016-v1-98-12-update.md)，main由99dbfec推进至d88bbf0，完整27提交/30文件；最新非draft Release v1.98.12，Apache-2.0不变。重点是附近发现与配对安全，SP-192五项机制边界保持；重大结论已写回正式参考档案和当日memory。此记录仅代表研究完成，不代表采用、运行或兼容性验证；机器可读检查点与门禁结果见[检查摘要](./plans/20261016-check-summary.json)。长期追踪状态不变。
 
 用户后续要求的本地采用评估已独立归档至 [SP-202](../SP-202-ictrl-security-assessment/README.md)：按当前源码重排广播/发现、日志、Runner 强化的优先级；评估未推进额外上游检查点；其后自动采用权限由本页“采用边界”的用户追加授权更新。

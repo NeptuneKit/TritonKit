@@ -1,5 +1,7 @@
 # iCTRL 长期参考与更新追踪
 
+- 最近检查：2026-10-26，[SP-193记录](../spaces/SP-193-ictrl-reference-tracking/plans/20261026-reference-review.md)。本轮官方身份、全部Release分页、固定许可全文/hash读取正常，HEAD `874f528`、Release `v1.98.12`、Apache-2.0/hash未变；无新故障或iCTRL采用。10月23日首次连接失败与有界恢复保留为历史记录，成功点仍只由SP-193维护。
+
 - 上游：[OpenMinis/iCTRL](https://github.com/OpenMinis/iCTRL)。
 - 决策：正式列为 TritonKit 长期参考项目，自 2026-10-14 起持续追踪。
 - 追踪事实源：[SP-193](../spaces/SP-193-ictrl-reference-tracking/README.md)；检查点：[upstream-state.json](../spaces/SP-193-ictrl-reference-tracking/plans/upstream-state.json)。
