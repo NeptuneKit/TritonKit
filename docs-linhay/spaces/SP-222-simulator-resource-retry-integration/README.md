@@ -84,3 +84,11 @@ root 已接受首次审查的两项修正建议并交执行者处理；候选尚
 整合后 `docs-linhay/scripts/verify.sh --ci-docs`、`docs-linhay/scripts/check-docs.sh`、`git diff --check` 均通过（222 spaces）。迁移前索引缺项已随已提交文档基线解决，不再是当前阻塞。main 仍可能被 root 后续推进，最终整合应仅吸收本 space 审查差异，不能以本分支的旧共享资料覆盖后续 main。
 
 当前等待修订后的冻结候选及完整 CLI 串行时段；本轮未执行产品测试。后续应将首次审查问题逐项标记为已修复/仍缺口，而不能删除历史失败路径与证据。
+
+## 修订候选静态复核
+
+未冻结的三源码/测试文件 SHA256 分别为 state `b7d7bd138da022866d999f7c1e3514a07ae03fdeb63b9ffe54a7b2e249133414`、state tests `284f38f8bc1d2d149bfa8be7a3b68f5838742410e02b17fc78aa0272af776a2d`、mutation tests `e51de9aabf609ca899d52202ae2c5e4de84cca59113a9e893fba0488cb49911b`。最终需与冻结 SHA 再核对。
+
+首次两项风险在源码层均已关闭：完整诊断行白名单拒绝多余/未知上下文和不匹配 header code；成功分支精确检查 sourceCommand，并保留合法非空 stderr。新增反例覆盖 unsupported/unrecognized 子串与复合永久错误、不同来源的成功结果，返回/typed throw 均有覆盖。MutationTests 仅一行 fixture source 对齐，原断言与产品绑定未削弱。尚未发现新实现阻塞；测试通过为 root 提供线索，未在本会话独立复跑。
+
+后续冻结验收须保留反例：未知/多行诊断、header code冲突、截断、无效UTF-8、畸形/重复payload、不同完整command/成功source、预算耗尽、取消与mutation不重放。离线typed throw证明reader处理生产错误类型，不等于本机真实launchd故障已发生。严格白名单可能拒绝未登记原生文本，这是fail-closed边界；后续扩展需新捕获证据。配置30秒不含runner终止/drain额外清理，且同步在途Process不会因本层Task取消立即结束；取消只证明返回后无再次重放。
