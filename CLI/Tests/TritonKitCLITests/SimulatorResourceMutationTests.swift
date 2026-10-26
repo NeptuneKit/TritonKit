@@ -113,6 +113,6 @@ private final class ResourceFixtureRunner: SimulatorResourceCommandRunning {
                 overrides[String(label)] = command.arguments.contains("disable")
             }
         }
-        return HostProcessResult(stdoutData: Data(output.utf8), stderrData: Data(), exitCode: exit, sourceCommand: "fixture", stdoutTruncated: false, stderrTruncated: false, stdoutLogPath: nil, stderrLogPath: nil, stdoutBytes: output.utf8.count, stderrBytes: 0)
+        return HostProcessResult(stdoutData: Data(output.utf8), stderrData: Data(), exitCode: exit, sourceCommand: hostSourceCommand(command), stdoutTruncated: false, stderrTruncated: false, stdoutLogPath: nil, stderrLogPath: nil, stdoutBytes: output.utf8.count, stderrBytes: 0)
     }
 }
