@@ -23,6 +23,6 @@ main@8fcd856f的runHostCommand正常退出后stdout/stderr group.wait无期限�
 
 ## 当前阶段
 
-评估可纳入，待实际执行/主控会话创建；真实thread仅成功后登记。
+已分派实现中，正式三runner红测试已复现；候选须经SP-224独立验收后才合main。
 
 真实thread `01a1773d-1703-7152-bfa0-a6e452491809`，显式gpt-6.1-sol；同级worktree/feat分支已建，已分派，尚未验收/合并。
