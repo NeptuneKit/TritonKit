@@ -1,0 +1,18 @@
+{
+  "command": [
+    "env",
+    "TRITON_VERIFY_XCODE=0",
+    "PATH=/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-main-verification/.build/offline-swift-bin:/Users/linhey/.local/bin:/Users/linhey/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/Applications/Little Snitch.app/Contents/Components:/Applications/ChatGPT.app/Contents/Resources/codex-cli/codex-path:/Users/linhey/.codex/tmp/arg0-macos/codex-arg0lZ561H:/Users/linhey/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/linhey/.grok/bin:/Users/linhey/.local/bin:/Users/linhey/Library/Application Support/gettokens/codex/bin:/Applications/Proxyman.app/Contents/MacOS/:/Users/linhey/.antigravity/antigravity/bin:/Users/linhey/.config/kaku/zsh/bin:/Users/linhey/.stock-cli/bin:/Users/linhey/.bun/bin:/Users/linhey/harmonyOS-command-line-tools/bin:/Applications/DevEco-Studio.app/Contents/sdk/HarmonyOS-NEXT-DB5/openharmony/toolchains:/Users/linhey/Library/Android/sdk/platform-tools:/Users/linhey/Library/Android/sdk/emulator:/Users/linhey/Library/Android/sdk/cmdline-tools/latest/bin:/opt/homebrew/opt/node@16/bin:/opt/homebrew/opt/ruby/bin:/Users/linhey/.swiftly/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/linhey/.orbstack/bin:/Users/linhey/flutter/bin:/Users/linhey/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback:/Applications/ChatGPT.app/Contents/Resources:/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS:/Users/linhey/.orbstack/bin",
+    "docs-linhay/scripts/verify.sh",
+    "--local"
+  ],
+  "cwd": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-main-verification",
+  "pid": 83012,
+  "exit": 0,
+  "watchdog_seconds": 1800.0,
+  "timed_out": false,
+  "wall_seconds": 154.995,
+  "candidate_head": "9fbda1d5df52bc8e5d814d65fa5992552a32f86b",
+  "triton_cli_path": null,
+  "log_sha256": "de0b5e0747e394e92ca59d9441994daf79916c0ea31f712627a977eecc5458aa"
+}

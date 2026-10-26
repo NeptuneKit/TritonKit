@@ -1,0 +1,17 @@
+{
+  "command": [
+    "env",
+    "TRITON_VERIFY_XCODE=0",
+    "docs-linhay/scripts/verify.sh",
+    "--local"
+  ],
+  "cwd": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-main-verification",
+  "pid": 80084,
+  "exit": -15,
+  "watchdog_seconds": 1800.0,
+  "timed_out": false,
+  "wall_seconds": 60.335,
+  "candidate_head": "9fbda1d5df52bc8e5d814d65fa5992552a32f86b",
+  "triton_cli_path": null,
+  "log_sha256": "103bb3fe48bf1f32ff650ed7d70fd4f115ded19e2f0f8a69b2bed89f1902213f"
+}

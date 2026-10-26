@@ -1,0 +1,20 @@
+{
+  "command": [
+    "swift",
+    "test",
+    "--package-path",
+    "CLI",
+    "--no-parallel",
+    "--disable-automatic-resolution",
+    "--skip-update"
+  ],
+  "cwd": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-main-verification",
+  "pid": 76287,
+  "exit": 0,
+  "watchdog_seconds": 1200.0,
+  "timed_out": false,
+  "wall_seconds": 138.989,
+  "candidate_head": "9fbda1d5df52bc8e5d814d65fa5992552a32f86b",
+  "triton_cli_path": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-main-verification/CLI/.build/debug/triton",
+  "log_sha256": "3a000e42a89446654b5461ba2f48b7e99b84ce60ab4ed81ec588d9b574fffbdd"
+}
