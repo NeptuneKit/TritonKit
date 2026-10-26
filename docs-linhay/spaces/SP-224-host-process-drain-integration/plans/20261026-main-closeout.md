@@ -15,12 +15,14 @@
 
 原verify.sh首轮触发自动repository元数据Updating后按本任务PID停止，exit-15，不算pass，Package.resolved无diff；离线wrapper只为swift build/test补--disable-automatic-resolution --skip-update，原local各步骤完整执行。原始被停止日志与成功日志均保留；未安装升级版本。合后日志初次暂存diff发现编译诊断空白，未止住shell commit链而提交daa32cbe；后续7eeef6f8将完整raw保留ignored/归档，tracked摘要保持连续测试输出或明确摘要，postmerge-log-manifest逐hash区分raw/摘要，最终range diff检查通过，不冒充首次检查绿色。
 
-证据位于本目录validation，原始大日志在原主目录`.build/reference-monitor/20261026-followup/root/raw-main/`；主控原始focused编译日志在其ignored目录，清理前归档至同级archives/20261026-sp223-sp224，manifest核验。两源worktree已停止、clean，branch tip均可达main后正常清理；原11份文档整理未提交，开工hash/精确副本和patch保留，临时main完成后原目录回main并保留整理diff。
+证据位于本目录validation，原始大日志在原主目录`.build/reference-monitor/20261026-followup/root/raw-main/`；主控原始focused编译日志在其ignored目录，清理前归档至同级archives/20261026-sp223-sp224，manifest核验。两源worktree已停止、clean，branch tip均可达main后正常清理；原11份文档整理未提交，开工hash/精确副本和patch保留；回main时索引两处冲突逐行保留新SP223/224状态与旧SP222整理，清除冲突stage但不stage整理diff。原spaces/README清理行与本批新状态重合被接替，当前剩10份docs dirty（含原untracked审计），产品无WIP，未覆盖原整理事实。
 
-当前清理和最后docs门禁结果写入本文收尾段；不得把临时main通过当原目录回main已完成。经验已回写ops治理与CLI文档，输出完整性/exit事实分开，旧SP222整理WIP不混入本批提交。
+最终清理和原目录门禁见收尾段；原目录main与临时main阶段已分别核对。经验已回写ops治理与CLI文档，输出完整性/exit事实分开，旧SP222整理WIP不混入本批提交。
 
 ## 归档清理与最终门禁
 
-360份固定来源/补查/原函数probe/红绿/独立及actualmain日志、原11份WIP精确副本已归档，MANIFEST逐文件大小/hash通过；归档为同级`archives/20261026-sp223-sp224/`。源执行与主控worktree已停止且clean，普通worktree remove完成；首次在旧detachedHEAD删除branch提示未合入，不改-D、不推送，改在真实main已验证祖先后普通branch-d成功。原目录WIP将保留回main；最终只剩原目录。
+360份固定来源/补查/原函数probe/红绿/独立及actualmain日志、原11份WIP精确副本已归档，MANIFEST逐文件大小/hash通过；归档为同级`archives/20261026-sp223-sp224/`。源执行与主控worktree已停止且clean，普通worktree remove完成；首次在旧detachedHEAD删除branch提示未合入，不改-D、不推送，改在真实main已验证祖先后普通branch-d成功。原目录已回main并保留既有docs整理WIP；最终只剩原目录。
 
 ci-docs和check-docs224spaces、range diff均通过。第一次收口日志名final-ci-docs触发既有可追溯命名门禁，改为日期明确的文件名后通过；产品不变未重复Swift。原编译日志空白通过raw/摘要分层纠正，manifest保持原hash，不伪造首次check通过。
+
+最终原目录核对：main、无unmerged/暂存、产品3文件匹配冻结，只有10份原docs整理差异；注册worktree=1，临时main正常移除。恢复时共享索引先出现两处冲突且初次docs结构失败，逐文件保留最新交付及原整理后，ci-docs/check-docs224/diff全部exit0。15条采用均local_merged且合并SHA为main祖先；两仓checkpoint以外31对象不变。完成验证机器记录位于原目录`.build/reference-monitor/20261026-followup/root/20261026-closeout-validation.json`，不将原WIP称作clean。
