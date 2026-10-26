@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-26",
+  "timezone": "Asia/Shanghai",
+  "sourceCandidate": "eb9539f48df4ea6a0e1cf3de6828b8d8177c8017",
+  "documentationBaseline": "f0159b483fec90756f8a2d3361c7e8007a2f1010",
+  "testedCommit": "4249bd264ddc0e1745e414187dbfa51e05e0bcf9",
+  "testedTree": "3a1e130ef0f3af4b144ad4072fbeec67f984661c",
+  "sha256": {
+    "Sources/TritonKitCLI/CLISimulatorResourceState.swift": "b7d7bd138da022866d999f7c1e3514a07ae03fdeb63b9ffe54a7b2e249133414",
+    "CLI/Tests/TritonKitCLITests/SimulatorResourceStateTests.swift": "284f38f8bc1d2d149bfa8be7a3b68f5838742410e02b17fc78aa0272af776a2d",
+    "CLI/Tests/TritonKitCLITests/SimulatorResourceMutationTests.swift": "e51de9aabf609ca899d52202ae2c5e4de84cca59113a9e893fba0488cb49911b",
+    "CLI/.build/debug/triton": "ddf7f0600842ca34c1746b3be6184bbc8a95a3dad05229999a3f7d09991c7f4a",
+    "docs-linhay/spaces/SP-222-simulator-resource-retry-integration/plans/focused.log": "89dbbd9e0cc2d42b34512745af47fecf832d1303f40dacdbdc4ce52eedcea317",
+    "docs-linhay/spaces/SP-222-simulator-resource-retry-integration/plans/full-cli.log": "55bca3b44a82c09f934505da6c7a10fb778df6f7860a4aac00e3bd5906a09e20"
+  },
+  "focusedExit": 0,
+  "fullCLIExit": 0,
+  "focusedXCTest": 37,
+  "fullXCTest": 91,
+  "fullSwiftTestingReported": 1515,
+  "fullSwiftTestingSuites": 153,
+  "explicitSwiftTestingSkipped": 3,
+  "rootTests": "not executed by SP-222",
+  "realSimulator": "not executed",
+  "documentationChecks": {
+    "verify.sh --ci-docs": 0,
+    "check-docs.sh": 0,
+    "git diff --check": 0,
+    "git diff --check f0159b48 HEAD": 0
+  }
+}

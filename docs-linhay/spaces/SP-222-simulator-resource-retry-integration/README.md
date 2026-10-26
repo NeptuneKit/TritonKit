@@ -92,3 +92,7 @@ root 已接受首次审查的两项修正建议并交执行者处理；候选尚
 首次两项风险在源码层均已关闭：完整诊断行白名单拒绝多余/未知上下文和不匹配 header code；成功分支精确检查 sourceCommand，并保留合法非空 stderr。新增反例覆盖 unsupported/unrecognized 子串与复合永久错误、不同来源的成功结果，返回/typed throw 均有覆盖。MutationTests 仅一行 fixture source 对齐，原断言与产品绑定未削弱。尚未发现新实现阻塞；测试通过为 root 提供线索，未在本会话独立复跑。
 
 后续冻结验收须保留反例：未知/多行诊断、header code冲突、截断、无效UTF-8、畸形/重复payload、不同完整command/成功source、预算耗尽、取消与mutation不重放。离线typed throw证明reader处理生产错误类型，不等于本机真实launchd故障已发生。严格白名单可能拒绝未登记原生文本，这是fail-closed边界；后续扩展需新捕获证据。配置30秒不含runner终止/drain额外清理，且同步在途Process不会因本层Task取消立即结束；取消只证明返回后无再次重放。
+
+## 冻结候选验收结果
+
+最终执行源 `eb9539f4` 已在隔离联合提交 `4249bd26` 独立验证；[验收报告](plans/20261026-validation-report.md)与[证据清单](plans/20261026-evidence-manifest.json)记录准确tree/hash/日志。focused37项零失败；完整CLI XCTest91项零失败，SwiftTesting报告1515项/153 suites通过并明确3项跳过；exit均0，不累加focused。首次静态问题均已修正，配置预算/真实运行边界保留。当前只判离线候选验收通过；root仍负责main集成、合后门禁与清理。历史待交接/索引失败记录已被本节与后续门禁替代。
