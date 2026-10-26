@@ -8,7 +8,7 @@
 - 状态：持续追踪与采用。既有 SP-203～205、SP-210、SP-212、SP-214～SP-219 已完成本地合并，SP-211/SP-213 与 SP-220 主控验收和清理均有独立证据；当前 main 为 `24e7d0f2`，`v0.2.33` 已由独立授权会话发布。SP-218普通native HID/占用拒绝恢复、SP-219普通→Resize→普通录制已有Xcode27.1/iOS27.0专用Simulator真实验收；Resize AX/HID仍unsupported，其他工具链及用户项目不外推。
 - 正式说明：[参考项目追踪与采用](../../dev/reference-project-adoption-workflow.md)。
 - 仓库与读取状态：[reference-state.json](./plans/reference-state.json)；任务去重与授权：[adoption-state.json](./plans/adoption-state.json)。上游读取状态与采用交付状态分开。
-- 最近检查：2026-10-26，22完整/11 partial，simslim与Revyl CLI共2仓HEAD变化，Release/许可未变；[日报](./plans/20261026-reference-update-report.md)。新采纳[SP-221资源只读暂态重试](../SP-221-simulator-resource-read-retry/README.md)，由[SP-222主控](../SP-222-simulator-resource-retry-integration/README.md)验收合main；两个显式gpt-6.1-sol真实会话已创建，当前开发中，未冒充验收/合并。原13条采用仍已合main，11旧源码/许可缺口保留成功点。
+- 最近检查：2026-10-26，22完整/11 partial，simslim/Revyl两仓HEAD变化，Release/许可不变；[日报](./plans/20261026-reference-update-report.md)。新[SP-221](../SP-221-simulator-resource-read-retry/README.md)经[SP-222](../SP-222-simulator-resource-retry-integration/README.md)验收，候选eb9539f4合本地main `a0eebff0`；focused37、独立与合后完整CLI、root、适用local/docs均通过。显式gpt-6.1-sol真实执行/主控会话创建成功。旧13条采用保持，11旧源码/许可缺口不推进；未push/tag/release或执行设备恢复验证。
 - 2026-10-22用户重申：开发验证完成须继续合入本地main并通过合并后门禁，不停在执行会话或候选分支完成；现有13条采用登记的合并提交已核对为main祖先。
 
 ## 执行流程

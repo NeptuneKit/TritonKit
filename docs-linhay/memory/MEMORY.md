@@ -1,6 +1,6 @@
 # TritonKit Project Memory
 
-- 2026-10-26：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-reference-update-report.md)22完整/11 partial、simslim/Revyl两仓HEAD变化。新增[SP-221](../spaces/SP-221-simulator-resource-read-retry/README.md)只读资源暂态有限重试及[SP-222](../spaces/SP-222-simulator-resource-retry-integration/README.md)有限主控，两个真实create_thread显式gpt-6.1-sol成功；当前开发中，后续验收/合main独立记，旧模型失败不作为本批阻塞。
+- 2026-10-26：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-reference-update-report.md)22完整/11 partial、simslim/Revyl两仓HEAD变化。新增[SP-221](../spaces/SP-221-simulator-resource-read-retry/README.md)只读资源暂态有限重试及[SP-222](../spaces/SP-222-simulator-resource-retry-integration/README.md)有限主控，两个真实create_thread显式gpt-6.1-sol成功；候选eb9539f4经主控及合后门禁合本地main a0eebff0，未发布，旧模型失败不作为本批阻塞。
 
 - 2026-10-25：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261025-reference-update-report.md)22完整/11 partial、3仓HEAD变化；新增Revyl v0.1.188/Mobile MCP 1.0.13，无新本地采用。云优先级、托管Web说明、MCP依赖/描述无对应本地路径；既有13条采用均在main，不重排。
 

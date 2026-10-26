@@ -51,7 +51,7 @@
 
 ## 当前交付状态（2026-10-26）
 
-2026-10-26 [日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-reference-update-report.md)22完整/11 partial，simslim/Revyl CLI两仓HEAD变化，Release与许可不变。新SP-221仅为同目标print-disabled明确launchd暂态提供有界只读重试；SP-222有限主控审查真实nonZeroExit throw、次数/总预算、取消和拒绝语义，不重放mutation。执行/主控均已通过create_thread显式gpt-6.1-sol创建真实会话（见分派记录），不将历史模型失败当当前阻塞。旧13条采用保持已合main，新批验证与合并分别记录，完成开发验证后继续合main。为原main干净，当前聊天自身跟踪资料可作本批必要的独立本地归档提交，与产品候选分开；不包含远端写入。
+2026-10-26 [日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-reference-update-report.md)22完整/11 partial，simslim/Revyl CLI两仓HEAD变化，Release与许可不变。新SP-221仅为同目标print-disabled明确launchd暂态提供有界只读重试；SP-222有限主控审查真实nonZeroExit throw、次数/总预算、取消和拒绝语义，不重放mutation。执行/主控均已通过create_thread显式gpt-6.1-sol创建真实会话（见分派记录），不将历史模型失败当当前阻塞。旧13条采用保持已合main，新批验证与合并分别记录；SP-221候选eb9539f4经SP-222独立验收后合actualmain a0eebff0，合后CLI/root/local/docs通过，当前标local_merged。真实恢复未执行，未push/tag/release。为原main干净，当前聊天自身跟踪资料可作本批必要的独立本地归档提交，与产品候选分开；不包含远端写入。
 
 2026-10-25 [日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261025-reference-update-report.md)对照未变的 `main@24e7d0f2`：22完整/11 partial，Revyl CLI、Maestro、Mobile MCP共3仓HEAD变化，新增v0.1.188/1.0.13，无新增采用项。云上传优先级、托管Web说明、MCP依赖与工具描述不能推定本地缺口；Mobile MCP描述门控此前已实现，不把changelog提及当成本次代码新增。13条采用状态不变，已合入main；不重复分派旧完成项。
 

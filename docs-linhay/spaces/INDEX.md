@@ -1,7 +1,7 @@
 # TritonKit Space 编号索引
 
 
-2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已创建，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
+2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-10-24（有限任务归档、真实验收与范围收口）
 > 覆盖范围：222/222 个已存在 space
@@ -248,7 +248,7 @@
 
 | `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30已发布 | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
 
-| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月26日22完整/11 partial，新SP-221/SP-222实际会话创建成功、开发中；旧13条采用已合main |
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月26日22完整/11 partial，新SP-221/SP-222已通过主控与合后门禁，合本地main a0eebff0；旧13条采用已合main |
 
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 
@@ -276,5 +276,5 @@
 | `SP-218-issue-222-device-hub-input` | [`SP-218-issue-222-device-hub-input`](./SP-218-issue-222-device-hub-input/README.md) | 已归档／真实验收通过 | 2026-10-24 native HID tap/swipe、Hub占用拒绝及恢复通过；兼容修复/文档已由c0ce0cc2推送；v0.2.33已发布，双架构/Homebrew/只读Web验收通过 |
 | `SP-219-simulator-resizable-routing` | [`SP-219-simulator-resizable-routing`](./SP-219-simulator-resizable-routing/README.md) | 已归档／录制真实验收通过 | 2026-10-24普通→Resize→普通视频真实解码通过；Resize AX/HID保持unsupported |
 | `SP-220-simulator-resizable-integration` | [`SP-220-simulator-resizable-integration`](./SP-220-simulator-resizable-integration/README.md) | v0.2.32已发布 | SP-219 主控验证与本地合并；候选 `51cd20dd` → `f9399e5e`；worktree已清理 |
-| `SP-221-simulator-resource-read-retry` | [`SP-221-simulator-resource-read-retry`](./SP-221-simulator-resource-read-retry/README.md) | 执行中 | 显式gpt-6.1-sol真实执行会话已创建；同一目标只读重试，待红绿/focused验收，主控SP-222 |
-| `SP-222-simulator-resource-retry-integration` | [`SP-222-simulator-resource-retry-integration`](./SP-222-simulator-resource-retry-integration/README.md) | 主控审查中 | 显式gpt-6.1-sol真实主控会话已创建；核对真实runner与预算，待候选冻结验证合main |
+| `SP-221-simulator-resource-read-retry` | [`SP-221-simulator-resource-read-retry`](./SP-221-simulator-resource-read-retry/README.md) | 已合本地main | a0eebff0；focused37、完整CLI及合后root/local/docs通过；真实恢复未测 |
+| `SP-222-simulator-resource-retry-integration` | [`SP-222-simulator-resource-retry-integration`](./SP-222-simulator-resource-retry-integration/README.md) | 已验收合本地main | 独立候选4249bd26、报告95a1dc8f、真实合并a0eebff0；未push/tag/release |

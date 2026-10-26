@@ -388,7 +388,7 @@ Harmony 有两条明确分层：host-side adapter 使用 HDC/DevEco 工具完成
 
 资源步骤 `simulator-resource`（内部 `simulatorResource`）仅支持 `plan inspect` 与 `replay --dry-run` 输出独立资源命令。真实 replay 只要发现任意一项资源步骤，就在整个计划开始、runtime 解析和任何前序动作之前以单一 `unsupported_capability` envelope/非零退出拒绝；不能先执行前面的业务动作再发现资源编排不支持。独立 `sim resource plan/apply/verify/restore` 能力保留，须按当前授权单独执行并保存 receipt/恢复证据。SP-177 的 fleet/编排扩张已取消当前排期，dry-run 输出不是资源执行或恢复证明。
 
-SP-221资源状态读取仅对同一精确UDID的`launchctl print-disabled system`明确launchd启动/teardown诊断提供有限只读重试：最多3次，0.1/0.2秒退避计入原30秒执行预算，每次host timeout不超过剩余预算；host runner超时终止/pipe drain仍可能有额外清理耗时，不称硬墙钟保证。生产`HostCommandRunError.nonZeroExit`的完整命令及成功/失败结果来源必须匹配本次读取，严格完整诊断不匹配、权限/截断/畸形/timeout/cancel保持失败。enable/disable/boot等mutation和未知送达不重放，空override不能从失败推导；该离线契约不证明本机launchd恢复或跨工具链兼容。实现/联合验收进度见SP-221/SP-222，未通过主控门禁前不标已合main。
+SP-221资源状态读取仅对同一精确UDID的`launchctl print-disabled system`明确launchd启动/teardown诊断提供有限只读重试：最多3次，0.1/0.2秒退避计入原30秒执行预算，每次host timeout不超过剩余预算；host runner超时终止/pipe drain仍可能有额外清理耗时，不称硬墙钟保证。生产`HostCommandRunError.nonZeroExit`的完整命令及成功/失败结果来源必须匹配本次读取，严格完整诊断不匹配、权限/截断/畸形/timeout/cancel保持失败。enable/disable/boot等mutation和未知送达不重放，空override不能从失败推导；该离线契约不证明本机launchd恢复或跨工具链兼容。SP-221/SP-222已通过主控与actualmain合后离线门禁，合并a0eebff0；真实恢复未验证。
 
 `replay --dry-run` 必须在不连接 runtime 的前提下提前拒绝明显不可执行的 `.tritonplan` step：`tap` 不能同时声明多个 selector，`wait` 不能同时声明多个 condition，`paste/type` 必须提供 `value` 或 `text`，`wait` 必须提供一个 condition。agent 遇到 dry-run 通过但真实 replay 因这些静态问题失败时，应视为 replay validation bug。
 

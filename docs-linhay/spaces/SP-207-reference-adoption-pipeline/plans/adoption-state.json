@@ -447,8 +447,8 @@
       "assessment": "docs-linhay/spaces/SP-221-simulator-resource-read-retry/README.md",
       "space": "SP-221-simulator-resource-read-retry",
       "controller_space": "SP-222-simulator-resource-retry-integration",
-      "state": "implemented_pending_controller_validation",
-      "controller_state": "full_cli_validation",
+      "state": "local_merged",
+      "controller_state": "accepted_local_merged",
       "execution_thread_id": "01a175fc-c9c4-7053-b91e-74c209d3f0ca",
       "controller_thread_id": "01a175fd-5c91-7b52-bc7c-683468efff9f",
       "execution_model": "gpt-6.1-sol",
@@ -456,12 +456,19 @@
       "host_id": "local",
       "worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-221-simulator-resource-read-retry",
       "controller_worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-222-simulator-resource-retry-integration",
-      "verification_note": "Execution red10/3fail baseline, final37/37green. Controller rejected substring classifier and success source mismatch; fixed. Evidence-only patch removal eb9539f4; full CLI controller gate pending; not merged.",
+      "verification_note": "Actualmain merge a0eebff0 after frozen eb9539f4 and independent controller4249bd26 focused37/fullCLI exit0. PostmergeCLI XCTest91 + SwiftTesting1515/153 (3real env skip), root XCTest5+108+293, local gate with Xcode skipped, docs gates all pass. No device recovery claim or remote release.",
       "branch": "feat/SP-221-simulator-resource-read-retry",
       "controller_branch": "feat/SP-222-simulator-resource-retry-integration",
       "dispatch_evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261026-dispatch.json",
       "acceptance_candidate_sha": "eb9539f48df4ea6a0e1cf3de6828b8d8177c8017",
-      "focused_test_count": 37
+      "focused_test_count": 37,
+      "local_merge_sha": "a0eebff06564dcf68ccf728efc97ec2d4f3d9292",
+      "last_verified_on": "2026-10-26",
+      "state_evidence": "docs-linhay/spaces/SP-222-simulator-resource-retry-integration/plans/20261026-main-merge.md",
+      "controller_validation_commit": "95a1dc8f348b5f68f6c0aa572b46bb4bd83f795a",
+      "worktree_status": "merged_pending_cleanup",
+      "controller_worktree_status": "validated_pending_cleanup",
+      "release_tag": null
     }
   ],
   "new_thread_policy": {
@@ -473,5 +480,5 @@
     "reasoning_effort": "unchanged"
   },
   "last_updated_on": "2026-10-26",
-  "last_update_note": "SP-221 product candidate eb9539f4 frozen37focused; SP-222 strict source/budget and fixture audit completed, full CLI pending. Prior13 merged unchanged."
+  "last_update_note": "SP-221 verified and merged to local main a0eebff0; SP-222 isolated candidate and actualmain postmerge gates passed. Cleanup pending evidence archive. No push/tag/release; prior13 adoption unchanged."
 }
