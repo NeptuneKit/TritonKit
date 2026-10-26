@@ -60,3 +60,7 @@ SP-192五机制、SP-196/200及SP-214/218/219已交付内容先行去重；实�
 | `mobile-dev-inc/Maestro` | `da0f0f2b7ad3` | cli-2.11.0 | 未变 | 完整 | observe |
 | `linhay/SKProcessRunner` | `24e036604b9e` | 0.0.17 | 未变 | partial | observe |
 | `mobile-next/mobile-mcp` | `294f403f2fe9` | 1.0.13 | 未变 | 完整 | observe |
+
+## 本日采用最终结果（接替上方分派时快照）
+
+SP-221候选eb9539f4经SP-222独立验收（focused37；完整CLI XCTest91/SwiftTesting1515、153suite、3skip）合本地main a0eebff0。合后完整CLI/root/local/docs门禁通过，真实恢复未验证。原跟踪资料已独立必要本地归档，不混产品；控制证据精确吸收f3d06523，等树历史merge6271d24e保留提交，40份ignored/验收证据归档后两个worktree/branch普通清理。状态local_merged并已清理，未push/tag/release。上方“开发中/无产品测试”等只代表读取评估时快照，以SP-222 main-merge最终记录为准。

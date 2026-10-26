@@ -65,3 +65,6 @@
 ## 最终整合验收
 
 实际main合并`a0eebff06564dcf68ccf728efc97ec2d4f3d9292`，SP222独立focused37/fullCLI通过；actualmain合后XCTest91、SwiftTesting1515/153 suites（3真实环境skip）、root5+108+293、适用local及ci-docs/check-docs/diff通过。30s为配置执行预算含退避与各次timeout，不含runner额外清理；真实设备恢复/跨Xcode未测。未push/tag/release。证据见SP-222/plans/20261026-main-merge.md；当前候选/历史开发段均为过程记录，以此最终验收接替未完成断言。
+
+
+清理：2026-10-26必要红/绿/完整/门禁日志与空间资料共40份已归档至`../TritonKit-worktrees/archives/20261026-sp221-sp222/`，MANIFEST逐文件hash复核后正常移除本批worktree及已合分支。主控history-only合并6271d24e与f3d06523树相同，保留已精确吸收的最新main文档，未回灌旧WIP；原目录仍为main。

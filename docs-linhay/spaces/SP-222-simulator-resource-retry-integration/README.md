@@ -118,3 +118,6 @@ root 已接受首次审查的两项修正建议并交执行者处理；候选尚
 ## root最终状态
 
 主控报告95a1dc8f已按本space精确吸收，未整controller分支回灌旧文档。实际main合并a0eebff0，合后完整CLI/root/local/docs门禁通过，现可标local_merged。设备恢复未执行、未push/tag/release；清理前证据MANIFEST已归档，清理结果另写main-merge记录。
+
+
+清理：2026-10-26必要红/绿/完整/门禁日志与空间资料共40份已归档至`../TritonKit-worktrees/archives/20261026-sp221-sp222/`，MANIFEST逐文件hash复核后正常移除本批worktree及已合分支。主控history-only合并6271d24e与f3d06523树相同，保留已精确吸收的最新main文档，未回灌旧WIP；原目录仍为main。

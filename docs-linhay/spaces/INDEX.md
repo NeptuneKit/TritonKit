@@ -276,5 +276,5 @@
 | `SP-218-issue-222-device-hub-input` | [`SP-218-issue-222-device-hub-input`](./SP-218-issue-222-device-hub-input/README.md) | 已归档／真实验收通过 | 2026-10-24 native HID tap/swipe、Hub占用拒绝及恢复通过；兼容修复/文档已由c0ce0cc2推送；v0.2.33已发布，双架构/Homebrew/只读Web验收通过 |
 | `SP-219-simulator-resizable-routing` | [`SP-219-simulator-resizable-routing`](./SP-219-simulator-resizable-routing/README.md) | 已归档／录制真实验收通过 | 2026-10-24普通→Resize→普通视频真实解码通过；Resize AX/HID保持unsupported |
 | `SP-220-simulator-resizable-integration` | [`SP-220-simulator-resizable-integration`](./SP-220-simulator-resizable-integration/README.md) | v0.2.32已发布 | SP-219 主控验证与本地合并；候选 `51cd20dd` → `f9399e5e`；worktree已清理 |
-| `SP-221-simulator-resource-read-retry` | [`SP-221-simulator-resource-read-retry`](./SP-221-simulator-resource-read-retry/README.md) | 已合本地main | a0eebff0；focused37、完整CLI及合后root/local/docs通过；真实恢复未测 |
-| `SP-222-simulator-resource-retry-integration` | [`SP-222-simulator-resource-retry-integration`](./SP-222-simulator-resource-retry-integration/README.md) | 已验收合本地main | 独立候选4249bd26、报告95a1dc8f、真实合并a0eebff0；未push/tag/release |
+| `SP-221-simulator-resource-read-retry` | [`SP-221-simulator-resource-read-retry`](./SP-221-simulator-resource-read-retry/README.md) | 已合本地main | a0eebff0；focused37、完整CLI及合后root/local/docs通过；真实恢复未测；worktree/branch已清理 |
+| `SP-222-simulator-resource-retry-integration` | [`SP-222-simulator-resource-retry-integration`](./SP-222-simulator-resource-retry-integration/README.md) | 已验收合本地main | 独立候选4249bd26、报告95a1dc8f、真实合并a0eebff0；worktree/branch已清理、未push/tag/release |

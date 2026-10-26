@@ -17,3 +17,7 @@ actualmain合前clean，已运行merge-tree --write-tree预检；仅SP221 README
 actualmain a0eebff0：独立完整CLI退出0（XCTest91/零失败，SwiftTesting1515/153 suites；3个真实环境skip），独立根包退出0（XCTest5；SwiftTesting108/20 suites+293/41 suites，真实Bonjour skip）。`TRITON_VERIFY_XCODE=0 verify.sh --local`退出0，含根包、Release CLI构建、CLI smoke、fake Harmony/iOS runtime smoke、docs/diff；只跳过Xcode真实Simulator构建，因为本监控未获设备/真实Xcode动作授权，未把fixture smoke当成设备恢复。单独ci-docs/check-docs/diff均通过，222 spaces。Release只是本地build未发版、未安装替换，未push/tag/release。
 
 只在以上实际合后门禁通过后将SP221状态标local_merged。严格launchd错误样本仍是上游文本+离线fixture，不代表本机暂态恢复概率或跨Xcode兼容。30s配置执行预算可能额外host清理耗时；取消不保证同步在途Process立即结束。
+
+## 清理完成
+
+40份本批空间/ignored日志/root门禁与只读摘要已归档并SHA256复核，SP221/SP222两个worktree均clean、agents已停止写入后正常git worktree remove与git branch -d。controller95a1dc8f证据已精确吸收f3d06523，使用history-only ours merge6271d24e保留控制验收提交可达性；两个提交tree完全相同，未回灌旧文档或产品，源branch为main祖先后普通删除。原目录为main，未push/tag/release。

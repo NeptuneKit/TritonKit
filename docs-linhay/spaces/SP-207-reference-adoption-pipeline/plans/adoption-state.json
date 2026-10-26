@@ -466,9 +466,11 @@
       "last_verified_on": "2026-10-26",
       "state_evidence": "docs-linhay/spaces/SP-222-simulator-resource-retry-integration/plans/20261026-main-merge.md",
       "controller_validation_commit": "95a1dc8f348b5f68f6c0aa572b46bb4bd83f795a",
-      "worktree_status": "merged_pending_cleanup",
-      "controller_worktree_status": "validated_pending_cleanup",
-      "release_tag": null
+      "worktree_status": "removed_after_local_merge",
+      "controller_worktree_status": "removed_after_local_merge",
+      "release_tag": null,
+      "controller_history_merge_sha": "6271d24e",
+      "cleanup_evidence": "docs-linhay/spaces/SP-222-simulator-resource-retry-integration/plans/20261026-main-merge.md"
     }
   ],
   "new_thread_policy": {
@@ -480,5 +482,5 @@
     "reasoning_effort": "unchanged"
   },
   "last_updated_on": "2026-10-26",
-  "last_update_note": "SP-221 verified and merged to local main a0eebff0; SP-222 isolated candidate and actualmain postmerge gates passed. Cleanup pending evidence archive. No push/tag/release; prior13 adoption unchanged."
+  "last_update_note": "SP-221 merged a0eebff0 and verified on actualmain; SP-222 evidence integrated f3d06523, history-only identical-tree merge6271d24e. Both sibling worktrees and merged branches normally removed after40-file hashed evidence archive. No push/tag/release."
 }
