@@ -12,8 +12,4 @@
 
 ## 当前阶段
 
-冻结候选 `25205ea2f0c1e549c0c6777b2e045e3a7f7088e0` 已与 main 文档基线 `f86e9cb1` 在本 worktree 联合为 `80922842`；三个产品/测试文件与候选 blob / manifest 字节一致。独立 focused 50 tests / 2 suites、完整 CLI 1527 tests / 154 suites、实际 CLI fake-adb 四场景均通过。文档门禁与移交以[独立验收报告](plans/20261026-independent-validation.md)为准。
-
-本阶段是独立候选验收，不代表 main 已合并或合后门禁、root/local、发布、设备/用户场景验收已完成；这些阶段由 root 收口。原始静态发现与修订过程保留在[审查记录](plans/20261026-static-review.md)，其中未冻结缺陷已由本候选补正。
-
-真实thread `01a1773d-8556-7a01-a885-a0f5d0c68a6d`，显式gpt-6.1-sol；同级worktree/feat分支的独立候选验收通过；actual main 尚未合并，合后门禁由 root 执行。
+已通过独立验收并合本地main `9fbda1d5`，合后完整CLI、fake CLI四场景及适用local门禁通过；清理与最终记录见[主线收口](../SP-224-host-process-drain-integration/plans/20261026-main-closeout.md)。未push/tag/release，真实设备和同步文件IO硬截止不在验收范围。

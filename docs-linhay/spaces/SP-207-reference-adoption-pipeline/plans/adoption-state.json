@@ -482,8 +482,8 @@
       "assessment": "docs-linhay/spaces/SP-223-host-process-drain-deadline/README.md",
       "space": "SP-223-host-process-drain-deadline",
       "controller_space": "SP-224-host-process-drain-integration",
-      "state": "candidate_ready",
-      "controller_state": "validating",
+      "state": "local_merged",
+      "controller_state": "accepted_local_merged",
       "execution_thread_id": "01a1773d-1703-7152-bfa0-a6e452491809",
       "controller_thread_id": "01a1773d-8556-7a01-a885-a0f5d0c68a6d",
       "execution_model": "gpt-6.1-sol",
@@ -494,11 +494,15 @@
       "worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-223-host-process-drain-deadline",
       "controller_worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-224-host-process-drain-integration",
       "last_verified_on": "2026-10-26",
-      "verification_note": "Production baseline red6 parameter cases/18 assertion issues; review gap red6; execution focused50/2suites exit0. Frozen25205ea2 and3file hashes independently checked; controller independent full/CLI acceptance pending. Not merged.",
+      "verification_note": "Frozen25205ea2; independent focused50, fullXCTest91+SwiftTesting1527/154(3skips), fakeCLI4cases and docs passed. Actualmain9fbda1d5 postmerge same fullCLI/fake4 and offline local gate root/release-build/fake-smokes/docs exit0. No device/release.",
       "dispatch_evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261026-followup-dispatch.json",
-      "local_merge_sha": null,
+      "local_merge_sha": "9fbda1d5df52bc8e5d814d65fa5992552a32f86b",
       "release_tag": null,
-      "acceptance_candidate_sha": "25205ea2f0c1e549c0c6777b2e045e3a7f7088e0"
+      "acceptance_candidate_sha": "25205ea2f0c1e549c0c6777b2e045e3a7f7088e0",
+      "controller_validation_commit": "1c73578755963268b45ea4a739224ff132ef6d26",
+      "state_evidence": "docs-linhay/spaces/SP-224-host-process-drain-integration/plans/20261026-main-closeout.md",
+      "worktree_status": "merged_cleanup_pending",
+      "controller_worktree_status": "merged_cleanup_pending"
     }
   ],
   "new_thread_policy": {
@@ -510,5 +514,5 @@
     "reasoning_effort": "unchanged"
   },
   "last_updated_on": "2026-10-26",
-  "last_update_note": "SP223/224 model-locked real execution/controller threads and sibling worktrees created; implementation/static review active. 14 old adopted records preserved."
+  "last_update_note": "SP223 production and SP224 accepted evidence merged9fbda1d5; postmerge fullCLI/fakeCLI/local gates passed; cleanup pending. Prior14 records preserved."
 }

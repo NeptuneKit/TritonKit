@@ -23,7 +23,7 @@ main@8fcd856f的runHostCommand正常退出后stdout/stderr group.wait无期限�
 
 ## 当前阶段
 
-执行候选已完成聚焦验证，待 SP-224 独立审查与主控整合；详见下方执行记录。
+已通过独立验收并合本地main `9fbda1d5`，合后完整CLI、fake CLI四场景及适用local门禁通过；清理与最终记录见[主线收口](../SP-224-host-process-drain-integration/plans/20261026-main-closeout.md)。未push/tag/release，真实设备和同步文件IO硬截止不在验收范围。
 
 ## 2026-10-26 执行候选
 

@@ -8,8 +8,8 @@
 - 状态：持续追踪与采用。既有 SP-203～205、SP-210、SP-212、SP-214～SP-219 已完成本地合并，SP-211/SP-213 与 SP-220 主控验收和清理均有独立证据；日检基线为 `24e7d0f2`；SP-221经主控验收后已合入本地main `a0eebff0`，当前已提交HEAD为 `8fcd856f`（仅后续文档收口）。`v0.2.33` 已由独立授权会话发布，未包含SP-221。SP-218普通native HID/占用拒绝恢复、SP-219普通→Resize→普通录制已有Xcode27.1/iOS27.0专用Simulator真实验收；Resize AX/HID仍unsupported，其他工具链及用户项目不外推。
 - 正式说明：[参考项目追踪与采用](../../dev/reference-project-adoption-workflow.md)。
 - 仓库与读取状态：[reference-state.json](./plans/reference-state.json)；任务去重与授权：[adoption-state.json](./plans/adoption-state.json)。上游读取状态与采用交付状态分开。
-- 最近检查：2026-10-26，22完整/11 partial，simslim/Revyl两仓HEAD变化，Release/许可不变；[日报](./plans/20261026-reference-update-report.md)。用户要求继续后，两仓文本缺口已闭合并独立推进，当前合并视图24完整/9 partial，见[补查记录](./plans/20261026-partial-recovery.md)；本次仅重新查询2仓，其他31仓沿用日检。新SP-223候选25205ea2完成正式红绿、focused50，SP-224独立focused50通过，完整CLI与实际fake-adb失败envelope验收中；尚未合main。新[SP-221](../SP-221-simulator-resource-read-retry/README.md)经[SP-222](../SP-222-simulator-resource-retry-integration/README.md)验收，候选eb9539f4合本地main `a0eebff0`；focused37、独立与合后完整CLI、root、适用local/docs均通过。显式gpt-6.1-sol真实执行/主控会话创建成功。旧13条采用保持，11旧源码/许可缺口不推进；未push/tag/release或执行设备恢复验证。
-- 2026-10-22用户重申：开发验证完成须继续合入本地main并通过合并后门禁，不停在执行会话或候选分支完成；当前14条采用登记的合并提交已核对为main祖先（含SP-221；条目数不等于独立功能数）。
+- 最近检查：2026-10-26，22完整/11 partial，simslim/Revyl两仓HEAD变化，Release/许可不变；[日报](./plans/20261026-reference-update-report.md)。用户要求继续后，两仓文本缺口已闭合并独立推进，当前合并视图24完整/9 partial，见[补查记录](./plans/20261026-partial-recovery.md)；本次仅重新查询2仓，其他31仓沿用日检。新SP-223/224已验收合本地main9fbda1d5；独立与合后完整CLI XCTest91/SwiftTesting1527、fakeCLI4场景和适用local通过，归档清理收尾中。新[SP-221](../SP-221-simulator-resource-read-retry/README.md)经[SP-222](../SP-222-simulator-resource-retry-integration/README.md)验收，候选eb9539f4合本地main `a0eebff0`；focused37、独立与合后完整CLI、root、适用local/docs均通过。显式gpt-6.1-sol真实执行/主控会话创建成功。旧13条采用保持，11旧源码/许可缺口不推进；未push/tag/release或执行设备恢复验证。
+- 2026-10-22用户重申：开发验证完成须继续合入本地main并通过合并后门禁，不停在执行会话或候选分支完成；当前15条采用登记的合并提交已核对为main祖先（含SP-221；条目数不等于独立功能数）。
 
 ## 执行流程
 
