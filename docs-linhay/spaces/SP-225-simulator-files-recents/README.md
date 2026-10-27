@@ -23,4 +23,4 @@ main缺口：features没有files-recents；spotlight同时要求searchd/searchto
 
 ## 当前状态
 
-评估完成，待分派独立执行与主控会话。通过验收后必要本地提交、main合并、合后验证、证据归档与会话关闭由root负责；未push/tag/release。
+实现与 focused 验证完成，候选提交后冻结交 SP-226 独立审查；详细红绿命令、测试数量、源码与日志 hash 见[验证报告](plans/20261027-validation.md)。完整 CLI、main 合并及合后验证由主控串行安排。共享索引、memory、adoption-state 由 root 统一写回；未 push/tag/release。
