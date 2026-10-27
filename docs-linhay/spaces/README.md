@@ -4,7 +4,7 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，33仓日检22完整/11 partial、两仓HEAD变化。新增SP-221只读资源暂态重试/SP-222有限主控，显式gpt-6.1-sol真实会话创建成功、已通过独立与合后门禁，合本地main a0eebff0；旧13条采用已合main，旧源码/许可缺口保留。
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（224/224 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（227/227 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-10-27（SP-227 v0.2.34 发布准备；保留既有参考追踪）
 
@@ -368,4 +368,4 @@
 
 ## 2026-10-27 v0.2.34 发布准备
 
-- [SP-227-release-v0-2-34](./SP-227-release-v0-2-34/README.md)：以当前本地 main 的已验收内容发布 `v0.2.34`；版本清单、公开资产、Homebrew、skills 与仓库外 Web smoke 按发布治理逐项验收。
+- [SP-227-release-v0-2-34](./SP-227-release-v0-2-34/README.md)：`v0.2.34` 已发布；Release/CI 7 job、双架构资产、skills、远端 Homebrew formula、仓库外 packaged Web 与真实浏览器 console 0 error/warning 均通过，CocoaPods 仅 lint。

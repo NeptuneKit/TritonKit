@@ -19,4 +19,4 @@
 
 ## 状态
 
-准备中。发布前证据写入 `plans/20261027-v0.2.34-release.md`；发布完成后补充 GitHub Actions、资产、Homebrew、安装与仓库外 Web smoke 结果。
+已发布并完成发布后验收。`v0.2.34` 固定在提交 `4a8de0af`；GitHub Release、双架构资产、skills、checksum、两次 Homebrew tap 更新与仓库外 packaged Web smoke 均通过。CocoaPods 仅完成 lint，未推送 trunk；本机 Homebrew 未执行升级，已核对远端 formula 与公开资产一致。详见 `plans/20261027-v0.2.34-release.md`。
