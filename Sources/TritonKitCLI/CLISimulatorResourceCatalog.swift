@@ -104,7 +104,7 @@ enum SimulatorResourceCatalog {
               ]),
         .init(id: "search", name: "Spotlight & Search",
               description: "On-device Spotlight and in-Settings search services.",
-              downside: "Spotlight and Settings search return no results.",
+              downside: "Spotlight and Settings search return no results; Files and document picker Recents may be unavailable.",
               approxMemoryMB: 50, labels: [
                   "com.apple.searchd",
                   "com.apple.searchtoold",
@@ -316,6 +316,9 @@ enum SimulatorResourceCatalog {
         .init(id: "storekit", name: "StoreKit / in-app purchase", labels: ["com.apple.storekitd", "com.apple.itunesstored", "com.apple.amsaccountsd", "com.apple.amsengagementd", "com.apple.amsondevicestoraged", "com.apple.passd", "com.apple.financed"]),
         .init(id: "app-store", name: "App Store", labels: ["com.apple.appstored", "com.apple.itunesstored"]),
         .init(id: "universal-links", name: "Universal links / associated domains", labels: ["com.apple.swcd"]),
+        // Files Recents dependency and search downside: independently modeled from simslim
+        // d961aa6d4fff29ad4727b9c052d02066f378fd16; sourceCommit pins the base catalog above.
+        .init(id: "files-recents", name: "Files / document picker Recents", labels: ["com.apple.searchd"]),
         .init(id: "spotlight", name: "Spotlight & Settings search", labels: ["com.apple.searchd", "com.apple.searchtoold"]),
         .init(id: "siri", name: "Siri & speech", labels: ["com.apple.assistantd", "com.apple.corespeechd"]),
         .init(id: "icloud", name: "iCloud sync", labels: ["com.apple.cloudd"]),

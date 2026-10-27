@@ -10,12 +10,24 @@ struct SimulatorResourceCatalogTests {
             "widgets", "siri", "search", "icloud", "store", "pim", "web", "family",
             "health", "photos", "apps", "messaging", "connectivity", "telemetry", "other",
         ])
-        #expect(SimulatorResourceCatalog.features.count == 24)
+        #expect(SimulatorResourceCatalog.features.count == 25)
         #expect(SimulatorResourceCatalog.slimmableLabels.count == 168)
         #expect(SimulatorResourceCatalog.managedLabels.count == 171)
         for feature in SimulatorResourceCatalog.features {
             #expect(Set(feature.labels).isSubset(of: SimulatorResourceCatalog.managedLabels))
         }
+    }
+
+    @Test("Files Recents depends only on searchd and search warns about document pickers")
+    func filesRecentsDependencies() throws {
+        let feature = try #require(SimulatorResourceCatalog.resolveFeatures(["files-recents"]).first)
+        #expect(feature.labels == ["com.apple.searchd"])
+        let search = try #require(SimulatorResourceCatalog.categories.first { $0.id == "search" })
+        #expect(search.downside.contains("Files"))
+        #expect(search.downside.contains("document picker"))
+        #expect(search.downside.contains("Recents"))
+        #expect(try SimulatorResourceCatalog.resolveFeatures(["spotlight"]).first?.labels ==
+                ["com.apple.searchd", "com.apple.searchtoold"])
     }
 
     @Test("Required services remain repairable but cannot be disabled")
