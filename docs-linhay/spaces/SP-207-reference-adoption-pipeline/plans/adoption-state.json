@@ -536,9 +536,9 @@
       "assessment": "docs-linhay/spaces/SP-225-simulator-files-recents/README.md",
       "space": "SP-225-simulator-files-recents",
       "controller_space": "SP-226-files-recents-integration",
-      "state": "assessed_pending_dispatch",
-      "execution_thread_id": null,
-      "controller_thread_id": null,
+      "state": "dispatched",
+      "execution_thread_id": "01a17b28-ccf7-7593-b589-72fa36290516",
+      "controller_thread_id": "01a17b29-206c-7b73-bfc4-6bded108ca9d",
       "execution_model": "gpt-6.1-sol",
       "controller_model": "gpt-6.1-sol",
       "host_id": "local",
@@ -546,7 +546,9 @@
       "controller_branch": "feat/SP-226-files-recents-integration",
       "worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-225-simulator-files-recents",
       "controller_worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-226-files-recents-integration",
-      "release_tag": null
+      "release_tag": null,
+      "controller_state": "awaiting_candidate",
+      "dispatch_evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261027-dispatch.json"
     }
   ],
   "new_thread_policy": {
@@ -558,7 +560,7 @@
     "reasoning_effort": "unchanged"
   },
   "last_updated_on": "2026-10-27",
-  "last_update_note": "New Files Recents diagnostic assessed; pending real execution/controller dispatch. Existing15 remain merged and9 threads archived.",
+  "last_update_note": "SP225 implementation and SP226 controller created with explicit gpt-6.1-sol; development/acceptance/merge pending. Existing15 completed.",
   "session_closeout": {
     "verified_main": "71ff9ae463f092c798ecc657410a52561124ead5",
     "verified_on": "2026-10-27",

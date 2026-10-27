@@ -282,5 +282,5 @@
 | `SP-223-host-process-drain-deadline` | [`SP-223-host-process-drain-deadline`](./SP-223-host-process-drain-deadline/README.md) | 已验收合本地main | 9fbda1d5；独立/合后完整CLI及local通过，源worktree/branch已清理 |
 | `SP-224-host-process-drain-integration` | [`SP-224-host-process-drain-integration`](./SP-224-host-process-drain-integration/README.md) | 已验收合本地main | 主控1c735787；独立/合后门禁通过，源worktree/branch已归档清理 |
 
-| `SP-225-simulator-files-recents` | [`SP-225-simulator-files-recents`](./SP-225-simulator-files-recents/README.md) | 待分派 | Files Recents仅searchd服务诊断；无UI恢复承诺 |
-| `SP-226-files-recents-integration` | [`SP-226-files-recents-integration`](./SP-226-files-recents-integration/README.md) | 待分派 | 独立候选审查、测试与本地主线验收 |
+| `SP-225-simulator-files-recents` | [`SP-225-simulator-files-recents`](./SP-225-simulator-files-recents/README.md) | 开发验证中 | Files Recents仅searchd服务诊断；无UI恢复承诺 |
+| `SP-226-files-recents-integration` | [`SP-226-files-recents-integration`](./SP-226-files-recents-integration/README.md) | 等待候选 | 独立候选审查、测试与本地主线验收 |

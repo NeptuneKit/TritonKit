@@ -363,5 +363,5 @@
 
 ## 2026-10-27 新采用批次
 
-- [SP-225-simulator-files-recents](./SP-225-simulator-files-recents/README.md)：CLI只读Files Recents精确服务诊断，待分派。
+- [SP-225-simulator-files-recents](./SP-225-simulator-files-recents/README.md)：CLI只读Files Recents精确服务诊断，执行会话已创建。
 - [SP-226-files-recents-integration](./SP-226-files-recents-integration/README.md)：有限主控，验收合main并完成清理/会话归档。
