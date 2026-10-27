@@ -10,4 +10,4 @@
 
 ## 协作与状态
 
-尚待执行候选。先只读静态审核，收到root冻结SHA才在自身worktree整合并测试；与执行共享scratch串行。子会话完成不是合入main的依据，未过验收退回修复。验收通过root合main并跑合后门禁，再归档证据/清理worktree/关闭会话。
+已完成基线只读静态审核，见[静态审查与候选验收入口](plans/20261027-static-review.md)。尚待root明确冻结candidateSHA及共享scratch时段，收到后才在自身worktree整合并测试；当前未构建、未运行产品测试，不构成实现验收。子会话完成不是合入main的依据，未过验收退回修复。验收通过root合main并跑合后门禁，再归档证据/清理worktree/关闭会话；共享索引/memory/state由root写回。
