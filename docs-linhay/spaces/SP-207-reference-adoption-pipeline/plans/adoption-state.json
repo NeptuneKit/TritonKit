@@ -536,7 +536,7 @@
       "assessment": "docs-linhay/spaces/SP-225-simulator-files-recents/README.md",
       "space": "SP-225-simulator-files-recents",
       "controller_space": "SP-226-files-recents-integration",
-      "state": "implementation_complete",
+      "state": "local_merged",
       "execution_thread_id": "01a17b28-ccf7-7593-b589-72fa36290516",
       "controller_thread_id": "01a17b29-206c-7b73-bfc4-6bded108ca9d",
       "execution_model": "gpt-6.1-sol",
@@ -547,10 +547,22 @@
       "worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-225-simulator-files-recents",
       "controller_worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-226-files-recents-integration",
       "release_tag": null,
-      "controller_state": "independent_validation_running",
+      "controller_state": "accepted_local_merged",
       "dispatch_evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261027-dispatch.json",
       "acceptance_candidate_sha": "46bbf1c95c919f9ac0c6bcc6bc0386f97179af4f",
-      "implementation_evidence": "docs-linhay/spaces/SP-225-simulator-files-recents/plans/20261027-validation.md"
+      "implementation_evidence": "docs-linhay/spaces/SP-225-simulator-files-recents/plans/20261027-validation.md",
+      "local_merge_sha": "607cdf1c025547ce8b5be21eaa00548e25400bb4",
+      "controller_validation_commit": "1847653e546eff9ce2e8be5092f060b22f44cd74",
+      "last_verified_on": "2026-10-27",
+      "state_evidence": "docs-linhay/spaces/SP-226-files-recents-integration/plans/20261027-main-closeout.md",
+      "worktree_status": "removed_after_local_merge",
+      "controller_worktree_status": "removed_after_local_merge",
+      "execution_thread_status": "archived",
+      "controller_thread_status": "archived",
+      "execution_thread_closed_on": "2026-10-27",
+      "controller_thread_closed_on": "2026-10-27",
+      "cleanup_evidence": "../TritonKit-worktrees/archives/20261027-sp225-sp226/MANIFEST.json",
+      "verification_note": "Independent focused10 XCTest+132 SwiftTesting passed; first full had existing framebuffer marker missing, root cause unknown; isolated11+1 and second full94+1528/154 passed. Actualmain postmerge full94+1528/154 (3 explicit skips), default features/profiles single JSON, docs gates passed. Service-overrides-only, no real UI/device, root/local total not applicable to unchanged shared core; no push/tag/release."
     }
   ],
   "new_thread_policy": {
@@ -562,9 +574,9 @@
     "reasoning_effort": "unchanged"
   },
   "last_updated_on": "2026-10-27",
-  "last_update_note": "SP225 frozen candidate46bbf1c9; focused10 XCTest+132 SwiftTesting passed. SP226 independent full acceptance in progress; not merged.",
+  "last_update_note": "SP225/226 accepted, merged607cdf1c, postmerge full CLI/offline JSON/docs passed; 53-file hash archive verified; both worktrees/branches removed and threads archived. All16 adoption entries merged.",
   "session_closeout": {
-    "verified_main": "71ff9ae463f092c798ecc657410a52561124ead5",
+    "verified_main": "607cdf1c025547ce8b5be21eaa00548e25400bb4",
     "verified_on": "2026-10-27",
     "archived_thread_ids": [
       "01a14284-df87-7d13-8373-a4d3a56fd470",
@@ -575,9 +587,11 @@
       "01a175fc-c9c4-7053-b91e-74c209d3f0ca",
       "01a175fd-5c91-7b52-bc7c-683468efff9f",
       "01a1773d-1703-7152-bfa0-a6e452491809",
-      "01a1773d-8556-7a01-a885-a0f5d0c68a6d"
+      "01a1773d-8556-7a01-a885-a0f5d0c68a6d",
+      "01a17b28-ccf7-7593-b589-72fa36290516",
+      "01a17b29-206c-7b73-bfc4-6bded108ca9d"
     ],
-    "evidence": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261027-session-closeout.md",
+    "evidence": "docs-linhay/spaces/SP-226-files-recents-integration/plans/20261027-main-closeout.md",
     "long_running_controller": "kept_open"
   }
 }

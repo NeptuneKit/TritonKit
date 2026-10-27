@@ -21,6 +21,10 @@ main缺口：features没有files-recents；spotlight同时要求searchd/searchto
 
 主控为[SP-226](../SP-226-files-recents-integration/README.md)。共享索引、memory、adoption-state由root维护。branch feat/SP-225-simulator-files-recents；worktree ../TritonKit-worktrees/SP-225-simulator-files-recents。模型gpt-6.1-sol显式锁定；非独占仓库，不撤销WIP。共享测试scratch/提交串行，禁止stash。
 
-## 当前状态
+## 开发候选阶段记录
 
-实现与 focused 验证完成，候选提交后冻结交 SP-226 独立审查；详细红绿命令、测试数量、源码与日志 hash 见[验证报告](plans/20261027-validation.md)。完整 CLI、main 合并及合后验证由主控串行安排。共享索引、memory、adoption-state 由 root 统一写回；未 push/tag/release。
+实现与 focused 验证完成，候选提交后冻结交 SP-226 独立审查；详细红绿命令、测试数量、源码与日志 hash 见[验证报告](plans/20261027-validation.md)。独立完整CLI、main合并及合后验证均已由主控串行完成，最终证据见下节。共享索引、memory、adoption-state 由 root 统一写回；未 push/tag/release。
+
+## 最终主线交付
+
+已验收合入本地main `607cdf1c`；合后完整CLI XCTest94/SwiftTesting1528、实际默认JSON入口与docs门禁通过。53份证据归档核对后，worktree/branch已移除，会话已归档。首轮既有夹具失败原因未知且完整保留；真实UI未验，不宣称恢复。见[主线收口](../SP-226-files-recents-integration/plans/20261027-main-closeout.md)。未push/tag/release。

@@ -1,0 +1,18 @@
+{
+  "head": "607cdf1c025547ce8b5be21eaa00548e25400bb4",
+  "command": [
+    "swift",
+    "test",
+    "--package-path",
+    "CLI",
+    "--no-parallel",
+    "--disable-automatic-resolution",
+    "--skip-update"
+  ],
+  "cwd": "/Users/linhey/Desktop/linhay-open-sources/TritonKit",
+  "cli": "/Users/linhey/Desktop/linhay-open-sources/TritonKit/CLI/.build/debug/triton",
+  "exit": 0,
+  "seconds": 141.414,
+  "pid": 70173,
+  "log_sha256": "88f9b4ada130815b978dd1044f38b08ab92bb2f62e57c0fb8aca133083e55b1b"
+}

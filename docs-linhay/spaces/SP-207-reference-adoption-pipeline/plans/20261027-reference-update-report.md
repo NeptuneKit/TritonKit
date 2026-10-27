@@ -52,3 +52,7 @@
 | mobile-dev-inc/Maestro | `0df4cf3c8cad` | cli-2.12.0 | 完整 |
 | linhay/SKProcessRunner | `24e036604b9e` | 0.0.17 | partial |
 | mobile-next/mobile-mcp | `6c945971b6b1` | 1.0.14 | 完整 |
+
+## 采用交付结果
+
+Files Recents诊断SP-225/226已合本地main607cdf1c；独立与合后完整CLI94 XCTest+1528 SwiftTesting报告通过（3真实环境skip），默认JSON离线入口与docs门禁通过。首次主控full的既有framebuffer marker缺失保留，根因未知；未改无关helper或放大timeout，隔离与完整复跑通过。53份文件hash归档后正常清理工作区/分支，执行与主控会话已归档。详见[收口证据](../../SP-226-files-recents-integration/plans/20261027-main-closeout.md)。本轮实现、验收、合并、清理、会话关闭均已完成；未push/tag/release。

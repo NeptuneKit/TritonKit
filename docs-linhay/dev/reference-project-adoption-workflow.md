@@ -27,6 +27,8 @@
 
 每日任务复用id `ictrl`，名称“参考项目更新与采用推进”，保持当前聊天、ACTIVE与北京时间10:00；不新增重叠任务。现有iCTRL检查点仍由SP-193管理，其他仓库从SP-194/SP-199历史快照开始，首次完整读取后才建立对应成功点。本轮配置未重新查询全体仓库。
 
+2026-10-27闭环已执行：[33仓日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261027-reference-update-report.md)24完整/9 partial，6仓更新；SP-225/226 Files Recents只读诊断完成开发、独立验收、main合并607cdf1c、合后完整CLI与docs、53份证据归档以及两个会话关闭。当前16条采用均已合main；首次既有夹具失败原因未知并保留证据，多点HID和软件键盘真实兼容前置继续观察。详见[收口](../spaces/SP-226-files-recents-integration/plans/20261027-main-closeout.md)。
+
 ## 新会话模型
 
 2026-10-16用户指定：今后本项目由agent创建的新会话（执行和主控）锁定为 `gpt-6.1-sol`。调用 `create_thread` 必须显式传入 `model: "gpt-6.1-sol"`，后续主控分派同样遵守；不省略后依赖默认模型，不使用latest别名，不自动回退其他模型。模型不可用则记录创建失败/待重试并报告，不冒充创建成功。本次不切换既有会话，也不改变推理强度。

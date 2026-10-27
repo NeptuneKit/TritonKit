@@ -248,7 +248,7 @@
 
 | `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30已发布 | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
 
-| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月26日补查后24完整/9 partial；15条采用已合main，10月27日9个执行/主控会话已归档 |
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月26日补查后24完整/9 partial；16条采用已合main，11个执行/主控会话已归档 |
 
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 
@@ -282,5 +282,5 @@
 | `SP-223-host-process-drain-deadline` | [`SP-223-host-process-drain-deadline`](./SP-223-host-process-drain-deadline/README.md) | 已验收合本地main | 9fbda1d5；独立/合后完整CLI及local通过，源worktree/branch已清理 |
 | `SP-224-host-process-drain-integration` | [`SP-224-host-process-drain-integration`](./SP-224-host-process-drain-integration/README.md) | 已验收合本地main | 主控1c735787；独立/合后门禁通过，源worktree/branch已归档清理 |
 
-| `SP-225-simulator-files-recents` | [`SP-225-simulator-files-recents`](./SP-225-simulator-files-recents/README.md) | 开发验证中 | Files Recents仅searchd服务诊断；无UI恢复承诺 |
-| `SP-226-files-recents-integration` | [`SP-226-files-recents-integration`](./SP-226-files-recents-integration/README.md) | 等待候选 | 独立候选审查、测试与本地主线验收 |
+| `SP-225-simulator-files-recents` | [`SP-225-simulator-files-recents`](./SP-225-simulator-files-recents/README.md) | 已验收合本地main | 607cdf1c；94+1528完整CLI/离线JSON/docs通过，已清理并关闭会话 |
+| `SP-226-files-recents-integration` | [`SP-226-files-recents-integration`](./SP-226-files-recents-integration/README.md) | 已验收合本地main | 主控1847653e；53份证据归档，worktree/branch与会话已关闭 |
