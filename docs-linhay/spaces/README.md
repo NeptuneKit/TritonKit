@@ -360,3 +360,8 @@
 
 | 已归档／录制真实验收通过 | [SP-219-simulator-resizable-routing](./SP-219-simulator-resizable-routing/README.md) | 普通→Resize→普通录屏真实解码通过 | 2026-10-24；Resize AX/HID保持unsupported，不作为本space待办 |
 | v0.2.32已发布 | [SP-220-simulator-resizable-integration](./SP-220-simulator-resizable-integration/README.md) | SP-219 主控验证、本地合并 | 候选 `51cd20dd` 已验收并合入 `f9399e5e`；worktree已清理 |
+
+## 2026-10-27 新采用批次
+
+- [SP-225-simulator-files-recents](./SP-225-simulator-files-recents/README.md)：CLI只读Files Recents精确服务诊断，待分派。
+- [SP-226-files-recents-integration](./SP-226-files-recents-integration/README.md)：有限主控，验收合main并完成清理/会话归档。

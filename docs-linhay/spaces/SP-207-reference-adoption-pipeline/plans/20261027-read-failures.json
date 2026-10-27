@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "date": "20261027",
+  "unresolved": [
+    {
+      "repository": "tddworks/baguette",
+      "fault_classes": [
+        "binary_source_provenance",
+        "incremental_review_incomplete"
+      ],
+      "errors": [
+        "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
+        "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: docs/features/companion-screens/DiPlay.apk",
+        "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: docs/features/companion-screens/identity/offline-mfi/certificate.p7b",
+        "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: docs/features/companion-screens/identity/offline-mfi/identity.pk8",
+        "commit patch omitted ec5a3defe15f6199aa6b0e3ce2092d02f2a00d88: docs/features/chrome-bezel/assets/crown-device-hub-vs-model.png",
+        "commit patch omitted ec5a3defe15f6199aa6b0e3ce2092d02f2a00d88: docs/features/chrome-bezel/assets/device-hub-watch4-1x.png",
+        "commit patch omitted ec5a3defe15f6199aa6b0e3ce2092d02f2a00d88: docs/features/chrome-bezel/assets/watch-device-hub-vs-baguette.png",
+        "commit patch omitted 2c864abda1a7b391a4cabf9a616d450385c8c542: docs/features/companion-screens/DiPlay.apk",
+        "commit patch omitted 2c864abda1a7b391a4cabf9a616d450385c8c542: docs/features/companion-screens/identity/offline-mfi/certificate.p7b",
+        "commit patch omitted 2c864abda1a7b391a4cabf9a616d450385c8c542: docs/features/companion-screens/identity/offline-mfi/identity.pk8",
+        "commit patch omitted d98c6cc76422486f91dc9ac19e527b9adde8f70a: Sources/Baguette/Resources/HingeControl/HingeControl",
+        "commit patch omitted 0e2af73dd8b1ccbdaccf59bb21444b49247aebfa: Sources/Baguette/Resources/HingeControl/HingeControl",
+        "commit patch omitted 7790384c5e020d94ac288f0d695d48dbcbc5b4e4: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
+        "commit patch omitted 7b0e8aab104321be00f15d2d7bde539798a6316e: Sources/Baguette/Resources/HingeControl/HingeControl",
+        "commit patch omitted 14b39834fef663c2eca868db98422e4eaa8e2bb3: Sources/Baguette/Resources/HingeControl/HingeControl",
+        "commit patch omitted 8a65e97f7e6c8976d95b42a82bf6fcd1af74b01b: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
+        "binary source provenance incomplete; sensitive/binary retrieval filter corrected; content removed"
+      ]
+    },
+    {
+      "repository": "karminski/eyes-on-my-phone",
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "errors": [
+        "license_full_text_unavailable: gh: Not Found (HTTP 404)",
+        "license: gh: Not Found (HTTP 404)",
+        "previous_partial_source_evidence_retained_not_recovered"
+      ]
+    },
+    {
+      "repository": "RevylAI/revyl-cli",
+      "fault_classes": [
+        "incremental_review_incomplete",
+        "license_full_text_unavailable"
+      ],
+      "errors": [
+        "license_full_text_unavailable: gh: Not Found (HTTP 404)",
+        "license_full_text_unavailable: existing official 404 retained",
+        "prior_large_increment_generated_hosted_and_binary_provenance_not_closed",
+        "4_changed_pyc_paths_not_requested_semantic_gap_retained",
+        "license: gh: Not Found (HTTP 404)",
+        "4_changed_pyc_paths_not_requested"
+      ]
+    },
+    {
+      "repository": "RevylAI/app-explorer",
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "errors": [
+        "license_full_text_unavailable: gh: Not Found (HTTP 404)",
+        "license: gh: Not Found (HTTP 404)",
+        "previous_partial_source_evidence_retained_not_recovered"
+      ]
+    },
+    {
+      "repository": "RevylAI/mobile-devtools",
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "errors": [
+        "license_full_text_unavailable: gh: Not Found (HTTP 404)",
+        "license: gh: Not Found (HTTP 404)",
+        "previous_partial_source_evidence_retained_not_recovered"
+      ]
+    },
+    {
+      "repository": "RevylAI/mobile-pr-reviewer",
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "errors": [
+        "license_full_text_unavailable: gh: Not Found (HTTP 404)",
+        "license: gh: Not Found (HTTP 404)",
+        "previous_partial_source_evidence_retained_not_recovered"
+      ]
+    },
+    {
+      "repository": "RevylAI/visual-regression",
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "errors": [
+        "license_full_text_unavailable: gh: Not Found (HTTP 404)",
+        "license: gh: Not Found (HTTP 404)",
+        "previous_partial_source_evidence_retained_not_recovered"
+      ]
+    },
+    {
+      "repository": "RevylAI/figma-design-checker",
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "errors": [
+        "license_full_text_unavailable: gh: Not Found (HTTP 404)",
+        "license: gh: Not Found (HTTP 404)",
+        "previous_partial_source_evidence_retained_not_recovered"
+      ]
+    },
+    {
+      "repository": "linhay/SKProcessRunner",
+      "fault_classes": [
+        "license_full_text_unavailable"
+      ],
+      "errors": [
+        "license_full_text_unavailable: gh: Not Found (HTTP 404)"
+      ]
+    }
+  ]
+}

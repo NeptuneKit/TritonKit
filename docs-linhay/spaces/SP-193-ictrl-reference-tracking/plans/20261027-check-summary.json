@@ -1,0 +1,271 @@
+{
+  "repository": "OpenMinis/iCTRL",
+  "checked_at": "2026-10-27T02:12:06.095969+00:00",
+  "head_sha": "c1e4268859ba858d1579f7b846a56cb40641b7f6",
+  "release": {
+    "url": "https://api.github.com/repos/OpenMinis/iCTRL/releases/424398299",
+    "assets_url": "https://api.github.com/repos/OpenMinis/iCTRL/releases/424398299/assets",
+    "upload_url": "https://uploads.github.com/repos/OpenMinis/iCTRL/releases/424398299/assets{?name,label}",
+    "html_url": "https://github.com/OpenMinis/iCTRL/releases/tag/v1.98.16",
+    "id": 424398299,
+    "author": {
+      "login": "wsvn53",
+      "id": 912204,
+      "node_id": "MDQ6VXNlcjkxMjIwNA==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/912204?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/wsvn53",
+      "html_url": "https://github.com/wsvn53",
+      "followers_url": "https://api.github.com/users/wsvn53/followers",
+      "following_url": "https://api.github.com/users/wsvn53/following{/other_user}",
+      "gists_url": "https://api.github.com/users/wsvn53/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/wsvn53/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/wsvn53/subscriptions",
+      "organizations_url": "https://api.github.com/users/wsvn53/orgs",
+      "repos_url": "https://api.github.com/users/wsvn53/repos",
+      "events_url": "https://api.github.com/users/wsvn53/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/wsvn53/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "node_id": "RE_kwDOTNMJwc4ZS83b",
+    "tag_name": "v1.98.16",
+    "target_commitish": "main",
+    "name": "iCTRL 1.98.16",
+    "draft": false,
+    "immutable": false,
+    "prerelease": false,
+    "created_at": "2026-10-26T14:29:44Z",
+    "updated_at": "2026-10-26T15:06:32Z",
+    "published_at": "2026-10-26T15:06:32Z",
+    "assets": [
+      {
+        "url": "https://api.github.com/repos/OpenMinis/iCTRL/releases/assets/678517084",
+        "id": 678517084,
+        "node_id": "RA_kwDOTNMJwc4ocVlc",
+        "name": "iCTRL.ipa",
+        "label": "",
+        "uploader": {
+          "login": "wsvn53",
+          "id": 912204,
+          "node_id": "MDQ6VXNlcjkxMjIwNA==",
+          "avatar_url": "https://avatars.githubusercontent.com/u/912204?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/wsvn53",
+          "html_url": "https://github.com/wsvn53",
+          "followers_url": "https://api.github.com/users/wsvn53/followers",
+          "following_url": "https://api.github.com/users/wsvn53/following{/other_user}",
+          "gists_url": "https://api.github.com/users/wsvn53/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/wsvn53/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/wsvn53/subscriptions",
+          "organizations_url": "https://api.github.com/users/wsvn53/orgs",
+          "repos_url": "https://api.github.com/users/wsvn53/repos",
+          "events_url": "https://api.github.com/users/wsvn53/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/wsvn53/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "content_type": "application/octet-stream",
+        "state": "uploaded",
+        "size": 8832078,
+        "digest": "sha256:dfbe97c3318ba5f2afa030e4b1f925d5773dbaf52ea911042aaa7cb41f2a9d00",
+        "download_count": 10,
+        "created_at": "2026-10-26T15:06:29Z",
+        "updated_at": "2026-10-26T15:06:31Z",
+        "browser_download_url": "https://github.com/OpenMinis/iCTRL/releases/download/v1.98.16/iCTRL.ipa"
+      },
+      {
+        "url": "https://api.github.com/repos/OpenMinis/iCTRL/releases/assets/678517083",
+        "id": 678517083,
+        "node_id": "RA_kwDOTNMJwc4ocVlb",
+        "name": "iCTRLUITests-Runner.ipa",
+        "label": "",
+        "uploader": {
+          "login": "wsvn53",
+          "id": 912204,
+          "node_id": "MDQ6VXNlcjkxMjIwNA==",
+          "avatar_url": "https://avatars.githubusercontent.com/u/912204?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/wsvn53",
+          "html_url": "https://github.com/wsvn53",
+          "followers_url": "https://api.github.com/users/wsvn53/followers",
+          "following_url": "https://api.github.com/users/wsvn53/following{/other_user}",
+          "gists_url": "https://api.github.com/users/wsvn53/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/wsvn53/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/wsvn53/subscriptions",
+          "organizations_url": "https://api.github.com/users/wsvn53/orgs",
+          "repos_url": "https://api.github.com/users/wsvn53/repos",
+          "events_url": "https://api.github.com/users/wsvn53/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/wsvn53/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "content_type": "application/octet-stream",
+        "state": "uploaded",
+        "size": 1678644,
+        "digest": "sha256:67450de1524837b137b1ba0175ed16c8850b951ef0127c7c765aa8f3c4702652",
+        "download_count": 8,
+        "created_at": "2026-10-26T15:06:29Z",
+        "updated_at": "2026-10-26T15:06:30Z",
+        "browser_download_url": "https://github.com/OpenMinis/iCTRL/releases/download/v1.98.16/iCTRLUITests-Runner.ipa"
+      }
+    ],
+    "tarball_url": "https://api.github.com/repos/OpenMinis/iCTRL/tarball/v1.98.16",
+    "zipball_url": "https://api.github.com/repos/OpenMinis/iCTRL/zipball/v1.98.16",
+    "body": "An AI-friendly iOS/iPadOS automation service. Tell your agent *\"My iPhone is running iCTRL at <ip>:8200 — figure out how to drive it.\"* and it reads the on-device manual and takes it from there. Works with any agent that can make HTTP requests: OpenClaw, Hermes, Minis, Claude Code, Codex and others.\n\n## Downloads\n\n### Which IPA do I need?\n\n| File | Needed? | What it is |\n|---|---|---|\n| `iCTRLUITests-Runner.ipa` | **Required** | The automation engine. It serves the JSON-RPC API that agents and clients call, and must be running. |\n| `iCTRL.ipa` | Optional | A companion app for tasks on the phone itself: <br>• mount the Developer Disk Image without a Mac, and remount it after a reboot <br>• start and stop the runner <br>• choose who can reach the runner (this device only / LAN / LAN + nearby) <br>• see and revoke authorized clients <br>• read the runner's log live |\n\nSkip `iCTRL.ipa` if you mount the Developer Disk Image with Xcode or StikDebug, and manage the runner from its notification or a computer. With a free Apple ID you get three sideloaded apps, and SideStore uses one of them. Install StikDebug *or* the iCTRL app alongside the runner, not both.\n\nBoth IPAs are unsigned for distribution (ad-hoc, no provisioning profile). Sign them when you install:\n- **Free Apple ID:** the latest SideStore signs and installs them. Older SideStore releases skip the nested `.xctest`, and the runner then crashes on launch.\n- **Paid account:** `Scripts/sign-ipa.sh -i iCTRLUITests-Runner.ipa`\n\nThe runner also needs the Developer Disk Image mounted (Xcode, StikDebug or the iCTRL app). The [README](https://github.com/OpenMinis/iCTRL#installation) covers the whole setup.\n\n## What's new since 1.98.15\n\n### Input\n- **Continuous single-finger drag paths.** `drag` accepts a `points` array (2-64 waypoints, 0.1-10 s) and follows it with one finger, pressing once and lifting once. Draw corners, unlock patterns, drag-to-reorder. Corners can be rounded by 1-2 pt, so keep each segment at least one frame long. Advertised as the `drag_path` capability. Existing endpoint/ref drags are unchanged. Thanks to @YanYunNN.\n\n### Build\n- `make ipa UNSIGNED=1` builds release IPAs without a signing identity.\n\n## Earlier in 1.98.13 - 1.98.15\n- The video stream skips identical frames while the screen is still, and no longer goes black after the runner was in the background.\n- The remote page keeps FPS, quality and verbose across reloads.\n- `type` falls back to on-screen key taps when a field drops focus and reports failures. `keyboard.visible` detects third-party keyboards.\n- More methods require authorization. The iCTRL app imports RemotePairing files such as StikDebug's pairingFile.plist.\n",
+    "mentions_count": 1
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "path": "LICENSE",
+    "html_url": "https://github.com/OpenMinis/iCTRL/blob/c1e4268859ba858d1579f7b846a56cb40641b7f6/LICENSE"
+  },
+  "complete": true,
+  "errors": [],
+  "fault_classes": [],
+  "changed_since_previous_observation": true,
+  "coverage": {
+    "actual_main": "cfda992467fc1ed19ef0c577577c313d79314069",
+    "previous_observation": "20261026-recovery-observations.json",
+    "runtime_executed": false,
+    "release_pages": 1,
+    "release_pagination_complete": true,
+    "source_review_reused": null,
+    "increment_review_complete": true
+  },
+  "evidence": ".build/reference-monitor/20261027/OpenMinis__iCTRL",
+  "default_branch": "main",
+  "release_tag": "v1.98.16",
+  "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+  "license_spdx": "Apache-2.0",
+  "decision": "observe",
+  "reason": "确认连续单指路径接口缺口，但现有HID只验证直线tap/swipe；多点拐角/停留及时间语义缺少Triton真实触点证明，本轮无设备动作授权，先观察/可行性与验证前置，不直接进入已可交付采用。",
+  "old_head": "874f528759b1b977971a06cc4a3594d169eb77b9",
+  "old_release_tag": "v1.98.12",
+  "changed_from_checkpoint": true,
+  "checkpoint_owner": "SP-193",
+  "review": {
+    "repository": "OpenMinis/iCTRL",
+    "complete_review": true,
+    "decision": "observe",
+    "reason": "确认连续单指路径接口缺口，但现有HID只验证直线tap/swipe；多点拐角/停留及时间语义缺少Triton真实触点证明，本轮无设备动作授权，先观察/可行性与验证前置，不直接进入已可交付采用。",
+    "errors": [],
+    "head_sha": "c1e4268859ba858d1579f7b846a56cb40641b7f6",
+    "base_sha": "874f528759b1b977971a06cc4a3594d169eb77b9",
+    "actual_main": "cfda992467fc1ed19ef0c577577c313d79314069",
+    "compare_url": "https://github.com/OpenMinis/iCTRL/compare/874f528759b1b977971a06cc4a3594d169eb77b9...c1e4268859ba858d1579f7b846a56cb40641b7f6",
+    "release_url": "https://github.com/OpenMinis/iCTRL/releases/tag/v1.98.16",
+    "evidence": [
+      "compare-pages.json",
+      "commit-<sha>.json (12 files)",
+      "release-pages-review.json",
+      "content-path-review.json",
+      "source/ (17 changed text files + LICENSE)"
+    ],
+    "local_gaps": [
+      {
+        "id": "continuous-single-finger-path",
+        "decision": "observe_validation_prerequisite",
+        "impact": "CLI/shared request contract/local iOS Simulator host HID",
+        "upstream": "https://github.com/OpenMinis/iCTRL/blob/c1e4268859ba858d1579f7b846a56cb40641b7f6/iCTRLUITests/ContinuousDragPath.swift",
+        "local_evidence": [
+          "Sources/TritonKitShared/TKInputModels.swift: TKInputRequest only start/end coordinates",
+          "Sources/TritonKitCLI/CLIActionCommands.swift: SwipeCommand only start/end",
+          "Sources/TritonKitCLI/CLIHostNativeHIDRuntime.swift: nativeHIDContacts interpolates 10 straight-line moves",
+          "Sources/TritonKitCLI/CLIHostNativeHIDCommand.swift: tap/swipe gate"
+        ],
+        "gap": "缺少单次按下、多个拐点、末尾一次抬起的机器可读路径动作。现有直线swipe不能组合为保持接触的折线，连续多次swipe会中途抬指。",
+        "implementation_boundary": "独立实现host-HID路径；不复制私有XCTest、不扩embedded UIKit能力，不自动增加Android/Harmony路径或真机控制。保留Device Hub/Resize/几何拒绝及unknown不可重放。 本地已有executeNativeHIDContacts可复用事件发送与失败释放，但其统一cadence只验证直线12事件；多段独立offset、每拐点采样和hold不是已验证兼容能力。",
+        "proposed_files": [
+          "Sources/TritonKitShared/TKInputModels.swift",
+          "Sources/TritonKitCLI/CLIActionCommands.swift or new path command file",
+          "Sources/TritonKitCLI/CLIHostNativeHIDRuntime.swift",
+          "Sources/TritonKitCLI/CLIHostNativeHIDCommand.swift",
+          "CLI/Tests/TritonKitCLITests focused path tests",
+          "schema/capability/public skill contracts"
+        ],
+        "bdd": [
+          "Given 2–64 finite in-bounds points and bounded duration, When path action executes, Then one down/all waypoints/one up preserve order and repeated waypoint hold timing.",
+          "Given invalid/mixed endpoint arguments, nonfinite/out-of-bounds points or incompatible surface, When validating, Then reject before any down.",
+          "Given failure after down or surface changes, Then best-effort release at last attempted point, report unknown and never replay.",
+          "Given old tap/swipe callers, Then existing wire/geometry semantics remain unchanged."
+        ],
+        "acceptance": [
+          "Red/green parsing and Codable/schema tests; fake sender proves every coordinate prevalidated and exact phase/order/timing.",
+          "Tests for geometry/Device Hub/Resize, cancellation/partial failure and release; full CLI/root/local checks as applicable.",
+          "Real isolated owned Simulator drawing/reorder fixture with event trace and postcondition is separate acceptance, requires device authorization; source review does not prove delivery."
+        ],
+        "validation_prerequisites": [
+          "先在独立可行性space用离线contract/fake sender验证绝对offset模型与向后兼容，不宣称guest收到事件。",
+          "取得专用Simulator设备验证授权后，以自有绘图fixture采集真实touchesBegan/Moved/Ended事件、单touch身份、拐角/hold/最大时长及中途失败清理。",
+          "实际触点证明/明确可支持范围齐备后再由主控裁决adopt；无设备授权先观察，不将private XCTest上游表现移植成native HID保证。"
+        ]
+      }
+    ],
+    "coverage": {
+      "compare_pages": 1,
+      "total_commits": 12,
+      "unique_commits": 12,
+      "changed_files": 17,
+      "commit_file_pagination": "gh api --paginate --slurp, each response page preserved",
+      "missing_patches": [],
+      "contents_verified": true,
+      "release_notes": "Full bodies v1.98.15 and v1.98.16, all non-draft releases paginated; no separate 1.98.13/14 release in response",
+      "runtime_executed": false,
+      "binary_identity_key_certificate_contents_fetched": false,
+      "checkpoint_modified": false
+    },
+    "license": {
+      "manual_identification": "Apache-2.0",
+      "metadata_spdx": "Apache-2.0",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "fixed_url": "https://github.com/OpenMinis/iCTRL/blob/c1e4268859ba858d1579f7b846a56cb40641b7f6/LICENSE",
+      "reuse": "只借鉴机制独立实现；若后续复制源码需保留LICENSE/归属与修改声明并核查NOTICE；不涵盖外部依赖/Apple私有API授权。"
+    },
+    "other_decisions": [
+      {
+        "mechanism": "typing focus loss / soft keyboard fallback",
+        "decision": "observe",
+        "reason": "当前Runner公开XCUIElement.typeText前重新解析焦点，返回submitted=true/postconditionVerified=false；embedded走公开UIKeyInput，SP196 WebView有读回校验。上游虚拟硬件键盘失焦现象尚未在Triton复现，自动整段重输有重复输入风险，不据上游声明新增本地bug。屏幕键/拼音候选私有snapshot实现不直接采用。",
+        "upstream": "https://github.com/OpenMinis/iCTRL/blob/c1e4268859ba858d1579f7b846a56cb40641b7f6/iCTRLUITests/SoftKeyboardTyper.swift"
+      },
+      {
+        "mechanism": "identical frame suppression",
+        "decision": "covered",
+        "reason": "本地FramebufferSession.processFrame已比较JPEG并只在变化时递增version，SP196生命周期/双订阅与helper取消已交付。",
+        "upstream": "https://github.com/OpenMinis/iCTRL/blob/c1e4268859ba858d1579f7b846a56cb40641b7f6/iCTRLUITests/VideoStreamer.swift"
+      },
+      {
+        "mechanism": "idle thermal throttling / VideoToolbox encoder recovery",
+        "decision": "observe",
+        "reason": "本地Simulator IOSurface/JPEG callbacks与CLI终端mirror不是iOS H264 VideoToolbox会话；不存在同一路径encoder黑屏证据。不以降热自述推定本地性能缺陷。"
+      },
+      {
+        "mechanism": "browser FPS/quality/verbose preferences",
+        "decision": "observe",
+        "reason": "上游正式remote控制页；本地Web为mock只读展示，不增加remote Web写控制或复制browser pairing storage。"
+      },
+      {
+        "mechanism": "unsigned release IPA / pairing / auth",
+        "decision": "covered_or_observe",
+        "reason": "新unsigned打包针对iCTRL侧载产品，Triton CLI/SDK和显式Runner构建不同；不扩签名/DDI/配对边界。v1.98.15中安全/RemotePairing说明为旧变化，已由10月20日SP193评估和SP203–205认证/日志/发现边界处理，不重复排期。"
+      },
+      {
+        "mechanism": "retrospective channel/loop advice",
+        "decision": "covered",
+        "reason": "SP192已有alias/预算/OCR/settle/UI健康与未知不重放；SP196有foreground/证据完整性；SP200已有录制/观察后动作验证；SP223输出收尾已在实际main，不作为本次新增采用。"
+      },
+      {
+        "mechanism": "host-HID path reuse feasibility",
+        "decision": "observe_validation_prerequisite",
+        "reason": "现有发送器可接受任意NativeHIDContact列表，但public入口/模型尚无路径，uniform cadence没有每段时间模型；最小技术面是新增path DTO/CLI、offset contacts及guard复用，仍需真实guest触点验收，离线契约不能证明完成。"
+      }
+    ]
+  },
+  "checkpoint_advanced": true,
+  "notification_required": true
+}
