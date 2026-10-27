@@ -190,3 +190,12 @@ main@ebfbb405全量推送，main CI38922511471/tag CI38924507762/Release38924507
 本版发布SP-218真实显示查询兼容修复及其余已收口CLI契约，保留Resize AX/HID unsupported、DerivedData自动删除取消与resource replay提前拒绝边界。公开面仍为双架构CLI、Web、public skills、checksum和Homebrew，podspec/Web清单对齐0.2.33；CocoaPods仅lint。使用独立干净main检出发布，避免原工作区参考追踪WIP混入tag。结果见[发布验收](../spaces/SP-218-issue-222-device-hub-input/plans/20261024-v0.2.33-release.md)。
 
 2026-10-24已发布[v0.2.33](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.33)，tag指向 `e2b1d959564bc306308a283f73d8d5bc5cb6164f`；main CI40044736453、tag CI40046036564与Release40046036515全部成功，包含双架构与两次tap更新。公开资产完整下载后通过checksum/gzip、架构、Runner与skills元数据校验，双CLI实际版本均为0.2.33；Homebrew升级/test及仓库外packaged Web只读HTTP/浏览器验收通过。原最低iOS13的CI标准pod lint通过；本机标准失败与兼容lint通过分别留证，未推送trunk。自有验收Web已停止，其他任务服务保留。
+
+## v0.2.34 复验经验
+
+2026-10-27 的 [SP-227 发布记录](../spaces/SP-227-release-v0-2-34/plans/20261027-v0.2.34-release.md) 补充了两条可复用边界：
+
+- packaged Web 必须从仓库外启动已发布二进制，并在 HTTP/浏览器探针前确认 `triton web --print-command --json` 返回 `mode=packaged`。从源码 checkout 启动，或传入内部源码/Web 路径参数，可能切换到 Vite dev server；这类探针不能作为发布包证据。
+- CocoaPods 的原始最低部署版本 lint 与为本机新版 Xcode 设置较高目标的兼容 lint 是两类证据。后者只能说明当前工具链可检查，不能替代产品最低版本；本机工具链不兼容时保留标准失败日志，等待兼容 CI/环境复验。
+
+本次对应 Release workflow [40464673488](https://github.com/NeptuneKit/TritonKit/actions/runs/40464673488) 的双架构、x86_64 回填和两次 tap 更新均成功；未改变发布资产契约，也未把本机 Homebrew 安装升级或 CocoaPods trunk 推送纳入自动范围。
