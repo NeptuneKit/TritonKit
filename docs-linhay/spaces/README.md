@@ -6,7 +6,7 @@
 >
 > 编号登记册：[INDEX.md](./INDEX.md)（224/224 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-24（SP-218/SP-219真实验收与v0.2.33发布通过，有限任务归档与范围收口；保留既有参考追踪）
+> 最近审计：2026-10-27（SP-227 v0.2.34 发布准备；保留既有参考追踪）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -365,3 +365,7 @@
 
 - [SP-225-simulator-files-recents](./SP-225-simulator-files-recents/README.md)：CLI只读Files Recents精确服务诊断，已验收合main607cdf1c并清理关闭。
 - [SP-226-files-recents-integration](./SP-226-files-recents-integration/README.md)：有限主控已完成验收，合后94+1528完整CLI与docs通过，证据归档及会话关闭。
+
+## 2026-10-27 v0.2.34 发布准备
+
+- [SP-227-release-v0-2-34](./SP-227-release-v0-2-34/README.md)：以当前本地 main 的已验收内容发布 `v0.2.34`；版本清单、公开资产、Homebrew、skills 与仓库外 Web smoke 按发布治理逐项验收。

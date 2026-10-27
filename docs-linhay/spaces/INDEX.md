@@ -3,7 +3,7 @@
 
 2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-24（有限任务归档、真实验收与范围收口）
+> 最近同步：2026-10-27（v0.2.34 发布准备）
 > 覆盖范围：224/224 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
@@ -284,3 +284,4 @@
 
 | `SP-225-simulator-files-recents` | [`SP-225-simulator-files-recents`](./SP-225-simulator-files-recents/README.md) | 已验收合本地main | 607cdf1c；94+1528完整CLI/离线JSON/docs通过，已清理并关闭会话 |
 | `SP-226-files-recents-integration` | [`SP-226-files-recents-integration`](./SP-226-files-recents-integration/README.md) | 已验收合本地main | 主控1847653e；53份证据归档，worktree/branch与会话已关闭 |
+| `SP-227-release-v0-2-34` | [`SP-227-release-v0-2-34`](./SP-227-release-v0-2-34/README.md) | 发布准备中 | 目标 `v0.2.34`；版本清单与发布门禁待验证 |
