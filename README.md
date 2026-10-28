@@ -806,6 +806,8 @@ triton act tap --platform android --target emulator-5554 "Network & internet" --
 triton smoke android --device android-a --package com.android.settings --wait-text "Settings" --tap-text "Network & internet" --post-tap-wait-text "Internet" --screenshot /tmp/android-smoke.png --evidence /tmp/android-smoke.tritonevidence --json
 ```
 
+Android `device wait-ready` / `target wait-ready` requires adb state `device`, `sys.boot_completed=1`, and an available package manager. This is a host readiness sample, not proof that an APK install or app workflow will succeed. Screenshot storage/capture errors remain `android_screenshot_failed`; a missing remote file is not evidence that adb is missing.
+
 `triton device foreground --platform android --device <selector> --json` reports `observed.bundleIdentifier`, the resolved `observed.activity` (only a leading `.` expands to the package), and the original package/activity `observed.component` from a trustworthy resumed ActivityRecord. Missing or conflicting identity stays `unknown`; window focus is not a fallback. A foreground identity is not business readiness. Legacy ADB text input now quotes the text for the remote shell and redacts it from the command ledger; Android `input text` Unicode/keymap and `%s` behavior remain platform limitations.
 
 Host Simulator AX rejects missing or non-finite display/root geometry with `ios_host_ax_geometry_unavailable`; it never substitutes a guessed screen size or scale. Inspect the target with `triton device doctor --platform ios --scope simulator --json` before retrying. Offline geometry tests do not establish old/new Xcode or live Resize Mode compatibility.

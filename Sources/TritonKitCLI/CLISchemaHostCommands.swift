@@ -86,7 +86,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "current", type: "Subcommand", description: "Show the current agent target"),
                 TKCommandSchemaOption(name: "resolve <selector>", type: "Subcommand", description: "Resolve a target selector without executing an action"),
                 TKCommandSchemaOption(name: "resolve --platform ios|android|harmony --device <selector>", type: "Subcommand", description: "Resolve a unified target selector without executing an action"),
-                TKCommandSchemaOption(name: "wait-ready --device <selector>", type: "Subcommand", description: "Wait for iOS Booted, Android adb state/package manager, or Harmony bootevent.boot.completed"),
+                TKCommandSchemaOption(name: "wait-ready --device <selector>", type: "Subcommand", description: "Wait for iOS Booted, Android adb state + sys.boot_completed=1 + package manager, or Harmony bootevent.boot.completed"),
                 TKCommandSchemaOption(name: "screenshot --device <selector> --output <path>", type: "Subcommand", description: "Capture an iOS Simulator, Android, or Harmony screenshot; an explicit iOS real-device selector returns unsupported_scope"),
                 TKCommandSchemaOption(name: "runtime-url --device <selector>", type: "Subcommand", description: "Prepare HDC fport and print a direct Harmony embedded runtime base URL"),
                 TKCommandSchemaOption(name: "runtime-url --platform harmony --target <target>", type: "Subcommand", description: "Compatibility path for preparing a direct Harmony embedded runtime base URL"),
@@ -496,7 +496,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "wait-ready",
-                    summary: "Wait for a host target to become ready",
+                    summary: "Wait for host readiness; Android requires adb state, sys.boot_completed=1 and package manager availability, not app/business verification",
                     optionalOptions: ["--device", "--target", "--platform", "--scope", "--name", "--runtime", "--state", "--ready", "--timeout", "--interval", "--hdc", "--adb", "--format", "--json"],
                     outputSelectors: ["host.device-ready"]
                 ),
@@ -506,7 +506,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     requiredOptions: ["--output"],
                     optionalOptions: ["--platform", "--device", "--target", "--scope", "--name", "--runtime", "--state", "--ready", "--timeout", "--hdc", "--adb", "--format", "--json"],
                     outputSelectors: ["host.device-screenshot"],
-                    failureCodes: ["ios_simulator_resize_capture_state_unknown", "unsupported_scope", "device_not_ready", "host_command_timeout", "host_action_failed"]
+                    failureCodes: ["ios_simulator_resize_capture_state_unknown", "unsupported_scope", "device_not_ready", "host_command_timeout", "host_action_failed", "android_screenshot_failed", "android_adb_not_found"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "runtime-url",

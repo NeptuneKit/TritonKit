@@ -1037,6 +1037,11 @@ func failHostCommand(
         let isHDC = command.executable == "hdc" || command.executable.hasSuffix("/hdc")
         let isADB = command.executable == "adb" || command.executable.hasSuffix("/adb")
         let stderr = result.stderr.lowercased()
+        // ADB propagates remote shell failures, including status 127. Only the
+        // host env launcher naming this executable proves an executable lookup failure.
+        let adbExecutableLookupFailed = result.exitCode == 127
+            && stderr.hasPrefix("env: \(command.executable.lowercased()):")
+            && (stderr.contains("no such file") || stderr.contains("not found"))
         let simctlSubcommand = command.arguments.dropFirst().first
         if isHarmonyEmulatorStopFailureCommand(command) {
             code = "harmony_emulator_stop_failed"
@@ -1044,7 +1049,7 @@ func failHostCommand(
         } else if command.executable == "xcodebuild" {
             code = "xcodebuild_failed"
             hint = "Inspect the xcodebuild output, verify workspace/project, scheme, destination, signing, and DerivedData path."
-        } else if isADB && (result.exitCode == 127 || stderr.contains("no such file") || stderr.contains("not found")) {
+        } else if isADB && adbExecutableLookupFailed {
             code = "android_adb_not_found"
             hint = "Install Android SDK platform-tools or pass --adb <path> to the Triton command."
         } else if isADB && command.arguments.contains("screencap") {

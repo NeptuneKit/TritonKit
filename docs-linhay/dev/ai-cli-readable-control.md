@@ -626,3 +626,9 @@ formula不匹配返回`homebrew_version_mismatch`，安装版不匹配返回`ins
 CLI三条host-process runner的输出完整性与直接子进程exit状态分别判断。直接子进程退出后采用共享0.25秒pipe收尾预算、非阻塞read和短poll；只有真实EOF才认为完整。未EOF的内部失败映射`host_output_incomplete`，读取错误映射`host_output_read_failed`，保持单一失败envelope且不自动重放。内部证据保留真实exitCode、sourceCommand、已观察部分字节/计数与artifact写入计数；正常EOF的既有字节截断不等于输出未知，保留原语义。
 
 范围仅pipe读取/worker join，文件系统open/write/close与既有执行terminate/kill预算分别保留限制；不承诺整个命令硬墙钟上限，不自动kill未拥有后代。同步大stdin旧路径未在此切片改动。已由9fbda1d5合本地main，独立与合后验证以[SP-224](../spaces/SP-224-host-process-drain-integration/README.md)为准，真实运行/文件系统边界仍按该报告声明。
+
+### Android install readiness 与截图失败分类
+
+`device wait-ready --platform android`（含 `target wait-ready` 的同一路由）依次验证 adb `get-state=device`、`sys.boot_completed=1` 和 `pm path android` 可用。boot property 未就绪时不把提前出现的 package 路径当作 install-ready；boot 完成但 package service 暂不可用时继续有限等待。成功回执的 `sourceCommands` 保留三项探针。该采样不证明 APK 安装必然成功、embedded runtime 已连接或业务就绪；安装仍需独立检查结果。
+
+`device screenshot` 的 screencap/pull 子命令失败（例如共享存储文件不存在、远端 shell 127）返回 `android_screenshot_failed`。只有宿主 executable lookup 的明确证据才报告 `android_adb_not_found`；不能根据通用 `No such file` / `not found` 文字推断 adb 未安装。

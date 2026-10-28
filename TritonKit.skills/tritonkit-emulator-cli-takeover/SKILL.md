@@ -72,6 +72,8 @@ triton device use <alias-or-id> --json
 triton device wait-ready --device <alias-or-id> --json
 ```
 
+Android wait-ready combines adb state, `sys.boot_completed=1` and PackageManager availability. A package path during boot is insufficient. Inspect install results and app postconditions separately. A screenshot `android_screenshot_failed` caused by `/sdcard` or remote command failure is not a reason to reinstall adb.
+
 Observation and action:
 
 ```bash

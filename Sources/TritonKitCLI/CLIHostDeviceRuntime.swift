@@ -760,14 +760,30 @@ func waitForHostDeviceReady(
             case .unknown(let raw):
                 throw AndroidDeviceReadinessError.packageManagerUnavailable(selected.target, "adb state \(raw)")
             }
-            let packageResult = try runAndroidADBReadinessProbe(TKAndroidADBCommand.packageManagerPath(serial: selected.rawTarget, executable: adb))
-            let packageStatus = TKAndroidPackageManagerProbeParser.parse(packageResult.stdout, stderr: packageResult.stderr, exitCode: packageResult.exitCode)
-            let sourceCommands = [stateResult.sourceCommand, packageResult.sourceCommand]
+            // Package paths can appear before Android's system providers finish booting.
+            // Keep this probe explicit so install-ready never treats a partially booted
+            // PackageManager as a usable target.
+            let bootResult = try runAndroidADBReadinessProbe(TKAndroidADBCommand.bootCompleted(serial: selected.rawTarget, executable: adb))
+            let bootStatus = TKAndroidBootCompletedParser.parse(bootResult.stdout, stderr: bootResult.stderr, exitCode: bootResult.exitCode)
+            var sourceCommands = [stateResult.sourceCommand, bootResult.sourceCommand]
+            let packageStatus: TKAndroidPackageManagerProbeStatus
+            switch bootStatus {
+            case .ready:
+                let packageResult = try runAndroidADBReadinessProbe(TKAndroidADBCommand.packageManagerPath(serial: selected.rawTarget, executable: adb))
+                sourceCommands.append(packageResult.sourceCommand)
+                packageStatus = TKAndroidPackageManagerProbeParser.parse(packageResult.stdout, stderr: packageResult.stderr, exitCode: packageResult.exitCode)
+            case .notReady:
+                packageStatus = .unavailable("Android boot is not complete")
+            case .failed(let detail):
+                packageStatus = .unavailable(detail.isEmpty ? "boot completion probe failed" : "boot completion probe failed: \(detail)")
+            }
             let ready: Bool
-            switch packageStatus {
-            case .available:
+            switch evaluateAndroidInstallReadiness(boot: bootStatus, package: packageStatus) {
+            case .ready:
                 ready = true
-            case .unavailable(let reason):
+            case .waiting:
+                ready = false
+            case .failed(let reason):
                 if Date().addingTimeInterval(interval) >= deadline {
                     throw AndroidDeviceReadinessError.packageManagerUnavailable(selected.target, reason)
                 }
@@ -793,6 +809,31 @@ func waitForHostDeviceReady(
         try await Task.sleep(nanoseconds: UInt64(max(0.1, interval) * 1_000_000_000))
     }
     throw HostCommandRunError.deviceNotReady(target: selected.target, timeoutSeconds: timeout)
+}
+
+enum AndroidInstallReadinessDecision: Equatable {
+    case ready
+    case waiting
+    case failed(String)
+}
+
+func evaluateAndroidInstallReadiness(
+    boot: TKAndroidBootCompletedStatus,
+    package: TKAndroidPackageManagerProbeStatus
+) -> AndroidInstallReadinessDecision {
+    switch boot {
+    case .notReady:
+        return .waiting
+    case .failed(let detail):
+        return .failed(detail.isEmpty ? "boot completion probe failed" : "boot completion probe failed: \(detail)")
+    case .ready:
+        switch package {
+        case .available:
+            return .ready
+        case .unavailable(let detail):
+            return .failed(detail.isEmpty ? "package service probe failed" : detail)
+        }
+    }
 }
 
 private func runAndroidADBReadinessProbe(_ command: TKHostCommand) throws -> HostProcessResult {
