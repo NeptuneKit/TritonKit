@@ -4,6 +4,39 @@ import XCTest
 #endif
 
 final class HTTPProtocolTests: XCTestCase {
+    func testObservationGeometryUnknownOrientationKeepsReadOnlyEvidence() throws {
+        let observation = RunnerObservationGeometry(width: 390, height: 844, orientation: "unknown")
+        XCTAssertNil(observation.geometry)
+        XCTAssertEqual(observation.json["coordinateActionsAvailable"] as? Bool, false)
+        XCTAssertEqual(observation.json["geometryAvailability"] as? String, "unavailable")
+        let error = try XCTUnwrap(observation.json["geometryError"] as? [String: String])
+        XCTAssertEqual(error["code"], "observation_orientation_unavailable")
+        XCTAssertEqual(error["field"], "deviceOrientation")
+        XCTAssertFalse(error["message"]?.contains("parameters") ?? true)
+        XCTAssertThrowsError(try observation.requireCoordinateGeometry()) { error in
+            XCTAssertEqual((error as? ProtocolFailure)?.code, "observation_orientation_unavailable")
+        }
+    }
+    func testObservationGeometryInvalidAppFrameNamesFailedField() throws {
+        for width in [0.0, -1, Double.infinity, Double.nan] {
+            let observation = RunnerObservationGeometry(width: width, height: 844, orientation: "portrait")
+            XCTAssertNil(observation.geometry)
+            XCTAssertThrowsError(try observation.requireUsableFrame()) { error in
+                XCTAssertEqual((error as? ProtocolFailure)?.code, "observation_window_unavailable")
+            }
+            XCTAssertEqual((observation.json["geometryError"] as? [String: String])?["field"], "appFrame.width")
+        }
+        let observation = RunnerObservationGeometry(width: 390, height: 0, orientation: "portrait")
+        XCTAssertEqual((observation.json["geometryError"] as? [String: String])?["field"], "appFrame.height")
+    }
+    func testObservationGeometryNeverGuessesOrientationFromDimensions() throws {
+        let observation = RunnerObservationGeometry(width: 844, height: 390, orientation: "face-up")
+        XCTAssertNil(observation.geometry)
+        let valid = RunnerObservationGeometry(width: 844, height: 390, orientation: "landscape-right")
+        XCTAssertEqual(valid.json["geometryAvailability"] as? String, "available")
+        XCTAssertEqual(valid.json["coordinateActionsAvailable"] as? Bool, true)
+        XCTAssertEqual(try valid.requireCoordinateGeometry().orientation, "landscape-right")
+    }
     func testCrossAppWhitelistAndBundleBinding() throws {
         let value = try CrossAppRequest(body: ["app": "settings", "operation": "probe", "expectedBundle": "com.apple.Preferences"])
         XCTAssertEqual(value.bundleID, "com.apple.Preferences")

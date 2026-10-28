@@ -4,6 +4,46 @@ import Foundation
 import UIKit
 
 final class TritonIOSRunnerTests: XCTestCase {
+    /// Fixture-only proof: readiness/activation do not imply usable orientation.
+    /// Run explicitly; the resident session still selects only testServe.
+    func testCrossAppObservationWithoutOrientation() throws {
+        let config = try RunnerConfiguration(environment: ["TRITON_RUNNER_TOKEN": "fixture-only-test-token", "TRITON_RUNNER_SESSION": "geometry-fixture"])
+        let fixture = XCUIApplication(bundleIdentifier: "dev.tritonkit.runnerfixture")
+        fixture.launch()
+        defer { fixture.terminate() }
+        XCTAssertTrue(fixture.buttons["incrementButton"].waitForExistence(timeout: 10))
+        var orientation = "portrait"
+        let ui = IOSRunnerUI(config: config, fixture: fixture, geometryProvider: { app in
+            RunnerObservationGeometry(width: Double(app.frame.width), height: Double(app.frame.height), orientation: orientation)
+        })
+        XCTAssertEqual(try ui.perform("/probe", body: [:])["automationReady"] as? Bool, true)
+        let base: [String: Any] = ["app": "fixture", "expectedBundle": "dev.tritonkit.runnerfixture"]
+        func request(_ operation: String, _ extra: [String: Any] = [:]) -> [String: Any] {
+            base.merging(["operation": operation]) { _, value in value }.merging(extra) { _, value in value }
+        }
+        XCTAssertEqual(try ui.perform("/crossApp", body: request("activate"))["foregroundVerified"] as? Bool, true)
+        let first = try ui.perform("/crossApp", body: request("inspect"))
+        let oldID = try XCTUnwrap(first["observationID"] as? String)
+        let oldGeometry = try XCTUnwrap(first["geometry"] as? [String: Any])
+        orientation = "unknown"
+        let inspect = try ui.perform("/crossApp", body: request("inspect"))
+        XCTAssertEqual(inspect["partial"] as? Bool, true)
+        XCTAssertNil(inspect["observationID"])
+        XCTAssertNil(inspect["geometry"])
+        XCTAssertTrue((inspect["returnedCount"] as? Int ?? 0) > 0)
+        let screenshot = try ui.perform("/crossApp", body: request("screenshot"))
+        XCTAssertEqual(screenshot["coordinateActionsAvailable"] as? Bool, false)
+        XCTAssertNotNil(screenshot["pngBase64"])
+        XCTAssertNil(screenshot["observationID"])
+        XCTAssertThrowsError(try ui.perform("/crossApp", body: request("coordinateTap", ["observationID": oldID, "geometry": oldGeometry, "x": 10, "y": 20]))) { error in
+            XCTAssertEqual((error as? ProtocolFailure)?.code, "coordinate_stale")
+        }
+        fixture.terminate()
+        XCTAssertThrowsError(try ui.perform("/crossApp", body: request("inspect"))) { error in
+            XCTAssertEqual((error as? ProtocolFailure)?.code, "cross_app_not_foreground")
+        }
+    }
+
     func testServe() throws {
         continueAfterFailure = false
         let config = try RunnerConfiguration(environment: ProcessInfo.processInfo.environment)
@@ -33,13 +73,20 @@ final class TritonIOSRunnerTests: XCTestCase {
 final class IOSRunnerUI {
     private let config: RunnerConfiguration
     private let fixture: XCUIApplication
+    private let geometryProvider: (XCUIApplication) -> RunnerObservationGeometry
     private var observedApp: String?
     private var observedAt: Date?
     private var observedID: String?
     private var observedGeometry: RunnerGeometry?
     private var observedElements: [[String: String]] = []
-    init(config: RunnerConfiguration, fixture: XCUIApplication) {
+    init(config: RunnerConfiguration, fixture: XCUIApplication,
+         geometryProvider: ((XCUIApplication) -> RunnerObservationGeometry)? = nil) {
         self.config = config; self.fixture = fixture
+        self.geometryProvider = geometryProvider ?? { app in
+            let frame = app.frame
+            return RunnerObservationGeometry(width: Double(frame.width), height: Double(frame.height),
+                orientation: Self.orientationName(XCUIDevice.shared.orientation))
+        }
     }
     func perform(_ path: String, body: [String: Any]) throws -> [String: Any] {
         if path == "/environment" { return try performEnvironment(RunnerEnvironmentRequest(body: body)) }
@@ -81,7 +128,7 @@ final class IOSRunnerUI {
     private func clearObserved() {
         observedApp = nil; observedAt = nil; observedID = nil; observedGeometry = nil; observedElements = []
     }
-    private func orientationName(_ value: UIDeviceOrientation) -> String {
+    private static func orientationName(_ value: UIDeviceOrientation) -> String {
         switch value {
         case .portrait: return "portrait"
         case .portraitUpsideDown: return "portrait-upside-down"
@@ -99,7 +146,7 @@ final class IOSRunnerUI {
     }
     private func performEnvironment(_ request: RunnerEnvironmentRequest) throws -> [String: Any] {
         if request.operation == "orientation" {
-            let previous = orientationName(XCUIDevice.shared.orientation)
+            let previous = Self.orientationName(XCUIDevice.shared.orientation)
             if let orientation = request.orientation {
                 clearObserved()
                 switch orientation {
@@ -110,7 +157,7 @@ final class IOSRunnerUI {
                 default: throw ProtocolFailure("environment_orientation", "Unsupported orientation")
                 }
             }
-            let current = orientationName(XCUIDevice.shared.orientation)
+            let current = Self.orientationName(XCUIDevice.shared.orientation)
             return ["operation": "orientation", "orientation": current, "previousOrientation": previous,
                     "submitted": request.orientation != nil, "verified": request.orientation.map { $0 == current } ?? (current != "unknown"),
                     "source": "public-xctest-runner", "verification": "device-orientation-readback-not-app-layout"]
@@ -127,13 +174,26 @@ final class IOSRunnerUI {
         return result
     }
     private func liveGeometry(_ app: XCUIApplication) throws -> RunnerGeometry {
-        let frame = app.frame
-        return try RunnerGeometry(body: ["width": Double(frame.width), "height": Double(frame.height), "orientation": orientationName(XCUIDevice.shared.orientation)])
+        try geometryProvider(app).requireCoordinateGeometry()
     }
     private func observeGeometry(_ app: XCUIApplication, bundleID: String) throws -> [String: Any] {
-        let geometry = try liveGeometry(app)
-        observedApp = bundleID; observedAt = Date(); observedID = UUID().uuidString; observedGeometry = geometry
-        return ["observationID": observedID!, "geometry": geometry.json, "coordinateSpace": "app-frame-points", "expiresAfterSeconds": 30]
+        guard app.state == .runningForeground else {
+            throw ProtocolFailure("cross_app_not_foreground", "Bound app left foreground while observing; activate and inspect again", status: 409)
+        }
+        let observation = geometryProvider(app)
+        try observation.requireUsableFrame()
+        observedApp = bundleID; observedAt = Date(); observedGeometry = observation.geometry
+        // Never preserve a previous coordinate lease when orientation is unavailable.
+        observedID = observation.geometry == nil ? nil : UUID().uuidString
+        var result = observation.json
+        result["partial"] = observation.geometry == nil
+        result["appAlertPresent"] = app.alerts.firstMatch.exists
+        result["systemAlertDetection"] = "not-probed"
+        if let observedID {
+            result["observationID"] = observedID
+            result["coordinateSpace"] = "app-frame-points"; result["expiresAfterSeconds"] = 30
+        }
+        return result
     }
     private func performCrossApp(_ request: CrossAppRequest) throws -> [String: Any] {
         let app = request.bundleID == "dev.tritonkit.runnerfixture" ? fixture : XCUIApplication(bundleIdentifier: request.bundleID)
@@ -199,7 +259,7 @@ final class IOSRunnerUI {
             return result
         }
         if let coordinate = request.coordinate {
-            guard observedApp == request.bundleID else { throw ProtocolFailure("coordinate_stale", "Inspect this allowlisted app before coordinates", status: 409) }
+            guard observedApp == request.bundleID, observedGeometry != nil, observedID != nil else { throw ProtocolFailure("coordinate_stale", "Inspect this allowlisted app before coordinates", status: 409) }
             try coordinate.validate(observationID: observedID, observedAt: observedAt, now: Date(), geometry: liveGeometry(app))
             // Consume the observation before submission. An unknown outcome cannot reuse it.
             clearObserved()

@@ -59,6 +59,30 @@ private final class IOSRunnerHarness {
 
 @Suite("iOS Runner lifecycle contracts")
 struct IOSRunnerLifecycleTests {
+    @Test func readyActivateInspectScreenshotRetainsPartialGeometryMetadata() throws {
+        let harness = try IOSRunnerHarness(), service = try harness.ready()
+        harness.actionResponse = ["ok": true, "result": ["foregroundVerified": true, "state": 4]]
+        let base: [String: Any] = ["app": "target", "expectedBundle": "com.example.app"]
+        let activate = try harness.call(service, "request", ["body": base.merging(["operation": "activate"]) { _, new in new }])
+        #expect((activate["result"] as? [String: Any])?["foregroundVerified"] as? Bool == true)
+        let partial: [String: Any] = ["partial": true, "geometryAvailability": "unavailable", "coordinateActionsAvailable": false,
+            "geometryError": ["code": "observation_orientation_unavailable", "field": "deviceOrientation", "message": "Orientation unknown"], "elements": [["identifier": "fixture"]]]
+        harness.actionResponse = ["ok": true, "result": partial]
+        let inspect = try harness.call(service, "request", ["body": base.merging(["operation": "inspect"]) { _, new in new }])
+        let inspected = try #require(inspect["result"] as? [String: Any])
+        #expect(inspect["ok"] as? Bool == true)
+        #expect(inspected["coordinateActionsAvailable"] as? Bool == false)
+        #expect(inspected["observationID"] == nil)
+        #expect(inspected["geometry"] == nil)
+        let png = Data([137,80,78,71,13,10,26,10, 0,0,0,13,73,72,68,82, 0,0,0,1,0,0,0,1, 8,6,0,0,0,0,0,0,0])
+        harness.actionResponse = ["ok": true, "result": partial.merging(["pngBase64": png.base64EncodedString(), "byteCount": png.count]) { _, new in new }]
+        let output = harness.root.appendingPathComponent("partial.png")
+        let screenshot = try harness.call(service, "request", ["body": base.merging(["operation": "screenshot"]) { _, new in new }, "screenshotOutput": output.path])
+        #expect(screenshot["ok"] as? Bool == true)
+        #expect((screenshot["result"] as? [String: Any])?["partial"] as? Bool == true)
+        #expect((screenshot["result"] as? [String: Any])?["pngBase64"] == nil)
+        #expect(try Data(contentsOf: output) == png)
+    }
     @Test func prepareOwnsBuildAndDoesNotEnableProvisioningByDefault() throws {
         let harness = try IOSRunnerHarness(), service = IOSRunnerService(dependencies: harness.dependencies)
         #expect(try harness.call(service, "prepare")["ok"] as? Bool == true)

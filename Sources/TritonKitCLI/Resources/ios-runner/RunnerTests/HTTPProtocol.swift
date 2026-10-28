@@ -93,6 +93,47 @@ struct RunnerGeometry: Equatable {
         return n.doubleValue
     }
 }
+/// Read-only observations need not invent orientation to return useful evidence.
+/// A missing app frame still rejects the target observation; unknown orientation
+/// only withholds coordinate authority. No pixel-to-point or aspect-ratio guess.
+struct RunnerObservationGeometry {
+    let geometry: RunnerGeometry?
+    let failure: ProtocolFailure?
+    let failedField: String?
+    init(width: Double, height: Double, orientation: String) {
+        let field: String?
+        if !width.isFinite || width <= 0 || width > 32768 { field = "appFrame.width" }
+        else if !height.isFinite || height <= 0 || height > 32768 { field = "appFrame.height" }
+        else { field = nil }
+        if let field {
+            geometry = nil; failedField = field
+            failure = ProtocolFailure("observation_window_unavailable", "Foreground app has no usable point frame (\(field)). Wait for its visible window, dismiss interruptions if appropriate, then inspect again.", status: 409)
+        } else if !RunnerEnvironmentRequest.orientations.contains(orientation) {
+            geometry = nil; failedField = "deviceOrientation"
+            failure = ProtocolFailure("observation_orientation_unavailable", "XCTest did not report a usable device orientation. Inspect or screenshot remains available; coordinate actions require a fresh observation after orientation becomes known.", status: 409)
+        } else {
+            geometry = try? RunnerGeometry(body: ["width": width, "height": height, "orientation": orientation])
+            failedField = nil; failure = nil
+        }
+    }
+    func requireUsableFrame() throws {
+        if let failure, failure.code == "observation_window_unavailable" { throw failure }
+    }
+    func requireCoordinateGeometry() throws -> RunnerGeometry {
+        if let geometry { return geometry }
+        throw failure ?? ProtocolFailure("observation_orientation_unavailable", "Observe a known orientation before coordinate actions", status: 409)
+    }
+    var json: [String: Any] {
+        if let geometry {
+            return ["geometryAvailability": "available", "coordinateActionsAvailable": true,
+                    "geometry": geometry.json, "geometrySource": "XCTest.app.frame+device.orientation"]
+        }
+        return ["geometryAvailability": "unavailable", "coordinateActionsAvailable": false,
+                "geometryError": ["code": failure!.code, "message": failure!.message, "field": failedField!],
+                "geometrySource": "XCTest.app.frame+device.orientation"]
+    }
+}
+
 struct RunnerCoordinateRequest {
     let observationID: String
     let geometry: RunnerGeometry
