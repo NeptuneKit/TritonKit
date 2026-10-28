@@ -57,6 +57,7 @@ struct HostSimulatorScreenshotOutput: Encodable {
     let display: HostSimulatorScreenshotDisplayMetadata
     let orientationPolicy: String
     let orientationNote: String
+    var primaryFramebuffer: IOSSimulatorPrimaryFramebufferEvidence? = nil
     let note: String
 }
 

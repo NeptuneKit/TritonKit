@@ -36,3 +36,5 @@ CLI首轮1566项中一项既有FramebufferHelperTests缺临时脚本marker，单
 ## 用户确认的验收范围与PR
 
 用户追加“Xcode27.1测试就行了”。因此此前26.6缺失记录只是历史验证边界，不再是本轮阻塞，也不继续索要该环境；本次以已完成的Xcode27.1+iOS27.0自有iPhone17/iPad A16验证为准。iPad捕获/输入仍受安全拒绝，是保留#224 OPEN的功能限制。实现提交5296ec2e，[PR #236](https://github.com/NeptuneKit/TritonKit/pull/236)为部分修复，没有自动关闭关键词；未合并/发布。后续若要恢复不支持查询目标的主屏只读捕获，需要独立、显式的显示绑定契约，不能静默放宽unknown。
+
+后续用户继续后，已定义并实现独立显式主屏只读截图，详见[后续契约与验收](20261028-primary-framebuffer.md)。本记录“捕获拒绝”继续适用于默认路径；新模式保留Resize unknown，不能据此解锁输入或关闭全部问题。

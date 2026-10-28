@@ -677,3 +677,7 @@ Runner `inspect` / `screenshot` 自行读取前台 App 的 `app.frame` 与 XCTes
 Public UIControl target/action and accessibilityActivate remain supported. If a navigation/toolbar view cannot activate through either path, embedded tap returns `unsupported_capability` with `bar-button-action-unsupported`; it never guesses a UIBarButtonItem association from matching titles or retries behind a sheet. Expose a customView control/accessibility action, or use fresh coordinates with an explicit Simulator target and host HID. Physical devices require an already-ready allowlisted Runner or manual interaction; verify the business result separately.
 
 #224后续：精确目标回执的CoreDeviceError1001、resizableappmanagement feature及同一DeviceIdentifier组合识别为`unknown/unsupportedDevice`，doctor的`simulatorDiagnostics.resize.hint`解释同一目标重复查询不会启用该能力。localizedDescription或任意嵌套错误不能充当判据；未知仍拒绝capture/AX/HID。可选择已验证支持appResize的目标/工具链，或显式连接embedded runtime做App层观察；后者不是主屏framebuffer/host input证据。iPad27.0实测不支持与iPhone17正常结果分开，旧Xcode26.6根因仍未知。
+
+## #224 显式主屏截图契约
+
+`sim screenshot --primary-framebuffer` 为独立opt-in单次PNG，和--display互斥。先fresh Resize inactive或严格unsupportedDevice，再fresh完整单LCD topology，按UUID捕获；默认入口不自动采用。仅此入口新增optional `primaryFramebuffer` DTO：captureScope=primary-display-framebuffer、displayUniqueID、resizeState/reason、resizeVerified、inputDispatchVerified=false、topologySource。unsupported状态保持unknown；额外off虚拟显示也拒绝。PNG必须新建可解码、正尺寸、最多64MiB/6400万像素，独占发布，不覆盖现有输出。查询非原子，不证明App内容完整或输入安全。参见[验收](../spaces/SP-235-issue-224-simulator-resize-query/plans/20261028-primary-framebuffer.md)。

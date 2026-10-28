@@ -467,17 +467,28 @@ struct SimScreenshot: AsyncParsableCommand {
     @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
     @Option(help: "Output PNG path") var output: String
     @Option(help: "CoreSimulator display selector, for example internal, external, screen id, or display UUID") var display: String?
+    @Flag(help: "Capture only a verified single primary LCD framebuffer; preserves unknown Resize state and does not authorize input. Cannot combine with --display.") var primaryFramebuffer = false
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
+    func validateCaptureOptions() throws {
+        if primaryFramebuffer && display != nil {
+            throw HostDeviceSelectionError.parameterConflict("--primary-framebuffer and --display cannot be combined.")
+        }
+    }
+
     func run() async throws {
+        do { try validateCaptureOptions() } catch {
+            try failHostCommand(error, outputFormat: effectiveFormat(format, json: json))
+        }
         let selected = try resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: simulator, platform: .ios, scope: .simulator, ready: true), hdc: "hdc")
         let udid = selected.target.rawTarget
         try runHostSimulatorScreenshotCommand(
             simulator: udid,
             command: TKSimctlCommand.screenshot(udid: udid, output: output, display: display),
             outputPath: output,
-            outputFormat: effectiveFormat(format, json: json)
+            outputFormat: effectiveFormat(format, json: json),
+            primaryFramebuffer: primaryFramebuffer
         )
     }
 }

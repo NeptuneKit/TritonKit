@@ -1,6 +1,6 @@
 # SP-235 · #224 Simulator 显示状态诊断
 
-当前状态：用户要求继续处理#224；v0.2.35后反馈仍有queryFailed，原诊断缺口修复不能视为根因解决。已定位iPad能力拒绝并完成最小分类修复/失败测试/真实验证，#224已恢复OPEN，iPad截图/输入仍未恢复，按用户追加要求仅验收Xcode27.1；旧completed记录保留历史含义，后续不据它判定问题全部解决。
+当前状态：用户要求继续处理#224；v0.2.35后反馈仍有queryFailed，原诊断缺口修复不能视为根因解决。已定位iPad能力拒绝并完成最小分类修复/失败测试/真实验证，#224已恢复OPEN，iPad默认截图/输入仍受限，显式主屏截图续作见下方验收，按用户追加要求仅验收Xcode27.1；旧completed记录保留历史含义，后续不据它判定问题全部解决。
 ## 边界和现状
 
 基线 main `a0d187ac`。只补显式目标 doctor 的 appResize/displays 只读事实与精确恢复指令，不绕过 unknown geometry 截图/触摸拒绝。#224全文及三条评论已经核对；Xcode27.1 topology bug 由 SP-218/v0.2.33 修复，Xcode26.6 旧 appResize 兼容性不能从该证据推断。影响 CLI host diagnostics/schema/failure envelope；无新 Web/HTTP 控制面。
@@ -13,7 +13,7 @@
 4. Given 原始 selector 非 UUID，Then 不反射进新恢复指令，也不调用 geometry query。
 5. Given selected HID/AX 或 screenshot unknown，Then 保留失败与独立业务验证边界，不放宽触控保护。
 
-## 当前阶段与验证
+## 历史诊断交付阶段与验证
 
 本地联合实现、完整CLI与local验收完成；现已合main并关闭对应issue；本批次未发布。
 
@@ -37,3 +37,7 @@ BDD：真实已停止/活动Resize查询须按原生结构、完整命令回执�
 当前后续事实源：[Resize capability rejection](plans/20261028-capability-rejection.md)，接替旧记录的完整关闭含义；v0.2.35已发布旧diagnostics修复，本轮部分修复尚未发布。
 
 用户追加范围：只用Xcode27.1测试即可，旧Xcode26.6不再作为本次阻塞。部分修复已提交为5296ec2e并创建[PR #236](https://github.com/NeptuneKit/TritonKit/pull/236)，#224保持OPEN；iPad默认捕获/输入仍受限，不自动合并/发布。
+
+## 2026-10-28 继续：显式主屏截图
+
+新增CLI显式 `--primary-framebuffer`，限定单LCD still PNG，保持Resize unknown和全部输入保护；BDD/真实生命周期证据与验证结果统一维护于[主屏截图验收](plans/20261028-primary-framebuffer.md)。之前“捕获仍拒绝”指默认路径；本模式独立声明范围，不推导完整问题已解决。

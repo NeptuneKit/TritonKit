@@ -14,7 +14,7 @@ enum IOSSimulatorResizeUnknownReason: String, Equatable, Encodable {
 
     var recoveryHint: String? {
         guard self == .unsupportedDevice else { return nil }
-        return "The selected Xcode backend explicitly reports that this target does not support Resizable App Management. Repeating the same doctor query will not enable that capability. Use a target/toolchain with verified appResize support, or an explicitly connected embedded runtime for App-only observation; neither is evidence that this target's host capture or input is safe."
+        return "The selected Xcode backend explicitly reports that this target does not support Resizable App Management. Repeating the same doctor query will not enable that capability. Use a target/toolchain with verified appResize support, or an explicitly connected embedded runtime for App-only observation. For a single verified primary LCD still image only, explicitly use triton sim screenshot --simulator <UUID> --primary-framebuffer --output <new-path.png> --json; it preserves Resize unknown and cannot authorize input. None of these is evidence that this target's host capture or input is safe."
     }
 }
 

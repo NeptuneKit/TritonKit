@@ -1,0 +1,170 @@
+{
+  "scope": "Explicit primary-display still image; not input or complete App/Resizable content",
+  "environment": {
+    "xcode": "27.1 (27A9275)",
+    "runtime": "iOS 27.0",
+    "targets": "task-owned iPhone 17 and iPad A16"
+  },
+  "baseCommit": "62e4872ec5d7b92b23b2e03aa0955ceda3e00b62",
+  "cases": [
+    {
+      "case": "candidate-ipad-primary",
+      "ok": true,
+      "errorCode": null,
+      "dimensions": [
+        1640,
+        2360
+      ],
+      "resizeState": "unknown",
+      "resizeReason": "unsupportedDevice",
+      "resizeVerified": false,
+      "inputDispatchVerified": false,
+      "rawEvidenceSHA256": "c9212694ae8ec447324e163259f04699ecac52fdaa3d8f01553ef6af5bfbd129"
+    },
+    {
+      "case": "candidate-ipad-default",
+      "ok": false,
+      "errorCode": "ios_simulator_resize_capture_state_unknown",
+      "dimensions": [
+        null,
+        null
+      ],
+      "resizeState": null,
+      "resizeReason": null,
+      "resizeVerified": null,
+      "inputDispatchVerified": null,
+      "rawEvidenceSHA256": "eacafb37c0d03426fe277f5d962f52f5f111a8e03b765d06d6c86949529e1e41"
+    },
+    {
+      "case": "candidate-ipad-existing",
+      "ok": false,
+      "errorCode": "artifact_output_rejected",
+      "dimensions": [
+        null,
+        null
+      ],
+      "resizeState": null,
+      "resizeReason": null,
+      "resizeVerified": null,
+      "inputDispatchVerified": null,
+      "rawEvidenceSHA256": "dc18cc2a9a1612a3a4fd6a7ff608df8b95ba2c592de90623d92aa19e584b93e0"
+    },
+    {
+      "case": "candidate-ipad-swipe",
+      "ok": false,
+      "errorCode": "ios_simulator_resize_state_unknown",
+      "dimensions": [
+        null,
+        null
+      ],
+      "resizeState": null,
+      "resizeReason": null,
+      "resizeVerified": null,
+      "inputDispatchVerified": null,
+      "rawEvidenceSHA256": "289c2673bfe2337ba99841d2d0d8be4e10f5d8dc6b6bf34bb8eb68c2b6218434"
+    },
+    {
+      "case": "candidate-phone-ended-primary",
+      "ok": false,
+      "errorCode": "ios_simulator_display_safety_unknown",
+      "dimensions": [
+        null,
+        null
+      ],
+      "resizeState": null,
+      "resizeReason": null,
+      "resizeVerified": null,
+      "inputDispatchVerified": null,
+      "rawEvidenceSHA256": "dd027ef93f027256d149fe67d27e41d8d951b104fc5c3e0ad97bdf9b796bec06"
+    },
+    {
+      "case": "candidate-phone-default",
+      "ok": true,
+      "errorCode": null,
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "resizeState": null,
+      "resizeReason": null,
+      "resizeVerified": null,
+      "inputDispatchVerified": null,
+      "rawEvidenceSHA256": "342066d8aaf6934531ee26c45dd6018c438e2188e4de6a0ac6a69989afce21ae"
+    },
+    {
+      "case": "candidate-phone-swipe",
+      "ok": true,
+      "errorCode": null,
+      "dimensions": [
+        null,
+        null
+      ],
+      "resizeState": null,
+      "resizeReason": null,
+      "resizeVerified": null,
+      "inputDispatchVerified": null,
+      "rawEvidenceSHA256": "29f3fc1eb0cfb6a38e76952bcce8c0628d18b376e4a7c08cc7bc5a5ee3cb36f8"
+    },
+    {
+      "case": "candidate-phone-active-primary",
+      "ok": false,
+      "errorCode": "ios_simulator_resize_capture_unroutable",
+      "dimensions": [
+        null,
+        null
+      ],
+      "resizeState": null,
+      "resizeReason": null,
+      "resizeVerified": null,
+      "inputDispatchVerified": null,
+      "rawEvidenceSHA256": "bd3efa7ed43439f532bf9b1fbd2ba18cce756c3d670e046135a611fc4e64fcdb"
+    },
+    {
+      "case": "candidate-phone-active-default",
+      "ok": true,
+      "errorCode": null,
+      "dimensions": [
+        1680,
+        2622
+      ],
+      "resizeState": null,
+      "resizeReason": null,
+      "resizeVerified": null,
+      "inputDispatchVerified": null,
+      "rawEvidenceSHA256": "d8ab0cff7b0c1202c0de2515b62d2af9c6d775063f5bf34923fdcc69dc632445"
+    }
+  ],
+  "lifecycle": "off Resizable display remains after session end/24004; no topology to inactive inference",
+  "knownLimits": [
+    "separate queries are not atomic",
+    "iPad default capture and input remain refused",
+    "not merged or released"
+  ],
+  "redaction": "Raw target/display identities, paths, logs and screenshots remain local ignored evidence.",
+  "testedBinarySHA256": "730ccb0aa39e2aab106a349222f7522f82b9e09182f9de88e07e55f86e96e285",
+  "cleanup": {
+    "ownedResizeSessions": "exited normally after SIGINT",
+    "ownedSimulators": "both shutdown with Triton",
+    "otherTargetsMutated": false
+  },
+  "parameterConflict": {
+    "exitNonzero": true,
+    "singleJSON": true,
+    "code": "parameter_conflict",
+    "outputCreated": false
+  },
+  "finalLiveRecheck": {
+    "primaryScreenshot": true,
+    "schemaAdvertised": true
+  },
+  "validation": {
+    "cliSwiftTesting": 1578,
+    "cliXCTest": 94,
+    "rootSwiftTesting": 401,
+    "rootXCTest": 7,
+    "localGate": "passed",
+    "docsGate": "passed",
+    "optionalBareXcodeBuild": "skipped: no embedded/UIKit/Runner source change",
+    "released": false
+  }
+}
