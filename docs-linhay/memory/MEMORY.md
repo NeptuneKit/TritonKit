@@ -82,3 +82,5 @@
 - 2026-10-28 #214 只读调查：现存两处 `.triton/DerivedData` 候选约1.95 GiB分配块，跨根相同内容164.808 MiB，属于不同项目；原大目录仍待定位。分配块/摘要重复均不是可回收独占空间；用户后续明确授权后已人工删除这两处现存缓存，父目录保留，原大目录调查仍未完成。详见[SP-240现场调查](../spaces/SP-240-issue-214-deriveddata-ownership/plans/20261028-cache-investigation.md)。
 
 - 2026-10-28 PR #234 已合并（`d52d62fd`），#214 复查保持 OPEN；原大目录/创建调用/实际可回收空间仍待证据，详见 [SP-240](../spaces/SP-240-issue-214-deriveddata-ownership/README.md)。
+
+- 2026-10-28 #214 历史溯源新增H1/H2候选：有双层目录历史索引及实际不同derived-data目的地调用；仍缺原12.13/6.53 GB路径映射，不能认定原现场。#214保持OPEN。见[溯源记录](../spaces/SP-240-issue-214-deriveddata-ownership/plans/20261028-history-trace.md)。

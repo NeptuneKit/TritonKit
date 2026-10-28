@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "issue": 214,
+  "issue_created_at": "2026-09-15T12:47:56Z",
+  "repo_baseline": "eefac94fa4a2bbbcb2816effa2c46154bc5a3e9a",
+  "investigation_date": "2026-10-28",
+  "mode": "read-only evidence collection; no cache deletion, app build or device changes",
+  "issue_disposition": "OPEN",
+  "original_pair_linkage": "unproven",
+  "sources": [
+    {
+      "source_id": "H2-root-triton",
+      "sha256": "a187d369623a7ac91f2ff00ce5e1610bb32336f5feb080adec5afd90dcb3b7cc",
+      "total_lines": 157,
+      "selected_line_numbers": [
+        1,
+        157
+      ]
+    },
+    {
+      "source_id": "H2-root-native",
+      "sha256": "240a7e2a6447afc95ce25ba5d55f5d26d2c70253ab045255a8df586a30d4c7aa",
+      "total_lines": 48910,
+      "selected_line_numbers": [
+        1,
+        2,
+        992,
+        48910
+      ]
+    },
+    {
+      "source_id": "H2-child-native",
+      "sha256": "73984192e76f5e4aa5d7afdd83ed67f5c2b806f8513cf10b1778cd7cd179a9e7",
+      "total_lines": 4707,
+      "selected_line_numbers": [
+        4,
+        448,
+        449,
+        1519,
+        4700
+      ]
+    },
+    {
+      "source_id": "H1-child-document",
+      "sha256": "2be30f14af262f9992aba1f75d75424c1e255d447a891272ebe54a318693dc1d",
+      "total_lines": 105,
+      "selected_line_numbers": [
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ]
+    },
+    {
+      "source_id": "H1-root-document",
+      "sha256": "89832af2f82a5b26579dcc8b80179df121faf74e3ede51f43974394d03297827",
+      "total_lines": 34,
+      "selected_line_numbers": [
+        13,
+        18
+      ]
+    }
+  ],
+  "historical_index": [
+    {
+      "source_id": "H1-child-index",
+      "cache_file_sha256": "b878d617c74b8dc8b901bd1a0910f413d69b0277e3029b065b9432fc2702a96e",
+      "cached_size_bytes": 6826598400,
+      "scan_time": "2026-10-02T22:02:02.144186+08:00",
+      "needs_refresh": true,
+      "schema_version": 3,
+      "currently_present": false,
+      "size_interpretation": "stale analyzer cache entry; not original Mole purge bytes or current disk usage"
+    },
+    {
+      "source_id": "H1-root-index",
+      "cache_file_sha256": "a213bdb895f67fc993af5996b57b83ff2b9986376ff26bd6839e07e4410a1b54",
+      "cached_size_bytes": 6695800832,
+      "scan_time": "2026-10-02T22:01:49.808239+08:00",
+      "needs_refresh": true,
+      "schema_version": 3,
+      "currently_present": false,
+      "size_interpretation": "stale analyzer cache entry; not original Mole purge bytes or current disk usage"
+    },
+    {
+      "source_id": "H2-root-index",
+      "cache_file_sha256": "b795dc1e5d5ca26d638a75661b30771c746adf97cc8d288a8b9c93f70b4924ff",
+      "cached_size_bytes": 14576066560,
+      "scan_time": "2026-10-02T22:02:29.402504+08:00",
+      "needs_refresh": true,
+      "schema_version": 3,
+      "currently_present": false,
+      "size_interpretation": "stale analyzer cache entry; not original Mole purge bytes or current disk usage"
+    }
+  ],
+  "search_coverage": {
+    "git_history": "related pre-2026-09-17 docs, no original purge/du path capture",
+    "codex_archived_rollouts": 6685,
+    "codex_archive_creation_cutoff_exclusive": "2026-09-17",
+    "original_purge_or_du_record_found": false,
+    "current_triton_artifact_directories": 1257,
+    "current_triton_artifact_name_time_range_utc": [
+      "2026-10-14T05:26:03.798Z",
+      "2026-10-28T03:24:18.131Z"
+    ],
+    "artifact_directories_before_issue_creation": 0,
+    "mole_purge_summary_local_time": [
+      "2026-09-15 19:46:50",
+      "2026-09-15 19:48:31"
+    ],
+    "mole_summary_items": 229,
+    "mole_summary_size_label": "32.14GB",
+    "mole_summary_has_target_paths": false
+  },
+  "remaining_unknowns": [
+    "Original 12.13GB child / 6.53GB root mapping to specific workspace",
+    "First creating invocation and Triton version",
+    "Original duplicate content and reclaimable exclusive physical bytes",
+    "Why or when currently absent historical cache roots disappeared"
+  ],
+  "local_private_evidence_sha256": {
+    "source-evidence-private.json": "b952af865ba7bde6a1e367220db2ccfd086e0b343e5714b157f9a076617a7732",
+    "mole-cache-private.jsonl": "fe4b9441df418a5781a711a33d447f5eb28ed95ddf8743afb6ccb6cdcd3406b7",
+    "archive-search-private.json": "9f7e63ffb70136b3b6a67f1ba8e90ae28e370667861e40faae140e1297309856",
+    "search-archives.py": "b803d95715748ba095b7c59c3276737cfb1a17460324846dc1e004bda805dd35",
+    "decode-mole.go": "ce71731fc8d9926c8bb8194f8f62d0d580d9f550b06fc873d7df2e6945055840"
+  },
+  "publication_scope": "User authorized committing/pushing sanitized docs, creating PR and updating issue; keep issue OPEN"
+}
