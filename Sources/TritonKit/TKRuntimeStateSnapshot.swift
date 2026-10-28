@@ -439,9 +439,14 @@ func runtimeTabState(_ tabController: UITabBarController) -> TKRuntimeTabState {
 }
 
 func findFirstResponder(in view: UIView) -> UIResponder? {
-    // Composite controls such as UISearchBar may forward their child's focus
-    // state. Resolve the actual focused descendant before accepting the wrapper;
-    // never select an unfocused child merely because it supports text input.
+    // Stop at a focused input owner before traversing its implementation
+    // children (UITextField may also contain a focused UIKit field editor).
+    // Non-input wrappers such as UISearchBar can forward focus state, so search
+    // their descendants before accepting them. Input capability alone is not
+    // enough: an unfocused editor must never be selected or steal focus.
+    if view.isFirstResponder, view is UIKeyInput {
+        return view
+    }
     for subview in view.subviews {
         if let responder = findFirstResponder(in: subview) {
             return responder

@@ -9,7 +9,9 @@ extension TKUIKitWindowTests {
 @MainActor
 @Suite(.serialized)
 struct TKSearchBarInputFocusTests {
-    /// Models a composite control forwarding its child's focus state.
+    /// Models a non-input composite control forwarding its child's focus state.
+    /// Its public UITextField can itself contain a focused UIKit field editor;
+    /// both levels must resolve to the public input owner, not either wrapper.
     final class FocusForwardingContainer: UIView {
         let textField = UITextField(frame: CGRect(x: 0, y: 0, width: 220, height: 44))
         override var isFirstResponder: Bool { textField.isFirstResponder }
@@ -27,7 +29,7 @@ struct TKSearchBarInputFocusTests {
         window.addSubview(container)
         window.makeKeyAndVisible()
         defer { window.isHidden = true }
-        #expect(container.textField.becomeFirstResponder())
+        try #require(container.textField.becomeFirstResponder())
         #expect(container.isFirstResponder)
         #expect(findFirstResponder(in: container) === container.textField)
         let resolved = resolveTextInputResponder(TKInputRequest(type: .typeText, text: "sample", secure: true))
@@ -45,8 +47,9 @@ struct TKSearchBarInputFocusTests {
         let field = searchBar.searchTextField
         let center = field.convert(CGPoint(x: field.bounds.midX, y: field.bounds.midY), to: window)
         let tap = performTap(.tap(x: Double(center.x), y: Double(center.y)))
-        #expect(tap.ok)
-        #expect(field.isFirstResponder)
+        try #require(tap.ok)
+        try #require(field.isFirstResponder)
+        #expect(tap.targetOID == TKObjectRegistry.shared.register(field))
         #expect(findFirstResponder(in: searchBar) === field)
         let typed = await performInput(TKInputRequest(type: .typeText, text: "sample", secure: true))
         #expect(typed.ok)

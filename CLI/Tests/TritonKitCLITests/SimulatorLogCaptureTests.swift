@@ -62,7 +62,7 @@ struct SimulatorLogCaptureTests {
                 #expect(!(error["message"] as? String ?? "").contains("PRIVATE-"))
                 if scenario == "signal" {
                     #expect(object["terminationReason"] as? String == "uncaught-signal")
-                    #expect(object["exitCode"] as? Int == SIGKILL)
+                    #expect(object["exitCode"] as? Int == Int(SIGKILL))
                 }
                 if scenario == "timeout" { #expect(object["captureEndedBy"] as? String == "timeout") }
                 if scenario == "limit" { #expect(object["captureEndedBy"] as? String == "byte-limit") }

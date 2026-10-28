@@ -331,14 +331,20 @@ struct BuildRunnerTests {
     func androidTimeoutSummaryReportsMeasuredDuration() throws {
         let project = try makeTemporaryProject()
         let fakeGradle = project.appendingPathComponent("fake-gradle.sh")
-        try writeExecutable(fakeGradle, body: """
+        // A 200 ms budget could kill env/bash before it emitted any diagnostics on
+        // a loaded host. Use the system shell directly and allow startup time while
+        // keeping the child longer-lived than the measured timeout.
+        try """
+        #!/bin/sh
+        set -eu
         echo '> Task :buildSrc:checkKotlinGradlePluginConfigurationErrors'
         echo 'w: file:///repo/Sample.kt:42:7 named error'
-        exec sleep 1
-        """)
+        exec /bin/sleep 10
+        """.write(to: fakeGradle, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: fakeGradle.path)
         let request = CLIBuildRequest.android(
             project: project.path, gradle: fakeGradle.path, variant: "debug", device: nil,
-            timeout: 0.2, discoveryRoot: nil
+            timeout: 2, discoveryRoot: nil
         )
 
         do {
@@ -347,11 +353,15 @@ struct BuildRunnerTests {
         } catch {
             let summary = buildFailureSummary(error: error, request: request, jsonl: false)
             #expect(summary.error?.code == "gradle_build_failed")
-            #expect(summary.durationMs >= 200)
+            #expect(summary.durationMs >= 2_000)
             #expect(summary.ok == false)
             #expect(summary.artifactPath == nil)
             #expect(summary.diagnostics?.errorCount == 0)
             #expect(summary.diagnostics?.warningCount == 1)
+            let stdoutPath = try #require(summary.stdoutLogPath)
+            let stdout = try String(contentsOfFile: stdoutPath, encoding: .utf8)
+            #expect(stdout.contains("w: file:///repo/Sample.kt:42:7 named error"))
+            #expect(summary.error?.message.contains("timed out") == true)
         }
     }
 

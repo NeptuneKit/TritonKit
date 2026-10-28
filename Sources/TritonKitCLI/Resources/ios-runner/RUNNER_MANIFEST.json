@@ -42,8 +42,8 @@
     },
     {
       "path": "RunnerTests/TritonIOSRunnerTests.swift",
-      "sha256": "da553703ab211d83ee625124b576df582dd3c1f66e8cd3df0c91fc4f74753bf3",
-      "size": 26651
+      "sha256": "390ddfe30c8e0c121915fdc5e7116107108859f5ac7aba16d0a79ff3b7728d61",
+      "size": 28019
     },
     {
       "path": "TritonIOSRunner.xcodeproj/project.pbxproj",

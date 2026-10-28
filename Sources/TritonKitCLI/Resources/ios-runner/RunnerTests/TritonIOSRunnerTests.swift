@@ -16,7 +16,20 @@ final class TritonIOSRunnerTests: XCTestCase {
         let ui = IOSRunnerUI(config: config, fixture: fixture, geometryProvider: { app in
             RunnerObservationGeometry(width: Double(app.frame.width), height: Double(app.frame.height), orientation: orientation)
         })
-        XCTAssertEqual(try ui.perform("/probe", body: [:])["automationReady"] as? Bool, true)
+        let probe = try ui.perform("/probe", body: [:])
+        XCTAssertEqual(probe["automationReady"] as? Bool, true)
+        #if targetEnvironment(simulator)
+        XCTAssertEqual(probe["supportedDeviceButtons"] as? [String], ["home"])
+        for button in ["volume-up", "volume-down"] {
+            XCTAssertThrowsError(try ui.perform("/crossApp", body: ["app": "fixture", "expectedBundle": "dev.tritonkit.runnerfixture", "operation": "press", "button": button])) { error in
+                XCTAssertEqual((error as? ProtocolFailure)?.code, "cross_app_button")
+                XCTAssertEqual((error as? ProtocolFailure)?.status, 501)
+                XCTAssertTrue((error as? ProtocolFailure)?.message.contains("Simulator") ?? false)
+            }
+        }
+        #else
+        XCTAssertEqual(probe["supportedDeviceButtons"] as? [String], ["home", "volume-up", "volume-down"])
+        #endif
         let base: [String: Any] = ["app": "fixture", "expectedBundle": "dev.tritonkit.runnerfixture"]
         func request(_ operation: String, _ extra: [String: Any] = [:]) -> [String: Any] {
             base.merging(["operation": operation]) { _, value in value }.merging(extra) { _, value in value }
@@ -71,6 +84,13 @@ final class TritonIOSRunnerTests: XCTestCase {
 
 
 final class IOSRunnerUI {
+    private static var supportedDeviceButtons: [String] {
+        #if targetEnvironment(simulator)
+        return ["home"]
+        #else
+        return ["home", "volume-up", "volume-down"]
+        #endif
+    }
     private let config: RunnerConfiguration
     private let fixture: XCUIApplication
     private let geometryProvider: (XCUIApplication) -> RunnerObservationGeometry
@@ -96,7 +116,7 @@ final class IOSRunnerUI {
         let state = fixture.state
         if path == "/probe" {
             let ready = state == .runningForeground && fixture.buttons["incrementButton"].exists && fixture.staticTexts["counterValue"].exists
-            return ["appState": state.rawValue, "automationReady": ready, "fixtureForeground": state == .runningForeground, "runnerApplicationState": UIApplication.shared.applicationState.rawValue]
+            return ["appState": state.rawValue, "automationReady": ready, "fixtureForeground": state == .runningForeground, "runnerApplicationState": UIApplication.shared.applicationState.rawValue, "supportedDeviceButtons": Self.supportedDeviceButtons]
         }
         guard state == .runningForeground else { throw ProtocolFailure("fixture_not_foreground", "Fixture must be foreground for this request", status: 409) }
         if path == "/snapshot" {
@@ -277,8 +297,13 @@ final class IOSRunnerUI {
             clearObserved()
             switch request.button {
             case "home": XCUIDevice.shared.press(.home)
+            #if targetEnvironment(simulator)
+            case "volume-up", "volume-down":
+                throw ProtocolFailure("cross_app_button", "Volume buttons are unsupported by public XCTest in iOS Simulator; no button press was submitted.", status: 501)
+            #else
             case "volume-up": XCUIDevice.shared.press(.volumeUp)
             case "volume-down": XCUIDevice.shared.press(.volumeDown)
+            #endif
             default: throw ProtocolFailure("cross_app_button", "Unsupported public XCTest button")
             }
             result["submitted"] = true; result["postconditionVerified"] = false; result["button"] = request.button
