@@ -144,7 +144,7 @@ enum CLIBuildError: Error, CustomStringConvertible {
     case validationFailed(String)
     case toolNotFound(platform: String, tool: String, project: String)
     case commandLaunchFailed(platform: String, plan: CLIBuildPlan, logs: CLIBuildLogPaths, message: String)
-    case commandTimedOut(platform: String, plan: CLIBuildPlan, logs: CLIBuildLogPaths, timeout: Double)
+    case commandTimedOut(platform: String, plan: CLIBuildPlan, logs: CLIBuildLogPaths, timeout: Double, durationMs: Int)
     case buildFailed(platform: String, plan: CLIBuildPlan, logs: CLIBuildLogPaths, result: CLIBuildProcessResult)
     case artifactNotFound(platform: String, plan: CLIBuildPlan, logs: CLIBuildLogPaths, result: CLIBuildProcessResult)
 
@@ -156,7 +156,7 @@ enum CLIBuildError: Error, CustomStringConvertible {
             "\(platform) build tool not found: \(tool) in \(project)"
         case .commandLaunchFailed(_, let plan, _, let message):
             "Failed to launch build command `\(plan.sourceCommand)`: \(message)"
-        case .commandTimedOut(_, let plan, _, let timeout):
+        case .commandTimedOut(_, let plan, _, let timeout, _):
             "Build command timed out after \(timeout)s: \(plan.sourceCommand)"
         case .buildFailed(_, let plan, _, let result):
             "Build command failed with exit \(result.exitCode): \(plan.sourceCommand)"

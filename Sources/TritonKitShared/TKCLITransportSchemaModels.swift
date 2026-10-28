@@ -151,9 +151,9 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
     /// Delivered or uncertain actions recover through observation and receipts, never automatic replay.
     public static func residentRunnerRecoveryCategories(forFailureCode failureCode: String) -> [String]? {
         switch failureCode {
-        case "ios_runner_transport_unknown", "ios_runner_stop_unknown", "outcome_unknown", "unauthorized", "ios_runner_invalid_response", "extra_bytes", "request_complete", "ios_runner_internal", "ios_runner_operation_failed", "ios_runner_command_timeout", "listener_failed":
+        case "ios_runner_native_exited", "ios_runner_transport_unknown", "ios_runner_stop_unknown", "outcome_unknown", "unauthorized", "ios_runner_invalid_response", "extra_bytes", "request_complete", "ios_runner_internal", "ios_runner_operation_failed", "ios_runner_command_timeout", "listener_failed":
             return ["diagnose", "observe", "archive", "plan"]
-        case "ios_runner_already_running", "ios_runner_busy", "ios_runner_owner_unknown", "ios_runner_owner_missing", "ios_runner_session_not_ready", "ios_runner_start_not_ready", "ios_runner_session_missing", "ios_runner_session_target_mismatch", "ios_runner_prepare_required", "ios_runner_lock_failed", "session_stopping", "fixture_not_foreground":
+        case "ios_runner_xctest_driver_channel_refused", "ios_runner_already_running", "ios_runner_busy", "ios_runner_owner_unknown", "ios_runner_owner_missing", "ios_runner_session_not_ready", "ios_runner_start_not_ready", "ios_runner_session_missing", "ios_runner_session_target_mismatch", "ios_runner_prepare_required", "ios_runner_lock_failed", "session_stopping", "fixture_not_foreground":
             return ["diagnose", "prepare-target", "plan"]
         case "cross_app_activation", "cross_app_address", "cross_app_ambiguous", "cross_app_binding", "cross_app_direction", "cross_app_focus", "cross_app_limit", "cross_app_navigation", "cross_app_not_foreground", "cross_app_not_hittable", "cross_app_operation", "cross_app_selector", "cross_app_text", "cross_app_unobserved", "ios_runner_bundle_not_allowed":
             return ["diagnose", "observe", "plan"]
@@ -258,7 +258,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if ["output_already_exists", "output_write_failed"].contains(failureCode) {
             categories.append(contentsOf: ["archive", "diagnose"])
         }
-        if ["sim_record_truncated", "sim_record_invalid_artifact"].contains(failureCode) {
+        if ["sim_record_truncated", "sim_record_invalid_artifact", "host_output_incomplete", "host_output_read_failed"].contains(failureCode) {
             categories.append(contentsOf: ["archive", "diagnose"])
         }
         if ["host_screenshot_unavailable", "evidence_capture_partial"].contains(failureCode) {

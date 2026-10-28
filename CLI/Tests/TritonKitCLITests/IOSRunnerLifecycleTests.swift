@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 import Testing
 @testable import TritonKitCLI
 
@@ -11,6 +12,7 @@ private final class IOSRunnerHarness {
     var calls = [String]()
     var commands = [[String]]()
     var actionResponse: [String: Any] = ["ok": true, "result": ["submitted": true]]
+    var nativeStderr = ""
     init() throws {
         root = FileManager.default.temporaryDirectory.appendingPathComponent("runner-lifecycle-test-" + UUID().uuidString)
         try IOSRunnerSessionStore.privateDirectory(root)
@@ -28,7 +30,13 @@ private final class IOSRunnerHarness {
                 try PropertyListSerialization.data(fromPropertyList: config, format: .xml, options: 0).write(to: products.appendingPathComponent("Runner.xctestrun"))
             }
             return IOSRunnerCommandResult(status: 0, stdout: "", stderr: "")
-        }, launch: { _, _ in self.alive = true; return 1234 }, processExists: { _ in self.alive }, ownsProcess: { _, _ in self.alive }, terminate: { _, _ in self.terminated += 1; self.alive = false; return true }, exchange: { session, route, _, requestID, _ in
+        }, launch: { _, directory in
+            self.alive = true
+            if !self.nativeStderr.isEmpty {
+                try? Data(self.nativeStderr.utf8).write(to: directory.appendingPathComponent("native.stderr"))
+            }
+            return 1234
+        }, processExists: { _ in self.alive }, ownsProcess: { _, _ in self.alive }, terminate: { _, _ in self.terminated += 1; self.alive = false; return true }, exchange: { session, route, _, requestID, _ in
             self.calls.append(route)
             if route == "/health" { return IOSRunnerWireResponse(envelope: ["ok": true, "sessionID": session.sessionID, "requestID": requestID, "result": ["networkReady": true]]) }
             if route == "/probe" { return IOSRunnerWireResponse(envelope: ["ok": true, "sessionID": session.sessionID, "requestID": requestID, "result": ["automationReady": true]]) }
@@ -51,6 +59,30 @@ private final class IOSRunnerHarness {
 
 @Suite("iOS Runner lifecycle contracts")
 struct IOSRunnerLifecycleTests {
+    @Test func readyActivateInspectScreenshotRetainsPartialGeometryMetadata() throws {
+        let harness = try IOSRunnerHarness(), service = try harness.ready()
+        harness.actionResponse = ["ok": true, "result": ["foregroundVerified": true, "state": 4]]
+        let base: [String: Any] = ["app": "target", "expectedBundle": "com.example.app"]
+        let activate = try harness.call(service, "request", ["body": base.merging(["operation": "activate"]) { _, new in new }])
+        #expect((activate["result"] as? [String: Any])?["foregroundVerified"] as? Bool == true)
+        let partial: [String: Any] = ["partial": true, "geometryAvailability": "unavailable", "coordinateActionsAvailable": false,
+            "geometryError": ["code": "observation_orientation_unavailable", "field": "deviceOrientation", "message": "Orientation unknown"], "elements": [["identifier": "fixture"]]]
+        harness.actionResponse = ["ok": true, "result": partial]
+        let inspect = try harness.call(service, "request", ["body": base.merging(["operation": "inspect"]) { _, new in new }])
+        let inspected = try #require(inspect["result"] as? [String: Any])
+        #expect(inspect["ok"] as? Bool == true)
+        #expect(inspected["coordinateActionsAvailable"] as? Bool == false)
+        #expect(inspected["observationID"] == nil)
+        #expect(inspected["geometry"] == nil)
+        let png = Data([137,80,78,71,13,10,26,10, 0,0,0,13,73,72,68,82, 0,0,0,1,0,0,0,1, 8,6,0,0,0,0,0,0,0])
+        harness.actionResponse = ["ok": true, "result": partial.merging(["pngBase64": png.base64EncodedString(), "byteCount": png.count]) { _, new in new }]
+        let output = harness.root.appendingPathComponent("partial.png")
+        let screenshot = try harness.call(service, "request", ["body": base.merging(["operation": "screenshot"]) { _, new in new }, "screenshotOutput": output.path])
+        #expect(screenshot["ok"] as? Bool == true)
+        #expect((screenshot["result"] as? [String: Any])?["partial"] as? Bool == true)
+        #expect((screenshot["result"] as? [String: Any])?["pngBase64"] == nil)
+        #expect(try Data(contentsOf: output) == png)
+    }
     @Test func prepareOwnsBuildAndDoesNotEnableProvisioningByDefault() throws {
         let harness = try IOSRunnerHarness(), service = IOSRunnerService(dependencies: harness.dependencies)
         #expect(try harness.call(service, "prepare")["ok"] as? Bool == true)
@@ -217,6 +249,97 @@ struct IOSRunnerLifecycleTests {
         #expect((response["error"] as? [String: Any])?["code"] as? String == "ios_runner_start_not_ready")
         #expect(harness.terminated == 1)
         #expect(try harness.store().read("session", as: IOSRunnerSession.self)?.state == "startup_failed")
+    }
+    @Test func startupClassifiesXCTestDriverChannelRefusal() throws {
+        let harness = try IOSRunnerHarness()
+        harness.nativeStderr = #"""
+Running tests... PRIVATE-TOKEN /Users/private/secret
+Connection peer refused channel request for "dtxproxy:XCTestDriverInterface:XCTestManager_IDEInterface"
+Exiting due to IDE disconnection.
+"""#
+        var dependencies = harness.dependencies
+        dependencies.exchange = { session, _, _, requestID, _ in
+            IOSRunnerWireResponse(envelope: ["ok": false, "sessionID": session.sessionID, "requestID": requestID, "error": ["code": "ios_runner_transport_unknown"]])
+        }
+        let service = IOSRunnerService(dependencies: dependencies)
+        #expect(try harness.call(service, "prepare")["ok"] as? Bool == true)
+        let response = try harness.call(service, "start", ["timeout": 1])
+        #expect((response["error"] as? [String: Any])?["code"] as? String == "ios_runner_xctest_driver_channel_refused")
+        #expect(((response["error"] as? [String: Any])?["message"] as? String)?.contains("XCTest") == true)
+        #expect(harness.terminated == 1)
+        let diagnostic = try #require((response["error"] as? [String: Any])?["startup"] as? [String: String])
+        #expect(diagnostic["launch"] == "verified")
+        #expect(diagnostic["transport"] == "unverified")
+        #expect(diagnostic["health"] == "unverified")
+        #expect(diagnostic["uiAutomation"] == "unverified")
+        #expect(harness.now.timeIntervalSince1970 < 1001)
+        let serialized = String(decoding: try iosRunnerJSON(response), as: UTF8.self)
+        #expect(!serialized.contains("PRIVATE-TOKEN"))
+        #expect(!serialized.contains("/Users/private"))
+    }
+    @Test func recoveredHealthOverridesEarlierDriverLog() throws {
+        let harness = try IOSRunnerHarness()
+        harness.nativeStderr = "Connection peer refused channel request for dtxproxy:XCTestDriverInterface:XCTestManager_IDEInterface"
+        let service = IOSRunnerService(dependencies: harness.dependencies)
+        #expect(try harness.call(service, "prepare")["ok"] as? Bool == true)
+        #expect(try harness.call(service, "start")["ok"] as? Bool == true)
+        #expect(harness.terminated == 0)
+    }
+    @Test func readinessFailureDistinguishesHealthFromAutomation() throws {
+        let harness = try IOSRunnerHarness()
+        var dependencies = harness.dependencies
+        dependencies.exchange = { session, route, _, requestID, _ in
+            IOSRunnerWireResponse(envelope: ["ok": true, "sessionID": session.sessionID, "requestID": requestID,
+                "result": ["networkReady": route == "/health", "automationReady": false]])
+        }
+        let service = IOSRunnerService(dependencies: dependencies)
+        #expect(try harness.call(service, "prepare")["ok"] as? Bool == true)
+        let response = try harness.call(service, "start", ["timeout": 1])
+        let diagnostic = try #require((response["error"] as? [String: Any])?["startup"] as? [String: String])
+        #expect(diagnostic["transport"] == "verified")
+        #expect(diagnostic["health"] == "verified")
+        #expect(diagnostic["uiAutomation"] == "unverified")
+    }
+    @Test func nativeLaunchFailureDoesNotPublishPrivateError() throws {
+        let harness = try IOSRunnerHarness()
+        var dependencies = harness.dependencies
+        dependencies.launch = { _, _ in throw NSError(domain: "PRIVATE-LAUNCH-PATH", code: 1) }
+        let service = IOSRunnerService(dependencies: dependencies)
+        #expect(try harness.call(service, "prepare")["ok"] as? Bool == true)
+        let response = try harness.call(service, "start", ["timeout": 1])
+        let error = try #require(response["error"] as? [String: Any])
+        #expect(error["code"] as? String == "ios_runner_native_launch_failed")
+        #expect((error["startup"] as? [String: String])?["launch"] == "unverified")
+        #expect(!String(decoding: try iosRunnerJSON(response), as: UTF8.self).contains("PRIVATE-LAUNCH-PATH"))
+    }
+    @Test func nativeExitIsSeparateFromReadinessDeadline() throws {
+        let harness = try IOSRunnerHarness()
+        var dependencies = harness.dependencies
+        dependencies.launch = { _, _ in 1234 }
+        let service = IOSRunnerService(dependencies: dependencies)
+        #expect(try harness.call(service, "prepare")["ok"] as? Bool == true)
+        let response = try harness.call(service, "start", ["timeout": 1])
+        let error = try #require(response["error"] as? [String: Any])
+        #expect(error["code"] as? String == "ios_runner_native_exited")
+        #expect((error["startup"] as? [String: String])?["launch"] == "verified")
+        #expect(harness.terminated == 0)
+    }
+    @Test func nativeDiagnosticReadIsBoundedAndRejectsSymlinksAndFIFOs() throws {
+        let harness = try IOSRunnerHarness()
+        let text = "Connection peer refused channel request for dtxproxy:XCTestDriverInterface:XCTestManager_IDEInterface\n"
+        let log = harness.root.appendingPathComponent("native.stderr")
+        try Data((String(repeating: "x", count: 200_000) + "\n" + text).utf8).write(to: log)
+        #expect(iosRunnerDriverChannelRefused(directory: harness.root))
+        try Data((text + String(repeating: "x", count: 200_000)).utf8).write(to: log)
+        #expect(!iosRunnerDriverChannelRefused(directory: harness.root))
+        try FileManager.default.removeItem(at: log)
+        let target = harness.root.appendingPathComponent("private-log")
+        try Data(text.utf8).write(to: target)
+        try FileManager.default.createSymbolicLink(at: log, withDestinationURL: target)
+        #expect(!iosRunnerDriverChannelRefused(directory: harness.root))
+        try FileManager.default.removeItem(at: log)
+        #expect(mkfifo(log.path, 0o600) == 0)
+        #expect(!iosRunnerDriverChannelRefused(directory: harness.root))
     }
     @Test func unknownScreenshotRecoversVerifiedOriginalReceiptWithoutRetaking() throws {
         let harness = try IOSRunnerHarness(), service = try harness.ready()

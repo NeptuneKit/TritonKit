@@ -6,6 +6,7 @@ func iosHostDeviceDoctor(
     scope: HostDeviceScope,
     commandProbe: ((AppleHostCommandSpecification) -> HostAppleCommandSupport)? = nil,
     hidProbe: IOSHostHIDProbe? = nil,
+    simulatorDiagnostics: SimulatorDoctorDiagnostics? = nil,
     probe: (String, TKHostCommand) -> HostToolProbeOutput = probeHostTool
 ) -> HostDeviceDoctorOutput {
     var tools: [HostToolProbeOutput] = []
@@ -29,7 +30,7 @@ func iosHostDeviceDoctor(
     }
     let requiredNames = Set(specifications.filter(\.requiredForDiscovery).map(\.name))
     let discoverySupported = commands?.filter { requiredNames.contains($0.name) }.allSatisfy(\.supported) ?? true
-    return HostDeviceDoctorOutput(ok: tools.allSatisfy(\.available) && discoverySupported, platform: "ios", tools: tools, capabilities: iosHostDeviceDoctorCapabilities(scope: scope), strongControl: iosStrongControlProbes(idbProbe: idb, hidProbe: hidProbe), artifactsSaved: false, commandSupport: commands, hidCompatibility: hidProbe)
+    return HostDeviceDoctorOutput(ok: tools.allSatisfy(\.available) && discoverySupported, platform: "ios", tools: tools, capabilities: iosHostDeviceDoctorCapabilities(scope: scope), strongControl: iosStrongControlProbes(idbProbe: idb, hidProbe: hidProbe), artifactsSaved: false, commandSupport: commands, hidCompatibility: hidProbe, simulatorDiagnostics: simulatorDiagnostics)
 }
 
 func iosHostDeviceDoctorCapabilities(scope: HostDeviceScope) -> [String] {
@@ -53,7 +54,7 @@ struct DeviceDoctor: AsyncParsableCommand {
 
     @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform = .harmony
     @Option(help: "Device scope: simulator|emulator|real|all") var scope: HostDeviceScope = .all
-    @Option(help: "Optional selected iOS Simulator selector for an independent host HID compatibility probe") var device: String?
+    @Option(help: "Optional selected iOS Simulator selector for readonly resize/display diagnostics and independent host HID compatibility") var device: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Optional path to DevEco Emulator executable") var emulator: String?
@@ -69,6 +70,7 @@ struct DeviceDoctor: AsyncParsableCommand {
         switch platform {
         case .ios:
             let hidProbe: IOSHostHIDProbe?
+            var diagnostics: SimulatorDoctorDiagnostics?
             if let device {
                 do {
                     let selected = try resolveHostDeviceSelection(
@@ -77,9 +79,10 @@ struct DeviceDoctor: AsyncParsableCommand {
                         adb: adb
                     ).target
                     var compatibility = probeIOSHostHID(selectedDevice: selected.rawTarget)
+                    var environment: [String: String] = [:]
+                    if let developer = selectedXcodeDeveloperDirectory(environment: ProcessInfo.processInfo.environment) { environment["DEVELOPER_DIR"] = developer }
+                    diagnostics = simulatorDoctorDiagnostics(target: selected.rawTarget, environment: environment)
                     do {
-                        var environment: [String: String] = [:]
-                        if let developer = selectedXcodeDeveloperDirectory(environment: ProcessInfo.processInfo.environment) { environment["DEVELOPER_DIR"] = developer }
                         _ = try nativeHIDGuardSnapshot(target: selected.rawTarget, environment: environment)
                         compatibility.inputSurfaceCode = "ios_host_hid_surface_preflight_passed"
                     } catch let error as NativeHIDControlError {
@@ -105,7 +108,7 @@ struct DeviceDoctor: AsyncParsableCommand {
             } else {
                 hidProbe = nil
             }
-            output = iosHostDeviceDoctor(scope: scope, commandProbe: { probeAppleHostCommand($0) }, hidProbe: hidProbe)
+            output = iosHostDeviceDoctor(scope: scope, commandProbe: { probeAppleHostCommand($0) }, hidProbe: hidProbe, simulatorDiagnostics: diagnostics)
         case .harmony:
             let hdcProbe = probeHostTool(name: "hdc", command: TKHarmonyHDCCommand.version(executable: hdc))
             let emulatorProbe = emulator.map { path in
@@ -139,6 +142,9 @@ struct DeviceDoctor: AsyncParsableCommand {
         case .text:
             for tool in output.tools {
                 print("\(tool.name)\t\(tool.available ? "available" : "unavailable")\t\(tool.path)")
+            }
+            if let diagnostics = output.simulatorDiagnostics {
+                print("\(diagnostics.target) appResize=\(diagnostics.resize.state) reason=\(diagnostics.resize.reason ?? "none") displays=\(diagnostics.display.state) reason=\(diagnostics.display.reason ?? "none"); input/capture unverified")
             }
         }
     }

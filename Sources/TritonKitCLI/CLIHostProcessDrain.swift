@@ -1,5 +1,6 @@
 import Darwin
 import Foundation
+import TritonKitShared
 
 /// Shared by all streams of one command. The budget starts only after the direct
 /// child exits (or its execution timeout has been handled), never at launch.
@@ -136,6 +137,29 @@ struct HostProcessOutputFailure: Error, CustomStringConvertible, LocalizedError 
 
     var description: String {
         "\(cause)\nexitCode: \(result.exitCode)\nstdoutBytes: \(result.stdoutBytes)\nstderrBytes: \(result.stderrBytes)"
+    }
+
+    var errorDescription: String? { description }
+}
+
+/// A bounded artifact capture can fail after writing useful output. Callers
+/// that opt in to preserving partial captures use this error to publish the
+/// artifact and its incomplete provenance instead of deleting it.
+struct HostArtifactCaptureFailure: Error, CustomStringConvertible, LocalizedError {
+    let command: TKHostCommand
+    let result: HostProcessResult
+    let outputPath: String
+    let artifactBytes: Int
+    let artifactTruncated: Bool
+    let failureCode: String
+    let failureMessage: String
+    let captureEndedBy: String
+    let terminationReason: String
+    let elapsedDurationSeconds: Double
+    let maximumBytes: Int
+
+    var description: String {
+        "\(failureMessage)\nexitCode: \(result.exitCode)\nstdoutBytes: \(result.stdoutBytes)\nstderrBytes: \(result.stderrBytes)"
     }
 
     var errorDescription: String? { description }

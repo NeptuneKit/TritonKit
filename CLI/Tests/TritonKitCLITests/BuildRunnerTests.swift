@@ -283,6 +283,88 @@ struct BuildRunnerTests {
         #expect(output.nextAction?.command == "build")
     }
 
+    @Test("Android diagnostics count compiler severity prefixes and Gradle failure blocks only")
+    func androidDiagnosticsCountCompilerSeverityPrefixes() throws {
+        let project = try makeTemporaryProject()
+        let logs = CLIBuildLogPaths(
+            directory: project.path,
+            stdoutLogPath: project.appendingPathComponent("stdout.log").path,
+            stderrLogPath: project.appendingPathComponent("stderr.log").path
+        )
+        try Data("""
+        > Task :buildSrc:checkKotlinGradlePluginConfigurationErrors
+        w: file:///repo/Sample.kt:454:14 Unnecessary safe call on a non-null receiver named error
+        e: file:///repo/Sample.kt:42:7 Unresolved reference: error
+        FAILURE: Build failed with an exception.
+        * What went wrong:
+        > Task :app:compileDebugKotlin FAILED
+        BUILD FAILED in 1s
+        /repo/Sample.java:18: error: cannot find symbol
+        /repo/Sample.java:19: warning: named error
+        warning: errorCount is deprecated
+        """.utf8).write(to: URL(fileURLWithPath: logs.stdoutLogPath))
+        try Data("""
+        w: file:///repo/Sample.kt:395:35 The corresponding parameter in the supertype 'Consumption' is named 'error'.
+        """.utf8).write(to: URL(fileURLWithPath: logs.stderrLogPath))
+        let plan = CLIBuildPlan(
+            platform: "android", action: "build.android", project: project.path,
+            executable: "gradle", arguments: ["assembleDebug"], workingDirectory: project.path,
+            variant: "debug", module: nil, mode: nil, device: nil, timeout: 1, discoveryRoot: nil
+        )
+        let error = CLIBuildError.buildFailed(
+            platform: "android", plan: plan, logs: logs,
+            result: CLIBuildProcessResult(exitCode: 1, stdoutBytes: 1, stderrBytes: 1)
+        )
+        let output = buildFailureSummary(
+            error: error,
+            request: .android(project: project.path, gradle: project.appendingPathComponent("no-longer-present-gradle").path, variant: "debug", device: nil, timeout: nil, discoveryRoot: nil),
+            jsonl: false
+        )
+
+        #expect(output.diagnostics?.warningCount == 4)
+        #expect(output.diagnostics?.errorCount == 3)
+        #expect(output.diagnostics?.errorSamples.first?.hasPrefix("e:") == true)
+        #expect(output.diagnostics?.errorSamples.contains("FAILURE: Build failed with an exception.") == true)
+    }
+
+    @Test("Android timeout summary reports measured elapsed duration")
+    func androidTimeoutSummaryReportsMeasuredDuration() throws {
+        let project = try makeTemporaryProject()
+        let fakeGradle = project.appendingPathComponent("fake-gradle.sh")
+        // A 200 ms budget could kill env/bash before it emitted any diagnostics on
+        // a loaded host. Use the system shell directly and allow startup time while
+        // keeping the child longer-lived than the measured timeout.
+        try """
+        #!/bin/sh
+        set -eu
+        echo '> Task :buildSrc:checkKotlinGradlePluginConfigurationErrors'
+        echo 'w: file:///repo/Sample.kt:42:7 named error'
+        exec /bin/sleep 10
+        """.write(to: fakeGradle, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: fakeGradle.path)
+        let request = CLIBuildRequest.android(
+            project: project.path, gradle: fakeGradle.path, variant: "debug", device: nil,
+            timeout: 2, discoveryRoot: nil
+        )
+
+        do {
+            _ = try runCLIBuild(request)
+            Issue.record("Expected the bounded fake Gradle process to time out")
+        } catch {
+            let summary = buildFailureSummary(error: error, request: request, jsonl: false)
+            #expect(summary.error?.code == "gradle_build_failed")
+            #expect(summary.durationMs >= 2_000)
+            #expect(summary.ok == false)
+            #expect(summary.artifactPath == nil)
+            #expect(summary.diagnostics?.errorCount == 0)
+            #expect(summary.diagnostics?.warningCount == 1)
+            let stdoutPath = try #require(summary.stdoutLogPath)
+            let stdout = try String(contentsOfFile: stdoutPath, encoding: .utf8)
+            #expect(stdout.contains("w: file:///repo/Sample.kt:42:7 named error"))
+            #expect(summary.error?.message.contains("timed out") == true)
+        }
+    }
+
     private func makeTemporaryProject() throws -> URL {
         let url = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("triton-build-tests", isDirectory: true)

@@ -239,31 +239,19 @@ func observeAndroid(
         return bridge
     }
 
-    let remotePath = "/sdcard/window_dump.xml"
-    let dumpCommand = TKAndroidADBCommand.uiautomatorDump(serial: selected.rawTarget, remotePath: remotePath, executable: adb)
-    let dumpResult = try runner(dumpCommand)
-    guard dumpResult.exitCode == 0 else {
-        throw HostCommandRunError.nonZeroExit(command: dumpCommand, result: dumpResult)
-    }
-
-    let readCommand = TKAndroidADBCommand.readFile(serial: selected.rawTarget, remotePath: remotePath, executable: adb)
-    let readResult = try runner(readCommand)
-    guard readResult.exitCode == 0 else {
-        throw HostCommandRunError.nonZeroExit(command: readCommand, result: readResult)
-    }
-
+    let capture = try captureAndroidHierarchy(serial: selected.rawTarget, adb: adb, maxNodes: maxNodes, runner: runner)
+    let collected = capture.collected
     let artifactPath = output ?? defaultAndroidObserveArtifactPath(serial: selected.id)
     try FileManager.default.createDirectory(
         at: URL(fileURLWithPath: artifactPath).deletingLastPathComponent(),
         withIntermediateDirectories: true
     )
-    try readResult.stdoutData.write(to: URL(fileURLWithPath: artifactPath), options: .atomic)
+    try capture.data.write(to: URL(fileURLWithPath: artifactPath), options: .atomic)
 
-    let collected = try TKAndroidUIAutomatorXMLParser.nodeSummaries(in: readResult.stdoutData, budget: .init(maxNodes: maxNodes ?? 800))
     let nodes = collected.nodes.enumerated()
         .map { offset, node in observeNode(fromAndroid: node, index: offset) }
 
-    let sourceCommands = [dumpResult.sourceCommand, readResult.sourceCommand]
+    let sourceCommands = capture.sourceCommands
     let source = ObserveSourceOutput(
         name: "host-layout",
         available: true,

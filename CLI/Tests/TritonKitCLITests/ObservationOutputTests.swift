@@ -389,9 +389,13 @@ struct ObservationOutputTests {
             selected: target,
             output: artifactPath,
             runner: { command in
+                if command.arguments.contains("rm") {
+                    return HostProcessResult(stdoutData: Data(), stderrData: Data(), exitCode: 0, sourceCommand: hostSourceCommand(command), stdoutTruncated: false, stderrTruncated: false, stdoutLogPath: nil, stderrLogPath: nil, stdoutBytes: 0, stderrBytes: 0)
+                }
+                let remotePath = command.arguments.last ?? ""
                 let fixture = try TKAndroidADBFakeRunner(fixtures: [
-                    .uiautomatorDump(serial: "emulator-5554", remotePath: "/sdcard/window_dump.xml"),
-                    .readFileXML(serial: "emulator-5554", remotePath: "/sdcard/window_dump.xml")
+                    .uiautomatorDump(serial: "emulator-5554", remotePath: remotePath),
+                    .readFileXML(serial: "emulator-5554", remotePath: remotePath)
                 ]).run(command)
                 return HostProcessResult(
                     stdoutData: fixture.stdout,
@@ -419,6 +423,56 @@ struct ObservationOutputTests {
         #expect(output.nodes[1].role == "android.widget.Button")
         #expect(output.nodes[1].capabilities.contains("tap"))
         #expect(FileManager.default.fileExists(atPath: artifactPath))
+    }
+
+    @Test("android observe tree rejects null-root dumps instead of reading a stale XML")
+    func androidObserveTreeRejectsNullRootDump() throws {
+        let target = HostDeviceTarget(
+            platform: "android",
+            id: "android:emulator-5554",
+            target: "emulator-5554",
+            state: "device",
+            ready: true,
+            source: "adb",
+            name: "Pixel_8",
+            runtime: "sdk_gphone64_arm64",
+            transport: "1"
+        )
+        var commands: [TKHostCommand] = []
+        do {
+            _ = try observeAndroid(
+                action: "observe.tree",
+                selected: target,
+                output: nil,
+                runner: { command in
+                    if command.arguments.contains(where: { $0.contains("auth_token") }) {
+                        throw RuntimeError("bridge unavailable in freshness fixture")
+                    }
+                    commands.append(command)
+                    let isDump = command.arguments.contains("uiautomator")
+                    return HostProcessResult(
+                        stdoutData: isDump ? Data("UI hierchary dumped to: \(command.arguments.last ?? "")\n".utf8) : Data("<hierarchy><node text=\"stale\"/></hierarchy>\n".utf8),
+                        stderrData: isDump ? Data("ERROR: null root node returned by UiTestAutomationBridge.\n".utf8) : Data(),
+                        exitCode: 0,
+                        sourceCommand: hostSourceCommand(command),
+                        stdoutTruncated: false,
+                        stderrTruncated: false,
+                        stdoutLogPath: nil,
+                        stderrLogPath: nil,
+                        stdoutBytes: 0,
+                        stderrBytes: 0
+                    )
+                }
+            )
+            Issue.record("A null-root UIAutomator dump must not return a previous hierarchy as current.")
+        } catch let error as AndroidObserveError {
+            #expect(error.code == "hierarchy_unavailable")
+        }
+        #expect(commands.count == 2)
+        #expect(commands.last?.arguments.contains("rm") == true)
+        #expect(commands.last?.arguments.last == commands.first?.arguments.last)
+        #expect(commands[0].arguments.contains("uiautomator"))
+        #expect(commands[0].arguments.last?.hasPrefix("/sdcard/triton-window-") == true)
     }
 
     @Test("android observe tree prefers bridge tree when available")

@@ -1,5 +1,7 @@
 # TritonKit Project Memory
 
+- 2026-10-28：[SP-241全部开放issue本地联合验收](../spaces/SP-241-open-issues-validation/README.md)覆盖#214、#221～232，10项缺陷、1项文档及2项范围/历史审计；实现`51d505bb`，完整CLI/root/local与UIKit/Runner模拟器fixture通过，Android旧版黑盒反证明确。随后用户明确授权推送分支并创建PR，已创建[PR #233](https://github.com/NeptuneKit/TritonKit/pull/233)并进入审查/CI阶段；未合main、未发布、远端issue仍OPEN，原设备与跨工具链缺口见报告；主目录WIP保留。
+
 - 2026-10-26继续：[SP-207补查](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-partial-recovery.md)恢复两仓文本完整性，当前24完整/9 partial（2仓重查、31沿用日检）。宿主退出后继承pipe超预算经自有原函数probe复现，SP-223执行/SP-224有限主控均gpt-6.1-sol；已验收合本地main9fbda1d5，独立及合后完整CLI/local通过，源worktree/branch已清理。
 
 - 2026-10-26：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-reference-update-report.md)22完整/11 partial、simslim/Revyl两仓HEAD变化。新增[SP-221](../spaces/SP-221-simulator-resource-read-retry/README.md)只读资源暂态有限重试及[SP-222](../spaces/SP-222-simulator-resource-retry-integration/README.md)有限主控，两个真实create_thread显式gpt-6.1-sol成功；候选eb9539f4经主控及合后门禁合本地main a0eebff0，未发布，旧模型失败不作为本批阻塞。

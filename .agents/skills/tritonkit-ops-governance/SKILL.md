@@ -36,7 +36,7 @@ metadata:
 - Package Manager 集成时，embedded TritonKit runtime 由 package 内部 Debug compile flag `TRITONKIT_RUNTIME_ENABLED` 控制；Debug package build 启用，Release package build API 保持可编译但 runtime 必须 no-op，不按端类型或 UIKit 可导入性决定是否启用。
 - 业务 App 侧 iOS 接入示例必须把所有 TritonKit 符号放进独立 Debug bootstrap 文件，并用文件级 `#if DEBUG` 包住 `import TritonKit` 与 `TritonKit.shared.start()` / `start { config in ... }` facade；AppDelegate、SceneDelegate 或 SwiftUI 入口只保留 `#if DEBUG` 调用点，不能只依赖 package 内部 Release no-op。只有需要自定义 delegate 或消息路由时才使用低层 `delegate` / `connect(host:port:)`。
 - SwiftPM 支持 configuration-scoped build settings / compile conditions，但 SwiftPM / Xcode package product dependency 没有 CocoaPods-style Debug-only product dependency 开关；对外接入指南必须明确：默认走 package Debug compile flag + 源码级 `#if DEBUG` bootstrap + Release no-op runtime，若生产 Release target 必须完全不链接 TritonKit，则使用独立 Debug-only app target / scheme。
-- Package Manager 分发同时覆盖 SwiftPM 与 CocoaPods；用户接入面只显式选择 / 添加 `TritonKit`，不得要求业务 App 手写或看到独立 `TritonKitShared` CocoaPods 入口；内部仍保留 `TritonKitShared` / `TritonKit` 两个 SwiftPM module 边界，CocoaPods 由 `TritonKit.podspec` 直接打包 shared 源码，CI 只校验 `TritonKit.podspec` 可 lint。
+- Package Manager 分发同时覆盖 SwiftPM 与 CocoaPods；用户接入面只显式选择 / 添加 `TritonKit`，不得要求业务 App 手写或看到独立 `TritonKitShared` CocoaPods 入口；内部仍保留 `TritonKitShared` / `TritonKit` 两个 SwiftPM module 边界，CocoaPods 由 `TritonKit.podspec` 直接打包 shared 源码，CI 只校验 `TritonKit.podspec` 可 lint。 新增runtime Swift文件中的 `import TritonKitShared` 必须沿用 `#if !TRITONKIT_COCOAPODS_SINGLE_POD` 条件，否则SwiftPM/模拟器测试可通过而pod lint报module missing；新增文件的分发验收须实际运行pod lint（PR #233）。
 - SwiftPM 根 `Package.swift` 只描述业务 App 可依赖的 embedded SDK product，不声明 `triton` CLI executable、不声明 Hummingbird / ArgumentParser 等 CLI-only package dependencies；macOS CLI 统一由 `CLI/Package.swift` 构建，命令为 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton`，避免 iOS App 解析 SwiftPM 时拉入 CLI 依赖。
 - Swift 源文件超过 1500 行即进入治理范围；新增或扩展 CLI 能力时，默认按 `*Commands.swift`、`*Runtime.swift` / `*Service.swift`、`*Models.swift` 拆分。`*Models.swift` 只放 Codable/Encodable/Argument enum 等 wire contract，`*Commands.swift` 只放 ArgumentParser 参数和 glue，执行逻辑进入 runtime/service 文件。
 - 新增配置项时同步覆盖默认值、环境变量覆盖和非法值。
@@ -56,6 +56,7 @@ metadata:
 - 本仓库默认本地门禁入口是 `docs-linhay/scripts/verify.sh --local`；CI validate 先用 `docs-linhay/scripts/ci-validate-mode.sh` 分类，docs/skill-only 走 `docs-linhay/scripts/verify.sh --ci-docs`，CLI/test/SwiftPM-only 走 Swift tests、CLI release build 与 release/homebrew 契约检查并跳过 podspec lint，workflow/release 脚本类只跑契约检查，`Sources/TritonKit/` 与 `Sources/TritonKitShared/` 走 podkit，运行 Swift tests、`TritonKit.podspec` lint 和 release/homebrew 契约检查；本地仍用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
 - 用户明确要求“实现完成再测试 / 分段提交”时，每个切片先完成代码、测试、schema、文档与 memory 的一致性改动，再集中跑该切片的 focused tests、必要 schema tests、完整回归和文档门禁；不要在同一切片里每改几行就停下来跑测试，除非正在定位失败。
 - 有副作用或共享状态的命令必须单飞，不进入 `multi_tool_use.parallel`：`git add/commit/tag/push/merge`、会写同一 scratch path 的 SwiftPM build/test、会启动/停止服务或修改本机/模拟器状态的命令。只有只读检查或彼此独立的文件读取、搜索、不同 scratch path 的纯构建验证，才适合并行。
+- 多 worktree 首次 SwiftPM 编译前检查 `swift test --help` 的默认 build-system；Xcode 27.1 本机默认为 swiftbuild，不能从 `--jobs 2` 推断 SwiftBuild 的全局并发已限流。批量 issue 验证优先冻结候选后在独立联合 worktree 使用单个 `--build-system native --jobs 2` scratch；若需要并行，先用真实进程数量验证预算。出现过载只停止已绑定的本任务进程树，保留日志并明确“编译中断、测试未执行”，不杀其他任务的同名进程。
 - 跟踪长构建进度先绑定本任务的tool session、启动命令/cwd/scratch和实际父子PID；不能从同名swift-frontend、SWBBuildService、dsymutil或别会话产物推断本候选阶段。进程消失/CPU活跃不等于成功，最终以本命令退出码及同候选日志/产物核实。
 - CLI 全量测试若暴露 host command timeout、fake tool timeout 或 proxy serve `Connection refused`，先排查测试基础设施和并发资源竞态，不要只调大 timeout。`Process`/pipe runner 不应把阻塞式 `read`、`waitUntilExit` 大量投到 `DispatchQueue.global`；优先用专用 queue、`terminationHandler`、有界 pipe drain 和明确 cleanup。并发网络测试不要 `bind(0)` 取端口后无登记释放给多个用例抢用；同一 test runner 内应有 reservation 或其它唯一端口策略。
 - 宿主输出收尾不能只等直接子进程退出：后代可能继承stdout/stderr写端。用真实自有shell/FD夹具分别验证内存/stdout-artifact/combined runner，外部watchdog防挂、仅清理精确自有PID。post-exit pipe预算需持续可读也检查，worker独占非阻塞read/close并join同步结果；真实EOF、字节cap、未EOF和读错误分开。失败证据保留实际exit与部分计数，不用incomplete遮住非零；磁盘open/write/close不是pipe deadline可取消范围，见[SP-224](../../../docs-linhay/spaces/SP-224-host-process-drain-integration/README.md)。
@@ -71,6 +72,7 @@ metadata:
 
 - `#if canImport(UIKit)` 测试在 macOS `swift test` 不执行；涉及 UILabel/手势/cell 行为时应在独立 Simulator 的真实 iOS destination 运行，并记录实际测试数量，不把宏条件跳过算通过。
 - UIKit 的 key window、scene 与 registry 是进程共享状态。多个 `@Suite(.serialized)` 仍可跨 suite 并行；共享窗口的 fixtures 应置于同一外层串行 suite，先断言真实 window 可见及 runtime 选择一致，不为测试放松生产安全校验。动态色需要真实 trait 树；pinch 需要 viewForZooming；坐标应从实际 view 转到 window。
+- UIKit 输入焦点不能按“最深 descendant”推断：非输入 wrapper 可能转发 isFirstResponder，公共 UITextField 又包含内部 field editor。解析优先已聚焦 UIKeyInput owner，再穿过非输入 wrapper；真实 App-hosted 回归同时核对文本、targetOID 与未聚焦负例，不能只看文本插入成功（SP-238）。
 - UIKit presentation 测试必须等待真实 completion 与目标 view 的 window 挂载，不能把 `present(animated:false)` 或 `Task.sleep` 当作展示完成。hostless runner 无法完成 presentation 时，不宣称展示验收通过；纯 responder/alert 路由测试可用真实 alert controller 的窗口夹具，但必须断言目标实际挂载、活动窗口及背景 fallback candidate 确实存在。`UIView.alpha` 与 backing `CALayer.opacity` 联动，同批 patch 应按真实执行顺序验证最终值，并分别覆盖两个入口；不要要求同一 backing value 同时保持不同值。
 - CLI 测试使用自定义 scratch 时显式设置 `TRITON_CLI_PATH` 为本次构建产物。含全局 stdout/stderr capture 的整套测试使用 `swift test --package-path CLI --no-parallel`，避免 Swift Testing 进度混入 JSON；异步 stdout/stderr reader 必须完成有界 drain 后才发布最终字节数。
 
@@ -127,6 +129,7 @@ metadata:
 - 不通过增加未使用父参数、删除真实错误码或跳过通用输出参数来换取测试绿色。测试应在实际参数所属命令验证，不能以放宽覆盖代替修复。
 - SP-179已取消通用自动删除，当前只维护inspect/preview与confirm fail-closed；不继续派发删除实现。未来若另行立项缓存生命周期，删除验收必须包含精确根目录白名单（不用字符串 contains）、symlink/路径逃逸、活动构建、权限、替换竞态、部分失败、dry-run 不变和 confirm 删除边界的临时 fixture。重解析路径不等于消除 TOCTOU；不跟随 symlink 不等于删除父目录时保留内部链接。
 - 报告区分 focused tests、完整 CLI、根包、local gate、发布资产和安装 smoke；局部绿色、发布脚本成功、资产存在均不替代删除安全验收。已发布后发现证据缺口应如实记入 space/memory，后续 patch 修复，不移动 tag。
+- 门禁链必须在失败时停止（shell使用set -e或显式检查exit）；最终检查包含新增文件的暂存差异与完整候选diff，不能仅检查未暂存tracked diff。新证据文件同样遵守可追溯命名，避免latest/final路径；失败后修复再跑，不以前一版docs通过替代新增产物检查。
 
 
 用户明确说“整理”“沉淀”“整理沉淀”“整理，沉淀，提交”“收尾整理”等时，再补做本轮完整回看；这些关键词是追加触发，不是默认自动沉淀的前提，不再追问是否需要沉淀。

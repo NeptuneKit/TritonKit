@@ -107,8 +107,8 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton observe tree --platform harmony --target 127.0.0.1:10100 --json",
             ],
             successShape: "{ ok, action, platform, capturedAt, partial, target, sources[], nodes[], outline?[], aliasCache?, artifacts[], sourceCommands[], note }",
-            failureShape: "{ ok:false, error:{ code: server_unavailable|target_unavailable|target_not_found|simulator_not_found|ambiguous_target|host_command_failed|validation_failed|ios_host_ax_unavailable|ios_host_ax_geometry_unavailable, message, hint, nextAction? }, candidates?[] }",
-            outputSemantics: "Use observe to read native visible surface state across iOS embedded runtime, iOS Simulator host AX, Android layout, and Harmony host layout before choosing tap, WebView, route, screenshot, or evidence commands. Add --outline to create schema2 @N aliases with a 30 second lifetime and live fingerprint revalidation. Truncated collections cannot validate aliases. OCR returns candidates only; visual settle never proves a business postcondition.",
+            failureShape: "{ ok:false, error:{ code: server_unavailable|target_unavailable|target_not_found|simulator_not_found|ambiguous_target|host_command_failed|validation_failed|ios_host_ax_unavailable|ios_host_ax_geometry_unavailable|hierarchy_unavailable, message, hint, nextAction? }, candidates?[] }",
+            outputSemantics: "Use observe to read native visible surface state across iOS embedded runtime, iOS Simulator host AX, Android layout, and Harmony host layout before choosing tap, WebView, route, screenshot, or evidence commands. Add --outline to create schema2 @N aliases with a 30 second lifetime and live fingerprint revalidation. Truncated collections cannot validate aliases. OCR returns candidates only; visual settle never proves a business postcondition. Android UIAutomator uses a unique capture path and validates dump acknowledgement plus current XML; ERROR/null-root, missing or invalid trees return hierarchy_unavailable without reusing cached coordinates.",
             artifacts: ["harmony-layout"],
             nextCommands: [
                 "triton status --json",
@@ -124,6 +124,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "target_not_found",
                 "ambiguous_target",
                 "host_command_failed",
+                "hierarchy_unavailable",
                 "harmony_layout_path_not_found",
                 "harmony_layout_text_not_found",
                 "harmony_layout_failed",

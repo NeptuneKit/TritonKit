@@ -1,0 +1,104 @@
+{
+  "candidateImplementationCommit": "51d505bba54d0f02a1bfdce29c34e434bb99695e",
+  "branch": "feat/SP-241-open-issues-validation",
+  "baseMain": "a0d187ace03d6e56b79b50a7a601c91b359b7955",
+  "rawEvidencePolicy": "raw logs stay in local ignored build folders; published summaries omit device IDs, private paths and log bodies",
+  "logs": [
+    {
+      "path": ".build/cli-full-v3.log",
+      "bytes": 366932,
+      "sha256": "d6be76341420f5a1be07e4920d7cf7e949a0a28101a1a36b30d260fffa62fee4"
+    },
+    {
+      "path": ".build/local-gate.log",
+      "bytes": 157236,
+      "sha256": "509fa03e224eef50c8f41504ba229ed5c07456f7d7e9340449b9c65da5f13ba1"
+    },
+    {
+      "path": ".build/runner-protocol.log",
+      "bytes": 9899,
+      "sha256": "0f1aae2bfa489a92e9f64db116401927e50fb26d3c01b3b421e19816466429f6"
+    },
+    {
+      "path": ".build/uikit-combined-v2.jsonl",
+      "bytes": 22484,
+      "sha256": "3c0255d11f7a3f7ccfc1b884199d69ed4c3c8492e1007635254beea9cbc98f5f"
+    },
+    {
+      "path": ".build/runner-geometry-v2.jsonl",
+      "bytes": 14742,
+      "sha256": "9125b1c4163e89b6b5a9d39b80eda5b3509f861ec66b12d59f26e861901efcdb"
+    },
+    {
+      "path": ".build/ci-docs-final.log",
+      "bytes": 1731,
+      "sha256": "0ea570738444e183352c5f3c83ef669bf8b6237fe532221f7b7e6bdffa49366b"
+    },
+    {
+      "path": ".build/check-docs-final.log",
+      "bytes": 213,
+      "sha256": "0a495940d35d63168ed66722e84c3fbd82b2ff0cc18c2343e63a961f8fcf9803"
+    },
+    {
+      "path": ".build/blackbox-regression.log",
+      "bytes": 1006,
+      "sha256": "cd8f45859de19551486e242811ee2f4e12d3b676c0e7f647ee754e77c47b8dda"
+    },
+    {
+      "path": ".build/real-sim-regression/result.log",
+      "bytes": 719,
+      "sha256": "3d83c5e4025f1a6e72483d2c848f69cb34dbd0e2d71285134ca07f20cc6e7fb7"
+    },
+    {
+      "path": ".build/ci-docs-delivery.log",
+      "bytes": 1731,
+      "sha256": "e5d71613d2749ad4c371dd6000ffb8b6105d84f0d9d9d56b55ae83c337eb4e3b"
+    },
+    {
+      "path": ".build/check-docs-delivery.log",
+      "bytes": 213,
+      "sha256": "d4b0a584ec5c96bba4278fb6323a36a3b3e06f2ea3c4b367e70e77ab9c2d95a3"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "CLI/.build/debug/triton",
+      "sha256": "7b86c0aba9f94b8293d97e13c81a865e267e7dc16025f33cd5da8288c985e535"
+    },
+    {
+      "path": ".build/cli/release/triton",
+      "sha256": "c8765d9731da9c8b6887c5cdd3fd52cb8827de5ce71a31d64507ef64cb2a6d61"
+    }
+  ],
+  "validation": {
+    "cli": {
+      "xctest": 94,
+      "swiftTesting": 1563,
+      "failures": 0
+    },
+    "rootMacOS": {
+      "xctest": 7,
+      "swiftTesting": 401,
+      "failures": 0,
+      "UIKitNotExecutedHere": true
+    },
+    "UIKitAppHosted": {
+      "tests": 7,
+      "failures": 0
+    },
+    "runnerProtocol": {
+      "tests": 32,
+      "failures": 0
+    },
+    "runnerSimulator": {
+      "tests": 1,
+      "failures": 0
+    },
+    "localGate": "passed",
+    "localGateOptionalXcode": "skipped with TRITON_VERIFY_XCODE=0; separate Triton Xcode build/tests passed",
+    "ciDocs": "passed",
+    "checkDocs": "passed"
+  },
+  "remoteWrites": false,
+  "mainWorktreeEdited": false
+}

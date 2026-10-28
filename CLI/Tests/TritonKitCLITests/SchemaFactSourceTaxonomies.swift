@@ -371,7 +371,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["archive", "diagnose"]
     case "app_pull_real_device_required", "app_pull_source_not_found", "app_pull_domain_not_found", "app_pull_failed":
         return ["diagnose", "prepare-target", "archive"]
-    case "sim_record_truncated", "sim_record_invalid_artifact", "host_screenshot_unavailable", "evidence_capture_partial":
+    case "sim_record_truncated", "sim_record_invalid_artifact", "host_screenshot_unavailable", "evidence_capture_partial", "host_output_incomplete", "host_output_read_failed":
         return ["archive", "diagnose"]
     case "app_map_error", "unconfirmed_path", "non_replayable_path":
         return ["archive", "plan", "diagnose"]

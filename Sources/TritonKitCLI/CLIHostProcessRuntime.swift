@@ -294,7 +294,15 @@ func runHostCommand(
     return result
 }
 
-func runHostCommandWritingStdoutArtifact(_ command: TKHostCommand, outputPath: String) throws -> HostProcessResult {
+func runHostCommandWritingStdoutArtifact(
+    _ command: TKHostCommand,
+    outputPath: String,
+    preserveArtifactOnFailure: Bool = false,
+    maximumArtifactBytes: Int = 10_485_760
+) throws -> HostProcessResult {
+    if preserveArtifactOnFailure {
+        return try runHostPartialLogCapture(command, outputPath: outputPath, maximumBytes: maximumArtifactBytes)
+    }
     try prepareHostArtifactOutputPath(outputPath)
     let timeoutSeconds = command.defaultTimeoutSeconds
     let process = Process()
@@ -750,6 +758,10 @@ func failHostCommand(
         detail = error.detail
     case let error as HostDeviceAdministrationDiscoveryFailure:
         detail = error.detail
+    case let error as SimulatorTargetDiagnosticError:
+        detail = error.detail
+    case let error as IOSSimulatorDisplayError:
+        detail = error.detail
     case let error as IOSSimulatorResizeCaptureError:
         detail = error.detail
     case let error as IOSSimulatorResizeError:
@@ -873,6 +885,12 @@ func failHostCommand(
             code: error.code,
             message: "\(error)",
             hint: error.hint
+        )
+    case let error as AndroidObserveError:
+        detail = TKCLIErrorDetail(
+            code: error.code,
+            message: "\(error)",
+            hint: "Retry after the Android UIAutomator service has a current root; Triton will not reuse a previous hierarchy capture."
         )
     case let error as HarmonyDeviceReadinessError:
         detail = TKCLIErrorDetail(
@@ -1031,6 +1049,11 @@ func failHostCommand(
         let isHDC = command.executable == "hdc" || command.executable.hasSuffix("/hdc")
         let isADB = command.executable == "adb" || command.executable.hasSuffix("/adb")
         let stderr = result.stderr.lowercased()
+        // ADB propagates remote shell failures, including status 127. Only the
+        // host env launcher naming this executable proves an executable lookup failure.
+        let adbExecutableLookupFailed = result.exitCode == 127
+            && stderr.hasPrefix("env: \(command.executable.lowercased()):")
+            && (stderr.contains("no such file") || stderr.contains("not found"))
         let simctlSubcommand = command.arguments.dropFirst().first
         if isHarmonyEmulatorStopFailureCommand(command) {
             code = "harmony_emulator_stop_failed"
@@ -1038,7 +1061,7 @@ func failHostCommand(
         } else if command.executable == "xcodebuild" {
             code = "xcodebuild_failed"
             hint = "Inspect the xcodebuild output, verify workspace/project, scheme, destination, signing, and DerivedData path."
-        } else if isADB && (result.exitCode == 127 || stderr.contains("no such file") || stderr.contains("not found")) {
+        } else if isADB && adbExecutableLookupFailed {
             code = "android_adb_not_found"
             hint = "Install Android SDK platform-tools or pass --adb <path> to the Triton command."
         } else if isADB && command.arguments.contains("screencap") {

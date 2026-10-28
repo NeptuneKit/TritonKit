@@ -531,6 +531,7 @@ struct SimLogs: AsyncParsableCommand {
     @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
     @Option(help: "Output log path") var output: String
     @Option(help: "Capture duration in seconds") var duration: Double = 10
+    @Option(name: .customLong("max-bytes"), help: "Maximum unified-log artifact bytes; excess output is drained and reported as partial failure") var maximumBytes: Int = 10_485_760
     @Option(help: "Log output style") var style: SimLogStyle = .ndjson
     @Option(help: "Log level") var level: SimLogLevel?
     @Option(help: "NSPredicate log filter") var predicate: String?
@@ -541,13 +542,16 @@ struct SimLogs: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
-        guard duration > 0 else {
+        guard duration.isFinite, duration > 0 else {
             try failHostValidation(
                 code: "invalid_duration",
                 message: "--duration must be greater than 0.",
                 hint: "Pass a positive log capture duration in seconds.",
                 outputFormat: outputFormat
             )
+        }
+        guard maximumBytes > 0 else {
+            try failHostValidation(code: "invalid_max_bytes", message: "--max-bytes must be greater than 0.", hint: "Pass a positive artifact byte limit.", outputFormat: outputFormat)
         }
         try runHostCommandCapturingStdoutArtifact(
             action: "sim.logs",
@@ -567,6 +571,8 @@ struct SimLogs: AsyncParsableCommand {
             sourcesCaptured: ["unified-log"],
             streamLayout: style.rawValue,
             artifactSensitive: true,
+            preserveArtifactOnFailure: true,
+            maximumArtifactBytes: maximumBytes,
             note: "Bounded Simulator unified log stream was written. This artifact does not capture App process stdout or stderr."
         )
     }

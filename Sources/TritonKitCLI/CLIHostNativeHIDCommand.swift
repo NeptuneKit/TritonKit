@@ -54,7 +54,8 @@ struct DeviceNativeHIDInput: ParsableCommand {
             case let failure as IOSSimulatorResizeError: detail = failure.detail
             default: detail = NativeHIDControlError(code: "ios_host_hid_helper_failed").detail
             }
-            print(try encodeJSON(TKInputResult.failure(action: input.type.rawValue, message: detail.message, error: detail)))
+            let boundDetail = simulatorTargetBoundDetail(detail, target: device)
+            print(try encodeJSON(TKInputResult.failure(action: input.type.rawValue, message: boundDetail.message, error: boundDetail)))
             throw ExitCode.failure
         }
     }

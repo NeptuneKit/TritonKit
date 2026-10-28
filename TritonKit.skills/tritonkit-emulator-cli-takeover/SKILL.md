@@ -72,6 +72,8 @@ triton device use <alias-or-id> --json
 triton device wait-ready --device <alias-or-id> --json
 ```
 
+Android wait-ready combines adb state, `sys.boot_completed=1` and PackageManager availability. A package path during boot is insufficient. Inspect install results and app postconditions separately. A screenshot `android_screenshot_failed` caused by `/sdcard` or remote command failure is not a reason to reinstall adb.
+
 Observation and action:
 
 ```bash
@@ -102,6 +104,8 @@ For iOS Simulator evidence, inspect `manifest.primaryArtifact.fidelity` before v
 
 ## Bounded observation and UI recovery
 
+- Android UIAutomator exit zero can still mean a null-root failure. Each Triton dump uses a unique remote path, validates its acknowledgement and current XML, and cleans only that path. On `hierarchy_unavailable`, preserve failure and recapture; never continue coordinate actions using the previous tree.
+
 - `observe tree --outline` aliases are valid for 30 seconds and `node resolve @N` validates a fresh whole-tree observation for the same target/platform. Refresh on stale, changed, or incomplete trees; an alias is not an executable OID. Inspect hierarchy `collection.visitedNodes` and `collection.limitReasons` (nonempty reasons mean incomplete collection): traversal deadlines cannot forcibly cancel native IPC already in progress.
 - Use `observe ocr --image <path>` or `observe ocr --platform <platform> --device <selector> --json` explicitly for text candidates. Candidates have no OID/action reference; coordinates are top-left raw-raster pixels, with points only for a known explicit scale. File mtime does not prove screenshot freshness (`freshness=unknown`). `--policy structure-unavailable` requires `--structure-unavailable-reason`.
 - `observe settle --device <selector> --json` reports visual stability with `businessVerified=false`. Workspace `--visual-settle` (HTTP `/workspace/run` optional `visualSettle`) is off by default; visual `unknown` or `timeout` stops the action chain. Continue with a business wait/assertion after a settled result.
@@ -112,6 +116,7 @@ For iOS Simulator evidence, inspect `manifest.primaryArtifact.fidelity` before v
 - Destructive or state-changing host actions require explicit flags or policy.
 - Host command success is not business success. Verify with `wait`, `find`, `assert`, screenshot, app prefs, layout/AX, or evidence.
 - Simulator video success is not `simctl` exit zero or MOV container duration. Require `durationValidation=passed` and inspect `actualDurationSeconds`; `sim_record_truncated` or `sim_record_invalid_artifact` means the MOV is failed evidence.
+- `sim logs --max-bytes <bytes>` defaults to 10485760, writes an owner-only artifact incrementally, and rejects existing output/symlinks. Child failure, timeout, incomplete output or byte-limit returns nonzero and `ok:false, partial:true` with retained artifact bytes/truncation/termination metadata. Preserve the partial file, which may be empty or end mid-record; do not claim a complete capture or replay automatically.
 - Keep logging sources explicit: `sim logs` is unified logging only, while `sim app-console` relaunches one App and writes merged process stdout/stderr to a sensitive bounded artifact. Never infer one source from the other or inline console content into issue/evidence JSON.
 - Multiple local targets must return `ambiguous_target`; do not pick an unsafe default.
 - Logs, screenshots, layout dumps, and data snapshots must be bounded and redacted when persisted into evidence.
@@ -156,3 +161,7 @@ Implemented in the source tree: optional Debug UIKit border highlighting and con
 Discover `triton schema --command act.tap --json` on the actual CLI before using `--hid-only`. Explicit `--platform ios` defaults to AX activation, including coordinates: `source=host-ax`, `strategy=accessibility-perform-press`, `verification.required=true`. For a touch-path regression use `triton act tap --platform ios --device sim:<UDID> --at 120,240 --hid-only --json`; only local Simulator coordinates are accepted, with no semantic/embedded/WebView fallback. Without `--platform`, existing explicit Simulator coordinate selectors retain host HID routing.
 
 Tap and `triton sim swipe` use the native digitizer bundled in triton, without an external Baguette executable or chrome lookup. Device Hub guest HID ownership returns `ios_host_hid_device_hub_attached`; unknown ownership and unsupported display topology fail closed. No automatic SpringBoard restart or heal occurs. Follow the selected-device doctor next step; `hidCompatibility.hostChromeLayout` is bundle presence only and `chromeLookupVerified=false`. Framework compatibility, booted state, AX activation, screenshots and ACKs do not prove HID delivery. Do not attribute an external native CUA drag/scroll failure to Triton. No verified host multi-tap/long-press primitive is supplied here; `act tap --duration` stays unsupported. App-owned semantic actions can check business state but cannot replace physical-touch regression proof. Report that boundary and preserve the typed error instead of claiming Device Hub HID support.
+
+## Selected Simulator display diagnostics
+
+Use `triton device doctor --platform ios --scope simulator --device sim:<UUID> --json` to read independent `simulatorDiagnostics.resize` and `.display` state/reason snapshots and an exact-target nextAction. Omitted --device adds no geometry query. Top-level doctor ok/capability names do not prove capture/input; captureVerified and inputDispatchVerified remain false. Unknown/unsupported/timeout is not inactive/primary. Snapshot success is not an atomic lock or action verification; do not bypass unknown geometry, silently capture another display, or replay uncertain input. Different Xcode versions and user projects require their own evidence.

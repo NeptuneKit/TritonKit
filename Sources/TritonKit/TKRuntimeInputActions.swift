@@ -108,6 +108,9 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
     }
 
     guard let control = nearestSuperview(of: view, matching: UIControl.self) else {
+        if isBarButtonSurface(view) {
+            return unsupportedBarButtonTap(view, request: request, action: action, matchedView: view)
+        }
         if let tableCell = nearestSuperview(of: view, matching: UITableViewCell.self)
             ?? tableCellContaining(request: request),
            let result = performTableCellTap(tableCell, request: request, action: action, matchedView: view) {
@@ -439,6 +442,9 @@ func performControlTap(
     }
 
     guard let dispatch = preferredTapDispatch(for: control) else {
+        if isBarButtonSurface(control) {
+            return unsupportedBarButtonTap(control, request: request, action: action, matchedView: matchedView)
+        }
         return TKInputResult.failure(
             action: action,
             message: "Target UIControl has no primary or touchUpInside action and did not activate through public UIKit accessibilityActivate",

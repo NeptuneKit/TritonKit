@@ -439,7 +439,12 @@ func runtimeTabState(_ tabController: UITabBarController) -> TKRuntimeTabState {
 }
 
 func findFirstResponder(in view: UIView) -> UIResponder? {
-    if view.isFirstResponder {
+    // Stop at a focused input owner before traversing its implementation
+    // children (UITextField may also contain a focused UIKit field editor).
+    // Non-input wrappers such as UISearchBar can forward focus state, so search
+    // their descendants before accepting them. Input capability alone is not
+    // enough: an unfocused editor must never be selected or steal focus.
+    if view.isFirstResponder, view is UIKeyInput {
         return view
     }
     for subview in view.subviews {
@@ -447,7 +452,7 @@ func findFirstResponder(in view: UIView) -> UIResponder? {
             return responder
         }
     }
-    return nil
+    return view.isFirstResponder ? view : nil
 }
 
 func oid(for object: UIResponder) -> UInt? {

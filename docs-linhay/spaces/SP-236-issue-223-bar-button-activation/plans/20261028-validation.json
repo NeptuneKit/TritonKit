@@ -1,0 +1,16 @@
+{
+  "suite": "TKRuntimeBarButtonTests",
+  "candidate": "16fa2012 (same UIKit source as source worktree)",
+  "platform": "iOS 27.0 Simulator / Xcode 27.1",
+  "tests": 4,
+  "passed": 4,
+  "failed": 0,
+  "skipped": 0,
+  "exitCode": 0,
+  "scope": "App-hosted, includes presented pageSheet with UINavigationController / UIBarButtonItem and background action guard",
+  "red": "Old implementation failed typed refusal assertions; hostless key-window test additionally failed environment prerequisite. App-hosted validation required.",
+  "limitations": [
+    "No physical device test",
+    "No private view-to-bar-item target mapping implemented; public control actions retained, otherwise typed unsupported."
+  ]
+}

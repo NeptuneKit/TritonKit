@@ -12,8 +12,8 @@
     },
     {
       "path": "ProtocolTests/HTTPProtocolTests.swift",
-      "sha256": "dc6ad49a5f6c199b92481562bf7ec805c968d0fdf512383a442108e9a65cfc8e",
-      "size": 13503
+      "sha256": "7ea7eb4a0121fdd32d078f3bbfecf4f6803464cc4d3d578d0c46de6a9853e9d8",
+      "size": 15827
     },
     {
       "path": "ProtocolTests/RunnerServerTests.swift",
@@ -22,13 +22,13 @@
     },
     {
       "path": "README.md",
-      "sha256": "13e9ffdae8198006288b3e78b1f31379d05aebd6840ab5a2c8c7d9774c956ce5",
-      "size": 5115
+      "sha256": "5b7cfc013115aa0b0e507c898bb17e45e26c9f9ae927859ced01a820ca2ab10a",
+      "size": 5856
     },
     {
       "path": "RunnerTests/HTTPProtocol.swift",
-      "sha256": "ecdfe9e4abff131e43a5516d75c2e31356e465867649e4d8972ea84d2b6f48dc",
-      "size": 18806
+      "sha256": "dfd7b4d905071728f62c916bd63bd8bc8337a2eff4fc64cfe3a65ef71778e71f",
+      "size": 21331
     },
     {
       "path": "RunnerTests/RunnerServer.swift",
@@ -42,8 +42,8 @@
     },
     {
       "path": "RunnerTests/TritonIOSRunnerTests.swift",
-      "sha256": "1350f35e6297f45d457ed4e39cd0daaee19031708cc5a9485634e2c0b300e2fd",
-      "size": 22892
+      "sha256": "390ddfe30c8e0c121915fdc5e7116107108859f5ac7aba16d0a79ff3b7728d61",
+      "size": 28019
     },
     {
       "path": "TritonIOSRunner.xcodeproj/project.pbxproj",

@@ -116,3 +116,27 @@ For Simulator host AX, `ios_host_ax_geometry_unavailable` rejects missing/invali
 Discover `triton schema --command act.tap --json` on the actual CLI before using `--hid-only`. Explicit `--platform ios` defaults to AX activation, including coordinates: `source=host-ax`, `strategy=accessibility-perform-press`, `verification.required=true`. For a touch-path regression use `triton act tap --platform ios --device sim:<UDID> --at 120,240 --hid-only --json`; only local Simulator coordinates are accepted, with no semantic/embedded/WebView fallback. Without `--platform`, existing explicit Simulator coordinate selectors retain host HID routing.
 
 Tap and `triton sim swipe` use the native digitizer bundled in triton, without an external Baguette executable or chrome lookup. Device Hub guest HID ownership returns `ios_host_hid_device_hub_attached`; unknown ownership and unsupported display topology fail closed. No automatic SpringBoard restart or heal occurs. Follow the selected-device doctor next step; `hidCompatibility.hostChromeLayout` is bundle presence only and `chromeLookupVerified=false`. Framework compatibility, booted state, AX activation, screenshots and ACKs do not prove HID delivery. Do not attribute an external native CUA drag/scroll failure to Triton. No verified host multi-tap/long-press primitive is supplied here; `act tap --duration` stays unsupported. App-owned semantic actions can check business state but cannot replace physical-touch regression proof. Report that boundary and preserve the typed error instead of claiming Device Hub HID support.
+
+### Android hierarchy freshness
+
+UIAutomator exit zero does not prove a current tree. Triton uses a unique dump path and validates its acknowledgement and XML. On `hierarchy_unavailable`, retain the failure and recapture after the UI has a usable root; never reuse old tree coordinates or claim business verification. Remote cleanup is limited to the current capture path and is best effort.
+
+## Wired iOS backend selection
+
+USB/wired is observed transport metadata, not a backend switch: iOS real discovery and app management use the selected Xcode's public `devicectl` / CoreDevice file-JSON route. Apple DeviceHub.app is not an automatic GUI/private-protocol fallback. Preserve command-specific sourceCommand(s), tool/source, artifacts and verification fields; do not assume all outputs contain strategy/transport/verification. Missing transport remains unknown. Physical `device logs` explicitly uses optional `idevicesyslog` with a verified USB identity alias; XCTest Runner and embedded runtime remain separate explicit surfaces. Distinguish inventory eligibility, host ACK, Runner/runtime readiness and business verification. A future physical Device Hub adapter needs a supported API/version matrix, exact identity, opt-in/readiness/ownership, fresh geometry and independent evidence; unknown delivery does not authorize replay or backend switching.
+
+## Selected Simulator display diagnostics
+
+Use `triton device doctor --platform ios --scope simulator --device sim:<UUID> --json` to read independent `simulatorDiagnostics.resize` and `.display` state/reason snapshots and an exact-target nextAction. Omitted --device adds no geometry query. Top-level doctor ok/capability names do not prove capture/input; captureVerified and inputDispatchVerified remain false. Unknown/unsupported/timeout is not inactive/primary. Snapshot success is not an atomic lock or action verification; do not bypass unknown geometry, silently capture another display, or replay uncertain input. Different Xcode versions and user projects require their own evidence.
+
+### Runner 启动失败诊断
+
+Runner `start` 失败的 `error.startup` 分开报告 `launch`、`transport`、`health`、`uiAutomation` 的 `verified|unverified`；transport 指本次收到经过鉴权的 Runner 响应，不代表 XCTest DTX 已就绪。已知 native XCTest driver channel refusal 返回 `ios_runner_xctest_driver_channel_refused`；启动失败、就绪前进程退出分别为 `ios_runner_native_launch_failed` / `ios_runner_native_exited`，其余仍用 `ios_runner_start_not_ready` 并指出未验证阶段。公开响应仅使用固定分类，不回传原始日志、路径、配对或签名身份。分类只读本会话 native logs 的有界尾部，未命中特征不表示无原生错误；不要假设解锁即可修复，也不据此诊断确定的 Apple 工具链问题。保留 private session，检查配对/授权/XCTest兼容性后先 stop/recover，再显式启动新会话。CLI与HTTP使用同一 service/envelope。
+
+### Runner 观察与坐标几何
+
+Runner `inspect` / `screenshot` 自行读取前台 App 的 `app.frame` 与 XCTest device orientation。未知方向不再丢弃已取得的层级或 PNG：结果标记 `partial=true`、`geometryAvailability=unavailable`、`coordinateActionsAvailable=false`，附固定的 `geometryError.code/message/field`，并省略 `geometry` 和 `observationID`。旧坐标观察立即失效；不得根据图像尺寸猜测方向或复用旧 ID。已返回的最新语义 selector 仍可使用。缺少有限正值 App frame 返回 `observation_window_unavailable`，App 不在前台仍返回 `cross_app_not_foreground`。`appAlertPresent` 仅覆盖该 App 的 alerts；`systemAlertDetection=not-probed` 不证明无系统弹窗。恢复已知方向并重新观察后才可使用坐标动作；截图仍是敏感的整屏证据，不保证只包含目标 App。
+
+### Embedded navigation button activation
+
+Public UIControl target/action and accessibilityActivate remain supported. If a navigation/toolbar view cannot activate through either path, embedded tap returns `unsupported_capability` with `bar-button-action-unsupported`; it never guesses a UIBarButtonItem association from matching titles or retries behind a sheet. Expose a customView control/accessibility action, or use fresh coordinates with an explicit Simulator target and host HID. Physical devices require an already-ready allowlisted Runner or manual interaction; verify the business result separately.
