@@ -2,7 +2,7 @@
 
 ## Requested
 
-用户要求处理全部开放 issue。冻结 GitHub 快照为 #214、#221～232；基线 main `a0d187ac`。主工作区已有参考追踪 WIP，只读保留；各 issue 独立 space/branch/worktree，联合候选在本 worktree 验证，不合 main、不写远端。
+用户要求处理全部开放 issue。冻结 GitHub 快照为 #214、#221～232；基线 main `a0d187ac`。主工作区已有参考追踪 WIP，只读保留；各 issue 独立 space/branch/worktree，联合候选在本worktree验证。用户随后明确授权推送分支并创建PR，进入远端审查阶段；本轮仍不合main或发布。
 
 ## BDD 与验收
 
@@ -20,7 +20,7 @@
 - [真实Simulator doctor与partial日志验证](plans/20261028-real-simulator.json)
 - [Android旧版失败/候选通过反证](plans/20261028-cli-blackbox-red-green.json)
 
-原主目录WIP未改动，候选只在本地分支，远端13项仍OPEN。下一步为用户审阅并明确授权远端推送/PR；本轮没有该授权。
+原主目录WIP未改动。用户已明确授权推送 `feat/SP-241-open-issues-validation` 并创建PR；当前进入PR审查/CI阶段，CI状态以GitHub当前head的checks为准。13项issue保留OPEN；此授权不包含合并、关闭或发布。
 
 ## Gaps / Remaining risk
 

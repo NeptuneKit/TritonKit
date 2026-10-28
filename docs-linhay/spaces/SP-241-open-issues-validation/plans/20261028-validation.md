@@ -6,7 +6,7 @@
 
 ## Observed
 
-基线 main `a0d187ace03d6e56b79b50a7a601c91b359b7955`，13个 issue 独立 space/branch/worktree，联合候选位于 `feat/SP-241-open-issues-validation`，实现整合提交`51d505bb`。主目录已有参考追踪 WIP 保留。仅本地修复、测试和草稿；没有推送、PR、远端评论、关闭、发布或切换用户主目录。增量[GitHub快照](20261028-open-issues.json)和[最终本地复查](20261028-open-issues-delivery.json)均为13项。实现SHA、binary与原始日志摘要在[证据索引](20261028-evidence.json)。
+基线 main `a0d187ace03d6e56b79b50a7a601c91b359b7955`，13个 issue 独立 space/branch/worktree，联合候选位于 `feat/SP-241-open-issues-validation`，实现整合提交`51d505bb`。主目录已有参考追踪 WIP 保留。上述验证是在本地交付时完成。用户随后明确授权推送分支并创建PR；进入远端审查/CI阶段，保留本地证据原始时间边界。没有合并、单独发送issue回复、关闭、发布或切换用户主目录。增量[GitHub快照](20261028-open-issues.json)和[最终本地复查](20261028-open-issues-delivery.json)均为13项。实现SHA、binary与原始日志摘要在[证据索引](20261028-evidence.json)。
 
 | Issue | Space | 处理结果与验收边界 |
 | --- | --- | --- |
