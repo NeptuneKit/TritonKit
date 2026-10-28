@@ -862,7 +862,7 @@ func hostSimulatorLogsOutputContract() -> TKCommandOutputContract {
         selector: "host.simulator-logs",
         format: "json",
         kind: "simulator-logs",
-        model: "HostArtifactCaptureOutput",
+        model: "HostArtifactCaptureOutput|HostArtifactCaptureFailureOutput",
         fields: schemaContractFields([
             ("ok", "Bool", true, "Whether bounded unified-log capture completed"),
             ("action", "String", true, "sim.logs"),
@@ -876,6 +876,14 @@ func hostSimulatorLogsOutputContract() -> TKCommandOutputContract {
             ("sourcesCaptured", "[String]", true, "Contains unified-log only; excludes App process stdout/stderr"),
             ("streamLayout", "String", true, "Requested log stream style"),
             ("artifactSensitive", "Bool", true, "Whether the artifact can contain sensitive App/system data"),
+            ("partial", "Bool", false, "True when capture is incomplete; file may be empty or end mid-record"),
+            ("artifactBytes", "Int", false, "Actual bytes retained in the artifact"),
+            ("artifactTruncated", "Bool", false, "Whether observed stdout is longer than the retained prefix"),
+            ("captureEndedBy", "String", false, "process-failure|timeout|output-failure|artifact-write-failure|byte-limit"),
+            ("terminationReason", "String", false, "exit or uncaught-signal for a failed capture"),
+            ("maximumBytes", "Int", true, "Maximum artifact bytes; default 10485760"),
+            ("elapsedDurationSeconds", "Double", false, "Measured failed capture duration including bounded termination/drain"),
+            ("error", "TKCLIErrorDetail", false, "Stable failure detail when a partial artifact is returned"),
             ("note", "String", true, "Explicit source coverage note"),
         ])
     )

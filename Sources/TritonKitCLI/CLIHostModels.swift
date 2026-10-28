@@ -1236,6 +1236,37 @@ struct HostArtifactCaptureOutput: Encodable {
     let streamLayout: String?
     let artifactSensitive: Bool?
     let note: String?
+    var artifactBytes: Int? = nil
+    var artifactTruncated: Bool? = nil
+    var maximumBytes: Int? = nil
+    var partial: Bool? = nil
+}
+
+struct HostArtifactCaptureFailureOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let runtimeScope: String
+    let target: String
+    let tool: String
+    let exitCode: Int32
+    let riskLevel: String
+    let sourceCommand: String
+    let artifact: String
+    let artifactBytes: Int
+    let stdoutBytes: Int
+    let stderrBytes: Int
+    let artifactTruncated: Bool
+    let partial: Bool
+    let captureEndedBy: String
+    let terminationReason: String
+    let elapsedDurationSeconds: Double
+    let maximumBytes: Int
+    let sourceType: String?
+    let sourcesCaptured: [String]?
+    let streamLayout: String?
+    let artifactSensitive: Bool?
+    let error: TKCLIErrorDetail
+    let note: String?
 }
 
 struct HostSimulatorProcessConsoleOutput: Encodable {

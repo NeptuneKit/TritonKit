@@ -294,7 +294,15 @@ func runHostCommand(
     return result
 }
 
-func runHostCommandWritingStdoutArtifact(_ command: TKHostCommand, outputPath: String) throws -> HostProcessResult {
+func runHostCommandWritingStdoutArtifact(
+    _ command: TKHostCommand,
+    outputPath: String,
+    preserveArtifactOnFailure: Bool = false,
+    maximumArtifactBytes: Int = 10_485_760
+) throws -> HostProcessResult {
+    if preserveArtifactOnFailure {
+        return try runHostPartialLogCapture(command, outputPath: outputPath, maximumBytes: maximumArtifactBytes)
+    }
     try prepareHostArtifactOutputPath(outputPath)
     let timeoutSeconds = command.defaultTimeoutSeconds
     let process = Process()

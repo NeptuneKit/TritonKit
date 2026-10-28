@@ -70,6 +70,51 @@ struct HostProcessDrainTests {
         }
     }
 
+    @Test("simulator log captures preserve partial artifact after child failure")
+    func preservesPartialArtifactAfterNonzeroExit() throws {
+        let output = FileManager.default.temporaryDirectory.appendingPathComponent("triton-drain-partial-\(UUID().uuidString)").path
+        defer { try? FileManager.default.removeItem(atPath: output) }
+        let command = TKHostCommand(
+            executable: "/bin/sh",
+            arguments: ["-c", "printf retained; kill -9 $$"],
+            defaultTimeoutSeconds: 2
+        )
+
+        do {
+            _ = try runHostCommandWritingStdoutArtifact(command, outputPath: output, preserveArtifactOnFailure: true)
+            Issue.record("failed log stream unexpectedly succeeded")
+        } catch let failure as HostArtifactCaptureFailure {
+            #expect(failure.failureCode == "sim_logs_failed")
+            #expect(failure.artifactBytes == 8)
+            #expect(failure.result.exitCode != 0)
+            #expect(try Data(contentsOf: URL(fileURLWithPath: output)) == Data("retained".utf8))
+        }
+    }
+
+    @Test("partial simulator logs are owner-only")
+    func partialLogPrivacy() throws {
+        let output = FileManager.default.temporaryDirectory.appendingPathComponent("triton-private-\(UUID().uuidString)").path
+        defer { try? FileManager.default.removeItem(atPath: output) }
+        let command = TKHostCommand(executable: "/bin/sh", arguments: ["-c", "printf private; exit 7"], defaultTimeoutSeconds: 2)
+        do { _ = try runHostCommandWritingStdoutArtifact(command, outputPath: output, preserveArtifactOnFailure: true) }
+        catch is HostArtifactCaptureFailure { }
+        let attributes = try FileManager.default.attributesOfItem(atPath: output)
+        #expect((attributes[.posixPermissions] as? NSNumber)?.intValue == 0o600)
+    }
+
+    @Test("timeout retains structured partial capture metadata")
+    func partialLogTimeout() throws {
+        let output = FileManager.default.temporaryDirectory.appendingPathComponent("triton-timeout-partial-\(UUID().uuidString)").path
+        defer { try? FileManager.default.removeItem(atPath: output) }
+        let command = TKHostCommand(executable: "/bin/sh", arguments: ["-c", "printf retained; exec /bin/sleep 10"], defaultTimeoutSeconds: 0.1)
+        var caught: Error?
+        do { _ = try runHostCommandWritingStdoutArtifact(command, outputPath: output, preserveArtifactOnFailure: true) }
+        catch { caught = error }
+        let failure = try #require(caught as? HostArtifactCaptureFailure)
+        #expect(failure.failureCode == "host_command_timeout")
+        #expect(failure.artifactBytes == 8)
+    }
+
     @Test("short-lived inherited writers reach real EOF and retain delayed tail", arguments: ["memory", "stdout", "combined"])
     func delayedTail(_ runner: String) throws {
         let output = FileManager.default.temporaryDirectory.appendingPathComponent("triton-drain-tail-\(UUID().uuidString)").path
@@ -203,6 +248,26 @@ struct HostProcessDrainTests {
             try? FileManager.default.removeItem(at: directory)
         }
         try body(pidPath, directory.appendingPathComponent("output").path)
+    }
+
+    @Test("log partial evidence survives inherited descriptors without killing their holder")
+    func partialLogInheritedDescriptor() throws {
+        try withWriterFixture { pidPath, output in
+            let script = "(/bin/sleep 3) 2>/dev/null & echo $! > \(shellEscaped(pidPath)); printf tail; exit 7"
+            let command = TKHostCommand(executable: "/bin/sh", arguments: ["-c", script], defaultTimeoutSeconds: 1)
+            let started = Date()
+            var caught: Error?
+            do { _ = try runHostCommandWritingStdoutArtifact(command, outputPath: output, preserveArtifactOnFailure: true) }
+            catch { caught = error }
+            let failure = try #require(caught as? HostArtifactCaptureFailure)
+            #expect(failure.failureCode == "sim_logs_failed")
+            #expect(failure.result.exitCode == 7)
+            #expect(failure.artifactBytes == 4)
+            #expect(try String(contentsOfFile: output) == "tail")
+            #expect(Date().timeIntervalSince(started) < 1.5)
+            let pid = try #require(Int32(try String(contentsOfFile: pidPath).trimmingCharacters(in: .whitespacesAndNewlines)))
+            #expect(kill(pid, 0) == 0)
+        }
     }
 
     @Test("incomplete capture preserves exit 7 and both stream facts", arguments: ["memory", "stdout", "combined"])

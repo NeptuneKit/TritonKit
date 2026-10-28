@@ -45,6 +45,8 @@ iOS host screenshot is Simulator-only. When `device list` returns a ready physic
 
 For an iOS Simulator runtime evidence bundle, `manifest.primaryArtifact.fidelity=full-screen` is the visual acceptance gate. The primary `screenshot` must come from `simctl-framebuffer`; `screenshot.runtime` is App-layer diagnostics only and may omit system-composited sheets, grabbers, navigation chrome, keyboards, or SpringBoard UI. If the host framebuffer is unavailable, report the failed-partial manifest, `screenshot.host` skip, `host_screenshot_unavailable`, and the structured Triton fallback command instead of attaching the runtime image as faithful visual proof.
 
+For `sim logs`, retain the partial artifact referenced by a nonzero `ok:false, partial:true` response. Record `artifactBytes`, `stdoutBytes`, `artifactTruncated`, `maximumBytes`, `captureEndedBy`, and `terminationReason`; do not treat file presence or a byte-limited prefix as a complete capture.
+
 Preserve log provenance in feedback: `sim logs` is `unified-log` only; `sim app-console` is merged App process stdout/stderr and relaunches the App. Console artifacts are sensitive. Report only bounded, sanitized excerpts, retain `sourcesCaptured` and truncation metadata, and never paste a full private artifact into a public issue.
 
 Destructive commands such as uninstall, erase, runtime delete, dyld-cache remove, or pairing changes must show `--dry-run` or `--confirm` behavior in the report.

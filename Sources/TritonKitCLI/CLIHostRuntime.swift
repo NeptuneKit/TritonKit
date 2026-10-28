@@ -73,13 +73,20 @@ func runHostCommandCapturingStdoutArtifact(
     sourcesCaptured: [String]? = nil,
     streamLayout: String? = nil,
     artifactSensitive: Bool? = nil,
+    preserveArtifactOnFailure: Bool = false,
+    maximumArtifactBytes: Int = 10_485_760,
     note: String? = nil
 ) throws {
     do {
         try prepareHostArtifactOutputPath(outputPath)
-        let result = try runHostCommandWritingStdoutArtifact(command, outputPath: outputPath)
+        let result = try runHostCommandWritingStdoutArtifact(
+            command,
+            outputPath: outputPath,
+            preserveArtifactOnFailure: preserveArtifactOnFailure,
+            maximumArtifactBytes: maximumArtifactBytes
+        )
         let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
-        let output = HostArtifactCaptureOutput(
+        var output = HostArtifactCaptureOutput(
             ok: true,
             action: action,
             runtimeScope: runtimeScope,
@@ -93,13 +100,19 @@ func runHostCommandCapturingStdoutArtifact(
             stderrBytes: result.stderrBytes,
             stdoutTruncated: result.stdoutTruncated,
             stderrTruncated: result.stderrTruncated,
-            stderr: stderr.isEmpty ? nil : stderr,
+            stderr: artifactSensitive == true || stderr.isEmpty ? nil : stderr,
             sourceType: sourceType,
             sourcesCaptured: sourcesCaptured,
             streamLayout: streamLayout,
             artifactSensitive: artifactSensitive,
             note: note
         )
+        if preserveArtifactOnFailure {
+            output.artifactBytes = result.stdoutBytes
+            output.artifactTruncated = false
+            output.maximumBytes = maximumArtifactBytes
+            output.partial = false
+        }
         switch outputFormat {
         case .json:
             print(try encodeJSON(output))
@@ -107,6 +120,47 @@ func runHostCommandCapturingStdoutArtifact(
             print(outputPath)
             if let note { print(note) }
         }
+    } catch let failure as HostArtifactCaptureFailure {
+        let detail = TKCLIErrorDetail(
+            code: failure.failureCode,
+            message: failure.description,
+            hint: "The partial artifact was preserved; inspect it before deciding whether to retry the capture."
+        )
+        let output = HostArtifactCaptureFailureOutput(
+            ok: false,
+            action: action,
+            runtimeScope: runtimeScope,
+            target: target,
+            tool: command.executable,
+            exitCode: failure.result.exitCode,
+            riskLevel: command.riskLevel.rawValue,
+            sourceCommand: failure.result.sourceCommand,
+            artifact: failure.outputPath,
+            artifactBytes: failure.artifactBytes,
+            stdoutBytes: failure.result.stdoutBytes,
+            stderrBytes: failure.result.stderrBytes,
+            artifactTruncated: failure.artifactTruncated,
+            partial: true,
+            captureEndedBy: failure.captureEndedBy,
+            terminationReason: failure.terminationReason,
+            elapsedDurationSeconds: failure.elapsedDurationSeconds,
+            maximumBytes: failure.maximumBytes,
+            sourceType: sourceType,
+            sourcesCaptured: sourcesCaptured,
+            streamLayout: streamLayout,
+            artifactSensitive: artifactSensitive,
+            error: detail,
+            note: "Incomplete unified-log evidence only; App process stdout/stderr are not captured. The file may be empty or end mid-record."
+        )
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(output))
+        case .text:
+            print(detail.message)
+            print("partial artifact: \(failure.outputPath) (\(failure.artifactBytes) bytes)")
+            if let hint = detail.hint { print("hint: \(hint)") }
+        }
+        throw ExitCode.failure
     } catch {
         try failHostCommand(error, outputFormat: outputFormat)
     }

@@ -116,6 +116,7 @@ For iOS Simulator evidence, inspect `manifest.primaryArtifact.fidelity` before v
 - Destructive or state-changing host actions require explicit flags or policy.
 - Host command success is not business success. Verify with `wait`, `find`, `assert`, screenshot, app prefs, layout/AX, or evidence.
 - Simulator video success is not `simctl` exit zero or MOV container duration. Require `durationValidation=passed` and inspect `actualDurationSeconds`; `sim_record_truncated` or `sim_record_invalid_artifact` means the MOV is failed evidence.
+- `sim logs --max-bytes <bytes>` defaults to 10485760, writes an owner-only artifact incrementally, and rejects existing output/symlinks. Child failure, timeout, incomplete output or byte-limit returns nonzero and `ok:false, partial:true` with retained artifact bytes/truncation/termination metadata. Preserve the partial file, which may be empty or end mid-record; do not claim a complete capture or replay automatically.
 - Keep logging sources explicit: `sim logs` is unified logging only, while `sim app-console` relaunches one App and writes merged process stdout/stderr to a sensitive bounded artifact. Never infer one source from the other or inline console content into issue/evidence JSON.
 - Multiple local targets must return `ambiguous_target`; do not pick an unsafe default.
 - Logs, screenshots, layout dumps, and data snapshots must be bounded and redacted when persisted into evidence.
