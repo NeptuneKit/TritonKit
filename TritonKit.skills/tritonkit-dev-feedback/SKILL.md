@@ -127,7 +127,7 @@ USB/wired is observed transport metadata, not a backend switch: iOS real discove
 
 ## Selected Simulator display diagnostics
 
-Use `triton device doctor --platform ios --scope simulator --device sim:<UUID> --json` to read independent `simulatorDiagnostics.resize` and `.display` state/reason snapshots and an exact-target nextAction. Omitted --device adds no geometry query. Top-level doctor ok/capability names do not prove capture/input; captureVerified and inputDispatchVerified remain false. Unknown/unsupported/timeout is not inactive/primary. Snapshot success is not an atomic lock or action verification; do not bypass unknown geometry, silently capture another display, or replay uncertain input. Different Xcode versions and user projects require their own evidence.
+Use `triton device doctor --platform ios --scope simulator --device sim:<UUID> --json` to read independent `simulatorDiagnostics.resize` and `.display` state/reason snapshots and an exact-target nextAction. Omitted --device adds no geometry query. Top-level doctor ok/capability names do not prove capture/input; captureVerified and inputDispatchVerified remain false. Unknown/unsupported/timeout is not inactive/primary. `resize.reason=unsupportedDevice` identifies an exact target-bound native capability rejection; `resize.hint` explains that repeating the same query cannot enable it. Use a verified compatible target/toolchain, or explicitly connected embedded App-only observation without claiming host capture/input recovery. Snapshot success is not an atomic lock or action verification; do not bypass unknown geometry, silently capture another display, or replay uncertain input. Different Xcode versions and user projects require their own evidence.
 
 ### Runner 启动失败诊断
 

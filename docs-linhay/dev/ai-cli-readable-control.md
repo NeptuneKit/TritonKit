@@ -662,7 +662,7 @@ CLI三条host-process runner的输出完整性与直接子进程exit状态分别
 
 `triton device doctor --platform ios --scope simulator --device sim:<UUID> --json` 返回 `simulatorDiagnostics`：独立的 `resize.state=active|inactive|unknown` 与 `display.state=primary|unknown`，未知时各有 `reason`，并保留精确目标 `target`、只读 provenance 和同目标 `nextAction`。未传 `--device` 时不增加这些查询。doctor 的顶层 `ok` 仅描述工具/发现契约；`inputDispatchVerified=false`、`captureVerified=false`，不是调用成功或业务完成。两个快照不是原子锁；动作仍做自己的 fresh gate。
 
-`appResize` 的 `unsupportedQuery/queryTimedOut/jsonMissing` 与 `displays` 的 `unsupported/timedOut/queryFailed` 不能当作 inactive/primary。截图或 AX 显示门禁失败保留 typed code，并绑定恢复到实际 Simulator；HID helper 的失败也绑定同目标 doctor。保持 unknown 时拒绝截图/输入，不静默回退原始 framebuffer；Xcode26.6 与原用户项目尚须真实复验。v0.2.33 的 Xcode27.1 displays 修复及截图证据不等于所有工具链已兼容。
+`appResize` 的 `unsupportedQuery/unsupportedDevice/queryTimedOut/jsonMissing` 与 `displays` 的 `unsupported/timedOut/queryFailed` 不能当作 inactive/primary。截图或 AX 显示门禁失败保留 typed code，并绑定恢复到实际 Simulator；HID helper 的失败也绑定同目标 doctor。保持 unknown 时拒绝截图/输入，不静默回退原始 framebuffer；Xcode26.6 与原用户项目尚须真实复验。v0.2.33 的 Xcode27.1 displays 修复及截图证据不等于所有工具链已兼容。
 
 ### Runner 启动失败诊断
 
@@ -675,3 +675,5 @@ Runner `inspect` / `screenshot` 自行读取前台 App 的 `app.frame` 与 XCTes
 ### Embedded navigation button activation
 
 Public UIControl target/action and accessibilityActivate remain supported. If a navigation/toolbar view cannot activate through either path, embedded tap returns `unsupported_capability` with `bar-button-action-unsupported`; it never guesses a UIBarButtonItem association from matching titles or retries behind a sheet. Expose a customView control/accessibility action, or use fresh coordinates with an explicit Simulator target and host HID. Physical devices require an already-ready allowlisted Runner or manual interaction; verify the business result separately.
+
+#224后续：精确目标回执的CoreDeviceError1001、resizableappmanagement feature及同一DeviceIdentifier组合识别为`unknown/unsupportedDevice`，doctor的`simulatorDiagnostics.resize.hint`解释同一目标重复查询不会启用该能力。localizedDescription或任意嵌套错误不能充当判据；未知仍拒绝capture/AX/HID。可选择已验证支持appResize的目标/工具链，或显式连接embedded runtime做App层观察；后者不是主屏framebuffer/host input证据。iPad27.0实测不支持与iPhone17正常结果分开，旧Xcode26.6根因仍未知。

@@ -10,7 +10,12 @@ struct IOSSimulatorResizeSession: Equatable, Encodable {
 }
 
 enum IOSSimulatorResizeUnknownReason: String, Equatable, Encodable {
-    case invalidResponse, identityMismatch, outputTooLarge, jsonMissing, queryFailed, queryTimedOut, unsupportedQuery
+    case invalidResponse, identityMismatch, outputTooLarge, jsonMissing, queryFailed, queryTimedOut, unsupportedQuery, unsupportedDevice
+
+    var recoveryHint: String? {
+        guard self == .unsupportedDevice else { return nil }
+        return "The selected Xcode backend explicitly reports that this target does not support Resizable App Management. Repeating the same doctor query will not enable that capability. Use a target/toolchain with verified appResize support, or an explicitly connected embedded runtime for App-only observation; neither is evidence that this target's host capture or input is safe."
+    }
 }
 
 enum IOSSimulatorResizeState: Equatable {
@@ -33,7 +38,7 @@ enum IOSSimulatorResizeError: Error, Equatable, LocalizedError {
         case .activeSession:
             return TKCLIErrorDetail(code: "ios_simulator_resize_touch_unroutable", message: "Resize Mode is active; the host touch adapter cannot route input to the Resizable display. No new gesture was sent.", hint: "End the Resize Mode session in Device Hub, then retry the complete gesture. Keyboard input remains subject to its own backend capability.")
         case .stateUnknown(let reason):
-            return TKCLIErrorDetail(code: "ios_simulator_resize_state_unknown", message: "Resize Mode state could not be verified (\(reason.rawValue)); no new gesture was sent.", hint: "Run triton device doctor --platform ios --scope simulator --json with the selected Xcode. The appResize query must be available and return target-bound JSON; an older Xcode version is not evidence of an inactive session.")
+            return TKCLIErrorDetail(code: "ios_simulator_resize_state_unknown", message: "Resize Mode state could not be verified (\(reason.rawValue)); no new gesture was sent.", hint: reason.recoveryHint ?? "Run triton device doctor --platform ios --scope simulator --json with the selected Xcode. The appResize query must be available and return target-bound JSON; an older Xcode version is not evidence of an inactive session.")
         case .invalidTarget:
             return TKCLIErrorDetail(code: "ios_simulator_resize_target_invalid", message: "Touch protection requires one exact resolved Simulator UUID.", hint: "Resolve the simulator through Triton device discovery before dispatching a touch gesture.")
         }
@@ -56,11 +61,15 @@ func classifyIOSSimulatorResize(data: Data, target: String, exitCode: Int32) -> 
     let selectors = arguments.indices.filter { arguments[$0] == "--device" || arguments[$0].hasPrefix("--device=") }
     guard selectors.count == 1, let index = selectors.first, arguments[index] == "--device",
           arguments.indices.contains(index + 1), arguments[index + 1] == target else { return .unknown(.identityMismatch) }
-    if root["result"] != nil && root["error"] != nil { return .unknown(.invalidResponse) }
+    if root["errors"] != nil || (root["result"] != nil && root["error"] != nil) { return .unknown(.invalidResponse) }
     if let error = root["error"] as? [String: Any] {
         guard info["outcome"] as? String == "failed", exitCode != 0,
-              error["domain"] as? String == "com.apple.dt.CoreDeviceError", resizeNumber(error["code"]) == 24004 else { return .unknown(.queryFailed) }
-        return .inactive
+              error["domain"] as? String == "com.apple.dt.CoreDeviceError" else { return .unknown(.queryFailed) }
+        if resizeNumber(error["code"]) == 24004 { return .inactive }
+        if resizeNumber(error["code"]) == 1001, resizeCapabilityRejected(error, target: target) {
+            return .unknown(.unsupportedDevice)
+        }
+        return .unknown(.queryFailed)
     }
     guard exitCode == 0, info["outcome"] as? String == "success",
           let result = root["result"] as? [String: Any],
@@ -72,6 +81,19 @@ func classifyIOSSimulatorResize(data: Data, target: String, exitCode: Int32) -> 
           let width = resizeNumber(size[0]), let height = resizeNumber(size[1]),
           width > 0, height > 0, width <= 16384, height <= 16384 else { return .unknown(.invalidResponse) }
     return .active(IOSSimulatorResizeSession(displayUniqueID: display, width: width, height: height))
+}
+
+/// Recognize only the observed, target-bound capability rejection, never arbitrary
+/// nested 1001 errors or localized descriptions. Unsupported is still unknown state.
+private func resizeCapabilityRejected(_ error: [String: Any], target: String) -> Bool {
+    guard Set(error.keys).isSubset(of: ["domain", "code", "userInfo"]),
+          let info = error["userInfo"] as? [String: Any],
+          Set(info.keys).isSubset(of: ["CapabilityFeatureIdentifier", "CapabilityName", "DeviceIdentifier", "NSLocalizedDescription", "NSLocalizedFailureReason"]),
+          let feature = info["CapabilityFeatureIdentifier"] as? [String: Any], feature.count == 1,
+          feature["string"] as? String == "com.apple.coredevice.feature.resizableappmanagement",
+          let device = info["DeviceIdentifier"] as? [String: Any], device.count == 1,
+          device["string"] as? String == target else { return false }
+    return true
 }
 
 func iosSimulatorResizeQueryCommand(target: String, json: String, log: String, environment: [String: String]) -> TKHostCommand {
@@ -153,7 +175,7 @@ enum IOSSimulatorResizeCaptureError: Error, Equatable, LocalizedError {
         case .activeSession:
             return TKCLIErrorDetail(code: "ios_simulator_resize_capture_unroutable", message: "Resize Mode is active; this video/framebuffer capture does not route to the Resizable display. Capture was not started.", hint: "Use triton sim screenshot for a display-bound still image, or end the Resize Mode session before video capture.")
         case .stateUnknown(let reason):
-            return TKCLIErrorDetail(code: "ios_simulator_resize_capture_state_unknown", message: "Resize Mode state could not be verified (\(reason.rawValue)); capture was not started.", hint: "Run triton device doctor --platform ios --scope simulator --json with the selected Xcode and verify the appResize query before capture.")
+            return TKCLIErrorDetail(code: "ios_simulator_resize_capture_state_unknown", message: "Resize Mode state could not be verified (\(reason.rawValue)); capture was not started.", hint: reason.recoveryHint ?? "Run triton device doctor --platform ios --scope simulator --json with the selected Xcode and verify the appResize query before capture.")
         }
     }
 }

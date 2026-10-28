@@ -1,5 +1,7 @@
 # TritonKit Project Memory
 
+- 2026-10-28后续：[#224能力拒绝调查](../spaces/SP-235-issue-224-simulator-resize-query/plans/20261028-capability-rejection.md)接替旧completed判断。原生iPad返回精确1001而非无会话；仅修复unsupportedDevice分类/恢复提示，截图/输入未恢复，原Xcode26.6/iPhone未知，issue须保留未完成。
+
 - 2026-10-28：[v0.2.35发布验收](../spaces/SP-242-release-v0-2-35/plans/20261028-release.md)完成：candidate190c161f，main/tag CI与Release全绿，双架构/checksum/skills/Runner/Homebrew验证通过。包外只读HTTP通过；默认实时流因本机resize unknown返回409，工作台布局零console error，不能声称默认流通过。#214 OPEN；原主目录HEAD/status/17个WIP哈希未变，CocoaPods仅lint。
 
 - 2026-10-28：[SP-241全部开放issue本地联合验收](../spaces/SP-241-open-issues-validation/README.md)覆盖#214、#221～232，10项缺陷、1项文档及2项范围/历史审计；实现`51d505bb`，完整CLI/root/local与UIKit/Runner模拟器fixture通过，Android旧版黑盒反证明确。随后已按追加授权合并[PR #233](https://github.com/NeptuneKit/TritonKit/pull/233)为40850dde，#221～232共12项completed关闭；#214保留原始来源/占用只读调查，通用删除仍取消。[归档及后续计划](../spaces/SP-241-open-issues-validation/plans/20261028-merge-closeout.md)；本批已随v0.2.35发布，主目录WIP保留。

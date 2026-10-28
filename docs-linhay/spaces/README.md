@@ -379,7 +379,7 @@
 - [SP-232-issue-231-simulator-log-partial](./SP-232-issue-231-simulator-log-partial/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
 - [SP-233-issue-232-ios-real-backend-docs](./SP-233-issue-232-ios-real-backend-docs/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
 - [SP-234-issue-225-ios-runner-transport](./SP-234-issue-225-ios-runner-transport/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
-- [SP-235-issue-224-simulator-resize-query](./SP-235-issue-224-simulator-resize-query/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
+- [SP-235-issue-224-simulator-resize-query](./SP-235-issue-224-simulator-resize-query/README.md)：#224后续处理中；iPad1001已定位，unsupportedDevice分类与提示已补，capture/input仍受限，旧Xcode26.6待原生证据。
 - [SP-236-issue-223-bar-button-activation](./SP-236-issue-223-bar-button-activation/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
 - [SP-237-issue-222-device-hub-followup](./SP-237-issue-222-device-hub-followup/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
 - [SP-238-issue-221-searchbar-input-focus](./SP-238-issue-221-searchbar-input-focus/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。

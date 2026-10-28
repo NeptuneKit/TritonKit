@@ -102,10 +102,15 @@ struct FramebufferHelperTests {
         let helper = directory.appendingPathComponent("adb-fixture")
         try Data(("#!/bin/sh\nprintf x >> '" + marker.path + "'\nexec /bin/sleep 10\n").utf8).write(to: helper)
         try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: helper.path)
-        let session = AndroidSession(serial: "fixture", adbPath: helper.path, captureTimeout: 0.5)
+        // This tests no relaunch after a timeout, not subsecond script startup.
+        // A fresh executable script can take over 0.5s to reach its first line.
+        let session = AndroidSession(serial: "fixture", adbPath: helper.path, captureTimeout: 2)
         session.start()
         defer { session.stop() }
-        Thread.sleep(forTimeInterval: 1.5)
+        let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+        while session.running && ContinuousClock.now < deadline {
+            Thread.sleep(forTimeInterval: 0.01)
+        }
         #expect(try Data(contentsOf: marker) == Data("x".utf8))
         #expect(!session.running)
         #expect(session.getLatestFrameWithVersion() == nil)

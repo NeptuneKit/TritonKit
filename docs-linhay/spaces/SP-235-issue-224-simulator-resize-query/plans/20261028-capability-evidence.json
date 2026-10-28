@@ -1,0 +1,40 @@
+{
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "runtime": "iOS 27.0",
+  "baseline": "v0.2.35",
+  "rootCause": {
+    "code": 1001,
+    "domain": "com.apple.dt.CoreDeviceError",
+    "feature": "com.apple.coredevice.feature.resizableappmanagement",
+    "errorTargetMatchedIssuedTarget": true,
+    "unsupportedIsInactive": false
+  },
+  "iphone17": {
+    "baselineResize": "inactive",
+    "candidateResize": "inactive",
+    "candidateScreenshot": {
+      "ok": true,
+      "width": 1206,
+      "height": 2622,
+      "visuallyInspected": "owned Simulator Home Screen"
+    }
+  },
+  "ipadA16": {
+    "baselineResize": "unknown/queryFailed",
+    "candidateResize": "unknown/unsupportedDevice",
+    "candidateDisplay": "primary",
+    "candidateCapture": "refused",
+    "candidateSwipe": "refused",
+    "captureFileCreated": false
+  },
+  "ownership": {
+    "createdSimulators": 2,
+    "shutdownSimulators": 2,
+    "otherDevicesMutated": false
+  },
+  "remaining": [
+    "Original Xcode 26.6/iPhone native error not available on this host",
+    "iPad host capture/input not restored",
+    "Do not close #224 for diagnostics alone"
+  ]
+}
