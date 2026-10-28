@@ -102,6 +102,8 @@ For iOS Simulator evidence, inspect `manifest.primaryArtifact.fidelity` before v
 
 ## Bounded observation and UI recovery
 
+- Android UIAutomator exit zero can still mean a null-root failure. Each Triton dump uses a unique remote path, validates its acknowledgement and current XML, and cleans only that path. On `hierarchy_unavailable`, preserve failure and recapture; never continue coordinate actions using the previous tree.
+
 - `observe tree --outline` aliases are valid for 30 seconds and `node resolve @N` validates a fresh whole-tree observation for the same target/platform. Refresh on stale, changed, or incomplete trees; an alias is not an executable OID. Inspect hierarchy `collection.visitedNodes` and `collection.limitReasons` (nonempty reasons mean incomplete collection): traversal deadlines cannot forcibly cancel native IPC already in progress.
 - Use `observe ocr --image <path>` or `observe ocr --platform <platform> --device <selector> --json` explicitly for text candidates. Candidates have no OID/action reference; coordinates are top-left raw-raster pixels, with points only for a known explicit scale. File mtime does not prove screenshot freshness (`freshness=unknown`). `--policy structure-unavailable` requires `--structure-unavailable-reason`.
 - `observe settle --device <selector> --json` reports visual stability with `businessVerified=false`. Workspace `--visual-settle` (HTTP `/workspace/run` optional `visualSettle`) is off by default; visual `unknown` or `timeout` stops the action chain. Continue with a business wait/assertion after a settled result.

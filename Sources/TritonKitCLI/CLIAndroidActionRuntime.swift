@@ -57,13 +57,13 @@ func resolveAndroidActionSelection(target: String, adb: String) throws -> HostDe
     return try resolveHostDeviceSelection(request: request, hdc: "hdc", adb: adb).target
 }
 
-func observeAndroidNodes(selected: HostDeviceTarget, adb: String) throws -> ([TKAndroidUIAutomatorNodeSummary], [String]) {
-    let dumpCommand = TKAndroidADBCommand.uiautomatorDump(serial: selected.target, remotePath: "/sdcard/window_dump.xml", executable: adb)
-    let dumpResult = try runHostCommand(dumpCommand)
-    let readCommand = TKAndroidADBCommand.readFile(serial: selected.target, remotePath: "/sdcard/window_dump.xml", executable: adb)
-    let readResult = try runHostCommand(readCommand)
-    let nodes = try TKAndroidUIAutomatorXMLParser.nodeSummaries(in: readResult.stdoutData)
-    return (nodes, [dumpResult.sourceCommand, readResult.sourceCommand])
+func observeAndroidNodes(
+    selected: HostDeviceTarget,
+    adb: String,
+    runner: AndroidObserveHostRunner = { try runHostCommand($0) }
+) throws -> ([TKAndroidUIAutomatorNodeSummary], [String]) {
+    let capture = try captureAndroidHierarchy(serial: selected.rawTarget, adb: adb, runner: runner)
+    return (capture.collected.nodes, capture.sourceCommands)
 }
 
 func androidTapMatch(from node: TKAndroidUIAutomatorNodeSummary) -> HostAndroidTapMatch {

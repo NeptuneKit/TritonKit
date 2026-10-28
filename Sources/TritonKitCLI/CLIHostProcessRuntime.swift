@@ -874,6 +874,12 @@ func failHostCommand(
             message: "\(error)",
             hint: error.hint
         )
+    case let error as AndroidObserveError:
+        detail = TKCLIErrorDetail(
+            code: error.code,
+            message: "\(error)",
+            hint: "Retry after the Android UIAutomator service has a current root; Triton will not reuse a previous hierarchy capture."
+        )
     case let error as HarmonyDeviceReadinessError:
         detail = TKCLIErrorDetail(
             code: error.code,
