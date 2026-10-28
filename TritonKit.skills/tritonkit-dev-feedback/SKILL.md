@@ -120,3 +120,7 @@ Tap and `triton sim swipe` use the native digitizer bundled in triton, without a
 ### Android hierarchy freshness
 
 UIAutomator exit zero does not prove a current tree. Triton uses a unique dump path and validates its acknowledgement and XML. On `hierarchy_unavailable`, retain the failure and recapture after the UI has a usable root; never reuse old tree coordinates or claim business verification. Remote cleanup is limited to the current capture path and is best effort.
+
+## Wired iOS backend selection
+
+USB/wired is observed transport metadata, not a backend switch: iOS real discovery and app management use the selected Xcode's public `devicectl` / CoreDevice file-JSON route. Apple DeviceHub.app is not an automatic GUI/private-protocol fallback. Preserve command-specific sourceCommand(s), tool/source, artifacts and verification fields; do not assume all outputs contain strategy/transport/verification. Missing transport remains unknown. Physical `device logs` explicitly uses optional `idevicesyslog` with a verified USB identity alias; XCTest Runner and embedded runtime remain separate explicit surfaces. Distinguish inventory eligibility, host ACK, Runner/runtime readiness and business verification. A future physical Device Hub adapter needs a supported API/version matrix, exact identity, opt-in/readiness/ownership, fresh geometry and independent evidence; unknown delivery does not authorize replay or backend switching.

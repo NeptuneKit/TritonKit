@@ -581,6 +581,31 @@ Temporary 查询可能创建客户端域，实际是否新建没有可靠后置�
 
 - `triton xcode build --package Package.swift --scheme <scheme> --sdk iphoneos --destination 'generic/platform=iOS' --build-setting CODE_SIGNING_ALLOWED=NO --json` 支持无物理设备的 SDK-only 编译。SDK/destination 必须显式给出，不继承此 opt-in；不接受 `--device`/`--simulator`，不包含安装或启动，也不证明产物可安装。settings/test/run 仍保留真机 ready preflight。
 
+## iOS wired real-device backend selection (#232)
+
+USB/wired 不决定后端。iOS 真机的 `--scope real` 或 `ios-real:*` selector 按硬件 scope 选择当前 Xcode 的 `xcrun devicectl` / CoreDevice；simulator lifecycle 仍走 `simctl`。选择公共、可机器读取的 CLI 是为了保留精确目标身份、fresh file-JSON/log 产物、可审计 argv 和 typed failure，不依赖 GUI 焦点或未纳入契约的私有 Device Hub 协议。源码中的 “Device Hub official adapter” 表示借助这些公共工具实现的能力组，不表示调用 Apple DeviceHub.app。
+
+以下是现有操作与输出的映射；表中的“策略/理由”和“验证阶段”是解释维度，**不是承诺每个命令已有同名 JSON 字段**。请按 `triton schema --command <command> --json` 读取各命令的实际契约。
+
+| 操作 | backend 与策略/理由 | 现有来源/transport 字段 | 已证明与未证明 |
+| --- | --- | --- | --- |
+| `device list --platform ios --scope real` | CoreDevice `devicectl list devices`；fresh file-JSON，显式 physical kind/scope 过滤 | `targets[].source=devicectl`、可选 `targets[].transport`、`sourceCommand(s)` | inventory 身份与 development-service eligibility；`ready` 不证明解锁、App runtime 或业务 ready |
+| `device doctor --platform ios --scope real` | 当前 Xcode 公共命令及 nested help 探测 | `tools[]`、`commandSupport[]`；没有统一的 target transport/strategy 字段 | `help-advertised-only`；不证明已执行设备动作 |
+| `device platforms --include-real-devices` | 同一 CoreDevice file-JSON 的独立 physical metadata inventory；不扩展旧 iOS action 路由 | `physicalInventoryObserved`、`physicalDevices[]`、`sourceCommands` | 硬件元数据，不等于 ready/可控制 |
+| iOS real `app install/launch/info/list/pull` | `devicectl` app 命令，使用已解析的精确 CoreDevice identity | 按操作读 `tool`、`sourceCommand`、`artifacts`、`target` 或 app metadata；不是统一 DTO | host 命令结果/metadata 或本地复制产物；安装、启动不等于业务成功 |
+| `device info/files/mountpoint`、`device containers` 的 SDK binding、`device pair/unpair/diagnose` | CoreDevice metadata/management；按操作校验 JSON 身份、outcome、策略和产物 | `sourceCommands`/`artifacts` 及各自的 `verification`、`status` 等已有字段 | info 的 `verification=executed-file-json` 且 `businessReadinessVerified=false`；管理执行仍须显式策略和各自后置证据 |
+| `device fs list` | 先以 CoreDevice 查询 mount-root，再对显式目标目录做宿主只读遍历 | mount/路径绑定和本地 metadata 输出 | 路径元数据，不等于 App bundle/group 绑定或业务数据权限 |
+| `device logs`（iOS real） | 显式可选 `idevicesyslog`，用已知 USB UDID alias；不是 Device Hub fallback | `source=libimobiledevice-system-log-live-sample`、`sourceCommands`、`partial`、`limitations` | 有界系统日志样本；不是完整历史日志 |
+| `device crashes list/get`（iOS real） | CoreDevice `systemCrashLogs` metadata / 显式 copy | `source`、`sourceCommands`、`artifacts`、`partial` | metadata 与取得的报告；不是 App 状态验证 |
+| `device runner ...` | 显式、owned XCTest Runner session；与 devicectl 管理面和 embedded runtime 分开 | Runner 的 session/ownership/readiness/receipt 契约 | `ready` 与实际 inspect、screenshot、action 的结果分别判断；不暗中切换为 Device Hub |
+| embedded `observe` / `act` | 已选 App 内 Debug runtime，语义观察/激活 | 按命令读 sources、strategy、target、verification 等已有字段 | in-app 范围；semantic ACK 仍须独立业务后置检查，不证明 physical touch |
+
+`HostDeviceTarget.transport` 来源于原生 connection properties，缺失就是 unknown（可省略），不把 paired 当作 LAN、也不把 USB 当作 ready。不同命令未必重复 transport；需与同目标的 fresh inventory 关联。名称、窗口可见性和 capability 数组不能补成 physical 身份。CoreDevice 的内部 identity/alias 与对外脱敏 target 不可混用。缺工具、缺 JSON、解析/身份失败或 unsupported 保留 typed failure；不自动启动 GUI、配对、解锁或换后端重试。
+
+Apple Device Hub 可以作为用户另行操作、单独取证的 display/interaction surface；当前没有通用 physical-device Device Hub 自动化后端。Triton 的只读 Web Device Hub 也是另一产品界面，不是 Apple GUI adapter。若将来引入 adapter，必须另建明确 scope，并同时证明：可调用 API/命令与支持工具链版本、准确 physical target identity mapping、独立 readiness/capability probe、显式 opt-in 与 ownership、输入所需新鲜 geometry/orientation、动作送达/失败/未知的 typed receipt、截图及业务后置证据；日志须脱敏且保留恢复/停止语义。unsupported 不执行，送达 unknown 不自动 replay 或切换后端；仅有 GUI 可见、源码符号、fixture 或 host ACK 不足以纳入默认路径。
+
+选择实现见 `CLIHostDeviceRuntime.iosHostDeviceTargets/iosCoreDeviceTargets`、`CLIHostApplePlatformReportRuntime`、`TKHostAdapterDevicectlModels`；历史设计依据见 [Device Hub 研究](./20261008-device-hub-paradigm-research.md)，当前验收边界见 [SP-183](../spaces/SP-183-device-hub-official-adapter/README.md)。本说明不新增后端、不统一扩展所有 DTO，也不声称物理设备实测。
+
 ## Offline Simulator swipe (#215)
 
 `triton sim swipe --simulator booted --start-x 360 --start-y 700 --end-x 80 --end-y 700 --duration 0.35 --json` 通过TritonKit 内置 SimulatorKit/IOHID 适配器执行，不依赖 embedded server 或 Web 服务。默认坐标为 Simulator points；可成对传 `--width/--height` 表示源图坐标空间。duration 为有限正数且最多 10 秒。成功只证明 host submission，必须用同目标 `triton sim ax --device <udid> --json` / `triton sim screenshot` 检查 settled 后置条件。后端不可用时失败关闭，不自动落回 embedded runtime。
