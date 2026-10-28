@@ -128,3 +128,7 @@ USB/wired is observed transport metadata, not a backend switch: iOS real discove
 ## Selected Simulator display diagnostics
 
 Use `triton device doctor --platform ios --scope simulator --device sim:<UUID> --json` to read independent `simulatorDiagnostics.resize` and `.display` state/reason snapshots and an exact-target nextAction. Omitted --device adds no geometry query. Top-level doctor ok/capability names do not prove capture/input; captureVerified and inputDispatchVerified remain false. Unknown/unsupported/timeout is not inactive/primary. Snapshot success is not an atomic lock or action verification; do not bypass unknown geometry, silently capture another display, or replay uncertain input. Different Xcode versions and user projects require their own evidence.
+
+### Runner 启动失败诊断
+
+Runner `start` 失败的 `error.startup` 分开报告 `launch`、`transport`、`health`、`uiAutomation` 的 `verified|unverified`；transport 指本次收到经过鉴权的 Runner 响应，不代表 XCTest DTX 已就绪。已知 native XCTest driver channel refusal 返回 `ios_runner_xctest_driver_channel_refused`；启动失败、就绪前进程退出分别为 `ios_runner_native_launch_failed` / `ios_runner_native_exited`，其余仍用 `ios_runner_start_not_ready` 并指出未验证阶段。公开响应仅使用固定分类，不回传原始日志、路径、配对或签名身份。分类只读本会话 native logs 的有界尾部，未命中特征不表示无原生错误；不要假设解锁即可修复，也不据此诊断确定的 Apple 工具链问题。保留 private session，检查配对/授权/XCTest兼容性后先 stop/recover，再显式启动新会话。CLI与HTTP使用同一 service/envelope。

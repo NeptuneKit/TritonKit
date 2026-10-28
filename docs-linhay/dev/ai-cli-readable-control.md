@@ -663,3 +663,7 @@ CLI三条host-process runner的输出完整性与直接子进程exit状态分别
 `triton device doctor --platform ios --scope simulator --device sim:<UUID> --json` 返回 `simulatorDiagnostics`：独立的 `resize.state=active|inactive|unknown` 与 `display.state=primary|unknown`，未知时各有 `reason`，并保留精确目标 `target`、只读 provenance 和同目标 `nextAction`。未传 `--device` 时不增加这些查询。doctor 的顶层 `ok` 仅描述工具/发现契约；`inputDispatchVerified=false`、`captureVerified=false`，不是调用成功或业务完成。两个快照不是原子锁；动作仍做自己的 fresh gate。
 
 `appResize` 的 `unsupportedQuery/queryTimedOut/jsonMissing` 与 `displays` 的 `unsupported/timedOut/queryFailed` 不能当作 inactive/primary。截图或 AX 显示门禁失败保留 typed code，并绑定恢复到实际 Simulator；HID helper 的失败也绑定同目标 doctor。保持 unknown 时拒绝截图/输入，不静默回退原始 framebuffer；Xcode26.6 与原用户项目尚须真实复验。v0.2.33 的 Xcode27.1 displays 修复及截图证据不等于所有工具链已兼容。
+
+### Runner 启动失败诊断
+
+Runner `start` 失败的 `error.startup` 分开报告 `launch`、`transport`、`health`、`uiAutomation` 的 `verified|unverified`；transport 指本次收到经过鉴权的 Runner 响应，不代表 XCTest DTX 已就绪。已知 native XCTest driver channel refusal 返回 `ios_runner_xctest_driver_channel_refused`；启动失败、就绪前进程退出分别为 `ios_runner_native_launch_failed` / `ios_runner_native_exited`，其余仍用 `ios_runner_start_not_ready` 并指出未验证阶段。公开响应仅使用固定分类，不回传原始日志、路径、配对或签名身份。分类只读本会话 native logs 的有界尾部，未命中特征不表示无原生错误；不要假设解锁即可修复，也不据此诊断确定的 Apple 工具链问题。保留 private session，检查配对/授权/XCTest兼容性后先 stop/recover，再显式启动新会话。CLI与HTTP使用同一 service/envelope。

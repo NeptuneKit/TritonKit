@@ -39,7 +39,9 @@ final class IOSRunnerService: @unchecked Sendable {
                 return try iosRunnerJSON(["ok": true, "result": iosRunnerSanitize(result), "error": NSNull()])
             }
         } catch let error as IOSRunnerFailure {
-            return try iosRunnerJSON(["ok": false, "result": NSNull(), "error": ["code": error.code, "message": error.message, "retryable": false]])
+            var failure: [String: Any] = ["code": error.code, "message": error.message, "retryable": false]
+            if let startup = error.startup { failure["startup"] = startup.json }
+            return try iosRunnerJSON(["ok": false, "result": NSNull(), "error": failure])
         } catch {
             // Native errors may contain private target IDs, signing identities, and paths.
             return try iosRunnerJSON(["ok": false, "result": NSNull(), "error": ["code": "ios_runner_internal", "message": "Runner operation failed; private state is retained for recovery.", "retryable": false]])
@@ -83,28 +85,37 @@ final class IOSRunnerService: @unchecked Sendable {
         try store.write(session, name: "session")
         let args = ["/usr/bin/xcodebuild", "test-without-building", "-xctestrun", xctestrun.path, "-destination", "platform=" + (target.scope == "real" ? "iOS" : "iOS Simulator") + ",id=" + target.address,
                     "-only-testing:TritonIOSRunnerTests/TritonIOSRunnerTests/testServe", "-parallel-testing-enabled", "NO", "-test-timeouts-enabled", "YES", "-maximum-test-execution-time-allowance", String(Int(ttl + 120)), "-resultBundlePath", directory.appendingPathComponent("result.xcresult").path]
+        var startup = IOSRunnerStartupDiagnostics()
         do {
-            session.pid = try dependencies.launch(args, directory)
+            do { session.pid = try dependencies.launch(args, directory) }
+            catch {
+                throw IOSRunnerFailure("ios_runner_native_launch_failed", "Native XCTest process could not be launched. Check the selected Xcode installation and private session diagnostics before preparing a fresh session.", startup: startup)
+            }
+            startup.launchVerified = true
             try store.write(session, name: "session")
             try IOSRunnerSessionStore.writeExclusive(try JSONEncoder().encode(session), to: directory.appendingPathComponent("owner.json"))
             let deadline = dependencies.now().addingTimeInterval(timeout)
             while dependencies.now() < deadline {
                 guard let pid = session.pid, dependencies.ownsProcess(pid, session.xctestrun) else { break }
                 let health = dependencies.exchange(session, "/health", nil, UUID().uuidString, min(2, max(0.01, deadline.timeIntervalSince(dependencies.now()))))
-                if health.ok {
+                if (health.envelope["error"] as? [String: Any])?["code"] as? String != "ios_runner_transport_unknown" {
+                    startup.transportVerified = true
+                }
+                if health.ok, health.result?["networkReady"] as? Bool == true {
+                    startup.healthVerified = true
                     let probe = dependencies.exchange(session, "/probe", Data("{}".utf8), UUID().uuidString, min(8, max(0.01, deadline.timeIntervalSince(dependencies.now()))))
                     if probe.ok, probe.result?["automationReady"] as? Bool == true {
                         session.state = "ready"; try store.write(session, name: "session")
                         return ["operation": "start", "device": target.device, "sessionID": sessionID, "state": "ready", "automationReady": true, "ttlSeconds": ttl, "ownershipVerified": true]
                     }
                 }
+                if !startup.healthVerified, iosRunnerDriverChannelRefused(directory: directory) {
+                    throw startup.failure(driverChannelRefused: true, nativeExited: false)
+                }
                 dependencies.sleep(0.25)
             }
-            session.state = "startup_failed"
-            if let pid = session.pid, dependencies.ownsProcess(pid, session.xctestrun) { _ = dependencies.terminate(pid, session.xctestrun) }
-            if let pid = session.pid, dependencies.processExists(pid) != false { session.state = "stop_unknown" }
-            try store.write(session, name: "session")
-            throw IOSRunnerFailure("ios_runner_start_not_ready", "Runner did not prove health and UI automation readiness. Unlock the device, complete UI Automation authorization, then start a fresh session; recovery state is retained.")
+            let exited = session.pid.map { dependencies.processExists($0) == false } ?? false
+            throw startup.failure(driverChannelRefused: !startup.healthVerified && iosRunnerDriverChannelRefused(directory: directory), nativeExited: exited)
         } catch {
             session.state = "startup_failed"
             if let pid = session.pid, dependencies.ownsProcess(pid, session.xctestrun) { _ = dependencies.terminate(pid, session.xctestrun) }
@@ -113,6 +124,7 @@ final class IOSRunnerService: @unchecked Sendable {
             throw error
         }
     }
+
     func allowedBundles(_ payload: [String: Any]) throws -> [String] {
         let fixture = "dev.tritonkit.runnerfixture"
         guard payload["allowBundles"] == nil || payload["allowBundles"] is [String] else { throw IOSRunnerFailure("ios_runner_invalid_allow_bundles", "allowBundles must be a JSON string array.") }

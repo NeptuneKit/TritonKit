@@ -4,7 +4,10 @@ import CryptoKit
 struct IOSRunnerFailure: Error {
     let code: String
     let message: String
-    init(_ code: String, _ message: String) { self.code = code; self.message = message }
+    let startup: IOSRunnerStartupDiagnostics?
+    init(_ code: String, _ message: String, startup: IOSRunnerStartupDiagnostics? = nil) {
+        self.code = code; self.message = message; self.startup = startup
+    }
 }
 struct IOSRunnerTarget: Codable, Equatable {
     let device: String
