@@ -48,6 +48,16 @@
       "path": ".build/real-sim-regression/result.log",
       "bytes": 719,
       "sha256": "3d83c5e4025f1a6e72483d2c848f69cb34dbd0e2d71285134ca07f20cc6e7fb7"
+    },
+    {
+      "path": ".build/ci-docs-delivery.log",
+      "bytes": 1731,
+      "sha256": "e5d71613d2749ad4c371dd6000ffb8b6105d84f0d9d9d56b55ae83c337eb4e3b"
+    },
+    {
+      "path": ".build/check-docs-delivery.log",
+      "bytes": 213,
+      "sha256": "d4b0a584ec5c96bba4278fb6323a36a3b3e06f2ea3c4b367e70e77ab9c2d95a3"
     }
   ],
   "binaries": [

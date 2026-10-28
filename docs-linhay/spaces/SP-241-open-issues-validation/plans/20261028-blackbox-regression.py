@@ -5,7 +5,7 @@ parser.add_argument('--baseline', type=pathlib.Path, required=True)
 parser.add_argument('--candidate', type=pathlib.Path, default=root_repo/'CLI/.build/debug/triton')
 args=parser.parse_args()
 baseline=args.baseline.resolve(); candidate=args.candidate.resolve()
-assert json.loads(subprocess.check_output([str(baseline),'version','--json']))['version']=='0.2.33' 
+assert json.loads(subprocess.check_output([str(baseline),'version','--json']))['version']=='0.2.33'
 results=[]
 with tempfile.TemporaryDirectory(prefix='triton-issue-regression-') as d:
  root=pathlib.Path(d); bins=root/'bin'; bins.mkdir()
