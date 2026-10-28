@@ -1,0 +1,126 @@
+{
+  "version": "0.2.35",
+  "tagCommit": "190c161f5362da97b35d0972441cc22aab393233",
+  "mainCI": 40652381739,
+  "tagCI": 40653383325,
+  "releaseWorkflow": 40653383293,
+  "remoteWorkflows": "success",
+  "publicAssets": {
+    "checksums": {
+      "triton-macos-arm64.tar.gz": "cc119d1b06a7e54c42a4992bdb7a8734109043acb0dde4b3fd102041d8840d86",
+      "triton-macos-x86_64.tar.gz": "fd126471ad734c4e7bc5d852e738cb81b648e36430ae390561f4ee27884a4968",
+      "tritonkit-skills.tar.gz": "85b4431e3c51d41eafb21666aba1781301a99e32c7c38b8068d25f3c43a8b5c6"
+    },
+    "binaries": {
+      "arm64": {
+        "version": "0.2.35",
+        "architecture": "arm64",
+        "executable": true
+      },
+      "x86_64": {
+        "version": "0.2.35",
+        "architecture": "x86_64",
+        "executable": true
+      }
+    },
+    "skillBuildInfo": {
+      "name": "tritonkit-skills",
+      "bundlePath": "TritonKit.skills/",
+      "version": "0.2.35",
+      "releaseTag": "v0.2.35",
+      "git": {
+        "commit": "190c161f5362da97b35d0972441cc22aab393233",
+        "shortCommit": "190c161",
+        "dirty": false
+      },
+      "builtAt": "2026-10-28T08:14:35Z",
+      "skills": [
+        {
+          "name": "tritonkit-dev-feedback",
+          "path": "TritonKit.skills/tritonkit-dev-feedback/",
+          "version": "0.2.35"
+        },
+        {
+          "name": "tritonkit-emulator-cli-takeover",
+          "path": "TritonKit.skills/tritonkit-emulator-cli-takeover/",
+          "version": "0.2.35"
+        },
+        {
+          "name": "tritonkit-real-project-regression",
+          "path": "TritonKit.skills/tritonkit-real-project-regression/",
+          "version": "0.2.35"
+        },
+        {
+          "name": "tritonkit-update",
+          "path": "TritonKit.skills/tritonkit-update/",
+          "version": "0.2.35"
+        }
+      ]
+    }
+  },
+  "homebrew": {
+    "from": "0.2.33",
+    "to": "0.2.35",
+    "formulaTest": "passed"
+  },
+  "packagedHTTP": {
+    "version": "0.2.35",
+    "mode": "packaged",
+    "readonly": true,
+    "html": 200,
+    "resources": [
+      {
+        "path": "/assets/index-CkYsvsdW.css",
+        "status": 200,
+        "bytes": 17581
+      },
+      {
+        "path": "/assets/index-F7RYKvXh.js",
+        "status": 200,
+        "bytes": 1024838
+      }
+    ],
+    "gesture": {
+      "target": "release-readonly-probe",
+      "platform": "ios",
+      "type": "tap",
+      "x": 10,
+      "y": 10,
+      "width": 390,
+      "height": 844
+    },
+    "gestureStatus": 405,
+    "gestureCode": "web_host_input_readonly",
+    "preexistingServe": false
+  },
+  "browser": {
+    "title": "Triton Inspector",
+    "defaultLayout": {
+      "status": "partial",
+      "consoleErrors": 1,
+      "resource": "/web/ios-simulator/mjpeg",
+      "httpStatus": 409,
+      "code": "ios_simulator_resize_capture_state_unknown",
+      "doctor": {
+        "resizeState": "unknown",
+        "reason": "queryFailed",
+        "captureVerified": false
+      }
+    },
+    "workbenchOnlyLayout": {
+      "method": "close stream panel using UI, open fresh page in same isolated context",
+      "readyState": "complete",
+      "consoleErrors": 0,
+      "consoleWarnings": 0,
+      "allResourcesHTTP200": true
+    },
+    "boundary": "workbench-only result does not prove default live stream works"
+  },
+  "issue214": "OPEN",
+  "originalWorkspace": {
+    "headUnchanged": true,
+    "statusUnchanged": true,
+    "wipFileHashesUnchanged": 17
+  },
+  "cleanup": "owned Web/serve and browser tabs stopped; no device/cache operations"
+}

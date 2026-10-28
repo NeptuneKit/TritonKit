@@ -286,32 +286,32 @@
 | `SP-226-files-recents-integration` | [`SP-226-files-recents-integration`](./SP-226-files-recents-integration/README.md) | 已验收合本地main | 主控1847653e；53份证据归档，worktree/branch与会话已关闭 |
 | `SP-227-release-v0-2-34` | [`SP-227-release-v0-2-34`](./SP-227-release-v0-2-34/README.md) | v0.2.34已发布 | `4a8de0af`；Release/CI 7 job、双架构资产、skills、Homebrew 与仓库外 packaged Web smoke 全部通过；CocoaPods仅lint |
 
-| `SP-228-issue-226-real-device-launch-args` | [`SP-228-issue-226-real-device-launch-args`](./SP-228-issue-226-real-device-launch-args/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+| `SP-228-issue-226-real-device-launch-args` | [`SP-228-issue-226-real-device-launch-args`](./SP-228-issue-226-real-device-launch-args/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-229-issue-227-android-build-diagnostics` | [`SP-229-issue-227-android-build-diagnostics`](./SP-229-issue-227-android-build-diagnostics/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+| `SP-229-issue-227-android-build-diagnostics` | [`SP-229-issue-227-android-build-diagnostics`](./SP-229-issue-227-android-build-diagnostics/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-230-issue-228-android-wait-ready` | [`SP-230-issue-228-android-wait-ready`](./SP-230-issue-228-android-wait-ready/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+| `SP-230-issue-228-android-wait-ready` | [`SP-230-issue-228-android-wait-ready`](./SP-230-issue-228-android-wait-ready/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-231-issue-229-android-observe-stale-tree` | [`SP-231-issue-229-android-observe-stale-tree`](./SP-231-issue-229-android-observe-stale-tree/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+| `SP-231-issue-229-android-observe-stale-tree` | [`SP-231-issue-229-android-observe-stale-tree`](./SP-231-issue-229-android-observe-stale-tree/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-232-issue-231-simulator-log-partial` | [`SP-232-issue-231-simulator-log-partial`](./SP-232-issue-231-simulator-log-partial/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+| `SP-232-issue-231-simulator-log-partial` | [`SP-232-issue-231-simulator-log-partial`](./SP-232-issue-231-simulator-log-partial/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-233-issue-232-ios-real-backend-docs` | [`SP-233-issue-232-ios-real-backend-docs`](./SP-233-issue-232-ios-real-backend-docs/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+| `SP-233-issue-232-ios-real-backend-docs` | [`SP-233-issue-232-ios-real-backend-docs`](./SP-233-issue-232-ios-real-backend-docs/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-234-issue-225-ios-runner-transport` | [`SP-234-issue-225-ios-runner-transport`](./SP-234-issue-225-ios-runner-transport/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+| `SP-234-issue-225-ios-runner-transport` | [`SP-234-issue-225-ios-runner-transport`](./SP-234-issue-225-ios-runner-transport/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-235-issue-224-simulator-resize-query` | [`SP-235-issue-224-simulator-resize-query`](./SP-235-issue-224-simulator-resize-query/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+| `SP-235-issue-224-simulator-resize-query` | [`SP-235-issue-224-simulator-resize-query`](./SP-235-issue-224-simulator-resize-query/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-236-issue-223-bar-button-activation` | [`SP-236-issue-223-bar-button-activation`](./SP-236-issue-223-bar-button-activation/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+| `SP-236-issue-223-bar-button-activation` | [`SP-236-issue-223-bar-button-activation`](./SP-236-issue-223-bar-button-activation/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-237-issue-222-device-hub-followup` | [`SP-237-issue-222-device-hub-followup`](./SP-237-issue-222-device-hub-followup/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+| `SP-237-issue-222-device-hub-followup` | [`SP-237-issue-222-device-hub-followup`](./SP-237-issue-222-device-hub-followup/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-238-issue-221-searchbar-input-focus` | [`SP-238-issue-221-searchbar-input-focus`](./SP-238-issue-221-searchbar-input-focus/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+| `SP-238-issue-221-searchbar-input-focus` | [`SP-238-issue-221-searchbar-input-focus`](./SP-238-issue-221-searchbar-input-focus/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-239-issue-230-ios-runner-geometry` | [`SP-239-issue-230-ios-runner-geometry`](./SP-239-issue-230-ios-runner-geometry/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+| `SP-239-issue-230-ios-runner-geometry` | [`SP-239-issue-230-ios-runner-geometry`](./SP-239-issue-230-ios-runner-geometry/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
 | `SP-240-issue-214-deriveddata-ownership` | [`SP-240-issue-214-deriveddata-ownership`](./SP-240-issue-214-deriveddata-ownership/README.md) | PR #235已合并，历史候选待关联 | PR #235合并5d0bba7b；两处删除前约1.95 GiB，部分内容重复；#214保持OPEN，两处现存缓存已按后续授权删除；物理回收量未知；历史调用候选已归档，原18.66 GB路径映射仍缺；详见SP-240溯源记录 |
 
-| `SP-241-open-issues-validation` | [`SP-241-open-issues-validation`](./SP-241-open-issues-validation/README.md) | 已合并归档，12关/1留 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+| `SP-241-open-issues-validation` | [`SP-241-open-issues-validation`](./SP-241-open-issues-validation/README.md) | 已合并归档，12关/1留 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-242-release-v0-2-35` | [`SP-242-release-v0-2-35`](./SP-242-release-v0-2-35/README.md) | 发布验证中 | v0.2.35完整发布；#214暂缓保持OPEN；主目录WIP隔离 |
+| `SP-242-release-v0-2-35` | [`SP-242-release-v0-2-35`](./SP-242-release-v0-2-35/README.md) | 已发布，实时流受限 | 双架构/Homebrew通过；默认实时流Resize未知，工作台通过；#214 OPEN，主目录WIP未变 |

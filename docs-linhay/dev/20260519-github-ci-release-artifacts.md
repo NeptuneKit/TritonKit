@@ -199,3 +199,7 @@ main@ebfbb405全量推送，main CI38922511471/tag CI38924507762/Release38924507
 - CocoaPods 的原始最低部署版本 lint 与为本机新版 Xcode 设置较高目标的兼容 lint 是两类证据。后者只能说明当前工具链可检查，不能替代产品最低版本；本机工具链不兼容时保留标准失败日志，等待兼容 CI/环境复验。
 
 本次对应 Release workflow [40464673488](https://github.com/NeptuneKit/TritonKit/actions/runs/40464673488) 的双架构、x86_64 回填和两次 tap 更新均成功；未改变发布资产契约，也未把本机 Homebrew 安装升级或 CocoaPods trunk 推送纳入自动范围。
+
+## v0.2.35 公开产物与受限浏览器验收
+
+[SP-242记录](../spaces/SP-242-release-v0-2-35/plans/20261028-release.md)绑定190c161f及同候选CI，双架构/checksum/skills/Runner/Homebrew全通过，CocoaPods仅lint。包外Web需resolve Homebrew share符号链接核对版本；`web --json`仅计划，真实启动不带JSON输出选项。默认页面实时流若409且doctor确认resize unknown，应保留失败并标受限；关闭流组件后工作台的零console error仅覆盖该布局，不得冒充默认页面或设备流通过。不得绕过安全保护取绿。
