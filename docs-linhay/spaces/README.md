@@ -384,5 +384,5 @@
 - [SP-237-issue-222-device-hub-followup](./SP-237-issue-222-device-hub-followup/README.md)：已合并，issue已关闭；见SP-241合并归档报告，本批次未发布。
 - [SP-238-issue-221-searchbar-input-focus](./SP-238-issue-221-searchbar-input-focus/README.md)：已合并，issue已关闭；见SP-241合并归档报告，本批次未发布。
 - [SP-239-issue-230-ios-runner-geometry](./SP-239-issue-230-ios-runner-geometry/README.md)：已合并，issue已关闭；见SP-241合并归档报告，本批次未发布。
-- [SP-240-issue-214-deriveddata-ownership](./SP-240-issue-214-deriveddata-ownership/README.md)：调查及授权回收完成，原大目录待定位；两处候选约1.95 GiB，部分内容重复；#214保留OPEN，见该space现场调查，两处现存缓存已按后续授权删除；物理回收量未知。
+- [SP-240-issue-214-deriveddata-ownership](./SP-240-issue-214-deriveddata-ownership/README.md)：PR #234已合并，原大目录待定位；两处删除前约1.95 GiB，部分内容重复；#214保留OPEN，见该space现场调查，两处现存缓存已按后续授权删除；物理回收量未知。
 - [SP-241-open-issues-validation](./SP-241-open-issues-validation/README.md)：已合并归档，12关/1留；见SP-241合并归档报告，本批次未发布。

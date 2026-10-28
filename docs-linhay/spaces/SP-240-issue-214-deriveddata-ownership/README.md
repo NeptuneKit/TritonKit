@@ -1,6 +1,6 @@
 # SP-240 · #214 DerivedData 处理结论
 
-当前状态：已完成只读调查，并按用户后续明确授权人工删除两处现存 `.triton/DerivedData`（删除前约1.95 GiB分配块）。原报告的大目录及原始调用仍未查明，#214 保持 OPEN；通用自动删除仍已取消。详见[调查记录](plans/20261028-cache-investigation.md)与[授权删除记录](plans/20261028-authorized-cache-deletion.md)。
+当前状态：调查与删除记录已通过 [PR #234](https://github.com/NeptuneKit/TritonKit/pull/234) 合入 main（`d52d62fd47d07f96940ddf59825b71e05d061bd6`，2026-10-28 13:08 +08:00），合并后复查 #214 仍为 OPEN。已完成只读调查，并按用户后续明确授权人工删除两处现存 `.triton/DerivedData`（删除前约1.95 GiB分配块）。原报告的大目录及原始调用仍未查明，#214 保持 OPEN；通用自动删除仍已取消。详见[调查记录](plans/20261028-cache-investigation.md)与[授权删除记录](plans/20261028-authorized-cache-deletion.md)。
 ## 范围
 
 本 space 跟踪 [GitHub #214](https://github.com/NeptuneKit/TritonKit/issues/214) 的有效裁决及原始缓存来源、实际占用与重复情况。2026-10-28 用户先要求只读调查，随后明确授权提交推送、同步 issue 与删除缓存。范围限定为已调查的 A/B 两处目录，影响层为 CLI 只读观察、一次性人工缓存回收和文档；不启动构建、不改配置、不实现产品清理。旧 not planned 草稿仅作历史记录。
