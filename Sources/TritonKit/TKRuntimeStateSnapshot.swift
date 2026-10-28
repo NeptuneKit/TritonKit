@@ -439,15 +439,15 @@ func runtimeTabState(_ tabController: UITabBarController) -> TKRuntimeTabState {
 }
 
 func findFirstResponder(in view: UIView) -> UIResponder? {
-    if view.isFirstResponder {
-        return view
-    }
+    // Composite controls such as UISearchBar may forward their child's focus
+    // state. Resolve the actual focused descendant before accepting the wrapper;
+    // never select an unfocused child merely because it supports text input.
     for subview in view.subviews {
         if let responder = findFirstResponder(in: subview) {
             return responder
         }
     }
-    return nil
+    return view.isFirstResponder ? view : nil
 }
 
 func oid(for object: UIResponder) -> UInt? {
