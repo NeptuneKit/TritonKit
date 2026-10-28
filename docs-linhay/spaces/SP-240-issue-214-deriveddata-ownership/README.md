@@ -1,9 +1,23 @@
-# SP-240-issue-214-deriveddata-ownership
+# SP-240 · #214 DerivedData 处理结论
 
-## 范围与状态
+状态：范围审计完成，远端回复草稿待主控审阅；未实现删除、未操作远端。
 
-2026-10-28 全部开放 issue 批次，独立 worktree 调查/实现中。主工作区现有 WIP 保持不动。
+## 范围
 
-## 验收
+本 space 只核对 [GitHub #214](https://github.com/NeptuneKit/TritonKit/issues/214) 的后续有效裁决和当前 CLI，并准备 not planned 收口说明。影响层为文档，无新增生产代码。
 
-待冻结对应 issue 的 BDD 与证据；实现、离线验证、真实设备、发布及远端关闭分别记录。
+[SP-179](../SP-179-issue-214-derived-data-cleanup/README.md) 于 2026-10-24 取消通用自动删除，继续维护 inspect / dry-run 与 confirm fail-closed；[SP-191](../SP-191-default-xcode-deriveddata/README.md) 已在 v0.2.26 将默认路径交回 Xcode 用户级 DerivedData。这两项不证明原报告两处缓存重复或泄漏，也不证明实现了竞态安全删除。
+
+## BDD / 验收
+
+- Given 远端旧评论仍称待实现排他协议，When 对照后续取消裁决，Then 说明该目标退出当前队列，而不是恢复删除承诺。
+- Given 当前源码，Then inspect/preview 为只读，confirm 在活动/未知构建状态返回 xcode_not_idle，空闲仍返回 derived_data_cleanup_unavailable，无删除路径。
+- Given 原报告的大目录，Then 保留产生版本/调用未知，logical bytes 与目录 mtime 不能证明可回收量/最后使用时间。
+- Given 回复草稿，Then 明确当前边界和 not planned 理由；只在用户明确授权的远端收口步骤发布，不能使用已实现安全删除的措辞。
+
+## 证据
+
+- [审计与验证](plans/20261028-audit.md)
+- [可审阅回复草稿](plans/20261028-issue-reply-draft.md)
+
+branch：feat/SP-240-issue-214-deriveddata-ownership；worktree：../TritonKit-worktrees/SP-240-issue-214-deriveddata-ownership。
