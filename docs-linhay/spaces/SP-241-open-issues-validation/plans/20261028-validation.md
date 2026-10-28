@@ -66,3 +66,8 @@ Android #227/#228/#229 增加了[已发布0.2.33与候选CLI的黑盒反证](202
 CLI联合测试：`swift test --package-path CLI --build-system native --jobs 2 --no-parallel`。UIKit宿主生成器见 [SP-236](../../SP-236-issue-223-bar-button-activation/plans/generate-test-host.py)，由 `triton xcode test` 显式选择专用Simulator运行。
 
 local门禁通过本地ignored wrapper只向swift build/test添加 `--build-system native --jobs 2`，其余命令和断言不改。local门禁的可选裸xcodebuild步骤显式 `TRITON_VERIFY_XCODE=0` 跳过，由上面的两项真实Triton Xcode构建/测试提供iOS编译证据；这不是门禁内该步骤通过。设备用例串行执行；raw日志保留`.build`，公开摘要不复制设备ID、私有路径或原生日志。最终docs检查和候选Git身份见随附证据索引。
+
+
+## PR #233 的 CocoaPods 整合修复
+
+远端head `03db09eb` 的 [CI](https://github.com/NeptuneKit/TritonKit/actions/runs/40628211462) 在podspec编译发现 `TKRuntimeBarButtonActions.swift` 无条件导入 `TritonKitShared`，而单pod已将shared源文件并入TritonKit。按既有 `TRITONKIT_COCOAPODS_SINGLE_POD` 条件隔离import；SwiftPM路径和按钮行为不变。该失败证明本地SwiftPM/Simulator通过不能替代CocoaPods分发验证，补回ops原权威入口。本地根包重跑401项Swift Testing + 7项XCTest通过。直接pod lint先被本机Xcode27.1 SDK不接受iOS13 deployment target阻断（并非module错误）；按本机xcodebuild手册的XCODE_XCCONFIG_FILE临时将验证target设为15后，实际pod编译通过。仓库podspec最低iOS13未修改，远端CI仍按未覆盖的原podspec执行。PR最新状态以checks为准。

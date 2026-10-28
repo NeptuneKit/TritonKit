@@ -1,6 +1,8 @@
 #if canImport(UIKit)
 import UIKit
+#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
+#endif
 
 @MainActor
 func isBarButtonSurface(_ view: UIView) -> Bool {
