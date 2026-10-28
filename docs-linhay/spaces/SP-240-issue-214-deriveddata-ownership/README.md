@@ -2,7 +2,7 @@
 
 当前状态：调查与删除记录已通过 [PR #234](https://github.com/NeptuneKit/TritonKit/pull/234) 合入 main（`d52d62fd47d07f96940ddf59825b71e05d061bd6`，2026-10-28 13:08 +08:00），合并后复查 #214 仍为 OPEN。已完成只读调查，并按用户后续明确授权人工删除两处现存 `.triton/DerivedData`（删除前约1.95 GiB分配块）。原报告的大目录及原始调用仍未查明，#214 保持 OPEN；通用自动删除仍已取消。详见[调查记录](plans/20261028-cache-investigation.md)与[授权删除记录](plans/20261028-authorized-cache-deletion.md)。
 
-最新调查：已找到两组历史候选及实际构建目的地记录，但尚无原 12.13 GB / 6.53 GB 的路径映射；不能将候选等同原现场。H2 原始日志证明显式选择不同 derived-data 路径也会形成两处缓存，需与 cwd 变化分别核对。详见[历史调用溯源](plans/20261028-history-trace.md)。取证阶段只读；用户随后授权提交推送、创建 PR 和同步脱敏结论，#214 保持 OPEN。
+最新调查：历史溯源文档已通过 [PR #235](https://github.com/NeptuneKit/TritonKit/pull/235) 合入 main（`5d0bba7b94f4fb127b7e7d7c599997b7311ce0ab`，2026-10-28 15:30:31 +08:00），合并后 #214 复查为 OPEN。已找到两组历史候选及实际构建目的地记录，但尚无原 12.13 GB / 6.53 GB 的路径映射；不能将候选等同原现场。H2 原始日志证明显式选择不同 derived-data 路径也会形成两处缓存，需与 cwd 变化分别核对。详见[历史调用溯源](plans/20261028-history-trace.md)。取证阶段只读；用户随后授权提交推送、创建 PR 和同步脱敏结论，#214 保持 OPEN。
 
 ## 范围
 
@@ -33,4 +33,4 @@
 
 本轮调查/删除记录位于 ../TritonKit-worktrees/SP-241-open-issues-validation，branch 为 codex/issue-214-cache-investigation；基线 32a85a9d。
 
-历史溯源切片沿用同一集成 worktree，branch 为 codex/issue-214-history-trace，基线 eefac94f；只读外部资料；本切片通过独立 PR 交付脱敏调查文档，不关闭 #214。
+历史溯源切片沿用同一集成 worktree，branch 为 codex/issue-214-history-trace，基线 eefac94f；只读外部资料；本切片已通过 PR #235 合并交付脱敏调查文档，不关闭 #214。
