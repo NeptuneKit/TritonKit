@@ -1,6 +1,6 @@
 # SP-235 · #224 Simulator 显示状态诊断
 
-当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
+当前状态：已随PR #233合入远端main（`40850dde`），issue #224已completed关闭；现场复验范围见[远端处置](https://github.com/NeptuneKit/TritonKit/issues/224#issuecomment-6460618236)。 本批次未发布；[合并归档报告](../SP-241-open-issues-validation/plans/20261028-merge-closeout.md)为当前事实源。
 ## 边界和现状
 
 基线 main `a0d187ac`。只补显式目标 doctor 的 appResize/displays 只读事实与精确恢复指令，不绕过 unknown geometry 截图/触摸拒绝。#224全文及三条评论已经核对；Xcode27.1 topology bug 由 SP-218/v0.2.33 修复，Xcode26.6 旧 appResize 兼容性不能从该证据推断。影响 CLI host diagnostics/schema/failure envelope；无新 Web/HTTP 控制面。
@@ -15,7 +15,7 @@
 
 ## 当前阶段与验证
 
-本地联合实现、完整CLI与local验收完成；未推送/发布或关闭issue。
+本地联合实现、完整CLI与local验收完成；现已合main并关闭对应issue；本批次未发布。
 
 - 新增 `CLIHostSimulatorDoctorDiagnostics.swift` 输出独立只读快照；仅显式已解析 Simulator 时运行，附精确 target/recovery。
 - `failHostCommand` 补 `IOSSimulatorDisplayError` typed 映射；生产 screenshot、AX 和 HID failure 绑定恢复目标，不改原门禁。

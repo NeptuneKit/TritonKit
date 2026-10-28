@@ -1,6 +1,6 @@
 # SP-238 · 搜索框已聚焦输入对象解析
 
-当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
+当前状态：已随PR #233合入远端main（`40850dde`），issue #221已completed关闭；现场复验范围见[远端处置](https://github.com/NeptuneKit/TritonKit/issues/221#issuecomment-6460614460)。 本批次未发布；[合并归档报告](../SP-241-open-issues-validation/plans/20261028-merge-closeout.md)为当前事实源。
 - Issue：[GitHub #221](https://github.com/NeptuneKit/TritonKit/issues/221)
 - 影响层：iOS embedded shared runtime；不改变 CLI 参数或 host keyboard 能力。
 - 分支：`feat/SP-238-issue-221-searchbar-input-focus`

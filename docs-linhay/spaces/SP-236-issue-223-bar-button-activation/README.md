@@ -1,6 +1,6 @@
 # SP-236 — #223 系统导航按钮语义边界
 
-当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
+当前状态：已随PR #233合入远端main（`40850dde`），issue #223已completed关闭；现场复验范围见[远端处置](https://github.com/NeptuneKit/TritonKit/issues/223#issuecomment-6460617024)。 本批次未发布；[合并归档报告](../SP-241-open-issues-validation/plans/20261028-merge-closeout.md)为当前事实源。
 ## 范围
 
 影响 embedded UIKit runtime 的 tap 失败契约。系统生成的 UIBarButtonItem 视图没有公开的 view → item 绑定；不凭相同标题猜测 target/action，不遍历后台页面寻找候选，不使用私有 KVC。

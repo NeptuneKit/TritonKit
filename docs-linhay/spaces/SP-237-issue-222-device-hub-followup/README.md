@@ -1,6 +1,6 @@
 # SP-237 · #222 Device Hub 后续审计
 
-当前状态：本地范围/历史审计完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
+当前状态：已随PR #233合入远端main（`40850dde`），issue #222已completed关闭；现场复验范围见[远端处置](https://github.com/NeptuneKit/TritonKit/issues/222#issuecomment-6460615766)。 本批次未发布；[合并归档报告](../SP-241-open-issues-validation/plans/20261028-merge-closeout.md)为当前事实源。
 ## 状态和边界
 
 2026-10-28 对 main `a0d187ac`、issue 本文及四条追加评论只读审计；不改产品、不运行设备、不声称新验收。原 chrome 依赖、HID authority 与 Xcode27.1 displays 兼容性已经由 SP-218/v0.2.33 覆盖。系统告警特定路径、多击/长按与跨工具链没有该发布的真实验证，不能一并声称完成。

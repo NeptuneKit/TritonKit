@@ -6,7 +6,7 @@
 
 ## Observed
 
-基线 main `a0d187ace03d6e56b79b50a7a601c91b359b7955`，13个 issue 独立 space/branch/worktree，联合候选位于 `feat/SP-241-open-issues-validation`，实现整合提交`51d505bb`。主目录已有参考追踪 WIP 保留。上述验证是在本地交付时完成。用户随后明确授权推送分支并创建PR；现已推送并创建[PR #233](https://github.com/NeptuneKit/TritonKit/pull/233)，进入远端审查/CI阶段，保留本地证据原始时间边界；GitHub checks才是远端CI事实源。没有合并、单独发送issue回复、关闭、发布或切换用户主目录。增量[GitHub快照](20261028-open-issues.json)和[最终本地复查](20261028-open-issues-delivery.json)均为13项。实现SHA、binary与原始日志摘要在[证据索引](20261028-evidence.json)。
+基线 main `a0d187ace03d6e56b79b50a7a601c91b359b7955`，13个 issue 独立 space/branch/worktree，联合候选位于 `feat/SP-241-open-issues-validation`，实现整合提交`51d505bb`。主目录已有参考追踪 WIP 保留。上述验证是在本地交付时完成。用户随后明确授权推送分支并创建PR；随后已推送并创建PR #233，并按用户追加授权合并为40850dde，关闭#221～232，保留#214；当前状态见[合并归档](20261028-merge-closeout.md)。下列测试记录保持原候选时间边界，不代表重新执行；本批次未发布，未切换用户主目录。增量[GitHub快照](20261028-open-issues.json)和[最终本地复查](20261028-open-issues-delivery.json)均为13项。实现SHA、binary与原始日志摘要在[证据索引](20261028-evidence.json)。
 
 | Issue | Space | 处理结果与验收边界 |
 | --- | --- | --- |

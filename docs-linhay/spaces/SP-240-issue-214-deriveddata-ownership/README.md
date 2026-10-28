@@ -1,6 +1,6 @@
 # SP-240 · #214 DerivedData 处理结论
 
-当前状态：本地范围/历史审计完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
+当前状态：范围审计已随PR #233合入远端main（`40850dde`）；#214保持OPEN，仅保留原始来源/占用的只读调查，通用自动删除仍已取消。[后续计划](https://github.com/NeptuneKit/TritonKit/issues/214#issuecomment-6460629137)。 本批次未发布；[合并归档报告](../SP-241-open-issues-validation/plans/20261028-merge-closeout.md)为当前事实源。
 ## 范围
 
 本 space 只核对 [GitHub #214](https://github.com/NeptuneKit/TritonKit/issues/214) 的后续有效裁决和当前 CLI，并准备 not planned 收口说明。影响层为文档，无新增生产代码。

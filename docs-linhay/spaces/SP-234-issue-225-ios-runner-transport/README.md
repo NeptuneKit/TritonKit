@@ -1,6 +1,6 @@
 # SP-234 · iOS Runner 启动阶段诊断
 
-当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
+当前状态：已随PR #233合入远端main（`40850dde`），issue #225已completed关闭；现场复验范围见[远端处置](https://github.com/NeptuneKit/TritonKit/issues/225#issuecomment-6460619455)。 本批次未发布；[合并归档报告](../SP-241-open-issues-validation/plans/20261028-merge-closeout.md)为当前事实源。
 - Issue：[#225](https://github.com/NeptuneKit/TritonKit/issues/225)
 - 影响层：CLI / HTTP 共用 Runner service、错误 schema。
 - 边界：不改变签名、配对、Developer Mode；不把 XCTest transport refusal 判为确定的 Apple 工具链缺陷。

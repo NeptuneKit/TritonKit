@@ -1,9 +1,9 @@
 # SP-232 · GitHub #231 simulator log partial artifact
 
-当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
+当前状态：已随PR #233合入远端main（`40850dde`），issue #231已completed关闭；现场复验范围见[远端处置](https://github.com/NeptuneKit/TritonKit/issues/231#issuecomment-6460626669)。 本批次未发布；[合并归档报告](../SP-241-open-issues-validation/plans/20261028-merge-closeout.md)为当前事实源。
 ## 边界与状态
 
-影响层：CLI host unified-log capture 与机器可读 schema。独立 worktree `../TritonKit-worktrees/SP-232-issue-231-simulator-log-partial`，分支 `feat/SP-232-issue-231-simulator-log-partial`，基线 `a0d187ac`。候选已汇入SP-241并通过本地联合验收，未合main、未发布。
+影响层：CLI host unified-log capture 与机器可读 schema。独立 worktree `../TritonKit-worktrees/SP-232-issue-231-simulator-log-partial`，分支 `feat/SP-232-issue-231-simulator-log-partial`，基线 `a0d187ac`。候选已汇入SP-241并通过联合验收，现已合main；本批次未发布。
 
 修复 `triton sim logs` 子进程非零/信号退出后删除已有日志的问题。新 opt-in 捕获路径先独占创建 0600 artifact、每块直接落盘；`--max-bytes` 默认 10485760。超出上限继续 drain，返回失败并保留前缀。其他 host artifact 默认行为保持原实现，不改变 app-console/截图/动作/设备状态。
 
@@ -25,7 +25,7 @@
 
 ## 风险与下一步
 
-SP-241已在真实专用Simulator杀死本次拥有的日志子进程，保留607402字节0600产物并返回单一partial失败，随后shutdown恢复成功。长时日志及历史已丢失数据未恢复。文件可能为空或以半行结束。增量写入不承诺断电持久化、外部路径替换后的恢复，文件系统同步 IO 不受 pipe deadline 硬截止约束。远端仍未关闭，发布/原现场验收不由本地结果替代。
+SP-241已在真实专用Simulator杀死本次拥有的日志子进程，保留607402字节0600产物并返回单一partial失败，随后shutdown恢复成功。长时日志及历史已丢失数据未恢复。文件可能为空或以半行结束。增量写入不承诺断电持久化、外部路径替换后的恢复，文件系统同步 IO 不受 pipe deadline 硬截止约束。远端按已满足的产物保留契约关闭；发布/原现场验收不由本地结果替代。
 
 ## 经验写回
 

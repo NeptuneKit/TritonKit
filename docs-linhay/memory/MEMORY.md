@@ -1,6 +1,6 @@
 # TritonKit Project Memory
 
-- 2026-10-28：[SP-241全部开放issue本地联合验收](../spaces/SP-241-open-issues-validation/README.md)覆盖#214、#221～232，10项缺陷、1项文档及2项范围/历史审计；实现`51d505bb`，完整CLI/root/local与UIKit/Runner模拟器fixture通过，Android旧版黑盒反证明确。随后用户明确授权推送分支并创建PR，已创建[PR #233](https://github.com/NeptuneKit/TritonKit/pull/233)并进入审查/CI阶段；未合main、未发布、远端issue仍OPEN，原设备与跨工具链缺口见报告；主目录WIP保留。
+- 2026-10-28：[SP-241全部开放issue本地联合验收](../spaces/SP-241-open-issues-validation/README.md)覆盖#214、#221～232，10项缺陷、1项文档及2项范围/历史审计；实现`51d505bb`，完整CLI/root/local与UIKit/Runner模拟器fixture通过，Android旧版黑盒反证明确。随后已按追加授权合并[PR #233](https://github.com/NeptuneKit/TritonKit/pull/233)为40850dde，#221～232共12项completed关闭；#214保留原始来源/占用只读调查，通用删除仍取消。[归档及后续计划](../spaces/SP-241-open-issues-validation/plans/20261028-merge-closeout.md)；本批次未发布，主目录WIP保留。
 
 - 2026-10-26继续：[SP-207补查](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-partial-recovery.md)恢复两仓文本完整性，当前24完整/9 partial（2仓重查、31沿用日检）。宿主退出后继承pipe超预算经自有原函数probe复现，SP-223执行/SP-224有限主控均gpt-6.1-sol；已验收合本地main9fbda1d5，独立及合后完整CLI/local通过，源worktree/branch已清理。
 

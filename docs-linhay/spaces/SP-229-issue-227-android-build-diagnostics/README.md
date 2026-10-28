@@ -1,6 +1,6 @@
 # SP-229 · Android build diagnostics
 
-当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
+当前状态：已随PR #233合入远端main（`40850dde`），issue #227已completed关闭；现场复验范围见[远端处置](https://github.com/NeptuneKit/TritonKit/issues/227#issuecomment-6460621893)。 本批次未发布；[合并归档报告](../SP-241-open-issues-validation/plans/20261028-merge-closeout.md)为当前事实源。
 ## 边界
 
 对应 [GitHub #227](https://github.com/NeptuneKit/TritonKit/issues/227)，影响 CLI Android 构建诊断和 timeout 摘要；不改变 Gradle 构建任务、进程超时策略或 Harmony/Xcode 诊断。

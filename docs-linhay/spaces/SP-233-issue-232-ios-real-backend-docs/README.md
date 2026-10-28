@@ -1,9 +1,9 @@
 # SP-233 · GitHub #232 iOS 真机后端选择说明
 
-当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
+当前状态：已随PR #233合入远端main（`40850dde`），issue #232已completed关闭；现场复验范围见[远端处置](https://github.com/NeptuneKit/TritonKit/issues/232#issuecomment-6460627903)。 本批次未发布；[合并归档报告](../SP-241-open-issues-validation/plans/20261028-merge-closeout.md)为当前事实源。
 ## 状态与边界
 
-文档/schema已通过联合契约验证；只澄清现有策略和字段，不新增后端或统一 DTO。基线 main `a0d187ac`；独立同名 worktree/feat 分支。未推送、发布或关闭远端issue。
+文档/schema已通过联合契约验证；只澄清现有策略和字段，不新增后端或统一 DTO。基线 main `a0d187ac`；独立同名 worktree/feat 分支。现已合main并关闭对应issue；本批次未发布。
 
 ## BDD 验收
 

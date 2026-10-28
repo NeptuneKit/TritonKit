@@ -2,7 +2,7 @@
 
 ## Requested
 
-用户要求处理全部开放 issue。冻结 GitHub 快照为 #214、#221～232；基线 main `a0d187ac`。主工作区已有参考追踪 WIP，只读保留；各 issue 独立 space/branch/worktree，联合候选在本worktree验证。用户随后明确授权推送分支并创建PR，进入远端审查阶段；本轮仍不合main或发布。
+用户要求处理全部开放 issue。冻结 GitHub 快照为 #214、#221～232；基线 main `a0d187ac`。主工作区已有参考追踪 WIP，只读保留；各 issue 独立 space/branch/worktree，联合候选在本worktree验证。用户随后授权推送/PR，并明确授权合并及关闭已解决项；现已远端合并，未发布新版本。
 
 ## BDD 与验收
 
@@ -20,7 +20,8 @@
 - [真实Simulator doctor与partial日志验证](plans/20261028-real-simulator.json)
 - [Android旧版失败/候选通过反证](plans/20261028-cli-blackbox-red-green.json)
 
-原主目录WIP未改动。用户已明确授权推送 `feat/SP-241-open-issues-validation` 并创建PR；分支已推送并创建[PR #233](https://github.com/NeptuneKit/TritonKit/pull/233)，当前进入审查/CI阶段；CI状态以GitHub当前head的checks为准。13项issue保留OPEN；此授权不包含合并、关闭或发布。
+当前已合并[PR #233](https://github.com/NeptuneKit/TritonKit/pull/233)，merge `40850dde`；#221～232共12项completed关闭，#214保留原始来源/占用调查并写明只读计划。详细当前状态、评论链接与CI见[合并归档报告](plans/20261028-merge-closeout.md)。原主目录WIP保留；归档工作分支为 `codex/issue-233-closeout`，本批次没有发布。
+
 
 ## Gaps / Remaining risk
 

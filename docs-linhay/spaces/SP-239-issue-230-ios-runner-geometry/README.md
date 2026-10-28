@@ -1,6 +1,6 @@
 # SP-239 · Runner 观察几何可用性
 
-当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
+当前状态：已随PR #233合入远端main（`40850dde`），issue #230已completed关闭；现场复验范围见[远端处置](https://github.com/NeptuneKit/TritonKit/issues/230#issuecomment-6460625401)。 本批次未发布；[合并归档报告](../SP-241-open-issues-validation/plans/20261028-merge-closeout.md)为当前事实源。
 - Issue：[#230](https://github.com/NeptuneKit/TritonKit/issues/230)
 - 影响层：随 CLI 打包的 iOS XCTest Runner、CLI/HTTP schema/使用文档。
 - 范围：修复 observation 被 coordinate geometry 校验连带拒绝。保持前台、允许列表、有限正值 App frame 和坐标时效门禁，不猜测方向、不修改设备方向、不自动处理权限弹窗。

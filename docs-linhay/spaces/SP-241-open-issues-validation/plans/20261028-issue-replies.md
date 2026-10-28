@@ -1,6 +1,6 @@
-# GitHub issue reply drafts — 2026-10-28
+# Historical GitHub issue reply drafts — 2026-10-28
 
-These 13 replies are **unsent drafts**. No issue has been closed by this document. New implementation candidates are unreleased PR candidates; the integrated local validation has passed; original-device gaps remain. Before posting, the controller must reconcile each draft with the [final validation record](20261028-validation.md), fill in an actual published version or commit only if available, and retain all unresolved acceptance limits. The linked record contains the executed checks, evidence boundaries and remaining risks.
+These 13 replies are **historical unsent drafts**. Actual merged dispositions and posted comments supersede them; see the [closeout record](20261028-merge-closeout.md). No issue has been closed by this document. New implementation candidates are unreleased PR candidates; the integrated local validation has passed; original-device gaps remain. Before posting, the controller must reconcile each draft with the [final validation record](20261028-validation.md), fill in an actual published version or commit only if available, and retain all unresolved acceptance limits. The linked record contains the executed checks, evidence boundaries and remaining risks.
 
 ## #214 — DerivedData usage and cleanup
 
