@@ -1,0 +1,45 @@
+{
+  "authorization": "User explicitly authorized deletion of the two investigated caches in current chat",
+  "started_at": "2026-10-28T05:03:37.819041+00:00",
+  "mode": "explicit manual one-off; Triton cleanup remains disabled",
+  "entries": [
+    {
+      "cache": 0,
+      "state": "deleted",
+      "activity": {
+        "triton_active": false,
+        "matching_build_process_count": 0
+      },
+      "regular_files": 24842,
+      "original_absent": true,
+      "quarantine_absent": true,
+      "parent_preserved": true,
+      "siblings_unchanged": true
+    },
+    {
+      "cache": 1,
+      "state": "deleted",
+      "activity": {
+        "triton_active": false,
+        "matching_build_process_count": 0
+      },
+      "regular_files": 16435,
+      "original_absent": true,
+      "quarantine_absent": true,
+      "parent_preserved": true,
+      "siblings_unchanged": true
+    }
+  ],
+  "finished_at": "2026-10-28T05:03:47.724565+00:00",
+  "scope": "Only previously inventoried cache A and B; no global Xcode cache deletion",
+  "predelete_allocated_bytes": 2093416448,
+  "reclaimed_physical_bytes": null,
+  "limits": "One-off explicitly authorized manual deletion; process/open-file snapshots do not prove a general race-safe cache deletion protocol.",
+  "private_evidence_sha256": {
+    "authorized-delete.py": "adf33245debaf9701fd4e98bc81d9883eefbf1e240fb388be6be63e8a57647c4",
+    "deletion-private.json": "723edca5c8237fb119f884a67e65090f460c0344d3da05b77a7e804dfbb3b313",
+    "predelete-preflight.json": "e9d37dd92a11c1644da28af3db3fa2f43b9042408c0218076430316478af2534",
+    "cache-1-lsof.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "cache-2-lsof.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

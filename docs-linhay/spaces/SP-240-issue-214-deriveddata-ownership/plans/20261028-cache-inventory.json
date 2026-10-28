@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "issue": 214,
+  "repo_head": "32a85a9d7f3625ecbbd6f4faa42ec5e2adf034b2",
+  "started_at": "2026-10-28T04:48:51.612149+00:00",
+  "finished_at": "2026-10-28T04:48:56.825010+00:00",
+  "scope": "read-only repo-local .triton/DerivedData; original reported pair not identified",
+  "tool": {
+    "version": "0.2.33",
+    "sha256": "17a80f89e0738938afd1cfbfe4bc890355db9734cd650a7bcf67a19811612d76"
+  },
+  "caches": [
+    {
+      "cache": 0,
+      "regular_files": 24842,
+      "logical": 1372470802,
+      "allocated_all_entries": 1437212672,
+      "allocated_unique_inodes": 1437212672,
+      "directories": 3844,
+      "symlinks": 19,
+      "other": 0,
+      "breakdown": {
+        ".": {
+          "logical": 0,
+          "allocated": 0,
+          "regular_files": 0
+        },
+        "info.plist": {
+          "logical": 396,
+          "allocated": 4096,
+          "regular_files": 1
+        },
+        "Build": {
+          "logical": 410625073,
+          "allocated": 431509504,
+          "regular_files": 7254
+        },
+        "CompilationCache.noindex": {
+          "logical": 16688,
+          "allocated": 28672,
+          "regular_files": 7
+        },
+        "ModuleCache.noindex": {
+          "logical": 227280639,
+          "allocated": 229744640,
+          "regular_files": 1319
+        },
+        "Logs": {
+          "logical": 84070535,
+          "allocated": 92217344,
+          "regular_files": 2268
+        },
+        "SourcePackages": {
+          "logical": 612689544,
+          "allocated": 637743104,
+          "regular_files": 10362
+        },
+        "Index.noindex": {
+          "logical": 36245720,
+          "allocated": 44417024,
+          "regular_files": 3629
+        },
+        "SDKStatCaches.noindex": {
+          "logical": 1541572,
+          "allocated": 1544192,
+          "regular_files": 1
+        },
+        "TestResults": {
+          "logical": 635,
+          "allocated": 4096,
+          "regular_files": 1
+        }
+      },
+      "root_birthtime_utc": "2026-09-15T16:36:16.243962+00:00",
+      "du_kib": 1403528,
+      "alias": "A",
+      "identity": "external-ios-project",
+      "inspect_matches_inventory": true,
+      "package_count": 32
+    },
+    {
+      "cache": 1,
+      "regular_files": 16435,
+      "logical": 610858640,
+      "allocated_all_entries": 656203776,
+      "allocated_unique_inodes": 656203776,
+      "directories": 5958,
+      "symlinks": 5,
+      "other": 0,
+      "breakdown": {
+        ".": {
+          "logical": 0,
+          "allocated": 0,
+          "regular_files": 0
+        },
+        "info.plist": {
+          "logical": 395,
+          "allocated": 4096,
+          "regular_files": 1
+        },
+        "Build": {
+          "logical": 70018758,
+          "allocated": 72044544,
+          "regular_files": 488
+        },
+        "CompilationCache.noindex": {
+          "logical": 16688,
+          "allocated": 28672,
+          "regular_files": 7
+        },
+        "ModuleCache.noindex": {
+          "logical": 139299314,
+          "allocated": 139886592,
+          "regular_files": 308
+        },
+        "Logs": {
+          "logical": 8567,
+          "allocated": 32768,
+          "regular_files": 7
+        },
+        "SourcePackages": {
+          "logical": 377576602,
+          "allocated": 415330304,
+          "regular_files": 13485
+        },
+        "Index.noindex": {
+          "logical": 22396744,
+          "allocated": 27332608,
+          "regular_files": 2138
+        },
+        "SDKStatCaches.noindex": {
+          "logical": 1541572,
+          "allocated": 1544192,
+          "regular_files": 1
+        }
+      },
+      "root_birthtime_utc": "2026-06-30T14:44:08.138109+00:00",
+      "du_kib": 640824,
+      "alias": "B",
+      "identity": "TritonKitDemo",
+      "inspect_matches_inventory": true,
+      "package_count": 29
+    }
+  ],
+  "hashing": {
+    "hash_candidates": 36918,
+    "hash_candidate_bytes": 705279816,
+    "hashed_files": 36918,
+    "cross_groups": 7738,
+    "cross_unique_content_bytes": 172813708,
+    "cross_member_bytes": 351845928,
+    "cross_member_files": 20153,
+    "within": [
+      {
+        "cache": 0,
+        "groups": 1498,
+        "extra_logical_copies_bytes": 109118601,
+        "duplicate_files": 8909
+      },
+      {
+        "cache": 1,
+        "groups": 390,
+        "extra_logical_copies_bytes": 7527372,
+        "duplicate_files": 2064
+      }
+    ],
+    "stable": [
+      {
+        "cache": 0,
+        "same_file_set_and_regular_file_metadata": true,
+        "changed": 0
+      },
+      {
+        "cache": 1,
+        "same_file_set_and_regular_file_metadata": true,
+        "changed": 0
+      }
+    ],
+    "errors": []
+  },
+  "package_overlap": {
+    "shared_identities": 24,
+    "same_recorded_revision": 11,
+    "different_or_unknown_revision": 13
+  },
+  "limits": [
+    "No APFS extent/snapshot ownership measurement; allocated blocks and hash duplicates are not reclaimable bytes.",
+    "Same-size regular files hashed with SHA-256; unique-size files cannot duplicate within this two-root set. Symlinks not followed.",
+    "No original invocation/cwd/Triton version evidence; workspace attribution uses info.plist and XCBuildData.",
+    "Bounded discovery under selected user development folders; not full disk or mounted volume enumeration."
+  ],
+  "private_evidence_sha256": {
+    "audit.py": "45ca9412a8d8d01c7772886af874b406884d946d408bf0eb9e95c2cd6e6ac111",
+    "summary-private.json": "e00bbec070f223887fb5ba50bff1458db9bf7eb4f93aa70279a62d7db0df38cc",
+    "cache-1-inspect.json": "8cf12b23097852a9cc5462ff278f912c42bfb82dabef2beb85adbef5c58b20de",
+    "cache-2-inspect.json": "5c4b478dfabac327db9ad526b12d56fb6242d3f4997fa3e6a6cd7dc6af0b89ee",
+    "local-context.json": "a30daca9544862b6074e9c03910af70a5965e77fff18b03cb6b321dc9b3c3d71",
+    "inventory-private.json": "a9c3aa42d136fb40cda2366df7ba1d49df8fc414b55abd56ce521f623952571f"
+  }
+}
