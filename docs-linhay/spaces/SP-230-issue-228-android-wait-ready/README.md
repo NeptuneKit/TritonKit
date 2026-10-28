@@ -1,7 +1,7 @@
 # SP-230 · Android install readiness 与截图失败分类
 
+当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
 - Issue：[#228](https://github.com/NeptuneKit/TritonKit/issues/228)
-- 阶段：候选已冻结，待主控统一测试与整合；未发布或真实设备验收。
 - 分支：`feat/SP-230-issue-228-android-wait-ready`；worktree：`../TritonKit-worktrees/SP-230-issue-228-android-wait-ready`。
 - 影响层：CLI host Android adapter；不改变 Web/桌面壳与 embedded runtime。
 
@@ -23,5 +23,5 @@
 - `git diff --check` 通过。
 - 新增 `AndroidInstallReadinessTests`：5 个测试声明，截图路径通过 2 个参数样本运行；包括真实 fake-process readiness 和单一 JSON 失败 envelope。
 - 红灯命令 `swift test --package-path CLI --no-parallel --jobs 2 --filter AndroidInstallReadinessTests` 在旧 readiness/错误分类实现上启动，但整机负载过高，在首次测试 target 编译阶段由主控要求停止（exit 143）；未执行到测试，不能称红灯已确认。日志保留于本 worktree `.build/issue228/red.log`。
-- `check-docs.sh` 与 `verify.sh --ci-docs` 均因独立分支缺前序 SP-228/SP-229 登记，失败于编号连续性；主控汇集各 space 后重跑，不建虚假占位 space。
-- 下一步：主控在联合候选以 `--build-system native --jobs 2 --no-parallel` 运行 `AndroidInstallReadinessTests|DeviceCrossPlatformTests|FailureDiagnosticsTests`，再串行执行旧实现反证与完整 CLI/local 门禁。具体记录见 [验证交接](plans/20261028-validation.md)。
+- `check-docs.sh` 与 `verify.sh --ci-docs` 均因独立分支缺前序 SP-228/SP-229 登记，失败于编号连续性；现已在SP-241联合登记并通过docs门禁；该失败保留为独立分支历史。
+- 联合结果：上述测试已随完整CLI通过，local通过；旧版0.2.33黑盒在boot=0却ready的反证失败，候选明确拒绝。历史构建记录见[验证交接](plans/20261028-validation.md)。

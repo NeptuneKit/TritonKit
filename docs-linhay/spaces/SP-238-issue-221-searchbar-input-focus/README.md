@@ -1,10 +1,10 @@
 # SP-238 · 搜索框已聚焦输入对象解析
 
+当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
 - Issue：[GitHub #221](https://github.com/NeptuneKit/TritonKit/issues/221)
 - 影响层：iOS embedded shared runtime；不改变 CLI 参数或 host keyboard 能力。
 - 分支：`feat/SP-238-issue-221-searchbar-input-focus`
 - Worktree：`../TritonKit-worktrees/SP-238-issue-221-searchbar-input-focus`
-- 状态：候选冻结，待主控联合 native 构建及 App-hosted UIKit 验证，未整合发布。
 
 ## BDD 与验收
 
@@ -15,4 +15,4 @@
 
 ## 范围与证据
 
-仅调整 first responder 遍历优先级，仍要求目标 `isFirstResponder == true`，不把“可输入”或父子关系当作焦点。UIKit 回归将覆盖转发型容器和实际 UISearchBar。macOS 根包通过不能替代 UIKit 执行；设备测试由批次主控统一协调。
+优先已聚焦且符合UIKeyInput的公共输入owner，再查非输入包装层，仍要求目标 `isFirstResponder == true`，不把“可输入”或父子关系当作焦点。真实App-hosted UIKit回归已覆盖转发型容器、内部field editor身份、实际UISearchBar和未聚焦负例。macOS 根包通过不能替代 UIKit 执行；最终设备证据以SP-241联合验收为准。

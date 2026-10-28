@@ -136,3 +136,7 @@ Runner `start` 失败的 `error.startup` 分开报告 `launch`、`transport`、`
 ### Runner 观察与坐标几何
 
 Runner `inspect` / `screenshot` 自行读取前台 App 的 `app.frame` 与 XCTest device orientation。未知方向不再丢弃已取得的层级或 PNG：结果标记 `partial=true`、`geometryAvailability=unavailable`、`coordinateActionsAvailable=false`，附固定的 `geometryError.code/message/field`，并省略 `geometry` 和 `observationID`。旧坐标观察立即失效；不得根据图像尺寸猜测方向或复用旧 ID。已返回的最新语义 selector 仍可使用。缺少有限正值 App frame 返回 `observation_window_unavailable`，App 不在前台仍返回 `cross_app_not_foreground`。`appAlertPresent` 仅覆盖该 App 的 alerts；`systemAlertDetection=not-probed` 不证明无系统弹窗。恢复已知方向并重新观察后才可使用坐标动作；截图仍是敏感的整屏证据，不保证只包含目标 App。
+
+### Embedded navigation button activation
+
+Public UIControl target/action and accessibilityActivate remain supported. If a navigation/toolbar view cannot activate through either path, embedded tap returns `unsupported_capability` with `bar-button-action-unsupported`; it never guesses a UIBarButtonItem association from matching titles or retries behind a sheet. Expose a customView control/accessibility action, or use fresh coordinates with an explicit Simulator target and host HID. Physical devices require an already-ready allowlisted Runner or manual interaction; verify the business result separately.

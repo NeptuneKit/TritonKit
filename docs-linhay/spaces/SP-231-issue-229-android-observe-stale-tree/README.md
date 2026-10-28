@@ -1,10 +1,10 @@
 # SP-231 · Android UIAutomator 当前树新鲜度
 
+当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
 - Issue：[GitHub #229](https://github.com/NeptuneKit/TritonKit/issues/229)
 - 影响层：CLI Android host observation，以及复用它的坐标目标解析；不改变 embedded bridge。
 - 分支：`feat/SP-231-issue-229-android-observe-stale-tree`
 - Worktree：`../TritonKit-worktrees/SP-231-issue-229-android-observe-stale-tree`
-- 状态：候选已冻结，等待主控联合 native 构建验证；未整合/发布/远端关闭。
 
 ## BDD 与验收
 

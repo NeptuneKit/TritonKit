@@ -1,0 +1,62 @@
+{
+  "scope": "isolated fake Gradle/ADB, no real devices",
+  "baselineVersion": "0.2.33",
+  "results": [
+    {
+      "binary": "released-0.2.33",
+      "issue": 227,
+      "exitCode": 1,
+      "ok": false,
+      "errorCode": "gradle_build_failed",
+      "durationMs": 0,
+      "errorCount": 2,
+      "warningCount": 0,
+      "passesRequirement": false
+    },
+    {
+      "binary": "released-0.2.33",
+      "issue": 228,
+      "exitCode": 0,
+      "ok": true,
+      "errorCode": null,
+      "passesRequirement": false
+    },
+    {
+      "binary": "released-0.2.33",
+      "issue": 229,
+      "exitCode": 0,
+      "ok": true,
+      "errorCode": null,
+      "staleReturned": true,
+      "passesRequirement": false
+    },
+    {
+      "binary": "candidate",
+      "issue": 227,
+      "exitCode": 1,
+      "ok": false,
+      "errorCode": "gradle_build_failed",
+      "durationMs": 2058,
+      "errorCount": 0,
+      "warningCount": 1,
+      "passesRequirement": true
+    },
+    {
+      "binary": "candidate",
+      "issue": 228,
+      "exitCode": 1,
+      "ok": false,
+      "errorCode": "device_not_ready",
+      "passesRequirement": true
+    },
+    {
+      "binary": "candidate",
+      "issue": 229,
+      "exitCode": 1,
+      "ok": false,
+      "errorCode": "hierarchy_unavailable",
+      "staleReturned": false,
+      "passesRequirement": true
+    }
+  ]
+}

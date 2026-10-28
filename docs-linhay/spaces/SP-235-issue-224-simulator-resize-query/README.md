@@ -1,5 +1,6 @@
 # SP-235 · #224 Simulator 显示状态诊断
 
+当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
 ## 边界和现状
 
 基线 main `a0d187ac`。只补显式目标 doctor 的 appResize/displays 只读事实与精确恢复指令，不绕过 unknown geometry 截图/触摸拒绝。#224全文及三条评论已经核对；Xcode27.1 topology bug 由 SP-218/v0.2.33 修复，Xcode26.6 旧 appResize 兼容性不能从该证据推断。影响 CLI host diagnostics/schema/failure envelope；无新 Web/HTTP 控制面。
@@ -14,14 +15,14 @@
 
 ## 当前阶段与验证
 
-静态实现已完成、待主控统一验证；未提交/推送/发布或关闭 issue。
+本地联合实现、完整CLI与local验收完成；未推送/发布或关闭issue。
 
 - 新增 `CLIHostSimulatorDoctorDiagnostics.swift` 输出独立只读快照；仅显式已解析 Simulator 时运行，附精确 target/recovery。
 - `failHostCommand` 补 `IOSSimulatorDisplayError` typed 映射；生产 screenshot、AX 和 HID failure 绑定恢复目标，不改原门禁。
 - `SimulatorDoctorDiagnosticsTests` 覆盖无选择/非法目标零查询、不同 unknown 状态独立保留、snapshot不升级验证、零截图副作用、DTO/schema 和 single typed envelope。
-- 已先编写测试并启动红测试；默认 Swift Build 冷编译导致宿主高负载，主控要求停止，本任务精确 session 退出130。**红测试尚未到测试编译，不宣称预期断言失败；绿测试未执行。** 原日志在本 worktree `.build/issue-validation/20261028-red-tests.log`，不公开私人路径。
-- `git diff --check` 通过。全量/聚焦/文档编号门禁由主控在联合候选使用 `--build-system native --jobs 2` 统一验证；本 worktree 不伪造缺失 SP 编号。
-- 真实 Simulator/Xcode26.6/原用户项目未执行；没有改变未知状态的安全边界。#224 在本轮只关闭诊断缺口，不宣称旧工具链的 appResize 根因已复现解决。
+- 已先编写测试并启动红测试；默认 Swift Build 冷编译导致宿主高负载，主控要求停止，本任务精确 session 退出130。**当时红测试未到测试编译，不宣称旧实现断言失败；候选绿测现已随SP-241完整CLI通过。** 原日志在本 worktree `.build/issue-validation/20261028-red-tests.log`，不公开私人路径。
+- `git diff --check` 通过。全量与文档编号门禁已在SP-241通过；本 worktree 不伪造缺失 SP 编号。
+- 真实Simulator的目标doctor已验证独立diagnostics和capture/inputVerified=false；Xcode26.6/原用户项目未执行；没有改变未知状态的安全边界。#224 在本轮只关闭诊断缺口，不宣称旧工具链的 appResize 根因已复现解决。
 
 ## 经验
 

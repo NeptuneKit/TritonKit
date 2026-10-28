@@ -1,5 +1,7 @@
 # #228 候选验证交接（2026-10-28）
 
+> 历史冻结记录。当前整合、测试结论及未验边界见[SP-241联合验收](../../SP-241-open-issues-validation/plans/20261028-validation.md)。下文中断/待验描述只对应当时的独立分支。
+
 ## 已知根因与候选
 
 `waitForHostDeviceReady` 的 Android 分支原来只检查 adb state + `pm path android`。候选插入 `sys.boot_completed` 探针，并只在其为 1 时继续检查 package service；保留最后一次成功轮询三项命令。PackageManager 暂不可用继续有限等待，截止时保留既有 package-manager failure 类型。

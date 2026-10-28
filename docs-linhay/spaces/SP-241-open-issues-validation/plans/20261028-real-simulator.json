@@ -1,0 +1,33 @@
+{
+  "doctor": {
+    "exitCode": 0,
+    "ok": true,
+    "hasTargetDiagnostics": true,
+    "diagnosticKeys": [
+      "captureVerified",
+      "display",
+      "inputDispatchVerified",
+      "nextAction",
+      "resize",
+      "sourceCommands",
+      "target",
+      "verification"
+    ],
+    "captureVerified": false,
+    "inputDispatchVerified": false
+  },
+  "logs": {
+    "ownedChildKilled": true,
+    "exitCode": 1,
+    "ok": false,
+    "partial": true,
+    "errorCode": "sim_logs_failed",
+    "artifactExists": true,
+    "retainedBytes": 607402,
+    "reportedBytes": 607402,
+    "terminationReason": "uncaught-signal",
+    "permissions": "0o600"
+  },
+  "restoreShutdownExitCode": 0,
+  "candidateCommit": "51d505bb"
+}

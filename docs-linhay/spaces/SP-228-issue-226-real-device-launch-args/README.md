@@ -1,5 +1,6 @@
 # SP-228 · GitHub #226 · iOS 真机 launch 参数终止符
 
+当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
 ## 边界
 
 修复 `devicectl device process launch` 的 iOS 真机参数构造：bundle identifier 后存在 App 参数时插入 `--`，使以 `-` 开头的参数和值按原样传给 App。模拟器 `simctl`、设备发现、真实设备执行和远端 GitHub 操作不在本切片内。

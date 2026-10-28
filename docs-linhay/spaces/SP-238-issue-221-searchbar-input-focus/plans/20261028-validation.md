@@ -1,5 +1,7 @@
 # #221 验证与交接
 
+> 历史冻结记录。当前整合、测试结论及未验边界见[SP-241联合验收](../../SP-241-open-issues-validation/plans/20261028-validation.md)。下文中断/待验描述只对应当时的独立分支。
+
 ## 根因和候选
 
 原 `findFirstResponder` 先检查父视图的 `isFirstResponder` 再递归，包装组件转发子对象焦点时父对象会遮蔽实际输入子对象。改为 descendant 优先，只返回 `isFirstResponder` 的对象，保留显式 targetOID 与 foreground root 限制。不会把未聚焦的 `searchTextField` 当作通用 fallback。

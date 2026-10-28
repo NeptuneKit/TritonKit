@@ -1,5 +1,7 @@
 # 2026-10-28 验证与交接
 
+> 历史冻结记录。当前整合、测试结论及未验边界见[SP-241联合验收](../../SP-241-open-issues-validation/plans/20261028-validation.md)。下文中断/待验描述只对应当时的独立分支。
+
 - 基线 a0d187ac，SP-234 独立 worktree。此前未提交分类补丁已复核并扩展；没有 commit/push/设备动作。
 - 测试先补：启动异常阶段、提前DTX分类、health成功但probe失败、私有日志不泄露；原专用代理残留测试语法已修正。
 - 首次 `swift test --package-path CLI --no-parallel --jobs 2 --filter IOSRunnerLifecycleTests` 在依赖构建期间被主控要求停止：宿主负载过高，默认 SwiftBuild backend 未按预期限制并行。精确终止自身swift-test及子进程，无测试结果。不能声称RED失败或GREEN通过。

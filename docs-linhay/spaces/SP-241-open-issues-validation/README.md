@@ -13,7 +13,14 @@
 
 ## Observed / Evidence
 
-进行中。#226 已有独立提交 `5a7faf0c`；其余候选逐项冻结后汇入本验收分支。远端全部仍 OPEN，未发布。
+本地10项缺陷候选、1项后端说明与2项范围/历史审计完成；实现整合提交 `51d505bb`。完整CLI（1563+94）、根包（401+7）、App-hosted UIKit（7）、Runner protocol（32）、Runner Simulator fixture（1）及local门禁通过。原环境未验项不冒充关闭条件。
+
+- [逐项结果与验证边界](plans/20261028-validation.md)
+- [13个未发送回复草稿](plans/20261028-issue-replies.md)
+- [真实Simulator doctor与partial日志验证](plans/20261028-real-simulator.json)
+- [Android旧版失败/候选通过反证](plans/20261028-cli-blackbox-red-green.json)
+
+原主目录WIP未改动，候选只在本地分支，远端13项仍OPEN。下一步为用户审阅并明确授权远端推送/PR；本轮没有该授权。
 
 ## Gaps / Remaining risk
 

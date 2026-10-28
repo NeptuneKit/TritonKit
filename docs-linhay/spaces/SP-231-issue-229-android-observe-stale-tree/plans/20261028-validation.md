@@ -1,5 +1,7 @@
 # #229 验证记录
 
+> 历史冻结记录。当前整合、测试结论及未验边界见[SP-241联合验收](../../SP-241-open-issues-validation/plans/20261028-validation.md)。下文中断/待验描述只对应当时的独立分支。
+
 ## 候选边界
 
 - 旧路径：共享 `/sdcard/window_dump.xml`，仅退出码检查；退出 0 的 null-root 错误会读取旧 XML。

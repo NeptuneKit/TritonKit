@@ -1,0 +1,83 @@
+{
+  "phase": "final-local-before-any-remote-write",
+  "issues": [
+    {
+      "number": 232,
+      "title": "[Docs/Question] Clarify wired iOS real-device backend selection: devicectl vs Device Hub",
+      "updatedAt": "2026-10-28T02:17:17Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/232"
+    },
+    {
+      "number": 231,
+      "title": "[Bug] sim logs loses partial capture artifact when simulator log child is killed",
+      "updatedAt": "2026-10-27T08:22:58Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/231"
+    },
+    {
+      "number": 230,
+      "title": "[Bug] Ready physical iOS Runner inspect and screenshot fail with coordinate_geometry after app activation",
+      "updatedAt": "2026-10-24T03:14:04Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/230"
+    },
+    {
+      "number": 229,
+      "title": "[Bug] Android observe tree returns stale XML as current after UIAutomator null-root failure",
+      "updatedAt": "2026-10-23T10:50:17Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/229"
+    },
+    {
+      "number": 228,
+      "title": "[Bug] Android wait-ready reports ready before system providers finish booting",
+      "updatedAt": "2026-10-23T10:39:21Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/228"
+    },
+    {
+      "number": 227,
+      "title": "[Bug] Android build diagnostics count task and warning text as compiler errors",
+      "updatedAt": "2026-10-23T10:16:07Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/227"
+    },
+    {
+      "number": 226,
+      "title": "[Bug] Real-device launch passes dash-prefixed app arguments into devicectl option parsing",
+      "updatedAt": "2026-10-22T17:45:04Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/226"
+    },
+    {
+      "number": 225,
+      "title": "[Bug] Physical iOS runner readiness failure hides XCTest driver channel refusal",
+      "updatedAt": "2026-10-24T02:08:14Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/225"
+    },
+    {
+      "number": 224,
+      "title": "iOS Simulator screenshot and swipe blocked by resize state queryFailed",
+      "updatedAt": "2026-10-23T06:51:46Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/224"
+    },
+    {
+      "number": 223,
+      "title": "[Bug] Embedded tap cannot activate target-action UIBarButtonItem in a page sheet",
+      "updatedAt": "2026-10-19T07:44:50Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/223"
+    },
+    {
+      "number": 222,
+      "title": "[Bug] Simulator host tap fails to locate chrome with Xcode 27.1 Device Hub",
+      "updatedAt": "2026-10-22T18:02:06Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/222"
+    },
+    {
+      "number": 221,
+      "title": "act input: focused UISearchBarTextField resolves to UISearchBar for unqualified type",
+      "updatedAt": "2026-10-15T04:30:51Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/221"
+    },
+    {
+      "number": 214,
+      "title": "排查 .triton/DerivedData 高磁盘占用，并提供可控的缓存清理机制",
+      "updatedAt": "2026-10-12T06:41:01Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/214"
+    }
+  ]
+}

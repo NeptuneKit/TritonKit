@@ -1,7 +1,6 @@
 # SP-229 · Android build diagnostics
 
-状态：静态候选冻结，focused 测试因宿主负载由主控暂停；待 SP-241 联合编译与反证。未合并、未发布、未操作远端。
-
+当前状态：本地实现/联合验收完成；汇入 `feat/SP-241-open-issues-validation`，未合main、未发布、远端仍开放。[联合验收与风险](../SP-241-open-issues-validation/plans/20261028-validation.md)为当前事实源；独立分支冻结记录保留为历史。
 ## 边界
 
 对应 [GitHub #227](https://github.com/NeptuneKit/TritonKit/issues/227)，影响 CLI Android 构建诊断和 timeout 摘要；不改变 Gradle 构建任务、进程超时策略或 Harmony/Xcode 诊断。

@@ -1,5 +1,7 @@
 # 2026-10-28 验证记录
 
+> 历史冻结记录。当前整合、测试结论及未验边界见[SP-241联合验收](../../SP-241-open-issues-validation/plans/20261028-validation.md)。下文中断/待验描述只对应当时的独立分支。
+
 - 基线：a0d187ac；独立 SP-239 worktree。
 - RED：新增 `RunnerObservationGeometry` 用例后、实现前，RunnerProtocol 编译失败 `cannot find RunnerObservationGeometry in scope`。记录 `20261028-red.log`。
 - GREEN：`swift test --package-path Sources/TritonKitCLI/Resources/ios-runner --jobs 2 --no-parallel --filter HTTPProtocolTests`，20 tests / 0 failures；记录 `20261028-green.log`。
