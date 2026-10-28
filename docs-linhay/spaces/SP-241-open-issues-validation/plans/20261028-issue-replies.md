@@ -1,6 +1,6 @@
 # GitHub issue reply drafts — 2026-10-28
 
-These 13 replies are **unsent drafts**. No issue has been closed by this document. New implementation candidates are local and unpublished; the integrated local validation has passed; original-device gaps remain. Before posting, the controller must reconcile each draft with the [final validation record](20261028-validation.md), fill in an actual published version or commit only if available, and retain all unresolved acceptance limits. The linked record contains the executed checks, evidence boundaries and remaining risks.
+These 13 replies are **unsent drafts**. No issue has been closed by this document. New implementation candidates are unreleased PR candidates; the integrated local validation has passed; original-device gaps remain. Before posting, the controller must reconcile each draft with the [final validation record](20261028-validation.md), fill in an actual published version or commit only if available, and retain all unresolved acceptance limits. The linked record contains the executed checks, evidence boundaries and remaining risks.
 
 ## #214 — DerivedData usage and cleanup
 
@@ -18,7 +18,7 @@ A local candidate changes unqualified input resolution to keep an already-focuse
 
 The intended result is that a focused search field receives the subsequent `type` action instead of resolving to its `UISearchBar` wrapper. Regression cases cover a forwarding container, a standard search bar, another focused field and no focused field.
 
-The candidate is local and unpublished. All 7 App-hosted UIKit tests for this issue and #223 passed on iOS 27.0 / Xcode 27.1, including public input-owner identity and unfocused-field protection. The original reported application/session has not been reproduced.
+The candidate is an unreleased PR candidate. All 7 App-hosted UIKit tests for this issue and #223 passed on iOS 27.0 / Xcode 27.1, including public input-owner identity and unfocused-field protection. The original reported application/session has not been reproduced.
 
 ## #222 — Device Hub chrome lookup and input authority
 
@@ -26,7 +26,7 @@ The original chrome lookup dependency and input-authority ambiguity were address
 
 The existing release evidence records a dedicated Xcode 27.1 / iOS 27.0 Simulator acceptance covering tap business counters, swipe postconditions, Hub-attached refusal/recovery and Triton framebuffer capture. These are historical acceptance results, not new device runs from this batch.
 
-This does not claim general Device Hub physical-device control, automatic system-alert handling, or support for host multi-tap/long-press. The specific system-alert path from the comments was not part of that acceptance, and embedded app trees cannot establish what is covering the app at system level. Other toolchains and the original private project remain unverified. Remaining target-specific display diagnostic guidance is being addressed by the unpublished candidate for #224. The present #222 batch work is an unsent audit/reply draft, not another released fix.
+This does not claim general Device Hub physical-device control, automatic system-alert handling, or support for host multi-tap/long-press. The specific system-alert path from the comments was not part of that acceptance, and embedded app trees cannot establish what is covering the app at system level. Other toolchains and the original private project remain unverified. Remaining target-specific display diagnostic guidance is being addressed by the unreleased candidate for #224. The present #222 batch work is an unsent audit/reply draft, not another released fix.
 
 ## #223 — Target/action UIBarButtonItem inside a page sheet
 
@@ -34,7 +34,7 @@ A local candidate implements the typed-refusal option allowed by this issue. Whe
 
 UIKit does not provide a public mapping from the generated view back to its bar item. The candidate therefore does not guess by title, use private KVC, or search behind the presented sheet for an action. Existing public control/accessibility activation remains supported. Recovery points to an explicit Simulator target with fresh coordinates for host input, or an already-ready, allowlisted Runner/manual interaction on a physical device. Host acknowledgement still requires a separate business-state check; a Device Hub/HID refusal is not bypassed.
 
-The candidate is local and unpublished. Four App-hosted UIKit cases passed, including a real page sheet with a target/action navigation button and a same-title background control that remained untouched. The original private application still needs its own business-state check.
+The candidate is an unreleased PR candidate. Four App-hosted UIKit cases passed, including a real page sheet with a target/action navigation button and a same-title background control that remained untouched. The original private application still needs its own business-state check.
 
 ## #224 — Resize/display query failures and unusable doctor guidance
 
@@ -50,7 +50,7 @@ A local candidate separates Runner startup evidence into native launch, transpor
 
 Classification reads a bounded tail from this session's native output files, refuses symlinks/non-regular files, and does not expose raw logs, local paths or credentials. Unknown or unreadable evidence stays a conservative readiness failure; it is not assigned an invented root cause. This does not imply that unlocking alone fixes the condition or that Apple tooling has been proven defective.
 
-The candidate is local and unpublished. Startup-stage, bounded log-signature and failure-envelope fixtures passed in the complete CLI suite. The original physical iOS/Xcode combination has not been rerun; native XCTest success does not by itself prove resident Runner readiness.
+The candidate is an unreleased PR candidate. Startup-stage, bounded log-signature and failure-envelope fixtures passed in the complete CLI suite. The original physical iOS/Xcode combination has not been rerun; native XCTest success does not by itself prove resident Runner readiness.
 
 ## #226 — Dash-prefixed real-device launch arguments
 
@@ -58,7 +58,7 @@ A local candidate inserts `--` immediately after the bundle identifier when an i
 
 This addresses the command-construction boundary where devicectl could interpret an app argument as one of its own options. It does not change Simulator launch or retry a failed launch through another backend.
 
-The candidate is local and unpublished. The command-builder regression failed with the old implementation and passed after restoration of the fix (42 shared host-adapter tests); the complete integrated CLI suite also passed. The original physical-device launch has not been executed here.
+The candidate is an unreleased PR candidate. The command-builder regression failed with the old implementation and passed after restoration of the fix (42 shared host-adapter tests); the complete integrated CLI suite also passed. The original physical-device launch has not been executed here.
 
 ## #227 — Android build severity and timeout duration
 
@@ -66,7 +66,7 @@ A local candidate classifies Android diagnostics using structured severity marke
 
 The timeout summary now uses measured monotonic elapsed time, including process cleanup, instead of reporting zero duration. Timeout remains a failed build with no installable-artifact claim, even when the captured log contains no compiler errors. Counts still describe the bounded log sample, not necessarily the complete compiler output.
 
-The candidate is local and unpublished. An isolated CLI comparison reproduced version 0.2.33 reporting two errors, zero warnings and duration zero; the candidate reported zero errors, one warning and 2058 ms for the same timeout fixture. The complete CLI suite passed. The private Android project has not been rebuilt, so this does not establish the cause of its slow compilation.
+The candidate is an unreleased PR candidate. An isolated CLI comparison reproduced version 0.2.33 reporting two errors, zero warnings and duration zero; the candidate reported zero errors, one warning and 2058 ms for the same timeout fixture. The complete CLI suite passed. The private Android project has not been rebuilt, so this does not establish the cause of its slow compilation.
 
 ## #228 — Android readiness before boot/provider availability
 
@@ -74,7 +74,7 @@ A local candidate requires adb connectivity, `sys.boot_completed=1` and a succes
 
 The screenshot error mapping is also narrowed: a remote shared-storage/capture failure is reported as `android_screenshot_failed`, not a missing adb executable. A genuine host-side inability to locate adb remains `android_adb_not_found`.
 
-The candidate is local and unpublished. A fake-adb CLI comparison reproduced version 0.2.33 reporting ready while boot completion was zero; the candidate returned device_not_ready. The complete CLI suite passed. This is sampled readiness, not an atomic guarantee of later install or business readiness. The original Android 14 cold boot under memory pressure and subsequent APK install remain unverified.
+The candidate is an unreleased PR candidate. A fake-adb CLI comparison reproduced version 0.2.33 reporting ready while boot completion was zero; the candidate returned device_not_ready. The complete CLI suite passed. This is sampled readiness, not an atomic guarantee of later install or business readiness. The original Android 14 cold boot under memory pressure and subsequent APK install remain unverified.
 
 ## #229 — Stale UIAutomator XML reported as current
 
@@ -82,7 +82,7 @@ A local candidate gives each hierarchy capture a unique remote dump path and req
 
 Observation and coordinate-target resolution share this fresh-capture path. Missing, empty, truncated or invalid/no-node XML is rejected. Cleanup is best effort and addresses only the current capture's path; its command ledger records an attempt, not proof of deletion. No gesture is automatically replayed after a hierarchy failure.
 
-The candidate is local and unpublished. The same isolated fake-adb scenario made version 0.2.33 return a stale node after null-root; the candidate returned hierarchy_unavailable and no stale node. The complete CLI suite passed. The original loaded emulator and display-size mismatch have not been reproduced on a real device.
+The candidate is an unreleased PR candidate. The same isolated fake-adb scenario made version 0.2.33 return a stale node after null-root; the candidate returned hierarchy_unavailable and no stale node. The complete CLI suite passed. The original loaded emulator and display-size mismatch have not been reproduced on a real device.
 
 ## #230 — Runner inspect/screenshot blocked by coordinate geometry
 
@@ -90,7 +90,7 @@ The local investigation found that inspect and screenshot unconditionally depend
 
 The candidate keeps allowlist, foreground, valid-frame and freshness checks. Missing/invalid app frame or a nonforeground app produces an actionable refusal. It does not guess orientation from aspect ratio, change device orientation, or automatically dismiss permissions/system alerts. `appAlertPresent` covers the queried app's alerts only; `systemAlertDetection=not-probed` explicitly avoids claiming comprehensive interruption detection.
 
-The candidate is local and unpublished. The 32 protocol tests, complete CLI suite and a real Simulator XCTest for unknown orientation passed, including observation/screenshot availability and rejection of old coordinate IDs. This uses an injected unknown orientation; the exact failed field and ready → activate → observe path on the original physical device remain unverified. No cause is attributed to a permission alert without evidence.
+The candidate is an unreleased PR candidate. The 32 protocol tests, complete CLI suite and a real Simulator XCTest for unknown orientation passed, including observation/screenshot availability and rejection of old coordinate IDs. This uses an injected unknown orientation; the exact failed field and ready → activate → observe path on the original physical device remain unverified. No cause is attributed to a permission alert without evidence.
 
 ## #231 — Preserve partial Simulator log artifacts
 
@@ -98,7 +98,7 @@ A local candidate writes `sim logs` stdout incrementally to an exclusively creat
 
 The new `--max-bytes` limit defaults to 10 MiB. After the retained-output cap, the process output is still drained without allowing the artifact to grow. Existing files/symlinks are rejected before the child starts. This does not recover logs already lost in the original runs; an artifact may be empty or end mid-line, and incremental writes do not promise power-loss durability.
 
-The candidate is local and unpublished. Fake-process tests passed, and a dedicated real Simulator capture was also tested: killing only the owned log child returned a single failure/partial JSON, retained 607402 bytes in a 0600 artifact, and reported matching byte counts. The Simulator was then shut down successfully. Hour-long capture and recovery of already-lost historical logs have not been tested or claimed.
+The candidate is an unreleased PR candidate. Fake-process tests passed, and a dedicated real Simulator capture was also tested: killing only the owned log child returned a single failure/partial JSON, retained 607402 bytes in a 0600 artifact, and reported matching byte counts. The Simulator was then shut down successfully. Hour-long capture and recovery of already-lost historical logs have not been tested or claimed.
 
 ## #232 — Wired iOS backend selection
 

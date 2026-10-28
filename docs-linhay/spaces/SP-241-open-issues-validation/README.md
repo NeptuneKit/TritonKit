@@ -20,7 +20,7 @@
 - [真实Simulator doctor与partial日志验证](plans/20261028-real-simulator.json)
 - [Android旧版失败/候选通过反证](plans/20261028-cli-blackbox-red-green.json)
 
-原主目录WIP未改动。用户已明确授权推送 `feat/SP-241-open-issues-validation` 并创建PR；当前进入PR审查/CI阶段，CI状态以GitHub当前head的checks为准。13项issue保留OPEN；此授权不包含合并、关闭或发布。
+原主目录WIP未改动。用户已明确授权推送 `feat/SP-241-open-issues-validation` 并创建PR；分支已推送并创建[PR #233](https://github.com/NeptuneKit/TritonKit/pull/233)，当前进入审查/CI阶段；CI状态以GitHub当前head的checks为准。13项issue保留OPEN；此授权不包含合并、关闭或发布。
 
 ## Gaps / Remaining risk
 
