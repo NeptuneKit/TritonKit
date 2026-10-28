@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import TritonKitShared
 
+#if os(macOS)
 @Suite("Android legacy input text shell contract")
 struct TKAndroidInputTextTests {
     @Test func fakeADBReceivesQuotedPayloadAsOneArgvElement() throws {
@@ -35,3 +36,5 @@ struct TKAndroidInputTextTests {
         }
     }
 }
+
+#endif
