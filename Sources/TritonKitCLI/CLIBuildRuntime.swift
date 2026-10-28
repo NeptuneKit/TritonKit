@@ -125,7 +125,7 @@ func runCLIBuildPlan(_ plan: CLIBuildPlan, jsonl: Bool = false) throws -> TKBuil
         stdoutBytes: result.stdoutBytes,
         stderrBytes: result.stderrBytes,
         durationMs: durationMs,
-        diagnostics: summarizeBuildDiagnostics(stdoutLogPath: logs.stdoutLogPath, stderrLogPath: logs.stderrLogPath),
+        diagnostics: summarizeBuildDiagnostics(stdoutLogPath: logs.stdoutLogPath, stderrLogPath: logs.stderrLogPath, platform: plan.platform),
         error: nil,
         nextAction: buildNextAction(plan: plan, artifact: artifact),
         note: "Build produced a debug artifact. Install and verify business readiness with app, smoke, wait/assert, or evidence."
@@ -159,8 +159,8 @@ func buildFailureSummary(error: Error, request: CLIBuildRequest?, jsonl: Bool) -
         stderrLogPath: logs?.stderrLogPath,
         stdoutBytes: nil,
         stderrBytes: nil,
-        durationMs: 0,
-        diagnostics: logs.map { summarizeBuildDiagnostics(stdoutLogPath: $0.stdoutLogPath, stderrLogPath: $0.stderrLogPath) },
+        durationMs: buildErrorDurationMs(error),
+        diagnostics: logs.map { summarizeBuildDiagnostics(stdoutLogPath: $0.stdoutLogPath, stderrLogPath: $0.stderrLogPath, platform: plan?.platform ?? buildPlatformName(request: request)) },
         error: detail,
         nextAction: detail.nextAction,
         note: "Build did not produce an installable artifact."
@@ -307,7 +307,7 @@ private func buildErrorDetail(_ error: CLIBuildError) -> TKCLIErrorDetail {
             hint: "Verify the build executable is runnable.",
             nextAction: TKCLINextAction(command: "build", args: [platform, "--project", plan.project, "--json"], category: "project")
         )
-    case .commandTimedOut(let platform, let plan, _, let timeout):
+    case .commandTimedOut(let platform, let plan, _, let timeout, _):
         return TKCLIErrorDetail(
             code: platform == "android" ? "gradle_build_failed" : "hvigor_build_failed",
             message: "Build timed out after \(timeout)s.",
@@ -475,6 +475,7 @@ private func createBuildLogPaths(platform: String) throws -> CLIBuildLogPaths {
 }
 
 private func runBuildProcess(plan: CLIBuildPlan, logs: CLIBuildLogPaths) throws -> CLIBuildProcessResult {
+    let startedAt = DispatchTime.now().uptimeNanoseconds
     let process = Process()
     if plan.executable.contains("/") {
         process.executableURL = URL(fileURLWithPath: plan.executable)
@@ -538,7 +539,8 @@ private func runBuildProcess(plan: CLIBuildPlan, logs: CLIBuildLogPaths) throws 
         }
         _ = stdoutGroup.wait(timeout: .now() + 2)
         _ = stderrGroup.wait(timeout: .now() + 2)
-        throw CLIBuildError.commandTimedOut(platform: plan.platform, plan: plan, logs: logs, timeout: plan.timeout)
+        let durationMs = Int((DispatchTime.now().uptimeNanoseconds - startedAt) / 1_000_000)
+        throw CLIBuildError.commandTimedOut(platform: plan.platform, plan: plan, logs: logs, timeout: plan.timeout, durationMs: durationMs)
     }
 
     stdoutGroup.wait()
@@ -772,16 +774,38 @@ private func sourceCommand(_ command: TKHostCommand) -> String {
     ([command.executable] + command.arguments).map(shellEscaped).joined(separator: " ")
 }
 
-private func summarizeBuildDiagnostics(stdoutLogPath: String, stderrLogPath: String) -> CLIBuildDiagnosticsSummary {
+private func summarizeBuildDiagnostics(stdoutLogPath: String, stderrLogPath: String, platform: String? = nil) -> CLIBuildDiagnosticsSummary {
     let lines = Array((readBuildLogLines(stdoutLogPath) + readBuildLogLines(stderrLogPath)).prefix(2000))
-    let warningLines = lines.filter { $0.localizedCaseInsensitiveContains("warning") }
-    let errorLines = lines.filter { $0.localizedCaseInsensitiveContains("error") || $0.localizedCaseInsensitiveContains("failed") }
+    let classified = platform == "android" ? classifyAndroidBuildDiagnostics(lines) : nil
+    let warningLines = classified?.warnings ?? lines.filter { $0.localizedCaseInsensitiveContains("warning") }
+    let errorLines = classified?.errors ?? lines.filter { $0.localizedCaseInsensitiveContains("error") || $0.localizedCaseInsensitiveContains("failed") }
     return CLIBuildDiagnosticsSummary(
         warningCount: warningLines.count,
         errorCount: errorLines.count,
         warningSamples: Array(warningLines.prefix(5)),
         errorSamples: Array(errorLines.prefix(5))
     )
+}
+
+private func classifyAndroidBuildDiagnostics(_ lines: [String]) -> (warnings: [String], errors: [String]) {
+    var warnings: [String] = []
+    var errors: [String] = []
+    for line in lines {
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Severity markers take precedence over words inside diagnostic messages.
+        // Java diagnostics may prefix the marker with a source location.
+        if trimmed.range(of: #"^(?:w:|warning:)\s|^.+:\d+(?::\d+)?:\s+warning:\s"#,
+                         options: [.regularExpression, .caseInsensitive]) != nil {
+            warnings.append(line)
+        } else if trimmed.range(of: #"^(?:e:|error:)\s|^.+:\d+(?::\d+)?:\s+error:\s"#,
+                                options: [.regularExpression, .caseInsensitive]) != nil {
+            errors.append(line)
+        } else if trimmed.range(of: #"^FAILURE:(?:\s|$)"#, options: .regularExpression) != nil {
+            // Count the failure banner once, not its heading or BUILD FAILED footer.
+            errors.append(line)
+        }
+    }
+    return (warnings, errors)
 }
 
 private func readBuildLogLines(_ path: String) -> [String] {
@@ -797,7 +821,7 @@ private func buildErrorLogs(_ error: Error) -> CLIBuildLogPaths? {
     case let error as CLIBuildError:
         switch error {
         case .commandLaunchFailed(_, _, let logs, _),
-             .commandTimedOut(_, _, let logs, _),
+             .commandTimedOut(_, _, let logs, _, _),
              .buildFailed(_, _, let logs, _),
              .artifactNotFound(_, _, let logs, _):
             return logs
@@ -814,6 +838,13 @@ private func buildErrorExitCode(_ error: Error) -> Int32 {
         return result.exitCode
     }
     return 1
+}
+
+private func buildErrorDurationMs(_ error: Error) -> Int {
+    if case let CLIBuildError.commandTimedOut(_, _, _, _, durationMs) = error {
+        return durationMs
+    }
+    return 0
 }
 
 private func buildActionName(request: CLIBuildRequest?) -> String {
