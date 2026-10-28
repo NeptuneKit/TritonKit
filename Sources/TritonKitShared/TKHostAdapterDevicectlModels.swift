@@ -124,7 +124,13 @@ public enum TKDevicectlCommand {
         }
         arguments += artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput)
         arguments.append(bundleID)
-        arguments += appArguments
+        if !appArguments.isEmpty {
+            // `devicectl` parses options until the bundle's `--` terminator.
+            // Preserve every app argument verbatim, including values beginning
+            // with a dash, instead of letting the host parser consume them.
+            arguments.append("--")
+            arguments += appArguments
+        }
         return command(
             arguments,
             riskLevel: .automation,

@@ -52,11 +52,18 @@ struct TKHostAdapterModelsTests {
             "--environment-variables", "{\"TRITON_HOST\":\"192.168.1.2\",\"TRITON_PORT\":\"19431\"}",
             "--json-output", "/tmp/launch.json",
             "--log-output", "/tmp/launch.log",
-            "com.example.demo", "debug-route",
+            "com.example.demo", "--", "debug-route",
         ])
         #expect(launchWithEnv.environment.isEmpty)
         #expect(launchWithEnv.redactedEnvironmentKeys.isEmpty)
         #expect(launchWithEnv.redactedArgumentIndexes == Set([7]))
+        #expect(TKDevicectlCommand.launchApp(
+            identifier: "00008110",
+            bundleID: "com.example.demo",
+            arguments: ["-launch-key", "dictionary-value", "--second-key"],
+            jsonOutput: "/tmp/launch.json",
+            logOutput: "/tmp/launch.log"
+        ).argv.suffix(5) == ["com.example.demo", "--", "-launch-key", "dictionary-value", "--second-key"])
         #expect(TKDevicectlCommand.copyFromDevice(
             identifier: "00008110",
             source: "Library/Application Support/bench/evidence.json",
