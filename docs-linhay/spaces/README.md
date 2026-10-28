@@ -386,3 +386,5 @@
 - [SP-239-issue-230-ios-runner-geometry](./SP-239-issue-230-ios-runner-geometry/README.md)：已合并，issue已关闭；见SP-241合并归档报告，本批次未发布。
 - [SP-240-issue-214-deriveddata-ownership](./SP-240-issue-214-deriveddata-ownership/README.md)：PR #235已合并，历史候选待关联；两处删除前约1.95 GiB，部分内容重复；#214保留OPEN，历史调用候选已归档，原容量映射仍缺；见该space溯源记录，两处现存缓存已按后续授权删除；物理回收量未知。
 - [SP-241-open-issues-validation](./SP-241-open-issues-validation/README.md)：已合并归档，12关/1留；见SP-241合并归档报告，本批次未发布。
+
+- [SP-242-release-v0-2-35](./SP-242-release-v0-2-35/README.md)：v0.2.35完整发布验证中；#214暂缓保持OPEN，无其它开放issue/PR。

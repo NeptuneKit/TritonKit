@@ -3,8 +3,8 @@
 
 2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-27（v0.2.34 发布准备）
-> 覆盖范围：227/227 个已存在 space
+> 最近同步：2026-10-28（v0.2.35 发布准备）
+> 覆盖范围：242/242 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -19,8 +19,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 224/224 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 224/224 | 每条记录链接到现有 space README |
+| 编号登记 | 242/242 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 242/242 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -313,3 +313,5 @@
 | `SP-240-issue-214-deriveddata-ownership` | [`SP-240-issue-214-deriveddata-ownership`](./SP-240-issue-214-deriveddata-ownership/README.md) | PR #235已合并，历史候选待关联 | PR #235合并5d0bba7b；两处删除前约1.95 GiB，部分内容重复；#214保持OPEN，两处现存缓存已按后续授权删除；物理回收量未知；历史调用候选已归档，原18.66 GB路径映射仍缺；详见SP-240溯源记录 |
 
 | `SP-241-open-issues-validation` | [`SP-241-open-issues-validation`](./SP-241-open-issues-validation/README.md) | 已合并归档，12关/1留 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；本批次未发布 |
+
+| `SP-242-release-v0-2-35` | [`SP-242-release-v0-2-35`](./SP-242-release-v0-2-35/README.md) | 发布验证中 | v0.2.35完整发布；#214暂缓保持OPEN；主目录WIP隔离 |
