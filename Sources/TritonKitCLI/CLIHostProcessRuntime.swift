@@ -750,6 +750,10 @@ func failHostCommand(
         detail = error.detail
     case let error as HostDeviceAdministrationDiscoveryFailure:
         detail = error.detail
+    case let error as SimulatorTargetDiagnosticError:
+        detail = error.detail
+    case let error as IOSSimulatorDisplayError:
+        detail = error.detail
     case let error as IOSSimulatorResizeCaptureError:
         detail = error.detail
     case let error as IOSSimulatorResizeError:

@@ -361,6 +361,7 @@ struct HostDeviceDoctorOutput: Encodable {
     let artifactsSaved: Bool
     var commandSupport: [HostAppleCommandSupport]? = nil
     var hidCompatibility: IOSHostHIDProbe? = nil
+    var simulatorDiagnostics: SimulatorDoctorDiagnostics? = nil
 }
 
 struct HostDeviceBridgeOutput: Encodable, Equatable {

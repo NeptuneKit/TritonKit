@@ -119,7 +119,9 @@ func runHostSimulatorScreenshotCommand(
     outputFormat: ClientOutputFormat
 ) throws {
     do {
-        let routed = try resizeAwareSimulatorScreenshotCommand(command, simulator: simulator)
+        let routed = try withSimulatorDiagnosticTarget(simulator) {
+            try resizeAwareSimulatorScreenshotCommand(command, simulator: simulator)
+        }
         let result = try runHostCommand(routed)
         let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
         let size = imagePixelSize(path: outputPath)

@@ -657,3 +657,9 @@ CLI三条host-process runner的输出完整性与直接子进程exit状态分别
 `device wait-ready --platform android`（含 `target wait-ready` 的同一路由）依次验证 adb `get-state=device`、`sys.boot_completed=1` 和 `pm path android` 可用。boot property 未就绪时不把提前出现的 package 路径当作 install-ready；boot 完成但 package service 暂不可用时继续有限等待。成功回执的 `sourceCommands` 保留三项探针。该采样不证明 APK 安装必然成功、embedded runtime 已连接或业务就绪；安装仍需独立检查结果。
 
 `device screenshot` 的 screencap/pull 子命令失败（例如共享存储文件不存在、远端 shell 127）返回 `android_screenshot_failed`。只有宿主 executable lookup 的明确证据才报告 `android_adb_not_found`；不能根据通用 `No such file` / `not found` 文字推断 adb 未安装。
+
+## Simulator 显式目标诊断（#224）
+
+`triton device doctor --platform ios --scope simulator --device sim:<UUID> --json` 返回 `simulatorDiagnostics`：独立的 `resize.state=active|inactive|unknown` 与 `display.state=primary|unknown`，未知时各有 `reason`，并保留精确目标 `target`、只读 provenance 和同目标 `nextAction`。未传 `--device` 时不增加这些查询。doctor 的顶层 `ok` 仅描述工具/发现契约；`inputDispatchVerified=false`、`captureVerified=false`，不是调用成功或业务完成。两个快照不是原子锁；动作仍做自己的 fresh gate。
+
+`appResize` 的 `unsupportedQuery/queryTimedOut/jsonMissing` 与 `displays` 的 `unsupported/timedOut/queryFailed` 不能当作 inactive/primary。截图或 AX 显示门禁失败保留 typed code，并绑定恢复到实际 Simulator；HID helper 的失败也绑定同目标 doctor。保持 unknown 时拒绝截图/输入，不静默回退原始 framebuffer；Xcode26.6 与原用户项目尚须真实复验。v0.2.33 的 Xcode27.1 displays 修复及截图证据不等于所有工具链已兼容。

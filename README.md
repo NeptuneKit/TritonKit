@@ -1044,3 +1044,9 @@ Temporary 查询可能创建客户端域，实际是否新建没有可靠后置�
 专门平台 runner 真实执行必须传递版本化 `TRITON_PLATFORM_REQUEST`（含 Crown delta 与唯一 nonce），并从 xcresult 的指定测试/设备附件校验结果，不能解析 xcodebuild stdout 作为成功 JSON。只运行一个精确测试方法，禁用并行与重复执行，先持久 intent 再执行并写 completion；未知送达保持未知且退出非零、不重试。独立验收工程在 `Examples/ApplePlatformAcceptance`，SDK build-for-testing 不代表 runtime/input 实测。结果父目录需 owned 0700 且路径无符号链接。
 
 `triton xcode ... --package <Package.swift-or-directory>` 的相对 `--derived-data-path` 按 package 工作目录解析并在 invocation/cache 元数据中给出绝对路径；`xcode test --result-bundle <relative>` 同样按 package 工作目录规范化，执行命令、inline xcresult parser 和最终 `resultBundlePath` 共享该位置。绝对路径保持不变；非 package 工作流保留调用目录语义。
+
+## Simulator 显式目标诊断（#224）
+
+`triton device doctor --platform ios --scope simulator --device sim:<UUID> --json` 返回 `simulatorDiagnostics`：独立的 `resize.state=active|inactive|unknown` 与 `display.state=primary|unknown`，未知时各有 `reason`，并保留精确目标 `target`、只读 provenance 和同目标 `nextAction`。未传 `--device` 时不增加这些查询。doctor 的顶层 `ok` 仅描述工具/发现契约；`inputDispatchVerified=false`、`captureVerified=false`，不是调用成功或业务完成。两个快照不是原子锁；动作仍做自己的 fresh gate。
+
+`appResize` 的 `unsupportedQuery/queryTimedOut/jsonMissing` 与 `displays` 的 `unsupported/timedOut/queryFailed` 不能当作 inactive/primary。截图或 AX 显示门禁失败保留 typed code，并绑定恢复到实际 Simulator；HID helper 的失败也绑定同目标 doctor。保持 unknown 时拒绝截图/输入，不静默回退原始 framebuffer；Xcode26.6 与原用户项目尚须真实复验。v0.2.33 的 Xcode27.1 displays 修复及截图证据不等于所有工具链已兼容。

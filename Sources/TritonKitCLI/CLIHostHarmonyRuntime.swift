@@ -412,7 +412,9 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
     switch platform {
     case .ios:
         try prepareHostArtifactOutputPath(output)
-        let command = try resizeAwareSimulatorScreenshotCommand(TKSimctlCommand.screenshot(udid: target.rawTarget, output: output).withTimeout(timeout), simulator: target.rawTarget)
+        let command = try withSimulatorDiagnosticTarget(target.rawTarget) {
+            try resizeAwareSimulatorScreenshotCommand(TKSimctlCommand.screenshot(udid: target.rawTarget, output: output).withTimeout(timeout), simulator: target.rawTarget)
+        }
         let result = try runHostCommand(command)
         return HostDeviceArtifactOutput(
             ok: true,
