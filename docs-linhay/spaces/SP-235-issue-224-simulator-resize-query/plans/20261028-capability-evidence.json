@@ -33,8 +33,10 @@
     "otherDevicesMutated": false
   },
   "remaining": [
-    "Original Xcode 26.6/iPhone native error not available on this host",
+    "Xcode 26.6 is outside the requested validation scope",
     "iPad host capture/input not restored",
     "Do not close #224 for diagnostics alone"
-  ]
+  ],
+  "acceptanceScope": "User explicitly accepts Xcode 27.1 testing only; Xcode 26.6 is not a blocker",
+  "pullRequest": "https://github.com/NeptuneKit/TritonKit/pull/236"
 }

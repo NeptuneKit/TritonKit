@@ -300,7 +300,7 @@
 
 | `SP-234-issue-225-ios-runner-transport` | [`SP-234-issue-225-ios-runner-transport`](./SP-234-issue-225-ios-runner-transport/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-235-issue-224-simulator-resize-query` | [`SP-235-issue-224-simulator-resize-query`](./SP-235-issue-224-simulator-resize-query/README.md) | 后续处理中，未完成 | v0.2.35后仍有Resize失败；本轮定位iPad1001并补unsupportedDevice，原Xcode26.6根因未定，禁止再次仅按诊断关闭 |
+| `SP-235-issue-224-simulator-resize-query` | [`SP-235-issue-224-simulator-resize-query`](./SP-235-issue-224-simulator-resize-query/README.md) | 后续处理中，未完成 | v0.2.35后仍有Resize失败；本轮定位iPad1001并补unsupportedDevice，按用户要求仅验收27.1，iPad捕获/输入仍受限；PR #236，禁止仅按诊断关闭 |
 
 | `SP-236-issue-223-bar-button-activation` | [`SP-236-issue-223-bar-button-activation`](./SP-236-issue-223-bar-button-activation/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 

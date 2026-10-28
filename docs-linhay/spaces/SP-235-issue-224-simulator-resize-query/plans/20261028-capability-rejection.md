@@ -32,3 +32,7 @@ CLI首轮1566项中一项既有FramebufferHelperTests缺临时脚本marker，单
 复跑：FramebufferHelperTests 11项通过，完整CLI1566项Swift Testing +94项XCTest通过，0失败；保留首轮失败。原始最低版本iPhone/Xcode26.6目前无可用安装，不能据本机27.1结果关闭兼容性问题。
 
 本地总门禁`TRITON_VERIFY_XCODE=0 verify.sh --local`通过（native/jobs=2 wrapper），根包401+7、CLI release构建及smoke、docs/diff通过。可选裸Xcode测试未跑：本轮无embedded/UIKit/Runner源码变化，实际host Simulator复验已单列。文档/skill门禁完成后创建PR；未自动合并或发布。独立只读审计确认没有安全放行变化、typed零动作负例齐备、helper测试核心断言保持。
+
+## 用户确认的验收范围与PR
+
+用户追加“Xcode27.1测试就行了”。因此此前26.6缺失记录只是历史验证边界，不再是本轮阻塞，也不继续索要该环境；本次以已完成的Xcode27.1+iOS27.0自有iPhone17/iPad A16验证为准。iPad捕获/输入仍受安全拒绝，是保留#224 OPEN的功能限制。实现提交5296ec2e，[PR #236](https://github.com/NeptuneKit/TritonKit/pull/236)为部分修复，没有自动关闭关键词；未合并/发布。后续若要恢复不支持查询目标的主屏只读捕获，需要独立、显式的显示绑定契约，不能静默放宽unknown。

@@ -1,6 +1,6 @@
 # SP-235 · #224 Simulator 显示状态诊断
 
-当前状态：用户要求继续处理#224；v0.2.35后反馈仍有queryFailed，原诊断缺口修复不能视为根因解决。已定位iPad能力拒绝并完成最小分类修复/失败测试/真实验证，#224已恢复OPEN，截图/输入及旧工具链仍未完全解决；旧completed记录保留历史含义，后续不据它判定问题全部解决。
+当前状态：用户要求继续处理#224；v0.2.35后反馈仍有queryFailed，原诊断缺口修复不能视为根因解决。已定位iPad能力拒绝并完成最小分类修复/失败测试/真实验证，#224已恢复OPEN，iPad截图/输入仍未恢复，按用户追加要求仅验收Xcode27.1；旧completed记录保留历史含义，后续不据它判定问题全部解决。
 ## 边界和现状
 
 基线 main `a0d187ac`。只补显式目标 doctor 的 appResize/displays 只读事实与精确恢复指令，不绕过 unknown geometry 截图/触摸拒绝。#224全文及三条评论已经核对；Xcode27.1 topology bug 由 SP-218/v0.2.33 修复，Xcode26.6 旧 appResize 兼容性不能从该证据推断。影响 CLI host diagnostics/schema/failure envelope；无新 Web/HTTP 控制面。
@@ -35,3 +35,5 @@
 BDD：真实已停止/活动Resize查询须按原生结构、完整命令回执和目标身份判定；先以脱敏原生失败fixture证明旧实现误分类，再最小修复。错误包装不能把一般query failure、混合错误、无目标回执或超预算输出误作inactive；截图通过不证明HID成功。真实验证仅使用本任务新建Simulator，设备与scratch操作串行。
 
 当前后续事实源：[Resize capability rejection](plans/20261028-capability-rejection.md)，接替旧记录的完整关闭含义；v0.2.35已发布旧diagnostics修复，本轮部分修复尚未发布。
+
+用户追加范围：只用Xcode27.1测试即可，旧Xcode26.6不再作为本次阻塞。部分修复已提交为5296ec2e并创建[PR #236](https://github.com/NeptuneKit/TritonKit/pull/236)，#224保持OPEN；iPad默认捕获/输入仍受限，不自动合并/发布。

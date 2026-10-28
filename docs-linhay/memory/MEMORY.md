@@ -1,6 +1,6 @@
 # TritonKit Project Memory
 
-- 2026-10-28后续：[#224能力拒绝调查](../spaces/SP-235-issue-224-simulator-resize-query/plans/20261028-capability-rejection.md)接替旧completed判断。原生iPad返回精确1001而非无会话；仅修复unsupportedDevice分类/恢复提示，截图/输入未恢复，原Xcode26.6/iPhone未知，issue须保留未完成。
+- 2026-10-28后续：[#224能力拒绝调查](../spaces/SP-235-issue-224-simulator-resize-query/plans/20261028-capability-rejection.md)接替旧completed判断。原生iPad返回精确1001而非无会话；仅修复unsupportedDevice分类/恢复提示，截图/输入未恢复，用户确认仅验27.1，iPad捕获/输入仍受限，issue保留未完成（PR #236）。
 
 - 2026-10-28：[v0.2.35发布验收](../spaces/SP-242-release-v0-2-35/plans/20261028-release.md)完成：candidate190c161f，main/tag CI与Release全绿，双架构/checksum/skills/Runner/Homebrew验证通过。包外只读HTTP通过；默认实时流因本机resize unknown返回409，工作台布局零console error，不能声称默认流通过。#214 OPEN；原主目录HEAD/status/17个WIP哈希未变，CocoaPods仅lint。
 
