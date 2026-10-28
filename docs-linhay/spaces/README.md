@@ -369,3 +369,20 @@
 ## 2026-10-27 v0.2.34 发布准备
 
 - [SP-227-release-v0-2-34](./SP-227-release-v0-2-34/README.md)：`v0.2.34` 已发布；Release/CI 7 job、双架构资产、skills、远端 Homebrew formula、仓库外 packaged Web 与真实浏览器 console 0 error/warning 均通过，CocoaPods 仅 lint。
+
+## 2026-10-28 开放 issue 批次
+
+- [SP-228-issue-226-real-device-launch-args](./SP-228-issue-226-real-device-launch-args/README.md)：处理中，独立候选验收。
+- [SP-229-issue-227-android-build-diagnostics](./SP-229-issue-227-android-build-diagnostics/README.md)：处理中，独立候选验收。
+- [SP-230-issue-228-android-wait-ready](./SP-230-issue-228-android-wait-ready/README.md)：处理中，独立候选验收。
+- [SP-231-issue-229-android-observe-stale-tree](./SP-231-issue-229-android-observe-stale-tree/README.md)：处理中，独立候选验收。
+- [SP-232-issue-231-simulator-log-partial](./SP-232-issue-231-simulator-log-partial/README.md)：处理中，独立候选验收。
+- [SP-233-issue-232-ios-real-backend-docs](./SP-233-issue-232-ios-real-backend-docs/README.md)：处理中，独立候选验收。
+- [SP-234-issue-225-ios-runner-transport](./SP-234-issue-225-ios-runner-transport/README.md)：处理中，独立候选验收。
+- [SP-235-issue-224-simulator-resize-query](./SP-235-issue-224-simulator-resize-query/README.md)：处理中，独立候选验收。
+- [SP-236-issue-223-bar-button-activation](./SP-236-issue-223-bar-button-activation/README.md)：处理中，独立候选验收。
+- [SP-237-issue-222-device-hub-followup](./SP-237-issue-222-device-hub-followup/README.md)：处理中，独立候选验收。
+- [SP-238-issue-221-searchbar-input-focus](./SP-238-issue-221-searchbar-input-focus/README.md)：处理中，独立候选验收。
+- [SP-239-issue-230-ios-runner-geometry](./SP-239-issue-230-ios-runner-geometry/README.md)：处理中，独立候选验收。
+- [SP-240-issue-214-deriveddata-ownership](./SP-240-issue-214-deriveddata-ownership/README.md)：处理中，独立候选验收。
+- [SP-241-open-issues-validation](./SP-241-open-issues-validation/README.md)：处理中，独立候选验收。
