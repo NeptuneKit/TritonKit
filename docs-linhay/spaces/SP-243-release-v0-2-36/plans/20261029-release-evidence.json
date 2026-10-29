@@ -1,0 +1,107 @@
+{
+  "version": "0.2.36",
+  "candidateCommit": "527b2368a28ea11c66873c22f63fa3759e5ec7a4",
+  "tag": "v0.2.36",
+  "published": true,
+  "mainCI": 40832836916,
+  "tagCI": 40833592180,
+  "releaseWorkflow": 40833592162,
+  "workflowsConclusion": "success",
+  "checksums": {
+    "triton-macos-arm64.tar.gz": "bcc2b72b372182faa951f8be543afe5f47910fc043c02582b354d9cd5f759baf",
+    "triton-macos-x86_64.tar.gz": "2ba6ebaa669df7cc7609fe3591fb1d7c708d6ee12e018258a714476056c6cc99",
+    "tritonkit-skills.tar.gz": "ebfeefb8390ed55e872d83220ca7a9ad6b36a49d235c074d52d9a0570dfee172"
+  },
+  "binaries": {
+    "arm64": {
+      "version": "0.2.36",
+      "architecture": "arm64",
+      "executable": true
+    },
+    "x86_64": {
+      "version": "0.2.36",
+      "architecture": "x86_64",
+      "executable": true
+    }
+  },
+  "skills": {
+    "version": "0.2.36",
+    "count": 4,
+    "dirty": false
+  },
+  "runner": {
+    "architectures": [
+      "arm64",
+      "x86_64"
+    ],
+    "fileCount": 11,
+    "version": "0.2.36",
+    "validation": "passed"
+  },
+  "homebrew": {
+    "upgradeFrom": "0.2.35",
+    "installed": "0.2.36",
+    "test": "passed",
+    "remoteFormulaChecksums": "matched"
+  },
+  "packagedWeb": {
+    "version": "0.2.36",
+    "mode": "packaged",
+    "readonly": true,
+    "html": 200,
+    "resources": [
+      {
+        "path": "/assets/index-CkYsvsdW.css",
+        "status": 200,
+        "bytes": 17581
+      },
+      {
+        "path": "/assets/index-F7RYKvXh.js",
+        "status": 200,
+        "bytes": 1024838
+      }
+    ],
+    "gesture": {
+      "target": "release-readonly-probe",
+      "platform": "ios",
+      "type": "tap",
+      "x": 10,
+      "y": 10,
+      "width": 390,
+      "height": 844
+    },
+    "gestureStatus": 405,
+    "gestureCode": "web_host_input_readonly",
+    "preexistingServe": true
+  },
+  "browser": {
+    "browser": "Codex in-app browser",
+    "url": "http://127.0.0.1:34129/",
+    "layout": "default",
+    "consoleErrors": 0,
+    "consoleWarnings": 0,
+    "streamImage": {
+      "complete": true,
+      "naturalWidth": 7680,
+      "naturalHeight": 4320,
+      "visualContent": "black image; scene correctness not asserted"
+    },
+    "boundary": "UI/static resources smoke passed; does not resolve issue224 or verify default streaming across devices",
+    "tabClosed": true
+  },
+  "issues": {
+    "224": "OPEN",
+    "214": "OPEN"
+  },
+  "originalWorkspace": {
+    "headUnchanged": true,
+    "statusUnchanged": true,
+    "unchangedWIPFiles": 17
+  },
+  "cocoaPods": {
+    "localStandard": "failed: Xcode27.1 rejects iOS13 minimum",
+    "localCompatibility": "passed with separate iOS15 xcconfig",
+    "candidateRemoteStandard": "passed",
+    "trunkPublished": false
+  }
+}
