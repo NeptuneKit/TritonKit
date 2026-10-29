@@ -49,6 +49,10 @@
 
 有价值更新、新采用批次、重要交付/阻塞、读取故障变化或恢复时简短中文通知并附原始链接；未变化且无待推进采用任务则静默。上游性能、测试数量与成功率如未在本地证明，明确标注未经验证。未来正式登记的参考进入清单，偶然链接或clone目录不自动纳入。
 
+## 2026-10-28 检查记录（历史基线）
+
+[日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261028-reference-update-report.md)以main `a0d187ac`评估33仓：24完整/9 partial，Baguette、mirroir、Revyl三仓变化，无新采用切片。mirroir的compiled技能链、Revyl云端导入/认证与Baguette折叠3D不直接映射本机缺口。16条采用合并均可达main，已随独立SP-227的v0.2.34发布；历史v0.2.33不含SP-221/223/225的记录仅代表当时版本。累计许可/二进制来源缺口继续保留，已关闭会话不重开。
+
 ## 历史关系
 
 - [SP-194参考报告](../spaces/SP-194-reference-project-updates/README.md)及[2026-10-14快照](20261014-reference-project-updates.md)：保留当时23+9数量和证据；后新增Mobile MCP使当前登记为33仓。

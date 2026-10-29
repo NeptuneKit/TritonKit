@@ -5,7 +5,7 @@
 - 用户于2026-10-16要求“后期评估可以纳入的改动可以直接按照这个流程直接进入开发”，随后明确“从 iCTRL 扩大到所有参考项目”。本页是当前流程事实源，替代各历史研究中逐项等待采用授权的说明。
 - 范围：全部已登记参考仓库，及登记为研究线索的候选；候选身份不等于已经采用。当前登记由 SP-194 的23主要仓库+9候选及 SP-199 的 Mobile MCP 组成，合计33个去重仓库。
 - 影响层：参考资料、自动任务、开发分派和治理规则；本次配置不修改CLI/HTTP/SDK产品代码。
-- 状态：持续追踪与采用。当前16条采用登记均已合入本地main；最新SP-225/226合并 `607cdf1c`，合后完整CLI与docs通过并清理关闭。v0.2.33来自独立发布，不含本轮SP-221/223/225；真实验收边界以各实现space为准。
+- 状态：持续追踪与采用。当前16条采用登记均已合入本地main；最新SP-225/226合并 `607cdf1c`，合后完整CLI与docs通过并清理关闭。SP-221/223/225已随SP-227的v0.2.34发布；真实验收边界以各实现space为准。
 - 正式说明：[参考项目追踪与采用](../../dev/reference-project-adoption-workflow.md)。
 - 仓库与读取状态：[reference-state.json](./plans/reference-state.json)；任务去重与授权：[adoption-state.json](./plans/adoption-state.json)。上游读取状态与采用交付状态分开。
 - 前次检查（历史）：2026-10-26，22完整/11 partial，simslim/Revyl两仓HEAD变化，Release/许可不变；[日报](./plans/20261026-reference-update-report.md)。用户要求继续后，两仓文本缺口已闭合并独立推进，当前合并视图24完整/9 partial，见[补查记录](./plans/20261026-partial-recovery.md)；本次仅重新查询2仓，其他31仓沿用日检。新SP-223/224已验收合本地main9fbda1d5；独立与合后完整CLI XCTest91/SwiftTesting1527、fakeCLI4场景和适用local通过，源worktree/branch已归档清理。新[SP-221](../SP-221-simulator-resource-read-retry/README.md)经[SP-222](../SP-222-simulator-resource-retry-integration/README.md)验收，候选eb9539f4合本地main `a0eebff0`；focused37、独立与合后完整CLI、root、适用local/docs均通过。显式gpt-6.1-sol真实执行/主控会话创建成功。旧13条采用保持，11旧源码/许可缺口不推进；未push/tag/release或执行设备恢复验证。
@@ -13,7 +13,7 @@
 
 - 2026-10-27主控接管自己开启会话的完整交付与关闭责任：15条合并提交再次确认在main，9个真实执行/主控会话已归档；本长期追踪聊天保留，见[关闭记录](./plans/20261027-session-closeout.md)。
 
-- 最近检查：2026-10-27，33仓中24完整/9 partial，6仓HEAD/Release变化；Files Recents诊断SP-225/226已验收合main并清理关闭。多点HID/软件键盘需真实兼容证据，保持观察。见[日报](./plans/20261027-reference-update-report.md)与[主线收口](../SP-226-files-recents-integration/plans/20261027-main-closeout.md)。
+- 最近检查：2026-10-28，33仓中24完整/9 partial，Baguette/mirroir/Revyl三仓变化；完整文本增量对照实际main后无新采用项，9个旧许可/来源缺口保持。16条采用合并SHA全部为main祖先，既有执行/主控会话不重开；见[日报](./plans/20261028-reference-update-report.md)。多点HID/软件键盘继续观察。
 
 ## 执行流程
 

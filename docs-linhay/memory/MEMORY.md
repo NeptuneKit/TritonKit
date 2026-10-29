@@ -1,5 +1,7 @@
 # TritonKit Project Memory
 
+- 2026-10-29整理：[10月28日参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261028-reference-update-report.md)原17个WIP已按用户授权对齐v0.2.36后的main并独立提交；33仓24完整/9partial、三仓更新无新采用，9个缺口保留。本轮仅资料整合，没有重新查询上游或变更发布tag。
+
 - 2026-10-29：[v0.2.36发布验收](../spaces/SP-243-release-v0-2-36/plans/20261029-release.md)完成，candidate527b2368；main/tag CI、双架构Release、checksum/skills/Runner/Homebrew通过，包外只读Web及默认页面console检查通过，流黑图内容未验证。#224/#214 OPEN；主目录17个WIP未变，CocoaPods仅lint。
 
 - 2026-10-28后续：[#224显式主屏截图](../spaces/SP-235-issue-224-simulator-resize-query/plans/20261028-primary-framebuffer.md)承接能力拒绝调查。Xcode27.1 iPad单LCD opt-in截图已实测成功，unsupported仍unknown；默认截图/输入仍拒绝，#224 OPEN，PR #236已合main（27c7a875），#224保持OPEN。原诊断completed仅历史记录，完整门禁结果见验收报告。
