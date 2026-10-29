@@ -36,8 +36,12 @@ BDD：真实已停止/活动Resize查询须按原生结构、完整命令回执�
 
 当前后续事实源：[Resize capability rejection](plans/20261028-capability-rejection.md)，接替旧记录的完整关闭含义；v0.2.35已发布旧diagnostics修复，本轮部分修复尚未发布。
 
-用户追加范围：只用Xcode27.1测试即可，旧Xcode26.6不再作为本次阻塞。部分修复已提交为5296ec2e并创建[PR #236](https://github.com/NeptuneKit/TritonKit/pull/236)，#224保持OPEN；iPad默认捕获/输入仍受限，不自动合并/发布。
+用户追加范围：只用Xcode27.1测试即可，旧Xcode26.6不再作为本次阻塞。部分修复已提交为5296ec2e并创建[PR #236](https://github.com/NeptuneKit/TritonKit/pull/236)，#224保持OPEN；iPad默认捕获/输入仍受限；PR已按用户授权合并，未发布。
 
 ## 2026-10-28 继续：显式主屏截图
 
 新增CLI显式 `--primary-framebuffer`，限定单LCD still PNG，保持Resize unknown和全部输入保护；BDD/真实生命周期证据与验证结果统一维护于[主屏截图验收](plans/20261028-primary-framebuffer.md)。之前“捕获仍拒绝”指默认路径；本模式独立声明范围，不推导完整问题已解决。
+
+## 2026-10-29 合入main
+
+用户明确授权后，[PR #236](https://github.com/NeptuneKit/TritonKit/pull/236)已合入main，merge commit `27c7a87597274649e62a00b2cf1dad92b12677f9`。候选8c2fab81的Swift/CLI Release、CocoaPods和contracts CI全部通过；merge tree与该候选完全一致。#224保留OPEN，剩余iPad默认捕获/输入限制未解除；#214暂缓，主目录17个WIP保持不变，未发布。此前未合并文字仅表示对应历史阶段。

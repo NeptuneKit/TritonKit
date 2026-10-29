@@ -35,3 +35,7 @@
 第二轮全CLI暴露既有HostProcessDrain executionTimeout(combined)竞争：intentional interrupt=10ms早于execution deadline=50ms，可能在shell装trap前完成duration中断。测试改为复用已有invoke（combined cutoff=5秒），保留同一50ms执行超时及严格抛timeout断言；独立intentional interruption测试未改，生产runner未改。152项相关focused及最终全量通过；原始失败日志保留，不将此表述为已证明宿主具体调度时序。经验写回ops治理原条目。
 
 阶段：实现与本地整合验证完成；已准备更新PR #236，未合并、未发布。#224继续OPEN；iPad输入仍缺安全Resize/触摸路由证据，后续只在获得可验证后端或独立路由契约时推进，不以本次主屏取证解除限制。主工作区17个原WIP文件hash、status、HEAD复核均未变；#214保持暂缓。
+
+## 合并记录
+
+2026-10-29用户授权合main；PR #236合并为27c7a875，合并树与已验证8c2fab81一致。[候选CI](https://github.com/NeptuneKit/TritonKit/actions/runs/40725631168)全部通过（发布作业按规则跳过）。#224/#214保持OPEN；主目录WIP未变。仅合并，不发布；不沿用历史“未合并”作为当前状态。
