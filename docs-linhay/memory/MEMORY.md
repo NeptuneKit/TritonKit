@@ -1,5 +1,7 @@
 # TritonKit Project Memory
 
+- 2026-10-28后续：[#224显式主屏截图](../spaces/SP-235-issue-224-simulator-resize-query/plans/20261028-primary-framebuffer.md)承接能力拒绝调查。Xcode27.1 iPad单LCD opt-in截图已实测成功，unsupported仍unknown；默认截图/输入仍拒绝，#224 OPEN，PR #236待审。原诊断completed仅历史记录，完整门禁结果见验收报告。
+
 - 2026-10-28：[v0.2.35发布验收](../spaces/SP-242-release-v0-2-35/plans/20261028-release.md)完成：candidate190c161f，main/tag CI与Release全绿，双架构/checksum/skills/Runner/Homebrew验证通过。包外只读HTTP通过；默认实时流因本机resize unknown返回409，工作台布局零console error，不能声称默认流通过。#214 OPEN；原主目录HEAD/status/17个WIP哈希未变，CocoaPods仅lint。
 
 - 2026-10-28：[SP-241全部开放issue本地联合验收](../spaces/SP-241-open-issues-validation/README.md)覆盖#214、#221～232，10项缺陷、1项文档及2项范围/历史审计；实现`51d505bb`，完整CLI/root/local与UIKit/Runner模拟器fixture通过，Android旧版黑盒反证明确。随后已按追加授权合并[PR #233](https://github.com/NeptuneKit/TritonKit/pull/233)为40850dde，#221～232共12项completed关闭；#214保留原始来源/占用只读调查，通用删除仍取消。[归档及后续计划](../spaces/SP-241-open-issues-validation/plans/20261028-merge-closeout.md)；本批已随v0.2.35发布，主目录WIP保留。

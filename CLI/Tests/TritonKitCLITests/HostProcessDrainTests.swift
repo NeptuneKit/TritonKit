@@ -148,11 +148,11 @@ struct HostProcessDrainTests {
         // exec replaces the shell, so the runner owns the only long-lived PID.
         let command = TKHostCommand(executable: "/bin/sh", arguments: ["-c", "trap '' INT TERM; exec /bin/sleep 20"], defaultTimeoutSeconds: 0.05)
         do {
-            if runner == "combined" {
-                _ = try runHostCommandWritingCombinedOutputArtifact(command, outputPath: output, interruptAfter: 0.01, maximumBytes: 100)
-            } else {
-                _ = try invoke(runner, command, output: output)
-            }
+            // Keep the intentional duration cutoff after the execution deadline.
+            // An earlier SIGINT can terminate the shell before it installs traps,
+            // correctly completing as a duration interruption instead of timeout.
+            // The separate interruptionStatus test covers that completion path.
+            _ = try invoke(runner, command, output: output)
             Issue.record("execution timeout succeeded")
         } catch HostCommandRunError.timeout { }
     }

@@ -1049,7 +1049,7 @@ Temporary 查询可能创建客户端域，实际是否新建没有可靠后置�
 
 `triton device doctor --platform ios --scope simulator --device sim:<UUID> --json` 返回 `simulatorDiagnostics`：独立的 `resize.state=active|inactive|unknown` 与 `display.state=primary|unknown`，未知时各有 `reason`，并保留精确目标 `target`、只读 provenance 和同目标 `nextAction`。未传 `--device` 时不增加这些查询。doctor 的顶层 `ok` 仅描述工具/发现契约；`inputDispatchVerified=false`、`captureVerified=false`，不是调用成功或业务完成。两个快照不是原子锁；动作仍做自己的 fresh gate。
 
-`appResize` 的 `unsupportedQuery/queryTimedOut/jsonMissing` 与 `displays` 的 `unsupported/timedOut/queryFailed` 不能当作 inactive/primary。截图或 AX 显示门禁失败保留 typed code，并绑定恢复到实际 Simulator；HID helper 的失败也绑定同目标 doctor。保持 unknown 时拒绝截图/输入，不静默回退原始 framebuffer；Xcode26.6 与原用户项目尚须真实复验。v0.2.33 的 Xcode27.1 displays 修复及截图证据不等于所有工具链已兼容。
+`appResize` 的 `unsupportedQuery/queryTimedOut/jsonMissing` 与 `displays` 的 `unsupported/timedOut/queryFailed` 不能当作 inactive/primary。截图或 AX 显示门禁失败保留 typed code，并绑定恢复到实际 Simulator；HID helper 的失败也绑定同目标 doctor。保持 unknown 时默认拒绝截图/输入，不静默回退原始 framebuffer。本轮用户指定Xcode27.1验收；不据此声明Xcode26.6或原用户项目已复验。v0.2.33 的 Xcode27.1 displays 修复及截图证据不等于所有工具链已兼容。
 
 ### Runner 启动失败诊断
 
@@ -1062,3 +1062,9 @@ Runner `inspect` / `screenshot` 自行读取前台 App 的 `app.frame` 与 XCTes
 ### Embedded navigation button activation
 
 Public UIControl target/action and accessibilityActivate remain supported. If a navigation/toolbar view cannot activate through either path, embedded tap returns `unsupported_capability` with `bar-button-action-unsupported`; it never guesses a UIBarButtonItem association from matching titles or retries behind a sheet. Expose a customView control/accessibility action, or use fresh coordinates with an explicit Simulator target and host HID. Physical devices require an already-ready allowlisted Runner or manual interaction; verify the business result separately.
+
+### 显式主屏 framebuffer 截图
+
+当安装版本的 `triton schema --command sim.screenshot --json` 暴露该选项时，可用 `triton sim screenshot --simulator <UUID> --primary-framebuffer --output <new-path.png> --json` 读取唯一主屏LCD。它与 `--display` 互斥，要求新鲜目标绑定的Resize inactive或精确unsupportedDevice，以及完整清单中仅一个active primary integrated LCD；额外虚拟屏（含off）、其他unknown或查询失败仍拒绝。默认截图与输入保护不变。
+
+输出 `primaryFramebuffer` 明确显示绑定与Resize状态；unsupported仍为unknown、resizeVerified=false、inputDispatchVerified=false。两次查询非原子；主屏图不保证App/Resizable内容完整，也不授权触摸、AX、录像或实时流。产物须为本次可解码PNG，已有文件不覆盖。

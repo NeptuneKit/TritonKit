@@ -197,7 +197,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
             return ["diagnose", "plan"]
         }
         // These failures require fresh inspection or an explicit plan; never infer a retry of delivered input.
-        if ["skills_update_busy", "ios_simulator_resize_touch_unroutable", "ios_simulator_resize_state_unknown", "ios_simulator_resize_capture_state_unknown"].contains(failureCode) {
+        if ["skills_update_busy", "ios_simulator_display_safety_unknown", "ios_simulator_resize_touch_unroutable", "ios_simulator_resize_state_unknown", "ios_simulator_resize_capture_state_unknown"].contains(failureCode) {
             return ["diagnose", "plan"]
         }
         if failureCode == "ios_simulator_resize_target_invalid" {

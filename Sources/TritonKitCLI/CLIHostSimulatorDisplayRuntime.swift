@@ -67,7 +67,15 @@ func iosSimulatorDisplayTopologyQueryCommand(target: String, json: String, log: 
     TKHostCommand(executable: "xcrun", arguments: ["devicectl", "device", "info", "displays", "--device", target, "--json-output", json, "--log-output", log, "--timeout", "5", "--quiet"], environment: environment, redactedArgumentIndexes: [5, 7, 9], defaultTimeoutSeconds: 6, capturesArtifacts: true, sensitiveOutput: true)
 }
 
-func probeIOSSimulatorDisplay(target: String, environment: [String: String] = [:], artifactProvider: (String) throws -> (json: String, log: String) = freshDeviceInfoArtifactPaths, runner: (TKHostCommand) throws -> HostProcessResult = { try runHostCommand($0, maximumOutputBytes: 16_384) }, reader: (String, Int) throws -> Data = readBoundedDeviceFilesJSON) -> IOSSimulatorDisplayTopology {
+/// A fresh, bounded native response. Classification retains the complete issued argv.
+/// Both the existing topology policy and explicit single-frame policy consume this
+/// same query path; neither may synthesize a successful inventory from stderr.
+enum IOSSimulatorDisplayQuerySnapshot {
+    case response(data: Data, exitCode: Int32, arguments: [String])
+    case unknown(IOSSimulatorDisplayUnknownReason)
+}
+
+func queryIOSSimulatorDisplaySnapshot(target: String, environment: [String: String] = [:], artifactProvider: (String) throws -> (json: String, log: String) = freshDeviceInfoArtifactPaths, runner: (TKHostCommand) throws -> HostProcessResult = { try runHostCommand($0, maximumOutputBytes: 16_384) }, reader: (String, Int) throws -> Data = readBoundedDeviceFilesJSON) -> IOSSimulatorDisplayQuerySnapshot {
     guard UUID(uuidString: target) != nil else { return .unknown(.identityMismatch) }
     let paths: (json: String, log: String)
     do { paths = try artifactProvider("simulator-display-topology") } catch { return .unknown(.queryFailed) }
@@ -81,7 +89,16 @@ func probeIOSSimulatorDisplay(target: String, environment: [String: String] = [:
         if result.exitCode == 64 && stderr.contains("displays") && (stderr.contains("unrecognized") || stderr.contains("unknown subcommand")) { return .unknown(.unsupported) }
         return .unknown(.queryFailed)
     }
-    return classifyIOSSimulatorDisplayTopology(data: data, target: target, exitCode: result.exitCode, expectedArguments: command.arguments)
+    return .response(data: data, exitCode: result.exitCode, arguments: command.arguments)
+}
+
+
+func probeIOSSimulatorDisplay(target: String, environment: [String: String] = [:], artifactProvider: (String) throws -> (json: String, log: String) = freshDeviceInfoArtifactPaths, runner: (TKHostCommand) throws -> HostProcessResult = { try runHostCommand($0, maximumOutputBytes: 16_384) }, reader: (String, Int) throws -> Data = readBoundedDeviceFilesJSON) -> IOSSimulatorDisplayTopology {
+    switch queryIOSSimulatorDisplaySnapshot(target: target, environment: environment, artifactProvider: artifactProvider, runner: runner, reader: reader) {
+    case .unknown(let reason): return .unknown(reason)
+    case .response(let data, let exitCode, let arguments):
+        return classifyIOSSimulatorDisplayTopology(data: data, target: target, exitCode: exitCode, expectedArguments: arguments)
+    }
 }
 
 func assertIOSSimulatorMainDisplayAllowed(target: String, environment: [String: String] = [:], probe: IOSSimulatorDisplayProbe) throws {

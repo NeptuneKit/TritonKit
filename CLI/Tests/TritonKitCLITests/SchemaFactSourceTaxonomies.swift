@@ -345,7 +345,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "observe", "plan"]
     case "highlight_render_timeout", "highlight_restore_conflict", "highlight_restore_failed":
         return ["diagnose", "observe"]
-    case "skills_update_busy", "ios_simulator_resize_touch_unroutable", "ios_simulator_resize_state_unknown", "ios_simulator_resize_capture_state_unknown":
+    case "skills_update_busy", "ios_simulator_display_safety_unknown", "ios_simulator_resize_touch_unroutable", "ios_simulator_resize_state_unknown", "ios_simulator_resize_capture_state_unknown":
         return ["diagnose", "plan"]
     case "ios_simulator_resize_target_invalid":
         return ["prepare-target", "diagnose"]

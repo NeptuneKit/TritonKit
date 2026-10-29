@@ -1,0 +1,42 @@
+{
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "runtime": "iOS 27.0",
+  "baseline": "v0.2.35",
+  "rootCause": {
+    "code": 1001,
+    "domain": "com.apple.dt.CoreDeviceError",
+    "feature": "com.apple.coredevice.feature.resizableappmanagement",
+    "errorTargetMatchedIssuedTarget": true,
+    "unsupportedIsInactive": false
+  },
+  "iphone17": {
+    "baselineResize": "inactive",
+    "candidateResize": "inactive",
+    "candidateScreenshot": {
+      "ok": true,
+      "width": 1206,
+      "height": 2622,
+      "visuallyInspected": "owned Simulator Home Screen"
+    }
+  },
+  "ipadA16": {
+    "baselineResize": "unknown/queryFailed",
+    "candidateResize": "unknown/unsupportedDevice",
+    "candidateDisplay": "primary",
+    "candidateCapture": "refused",
+    "candidateSwipe": "refused",
+    "captureFileCreated": false
+  },
+  "ownership": {
+    "createdSimulators": 2,
+    "shutdownSimulators": 2,
+    "otherDevicesMutated": false
+  },
+  "remaining": [
+    "Xcode 26.6 is outside the requested validation scope",
+    "iPad host capture/input not restored",
+    "Do not close #224 for diagnostics alone"
+  ],
+  "acceptanceScope": "User explicitly accepts Xcode 27.1 testing only; Xcode 26.6 is not a blocker",
+  "pullRequest": "https://github.com/NeptuneKit/TritonKit/pull/236"
+}

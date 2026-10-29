@@ -4,6 +4,13 @@ import TritonKitShared
 struct SimulatorDoctorProbeStatus: Encodable, Equatable {
     let state: String
     let reason: String?
+    let hint: String?
+
+    init(state: String, reason: String?, hint: String? = nil) {
+        self.state = state
+        self.reason = reason
+        self.hint = hint
+    }
 }
 
 /// Independent readonly snapshots, not a capability grant or a capture/input test.
@@ -32,7 +39,7 @@ func simulatorDoctorDiagnostics(
     switch resizeProbe(target, environment) {
     case .inactive: resize = .init(state: "inactive", reason: nil)
     case .active: resize = .init(state: "active", reason: nil)
-    case .unknown(let reason): resize = .init(state: "unknown", reason: reason.rawValue)
+    case .unknown(let reason): resize = .init(state: "unknown", reason: reason.rawValue, hint: reason.recoveryHint)
     }
     let display: SimulatorDoctorProbeStatus
     switch displayProbe(target, environment) {

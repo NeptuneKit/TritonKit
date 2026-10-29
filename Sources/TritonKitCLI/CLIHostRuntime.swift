@@ -170,15 +170,29 @@ func runHostSimulatorScreenshotCommand(
     simulator: String,
     command: TKHostCommand,
     outputPath: String,
-    outputFormat: ClientOutputFormat
+    outputFormat: ClientOutputFormat,
+    primaryFramebuffer: Bool = false
 ) throws {
     do {
-        let routed = try withSimulatorDiagnosticTarget(simulator) {
-            try resizeAwareSimulatorScreenshotCommand(command, simulator: simulator)
+        let result: HostProcessResult
+        let size: (width: Int, height: Int)?
+        let evidence: IOSSimulatorPrimaryFramebufferEvidence?
+        if primaryFramebuffer {
+            let capture = try withSimulatorDiagnosticTarget(simulator) {
+                try captureIOSSimulatorPrimaryFramebuffer(simulator: simulator, outputPath: outputPath)
+            }
+            result = capture.result
+            size = (capture.width, capture.height)
+            evidence = capture.evidence
+        } else {
+            let routed = try withSimulatorDiagnosticTarget(simulator) {
+                try resizeAwareSimulatorScreenshotCommand(command, simulator: simulator)
+            }
+            result = try runHostCommand(routed)
+            size = imagePixelSize(path: outputPath)
+            evidence = nil
         }
-        let result = try runHostCommand(routed)
         let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
-        let size = imagePixelSize(path: outputPath)
         let output = HostSimulatorScreenshotOutput(
             ok: true,
             action: "sim.screenshot",
@@ -190,14 +204,19 @@ func runHostSimulatorScreenshotCommand(
             sourceCommand: result.sourceCommand,
             stdoutTruncated: result.stdoutTruncated,
             stderrTruncated: result.stderrTruncated,
-            stderr: stderr.isEmpty ? nil : stderr,
+            stderr: primaryFramebuffer || stderr.isEmpty ? nil : stderr,
             artifact: outputPath,
             pixelWidth: size?.width,
             pixelHeight: size?.height,
-            display: parseSimctlScreenshotDisplayMetadata(stderr: result.stderr),
+            display: primaryFramebuffer
+                ? HostSimulatorScreenshotDisplayMetadata(rawLine: nil, displayID: evidence?.displayUniqueID, screenID: nil, name: "LCD")
+                : parseSimctlScreenshotDisplayMetadata(stderr: result.stderr),
             orientationPolicy: "raw-framebuffer",
             orientationNote: "simctl io screenshot writes the simulator display framebuffer as provided by CoreSimulator. Triton reports this as raw framebuffer orientation and does not rotate iPad screenshots yet.",
-            note: "Host-side simulator screenshot was written with raw framebuffer orientation metadata."
+            primaryFramebuffer: evidence,
+            note: primaryFramebuffer
+                ? "Explicit primary-display framebuffer only; Resize state is reported separately. Queries are not atomic. This image does not verify input routing or complete App/Resizable content."
+                : "Host-side simulator screenshot was written with raw framebuffer orientation metadata."
         )
         switch outputFormat {
         case .json:
@@ -205,6 +224,7 @@ func runHostSimulatorScreenshotCommand(
         case .text:
             print(outputPath)
             print(output.orientationNote)
+            if primaryFramebuffer { print(output.note) }
         }
     } catch {
         try failHostCommand(error, outputFormat: outputFormat)
