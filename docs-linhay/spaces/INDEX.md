@@ -315,3 +315,5 @@
 | `SP-241-open-issues-validation` | [`SP-241-open-issues-validation`](./SP-241-open-issues-validation/README.md) | 已合并归档，12关/1留 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
 | `SP-242-release-v0-2-35` | [`SP-242-release-v0-2-35`](./SP-242-release-v0-2-35/README.md) | 已发布，实时流受限 | 双架构/Homebrew通过；默认实时流Resize未知，工作台通过；#214 OPEN，主目录WIP未变 |
+
+| `SP-243-release-v0-2-36` | [`SP-243-release-v0-2-36`](./SP-243-release-v0-2-36/README.md) | 发布验证中 | PR #236；#224/#214 OPEN，主目录 WIP 隔离 |
