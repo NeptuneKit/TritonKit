@@ -325,4 +325,4 @@
 
 | `SP-248-issue-238-arkweb-transport` | [`SP-248-issue-238-arkweb-transport`](./SP-248-issue-238-arkweb-transport/README.md) | 本地验证通过，待真实ArkWeb | #238 text frame与错误分型；CLI1582+94、root402通过；独立worktree未提交/合并/发布 |
 
-| `SP-249-issue-237-webview-snapshot` | [`SP-249-issue-237-webview-snapshot`](./SP-249-issue-237-webview-snapshot/README.md) | 本地实现/root403通过，待联合文档验证 | #237 snapshot JS解析及selector精确往返；独立docs缺SP244～246前序编号；未提交、整合或发布 |
+| `SP-249-issue-237-webview-snapshot` | [`SP-249-issue-237-webview-snapshot`](./SP-249-issue-237-webview-snapshot/README.md) | 已本地提交，整合验证中 | 根包403及JSC/WK通过；前序已登记，待PR/main CI，真实iOS未验 |

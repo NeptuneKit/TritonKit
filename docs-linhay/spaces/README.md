@@ -399,4 +399,4 @@
 - [SP-248-issue-238-arkweb-transport](./SP-248-issue-238-arkweb-transport/README.md)：#238 本地修复验证通过（CLI1582+94、root402）；真实ArkWeb未验收，独立worktree未提交/合并/发布。
 
 ## SP-249-issue-237-webview-snapshot
-[SP-249-issue-237-webview-snapshot](./SP-249-issue-237-webview-snapshot/README.md)：本地实现、根包403项与JSC/WKWebView通过；独立docs因缺SP244～246前序编号失败，待联合文档验证；影响嵌入runtime，未提交、整合或发布。
+[SP-249-issue-237-webview-snapshot](./SP-249-issue-237-webview-snapshot/README.md)：修复已独立提交，首轮根包403及JSC/WK通过，前序已登记；当前复验整合候选，待PR/main CI，真实iOS未验。

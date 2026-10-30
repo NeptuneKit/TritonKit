@@ -96,3 +96,5 @@
 - 2026-10-30：[SP-248 / #238](../spaces/SP-248-issue-238-arkweb-transport/README.md)在独立worktree完成CDP text frame和transport/protocol分型本地修复；CLI1582+94、root402通过。真实ArkWeb及分发未验收，未提交合并发布。
 
 - 2026-10-30：[SP-247 #237 snapshot](../spaces/SP-249-issue-237-webview-snapshot/README.md)本地修复、JSC/macOS WebKit与根包403项通过；待联合文档门禁和真实iOS匹配SDK验收，未提交发布。
+
+- #237当前：已改SP249并在远端main+SP248前置上独立提交；已获持续提交/合并授权，前序登记缺口已解除，当前等待整合测试/PR CI。上述未提交与缺前序描述仅为首轮历史；真实iOS验收仍未完成。
