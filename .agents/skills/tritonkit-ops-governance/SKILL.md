@@ -13,6 +13,7 @@ metadata:
 
 - 新单需求优先在 `docs-linhay/spaces/SP-<三位序号>-<topic>/README.md` 写清 BDD 场景和验收边界；历史或项目级规格再使用 `docs-linhay/features/`。
 - 新 space 使用 `SP-<三位序号>-<topic>` 规范名，例如 `SP-001-hybrid-transport-smoke`；序号全局递增且永不复用。历史目录通过 `docs-linhay/spaces/INDEX.md` 映射，不在普通需求中直接重命名。
+- 并行分配新Space编号时联合核对主索引和所有注册worktree/分支的占号；独立未提交分支也占用编号。若碰号，仅调整本轮未提交候选并记录旧证据路径。前序Space尚未整合时，可精确提交真实需求/BDD/归属和源摘要的登记记录，明确产品WIP未纳入；不能复制未整合交付断言、捎入其他产品或放宽连续编号门禁。
 - `docs-linhay/spaces/INDEX.md` 是全量编号登记册，`docs-linhay/spaces/README.md` 是路线总览；新建 space、状态变化、独立 worktree 待集成或需求收口时，同步更新编号、迁移进度、当前队列、下一步和历史归档。
 - 先补失败测试，再实现最小代码。
 - HTTP handler 用 `httptest` 优先验证，只有进程生命周期或信号处理才启动真实 server。

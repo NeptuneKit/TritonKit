@@ -540,6 +540,55 @@ struct HarmonyArkWebBridgeCallTests {
         }
     }
 
+    @Test("socket failure preserves typed error, audit trail and forward cleanup")
+    func bridgeCallSocketFailureIsTransportError() async {
+        final class FailedSession: HarmonyArkWebCDPSession {
+            let recorder: Recorder
+            init(_ recorder: Recorder) { self.recorder = recorder }
+            func evaluate(expression: String, timeoutSeconds: Double) async throws -> String? {
+                recorder.append(expression: expression)
+                throw NSError(domain: NSPOSIXErrorDomain, code: 57, userInfo: [NSLocalizedDescriptionKey: "private-fixture-url"])
+            }
+            func close() async { recorder.recordClose() }
+        }
+        let recorder = Recorder()
+        let environment = makeEnvironment(
+            recorder: recorder, socketOutput: devtoolsSocketOutput,
+            pageListData: pageListJSON(pages: [singlePage]),
+            sessionFactory: { _ in FailedSession(recorder) }
+        )
+        do {
+            _ = try await callBridge(environment)
+            Issue.record("Expected transport failure")
+        } catch {
+            let failure = failure(error)
+            #expect(failure?.error.code.rawValue == "webview_transport_error")
+            #expect(failure?.error.message.contains("private-fixture-url") == false)
+            #expect(failure?.error.hint?.contains("page bridge handler") == false)
+            #expect(failure?.sourceCommands.contains { $0.contains("Runtime.evaluate") } == true)
+            #expect(recorder.closeCount == 1)
+            #expect(recorder.fportRemoveCount == 1)
+        }
+    }
+
+    @Test("malformed page envelope is a protocol error rather than socket or page exception")
+    func malformedBridgeEnvelopeIsProtocolError() async {
+        let recorder = Recorder()
+        let environment = makeEnvironment(
+            recorder: recorder, socketOutput: devtoolsSocketOutput,
+            pageListData: pageListJSON(pages: [singlePage]),
+            sessionFactory: { _ in FakeCDPSession(recorder: recorder, invokeAck: "not-json", pollResponses: []) }
+        )
+        do {
+            _ = try await callBridge(environment)
+            Issue.record("Expected protocol failure")
+        } catch {
+            #expect(failure(error)?.error.code.rawValue == "webview_protocol_error")
+            #expect(recorder.closeCount == 1)
+            #expect(recorder.fportRemoveCount == 1)
+        }
+    }
+
     @Test("callback that never arrives returns webview_bridge_timeout")
     func bridgeCallCallbackTimeoutIsTyped() async throws {
         let recorder = Recorder()
@@ -732,6 +781,8 @@ struct HarmonyArkWebBridgeCallTests {
         #expect(optionNames.contains("--webview-id"))
         #expect(schema.providedCapabilities.contains("webview-bridge-call"))
         #expect(schema.failureCodes.contains("webview_bridge_timeout"))
+        #expect(schema.failureCodes.contains("webview_transport_error"))
+        #expect(schema.failureCodes.contains("webview_protocol_error"))
         #expect(schema.failureCodes.contains("webview_method_not_allowed"))
         #expect(schema.failureCodes.contains("webview_provider_unavailable"))
         #expect(schema.failureShape?.contains("webview_bridge_timeout") == true)

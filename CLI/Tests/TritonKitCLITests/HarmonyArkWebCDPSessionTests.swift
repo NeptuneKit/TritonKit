@@ -38,14 +38,15 @@ struct HarmonyArkWebCDPSessionTests {
         #"{"id":1,"result":{"result":{"type":"object","subtype":"error"},"exceptionDetails":{"text":"Uncaught fixture failure"}}}"#,
         #"{"id":1,"error":{"code":-32601,"message":"Method not found"}}"#,
         #"{"id":1,"result":{}}"#,
+        "not-json",
     ])
     func protocolErrors(payload: String) async {
         let session = HarmonyArkWebURLSessionCDPSession(transport: Transport([payload]))
         do {
             _ = try await session.evaluate(expression: "fixture", timeoutSeconds: 1)
-            Issue.record("Expected javascript_error")
+            Issue.record("Expected typed CDP error")
         } catch let error as HarmonyArkWebBridgeCallError {
-            #expect(error.code.rawValue == "javascript_error")
+            #expect(error.code.rawValue == (payload.contains("exceptionDetails") ? "javascript_error" : "webview_protocol_error"))
         } catch { Issue.record("Unexpected error: \(error)") }
     }
 

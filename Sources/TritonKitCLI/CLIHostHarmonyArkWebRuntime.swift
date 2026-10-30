@@ -87,6 +87,10 @@ enum HarmonyArkWebBridgeCallError: Error, Equatable {
     case bridgeTimeout(String)
     /// The page bridge threw synchronously or the callback rejected.
     case javascriptError(String)
+    /// WebSocket connection/send/receive failed; page execution may be unknown.
+    case transportError(String)
+    /// CDP rejected the request or returned an invalid protocol envelope.
+    case protocolError(String)
 
     var code: TKWebViewErrorCode {
         switch self {
@@ -97,6 +101,8 @@ enum HarmonyArkWebBridgeCallError: Error, Equatable {
         case .methodNotAllowed: return .webViewMethodNotAllowed
         case .bridgeTimeout: return .webViewBridgeTimeout
         case .javascriptError: return .javascriptError
+        case .transportError: return .webViewTransportError
+        case .protocolError: return .webViewProtocolError
         }
     }
 
@@ -114,7 +120,7 @@ enum HarmonyArkWebBridgeCallError: Error, Equatable {
             return message
         case .bridgeTimeout(let message):
             return message
-        case .javascriptError(let message):
+        case .javascriptError(let message), .transportError(let message), .protocolError(let message):
             return message
         }
     }
@@ -133,6 +139,10 @@ enum HarmonyArkWebBridgeCallError: Error, Equatable {
             return "Expose the method through window.__tritonBridge.methods or use `triton webview snapshot --include metadata,text,dom,forms --json` for linked validation."
         case .bridgeTimeout:
             return "Verify the page bridge calls back for this method, or retry with a larger --timeout-ms."
+        case .transportError:
+            return "Check the ArkWeb DevTools WebSocket and HDC forward. HTTP discovery does not verify this channel; inspect page state before retrying because the method may already have executed."
+        case .protocolError:
+            return "Check ArkWeb CDP Runtime.evaluate compatibility and response shape. Do not automatically repeat the bridge call."
         case .javascriptError:
             return "Inspect the page bridge handler; Triton only forwards the call and reports the page error."
         }
@@ -695,9 +705,14 @@ func harmonyArkWebBridgeCall(
                     throw HarmonyArkWebBridgeCallFailure(error: failure.error, sourceCommands: sourceCommands + failure.sourceCommands)
                 case let bridgeError as HarmonyArkWebBridgeCallError:
                     throw HarmonyArkWebBridgeCallFailure(error: bridgeError, sourceCommands: sourceCommands)
+                case is DecodingError:
+                    throw HarmonyArkWebBridgeCallFailure(
+                        error: .protocolError("ArkWeb bridge response is not a valid envelope."),
+                        sourceCommands: sourceCommands
+                    )
                 default:
                     throw HarmonyArkWebBridgeCallFailure(
-                        error: .javascriptError("ArkWeb bridge call failed: \(error)"),
+                        error: .transportError("ArkWeb CDP session failed; method delivery is unknown."),
                         sourceCommands: sourceCommands
                     )
                 }

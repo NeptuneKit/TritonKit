@@ -383,7 +383,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "plan"]
     case "confirmation_required", "destructive_action_requires_policy":
         return ["diagnose", "plan", "act"]
-    case "javascript_error", "webview_element_not_interactable", "webview_form_input_not_opted_in", "webview_form_target_not_found":
+    case "javascript_error", "webview_transport_error", "webview_protocol_error", "webview_element_not_interactable", "webview_form_input_not_opted_in", "webview_form_target_not_found":
         return ["diagnose", "observe", "archive"]
     case "collection_cell_selection_blocked", "collection_cell_selection_denied":
         return ["diagnose"]
