@@ -17,6 +17,8 @@ public enum TKWebViewErrorCode: String, Codable, Equatable {
     case webViewFormTargetNotFound = "webview_form_target_not_found"
     case javascriptTimeout = "javascript_timeout"
     case javascriptError = "javascript_error"
+    case webViewTransportError = "webview_transport_error"
+    case webViewProtocolError = "webview_protocol_error"
     case unsafeEvalDisabled = "unsafe_eval_disabled"
     case runtimeUITimeout = "runtime_ui_timeout"
     case runtimeUIBusy = "runtime_ui_busy"

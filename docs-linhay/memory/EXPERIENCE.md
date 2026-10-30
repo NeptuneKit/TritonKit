@@ -23,3 +23,5 @@
 | Simulator AX几何、Android前台身份或legacy文本输入 | AX拒绝猜测并测试生产提交边界；前台只展开ComponentName前导点且无效top不回退；shell字面量安全与设备输入能力分开验收 | [AX几何](../spaces/SP-210-simulator-ax-geometry/README.md)、[Android契约](../spaces/SP-212-mobile-mcp-android-contracts/README.md) |
 
 | Simulator HID、Device Hub输入或外部adapter替换 | 内置隔离driver；退出外部依赖同时清编译死代码/runner hook/override/旧测试与指引，保留许可；AX/HID权限分明；严格geometry与guest ownership，初始化后/发送后重检非原子锁；deadline覆盖预检/发送/释放，partial不可自动replay；Apple命令/JSON先核对本机真实响应再建fixture，不能用自拟schema证明兼容；appResize目标绑定1001为unsupportedDevice，不能当inactive，iPad与iPhone分别验收；off Resizable结束后仍存在，不能由topology推inactive；显式单LCD截图保留unknown/输入禁用并独占发布；固定SHA许可随产物 | [host skill](../../.agents/skills/tritonkit-host-simulator-takeover/SKILL.md)、[内置HID契约](../spaces/SP-218-issue-222-device-hub-input/plans/20261020-native-hid-contract.md) |
+
+| ArkWeb CDP/WebSocket 错误 | JSON text/binary frame须真实wire验证；HTTP discovery不证明WS成功；transport/protocol/page exception分型，断连送达未知不重放 | [CLI信息契约](../dev/ai-cli-readable-control.md)、[SP-248](../spaces/SP-248-issue-238-arkweb-transport/README.md) |

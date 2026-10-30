@@ -92,3 +92,5 @@
 - 2026-10-28 #214 历史溯源新增H1/H2候选：有双层目录历史索引及实际不同derived-data目的地调用；仍缺原12.13/6.53 GB路径映射，不能认定原现场。#214保持OPEN。见[溯源记录](../spaces/SP-240-issue-214-deriveddata-ownership/plans/20261028-history-trace.md)。
 
 - 2026-10-28 PR #235 已合并（`5d0bba7b`），历史溯源已归档，#214复查OPEN；H1/H2与原18.66 GB的关联仍未证实，未查明项全部保留。见[SP-240](../spaces/SP-240-issue-214-deriveddata-ownership/README.md)。
+
+- 2026-10-30：[SP-248 / #238](../spaces/SP-248-issue-238-arkweb-transport/README.md)在独立worktree完成CDP text frame和transport/protocol分型本地修复；CLI1582+94、root402通过。真实ArkWeb及分发未验收，未提交合并发布。
