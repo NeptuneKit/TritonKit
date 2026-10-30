@@ -105,4 +105,6 @@
 
 - 2026-10-30：[SP-247](../spaces/SP-247-rhine-page-preferences/README.md) 四页Rhine设计偏好已接回主目录；142项测试/两构建与浏览器布局、动态、删除焦点通过。保留固定0.11.3；#14/#117反馈已回读，真实设备未复测，本地提交收口，未推送发布。
 
-- 2026-10-30：[SP248 / #238](../spaces/SP-248-issue-238-arkweb-transport/plans/20261030-merged-validation.md) 与 [SP249 / #237](../spaces/SP-249-issue-237-webview-snapshot/plans/20261030-merged-validation.md) 已经 PR #239 / #240 合入远端 main；精确候选 CI 通过，组合 root 404 项 / 64 suites、CLI Release 和标准 CocoaPods lint 通过。已随[v0.2.37](../spaces/SP-250-release-v0-2-37/plans/20261030-release.md)发布：真实ArkWeb自有probe、iOS App-host 3测试与17字段往返、完整local/CI、双架构制品及Homebrew安装验证通过；原私有App未验，两个issue保持OPEN，#224实时流黑图保留。主目录其他提交与 WIP 保留，自动任务持续执行开发到 CI 通过后合并 main，不重复等待授权。
+- 2026-10-30：[SP248 / #238](../spaces/SP-248-issue-238-arkweb-transport/plans/20261030-merged-validation.md) 与 [SP249 / #237](../spaces/SP-249-issue-237-webview-snapshot/plans/20261030-merged-validation.md) 已经 PR #239 / #240 合入远端 main；精确候选 CI 通过，组合 root 404 项 / 64 suites、CLI Release 和标准 CocoaPods lint 通过。已随[v0.2.37](../spaces/SP-250-release-v0-2-37/plans/20261030-release.md)发布：真实ArkWeb自有probe、iOS App-host 3测试与17字段往返、完整local/CI、双架构制品及Homebrew安装验证通过；原私有App未验，两个issue保持OPEN；#224在0.2.37的流黑图是历史边界，0.2.38 iPhone主屏预览已通过，iPad默认截图/输入仍受限。主目录其他提交与 WIP 保留，自动任务持续执行开发到 CI 通过后合并 main，不重复等待授权。
+
+- 2026-10-30巡查：[#224证据接替](../spaces/SP-235-issue-224-simulator-resize-query/plans/20261030-release038-followup.md)复用SP251真实公开包验收；主屏流修复已随0.2.38发布，不重复设备测试或发版。iPad Resize unsupported及原私有App未知保留，issue继续OPEN。

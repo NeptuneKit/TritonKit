@@ -37,7 +37,7 @@
 
 ## 路线裁决
 
-当前发布：[SP-243-release-v0-2-36](./SP-243-release-v0-2-36/README.md) 已发布，双架构/Homebrew/只读Web通过；流内容未验证，#224/#214 保持 OPEN，主目录 WIP 未变。
+当前发布：[SP-251 v0.2.38](./SP-251-release-v0-2-38/README.md)，双架构/Homebrew/skills及三端公开包预览通过；#224的iPad默认截图/输入仍未恢复，#214继续暂缓。历史发布[SP-243-release-v0-2-36](./SP-243-release-v0-2-36/README.md)与v0.2.37黑图记录保留原候选边界。
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
@@ -392,7 +392,7 @@
 - [SP-232-issue-231-simulator-log-partial](./SP-232-issue-231-simulator-log-partial/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
 - [SP-233-issue-232-ios-real-backend-docs](./SP-233-issue-232-ios-real-backend-docs/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
 - [SP-234-issue-225-ios-runner-transport](./SP-234-issue-225-ios-runner-transport/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
-- [SP-235-issue-224-simulator-resize-query](./SP-235-issue-224-simulator-resize-query/README.md)：#224后续处理中；iPad1001已定位，unsupportedDevice分类与提示已补，默认capture/input仍受限；显式单LCD截图与全量门禁已通过，用户确认只验27.1，PR #236已合main（27c7a875），#224保持OPEN。
+- [SP-235-issue-224-simulator-resize-query](./SP-235-issue-224-simulator-resize-query/README.md)：#224部分验收；v0.2.38 iPhone主屏预览内容及隐藏恢复通过，iPad默认capture/input仍unsupported；显式still不替代完整恢复，Xcode27.1范围与OPEN状态保持。
 - [SP-236-issue-223-bar-button-activation](./SP-236-issue-223-bar-button-activation/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
 - [SP-237-issue-222-device-hub-followup](./SP-237-issue-222-device-hub-followup/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
 - [SP-238-issue-221-searchbar-input-focus](./SP-238-issue-221-searchbar-input-focus/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
