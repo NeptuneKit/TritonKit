@@ -2,9 +2,9 @@
 
 ## 当前状态与边界
 
-对应 GitHub #238；影响 CLI host ArkWeb WebSocket transport、共享错误码与 schema。远端候选已以 `origin/main@dba41b6e` 重放：真实前序Space登记提交 `e6258339`，独立修复提交 `8d18670f`；两提交已在本地完成，尚未推送、创建PR或合并。用户已明确持续授权开发、测试、提交、推送及合并main，后续不再等待逐项授权。
+对应 GitHub #238；影响 CLI host ArkWeb WebSocket transport、共享错误码与 schema。已通过 [PR #239](https://github.com/NeptuneKit/TritonKit/pull/239) 合入远端 main，merge `41598639776e3e832eab809aefd41c4eddeda386`；精确候选与合并后 CI 均通过。真实前序 Space 登记单独提交，不包含其他任务产品 WIP。
 
-SP244～247现已在本候选以真实登记摘要就绪，不包含其产品WIP；本地旧 `30185dc2` 日检文档未带入。最新候选的独立docs门禁正在主控复验，尚未判定通过。真实ArkWeb、发布及原用户场景仍未验收，#238保持开放。不操作设备或业务App。
+机制修复已交付源码；真实 ArkWeb 与原用户场景未验收，#238 保持开放，未发布。最终状态与 CI 见[合并验收](plans/20261030-merged-validation.md)。
 
 ## BDD 与验收
 
@@ -22,7 +22,7 @@ CDP改发UTF-8 text frame；socket与protocol错误有独立code/hint，页面�
 - 定向绿灯45项；完整CLI1582项+94 XCTest；完整root402项（含新旧错误码DTO roundtrip）通过。
 - 实际CLI schema单一JSON且含新错误码。
 - 以上产品与测试候选在rebase后逐文件SHA-256一致；原基线与dba41b6e的差异仅为已排除的历史文档。
-- 首轮独立docs因缺前序Space失败是历史证据；真实前序登记现已补齐，最新候选docs仍待主控检查结果，不能沿用早期联合快照通过替代。
-- Harmony真实设备/ArkWeb、Release制品与CocoaPods lint未执行；本机wire通过不等于原现场已恢复。
+- 首轮独立 docs 缺前序 Space 的失败保留；补齐真实登记后，实际候选 ci-docs、独立 check-docs 与 diff check 均通过。
+- 远端 CI 的 CLI Release 编译与标准 CocoaPods lint 通过；未制作或发布 Release 制品。Harmony 真实设备/ArkWeb 未验收，本机 wire 通过不等于原现场恢复。
 
 证据与命令见[验证记录](plans/20261030-validation.md)，阶段复核见[交付复核](plans/20261030-controller-review.md)。worktree：`../TritonKit-worktrees/SP-248-issue-238-arkweb-transport/`；branch：`feat/SP-248-issue-238-arkweb-transport`。

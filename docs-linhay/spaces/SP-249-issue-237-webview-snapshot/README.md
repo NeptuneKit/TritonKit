@@ -1,6 +1,6 @@
 # SP-249 · #237 WebView snapshot JavaScript
 
-当前状态：独立修复已提交并重放至远端main dba41b6e + SP248前置候选；等待最终整合检查与PR CI后合并main。分支 `feat/SP-249-issue-237-webview-snapshot`，同名worktree。前序SP244–247已真实登记，不包含其产品WIP；不捎入本地30185dc2旧日检文档。
+当前状态：已通过 [PR #240](https://github.com/NeptuneKit/TritonKit/pull/240) 合入远端 main，merge `88cdbba25f91c5047abcd40c62db79a888fda970`；精确候选 CI 通过，合并后 CI 全部必要检查通过。分支 `feat/SP-249-issue-237-webview-snapshot`，同名 worktree；原始实现分支与本地证据保留。
 
 ## BDD 与边界
 
@@ -13,9 +13,9 @@
 
 ## 验证与交付边界
 
-首轮旧源码真实复现getAttribute SyntaxError；原始Swift字符串保留JS转义，CSS属性编码与form resolver对称解析。JSC/macOS WKWebView默认includes和forms-only、14字段selector/focus往返及根包403项通过，未变更该已验生产/测试源码。当前包含SP248共享错误码后的整合root复跑与docs门禁单独记录。
+首轮旧源码真实复现getAttribute SyntaxError；原始Swift字符串保留JS转义，CSS属性编码与form resolver对称解析。JSC/macOS WKWebView默认includes和forms-only、14字段selector/focus往返及根包403项通过，未变更该已验生产/测试源码。包含 SP248 共享错误码的精确组合候选，远端根包 404 项 / 64 suites、CLI Release 编译与标准 CocoaPods lint 通过；实际候选 docs 门禁通过。
 
-用户已授权开发、测试、提交、推送、PR及通过检查后合并main；尚未推送/合并/发布。真实iOS匹配SDK/CLI及原私有App验收未执行，issue保持开放。详见[首轮证据](plans/20261030-validation.md)和[阶段复核](plans/20261030-controller-review.md)。
+实现、推送、PR 与远端 main 合并已完成，未发布。真实 iOS 匹配 SDK/CLI 及原私有 App 验收未执行，issue 保持开放。最终状态见[合并验收](plans/20261030-merged-validation.md)，历史过程见[首轮证据](plans/20261030-validation.md)和[阶段复核](plans/20261030-controller-review.md)。
 
 ## 编号历史
 
