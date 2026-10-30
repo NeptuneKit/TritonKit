@@ -399,10 +399,6 @@
 
 - [SP-242-release-v0-2-35](./SP-242-release-v0-2-35/README.md)：v0.2.35已发布；双架构/Homebrew通过，默认实时流Resize未知、工作台通过；#214 OPEN，主目录WIP未变。
 
-| 待原任务整合 | [SP-244-emulator-service-slimming](./SP-244-emulator-service-slimming/README.md) | Android/Harmony模拟器资源管理与预览生命周期；仅登记 | 产品WIP与验收由原任务维护 |
-| 待原任务整合 | [SP-245-rhine-design-adoption](./SP-245-rhine-design-adoption/README.md) | Rhine固定制品接入及设计先行；仅登记 | 产品WIP与验收由原任务维护 |
-| 待原任务整合 | [SP-246-rhine-web-migration](./SP-246-rhine-web-migration/README.md) | 设备预览、层级、分屏和外壳的Rhine迁移；仅登记 | 产品WIP与验收由原任务维护 |
-| 待原任务整合 | [SP-247-rhine-page-preferences](./SP-247-rhine-page-preferences/README.md) | Web页面组合及视觉偏好调整；仅登记 | 产品WIP与验收由原任务维护 |
 
 - [SP-248-issue-238-arkweb-transport](./SP-248-issue-238-arkweb-transport/README.md)：#238 已经 PR #239 合入远端 main；机制真实验收通过，已随v0.2.37发布，原私有App未验，issue OPEN。
 
