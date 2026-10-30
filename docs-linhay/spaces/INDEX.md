@@ -4,7 +4,7 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-10-30（Rhine Design 接入）
-> 覆盖范围：247/247 个已存在 space
+> 覆盖范围：250/250 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -19,8 +19,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 247/247 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 247/247 | 每条记录链接到现有 space README |
+| 编号登记 | 250/250 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 250/250 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -324,3 +324,9 @@
 | `SP-246-rhine-web-migration` | [`SP-246-rhine-web-migration`](./SP-246-rhine-web-migration/README.md) | 主目录已复验，本地提交收口 | 其余Web迁移Rhine0.11.3；设备/层级/分屏/外壳，官方设计先行；本地提交收口，未推送发布 |
 
 | `SP-247-rhine-page-preferences` | [`SP-247-rhine-page-preferences`](./SP-247-rhine-page-preferences/README.md) | 主目录已复验，本地提交收口 | 四页设计偏好调整；固定 registry0.11.3；142项测试、两构建、布局/动态/焦点通过；反馈已回读 |
+
+| `SP-248-issue-238-arkweb-transport` | [`SP-248-issue-238-arkweb-transport`](./SP-248-issue-238-arkweb-transport/README.md) | 机制验收通过，已发布 | #238 已经 PR #239 合入远端 main；机制真实验收通过，已随v0.2.37发布，原私有App未验，issue OPEN |
+
+| `SP-249-issue-237-webview-snapshot` | [`SP-249-issue-237-webview-snapshot`](./SP-249-issue-237-webview-snapshot/README.md) | 机制验收通过，已发布 | #237 已经 PR #240 合入远端 main；机制真实验收通过，已随v0.2.37发布，原私有App未验，issue OPEN |
+
+| `SP-250-release-v0-2-37` | [`SP-250-release-v0-2-37`](./SP-250-release-v0-2-37/README.md) | 已发布并安装验证 | #237/#238机制真实验收通过，v0.2.37已发布；原私有App未验，#224黑图保留 |

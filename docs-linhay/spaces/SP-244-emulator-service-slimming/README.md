@@ -82,3 +82,5 @@ BDD/契约：
 [完整记录与截图反证](plans/20261030-further-memory-candidates.md)：慢TCP消费者测试的Node队列积压63.46→0.17MiB；该数不是VM物理内存收益。直接iOS路由首帧前断开/未执行body的引用释放修复，Android宿主识别兼容`-avd NAME`。Android四轮硬件裁剪对照出现蓝牙崩溃、包状态与宿主负载漂移，因此不采用组合、不新增启动开关；一次性AVD已删除，外部设备未修改。鸿蒙camera宿主门禁仍为未实测候选，free-page reporting已开启不重复包装。
 
 CLI1810项（含3项条件跳过）、Web153/build通过。首次全量的Vision OCR框架错误保留，相关23项及完整CLI原样复测通过；未修改OCR/跳过用例。七文件按hash整合main；main local通过，含iOS Simulator编译；最终文档检查结果见第七轮记录。
+
+远端此前的仅编号登记由本次完整整合接替；登记历史保留于 `e6258339`，不将占位资料解释为当时已交付。

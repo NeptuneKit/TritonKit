@@ -562,6 +562,7 @@ Round 179 修复 platform-focused doctor / plan 对 Harmony 与 Android host-sid
 - `debug attrs --oid` 支持 UIView/CALayer oid；UILabel 的有效字体/颜色与 UTF-16 run 有界输出，正文预览和 run 都要检查截断字段。
 - collection cell 激活尊重 allowsSelection/delegate，success 只证明公开 callback，必须验证业务后置条件。`act tap --duration` 不支持长按，提前 typed unsupported；embedded longPress 和非滚动手势也不伪造成功，使用 App 显式注册的 semantic DEBUG action 或检查实际 provider 能力。
 - Harmony ArkWeb bridge-call 需可达 DevTools socket 与页面 `window.__tritonBridge.methods` 自有函数白名单；函数接收 `(params, complete, reject)`，支持返回值/Promise/callback。明确选中 CDP page ID，stale/ambiguous 失败关闭；不把 CDP page ID 当导航 session 验证，清理失败也可能发生在页面方法已执行之后，重试前先验业务状态。
+- ArkWeb CDP 的 JSON 使用 WebSocket text frame；binary 不是等价编码。连接/发送/接收失败使用 `webview_transport_error`，CDP protocol error 或损坏响应使用 `webview_protocol_error`，只有页面 `exceptionDetails` / bridge reject 属于 `javascript_error`。传输断开可能发生在方法已执行后，提示必须保留送达未知，不自动重放。读取 HTTP discovery 成功不证明 WebSocket 可用；单一 loopback fixture 不替代目标 ArkWeb 验收（[SP-248](../spaces/SP-248-issue-238-arkweb-transport/README.md)）。
 
 ## Device Hub 能力组（2026-10-10）
 

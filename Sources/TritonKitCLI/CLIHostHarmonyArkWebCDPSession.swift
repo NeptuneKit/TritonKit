@@ -8,7 +8,14 @@ protocol HarmonyArkWebCDPTransport: Sendable {
 }
 
 extension URLSessionWebSocketTask: HarmonyArkWebCDPTransport {
-    func sendMessage(_ data: Data) async throws { try await send(.data(data)) }
+    func sendMessage(_ data: Data) async throws {
+        // CDP is UTF-8 JSON over text frames. Chromium DevTools rejects binary
+        // frames even when their payload happens to contain valid JSON.
+        guard let text = String(data: data, encoding: .utf8) else {
+            throw HarmonyArkWebBridgeCallError.protocolError("CDP request is not valid UTF-8.")
+        }
+        try await send(.string(text))
+    }
 
     func receiveMessage() async throws -> Data {
         switch try await receive() {
@@ -56,15 +63,17 @@ final class HarmonyArkWebURLSessionCDPSession: HarmonyArkWebCDPSession {
                     while true {
                         try Task.checkCancellation()
                         let messageData = try await transport.receiveMessage()
-                        guard let json = try? JSONSerialization.jsonObject(with: messageData) as? [String: Any],
-                              (json["id"] as? Int) == messageID else { continue }
+                        guard let json = try? JSONSerialization.jsonObject(with: messageData) as? [String: Any] else {
+                            throw HarmonyArkWebBridgeCallError.protocolError("CDP response is not a JSON object.")
+                        }
+                        guard (json["id"] as? Int) == messageID else { continue }
                         if let error = json["error"] as? [String: Any] {
-                            throw HarmonyArkWebBridgeCallError.javascriptError(
+                            throw HarmonyArkWebBridgeCallError.protocolError(
                                 "CDP Runtime.evaluate failed: \(error["message"] as? String ?? "protocol error")"
                             )
                         }
                         guard let result = json["result"] as? [String: Any] else {
-                            throw HarmonyArkWebBridgeCallError.javascriptError("CDP Runtime.evaluate response is missing result.")
+                            throw HarmonyArkWebBridgeCallError.protocolError("CDP Runtime.evaluate response is missing result.")
                         }
                         if let exception = result["exceptionDetails"] as? [String: Any] {
                             throw HarmonyArkWebBridgeCallError.javascriptError(
@@ -72,7 +81,7 @@ final class HarmonyArkWebURLSessionCDPSession: HarmonyArkWebCDPSession {
                             )
                         }
                         guard let inner = result["result"] as? [String: Any] else {
-                            throw HarmonyArkWebBridgeCallError.javascriptError("CDP Runtime.evaluate response is missing remote object.")
+                            throw HarmonyArkWebBridgeCallError.protocolError("CDP Runtime.evaluate response is missing remote object.")
                         }
                         if let value = inner["value"] as? String { return value }
                         if (inner["type"] as? String) == "undefined" { return nil }
@@ -96,7 +105,11 @@ final class HarmonyArkWebURLSessionCDPSession: HarmonyArkWebCDPSession {
                     if Date() >= deadline {
                         throw HarmonyArkWebBridgeCallError.bridgeTimeout("CDP Runtime.evaluate deadline exceeded.")
                     }
-                    throw error
+                    if let typed = error as? HarmonyArkWebBridgeCallError { throw typed }
+                    if error is CancellationError { throw error }
+                    throw HarmonyArkWebBridgeCallError.transportError(
+                        "ArkWeb CDP WebSocket send/receive failed; method delivery is unknown."
+                    )
                 }
             }
         } onCancel: {
