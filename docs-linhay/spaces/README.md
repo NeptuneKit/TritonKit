@@ -10,9 +10,9 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，33仓日检22完整/11 partial、两仓HEAD变化。新增SP-221只读资源暂态重试/SP-222有限主控，显式gpt-6.1-sol真实会话创建成功、已通过独立与合后门禁，合本地main a0eebff0；旧13条采用已合main，旧源码/许可缺口保留。
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（250/250 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（251/251 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-30（SP-244 第1–9轮内存优化验收与本地main整理提交）
+> 最近审计：2026-10-30（SP251双边main整合与v0.2.38发布准备）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -412,3 +412,5 @@
 ## v0.2.37 验收与发布
 
 - [SP-250-release-v0-2-37](./SP-250-release-v0-2-37/README.md)：v0.2.37已发布，CI/双架构制品/Homebrew/机制验收通过；原私有App未验，#224实时流黑图保留。
+
+| 发布准备中 | [SP-251-release-v0-2-38](./SP-251-release-v0-2-38/README.md) | skills更新、内存/Rhine/WebView联合候选 | 精确门禁、双架构与Homebrew/包外验收，原WIP保留 |

@@ -28,6 +28,38 @@ triton device stop --platform harmony --hvd "Codex Test Phone" --path ~/.Huawei/
 
 Use `--device <selector>` as the default agent-facing target selector for common host-side commands. Selectors can be aliases, full ids such as `sim:<udid>` / `android:<serial>` / `harmony:<target>`, raw platform ids, `booted`, or `current`. `--platform`, `--name`, `--runtime`, `--state`, and `--ready` are filters; they may auto-select only when the filtered candidate set is unique. Keep `sim` for iOS-only advanced maintenance; `device runtime-url --device <selector>` is the Harmony embedded runtime port-forward setup path, and `--platform harmony --target <target>` remains the direct raw-target form.
 
+### Android / Harmony resource management
+
+`device resource` has a narrower target contract than the common device commands above: use an exact Android emulator serial or Harmony loopback endpoint, not an alias, `current`, physical device, or remote target. Check the installed schema first; an older CLI may not implement this surface.
+
+```bash
+triton schema --command device.resource --json
+triton device resource profiles --platform android --json
+triton device resource features --platform android --json
+triton device resource doctor --platform android --device <emulator-serial> --json
+triton device resource status --platform android --device <emulator-serial> --json
+triton device resource plan --platform android --device <emulator-serial> --profile custom --disable youtube,music --json
+triton device resource measure --platform android --device <emulator-serial> --json
+triton device resource features --platform harmony --json
+triton device resource doctor --platform harmony --device <loopback-host:port> --json
+```
+
+Review feature impact and `states[].available/value/reason` before mutation. Android `ui-minimal` selects assistant, youtube, music, wellbeing, and bluetooth; `--keep bluetooth` preserves Bluetooth. Harmony `ui-minimal` is empty; camera, audio, and analytics require explicit selection and verified control permission. An empty `stock` profile does not restore earlier changes. Permission or identity failures do not authorize root, SELinux changes, or a broader native fallback.
+
+When the task authorizes the reviewed selection, use a new receipt path in an existing private directory. Keep the same exact device and selection as the plan:
+
+```bash
+triton device resource apply --platform android --device <emulator-serial> --profile custom --disable youtube,music --receipt <receipt-in-private-directory.json> --confirm --json
+triton device resource verify --platform android --device <emulator-serial> --receipt <receipt-in-private-directory.json> --json
+triton device resource restore --platform android --device <emulator-serial> --receipt <receipt-in-private-directory.json> --confirm --json
+```
+
+Retain the apply receipt and use that same path for verify/restore. Restore only owns the recorded changes; it preserves detected later state conflicts. Check `ok`, `partial`, and `error` together and do not replay an uncertain write. `memory` is managed guest-process PSS; `hostMemory` is the identified VM main-process physical footprint, excluding helper processes. Neither `verify` nor one memory sample proves application correctness or host savings. See [platform rules](platform-commands.md) and [resource acceptance](validation.md#resource-profile-acceptance).
+
+Android startup options are a separate surface: query `triton schema --command device.start --json` before using `--no-snapshot` or `--disable-vulkan`. Both are opt-in and Android-only; `--no-snapshot` disables loading and saving without deleting snapshots, and Vulkan disabling is inappropriate for Vulkan tests. These options do not prove a memory reduction.
+
+### Common observation workflow
+
 For agent navigation across iOS Simulator host AX, Android bridge/layout, Harmony host layout, or embedded runtime trees, prefer a fresh outline before selecting numbered nodes:
 
 ```bash

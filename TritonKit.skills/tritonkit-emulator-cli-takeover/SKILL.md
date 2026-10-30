@@ -139,6 +139,14 @@ The catalog is pinned to simslim commit `6518ba7eab1123d7e1d7797b0e05f51043b42a5
 
 Retain the apply receipt and use it for target-bound, conservative delta restore. Restore changes only known managed labels whose current state still matches the recorded applied state; it preserves detected intervening overrides and never re-disables protected services. Legacy receipts without managed-label sets restore no inferred delta. This is not a lossless history of later user edits, including edits that reassert the same value. `measure` reports `phys_footprint` for the target `launchd_sim` process tree and is invalid when `partial=true`.
 
+## Android / Harmony resource profiles and preview memory
+
+For these platforms, inspect `triton schema --command device.resource --json` on the installed CLI; do not reuse the iOS `sim.resource` catalog. Start with `features`, `doctor`, `status`, and a read-only `plan`. Target operations require `--platform` and an exact local emulator ID: an Android `emulator-<port>` serial or Harmony loopback endpoint. This resource surface does not accept aliases, `current`, physical devices, or remote targets. See the [minimal workflow](references/current-implemented-surface.md#android--harmony-resource-management) and [platform details](references/platform-commands.md).
+
+Only apply the reviewed feature selection within the authorized task scope, with `--confirm` and a new receipt in an existing private directory. Keep that receipt for `verify` and conservative `restore --confirm`; `stock` is an empty selection, not restoration. Preserve conflicts and partial failures rather than retrying uncertain writes. Harmony controls depend on image permissions; permission or identity failures remain diagnostic failures, without automatic root or SELinux changes. Guest PSS, VM footprint, and application correctness are separate facts; `businessVerified` and `hostSavingsVerified` remain false.
+
+Source and packaged previews release hidden subscriptions and reconnect when visible. Another visible subscriber keeps its capture active; the final subscriber releases it. This does not stop the emulator, App, logs, or recording. Android preview frames preserve the original PNG; native iOS framebuffer and Harmony capture retain JPEG, while the source iOS screenshot fallback preserves its actual format. Multipart clients must honor each part's Content-Type, even on a legacy `mjpeg` URL. Use the [preview acceptance checklist](references/validation.md#preview-and-packaged-acceptance); image format, bandwidth, capture-process memory, and VM memory require separate evidence.
+
 ## Resize, preferences, and capture acceptance
 
 Query the installed schema before selecting these capabilities; preserve unsupported/error facts when the installed release does not cover them.

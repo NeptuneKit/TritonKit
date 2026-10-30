@@ -11,6 +11,8 @@ Use this file to choose the smallest reference needed for an emulator CLI takeov
 | Change `schema`, `capabilities`, output contracts, recovery commands, examples, or failure taxonomy | `schema-contracts.md` |
 | Need current iOS / Android / Harmony command inventory and examples | `current-implemented-surface.md` |
 | Change iOS Simulator, Android Emulator, Harmony / DevEco app lifecycle, observe, screenshot, or host actions | `platform-commands.md` |
+| Inspect, selectively disable, measure, or restore Android/Harmony emulator features | [current-implemented-surface.md](current-implemented-surface.md#android--harmony-resource-management), then [platform-commands.md](platform-commands.md) |
+| Validate hidden preview cancellation, PNG multipart frames, shared subscriptions, or packaged capture | [validation.md](validation.md#preview-and-packaged-acceptance), then [platform-commands.md](platform-commands.md) |
 | Update README, external integration guides, CLI/Harmony/iOS onboarding | `integration-guide-contract.md` |
 | Touch workspace run, model decisions, Atlas/app-map, replay, `.tritonplan`, or evidence archive | `workspace-runs.md` |
 | Plan host-side mutation, destructive action, or implementation sequence | `safety-rules.md`, then `implementation-workflow.md` |
