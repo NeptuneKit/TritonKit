@@ -40,7 +40,7 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
    Run multiple gates fail-fast (`set -e` or one command per checked invocation). Do not treat the final command's zero exit as proof that earlier gates passed. For CocoaPods, require both a zero exit and the explicit `TritonKit passed validation.` result; compiler errors printed before a later successful command remain release blockers.
 6. Run release preflight with Xcode simulator checks disabled only when the local environment does not need that coverage: `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local`.
 7. Update `docs-linhay/dev/` and `docs-linhay/memory/YYYY-MM-DD.md` for release contract changes.
-8. Commit and push `main`, then publish through `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/release.sh v<version> --yes`.
+8. Commit and push `main`, then wait for the exact candidate SHA’s complete main CI and confirm the standard pod lint job contains `TritonKit passed validation.` before publishing through `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/release.sh v<version> --yes`. `release.sh` does not enforce the main CI gate; tag contracts do not replace it. If using `--skip-local-verify` after an already completed local gate, record the tested SHA and prove unchanged native paths; rerun every affected Web/docs gate on the final candidate.
 9. After release, verify GitHub Release assets, GitHub Actions success including x86_64 backfill, Homebrew upgrade, `triton version --json`, packaged `triton web --print-command --json`, and a real `triton web` HTTP smoke.
    - If the release changes Web input routing, the smoke must POST the same complete gesture DTO used by the Web client. Coordinate taps include `x`, `y`, `width`, and `height`; an intentionally incomplete probe may return a contract error but is not success evidence.
    - Run the installed packaged binary from outside the repository on an isolated port first. When handing the canonical Web port back to another task, resolve and replace only that listener; preserve the shared `triton serve`, Simulator/Emulator, and App processes unless their owner explicitly authorizes a restart.
@@ -78,6 +78,8 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 
 - Homebrew update checks in older releases can return `updateAvailable=false` without a target/latest version; treat that as unqueried, not up to date. Compare remote Release, remote formula, local formula, actual CLI, and each installed skills BUILD_INFO separately. A maintainer machine is not evidence for a reporting user's installation.
 - Update regression must cover latest lookup failure, stale/different formula, brew success with wrong installed binary, and mismatched skill metadata. Only actual installed version verification supports update success; stop before skills installation when CLI and selected release differ.
+
+- When updating multiple local skill roots, run the guarded installer serially for each root. Verify `BUILD_INFO.json`, each skill metadata version, and receipt file hashes against the selected release; keep installer backups. A same-version CLI update can report `updated=false` with `skillsUpdated=true`, so verify these fields independently. CLI dry-run plans do not validate downloaded archive contents or local baseline hashes.
 
 ## Reporting
 

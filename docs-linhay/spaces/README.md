@@ -1,10 +1,12 @@
 # TritonKit Spaces Index
 
-2026-10-30：[SP-247 页面设计偏好](./SP-247-rhine-page-preferences/README.md) 四页设计偏好已同步主目录复验；固定 registry0.11.3，142项测试、两构建和浏览器布局/动态/焦点通过，本地提交收口，未推送发布。
+2026-10-30：[SP-251 v0.2.38](./SP-251-release-v0-2-38/README.md)已发布；内存优化/Rhine/WebView联合候选、双架构与Homebrew、两处skills、三端公开包验收通过。原WIP保留，自有测试资源已清理。
 
-2026-10-30：[SP-246-rhine-web-migration](./SP-246-rhine-web-migration/README.md) 已完成其余Web设计与实现候选：固定Rhine0.11.3、设备预览/层级/分屏/外壳、125项测试；主目录复验通过，本地提交收口，未推送发布。
+2026-10-30：[SP-247 页面设计偏好](./SP-247-rhine-page-preferences/README.md) 四页设计偏好已同步主目录复验；固定 registry0.11.3，142项测试、两构建和浏览器布局/动态/焦点通过，已随v0.2.38发布，联合验收见SP-251。
 
-2026-10-30：[SP-245-rhine-design-adoption](./SP-245-rhine-design-adoption/README.md) 已同步主目录并复验通过：固定 npm0.11.3、官方设计评审和 Run/Atlas 单页范例；其余页面只登记迁移范围，本地提交收口，未推送发布。
+2026-10-30：[SP-246-rhine-web-migration](./SP-246-rhine-web-migration/README.md) 已完成其余Web设计与实现候选：固定Rhine0.11.3、设备预览/层级/分屏/外壳、125项测试；主目录复验通过，已随v0.2.38发布，联合验收见SP-251。
+
+2026-10-30：[SP-245-rhine-design-adoption](./SP-245-rhine-design-adoption/README.md) 已同步主目录并复验通过：固定 npm0.11.3、官方设计评审和 Run/Atlas 单页范例；其余页面只登记迁移范围，已随v0.2.38发布，联合验收见SP-251。
 
 
 2026-10-26参考核对：原目录 `main@24e7d0f2`，33仓日检22完整/11 partial、两仓HEAD变化。新增SP-221只读资源暂态重试/SP-222有限主控，显式gpt-6.1-sol真实会话创建成功、已通过独立与合后门禁，合本地main a0eebff0；旧13条采用已合main，旧源码/许可缺口保留。
@@ -12,7 +14,7 @@
 >
 > 编号登记册：[INDEX.md](./INDEX.md)（251/251 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-30（SP251双边main整合与v0.2.38发布准备）
+> 最近审计：2026-10-30（SP251 v0.2.38发布与安装验收完成）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -39,8 +41,9 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 主目录已复验 | [SP-247-rhine-page-preferences](./SP-247-rhine-page-preferences/README.md) | 四页标题/动作合并、渐进展示、无框组合与树语义；registry0.11.3不变 | 按开工基线三方接回；142项测试与两构建通过，#14/#117反馈已回读；不升级或发布 |
-| 已验收整合本地main | [SP-244-emulator-service-slimming](./SP-244-emulator-service-slimming/README.md) | 资源选项、隐藏暂停、生命周期/编码峰值及Android PNG收口 | CLI1819/Web156/local、真实Android源码/解包版/WKWebView通过；后续FPS/缓冲/HWUI量化，未发布 |
+| 已随v0.2.38发布 | [SP-251-release-v0-2-38](./SP-251-release-v0-2-38/README.md) | skills更新、内存/Rhine/WebView联合候选 | SP251联合门禁、双架构/Homebrew/skills与三端公开包通过；历史候选边界保留 |
+| 已随v0.2.38发布 | [SP-247-rhine-page-preferences](./SP-247-rhine-page-preferences/README.md) | 四页标题/动作合并、渐进展示、无框组合与树语义；registry0.11.3不变 | SP251联合门禁、双架构/Homebrew/skills与三端公开包通过；历史候选边界保留 |
+| 已随v0.2.38发布 | [SP-244-emulator-service-slimming](./SP-244-emulator-service-slimming/README.md) | 资源选项、隐藏暂停、生命周期/编码峰值及Android PNG收口 | 已发布验收见SP251；后续量化采集FPS仲裁、PNG缓冲与HWUI净收益 |
 | 已合本地main | [SP-223-host-process-drain-deadline](./SP-223-host-process-drain-deadline/README.md) | 宿主进程退出后的有界输出收尾 | 9fbda1d5；完整CLI/local合后通过，源worktree/branch已清理 |
 | 已验收合本地main | [SP-224-host-process-drain-integration](./SP-224-host-process-drain-integration/README.md) | SP-223有限独立主控 | 主控1c735787验收、合后门禁通过，源worktree/branch已清理 |
 | 已合本地main | [SP-221-simulator-resource-read-retry](./SP-221-simulator-resource-read-retry/README.md) | 同目标print-disabled明确launchd暂态有限只读重试 | a0eebff0；focused37/fullCLI/root/local/docs通过，mutation不重放 |
@@ -408,5 +411,3 @@
 ## v0.2.37 验收与发布
 
 - [SP-250-release-v0-2-37](./SP-250-release-v0-2-37/README.md)：v0.2.37已发布，CI/双架构制品/Homebrew/机制验收通过；原私有App未验，#224实时流黑图保留。
-
-| 发布准备中 | [SP-251-release-v0-2-38](./SP-251-release-v0-2-38/README.md) | skills更新、内存/Rhine/WebView联合候选 | 精确门禁、双架构与Homebrew/包外验收，原WIP保留 |

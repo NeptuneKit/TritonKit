@@ -317,13 +317,13 @@
 | `SP-242-release-v0-2-35` | [`SP-242-release-v0-2-35`](./SP-242-release-v0-2-35/README.md) | 已发布，实时流受限 | 双架构/Homebrew通过；默认实时流Resize未知，工作台通过；#214 OPEN，主目录WIP未变 |
 
 | `SP-243-release-v0-2-36` | [`SP-243-release-v0-2-36`](./SP-243-release-v0-2-36/README.md) | v0.2.36 已发布 | 双架构/Homebrew/只读Web通过，流内容未验证；#224/#214 OPEN，主目录 WIP 未变 |
-| `SP-244-emulator-service-slimming` | [`SP-244-emulator-service-slimming`](./SP-244-emulator-service-slimming/README.md) | 已验收整合本地main | 第1–9轮收口，PNG真实HTTP峰值18.99→8.56MiB；CLI1819/Web156/local及真实Android源码/解包版/WKWebView通过；无固定VM收益，未发布 |
+| `SP-244-emulator-service-slimming` | [`SP-244-emulator-service-slimming`](./SP-244-emulator-service-slimming/README.md) | 已随v0.2.38发布 | 第1–9轮内存优化与PNG采用；最终联合CLI1823/Web159，三端公开包暂停/恢复通过；无固定VM收益 |
 
-| `SP-245-rhine-design-adoption` | [`SP-245-rhine-design-adoption`](./SP-245-rhine-design-adoption/README.md) | 主目录已验证，本地提交收口 | 固定 npm0.11.3、官方review与Run/Atlas范例；本地提交收口，未推送发布 |
+| `SP-245-rhine-design-adoption` | [`SP-245-rhine-design-adoption`](./SP-245-rhine-design-adoption/README.md) | 已随v0.2.38发布 | 固定npm0.11.3、官方review与Run/Atlas范例随SP251交付 |
 
-| `SP-246-rhine-web-migration` | [`SP-246-rhine-web-migration`](./SP-246-rhine-web-migration/README.md) | 主目录已复验，本地提交收口 | 其余Web迁移Rhine0.11.3；设备/层级/分屏/外壳，官方设计先行；本地提交收口，未推送发布 |
+| `SP-246-rhine-web-migration` | [`SP-246-rhine-web-migration`](./SP-246-rhine-web-migration/README.md) | 已随v0.2.38发布 | 设备/层级/分屏/外壳迁移Rhine0.11.3；SP251最终联合门禁与公开包通过 |
 
-| `SP-247-rhine-page-preferences` | [`SP-247-rhine-page-preferences`](./SP-247-rhine-page-preferences/README.md) | 主目录已复验，本地提交收口 | 四页设计偏好调整；固定 registry0.11.3；142项测试、两构建、布局/动态/焦点通过；反馈已回读 |
+| `SP-247-rhine-page-preferences` | [`SP-247-rhine-page-preferences`](./SP-247-rhine-page-preferences/README.md) | 已随v0.2.38发布 | 四页设计偏好、布局/动态/焦点收口；固定registry0.11.3，随SP251交付 |
 
 | `SP-248-issue-238-arkweb-transport` | [`SP-248-issue-238-arkweb-transport`](./SP-248-issue-238-arkweb-transport/README.md) | 机制验收通过，已发布 | #238 已经 PR #239 合入远端 main；机制真实验收通过，已随v0.2.37发布，原私有App未验，issue OPEN |
 
@@ -331,4 +331,4 @@
 
 | `SP-250-release-v0-2-37` | [`SP-250-release-v0-2-37`](./SP-250-release-v0-2-37/README.md) | 已发布并安装验证 | #237/#238机制真实验收通过，v0.2.37已发布；原私有App未验，#224黑图保留 |
 
-| `SP-251-release-v0-2-38` | [`SP-251-release-v0-2-38`](./SP-251-release-v0-2-38/README.md) | 发布准备中 | 双边main整合、skills更新与完整发布；原WIP保留 |
+| `SP-251-release-v0-2-38` | [`SP-251-release-v0-2-38`](./SP-251-release-v0-2-38/README.md) | 已随v0.2.38发布 | 双边main整合、skills更新；双架构/Homebrew/两处skills/三端公开包通过，自有资源清理 |
