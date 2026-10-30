@@ -188,4 +188,5 @@ Only update `AGENTS.md` when the rule is repo-wide and long-lived.
 - `mjpeg`路径不保证每帧都是JPEG；读取typed帧格式并保持Content-Type、Content-Length与Data一致。原始PNG直通必须验证真实设备、源码代理、实际解包资产和原生WKWebView；单个Chromium fixture不足以证明客户端兼容，WKWebView harness也不等于完整桌面壳验收。
 - PNG的ImageIO complete状态不保证容器有末尾IEND；用有界chunk结构和no-cache metadata检查，避免为了校验再次全图解码。明确CRC/压缩像素语义未完整验证，不把结构检查描述成任意图片可解码保证。
 - 上游就绪查询、流与流内截图fallback须消费同一配置来源；测试直接监听配置地址，不通过fetch重写hardcoded默认端口掩盖错误。
+- 源码iOS截图fallback的共享缓存按上游URL、CLI路径与设备共同绑定；最后订阅释放时取消该generation的fetch/timer并移出缓存。立即重连使用新generation，旧await回调不得供帧或释放新订阅。用两个真实临时HTTP上游和pending截图证明隔离/取消，不靠测试唯一设备ID掩盖跨上游串流。见[SP251发布前修复](../../../docs-linhay/spaces/SP-251-release-v0-2-38/plans/20261030-release.md)。
 - 分别记录恢复请求与首帧已到达的时间。隐藏负窗口止于恢复请求前，保留可见阶段完整正对照和采样数量；不能把恢复等待期计入隐藏，也不能把进程采样计数当精确帧数。经验、失败反证与真实收益范围见[SP-244第九轮](../../../docs-linhay/spaces/SP-244-emulator-service-slimming/plans/20261030-png-adoption-commit.md)。

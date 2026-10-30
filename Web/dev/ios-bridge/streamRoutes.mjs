@@ -208,27 +208,40 @@ async function handleIosSimulatorMjpeg(url, req, res, tritonPath, hostInputBaseU
     if (connection.signal.aborted || res.destroyed) return;
 
     res.writeHead(200, mjpegHeaders());
-    let cache = simulatorFrameCache.get(simulator);
+    // A simulator ID is only meaningful within its upstream and CLI configuration.
+    const cacheKey = JSON.stringify([new URL(hostInputBaseURL).href, tritonPath, simulator]);
+    let cache = simulatorFrameCache.get(cacheKey);
     if (!cache) {
       cache = createSimulatorFrameCache();
-      simulatorFrameCache.set(simulator, cache);
+      simulatorFrameCache.set(cacheKey, cache);
     }
     const listenerId = randomUUID();
     cache.activeListeners.set(listenerId, fps);
     let active = true;
     let pushTimer;
     const stop = () => {
+      if (!active) return;
       active = false;
       clearTimeout(pushTimer);
       cache.activeListeners.delete(listenerId);
-      if (cache.activeListeners.size === 0) cache.buffer = null;
+      if (cache.activeListeners.size === 0) {
+        cache.loopActive = false;
+        clearTimeout(cache.loopTimer);
+        cache.loopTimer = null;
+        cache.buffer = null;
+        // Retire this generation before aborting its pending HTTP screenshot.
+        // A reconnect always acquires a fresh cache, even while old work unwinds.
+        if (simulatorFrameCache.get(cacheKey) === cache) simulatorFrameCache.delete(cacheKey);
+        cache.controller.abort();
+      }
       connection.signal.removeEventListener("abort", stop);
       connection.dispose();
     };
     connection.signal.addEventListener("abort", stop, { once: true });
     // The polling listener owns connection cleanup until the response closes.
     polling = true;
-    startSimulatorGrabLoop(tritonPath, simulator, hostInputBaseURL);
+    if (connection.signal.aborted) { stop(); return; }
+    startSimulatorGrabLoop(cacheKey, cache, tritonPath, simulator, hostInputBaseURL);
 
     const pushFrame = async () => {
       if (!active) return;
@@ -259,18 +272,16 @@ async function handleIosSimulatorMjpeg(url, req, res, tritonPath, hostInputBaseU
   }
 }
 
-function startSimulatorGrabLoop(tritonPath, simulator, hostInputBaseURL) {
-  let cache = simulatorFrameCache.get(simulator);
-  if (!cache) {
-    cache = createSimulatorFrameCache();
-    simulatorFrameCache.set(simulator, cache);
-  }
-
+function startSimulatorGrabLoop(cacheKey, cache, tritonPath, simulator, hostInputBaseURL) {
   if (cache.loopActive) return;
   cache.loopActive = true;
+  const isActive = () => simulatorFrameCache.get(cacheKey) === cache
+    && cache.loopActive && !cache.controller.signal.aborted && cache.activeListeners.size > 0;
+  const captureSignal = () => AbortSignal.any([cache.controller.signal, AbortSignal.timeout(3000)]);
 
   const grabFrame = async () => {
-    if (!cache.loopActive || cache.activeListeners.size === 0) {
+    cache.loopTimer = null;
+    if (!isActive()) {
       cache.loopActive = false;
       return;
     }
@@ -283,15 +294,19 @@ function startSimulatorGrabLoop(tritonPath, simulator, hostInputBaseURL) {
       let targetId = `triton:ios-simulator:${simulator}`;
       let fastRes = await fetch(
         new URL(`/web/screenshot?target=${encodeURIComponent(targetId)}&t=${Date.now()}`, hostInputBaseURL),
-        { signal: AbortSignal.timeout(3000) }
+        { signal: captureSignal() }
       );
-      if (!fastRes.ok && cache.loopActive && cache.activeListeners.size > 0) {
+      if (!isActive()) { await fastRes.body?.cancel(); return; }
+      if (!fastRes.ok) {
+        await fastRes.body?.cancel();
+        if (!isActive()) return;
         targetId = `host:ios:${simulator}`;
         fastRes = await fetch(
           new URL(`/web/screenshot?target=${encodeURIComponent(targetId)}&t=${Date.now()}`, hostInputBaseURL),
-          { signal: AbortSignal.timeout(3000) }
+          { signal: captureSignal() }
         );
       }
+      if (!isActive()) { await fastRes.body?.cancel(); return; }
 
       if (fastRes.ok) {
         const contentType = fastRes.headers.get("content-type") || "";
@@ -299,17 +314,23 @@ function startSimulatorGrabLoop(tritonPath, simulator, hostInputBaseURL) {
           newBuffer = Buffer.from(await fastRes.arrayBuffer());
           newContentType = contentType;
           isFastChannel = true;
+        } else {
+          await fastRes.body?.cancel();
         }
+      } else {
+        await fastRes.body?.cancel();
       }
     } catch {
       // Slow fallback below.
     }
 
-    if (!newBuffer && cache.loopActive && cache.activeListeners.size > 0) {
+    if (!isActive()) return;
+    if (!newBuffer) {
       const outputDir = join(tmpdir(), `tritonkit-web-grab-${randomUUID()}`);
       const outputPath = join(outputDir, "frame.png");
-      await mkdir(outputDir, { recursive: true });
       try {
+        await mkdir(outputDir, { recursive: true });
+        if (!isActive()) return;
         await runTritonJSON(tritonPath, [
           "sim",
           "screenshot",
@@ -319,6 +340,9 @@ function startSimulatorGrabLoop(tritonPath, simulator, hostInputBaseURL) {
           outputPath,
           "--json",
         ]);
+        // Already-dispatched CLI work may finish after cancellation; never
+        // publish it or let it schedule another capture for a later generation.
+        if (!isActive()) return;
         newBuffer = await readFile(outputPath);
         newContentType = "image/png";
       } catch {
@@ -328,17 +352,17 @@ function startSimulatorGrabLoop(tritonPath, simulator, hostInputBaseURL) {
       }
     }
 
-    if (newBuffer && cache.activeListeners.size > 0) {
+    if (newBuffer && isActive()) {
       cache.buffer = newBuffer;
       cache.contentType = newContentType;
       cache.lastFetchTime = Date.now();
     }
 
-    if (cache.loopActive && cache.activeListeners.size > 0) {
+    if (isActive()) {
       const maxFps = Math.max(...cache.activeListeners.values(), 15);
       const fastDelay = maxFps >= 60 ? 2 : Math.max(0, Math.round(1000 / (maxFps * 2)));
       const delay = isFastChannel ? fastDelay : 1200;
-      setTimeout(grabFrame, delay);
+      cache.loopTimer = setTimeout(grabFrame, delay);
     } else {
       cache.loopActive = false;
     }
@@ -443,6 +467,8 @@ function createSimulatorFrameCache() {
     activeListeners: new Map(),
     currentFps: 0,
     loopActive: false,
+    loopTimer: null,
+    controller: new AbortController(),
   };
 }
 

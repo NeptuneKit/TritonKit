@@ -26,7 +26,7 @@ async function listen(server) {
   return `http://127.0.0.1:${server.address().port}`;
 }
 
-async function fixture(t, { holdHeaders = false, holdHealth = false, framebufferUnavailable = false, holdFirstScreenshot = false, blockFirstResponse = false, rapidStream = false, frameContentType = "image/jpeg", framePayload = Buffer.from("frame-one") } = {}) {
+async function fixture(t, { holdHeaders = false, holdHealth = false, framebufferUnavailable = false, holdFirstScreenshot = false, blockFirstResponse = false, rapidStream = false, frameContentType = "image/jpeg", framePayload = Buffer.from("frame-one"), screenshotPayload = "fixture-jpeg" } = {}) {
   const partBytes = Buffer.concat([Buffer.from(`--fixture\r\nContent-Type: ${frameContentType}\r\nContent-Length: ${framePayload.length}\r\n\r\n`), framePayload, Buffer.from("\r\n")]);
   const upstreamRequests = [];
   const bridgeRequests = [];
@@ -48,7 +48,7 @@ async function fixture(t, { holdHeaders = false, holdHealth = false, framebuffer
         return;
       }
       res.writeHead(200, { "content-type": "image/jpeg" });
-      res.end("fixture-jpeg");
+      res.end(screenshotPayload);
       return;
     }
     if (framebufferUnavailable) {
@@ -107,9 +107,9 @@ async function fixture(t, { holdHeaders = false, holdHealth = false, framebuffer
     // close has already happened, but its iOS fallback may subscribe afterward.
     for (const { req, res } of bridgeRequests) { req.emit("close"); res.emit("close"); }
   });
-  function connect(platform = "android", { paused = false } = {}) {
+  function connect(platform = "android", { paused = false, target = "fixture-target" } = {}) {
     const client = { chunks: [], byteChunks: [], ended: false, response: null };
-    client.request = get(`${bridgeURL}/web/${platform}/mjpeg?udid=fixture-target&fps=5`, { agent: false }, (response) => {
+    client.request = get(`${bridgeURL}/web/${platform}/mjpeg?udid=${encodeURIComponent(target)}&fps=5`, { agent: false }, (response) => {
       client.response = response;
       response.on("data", (data) => { client.chunks.push(data.toString()); client.byteChunks.push(data); });
       if (paused) response.pause();
@@ -327,3 +327,57 @@ for (const platform of ["android", "harmony", "ios-simulator"]) {
     assert.deepEqual(f.errors, []);
   });
 }
+
+
+test("iOS polling sessions isolate the same simulator on different upstreams", async (t) => {
+  const firstUpstream = await fixture(t, { framebufferUnavailable: true, screenshotPayload: "upstream-one-frame" });
+  const secondUpstream = await fixture(t, { framebufferUnavailable: true, screenshotPayload: "upstream-two-frame" });
+  const target = "isolated-upstream-target";
+  const first = firstUpstream.connect("ios-simulator", { target });
+  await until(() => first.chunks.join("").includes("upstream-one-frame"), "first upstream produced its own frame");
+  const second = secondUpstream.connect("ios-simulator", { target });
+  await until(() => secondUpstream.screenshotRequests.length > 0, "second upstream must have its own capture session");
+  await until(() => second.chunks.join("").includes("upstream-two-frame"), "second stream receives its configured upstream");
+  assert.ok(!second.chunks.join("").includes("upstream-one-frame"), "frames cannot cross upstreams for the same simulator");
+  assert.ok(!first.chunks.join("").includes("upstream-two-frame"));
+  first.request.destroy();
+  await until(() => firstUpstream.bridgeRequests[0].res.destroyed, "first session released");
+  const before = second.chunks.length;
+  await until(() => second.chunks.length > before, "releasing one upstream leaves the other session active");
+});
+
+test("iOS polling last release aborts a pending screenshot and does not start another capture", async (t) => {
+  const f = await fixture(t, { framebufferUnavailable: true, holdFirstScreenshot: true });
+  const client = f.connect("ios-simulator", { target: "abort-pending-target" });
+  await until(() => f.heldScreenshots.length === 1, "screenshot is pending before headers");
+  client.request.destroy();
+  await until(() => f.bridgeRequests[0].res.destroyed, "last polling response closed");
+  await until(() => f.heldScreenshots[0].destroyed, "last release must cancel the pending HTTP screenshot");
+  await delay(150);
+  assert.equal(f.screenshotRequests.length, 1, "canceled screenshot cannot start fallback or another loop iteration");
+  assert.deepEqual(f.errors, []);
+});
+
+test("iOS polling reconnect creates a fresh generation while the old screenshot is pending", async (t) => {
+  const f = await fixture(t, { framebufferUnavailable: true, holdFirstScreenshot: true, screenshotPayload: "new-generation-frame" });
+  const target = "reconnect-generation-target";
+  const first = f.connect("ios-simulator", { target });
+  await until(() => f.heldScreenshots.length === 1, "old generation has a pending capture");
+  first.request.destroy();
+  await until(() => f.bridgeRequests[0].res.destroyed, "old response closed before reconnect");
+  const second = f.connect("ios-simulator", { target });
+  await until(() => second.chunks.join("").includes("new-generation-frame"), "new generation captures without waiting for the old request");
+  assert.ok(f.heldScreenshots[0].destroyed, "old generation's pending HTTP request was canceled");
+  f.heldScreenshots[0].writeHead(503);
+  f.heldScreenshots[0].end("old-generation-frame");
+  await delay(100);
+  assert.ok(!second.chunks.join("").includes("old-generation-frame"), "late old output cannot enter the new session");
+  assert.ok(f.screenshotRequests.every((url) => new URL(url, "http://fixture.local").searchParams.get("target").startsWith("triton:ios-simulator:")), "old failure cannot trigger a host capture in the new generation");
+  second.request.destroy();
+  await until(() => f.bridgeRequests.every(({ res }) => res.destroyed), "new generation also released");
+  await delay(80);
+  const captures = f.screenshotRequests.length;
+  await delay(100);
+  assert.equal(f.screenshotRequests.length, captures, "no loop survives the final release");
+  assert.deepEqual(f.errors, []);
+});
