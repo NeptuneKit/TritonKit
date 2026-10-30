@@ -6,7 +6,7 @@
 >
 > 编号登记册：[INDEX.md](./INDEX.md)（248/248 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-29（SP-243 v0.2.36 发布验收；保留既有参考追踪）
+> 最近审计：2026-10-30（真实前序Space登记及SP-248本地提交；保留既有参考追踪）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -396,4 +396,4 @@
 | 待原任务整合 | [SP-246-rhine-web-migration](./SP-246-rhine-web-migration/README.md) | 设备预览、层级、分屏和外壳的Rhine迁移；仅登记 | 产品WIP与验收由原任务维护 |
 | 待原任务整合 | [SP-247-rhine-page-preferences](./SP-247-rhine-page-preferences/README.md) | Web页面组合及视觉偏好调整；仅登记 | 产品WIP与验收由原任务维护 |
 
-- [SP-248-issue-238-arkweb-transport](./SP-248-issue-238-arkweb-transport/README.md)：#238 本地修复验证通过（CLI1582+94、root402）；真实ArkWeb未验收，独立worktree未提交/合并/发布。
+- [SP-248-issue-238-arkweb-transport](./SP-248-issue-238-arkweb-transport/README.md)：#238已以dba41b6e重放并本地提交e6258339/8d18670f；CLI1582+94、root402通过；前序登记已就绪，最新docs待复验。交付已授权，尚未推送/PR/合并/发布，真实ArkWeb未验收。
