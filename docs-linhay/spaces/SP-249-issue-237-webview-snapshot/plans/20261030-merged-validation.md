@@ -1,5 +1,7 @@
 # #237 合并验收（2026-10-30）
 
+> 本文为合并阶段证据；后续真实iOS/ArkWeb验收及发布见[SP250](../../SP-250-release-v0-2-37/plans/20261030-release.md)。
+
 ## 当前交付
 
 [PR #240](https://github.com/NeptuneKit/TritonKit/pull/240) 的审阅候选为 `c594ebb6b926dcdbbe7c2dac70f2988f0e135aa0`，合并为 `88cdbba25f91c5047abcd40c62db79a888fda970`。合并后远端 main tree 与审阅候选 tree 精确一致。

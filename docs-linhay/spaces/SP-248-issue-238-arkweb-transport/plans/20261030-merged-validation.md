@@ -1,5 +1,7 @@
 # #238 合并验收（2026-10-30）
 
+> 本文为合并阶段证据；后续真实iOS/ArkWeb验收及发布见[SP250](../../SP-250-release-v0-2-37/plans/20261030-release.md)。
+
 ## 当前交付
 
 [PR #239](https://github.com/NeptuneKit/TritonKit/pull/239) 的审阅候选为 `c640d12e039ec13efcd6ead7f43a4e4a8147ab92`，合并为 `41598639776e3e832eab809aefd41c4eddeda386`。真实前序登记 `e6258339` 与产品修复 `8d18670f` 分开提交；未带入主目录的其他产品 WIP 或旧日检提交。

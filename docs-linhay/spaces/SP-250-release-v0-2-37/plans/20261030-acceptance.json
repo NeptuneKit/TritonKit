@@ -1,0 +1,243 @@
+{
+  "candidate": "321cb9ec88eb6d5c1739381ba16e146649f75381",
+  "sdkSource": "current candidate local SwiftPM package",
+  "ios": {
+    "environment": "Xcode 27.1 / iOS Simulator 27.0 / dedicated App-host",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "fixtureFields": 17,
+    "cases": [
+      "default snapshot and exact selector/focus roundtrip",
+      "forms-only exact selector/focus roundtrip",
+      "bounded output and malformed/missing selector keeps focus"
+    ],
+    "originalPrivateApp": "not modified or tested",
+    "cliE2E": {
+      "ok": true,
+      "defaultForms": 17,
+      "formsOnlyForms": 17,
+      "focusReadbacks": [
+        {
+          "index": 0,
+          "ok": true
+        },
+        {
+          "index": 1,
+          "ok": true
+        },
+        {
+          "index": 2,
+          "ok": true
+        },
+        {
+          "index": 3,
+          "ok": true
+        },
+        {
+          "index": 4,
+          "ok": true
+        },
+        {
+          "index": 5,
+          "ok": true
+        },
+        {
+          "index": 6,
+          "ok": true
+        },
+        {
+          "index": 7,
+          "ok": true
+        },
+        {
+          "index": 8,
+          "ok": true
+        },
+        {
+          "index": 9,
+          "ok": true
+        },
+        {
+          "index": 10,
+          "ok": true
+        },
+        {
+          "index": 11,
+          "ok": true
+        },
+        {
+          "index": 12,
+          "ok": true
+        },
+        {
+          "index": 13,
+          "ok": true
+        },
+        {
+          "index": 14,
+          "ok": true
+        },
+        {
+          "index": 15,
+          "ok": true
+        },
+        {
+          "index": 16,
+          "ok": true
+        }
+      ],
+      "sdkCandidate": "321cb9ec",
+      "cliSha256": "ff0ff6c3cba3f354fd92e987575e26e6b23f4b6598c00a8a4d03e380116697a4"
+    },
+    "evidence": {
+      "ok": true,
+      "partial": false,
+      "screenshotVisuallyInspected": true
+    }
+  },
+  "arkweb": {
+    "fixture": "owned synthetic offline probe",
+    "oldCLI": "0.2.36",
+    "oldResult": {
+      "ok": false,
+      "code": "javascript_error",
+      "underlying": "NSPOSIXErrorDomain 57"
+    },
+    "fixedBuild": "SP250 current candidate Release CLI",
+    "result": {
+      "phase": "READY",
+      "heldImages": 0,
+      "loadedImages": 0
+    },
+    "ok": true,
+    "privateHandlerCalled": false,
+    "cliSha256": "ff0ff6c3cba3f354fd92e987575e26e6b23f4b6598c00a8a4d03e380116697a4",
+    "allowlistError": "webview_method_not_allowed"
+  },
+  "localStandardPod": "failed: Xcode27.1 does not accept original minimum iOS13",
+  "currentToolchainPod": "passed with private iOS15 xcconfig; product minimum unchanged",
+  "standardPodCI": {
+    "run": 41022271652,
+    "job": 123952132327,
+    "conclusion": "success"
+  },
+  "releasePublished": true,
+  "localGate": "passed",
+  "web": {
+    "build": "passed",
+    "testsPassed": 78,
+    "testsFailed": 0,
+    "retainedInitialFailure": "CLI binary not yet generated; rebound same candidate binary and passed",
+    "existingLogWarnings": "Vite dep-scan close warnings retained"
+  },
+  "candidateCI": {
+    "run": 41022271652,
+    "conclusion": "success"
+  },
+  "release": {
+    "tag": "v0.2.37",
+    "sha": "bfaeb96173456dbac58d08aaaf91df2272c7a92a",
+    "mainCI": 41023914358,
+    "tagCI": 41025365064,
+    "releaseRun": 41025365081,
+    "allConclusions": "success",
+    "url": "https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.37"
+  },
+  "assets": {
+    "ok": true,
+    "version": "0.2.37",
+    "tag": "v0.2.37",
+    "expectedCommit": "bfaeb96173456dbac58d08aaaf91df2272c7a92a",
+    "checks": {
+      "checksums": {
+        "triton-macos-arm64.tar.gz": "1083ed5c8d9b06396909a0eaac2d321b11e2b17ce252e0d61f359ed9c304b6f2",
+        "triton-macos-x86_64.tar.gz": "f2cfecb0175e26c13bce96cbd488b3475bcb524a7ea5b72a2b76197b2775f682",
+        "tritonkit-skills.tar.gz": "c558d427d61141d3a9dd0ef737bc1d398d9f4d03e5bb75b86f2e241595f6f4ef"
+      },
+      "triton-macos-arm64.tar.gz": {
+        "members": 60,
+        "payloadBytes": 61021439,
+        "gzipExpandedBytes": 61063680
+      },
+      "triton-macos-x86_64.tar.gz": {
+        "members": 60,
+        "payloadBytes": 63675175,
+        "gzipExpandedBytes": 63717376
+      },
+      "tritonkit-skills.tar.gz": {
+        "members": 48,
+        "payloadBytes": 320026,
+        "gzipExpandedBytes": 409600
+      },
+      "skills": {
+        "version": "0.2.37",
+        "tag": "v0.2.37",
+        "commit": "bfaeb96173456dbac58d08aaaf91df2272c7a92a",
+        "dirty": false,
+        "skills": [
+          "tritonkit-dev-feedback",
+          "tritonkit-emulator-cli-takeover",
+          "tritonkit-real-project-regression",
+          "tritonkit-update"
+        ]
+      },
+      "arm64": {
+        "file": "Mach-O 64-bit executable arm64",
+        "version": "0.2.37",
+        "binarySHA256": "38f16499abce298b416535384e4851a733323b15e7649a210d807bfcc42a4452",
+        "runner": {
+          "ok": true,
+          "sourceVersion": "0.2.37",
+          "fileCount": 11
+        },
+        "web": {
+          "index": true,
+          "jsFiles": 1,
+          "cssFiles": 1
+        }
+      },
+      "x86_64": {
+        "file": "Mach-O 64-bit executable x86_64",
+        "version": "0.2.37",
+        "binarySHA256": "0109002bc2c21dd04aac2f7b58760b181879fb9adfb81018a0e76d495d939f6f",
+        "runner": {
+          "ok": true,
+          "sourceVersion": "0.2.37",
+          "fileCount": 11
+        },
+        "web": {
+          "index": true,
+          "jsFiles": 1,
+          "cssFiles": 1
+        }
+      }
+    },
+    "note": "Offline asset acceptance only; no device or HTTP/browser acceptance."
+  },
+  "packagedWeb": {
+    "ok": true,
+    "scope": "packaged readonly page and console only",
+    "consoleErrors": 0,
+    "consoleWarnings": 0,
+    "imageComplete": true,
+    "imageNaturalWidth": 7680,
+    "imageNaturalHeight": 4320,
+    "imageContent": "visually black",
+    "liveStreamContentAccepted": false,
+    "issue224Resolved": false
+  },
+  "installation": {
+    "homebrew": "0.2.37 upgrade and brew test passed",
+    "formulaChecksums": "matched both architectures",
+    "iosSnapshotFields": 17,
+    "arkwebProbe": "READY",
+    "originalPrivateApps": "not tested"
+  },
+  "cleanup": {
+    "ownListeners": "stopped",
+    "ownHVD": "stopped, probe uninstalled",
+    "ownSimulator": "shutdown, retained",
+    "others": "untouched"
+  }
+}

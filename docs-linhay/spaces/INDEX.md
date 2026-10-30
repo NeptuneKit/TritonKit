@@ -323,8 +323,8 @@
 | `SP-246-rhine-web-migration` | [`SP-246-rhine-web-migration`](./SP-246-rhine-web-migration/README.md) | 仅登记，产品未整合 | 真实既有Space；原负责人WIP不随本次提交 |
 | `SP-247-rhine-page-preferences` | [`SP-247-rhine-page-preferences`](./SP-247-rhine-page-preferences/README.md) | 仅登记，产品未整合 | 真实既有Space；原负责人WIP不随本次提交 |
 
-| `SP-248-issue-238-arkweb-transport` | [`SP-248-issue-238-arkweb-transport`](./SP-248-issue-238-arkweb-transport/README.md) | 已合远端 main，现场待验 | #238 已经 PR #239 合入远端 main；候选 CI 通过，现场待验，未发布，issue OPEN |
+| `SP-248-issue-238-arkweb-transport` | [`SP-248-issue-238-arkweb-transport`](./SP-248-issue-238-arkweb-transport/README.md) | 机制验收通过，已发布 | #238 已经 PR #239 合入远端 main；机制真实验收通过，已随v0.2.37发布，原私有App未验，issue OPEN |
 
-| `SP-249-issue-237-webview-snapshot` | [`SP-249-issue-237-webview-snapshot`](./SP-249-issue-237-webview-snapshot/README.md) | 已合远端 main，现场待验 | #237 已经 PR #240 合入远端 main；候选 CI 通过，现场待验，未发布，issue OPEN |
+| `SP-249-issue-237-webview-snapshot` | [`SP-249-issue-237-webview-snapshot`](./SP-249-issue-237-webview-snapshot/README.md) | 机制验收通过，已发布 | #237 已经 PR #240 合入远端 main；机制真实验收通过，已随v0.2.37发布，原私有App未验，issue OPEN |
 
-| `SP-250-release-v0-2-37` | [`SP-250-release-v0-2-37`](./SP-250-release-v0-2-37/README.md) | 验收与发布准备 | #237/#238 已合main，主动验收与完整发布门禁进行中；尚未发布 |
+| `SP-250-release-v0-2-37` | [`SP-250-release-v0-2-37`](./SP-250-release-v0-2-37/README.md) | 已发布并安装验证 | #237/#238机制真实验收通过，v0.2.37已发布；原私有App未验，#224黑图保留 |
