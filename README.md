@@ -465,6 +465,8 @@ triton web
 
 `triton web` is a local launcher for the readonly Device Hub only. In a source checkout it starts the React/Vite dev server from `Web/`; in a released archive or Homebrew install it serves bundled `web/` static assets from the CLI package. It does not replace the CLI / HTTP control surface, and it does not introduce browser-side create / update / execute business actions.
 
+Source-checkout and packaged Web previews automatically pause when their page or viewport is hidden, offscreen, or has no visible area. Returning to a visible preview reconnects with the same device and FPS preference. Each pane owns its subscription, so another visible preview continues streaming; the last hidden or closed preview releases the Android/Harmony capture session. This does not change device resource profiles. Android previews stream the original PNG. Native iOS framebuffer and Harmony capture retain JPEG; the source iOS screenshot fallback preserves its actual image format. Multipart consumers must use each part’s Content-Type rather than assume JPEG from the legacy `mjpeg` URL. The PNG tradeoff and measured scope are recorded in the [preview memory report](docs-linhay/spaces/SP-244-emulator-service-slimming/plans/20261030-png-adoption-commit.md).
+
 If the default port is already occupied, `triton web --json` reports `web_port_in_use` before invoking npm/Vite. Use `lsof -nP -iTCP:34127 -sTCP:LISTEN` to find stale listeners, stop the old `triton web` / Vite process, or run `triton web --port <free-port>`. If a packaged/Homebrew server reports missing static assets, reinstall or update the package so `share/triton/web/index.html` exists, or pass `--root /path/to/TritonKit` when validating from a checkout.
 
 For a non-mutating preflight, use `triton web status --json` to inspect whether the Web port is listening and `triton web doctor --json` to get ordered launch-readiness checks and recovery actions. These commands do not start npm/Vite and do not stop existing processes.
@@ -793,7 +795,7 @@ triton target use emulator-5554 --platform android --json
 triton target wait-ready emulator-5554 --platform android --json
 triton device doctor --platform android --json
 triton device list --platform android --json
-triton device start --platform android --avd Dxyer_API_34 --headless --gpu swiftshader_indirect --plan-only --json
+triton device start --platform android --avd Dxyer_API_34 --headless --gpu host --no-snapshot --plan-only --json
 triton device stop --platform android --device emulator-5554 --confirm --json
 triton device alias set android-a --platform android --target emulator-5554 --json
 triton device screenshot --device android-a --output /tmp/android-before.png --json
@@ -809,6 +811,8 @@ triton smoke android --device android-a --package com.android.settings --wait-te
 ```
 
 Android `device wait-ready` / `target wait-ready` requires adb state `device`, `sys.boot_completed=1`, and an available package manager. This is a host readiness sample, not proof that an APK install or app workflow will succeed. Screenshot storage/capture errors remain `android_screenshot_failed`; a missing remote file is not evidence that adb is missing.
+
+Android startup accepts opt-in `--no-snapshot` (disable both snapshot loading and saving; overrides `--no-snapshot-load`) and `--disable-vulkan` (only for workflows that do not need Vulkan). Both default to false and reject non-Android targets. `--gpu host` can reduce software-rendering overhead on Apple Silicon; verify actual rendering and memory for the selected AVD. Selective package/service controls and measured limits are documented in [emulator resource management](docs-linhay/dev/emulator-resource-management.md).
 
 `triton device foreground --platform android --device <selector> --json` reports `observed.bundleIdentifier`, the resolved `observed.activity` (only a leading `.` expands to the package), and the original package/activity `observed.component` from a trustworthy resumed ActivityRecord. Missing or conflicting identity stays `unknown`; window focus is not a fallback. A foreground identity is not business readiness. Legacy ADB text input now quotes the text for the remote shell and redacts it from the command ledger; Android `input text` Unicode/keymap and `%s` behavior remain platform limitations.
 

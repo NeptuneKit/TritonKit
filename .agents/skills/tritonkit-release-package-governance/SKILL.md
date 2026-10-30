@@ -59,6 +59,8 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 - 区分认证失败与网络失败。DNS/transport错误时`gh auth status`可能报告token invalid；先在不打印凭据的情况下检查认证API是否可达，不据该提示自动清除认证或改全局DNS。必要网络回退只绑定当前任务进程，结束后关闭自有通道。
 - 发布runner的Swift版本可与本机/main CI不同；局部新版Release通过不证明旧编译器优化路径。保留编译器版本、函数与SIL崩溃证据，优先以最小源码结构修复并复验旧工具链，不以关优化/跳过build换绿色。失败tag不等于公开Release；下一补丁保留失败尝试关系。SP-196视觉结果纯snapshot builder恢复记录见[发布验收](../../../docs-linhay/spaces/SP-196-upstream-optimization-delivery/plans/20261014-release.md)。
 
+- Packaged preview acceptance must exercise each platform route, parse the registry with SDK tools absent from PATH, and verify an actual decoded frame plus hide/resume/final-subscriber cleanup. A launch plan or HTML 200 does not prove an MJPEG route exists. Test the local artifact after archive extraction with no independent dev proxy, and retain the binary/static-asset hashes; UI changes after the snapshot require rebuilding the affected candidate.
+
 - Homebrew的`bundledWebRoot`可能是稳定share符号链接；核对resolve后的Cellar版本，不要求原字符串含版本号。`triton web --json`只输出launch plan；用`--print-command --json`检查计划，实际启动去掉JSON输出选项。
 - 浏览器默认布局若因设备诊断拒绝实时流，保留HTTP错误、console计数和target-bound doctor证据；可另测关闭流组件后的工作台，但必须标注该结果仅覆盖限定布局，不能据此把默认页面或实时流验收记为通过。不得绕过设备安全保护以满足零console error。
 

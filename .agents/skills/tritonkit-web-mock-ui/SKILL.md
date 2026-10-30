@@ -153,11 +153,18 @@ Then open `http://127.0.0.1:34127/` in a browser automation tool and verify:
 - changed motion is actually observed during playback, pause, system/manual reduced motion, resize and unmount cleanup. Do not advertise pause/full controls unless every animation in the scene implements them; static screenshots do not prove motion;
 - mock/browser evidence is not described as native, Wails, real-device or production acceptance.
 
-### Retained preview lifecycle
+### Preview lifecycle acceptance
 
 - Keep connection intent and selected target/FPS separate from visibility. Observe the stable viewport, require a positive intersection area, and include page visibility/pagehide plus ancestor CSS visibility and transition completion. Window blur alone is not hiding.
 - Explicitly replace a multipart image source when releasing it. React StrictMode may detach and reattach the same DOM ref; setup must restore the current source, and a transparent placeholder must not count as a real frame.
+- A dev proxy must listen to response close before waiting for readiness or upstream headers and abort only that subscriber. In Hummingbird, prefer acquiring the subscription inside response-body execution, consume inbound close even while no frame is available, and bind release to the acquired session. If a synchronous native startup failure must retain its HTTP status, an eager subscription needs an idempotent RAII lease that also releases when the body never executes. A terminated session must not be reused by a later subscription.
+- Validate a single preview, two subscribers, final cancellation, fresh reconnection, and early disconnect with actual HTTP fixtures. Keep process identity in capture observations; a server replacement invalidates observations tied to its old PID.
+- Keep known-platform framebuffer target lookup lightweight: preserve selector/alias/current rules, but avoid unrelated platform discovery and foreground-app enrichment on every reconnect. Compare this hot path separately from registry refresh requests.
 - Keep capture, proxy-header and first-frame UI budgets distinct. A multipart HTTP 200 without a decoded image is a failure. Align the bounded UI probe with the sum of capture stages and startup margin; extending a deadline must retain immediate cancellation and terminal-session tests. Node writeHead alone may not flush downstream headers, so the browser response timestamp does not identify upstream header latency.
+- Prefer semantic preview state and accessible controls over an old presentation class when parallel UI work changes components. Bind browser evidence to a frozen Web source/asset manifest and the actual binary/PID.
+- For native Page Visibility acceptance, check the actual document state. Playwright enables focus emulation by default; attach to an isolated owned Chrome default context with `connectOverCDP(..., { noDefaults: true })` when supported, and use numeric polling while hidden because requestAnimationFrame pauses. Synthetic visibility events or a helper-only test are not native browser proof.
+
+- 截图采集进程很短时，固定频率ps可能与采集周期重合，只看到`(adb)`等不完整命令；未记录进程状态时不能据此判定已退出。保留原窗口失败，延长显示正对照并给采样间隔加抖动；不能把缺失完整命令当“无采集”，也不能把PID采样数称为精确帧数。 全机ps查询出现长样本空洞时，只查询绑定服务的子进程与argv，并先用自有子进程验证解析；缺样本必须失败，不能当作零采集。
 
 ## Documentation
 
@@ -168,3 +175,17 @@ Update:
 - this skill when a new reusable Web mock workflow appears.
 
 Only update `AGENTS.md` when the rule is repo-wide and long-lived.
+
+
+### 慢消费者与无首帧释放
+
+- MJPEG代理必须检查`res.write`返回值，false后暂停上游读取/下一帧，drain后继续；close/error/abort/finish必须解除等待并移除监听。真实暂停TCP消费者验证输出队列，不能只测模拟false或把队列字节当VM物理收益。
+- fallback等待时固定当前帧内容、类型和长度，避免共享缓存变化拼出不一致帧。采集频率与推送频率另行验证。
+- eager启动iOS采集需要成功订阅的RAII所有权，direct/packaged分别验收未运行body、无首帧断开、双订阅及错误契约；fixture的terminal不代表native默认运行状态已有故障检测。经验与反证见[SP-244第七轮](../../../docs-linhay/spaces/SP-244-emulator-service-slimming/plans/20261030-further-memory-candidates.md)。
+
+### PNG帧与观测窗口
+
+- `mjpeg`路径不保证每帧都是JPEG；读取typed帧格式并保持Content-Type、Content-Length与Data一致。原始PNG直通必须验证真实设备、源码代理、实际解包资产和原生WKWebView；单个Chromium fixture不足以证明客户端兼容，WKWebView harness也不等于完整桌面壳验收。
+- PNG的ImageIO complete状态不保证容器有末尾IEND；用有界chunk结构和no-cache metadata检查，避免为了校验再次全图解码。明确CRC/压缩像素语义未完整验证，不把结构检查描述成任意图片可解码保证。
+- 上游就绪查询、流与流内截图fallback须消费同一配置来源；测试直接监听配置地址，不通过fetch重写hardcoded默认端口掩盖错误。
+- 分别记录恢复请求与首帧已到达的时间。隐藏负窗口止于恢复请求前，保留可见阶段完整正对照和采样数量；不能把恢复等待期计入隐藏，也不能把进程采样计数当精确帧数。经验、失败反证与真实收益范围见[SP-244第九轮](../../../docs-linhay/spaces/SP-244-emulator-service-slimming/plans/20261030-png-adoption-commit.md)。

@@ -1,5 +1,7 @@
 # TritonKit Project Memory
 
+- 2026-10-30：[SP-244内存优化](../spaces/SP-244-emulator-service-slimming/README.md)第1–9轮已验收并整合本地main：Android/Harmony resource契约与启动选项、预览自动暂停/packaged路由、背压/引用释放、iOS逐帧pool及Android PNG直通。Harmony商用镜像仍只诊断/拒绝无权限写入。用户接受PNG带宽代价；[第九轮真实对照与提交](../spaces/SP-244-emulator-service-slimming/plans/20261030-png-adoption-commit.md)HTTP进程峰值18.99→8.56MiB、持续中位少0.55MiB，Settings payload增加9.87%；非VM收益，旧18%为另两图样本。CLI1819（3条件跳过）、Web156/build、local、真实Android源码/解包版与WKWebView通过；本轮未重跑真实Harmony/iOS矩阵。所有自有资源清理，保留外部环境与并行WIP，未push/tag/release。lowram/蓝牙崩溃组合拒绝，zRAM/ArkWeb/商用trimMem未证额外host收益；后续采集FPS仲裁、PNG缓冲与HWUI稳定净收益进入验证队列。历史证据由space各轮报告索引。
+
 - 2026-10-29整理：[10月28日参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261028-reference-update-report.md)原17个WIP已按用户授权对齐v0.2.36后的main并独立提交；33仓24完整/9partial、三仓更新无新采用，9个缺口保留。本轮仅资料整合，没有重新查询上游或变更发布tag。
 
 - 2026-10-29：[v0.2.36发布验收](../spaces/SP-243-release-v0-2-36/plans/20261029-release.md)完成，candidate527b2368；main/tag CI、双架构Release、checksum/skills/Runner/Homebrew通过，包外只读Web及默认页面console检查通过，流黑图内容未验证。#224/#214 OPEN；主目录17个WIP未变，CocoaPods仅lint。

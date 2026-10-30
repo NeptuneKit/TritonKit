@@ -90,7 +90,9 @@ func androidEmulatorStartCommand(
     memory: Int?,
     noSnapshotLoad: Bool,
     noAudio: Bool,
-    noBootAnim: Bool
+    noBootAnim: Bool,
+    noSnapshot: Bool = false,
+    disableVulkan: Bool = false
 ) -> TKHostCommand {
     var arguments = ["@\(avd)"]
     if headless {
@@ -102,8 +104,13 @@ func androidEmulatorStartCommand(
     if let memory {
         arguments += ["-memory", String(memory)]
     }
-    if noSnapshotLoad {
+    if noSnapshot {
+        arguments.append("-no-snapshot")
+    } else if noSnapshotLoad {
         arguments.append("-no-snapshot-load")
+    }
+    if disableVulkan {
+        arguments += ["-feature", "-Vulkan"]
     }
     if noAudio {
         arguments.append("-no-audio")
@@ -129,7 +136,9 @@ func androidEmulatorStartPlan(
     noSnapshotLoad: Bool,
     noAudio: Bool,
     noBootAnim: Bool,
-    adbSerial: String = "emulator-5554"
+    adbSerial: String = "emulator-5554",
+    noSnapshot: Bool = false,
+    disableVulkan: Bool = false
 ) throws -> HostDeviceStartPlan {
     let trimmedAVD = avd.trimmingCharacters(in: .whitespacesAndNewlines)
     let trimmedEmulator = emulator.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -150,8 +159,20 @@ func androidEmulatorStartPlan(
         memory: memory,
         noSnapshotLoad: noSnapshotLoad,
         noAudio: noAudio,
-        noBootAnim: noBootAnim
+        noBootAnim: noBootAnim,
+        noSnapshot: noSnapshot,
+        disableVulkan: disableVulkan
     )
+    var notes = ["Android emulator launch is detached. Use the nextAction wait-ready command before app, hierarchy, screenshot, or smoke actions."]
+    if noSnapshot {
+        notes.append("Snapshot loading and saving are disabled for this launch; existing snapshots are retained.")
+    }
+    if disableVulkan {
+        notes.append("Guest Vulkan is disabled; this launch is incompatible with Vulkan tests and does not select a different GPU backend.")
+    }
+    if disableVulkan || noSnapshot {
+        notes.append("These opt-in settings do not establish memory savings; compare the same workload before claiming a reduction.")
+    }
     return HostDeviceStartPlan(
         action: "device.start",
         platform: "android",
@@ -163,7 +184,7 @@ func androidEmulatorStartPlan(
         hdcPort: nil,
         commands: [command],
         waitReadyArgs: ["wait-ready", "--platform", "android", "--device", adbSerial, "--json"],
-        note: "Android emulator launch is detached. Use the nextAction wait-ready command before app, hierarchy, screenshot, or smoke actions."
+        note: notes.joined(separator: " ")
     )
 }
 

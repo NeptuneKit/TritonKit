@@ -153,9 +153,11 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--emulator", type: "Path", defaultValue: "emulator|/Applications/DevEco-Studio.app/Contents/tools/emulator/Emulator", description: "Android emulator or DevEco Emulator executable for device start/stop"),
                 TKCommandSchemaOption(name: "--adb-serial", type: "String", defaultValue: "emulator-5554", description: "Expected Android adb serial after first emulator launch"),
                 TKCommandSchemaOption(name: "--headless", type: "Bool", defaultValue: "false", description: "Start Android emulator with -no-window"),
-                TKCommandSchemaOption(name: "--gpu", type: "String", description: "Android emulator GPU mode such as swiftshader_indirect"),
+                TKCommandSchemaOption(name: "--gpu", type: "String", description: "Android emulator GPU mode such as host or software"),
                 TKCommandSchemaOption(name: "--memory", type: "Int", description: "Android emulator memory in MB"),
                 TKCommandSchemaOption(name: "--no-snapshot-load", type: "Bool", defaultValue: "false", description: "Start Android emulator without loading a snapshot"),
+                TKCommandSchemaOption(name: "--no-snapshot", type: "Bool", defaultValue: "false", description: "Android only: disable snapshot loading and saving for this launch; overrides --no-snapshot-load without deleting existing snapshots"),
+                TKCommandSchemaOption(name: "--disable-vulkan", type: "Bool", defaultValue: "false", description: "Android only: disable guest Vulkan with -feature -Vulkan; incompatible with Vulkan tests, does not select a GPU backend or guarantee memory savings"),
                 TKCommandSchemaOption(name: "--no-audio", type: "Bool", defaultValue: "false", description: "Start Android emulator without audio"),
                 TKCommandSchemaOption(name: "--no-boot-anim", type: "Bool", defaultValue: "false", description: "Start Android emulator without boot animation"),
                 TKCommandSchemaOption(name: "--hdc-port", type: "Int", defaultValue: "10100", description: "Harmony HDC bridge port for DevEco Emulator start"),
@@ -265,6 +267,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton app launch --device <selector> --json",
             ],
             outputContracts: [
+                emulatorResourceOutputContract(),
                 iosRunnerOutputContract(),
                 hostDeviceListOutputContract(),
                 hostDeviceListOutputContract(selector: "host.android-device"),
@@ -293,7 +296,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 deviceActionOutputContract(),
                 runtimeManifestOutputContract(),
             ],
-            failureCodes: Array(Set(applePlatformRunnerFailureCodes + iosRunnerFailureCodes + [
+            failureCodes: Array(Set(emulatorResourceFailureCodes + applePlatformRunnerFailureCodes + iosRunnerFailureCodes + [
                 "invalid_device_orientation", "invalid_device_fold", "invalid_clipboard_text", "unsupported_device_environment", "device_environment_not_verified", "device_environment_backend_failed", "clipboard_resource_missing", "clipboard_invalid_response", "device_location_failed", "device_foreground_unavailable",
                 "device_action_invalid", "device_action_failed", "device_action_geometry_invalid", "device_action_observation_stale", "device_action_unsupported",
                 "device_diagnostics_invalid_request", "device_diagnostics_unavailable", "device_diagnostics_timeout", "device_diagnostics_artifact_unsafe", "device_crash_list_failed", "device_crash_partial", "device_crash_not_found", "device_crash_receipt_invalid",
@@ -410,6 +413,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "validation_failed",
             ])).sorted(),
             subcommands: [
+                emulatorResourceSubcommandSchema(),
                 iosRunnerSubcommandSchema(),
                 TKCommandSubcommandSchema(name: "orientation", summary: "Read or set target orientation", outputSelectors: ["device.environment"], subcommands: [
                     TKCommandSubcommandSchema(name: "get", summary: "Read current target orientation", optionalOptions: ["--device", "--platform", "--scope", "--adb", "--hdc", "--session-root", "--timeout", "--format", "--json"], outputSelectors: ["device.environment"]),
@@ -516,7 +520,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "start",
-                    summary: "Start an Android or Harmony emulator with a machine-readable launch ledger"
+                    summary: "Start an Android or Harmony emulator with a machine-readable launch ledger",
+                    optionalOptions: ["--platform", "--avd", "--hvd", "--path", "--emulator", "--hdc", "--hdc-port", "--bootmode", "--adb-serial", "--headless", "--gpu", "--memory", "--no-snapshot-load", "--no-snapshot", "--disable-vulkan", "--no-audio", "--no-boot-anim", "--connect-after-launch", "--plan-only", "--stdout-log", "--stderr-log", "--json", "--format"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "stop",

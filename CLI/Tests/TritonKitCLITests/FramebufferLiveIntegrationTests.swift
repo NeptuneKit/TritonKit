@@ -17,6 +17,7 @@ private enum FramebufferLiveIntegrationError: Error, CustomStringConvertible {
     case ownedTargetNotReady
     case resizeActive
     case resizeStateUnknown
+    case primaryGeometryUnavailable
     case jpegDeadlineExceeded
 
     var description: String {
@@ -28,6 +29,7 @@ private enum FramebufferLiveIntegrationError: Error, CustomStringConvertible {
         case .ownedTargetNotReady: "The owned Simulator is not uniquely available and Booted; no boot was attempted."
         case .resizeActive: "Resize Mode is active; no framebuffer capture was started."
         case .resizeStateUnknown: "Fresh Resize Mode state is unknown; no framebuffer capture was started."
+        case .primaryGeometryUnavailable: "Fresh verified primary display geometry is unavailable; no live acceptance is claimed."
         case .jpegDeadlineExceeded: "No decodable real JPEG arrived within the ten-second deadline."
         }
     }
@@ -75,6 +77,11 @@ struct FramebufferLiveIntegrationTests {
         case .unknown: throw FramebufferLiveIntegrationError.resizeStateUnknown
         }
 
+        guard case .binding(let primary) = probeSimulatorFramebufferDisplayBinding(target: target, environment: environment),
+              let expectedSize = primary.nativePixelSize else {
+            throw FramebufferLiveIntegrationError.primaryGeometryUnavailable
+        }
+
         let service = CLIHostSimulatorFramebufferService.shared
         // The parent runs this in a fresh, dedicated test process. Reject a
         // stale visible frame; this getter alone cannot prove zero leases.
@@ -94,7 +101,7 @@ struct FramebufferLiveIntegrationTests {
         try #require(firstStarted, "Selected Xcode could not start the real framebuffer session.")
         ownedLeases += 1
         let firstJPEG = try await realJPEG(service: service, target: target)
-        try requireJPEG(firstJPEG)
+        try requireJPEG(firstJPEG, expectedSize: expectedSize)
 
         let secondStarted = service.startStreaming(udid: target)
         try #require(secondStarted, "A second subscriber could not acquire the same framebuffer session.")
@@ -102,7 +109,7 @@ struct FramebufferLiveIntegrationTests {
         service.stopStreaming(udid: target)
         ownedLeases -= 1
         let remainingJPEG = try await realJPEG(service: service, target: target)
-        try requireJPEG(remainingJPEG)
+        try requireJPEG(remainingJPEG, expectedSize: expectedSize)
 
         service.stopStreaming(udid: target)
         ownedLeases -= 1
@@ -140,8 +147,12 @@ struct FramebufferLiveIntegrationTests {
         return image.width > 0 && image.height > 0
     }
 
-    private func requireJPEG(_ data: Data) throws {
+    private func requireJPEG(_ data: Data, expectedSize: SimulatorFramebufferPixelSize) throws {
         let decoded = isDecodableJPEG(data)
         try #require(decoded, "The real framebuffer must produce JPEG bytes with positive decoded dimensions.")
+        let source = try #require(CGImageSourceCreateWithData(data as CFData, nil))
+        let image = try #require(CGImageSourceCreateImageAtIndex(source, 0, nil))
+        #expect(image.width == expectedSize.width && image.height == expectedSize.height,
+                "Decoded framebuffer dimensions must match the fresh target-bound primary display nativeSize; a larger secondary image is not acceptance.")
     }
 }

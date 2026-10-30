@@ -9,7 +9,7 @@ struct Device: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "device",
         abstract: "Discover and inspect host-side devices and emulators",
-        subcommands: [DeviceRunner.self, DevicePlatforms.self, DevicePlatformControl.self, DeviceContainers.self, DeviceDoctor.self, DeviceHIDBootstrap.self, DeviceNativeHIDInput.self, DeviceInfo.self, DeviceFiles.self, DeviceMountpoint.self, DeviceFS.self, DevicePair.self, DeviceUnpair.self, DeviceDiagnose.self, DeviceBridge.self, DeviceProxy.self, DeviceList.self, DeviceAlias.self, DeviceUse.self, DeviceCurrent.self, DeviceResolve.self, DeviceWaitReady.self, DeviceScreenshot.self, DeviceRuntimeURL.self, DeviceStart.self, DeviceStop.self, DeviceOrientation.self, DeviceFold.self, DeviceLocation.self, DeviceClipboard.self, DeviceForeground.self, DeviceRecording.self, DeviceLogs.self, DeviceCrashes.self, DeviceMirror.self, DeviceTap.self, DeviceDoubleTap.self, DeviceSwipe.self, DevicePress.self, DeviceType.self]
+        subcommands: [DeviceResource.self, DeviceRunner.self, DevicePlatforms.self, DevicePlatformControl.self, DeviceContainers.self, DeviceDoctor.self, DeviceHIDBootstrap.self, DeviceNativeHIDInput.self, DeviceInfo.self, DeviceFiles.self, DeviceMountpoint.self, DeviceFS.self, DevicePair.self, DeviceUnpair.self, DeviceDiagnose.self, DeviceBridge.self, DeviceProxy.self, DeviceList.self, DeviceAlias.self, DeviceUse.self, DeviceCurrent.self, DeviceResolve.self, DeviceWaitReady.self, DeviceScreenshot.self, DeviceRuntimeURL.self, DeviceStart.self, DeviceStop.self, DeviceOrientation.self, DeviceFold.self, DeviceLocation.self, DeviceClipboard.self, DeviceForeground.self, DeviceRecording.self, DeviceLogs.self, DeviceCrashes.self, DeviceMirror.self, DeviceTap.self, DeviceDoubleTap.self, DeviceSwipe.self, DevicePress.self, DeviceType.self]
     )
 }
 
@@ -1189,9 +1189,11 @@ struct DeviceStart: AsyncParsableCommand {
     @Option(help: "Harmony boot mode passed to DevEco Emulator") var bootmode: String = "coldboot"
     @Option(help: "Expected Android adb serial after first emulator launch") var adbSerial: String = "emulator-5554"
     @Flag(help: "Run Android emulator without a visible window") var headless = false
-    @Option(help: "Android emulator GPU mode, for example swiftshader_indirect") var gpu: String?
+    @Option(help: "Android emulator GPU mode, for example host or software") var gpu: String?
     @Option(help: "Android emulator memory in MB") var memory: Int?
     @Flag(help: "Pass -no-snapshot-load to Android emulator") var noSnapshotLoad = false
+    @Flag(help: "Android only: disable snapshot loading and saving; overrides --no-snapshot-load without deleting snapshots") var noSnapshot = false
+    @Flag(help: "Android only: disable guest Vulkan (-feature -Vulkan); incompatible with Vulkan tests, with no guaranteed memory savings") var disableVulkan = false
     @Flag(help: "Pass -no-audio to Android emulator") var noAudio = false
     @Flag(help: "Pass -no-boot-anim to Android emulator") var noBootAnim = false
     @Flag(inversion: .prefixedNo, help: "Include Harmony hdc tconn follow-up command in sourceCommands") var connectAfterLaunch = true
@@ -1305,7 +1307,10 @@ struct DeviceStart: AsyncParsableCommand {
         throw ExitCode.failure
     }
 
-    private func makePlan() throws -> HostDeviceStartPlan {
+    func makePlan() throws -> HostDeviceStartPlan {
+        if platform != .android && (noSnapshot || disableVulkan) {
+            throw HostDeviceSelectionError.parameterConflict("--no-snapshot and --disable-vulkan require --platform android.")
+        }
         switch platform {
         case .android:
             return try androidEmulatorStartPlan(
@@ -1317,7 +1322,9 @@ struct DeviceStart: AsyncParsableCommand {
                 noSnapshotLoad: noSnapshotLoad,
                 noAudio: noAudio,
                 noBootAnim: noBootAnim,
-                adbSerial: adbSerial
+                adbSerial: adbSerial,
+                noSnapshot: noSnapshot,
+                disableVulkan: disableVulkan
             )
         case .harmony:
             return try harmonyEmulatorStartPlan(

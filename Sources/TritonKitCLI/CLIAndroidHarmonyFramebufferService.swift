@@ -1,70 +1,30 @@
 import Foundation
-import ImageIO
-#if canImport(CoreGraphics)
-import CoreGraphics
-#endif
 
 // MARK: - Android Framebuffer Service
 
 final class CLIAndroidFramebufferService: @unchecked Sendable {
     static let shared = CLIAndroidFramebufferService()
 
-    private let lock = NSLock()
-    private var activeSessions = [String: AndroidSession]()
-    private var sessionRefCount = [String: Int]()
+    private let streams = FramebufferStreamRegistry()
 
-    private init() {}
-
-    func startStreaming(serial: String, adbPath: String = "adb") -> Bool {
-        lock.lock()
-        sessionRefCount[serial, default: 0] += 1
-        if activeSessions[serial] != nil {
-            lock.unlock()
-            return true // Already streaming
+    func subscribe(serial: String, adbPath: String = "adb") -> FramebufferStreamSubscription {
+        streams.subscribe(target: serial) {
+            AndroidSession(serial: serial, adbPath: adbPath)
         }
-
-        let session = AndroidSession(serial: serial, adbPath: adbPath)
-        session.start()
-        activeSessions[serial] = session
-        lock.unlock()
-        return true
-    }
-
-    func stopStreaming(serial: String) {
-        lock.lock()
-        if let count = sessionRefCount[serial] {
-            let newCount = count - 1
-            sessionRefCount[serial] = newCount
-            if newCount > 0 {
-                lock.unlock()
-                return // Still has other active clients
-            }
-        }
-        sessionRefCount.removeValue(forKey: serial)
-        let session = activeSessions.removeValue(forKey: serial)
-        lock.unlock()
-
-        session?.stop()
-    }
-
-    func getLatestFrameWithVersion(serial: String) -> (Data, UInt64)? {
-        lock.lock()
-        let session = activeSessions[serial]
-        lock.unlock()
-        return session?.getLatestFrameWithVersion()
     }
 }
 
 // MARK: - Android Session Implementation
 
-final class AndroidSession: @unchecked Sendable {
+final class AndroidSession: FramebufferCaptureSession, @unchecked Sendable {
     let serial: String
     let adbPath: String
     private let captureTimeout: TimeInterval
     var running: Bool { lock.lock(); defer { lock.unlock() }; return isRunning }
+    var imageFormat: FramebufferImageFormat { .png }
 
     private let lock = NSLock()
-    private var latestJPEGData = Data()
+    private var latestFrameData = Data()
     private var latestFrameVersion: UInt64 = 0
     private var isRunning = false
     private var isStopped = false
@@ -97,7 +57,7 @@ final class AndroidSession: @unchecked Sendable {
         lock.lock()
         isRunning = false
         isStopped = true
-        latestJPEGData = Data()
+        latestFrameData = Data()
         lock.unlock()
         captureProcess.cancel()
     }
@@ -105,8 +65,8 @@ final class AndroidSession: @unchecked Sendable {
     func getLatestFrameWithVersion() -> (Data, UInt64)? {
         lock.lock()
         defer { lock.unlock() }
-        guard !latestJPEGData.isEmpty else { return nil }
-        return (latestJPEGData, latestFrameVersion)
+        guard !latestFrameData.isEmpty else { return nil }
+        return (latestFrameData, latestFrameVersion)
     }
 
     private func runLoop() {
@@ -125,10 +85,10 @@ final class AndroidSession: @unchecked Sendable {
             let arguments = (adbPath.hasPrefix("/") ? [] : [adbPath]) + ["-s", serial, "exec-out", "screencap", "-p"]
             guard let result = captureProcess.run(executable: executable, arguments: arguments, timeout: captureTimeout) else { break }
             if result.exitStatus == 0,
-               let jpegData = convertPNGToJPEG(pngData: result.stdout) {
+               let pngData = validatedAndroidFramebufferPNG(result.stdout) {
                 lock.lock()
-                if isRunning, jpegData != latestJPEGData {
-                    latestJPEGData = jpegData
+                if isRunning, pngData != latestFrameData {
+                    latestFrameData = pngData
                     latestFrameVersion += 1
                     lastSuccessTime = Date().timeIntervalSince1970
                 }
@@ -147,26 +107,6 @@ final class AndroidSession: @unchecked Sendable {
         }
     }
 
-    private func convertPNGToJPEG(pngData: Data) -> Data? {
-        #if canImport(CoreGraphics) && canImport(ImageIO)
-        guard let imageSource = CGImageSourceCreateWithData(pngData as CFData, nil),
-              let cgImage = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) else {
-            return nil
-        }
-        let outputData = NSMutableData()
-        guard let destination = CGImageDestinationCreateWithData(outputData as CFMutableData, "public.jpeg" as CFString, 1, nil) else {
-            return nil
-        }
-        let options: [CFString: Any] = [
-            kCGImageDestinationLossyCompressionQuality: 0.6
-        ]
-        CGImageDestinationAddImage(destination, cgImage, options as CFDictionary)
-        if CGImageDestinationFinalize(destination) {
-            return outputData as Data
-        }
-        #endif
-        return nil
-    }
 }
 
 // MARK: - Harmony Framebuffer Service
@@ -174,57 +114,22 @@ final class AndroidSession: @unchecked Sendable {
 final class CLIHarmonyFramebufferService: @unchecked Sendable {
     static let shared = CLIHarmonyFramebufferService()
 
-    private let lock = NSLock()
-    private var activeSessions = [String: HarmonySession]()
-    private var sessionRefCount = [String: Int]()
+    private let streams = FramebufferStreamRegistry()
 
-    private init() {}
-
-    func startStreaming(target: String, hdcPath: String = "hdc") -> Bool {
-        lock.lock()
-        sessionRefCount[target, default: 0] += 1
-        if activeSessions[target] != nil {
-            lock.unlock()
-            return true // Already streaming
+    func subscribe(target: String, hdcPath: String = "hdc") -> FramebufferStreamSubscription {
+        streams.subscribe(target: target) {
+            HarmonySession(target: target, hdcPath: hdcPath)
         }
-
-        let session = HarmonySession(target: target, hdcPath: hdcPath)
-        session.start()
-        activeSessions[target] = session
-        lock.unlock()
-        return true
-    }
-
-    func stopStreaming(target: String) {
-        lock.lock()
-        if let count = sessionRefCount[target] {
-            let newCount = count - 1
-            sessionRefCount[target] = newCount
-            if newCount > 0 {
-                lock.unlock()
-                return // Still has other active clients
-            }
-        }
-        sessionRefCount.removeValue(forKey: target)
-        let session = activeSessions.removeValue(forKey: target)
-        lock.unlock()
-
-        session?.stop()
-    }
-
-    func getLatestFrameWithVersion(target: String) -> (Data, UInt64)? {
-        lock.lock()
-        let session = activeSessions[target]
-        lock.unlock()
-        return session?.getLatestFrameWithVersion()
     }
 }
 
 // MARK: - Harmony Session Implementation
 
-final class HarmonySession: @unchecked Sendable {
+final class HarmonySession: FramebufferCaptureSession, @unchecked Sendable {
     let target: String
     let hdcPath: String
+    private let captureTimeout: TimeInterval
+    var running: Bool { lock.lock(); defer { lock.unlock() }; return isRunning }
 
     private let lock = NSLock()
     private var latestJPEGData = Data()
@@ -234,9 +139,12 @@ final class HarmonySession: @unchecked Sendable {
     private var thread: Thread?
     private let captureProcess = FramebufferCaptureProcess()
 
-    init(target: String, hdcPath: String) {
+    // Harmony snapshot and transfer can exceed five seconds under host load.
+    // Bound each stage independently; cancellation still stops the owned helper immediately.
+    init(target: String, hdcPath: String, captureTimeout: TimeInterval = 15) {
         self.target = target
         self.hdcPath = hdcPath
+        self.captureTimeout = captureTimeout
     }
 
     func start() {
@@ -295,9 +203,9 @@ final class HarmonySession: @unchecked Sendable {
 
             let startTime = Date().timeIntervalSince1970
 
-            guard let snapshot = captureProcess.run(executable: executable, arguments: prefix + ["shell", "snapshot_display", "-f", remotePath]) else { break }
+            guard let snapshot = captureProcess.run(executable: executable, arguments: prefix + ["shell", "snapshot_display", "-f", remotePath], timeout: captureTimeout) else { break }
             if snapshot.exitStatus == 0 {
-                guard let received = captureProcess.run(executable: executable, arguments: prefix + ["file", "recv", remotePath, localURL.path]) else { break }
+                guard let received = captureProcess.run(executable: executable, arguments: prefix + ["file", "recv", remotePath, localURL.path], timeout: captureTimeout) else { break }
                 if received.exitStatus == 0,
                    let attributes = try? FileManager.default.attributesOfItem(atPath: localURL.path),
                    attributes[.type] as? FileAttributeType == .typeRegular,

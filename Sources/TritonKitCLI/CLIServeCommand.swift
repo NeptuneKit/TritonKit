@@ -685,88 +685,7 @@ struct Serve: AsyncParsableCommand {
             }
         }
 
-        router.get("/web/ios-simulator/framebuffer") { request, _ -> Response in
-            guard let target = queryParameter("target", from: request) ?? queryParameter("udid", from: request) else {
-                return jsonError(
-                    code: "missing_parameter",
-                    message: "Missing target or udid parameter",
-                    endpoint: "/web/ios-simulator/framebuffer",
-                    status: .badRequest
-                )
-            }
-
-            let udid: String
-            if target.hasPrefix("host:ios:") {
-                let parts = target.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false)
-                if parts.count == 3 {
-                    udid = String(parts[2])
-                } else {
-                    udid = target
-                }
-            } else {
-                udid = target
-            }
-
-            do { try assertIOSSimulatorResizeCaptureAllowed(target: udid) }
-            catch let error as IOSSimulatorResizeCaptureError {
-                return jsonError(code: error.detail.code, message: error.detail.message, endpoint: "/web/ios-simulator/framebuffer", hint: error.detail.hint, status: .conflict)
-            } catch {
-                return jsonError(code: "ios_simulator_resize_capture_state_unknown", message: "Capture routing could not be verified.", endpoint: "/web/ios-simulator/framebuffer", status: .conflict)
-            }
-            guard CLIHostSimulatorFramebufferService.shared.startStreaming(udid: udid) else {
-                return jsonError(code: "web_ios_simulator_mjpeg_unavailable", message: "Framebuffer service did not start.", endpoint: "/web/ios-simulator/framebuffer", status: .conflict)
-            }
-
-            let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 60
-            let fps = min(120, max(1, requestedFps))
-            let targetInterval = Double(1000 / fps) / 1000.0
-
-            let boundary = "tritonboundary"
-            let headers: HTTPFields = [
-                .contentType: "multipart/x-mixed-replace; boundary=\(boundary)",
-                .cacheControl: "no-cache, no-store, must-revalidate",
-                .connection: "close"
-            ]
-
-            let responseBody = ResponseBody { writer in
-                defer {
-                    CLIHostSimulatorFramebufferService.shared.stopStreaming(udid: udid)
-                }
-
-                var lastSentVersion: UInt64 = 0
-                var lastWriteTime = Date().timeIntervalSince1970
-                while true {
-                    if let (jpegData, version) = CLIHostSimulatorFramebufferService.shared.getLatestFrameWithVersion(udid: udid) {
-                        let now = Date().timeIntervalSince1970
-                        if version != lastSentVersion || (now - lastWriteTime) >= 1.0 {
-                            lastSentVersion = version
-                            lastWriteTime = now
-
-                            var headerStr = "--\(boundary)\r\n"
-                            headerStr += "Content-Type: image/jpeg\r\n"
-                            headerStr += "Content-Length: \(jpegData.count)\r\n\r\n"
-
-                            var buffer = ByteBuffer()
-                            buffer.writeString(headerStr)
-                            buffer.writeBytes(jpegData)
-                            buffer.writeString("\r\n")
-
-                            do {
-                                try await writer.write(buffer)
-                            } catch {
-                                break
-                            }
-                        }
-                    }
-
-                    try await Task.sleep(nanoseconds: UInt64(targetInterval * 1_000_000_000))
-                }
-
-                try? await writer.finish(nil)
-            }
-
-            return Response(status: .ok, headers: headers, body: responseBody)
-        }
+        registerDirectIOSFramebufferRoute(on: router)
 
         router.get("/web/android/framebuffer") { request, _ -> Response in
             guard let serial = queryParameter("target", from: request) ?? queryParameter("serial", from: request) ?? queryParameter("udid", from: request) else {
@@ -781,65 +700,19 @@ struct Serve: AsyncParsableCommand {
             let resolvedSerial: String
             let adbPath = findAdbExecutable()
             let hdcPath = findHdcExecutable()
-            if let selection = try? resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: serial), hdc: hdcPath, adb: adbPath) {
-                resolvedSerial = selection.target.rawTarget
-            } else if serial.hasPrefix("android-real:") {
-                resolvedSerial = String(serial.dropFirst("android-real:".count))
-            } else {
-                resolvedSerial = serial
+            do {
+                resolvedSerial = try resolveFramebufferTarget(platform: .android, target: serial, hdc: hdcPath, adb: adbPath, liveCurrentResolver: {
+                    try resolveHostDeviceSelection(request: .init(device: "current", platform: .android), hdc: hdcPath, adb: adbPath)
+                })
+            } catch {
+                return jsonError(code: "invalid_query", message: "\(error)", endpoint: "/web/android/framebuffer", status: .badRequest)
             }
-
-            _ = CLIAndroidFramebufferService.shared.startStreaming(serial: resolvedSerial, adbPath: adbPath)
 
             let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 30
             let fps = min(30, max(1, requestedFps))
-            let targetInterval = Double(1000 / fps) / 1000.0
-
-            let boundary = "tritonboundary"
-            let headers: HTTPFields = [
-                .contentType: "multipart/x-mixed-replace; boundary=\(boundary)",
-                .cacheControl: "no-cache, no-store, must-revalidate",
-                .connection: "close"
-            ]
-
-            let responseBody = ResponseBody { writer in
-                defer {
-                    CLIAndroidFramebufferService.shared.stopStreaming(serial: resolvedSerial)
-                }
-
-                var lastSentVersion: UInt64 = 0
-                var lastWriteTime = Date().timeIntervalSince1970
-                while true {
-                    if let (jpegData, version) = CLIAndroidFramebufferService.shared.getLatestFrameWithVersion(serial: resolvedSerial) {
-                        let now = Date().timeIntervalSince1970
-                        if version != lastSentVersion || (now - lastWriteTime) >= 1.0 {
-                            lastSentVersion = version
-                            lastWriteTime = now
-
-                            var headerStr = "--\(boundary)\r\n"
-                            headerStr += "Content-Type: image/jpeg\r\n"
-                            headerStr += "Content-Length: \(jpegData.count)\r\n\r\n"
-
-                            var buffer = ByteBuffer()
-                            buffer.writeString(headerStr)
-                            buffer.writeBytes(jpegData)
-                            buffer.writeString("\r\n")
-
-                            do {
-                                try await writer.write(buffer)
-                            } catch {
-                                break
-                            }
-                        }
-                    }
-
-                    try await Task.sleep(nanoseconds: UInt64(targetInterval * 1_000_000_000))
-                }
-
-                try? await writer.finish(nil)
+            return framebufferStreamingResponse(request: request, framesPerSecond: fps) {
+                CLIAndroidFramebufferService.shared.subscribe(serial: resolvedSerial, adbPath: adbPath)
             }
-
-            return Response(status: .ok, headers: headers, body: responseBody)
         }
 
         router.get("/web/harmony/framebuffer") { request, _ -> Response in
@@ -855,65 +728,19 @@ struct Serve: AsyncParsableCommand {
             let resolvedTarget: String
             let adbPath = findAdbExecutable()
             let hdcPath = findHdcExecutable()
-            if let selection = try? resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: target), hdc: hdcPath, adb: adbPath) {
-                resolvedTarget = selection.target.rawTarget
-            } else if target.hasPrefix("harmony-real:") {
-                resolvedTarget = String(target.dropFirst("harmony-real:".count))
-            } else {
-                resolvedTarget = target
+            do {
+                resolvedTarget = try resolveFramebufferTarget(platform: .harmony, target: target, hdc: hdcPath, adb: adbPath, liveCurrentResolver: {
+                    try resolveHostDeviceSelection(request: .init(device: "current", platform: .harmony), hdc: hdcPath, adb: adbPath)
+                })
+            } catch {
+                return jsonError(code: "invalid_query", message: "\(error)", endpoint: "/web/harmony/framebuffer", status: .badRequest)
             }
-
-            _ = CLIHarmonyFramebufferService.shared.startStreaming(target: resolvedTarget, hdcPath: hdcPath)
 
             let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 15
             let fps = min(15, max(1, requestedFps))
-            let targetInterval = Double(1000 / fps) / 1000.0
-
-            let boundary = "tritonboundary"
-            let headers: HTTPFields = [
-                .contentType: "multipart/x-mixed-replace; boundary=\(boundary)",
-                .cacheControl: "no-cache, no-store, must-revalidate",
-                .connection: "close"
-            ]
-
-            let responseBody = ResponseBody { writer in
-                defer {
-                    CLIHarmonyFramebufferService.shared.stopStreaming(target: resolvedTarget)
-                }
-
-                var lastSentVersion: UInt64 = 0
-                var lastWriteTime = Date().timeIntervalSince1970
-                while true {
-                    if let (jpegData, version) = CLIHarmonyFramebufferService.shared.getLatestFrameWithVersion(target: resolvedTarget) {
-                        let now = Date().timeIntervalSince1970
-                        if version != lastSentVersion || (now - lastWriteTime) >= 1.0 {
-                            lastSentVersion = version
-                            lastWriteTime = now
-
-                            var headerStr = "--\(boundary)\r\n"
-                            headerStr += "Content-Type: image/jpeg\r\n"
-                            headerStr += "Content-Length: \(jpegData.count)\r\n\r\n"
-
-                            var buffer = ByteBuffer()
-                            buffer.writeString(headerStr)
-                            buffer.writeBytes(jpegData)
-                            buffer.writeString("\r\n")
-
-                            do {
-                                try await writer.write(buffer)
-                            } catch {
-                                break
-                            }
-                        }
-                    }
-
-                    try await Task.sleep(nanoseconds: UInt64(targetInterval * 1_000_000_000))
-                }
-
-                try? await writer.finish(nil)
+            return framebufferStreamingResponse(request: request, framesPerSecond: fps) {
+                CLIHarmonyFramebufferService.shared.subscribe(target: resolvedTarget, hdcPath: hdcPath)
             }
-
-            return Response(status: .ok, headers: headers, body: responseBody)
         }
 
 
@@ -1289,52 +1116,51 @@ func serveScreenshotPayloadErrorDetail(
     )
 }
 
-private func findAdbExecutable() -> String {
-    let env = ProcessInfo.processInfo.environment
-    let home = env["HOME"] ?? ""
-    if !home.isEmpty {
-        let path1 = "\(home)/Library/Android/sdk/platform-tools/adb"
-        if FileManager.default.fileExists(atPath: path1) {
-            return path1
-        }
+func registerDirectIOSFramebufferRoute<Context: RequestContext>(
+    on router: Router<Context>,
+    capture: PackagedWebIOSFramebufferDependencies = .init()
+) {
+    router.get("/web/ios-simulator/framebuffer") { request, _ -> Response in
+        makeDirectIOSFramebufferResponse(request: request, capture: capture)
     }
-    if let pathVar = env["PATH"] {
-        for dir in pathVar.split(separator: ":") {
-            let fullPath = "\(dir)/adb"
-            if FileManager.default.fileExists(atPath: fullPath) {
-                return fullPath
-            }
-        }
-    }
-    return "adb"
 }
 
-private func findHdcExecutable() -> String {
-    let env = ProcessInfo.processInfo.environment
-    let home = env["HOME"] ?? ""
-    if !home.isEmpty {
-        let path1 = "\(home)/harmonyOS-command-line-tools/bin/hdc"
-        if FileManager.default.fileExists(atPath: path1) {
-            return path1
-        }
-        let path2 = "\(home)/Library/Huawei/Sdk/openharmony/12/toolchains/hdc"
-        if FileManager.default.fileExists(atPath: path2) {
-            return path2
-        }
-        let path3 = "\(home)/Library/Huawei/Sdk/openharmony/11/toolchains/hdc"
-        if FileManager.default.fileExists(atPath: path3) {
-            return path3
-        }
+func makeDirectIOSFramebufferResponse(
+    request: Request,
+    capture: PackagedWebIOSFramebufferDependencies = .init()
+) -> Response {
+    guard let target = queryParameter("target", from: request) ?? queryParameter("udid", from: request) else {
+        return jsonError(
+            code: "missing_parameter",
+            message: "Missing target or udid parameter",
+            endpoint: "/web/ios-simulator/framebuffer",
+            status: .badRequest
+        )
     }
-    if let pathVar = env["PATH"] {
-        for dir in pathVar.split(separator: ":") {
-            let fullPath = "\(dir)/hdc"
-            if FileManager.default.fileExists(atPath: fullPath) {
-                return fullPath
-            }
-        }
-    }
-    return "hdc"
-}
 
-// MARK: - Client Commands
+    let udid: String
+    if target.hasPrefix("host:ios:") {
+        let parts = target.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false)
+        if parts.count == 3 {
+            udid = String(parts[2])
+        } else {
+            udid = target
+        }
+    } else {
+        udid = target
+    }
+
+    do { try capture.validateCapture(udid) }
+    catch let error as IOSSimulatorResizeCaptureError {
+        return jsonError(code: error.detail.code, message: error.detail.message, endpoint: "/web/ios-simulator/framebuffer", hint: error.detail.hint, status: .conflict)
+    } catch {
+        return jsonError(code: "ios_simulator_resize_capture_state_unknown", message: "Capture routing could not be verified.", endpoint: "/web/ios-simulator/framebuffer", status: .conflict)
+    }
+    guard let subscription = startIOSFramebufferSubscription(target: udid, capture: capture) else {
+        return jsonError(code: "web_ios_simulator_mjpeg_unavailable", message: "Framebuffer service did not start.", endpoint: "/web/ios-simulator/framebuffer", status: .conflict)
+    }
+
+    let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 60
+    let fps = min(120, max(1, requestedFps))
+    return framebufferStreamingResponse(request: request, framesPerSecond: fps) { subscription }
+}

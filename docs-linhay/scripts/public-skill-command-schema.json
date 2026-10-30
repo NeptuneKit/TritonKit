@@ -10,7 +10,7 @@
   "capabilities": [],
   "coverage": ["report"],
   "debug": ["attrs", "ax", "geometry", "hierarchy", "hit", "ledger", "node", "nodes", "object", "patch-node", "runtime", "snapshot", "state", "ui-health"],
-  "device": ["alias", "bridge", "clipboard", "containers", "crashes", "current", "diagnose", "doctor", "double-tap", "files", "fold", "foreground", "list", "location", "logs", "mirror", "mountpoint", "orientation", "pair", "platform-control", "platforms", "proxy", "press", "recording", "resolve", "runner", "runtime-url", "screenshot", "start", "stop", "swipe", "tap", "type", "unpair", "use", "wait-ready"],
+  "device": ["alias", "bridge", "clipboard", "containers", "crashes", "current", "diagnose", "doctor", "double-tap", "files", "fold", "foreground", "list", "location", "logs", "mirror", "mountpoint", "orientation", "pair", "platform-control", "platforms", "proxy", "press", "recording", "resolve", "resource", "runner", "runtime-url", "screenshot", "start", "stop", "swipe", "tap", "type", "unpair", "use", "wait-ready"],
   "doctor": [],
   "evidence": ["capture", "ingest", "inspect", "project-screens", "project-workspace", "redact", "summary"],
   "export": [],

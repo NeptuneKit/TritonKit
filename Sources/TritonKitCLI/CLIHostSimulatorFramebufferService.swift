@@ -30,10 +30,16 @@ final class CLIHostSimulatorFramebufferService: @unchecked Sendable {
 
     func startStreaming(udid: String) -> Bool {
         guard loadPrivateFrameworks() else { return false }
+        let developerDirectory = lock.withLock { selectedDeveloperDirectory }
+        guard let developerDirectory,
+              case .binding(let binding) = probeSimulatorFramebufferDisplayBinding(
+                target: udid, environment: ["DEVELOPER_DIR": developerDirectory]
+              ) else { return false }
 
         lock.lock()
         defer { lock.unlock() }
-        if activeSessions[udid] != nil {
+        if let session = activeSessions[udid] {
+            guard session.isBound(to: binding.displayUniqueID) else { return false }
             sessionRefCount[udid, default: 0] += 1
             return true
         }
@@ -85,7 +91,7 @@ final class CLIHostSimulatorFramebufferService: @unchecked Sendable {
 
         // 创建我们的 Framebuffer 接收代理并启动
         let session = FramebufferSession(udid: udid)
-        guard session.start(simDevice: simDevice) else {
+        guard session.start(simDevice: simDevice, primaryDisplayUUID: binding.displayUniqueID) else {
             return false
         }
 
@@ -140,7 +146,8 @@ final class FramebufferSession: @unchecked Sendable {
     private var latestFrameVersion: UInt64 = 0
     private var isStopped = false
 
-    private var descriptors: [AnyObject] = []
+    private var descriptors: [NSObject] = []
+    private var primaryDisplayUUID: UUID?
     private var callbackUUIDs: [ObjectIdentifier: NSUUID] = [:]
 
     private var frameBlock: (@convention(block) () -> Void)?
@@ -151,7 +158,8 @@ final class FramebufferSession: @unchecked Sendable {
         self.udid = udid
     }
 
-    func start(simDevice: AnyObject) -> Bool {
+    func start(simDevice: AnyObject, primaryDisplayUUID: UUID? = nil) -> Bool {
+        guard lock.withLock({ !isStopped && descriptors.isEmpty }) else { return false }
         let device = simDevice as! NSObject
 
         let ioSel = NSSelectorFromString("io")
@@ -198,12 +206,12 @@ final class FramebufferSession: @unchecked Sendable {
             }
         }
 
-        guard !candidates.isEmpty else {
-            return false
-        }
+        guard let primary = selectSimulatorPrimaryFramebufferDescriptor(candidates, primaryDisplayUUID: primaryDisplayUUID) else { return false }
+        candidates = [primary]
 
         self.lock.lock()
         self.descriptors = candidates
+        self.primaryDisplayUUID = primaryDisplayUUID
         self.isStopped = false
         self.lock.unlock()
 
@@ -218,7 +226,9 @@ final class FramebufferSession: @unchecked Sendable {
         let surfaces: @convention(block) () -> Void = { [weak self] in
             self?.queue.async { self?.captureLatest() }
         }
-        let props: @convention(block) () -> Void = {}
+        let props: @convention(block) () -> Void = { [weak self] in
+            self?.queue.async { self?.captureLatest() }
+        }
 
         self.frameBlock = frame
         self.surfacesBlock = surfaces
@@ -257,46 +267,45 @@ final class FramebufferSession: @unchecked Sendable {
         return true
     }
 
+    func isBound(to displayUniqueID: UUID) -> Bool {
+        lock.withLock { !isStopped && primaryDisplayUUID == displayUniqueID }
+    }
+
     private func captureLatest() {
         let surfSel = NSSelectorFromString("framebufferSurface")
         lock.lock()
         guard !isStopped else { lock.unlock(); return }
         let currentDescriptors = descriptors
+        let expectedDisplayUUID = primaryDisplayUUID
         lock.unlock()
-        var best: IOSurface?
-        var bestArea = 0
-        for desc in currentDescriptors {
-            if let surfObj = desc.perform(surfSel)?.takeUnretainedValue() {
-                let surf = unsafeBitCast(surfObj, to: IOSurface.self)
-                let area = IOSurfaceGetWidth(surf) * IOSurfaceGetHeight(surf)
-                if area > bestArea {
-                    best = surf
-                    bestArea = area
-                }
-            }
+        guard let descriptor = selectSimulatorPrimaryFramebufferDescriptor(currentDescriptors, primaryDisplayUUID: expectedDisplayUUID),
+              let surfaceObject = descriptor.perform(surfSel)?.takeUnretainedValue() else {
+            // A missing or changed primary never authorizes another surface or a stale frame.
+            lock.withLock { latestJPEGData = nil }
+            return
         }
-        if let best {
-            processFrame(surface: best)
-        }
+        processFrame(surface: unsafeBitCast(surfaceObject, to: IOSurface.self))
     }
 
     func processFrame(surface: IOSurfaceRef) {
-        lock.lock()
-        let stopped = isStopped
-        lock.unlock()
-        guard !stopped else { return }
-        let ciImage = CIImage(ioSurface: surface)
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let options: [CIImageRepresentationOption: Any] = [
-            .init(rawValue: kCGImageDestinationLossyCompressionQuality as String): 0.6
-        ]
-        if let data = self.ciContext.jpegRepresentation(of: ciImage, colorSpace: colorSpace, options: options) {
-            self.lock.lock()
-            if !self.isStopped, data != self.latestJPEGData {
-                self.latestJPEGData = data
-                self.latestFrameVersion += 1
+        autoreleasepool {
+            lock.lock()
+            let stopped = isStopped
+            lock.unlock()
+            guard !stopped else { return }
+            let ciImage = CIImage(ioSurface: surface)
+            let colorSpace = CGColorSpaceCreateDeviceRGB()
+            let options: [CIImageRepresentationOption: Any] = [
+                .init(rawValue: kCGImageDestinationLossyCompressionQuality as String): 0.6
+            ]
+            if let data = self.ciContext.jpegRepresentation(of: ciImage, colorSpace: colorSpace, options: options) {
+                self.lock.lock()
+                if !self.isStopped, data != self.latestJPEGData {
+                    self.latestJPEGData = data
+                    self.latestFrameVersion += 1
+                }
+                self.lock.unlock()
             }
-            self.lock.unlock()
         }
     }
 
@@ -315,6 +324,7 @@ final class FramebufferSession: @unchecked Sendable {
         latestJPEGData = nil
         let currentDescriptors = descriptors
         descriptors.removeAll()
+        primaryDisplayUUID = nil
         lock.unlock()
         // Serialize private descriptor teardown with already queued captures;
         // the public stop path never waits on a private framework callback.

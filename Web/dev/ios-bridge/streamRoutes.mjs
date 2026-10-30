@@ -143,46 +143,36 @@ async function handleGenericMjpegProxy({
   const fps = Math.min(fpsMax, Math.max(1, requestedFps));
   console.log(`[PROXY] Starting ${platformLabel} MJPEG stream proxy for target: ${targetParam}, fps: ${fps}`);
 
+  const connection = createMjpegConnection(req, res);
   try {
-    await ensureTritonServe(tritonPath, hostInputBaseURL);
-  } catch (error) {
-    console.error(`[PROXY] ensureTritonServe failed for ${platformLabel}: ${error.message}`);
-  }
-
-  let proxyStarted = false;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    if (!proxyStarted) {
-      console.warn(`[PROXY] ${platformLabel} stream proxy request timed out for target: ${targetParam}`);
-      controller.abort();
+    try {
+      await ensureTritonServe(tritonPath, hostInputBaseURL);
+    } catch (error) {
+      if (!connection.signal.aborted) {
+        console.error(`[PROXY] ensureTritonServe failed for ${platformLabel}: ${error.message}`);
+      }
     }
-  }, 5000);
+    if (connection.signal.aborted) return;
 
-  try {
-    const fetchUrl = `http://127.0.0.1:19421${upstreamPath}?target=${targetParam}&fps=${fps}`;
-    console.log(`[PROXY] Fetching from upstream ${platformLabel}: ${fetchUrl}`);
-    const fastRes = await fetch(fetchUrl, { signal: controller.signal });
-    clearTimeout(timeoutId);
-
+    const fetchUrl = new URL(upstreamPath, hostInputBaseURL);
+    fetchUrl.searchParams.set("target", targetParam);
+    fetchUrl.searchParams.set("fps", String(fps));
+    const fastRes = await fetchMjpegResponse(fetchUrl, connection.signal);
     if (fastRes.ok) {
-      console.log(`[PROXY] Upstream connected for ${platformLabel} target: ${targetParam}. Piping response...`);
-      proxyStarted = true;
-      await pipeMjpegResponse(req, res, fastRes, `${platformLabel} target: ${targetParam}`);
+      await pipeMjpegResponse(res, fastRes, `${platformLabel} target: ${targetParam}`, connection.signal);
       return;
     }
+    await fastRes.body?.cancel();
     console.error(`[PROXY] Upstream returned non-ok status for ${platformLabel}: ${fastRes.status} ${fastRes.statusText}`);
   } catch (error) {
-    console.error(`[PROXY] Fetch exception for ${platformLabel} target: ${targetParam}: ${error.message}`);
-    if (proxyStarted) {
-      try {
-        res.end();
-      } catch {
-        // ignore
-      }
-      return;
+    if (!connection.signal.aborted) {
+      console.error(`[PROXY] Fetch exception for ${platformLabel} target: ${targetParam}: ${error.message}`);
     }
+  } finally {
+    connection.dispose();
   }
-  res.writeHead(500, { "Content-Type": "text/plain" });
+  if (connection.signal.aborted || res.destroyed || res.writableEnded) return;
+  if (!res.headersSent) res.writeHead(500, { "Content-Type": "text/plain" });
   res.end(`${platformLabel} stream proxy failed`);
 }
 
@@ -191,90 +181,85 @@ async function handleIosSimulatorMjpeg(url, req, res, tritonPath, hostInputBaseU
   const simulator = udid === "booted" ? "booted" : udid;
   const requestedFps = parseInt(url.searchParams.get("fps") || "15", 10);
   const fps = Math.min(120, Math.max(1, requestedFps));
-  const targetInterval = Math.round(1000 / fps);
+  const connection = createMjpegConnection(req, res);
+  let polling = false;
 
   try {
-    await ensureTritonServe(tritonPath, hostInputBaseURL);
-  } catch {
-    // Fallback to polling below.
-  }
-
-  let proxyStarted = false;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    if (!proxyStarted) {
-      controller.abort();
+    try {
+      await ensureTritonServe(tritonPath, hostInputBaseURL);
+    } catch {
+      // Fallback to polling below, only while the client is still connected.
     }
-  }, 5000);
+    if (connection.signal.aborted) return;
 
-  try {
-    const fastRes = await fetch(
-      `http://127.0.0.1:19421/web/ios-simulator/framebuffer?target=host:ios:${simulator}&fps=${fps}`,
-      { signal: controller.signal }
-    );
-    clearTimeout(timeoutId);
-
-    if (fastRes.ok) {
-      proxyStarted = true;
-      await pipeMjpegResponse(req, res, fastRes, `iOS simulator: ${simulator}`);
-      return;
-    }
-  } catch {
-    if (proxyStarted) {
-      try {
-        res.end();
-      } catch {
-        // ignore
+    try {
+      const fastRes = await fetchMjpegResponse(
+        new URL(`/web/ios-simulator/framebuffer?target=${encodeURIComponent(`host:ios:${simulator}`)}&fps=${fps}`, hostInputBaseURL),
+        connection.signal
+      );
+      if (fastRes.ok) {
+        await pipeMjpegResponse(res, fastRes, `iOS simulator: ${simulator}`, connection.signal);
+        return;
       }
-      return;
+      await fastRes.body?.cancel();
+    } catch {
+      if (res.headersSent) return;
     }
-  }
+    if (connection.signal.aborted || res.destroyed) return;
 
-  res.writeHead(200, mjpegHeaders());
-
-  let cache = simulatorFrameCache.get(simulator);
-  if (!cache) {
-    cache = createSimulatorFrameCache();
-    simulatorFrameCache.set(simulator, cache);
-  }
-
-  const listenerId = randomUUID();
-  cache.activeListeners.set(listenerId, requestedFps);
-  startSimulatorGrabLoop(tritonPath, simulator);
-
-  let active = true;
-
-  req.on("close", () => {
-    active = false;
-    if (cache) {
+    res.writeHead(200, mjpegHeaders());
+    let cache = simulatorFrameCache.get(simulator);
+    if (!cache) {
+      cache = createSimulatorFrameCache();
+      simulatorFrameCache.set(simulator, cache);
+    }
+    const listenerId = randomUUID();
+    cache.activeListeners.set(listenerId, fps);
+    let active = true;
+    let pushTimer;
+    const stop = () => {
+      active = false;
+      clearTimeout(pushTimer);
       cache.activeListeners.delete(listenerId);
-    }
-  });
+      if (cache.activeListeners.size === 0) cache.buffer = null;
+      connection.signal.removeEventListener("abort", stop);
+      connection.dispose();
+    };
+    connection.signal.addEventListener("abort", stop, { once: true });
+    // The polling listener owns connection cleanup until the response closes.
+    polling = true;
+    startSimulatorGrabLoop(tritonPath, simulator, hostInputBaseURL);
 
-  const pushFrame = () => {
-    if (!active) return;
-
-    if (cache.buffer) {
-      try {
-        res.write("--tritonboundary\r\n");
-        res.write(`Content-Type: ${cache.contentType}\r\n`);
-        res.write(`Content-Length: ${cache.buffer.length}\r\n\r\n`);
-        res.write(cache.buffer);
-        res.write("\r\n");
-      } catch {
-        // ignore
+    const pushFrame = async () => {
+      if (!active) return;
+      // Keep one coherent frame while a slow client waits for drain. The shared
+      // cache may advance for other subscribers, but this response never queues
+      // the next frame while the current one is blocked by its output buffer.
+      const buffer = cache.buffer;
+      if (buffer) {
+        const parts = [
+          "--tritonboundary\r\n",
+          `Content-Type: ${cache.contentType}\r\n`,
+          `Content-Length: ${buffer.length}\r\n\r\n`,
+          buffer,
+          "\r\n",
+        ];
+        for (const part of parts) {
+          if (!await writeMjpegChunk(res, part, connection.signal)) {
+            stop();
+            return;
+          }
+        }
       }
-    }
-
-    if (active) {
-      setTimeout(pushFrame, targetInterval);
-    }
-  };
-
-  pushFrame();
+      if (active) pushTimer = setTimeout(pushFrame, Math.round(1000 / fps));
+    };
+    pushFrame();
+  } finally {
+    if (!polling) connection.dispose();
+  }
 }
 
-function startSimulatorGrabLoop(tritonPath, simulator) {
+function startSimulatorGrabLoop(tritonPath, simulator, hostInputBaseURL) {
   let cache = simulatorFrameCache.get(simulator);
   if (!cache) {
     cache = createSimulatorFrameCache();
@@ -297,13 +282,13 @@ function startSimulatorGrabLoop(tritonPath, simulator) {
     try {
       let targetId = `triton:ios-simulator:${simulator}`;
       let fastRes = await fetch(
-        `http://127.0.0.1:19421/web/screenshot?target=${targetId}&t=${Date.now()}`,
+        new URL(`/web/screenshot?target=${encodeURIComponent(targetId)}&t=${Date.now()}`, hostInputBaseURL),
         { signal: AbortSignal.timeout(3000) }
       );
-      if (!fastRes.ok) {
+      if (!fastRes.ok && cache.loopActive && cache.activeListeners.size > 0) {
         targetId = `host:ios:${simulator}`;
         fastRes = await fetch(
-          `http://127.0.0.1:19421/web/screenshot?target=${targetId}&t=${Date.now()}`,
+          new URL(`/web/screenshot?target=${encodeURIComponent(targetId)}&t=${Date.now()}`, hostInputBaseURL),
           { signal: AbortSignal.timeout(3000) }
         );
       }
@@ -343,7 +328,7 @@ function startSimulatorGrabLoop(tritonPath, simulator) {
       }
     }
 
-    if (newBuffer) {
+    if (newBuffer && cache.activeListeners.size > 0) {
       cache.buffer = newBuffer;
       cache.contentType = newContentType;
       cache.lastFetchTime = Date.now();
@@ -362,31 +347,92 @@ function startSimulatorGrabLoop(tritonPath, simulator) {
   grabFrame();
 }
 
-async function pipeMjpegResponse(req, res, upstreamResponse, label) {
+// A GET request's close event can mean its request body has completed. The
+// long-lived response owns the preview subscription, including the time spent
+// waiting for readiness and upstream headers.
+function createMjpegConnection(req, res) {
+  const controller = new AbortController();
+  const close = () => controller.abort();
+  res.once("close", close);
+  res.once("error", close);
+  req.once("aborted", close);
+  if (req.aborted || res.destroyed || res.writableEnded) close();
+  return {
+    signal: controller.signal,
+    dispose() {
+      res.removeListener("close", close);
+      res.removeListener("error", close);
+      req.removeListener("aborted", close);
+    },
+  };
+}
+
+async function fetchMjpegResponse(url, clientSignal) {
+  const timeout = new AbortController();
+  const timeoutId = setTimeout(() => timeout.abort(), 5000);
+  try {
+    return await fetch(url, { signal: AbortSignal.any([clientSignal, timeout.signal]) });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function pipeMjpegResponse(res, upstreamResponse, label, signal) {
+  if (signal.aborted || res.destroyed) {
+    await upstreamResponse.body?.cancel();
+    return;
+  }
   res.writeHead(200, {
     ...mjpegHeaders(),
     "Content-Type": upstreamResponse.headers.get("content-type") || "multipart/x-mixed-replace; boundary=tritonboundary",
   });
   const reader = upstreamResponse.body.getReader();
-  req.on("close", () => {
-    console.log(`[PROXY] Client connection closed for ${label}`);
-    reader.cancel().catch(() => {});
-  });
-
+  const cancel = () => { reader.cancel().catch(() => {}); };
+  signal.addEventListener("abort", cancel, { once: true });
   try {
-    while (true) {
+    while (!signal.aborted) {
       const { done, value } = await reader.read();
-      if (done) {
-        console.log(`[PROXY] Upstream stream finished for ${label}`);
-        break;
-      }
-      res.write(Buffer.from(value));
+      if (done || signal.aborted) break;
+      if (!await writeMjpegChunk(res, Buffer.from(value), signal)) break;
     }
   } catch (error) {
-    console.error(`[PROXY] Stream piping error for ${label}: ${error.message}`);
+    if (!signal.aborted) console.error(`[PROXY] Stream piping error for ${label}: ${error.message}`);
   } finally {
-    res.end();
+    signal.removeEventListener("abort", cancel);
+    await reader.cancel().catch(() => {});
+    reader.releaseLock();
+    if (!res.destroyed && !res.writableEnded) res.end();
   }
+}
+
+// ServerResponse.write(false) is a request to stop producing, not a failure.
+// Keep only the current chunk until drain; cancellation must also wake this wait
+// because a closed response will never drain.
+async function writeMjpegChunk(res, chunk, signal) {
+  if (signal.aborted || res.destroyed || res.writableEnded) return false;
+  try {
+    if (res.write(chunk)) return true;
+  } catch {
+    return false;
+  }
+  return new Promise((resolve) => {
+    const finish = (drained) => {
+      res.removeListener("drain", onDrain);
+      res.removeListener("close", onStop);
+      res.removeListener("error", onStop);
+      res.removeListener("finish", onStop);
+      signal.removeEventListener("abort", onStop);
+      resolve(drained);
+    };
+    const onDrain = () => finish(true);
+    const onStop = () => finish(false);
+    res.once("drain", onDrain);
+    res.once("close", onStop);
+    res.once("error", onStop);
+    res.once("finish", onStop);
+    signal.addEventListener("abort", onStop, { once: true });
+    if (signal.aborted || res.destroyed || res.writableEnded) onStop();
+  });
 }
 
 function createSimulatorFrameCache() {

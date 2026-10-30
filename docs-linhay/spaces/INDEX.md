@@ -317,7 +317,7 @@
 | `SP-242-release-v0-2-35` | [`SP-242-release-v0-2-35`](./SP-242-release-v0-2-35/README.md) | 已发布，实时流受限 | 双架构/Homebrew通过；默认实时流Resize未知，工作台通过；#214 OPEN，主目录WIP未变 |
 
 | `SP-243-release-v0-2-36` | [`SP-243-release-v0-2-36`](./SP-243-release-v0-2-36/README.md) | v0.2.36 已发布 | 双架构/Homebrew/只读Web通过，流内容未验证；#224/#214 OPEN，主目录 WIP 未变 |
-| `SP-244-emulator-service-slimming` | [`SP-244-emulator-service-slimming`](./SP-244-emulator-service-slimming/README.md) | 编号保留，独立WIP | 本提交仅登记编号；设备/服务实现与验收由独立任务收口 |
+| `SP-244-emulator-service-slimming` | [`SP-244-emulator-service-slimming`](./SP-244-emulator-service-slimming/README.md) | 已验收整合本地main | 第1–9轮收口，PNG真实HTTP峰值18.99→8.56MiB；CLI1819/Web156/local及真实Android源码/解包版/WKWebView通过；无固定VM收益，未发布 |
 
 | `SP-245-rhine-design-adoption` | [`SP-245-rhine-design-adoption`](./SP-245-rhine-design-adoption/README.md) | 主目录已验证，本地提交收口 | 固定 npm0.11.3、官方review与Run/Atlas范例；本地提交收口，未推送发布 |
 

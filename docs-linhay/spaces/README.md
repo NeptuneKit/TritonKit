@@ -12,7 +12,7 @@
 >
 > 编号登记册：[INDEX.md](./INDEX.md)（247/247 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-10-30（Rhine设计迁移整理提交）
+> 最近审计：2026-10-30（SP-244 第1–9轮内存优化验收与本地main整理提交）
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -40,7 +40,7 @@
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
 | 主目录已复验 | [SP-247-rhine-page-preferences](./SP-247-rhine-page-preferences/README.md) | 四页标题/动作合并、渐进展示、无框组合与树语义；registry0.11.3不变 | 按开工基线三方接回；142项测试与两构建通过，#14/#117反馈已回读；不升级或发布 |
-| 编号保留 | [SP-244-emulator-service-slimming](./SP-244-emulator-service-slimming/README.md) | 独立设备/服务任务 | 不在本Rhine提交内；保留原工作区WIP |
+| 已验收整合本地main | [SP-244-emulator-service-slimming](./SP-244-emulator-service-slimming/README.md) | 资源选项、隐藏暂停、生命周期/编码峰值及Android PNG收口 | CLI1819/Web156/local、真实Android源码/解包版/WKWebView通过；后续FPS/缓冲/HWUI量化，未发布 |
 | 已合本地main | [SP-223-host-process-drain-deadline](./SP-223-host-process-drain-deadline/README.md) | 宿主进程退出后的有界输出收尾 | 9fbda1d5；完整CLI/local合后通过，源worktree/branch已清理 |
 | 已验收合本地main | [SP-224-host-process-drain-integration](./SP-224-host-process-drain-integration/README.md) | SP-223有限独立主控 | 主控1c735787验收、合后门禁通过，源worktree/branch已清理 |
 | 已合本地main | [SP-221-simulator-resource-read-retry](./SP-221-simulator-resource-read-retry/README.md) | 同目标print-disabled明确launchd暂态有限只读重试 | a0eebff0；focused37/fullCLI/root/local/docs通过，mutation不重放 |

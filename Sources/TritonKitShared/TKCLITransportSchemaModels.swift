@@ -165,7 +165,31 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         }
     }
 
+    /// Resource mutations can be partially delivered. Recovery inspects identity,
+    /// state and the durable receipt; it never implies replay or privilege escalation.
+    /// Keep this an explicit catalog so new resource failures require classification.
+    public static func emulatorResourceRecoveryCategories(forFailureCode failureCode: String) -> [String]? {
+        switch failureCode {
+        case "resource_confirmation_required", "resource_invalid_action", "resource_invalid_feature", "resource_invalid_item", "resource_invalid_profile", "resource_invalid_state", "resource_control_permission_unverified", "resource_permission_denied", "resource_unsupported_control":
+            return ["diagnose", "plan"]
+        case "resource_busy", "resource_lock_failed":
+            return ["diagnose", "prepare-target", "plan"]
+        case "resource_identity_mismatch", "resource_identity_unavailable", "resource_invalid_identity", "resource_invalid_target", "resource_target_not_ready":
+            return ["diagnose", "observe", "prepare-target", "plan"]
+        case "resource_invalid_receipt", "resource_receipt_exists", "resource_receipt_write_failed":
+            return ["archive", "diagnose", "plan"]
+        case "resource_invalid_output", "resource_memory_invalid_output", "resource_output_invalid", "resource_output_truncated", "resource_state_unavailable":
+            return ["diagnose", "observe", "archive"]
+        case "resource_command_failed", "resource_failed", "resource_state_mismatch", "resource_verification_failed", "resource_write_unconfirmed":
+            return ["diagnose", "observe", "verify", "archive"]
+        case "resource_state_conflict":
+            return ["diagnose", "observe", "plan"]
+        default: return nil
+        }
+    }
+
     public static func recoveryCategories(forFailureCode failureCode: String) -> [String] {
+        if let categories = emulatorResourceRecoveryCategories(forFailureCode: failureCode) { return categories }
         // Highlight recovery observes an existing operation/session before replanning.
         // It never suggests installing a provider, forcing restore, or replaying apply.
         switch failureCode {
