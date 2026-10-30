@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from "vite";
 import { createViteDebugInspectorPlugin } from "@linhey/react-debug-inspector";
 import react from "@vitejs/plugin-react";
+import { reviewProductionGuard } from "@linhey/rhine-design/review/vite";
 // @ts-expect-error Local dev middleware is a Node ESM helper outside the TS app bundle.
 import { createIosSimulatorBridgeMiddleware } from "./dev/ios-bridge/index.mjs";
 
@@ -17,9 +18,11 @@ export default defineConfig(({ mode }) => {
   const isDevelopment = mode === "development";
 
   return {
+    optimizeDeps: { entries: ["index.html"] },
     plugins: [
       ...(isDevelopment ? [createViteDebugInspectorPlugin() as unknown as Plugin] : []),
       react(),
+      reviewProductionGuard({ forbidden: ["./design"] }),
       iosSimulatorBridge(),
     ],
     server: {

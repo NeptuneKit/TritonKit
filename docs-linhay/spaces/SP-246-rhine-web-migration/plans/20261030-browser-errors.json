@@ -1,0 +1,20 @@
+{
+  "imageError": {
+    "state": "error",
+    "message": true
+  },
+  "retry": {
+    "newImage": true,
+    "released": true
+  },
+  "copyError": [
+    "复制失败，请重试"
+  ],
+  "narrowDialog": {
+    "width": 334,
+    "client": 165,
+    "scroll": 165,
+    "view": 398,
+    "body": 199
+  }
+}

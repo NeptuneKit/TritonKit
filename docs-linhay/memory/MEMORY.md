@@ -94,3 +94,9 @@
 - 2026-10-28 #214 历史溯源新增H1/H2候选：有双层目录历史索引及实际不同derived-data目的地调用；仍缺原12.13/6.53 GB路径映射，不能认定原现场。#214保持OPEN。见[溯源记录](../spaces/SP-240-issue-214-deriveddata-ownership/plans/20261028-history-trace.md)。
 
 - 2026-10-28 PR #235 已合并（`5d0bba7b`），历史溯源已归档，#214复查OPEN；H1/H2与原18.66 GB的关联仍未证实，未查明项全部保留。见[SP-240](../spaces/SP-240-issue-214-deriveddata-ownership/README.md)。
+
+- 2026-10-30：Rhine Design 固定制品/设计先行/持续反馈与升级回接规则已落地；Web 首个Run/Atlas页面接入，iOS与Wails未接入。入口：[设计体系](../../DESIGN_SYSTEM.md)、[流程](../dev/rhine-design-workflow.md)、[SP-245](../spaces/SP-245-rhine-design-adoption/README.md)。
+
+- 2026-10-30：[SP-246](../spaces/SP-246-rhine-web-migration/README.md) 已完成其余Web Rhine迁移并完成主目录125项Web测试；保留设备流/只读边界，移除AntD，常驻树适配关联Rhine #117；真实设备未复测，本地提交收口，未推送发布。
+
+- 2026-10-30：[SP-247](../spaces/SP-247-rhine-page-preferences/README.md) 四页Rhine设计偏好已接回主目录；142项测试/两构建与浏览器布局、动态、删除焦点通过。保留固定0.11.3；#14/#117反馈已回读，真实设备未复测，本地提交收口，未推送发布。

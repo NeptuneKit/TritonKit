@@ -1,0 +1,21 @@
+.rhine-workspace-shell {
+  height: 100dvh;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  background: var(--rhine-bg);
+  color: var(--rhine-ink);
+  overflow-wrap: anywhere;
+}
+.rhine-workspace-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rhine-space-3);
+  padding: var(--rhine-space-2) var(--rhine-space-4);
+  border-bottom: 1px solid var(--rhine-line);
+}
+.rhine-workspace-brand { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rhine-space-3); min-width: 0; }
+.rhine-workspace-brand h1 { letter-spacing: .12em; }
+.rhine-workspace-main { flex: 1; min-height: 0; min-width: 0; display: flex; padding: var(--rhine-space-2); }

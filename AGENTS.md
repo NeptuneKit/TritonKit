@@ -10,6 +10,8 @@
 .
 ├── MEMORY.md          # 主记忆文件（过期，后续改为 docs-linhay/memory/MEMORY.md）
 ├── AGENTS.md          # 行为规则
+├── DESIGN_SYSTEM.md   # 产品设计体系、平台边界与迁移目录
+├── design/            # 页面目录、场景协议与评审入口说明
 ├── references/        # 参考项目目录（过期，后续改为 docs-linhay/references/）
 ├── screenshots/       # 截图测试目录（过期，后续改为 docs-linhay/screenshots/）
 ├── docs-dev/          # 项目文档系统（过期，后续改为 docs-linhay/）
@@ -38,7 +40,7 @@
 3. 每个 space 以 `README.md` 记录边界、BDD、验收和链接；新建、状态变化、worktree 集成或收口时同步更新 `INDEX.md` 与 `spaces/README.md`。
 4. 默认映射：`space = docs-linhay/spaces/SP-<三位序号>-<topic>/`、`branch = feat/SP-<三位序号>-<topic>`、`worktree = ../TritonKit-worktrees/SP-<三位序号>-<topic>/`。
 5. 多日、并行或频繁切换的 feature 必须使用同级独立 worktree；短小当天修复可在主工作区完成。不得在仓库内嵌套 worktree 或把常规 feature 放入 `/tmp`。
-6. 设计稿放在对应 space 根目录；同一期只保留一个 HTML 文件，多方案在同一文件内组织。截图优先归档到该 space 的 `screenshots/`，文件名为 `<YYYYMMDD>-<模块>-<场景>-<状态>-v<序号>.png`。
+6. 设计稿放在对应 space 根目录；同一期只保留一个产品 HTML 入口，多方案在同一入口组织。官方评审工具可在 `design/` 或 `Web/design/` 维护源码并在 space 登记入口，其生成的壳与画布属于同一评审入口，不另算产品设计稿。截图优先归档到该 space 的 `screenshots/`，文件名为 `<YYYYMMDD>-<模块>-<场景>-<状态>-v<序号>.png`。
 
 ## 1. 基础工作方式
 
@@ -49,6 +51,12 @@
 5. 有副作用或共享状态的操作串行执行：git 提交/合并/推送、同一 scratch build/test、服务启停和设备动作不得并发抢占。
 6. 可复用流程优先更新现有 skill；只有 repo-wide 且长期稳定的规则才进入本文件。
 7. 开工先核对当前仓库、Git 差异、维护权限与权威资料；按[经验索引](docs-linhay/memory/EXPERIENCE.md)只读命中主题，未命中再检索，不全量预读历史记忆。独立仓库/子模块分别核对；目录、旧计划和参考会话不产生维护授权。
+
+## 1.1 Rhine Design 与设计共建
+
+1. Web 新增或重构界面默认采用 `linhay/rhine-design` 的 `@linhey/rhine-design` 固定制品；UIKit 对应独立的 `linhay/rhine-design-ios`。先核对技术栈、实际安装包的规范/导出/随包 skill 与当前上游决策，源码或展台存在不等于已发布 API；其他技术栈只复用适用规范，不直接套组件。详见 [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)。
+2. 页面、视觉与交互变化先更新可交互设计稿并验证，再接业务；设计与实现已一起授权时连续完成。设计稿复用真实组件/样式与合成数据，评审与模拟入口不得进入正式制品；纯后端修复不强制设计阶段。固定依赖、临时适配和回接执行[设计开发流程](docs-linhay/dev/rhine-design-workflow.md)。
+3. 用户已明确授权随项目任务主动向 `linhay/rhine-design` issues 反馈规范、偏好、纠正、设计细节、成功组合、验证发现和缺口：先查 open/closed 主题，已有覆盖则关联，有新增则补充，否则新建；脱敏提交后回读并记录链接，失败保存草稿和原因。此专项授权不含公共源码改造、提交推送、合并、发布或后台监控。
 
 ## 2. Subagent 与并行
 

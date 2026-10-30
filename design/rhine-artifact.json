@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-30",
+  "package": "@linhey/rhine-design",
+  "version": "0.11.3",
+  "source": "https://registry.npmjs.org/@linhey/rhine-design/-/rhine-design-0.11.3.tgz",
+  "integrity": "sha512-wqSefwZhhEqL+HoMLqhPAtr5GobpUy5zppsXS+sy6de3uLfHk0HDbPgsPpFHg9MrbUvpZXGnr0+xJeoSacq9Qw==",
+  "sourceRepository": "https://github.com/linhay/rhine-design",
+  "upstreamDecisionRevision": "6e7e3f583ec9173687f8d574288f948e89210d60",
+  "node": "24.21.0",
+  "peerReact": "^19.0.0",
+  "newDevDependency": {
+    "@types/node": "24.19.2"
+  },
+  "changedExistingPackageVersions": [],
+  "addedPackageRecords": 55,
+  "bundledSkillMetadataVersion": "0.10.0",
+  "note": "随包 skill 元数据落后包版本，原样同步并用实际导出作 API 事实源；项目持续反馈规则在根 AGENTS 和 workflow 增补。",
+  "bundledSkillSHA256": {
+    "SKILL.md": "ecac229f27a9ca4e645bcfa26c89100f181a721c288cb41a003579ce62c9e697",
+    "references/integration.md": "49f7e0320720522e45a1d6375d3170c2269704c8bc615008d9be79b3c426c817",
+    "references/TASK_MAP.md": "a1769d2b311757896929463950b01e74e984e5793f6944b15ce0aa76f498194a",
+    "references/API_MAP.md": "1592ee1555ee9433b9d21dd7fa8dbffc72e70d22b2fe9e4580e95865c71b3c7c",
+    "agents/openai.yaml": "f919b1ad716adb6bceea8692216b8a46ede09c8a115851f37fc73227eb009cab"
+  },
+  "migrationSP246": {
+    "packageVersion": "0.11.3",
+    "dependencyChanges": "removed antd and 62 orphan transitive packages",
+    "changedExistingPackageVersions": [],
+    "addedPackageRecords": 0,
+    "removedPackageRecords": 63,
+    "reviewScenes": [
+      "run-atlas",
+      "device-preview",
+      "hierarchy-inspector",
+      "workspace"
+    ],
+    "temporaryAdaptations": [
+      "https://github.com/linhay/rhine-design/issues/117"
+    ]
+  }
+}

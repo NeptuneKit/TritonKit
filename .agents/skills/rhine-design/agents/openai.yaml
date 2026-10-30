@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rhine Design · 莱茵设计"
+  short_description: "用莱茵设计组件与规范完成页面设计、字体排版、动效及应用接入"
+  default_prompt: "使用 $rhine-design，优先复用现有组件，先完成设计稿和交互验证，再按本次任务授权接入应用。"

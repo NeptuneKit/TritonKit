@@ -1,0 +1,29 @@
+{
+  "keyboardRatio": "55",
+  "homeRatio": "10",
+  "endRatio": "90",
+  "treeHome": "root",
+  "treeDown": "child-container",
+  "treeSelected": "child-container",
+  "overlaySelected": "child-container",
+  "reverseSelected": "child-action",
+  "busy": "true",
+  "highlight": {
+    "exists": true,
+    "animations": [
+      {
+        "name": "rhine-inspector-node-highlight",
+        "time": 933.400000000006,
+        "state": "running"
+      }
+    ]
+  },
+  "highlightLater": [],
+  "highlightClean": 0,
+  "paused": {
+    "state": "paused",
+    "imageDetached": true,
+    "released": true
+  },
+  "resumed": "live"
+}

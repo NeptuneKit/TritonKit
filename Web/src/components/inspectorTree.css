@@ -1,0 +1,20 @@
+.rhine-inspector-tree-item,
+.rhine-inspector-tree-item > [role="group"] {
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+}
+.rhine-theme .rhine-inspector-tree-item:focus-visible { outline: none; }
+.rhine-inspector-tree-item:focus-visible > .rhine-inspector-tree-row {
+  outline: 2px solid var(--rhine-green);
+  outline-offset: -2px;
+}
+.rhine-inspector-tree-item[aria-selected="true"] > .rhine-inspector-tree-row {
+  background: var(--rhine-selected);
+  box-shadow: inset 3px 0 var(--rhine-green);
+}
+.rhine-inspector-tree-title .rhine-inspector-tree-updated {
+  display: inline-block;
+  color: var(--rhine-signal);
+}
+.rhine-inspector-tree-depth { display: inline-block; }

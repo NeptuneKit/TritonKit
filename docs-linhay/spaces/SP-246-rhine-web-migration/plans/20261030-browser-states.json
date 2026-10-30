@@ -1,0 +1,207 @@
+[
+  {
+    "scene": "device-preview",
+    "platform": "ios",
+    "state": "ready",
+    "preview": "paused",
+    "tabs": [],
+    "tree": 0,
+    "text": "设备实时画面流\n预览已暂停\n只读镜像\n调试设备\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标帧率\n1 FPS\n5 FPS\n15 FPS\n30 FPS\n60 FPS\n120 FPS\n叠加层\n无\n视图\nAX\n预览已暂停，显示后自动恢复"
+  },
+  {
+    "scene": "device-preview",
+    "platform": "ios",
+    "state": "empty",
+    "preview": "offline",
+    "tabs": [],
+    "tree": 0,
+    "text": "设备实时画面流\n离线\n只读镜像\n调试设备\n未发现可用设备\n目标帧率\n1 FPS\n5 FPS\n15 FPS\n30 FPS\n60 FPS\n120 FPS\n叠加层\n无\n视图\nAX\n等待可用设备"
+  },
+  {
+    "scene": "device-preview",
+    "platform": "ios",
+    "state": "image-error",
+    "preview": "paused",
+    "tabs": [],
+    "tree": 0,
+    "text": "设备实时画面流\n预览已暂停\n只读镜像\n调试设备\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标帧率\n1 FPS\n5 FPS\n15 FPS\n30 FPS\n60 FPS\n120 FPS\n叠加层\n无\n视图\nAX\n预览已暂停，显示后自动恢复"
+  },
+  {
+    "scene": "device-preview",
+    "platform": "android",
+    "state": "ready",
+    "preview": "paused",
+    "tabs": [],
+    "tree": 0,
+    "text": "设备实时画面流\n预览已暂停\n只读镜像\n调试设备\n[ANDROID] Synthetic ANDROID target\n[IOS] Synthetic IOS target\n[HARMONY] Synthetic HARMONY target\n目标帧率\n1 FPS\n5 FPS\n15 FPS\n30 FPS\n60 FPS\n120 FPS\n叠加层\n无\n视图\nAX\n预览已暂停，显示后自动恢复"
+  },
+  {
+    "scene": "device-preview",
+    "platform": "android",
+    "state": "empty",
+    "preview": "offline",
+    "tabs": [],
+    "tree": 0,
+    "text": "设备实时画面流\n离线\n只读镜像\n调试设备\n未发现可用设备\n目标帧率\n1 FPS\n5 FPS\n15 FPS\n30 FPS\n60 FPS\n120 FPS\n叠加层\n无\n视图\nAX\n等待可用设备"
+  },
+  {
+    "scene": "device-preview",
+    "platform": "android",
+    "state": "image-error",
+    "preview": "paused",
+    "tabs": [],
+    "tree": 0,
+    "text": "设备实时画面流\n预览已暂停\n只读镜像\n调试设备\n[ANDROID] Synthetic ANDROID target\n[IOS] Synthetic IOS target\n[HARMONY] Synthetic HARMONY target\n目标帧率\n1 FPS\n5 FPS\n15 FPS\n30 FPS\n60 FPS\n120 FPS\n叠加层\n无\n视图\nAX\n预览已暂停，显示后自动恢复"
+  },
+  {
+    "scene": "device-preview",
+    "platform": "harmony",
+    "state": "ready",
+    "preview": "paused",
+    "tabs": [],
+    "tree": 0,
+    "text": "设备实时画面流\n预览已暂停\n只读镜像\n调试设备\n[HARMONY] Synthetic HARMONY target\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n目标帧率\n1 FPS\n5 FPS\n15 FPS\n30 FPS\n60 FPS\n120 FPS\n叠加层\n无\n视图\nAX\n预览已暂停，显示后自动恢复"
+  },
+  {
+    "scene": "device-preview",
+    "platform": "harmony",
+    "state": "empty",
+    "preview": "offline",
+    "tabs": [],
+    "tree": 0,
+    "text": "设备实时画面流\n离线\n只读镜像\n调试设备\n未发现可用设备\n目标帧率\n1 FPS\n5 FPS\n15 FPS\n30 FPS\n60 FPS\n120 FPS\n叠加层\n无\n视图\nAX\n等待可用设备"
+  },
+  {
+    "scene": "device-preview",
+    "platform": "harmony",
+    "state": "image-error",
+    "preview": "paused",
+    "tabs": [],
+    "tree": 0,
+    "text": "设备实时画面流\n预览已暂停\n只读镜像\n调试设备\n[HARMONY] Synthetic HARMONY target\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n目标帧率\n1 FPS\n5 FPS\n15 FPS\n30 FPS\n60 FPS\n120 FPS\n叠加层\n无\n视图\nAX\n预览已暂停，显示后自动恢复"
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "platform": "ios",
+    "state": "ready",
+    "tabs": [
+      "视图树",
+      "AX 树"
+    ],
+    "tree": 8,
+    "text": "界面与 AX 审查\n就绪\n目标源\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标关联\n跟随\n固定\n简化\n更新层级\n选中：UIButton\n节点详情\n 复制 DTO\n视图树\nAX 树\n\niOS runtime / hierarchy scene view tree.\n\nUIView\nUIView\nUILabel“Synthetic workspace”[synthetic-child-title]\nUIButton“Synthetic action · refresh 1”[synthetic-child-action]"
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "platform": "ios",
+    "state": "empty",
+    "tabs": [
+      "视图树",
+      "AX 树"
+    ],
+    "tree": 0,
+    "text": "界面与 AX 审查\n就绪\n目标源\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标关联\n跟随\n固定\n简化\n更新层级\n视图树\nAX 树\n\niOS runtime / hierarchy scene view tree.\n\n无数据或未就绪\n\n可更新层级，或检查当前目标与数据来源。"
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "platform": "ios",
+    "state": "loading",
+    "tabs": [
+      "视图树",
+      "AX 树"
+    ],
+    "tree": 8,
+    "text": "界面与 AX 审查\n更新中\n目标源\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标关联\n跟随\n固定\n简化\n正在更新层级\n更新中\n保留上次读取的节点，等待新的结果。\n选中：UIButton\n节点详情\n 复制 DTO\n视图树\nAX 树\n\niOS runtime / hierarchy scene view tree.\n\nUIView\nUIView\nUILabel“Synthetic workspace”[synthetic-child-title]\nUIButton“Synthetic action”[synthetic-child-action]"
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "platform": "ios",
+    "state": "error",
+    "tabs": [
+      "视图树",
+      "AX 树"
+    ],
+    "tree": 8,
+    "text": "界面与 AX 审查\n读取失败\n目标源\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标关联\n跟随\n固定\n简化\n更新层级\n层级读取失败\n合成层级读取失败；可重试验证恢复路径。 以下保留上次读取的节点。\n选中：UIButton\n节点详情\n 复制 DTO\n视图树\nAX 树\n\niOS runtime / hierarchy scene view tree.\n\nUIView\nUIView\nUILabel“Synthetic workspace”[synthetic-child-title]\nUIButton“Synthetic action”[synthetic-child-action]"
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "platform": "android",
+    "state": "ready",
+    "tabs": [
+      "布局树"
+    ],
+    "tree": 4,
+    "text": "界面与 AX 审查\n就绪\n目标源\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标关联\n跟随\n固定\n简化\n更新层级\n选中：android.widget.Button\n节点详情\n 复制 DTO\n布局树\n\nAndroid UIAutomator host layout；当前没有独立 View/AX 双源。\n\nandroid.widget.FrameLayout\nandroid.widget.FrameLayout\nandroid.widget.TextView“Synthetic workspace”[synthetic-child-title]\nandroid.widget.Button“Synthetic action · refresh 1”[synthetic-child-ac"
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "platform": "android",
+    "state": "empty",
+    "tabs": [
+      "布局树"
+    ],
+    "tree": 0,
+    "text": "界面与 AX 审查\n就绪\n目标源\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标关联\n跟随\n固定\n简化\n更新层级\n布局树\n\nAndroid UIAutomator host layout；当前没有独立 View/AX 双源。\n\n无数据或未就绪\n\n可更新层级，或检查当前目标与数据来源。"
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "platform": "android",
+    "state": "loading",
+    "tabs": [
+      "布局树"
+    ],
+    "tree": 4,
+    "text": "界面与 AX 审查\n更新中\n目标源\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标关联\n跟随\n固定\n简化\n正在更新层级\n更新中\n保留上次读取的节点，等待新的结果。\n选中：android.widget.Button\n节点详情\n 复制 DTO\n布局树\n\nAndroid UIAutomator host layout；当前没有独立 View/AX 双源。\n\nandroid.widget.FrameLayout\nandroid.widget.FrameLayout\nandroid.widget.TextView“Synthetic workspace”[synthetic-child-title]\nandroid.widget.Button“Synthetic action”[synth"
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "platform": "android",
+    "state": "error",
+    "tabs": [
+      "布局树"
+    ],
+    "tree": 4,
+    "text": "界面与 AX 审查\n读取失败\n目标源\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标关联\n跟随\n固定\n简化\n更新层级\n层级读取失败\n合成层级读取失败；可重试验证恢复路径。 以下保留上次读取的节点。\n选中：android.widget.Button\n节点详情\n 复制 DTO\n布局树\n\nAndroid UIAutomator host layout；当前没有独立 View/AX 双源。\n\nandroid.widget.FrameLayout\nandroid.widget.FrameLayout\nandroid.widget.TextView“Synthetic workspace”[synthetic-child-title]\nandroid.widget.Button“Synthe"
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "platform": "harmony",
+    "state": "ready",
+    "tabs": [
+      "布局树"
+    ],
+    "tree": 4,
+    "text": "界面与 AX 审查\n就绪\n目标源\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标关联\n跟随\n固定\n简化\n更新层级\n选中：Button\n节点详情\n 复制 DTO\n布局树\n\nHarmony HDC dumpLayout host layout；当前没有独立 View/AX 双源。\n\nColumn\nColumn\nText“Synthetic workspace”[synthetic-child-title]\nButton“Synthetic action · refresh 1”[synthetic-child-action]"
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "platform": "harmony",
+    "state": "empty",
+    "tabs": [
+      "布局树"
+    ],
+    "tree": 0,
+    "text": "界面与 AX 审查\n就绪\n目标源\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标关联\n跟随\n固定\n简化\n更新层级\n布局树\n\nHarmony HDC dumpLayout host layout；当前没有独立 View/AX 双源。\n\n无数据或未就绪\n\n可更新层级，或检查当前目标与数据来源。"
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "platform": "harmony",
+    "state": "loading",
+    "tabs": [
+      "布局树"
+    ],
+    "tree": 4,
+    "text": "界面与 AX 审查\n更新中\n目标源\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标关联\n跟随\n固定\n简化\n正在更新层级\n更新中\n保留上次读取的节点，等待新的结果。\n选中：Button\n节点详情\n 复制 DTO\n布局树\n\nHarmony HDC dumpLayout host layout；当前没有独立 View/AX 双源。\n\nColumn\nColumn\nText“Synthetic workspace”[synthetic-child-title]\nButton“Synthetic action”[synthetic-child-action]"
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "platform": "harmony",
+    "state": "error",
+    "tabs": [
+      "布局树"
+    ],
+    "tree": 4,
+    "text": "界面与 AX 审查\n读取失败\n目标源\n[IOS] Synthetic IOS target\n[ANDROID] Synthetic ANDROID target\n[HARMONY] Synthetic HARMONY target\n目标关联\n跟随\n固定\n简化\n更新层级\n层级读取失败\n合成层级读取失败；可重试验证恢复路径。 以下保留上次读取的节点。\n选中：Button\n节点详情\n 复制 DTO\n布局树\n\nHarmony HDC dumpLayout host layout；当前没有独立 View/AX 双源。\n\nColumn\nColumn\nText“Synthetic workspace”[synthetic-child-title]\nButton“Synthetic action”[synthetic-child-action]"
+  }
+]

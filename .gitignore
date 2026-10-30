@@ -36,3 +36,6 @@ docs-linhay/spaces/SP-219-simulator-resizable-routing/screenshots/*
 !docs-linhay/spaces/SP-219-simulator-resizable-routing/screenshots/20261024-record-normal-passed-v1.png
 !docs-linhay/spaces/SP-219-simulator-resizable-routing/screenshots/20261024-record-restored-passed-v1.png
 !docs-linhay/spaces/SP-219-simulator-resizable-routing/screenshots/20261024-record-resize-passed-v1.png
+
+# Independent Rhine design review output
+Web/dist-review/

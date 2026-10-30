@@ -1,0 +1,434 @@
+[
+  {
+    "scene": "device-preview",
+    "width": 400,
+    "zoom": 1,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 400,
+    "zoom": 1,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 400,
+    "zoom": 1,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 400,
+    "zoom": 2,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 400,
+    "zoom": 2,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 400,
+    "zoom": 2,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 520,
+    "zoom": 1,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 520,
+    "zoom": 1,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 520,
+    "zoom": 1,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 520,
+    "zoom": 2,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 520,
+    "zoom": 2,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 520,
+    "zoom": 2,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 880,
+    "zoom": 1,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 880,
+    "zoom": 1,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 880,
+    "zoom": 1,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 880,
+    "zoom": 2,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 880,
+    "zoom": 2,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "device-preview",
+    "width": 880,
+    "zoom": 2,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 400,
+    "zoom": 1,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 400,
+    "zoom": 1,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 400,
+    "zoom": 1,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 400,
+    "zoom": 2,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 400,
+    "zoom": 2,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 400,
+    "zoom": 2,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 520,
+    "zoom": 1,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 520,
+    "zoom": 1,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 520,
+    "zoom": 1,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 520,
+    "zoom": 2,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 520,
+    "zoom": 2,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 520,
+    "zoom": 2,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 880,
+    "zoom": 1,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 880,
+    "zoom": 1,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 880,
+    "zoom": 1,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 880,
+    "zoom": 2,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 880,
+    "zoom": 2,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "hierarchy-inspector",
+    "width": 880,
+    "zoom": 2,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 400,
+    "zoom": 1,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 400,
+    "zoom": 1,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 400,
+    "zoom": 1,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 400,
+    "zoom": 2,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 400,
+    "zoom": 2,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 400,
+    "zoom": 2,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 520,
+    "zoom": 1,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 520,
+    "zoom": 1,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 520,
+    "zoom": 1,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 520,
+    "zoom": 2,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 520,
+    "zoom": 2,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 520,
+    "zoom": 2,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 880,
+    "zoom": 1,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 880,
+    "zoom": 1,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 880,
+    "zoom": 1,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 880,
+    "zoom": 2,
+    "theme": "rhine",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 880,
+    "zoom": 2,
+    "theme": "arknights",
+    "over": [],
+    "ready": true
+  },
+  {
+    "scene": "workspace",
+    "width": 880,
+    "zoom": 2,
+    "theme": "neo-brutalism",
+    "over": [],
+    "ready": true
+  }
+]

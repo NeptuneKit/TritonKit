@@ -6,12 +6,16 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
-    "test": "node --import ./dev/polyfill.mjs --test dev/appContext.test.mjs dev/currentWebContracts.test.mjs dev/hierarchyMaterialPolicy.test.mjs dev/hierarchyVisibility.test.mjs dev/inspectModel.test.mjs dev/inspectorTreeTabs.test.mjs dev/inspectorTreeUpdateHighlight.test.mjs dev/inspectorWorkspaceModel.test.mjs dev/ios-bridge/hierarchyRoute.test.mjs dev/ios-bridge/hostTargets.test.mjs dev/ios-bridge/nodePropertyRoute.test.mjs dev/iosRuntimeMirrorBridge.test.mjs dev/iosSimulatorBridge.test.mjs dev/nodePropertyDraft.test.mjs dev/streamPreferences.test.mjs dev/targetRegistryClient.test.mjs dev/workbenchModel.test.mjs",
-    "preview": "vite preview --host 127.0.0.1"
+    "test": "node --import ./dev/polyfill.mjs --test dev/appContext.test.mjs dev/currentWebContracts.test.mjs dev/hierarchyMaterialPolicy.test.mjs dev/hierarchyVisibility.test.mjs dev/inspectModel.test.mjs dev/inspectorTreeTabs.test.mjs dev/inspectorTreeUpdateHighlight.test.mjs dev/inspectorWorkspaceModel.test.mjs dev/ios-bridge/hierarchyRoute.test.mjs dev/ios-bridge/hostTargets.test.mjs dev/ios-bridge/nodePropertyRoute.test.mjs dev/iosRuntimeMirrorBridge.test.mjs dev/iosSimulatorBridge.test.mjs dev/nodePropertyDraft.test.mjs dev/streamPreferences.test.mjs dev/streamVisibility.test.mjs dev/targetRegistryClient.test.mjs dev/workbenchModel.test.mjs dev/rhineReview.test.mjs dev/rhineWorkbench.test.mjs dev/rhineStream.test.mjs dev/rhineInspector.test.mjs dev/rhineWorkspace.test.mjs dev/rhineTreeFocus.test.mjs",
+    "preview": "vite preview --host 127.0.0.1",
+    "design:dev": "vite --config design/vite.config.ts",
+    "design:build": "tsc --noEmit -p design/tsconfig.json && vite build --config design/vite.config.ts",
+    "design:preview": "vite preview --config design/vite.config.ts",
+    "test:design": "node --test dev/rhineReview.test.mjs dev/rhineWorkbench.test.mjs dev/rhineStream.test.mjs dev/rhineInspector.test.mjs dev/rhineWorkspace.test.mjs dev/rhineTreeFocus.test.mjs"
   },
   "dependencies": {
+    "@linhey/rhine-design": "0.11.3",
     "@vitejs/plugin-react": "^5.0.0",
-    "antd": "^6.4.4",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -20,7 +24,11 @@
   },
   "devDependencies": {
     "@linhey/react-debug-inspector": "^1.2.5",
+    "@types/node": "24.19.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0"
+  },
+  "engines": {
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
   }
 }

@@ -3,6 +3,7 @@ import { after, test } from "node:test";
 import { createServer } from "vite";
 
 const viteServer = await createServer({
+  optimizeDeps: { noDiscovery: true },
   appType: "custom",
   server: {
     hmr: false,

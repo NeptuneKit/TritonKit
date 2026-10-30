@@ -1,0 +1,34 @@
+{
+  "pinned": {
+    "before": "ios:simulator:simulator:synthetic-ios:host",
+    "after": "ios:simulator:simulator:synthetic-ios:host"
+  },
+  "follow": "android:emulator:emulator:synthetic-android:default",
+  "platformTabs": [
+    "布局树"
+  ],
+  "motion1": [
+    {
+      "name": "rhine-inspector-node-highlight",
+      "time": 33.299999999997
+    }
+  ],
+  "motion2": [
+    {
+      "name": "rhine-inspector-node-highlight",
+      "time": 183.19999999999936
+    }
+  ],
+  "dialog": {
+    "exists": true,
+    "theme": "arknights",
+    "focus": true,
+    "tabs": [
+      "Geometry",
+      "View",
+      "Layer",
+      "AX",
+      "Raw"
+    ]
+  }
+}

@@ -47,11 +47,11 @@ Do not use it for CLI / HTTP contract work unless the request also needs a human
 - Keep top-level state and page composition in `Web/src/App.tsx`.
 - Use icons from `lucide-react`.
 - Build the real tool screen first, not a landing page.
-- Current Web mock UI uses Ant Design as the primary display component system. For new or refactored Web mock screens, prefer AntD primitives for page chrome, navigation, panels, forms, trees, tabs, descriptions, tags and buttons before adding custom DOM/CSS.
-- Before changing AntD component code, query the local AntD CLI with `antd design.md --format json` and component docs such as `antd info <Component> --format json`; after changing usage, run `antd usage Web/src --format json` and `antd lint Web/src --format json`.
-- Keep `antd/dist/reset.css` imported once from the Web entrypoint, and keep AntD theme seed/token overrides in a top-level `ConfigProvider` instead of scattering one-off runtime colors, radii or spacing values through CSS.
+- New or refactored Web screens use the fixed installed Rhine Design package and its public components, tokens, theme and motion contracts. SP-246 migrates the remaining Web surfaces to Rhine. For any future project snapshot that still contains Ant Design, scope migration by page and preserve its behavior until that page is authorized. Read [the product design system](../../../DESIGN_SYSTEM.md), [design workflow](../../../docs-linhay/dev/rhine-design-workflow.md), and the actual package’s `skills/rhine-design/SKILL.md`; a globally installed skill or upstream showcase does not establish installed API availability.
+- When changing a remaining AntD component, query the local AntD CLI with `antd design.md --format json` and component docs such as `antd info <Component> --format json`; after changing usage, run `antd usage Web/src --format json` and `antd lint Web/src --format json`.
+- Use one supported Rhine theme root for the app and keep portal/focus behavior inside it. Retain an AntD reset/ConfigProvider only when the actual candidate still has AntD consumers; after the last consumer is migrated, remove the dependency, reset and obsolete styles together. Never copy private CSS, patch `node_modules`, or nest Rhine providers.
 - If `Web/src/App.tsx` grows beyond state orchestration or approaches large-file territory, split presentation into component files and move hierarchy/formatting/localization helper logic into a model/helper module. `App.tsx` should remain responsible for route, host bridge, target, screenshot, hierarchy and evidence state composition.
-- Device screenshot canvases, coordinate hit-testing, node highlight overlays and other runtime-evidence surfaces may remain custom DOM/SVG when AntD components would obscure machine-readable geometry or event semantics.
+- Device screenshot canvases, coordinate hit-testing, node highlight overlays and other runtime-evidence surfaces may remain custom DOM/SVG when design-library components would obscure machine-readable geometry or event semantics. Under CSS zoom, convert pointer client coordinates using the same rendered content `getBoundingClientRect()` width/height and origin; do not mix them with unscaled clientWidth/layout pixels. Preserve image letterboxing and verify a known node at 100% and 200%.
 - Real simulator screenshot frames must keep a browser-stable intrinsic size. Avoid using percentage-only container height such as `height: min(..., calc(100% - ...))` as the primary size for portrait real screenshots inside CSS grid / auto rows; it can compute to `0px` and leave only device chrome visible. Prefer viewport-based fallback such as `100dvh` plus a minimum height, and add a CSS contract test when changing frame sizing.
 - When a visible label depends on runtime state such as foreground app name, bundle id, hierarchy owner, readiness, or command result, first confirm the CLI / HTTP DTO exposes a machine-readable field. Web may pass through optional fields and show honest unknown/fallback states, but must not invent app identity, hierarchy source, or business status from emulator type, screenshot pixels, or static mock names.
 - If a human-facing Web mock reveals a missing CLI / HTTP field, preserve the optional field in the Web bridge where useful, add a clear fallback label, and file or link a development feedback issue for the missing machine-readable contract.
@@ -65,6 +65,23 @@ Do not use it for CLI / HTTP contract work unless the request also needs a human
   - actions
   - network evidence
   - logs
+
+## Design-first adoption and feedback
+
+1. Inventory the existing page’s distinctive visuals, motion, data/permission semantics and recovery path. Record what remains, what changes and why in the space and `design/` page record.
+2. Read the fixed package README, design/interaction rules, component index, relevant contracts and bundled skill. Use official review exports when available; product code owns scenes and synthetic data, while the library owns the shell, routing and iframe protocol. Keep review configuration independent from production configuration, secrets and real backend access.
+3. Validate the interactive design using the actual page component and styles before wiring it into the existing app. If both design and implementation are authorized, continue through implementation and regression without a new approval stop. Never ship review scenes/mocks with the normal build.
+4. Apply [the continuous feedback workflow](../../../docs-linhay/dev/rhine-design-workflow.md#持续反馈与临时适配) for new preferences, successful combinations and findings as well as gaps. Feedback is already authorized, must be deduplicated and sanitized, and must be read back or retained as a pending draft on failure.
+5. Inspect installed exports/contracts before declaring a gap. Keep any necessary temporary adaptation minimal and reversible, marked `Temporary design adaptation` plus its issue URL; record its removal conditions in the product design system. Do not grow another component library.
+6. On related work or an authorized upgrade, check issue outcomes against the actual new artifact, refresh manifest/lock/artifact/bundled-skill records together, validate equivalent product behavior, then remove only covered adaptations. No background polling.
+
+## Page preference acceptance
+
+Component migration does not prove that page hierarchy and user preferences have been adopted. Review these product compositions against [SP-247](../../../docs-linhay/spaces/SP-247-rhine-page-preferences/README.md), then verify the resulting page:
+
+- Keep one `Surface` boundary per pane. Compose its content with a semantic `section`; do not stack another themed Surface and override its private borders, clipping or decorations. Pass `headerActions` into the page title row so refresh and the pane Menu share one action area instead of reserving another mostly empty toolbar row. The action area contains actions; identity and status belong with the related content.
+- Use public Popover/Disclosure for low-frequency settings, explanations and facts. Keep the active target, failure, unknown/incomplete data and recovery path discoverable without opening help. Preserve existing fields, selection, permissions, busy/focus behavior and drafts; compactness comes from removing duplicate containers and prose, not smaller text or controls. Confirm every moved control remains reachable at 400/520/880 px and 200% CSS zoom.
+- The installed 0.11.3 DataTable has a 500px minimum table width. For a small path collection without sorting/pagination requirements, prefer a product composition of public layout, text, disclosure and copy components; do not override private table CSS to force it into a narrow pane. Preserve all path state/source/command fields, and retain server-side list contracts where they actually exist.
 
 ## Device Canvas Interaction Pattern
 
@@ -80,6 +97,14 @@ Do not use it for CLI / HTTP contract work unless the request also needs a human
   - deletion maps to repeated `deleteBackward`;
   - Escape or an equivalent UI action dismisses only the relay, not the remote App state.
 - Tests should cover the relay at the DOM payload level: tap creates/focuses the relay, typed text emits `type`, deletion emits `deleteBackward`, and paste emits `paste` without requiring a real device.
+
+## Split layout and inspector adaptations
+
+- Divider movement is incremental: update the previous pointer position after each move before emitting a ratio delta. Repeated events at the same position must yield zero, and opposite movements must cancel. Normalize against the rendered container rectangle, retain pointer identity/capture, and clean up on release, cancellation and unmount; test keyboard Home/End and directional bounds separately.
+- Rhine 0.11.3 exports TreeSelect but no persistent hierarchy browser. Keep the product-specific `InspectorHierarchyTree` adaptation tied to [#117](https://github.com/linhay/rhine-design/issues/117), with ARIA tree/level/selection, roving focus, arrows/Home/End, long text, hover and external-selection reveal. Do not substitute TreeSelect or drop platform source semantics. Recheck the actual release before removing the adaptation.
+- In a nested resident tree, Home/End and external selection must reveal the visible row, not the enclosing treeitem wrapper containing its whole descendant group. Preserve nested `group` semantics and one roving tab stop. Repeated updates of the same node must restart its highlight without remounting the focused treeitem; a lifetime timer reset alone does not restart an already-running CSS animation.
+- Deleting a focused node can dispatch `focusout` before DOM detach, while `isConnected` is still true. Do not equate that intermediate event with an intentional user focus exit. Verify deletion recovery in a real browser across the commit, including an outside-focus counterexample; SSR and manually detached fixtures do not prove it. The finding and current repair/verification status are tracked in [SP-247](../../../docs-linhay/spaces/SP-247-rhine-page-preferences/README.md), not declared passed by this rule.
+- Update highlights have both a CSS animation and a lifetime timer. Observe real animation progress, one-second marker cleanup, system/manual reduced motion, resize and unmount. Pausing only CSS while the timer still removes the marker does not provide paused semantics; do not advertise full/paused review controls until the entire scene, including timers and frame loops, supports them.
 
 ## Evidence Panel Interaction Pattern
 
@@ -102,7 +127,9 @@ Do not use it for CLI / HTTP contract work unless the request also needs a human
 
 ## Validation
 
-Run these before delivery:
+For Vite SSR tests, disable automatic dependency discovery with `optimizeDeps: { noDiscovery: true }`; limit normal Vite dev scanning to `optimizeDeps.entries: ["index.html"]` so independent `dist-review` output is not treated as another app entry. Passing assertions do not excuse asynchronous dependency-scan errors at shutdown.
+
+Run the actual package scripts before delivery; `npm run build` includes TypeScript checking. Validate the affected normal build and independent review build, and inspect production output for leaked review code/scenes. Record pass, fail, skipped and not-run separately:
 
 ```bash
 npm run build
@@ -121,7 +148,16 @@ Then open `http://127.0.0.1:34127/` in a browser automation tool and verify:
 - console has no errors except known dev-tool informational logs;
 - no horizontal overflow at a desktop viewport around 1200 px;
 - target/device switching changes visible DTO values;
-- screenshot evidence is saved under the corresponding space screenshots directory.
+- screenshot evidence is saved under the corresponding space screenshots directory;
+- affected scenes at 400/520/880 px, 200% zoom, long text, loading/empty/error, keyboard/focus, overlays and themes remain usable; distinguish review CSS zoom from browser zoom;
+- changed motion is actually observed during playback, pause, system/manual reduced motion, resize and unmount cleanup. Do not advertise pause/full controls unless every animation in the scene implements them; static screenshots do not prove motion;
+- mock/browser evidence is not described as native, Wails, real-device or production acceptance.
+
+### Retained preview lifecycle
+
+- Keep connection intent and selected target/FPS separate from visibility. Observe the stable viewport, require a positive intersection area, and include page visibility/pagehide plus ancestor CSS visibility and transition completion. Window blur alone is not hiding.
+- Explicitly replace a multipart image source when releasing it. React StrictMode may detach and reattach the same DOM ref; setup must restore the current source, and a transparent placeholder must not count as a real frame.
+- Keep capture, proxy-header and first-frame UI budgets distinct. A multipart HTTP 200 without a decoded image is a failure. Align the bounded UI probe with the sum of capture stages and startup margin; extending a deadline must retain immediate cancellation and terminal-session tests. Node writeHead alone may not flush downstream headers, so the browser response timestamp does not identify upstream header latency.
 
 ## Documentation
 

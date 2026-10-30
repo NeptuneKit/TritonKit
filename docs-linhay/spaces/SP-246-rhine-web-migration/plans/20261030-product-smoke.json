@@ -1,0 +1,18 @@
+{
+  "width": 400,
+  "scroll": 400,
+  "direction": "h",
+  "ratio": "63",
+  "themeRoots": 1,
+  "panes": [
+    {
+      "w": 366,
+      "sw": 366
+    },
+    {
+      "w": 366,
+      "sw": 366
+    }
+  ],
+  "reviewScripts": []
+}

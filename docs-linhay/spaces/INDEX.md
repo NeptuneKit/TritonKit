@@ -3,8 +3,8 @@
 
 2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-29（v0.2.36 发布验收）
-> 覆盖范围：243/243 个已存在 space
+> 最近同步：2026-10-30（Rhine Design 接入）
+> 覆盖范围：247/247 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -19,8 +19,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 242/242 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 242/242 | 每条记录链接到现有 space README |
+| 编号登记 | 247/247 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 247/247 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -317,3 +317,10 @@
 | `SP-242-release-v0-2-35` | [`SP-242-release-v0-2-35`](./SP-242-release-v0-2-35/README.md) | 已发布，实时流受限 | 双架构/Homebrew通过；默认实时流Resize未知，工作台通过；#214 OPEN，主目录WIP未变 |
 
 | `SP-243-release-v0-2-36` | [`SP-243-release-v0-2-36`](./SP-243-release-v0-2-36/README.md) | v0.2.36 已发布 | 双架构/Homebrew/只读Web通过，流内容未验证；#224/#214 OPEN，主目录 WIP 未变 |
+| `SP-244-emulator-service-slimming` | [`SP-244-emulator-service-slimming`](./SP-244-emulator-service-slimming/README.md) | 编号保留，独立WIP | 本提交仅登记编号；设备/服务实现与验收由独立任务收口 |
+
+| `SP-245-rhine-design-adoption` | [`SP-245-rhine-design-adoption`](./SP-245-rhine-design-adoption/README.md) | 主目录已验证，本地提交收口 | 固定 npm0.11.3、官方review与Run/Atlas范例；本地提交收口，未推送发布 |
+
+| `SP-246-rhine-web-migration` | [`SP-246-rhine-web-migration`](./SP-246-rhine-web-migration/README.md) | 主目录已复验，本地提交收口 | 其余Web迁移Rhine0.11.3；设备/层级/分屏/外壳，官方设计先行；本地提交收口，未推送发布 |
+
+| `SP-247-rhine-page-preferences` | [`SP-247-rhine-page-preferences`](./SP-247-rhine-page-preferences/README.md) | 主目录已复验，本地提交收口 | 四页设计偏好调整；固定 registry0.11.3；142项测试、两构建、布局/动态/焦点通过；反馈已回读 |

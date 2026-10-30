@@ -39,58 +39,21 @@ test("keeps iOS fallback tab bar aligned with the four Overloaded bottom tabs", 
   );
 });
 
-test("keeps view-tree labels readable for deep and long runtime node names", () => {
-  const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
-  const viewTreeRowRule = css.match(/\.view-tree-row \{[^}]+\}/)?.[0] ?? "";
-  const treeNodeRule = css.match(/\.view-tree \.ant-tree-treenode \{[^}]+\}/)?.[0] ?? "";
-  const treeTitleRule = css.match(/\.view-tree \.ant-tree-title \{[^}]+\}/)?.[0] ?? "";
-  const treeStatusStaleRule = css.match(/\.view-tree-status\.is-stale \{[^}]+\}/)?.[0] ?? "";
-  const typeRule = css.match(/\.view-tree-row strong \{[^}]+\}/)?.[0] ?? "";
-  const labelRule = css.match(/\.view-tree-row span \{[^}]+\}/)?.[0] ?? "";
-  const copyRule = css.match(/\.tree-node-copy \{[^}]+\}/)?.[0] ?? "";
-  const deviceStageRule = css.match(/\.device-stage \{[^}]+\}/)?.[0] ?? "";
-  const controllerBadgeRule = css.match(/\.controller-shell-badge \{[^}]+\}/)?.[0] ?? "";
-  const controllerBadgeNameRule = css.match(/\.controller-shell-badge strong \{[^}]+\}/)?.[0] ?? "";
-  const controllerBadgeStatusRule = css.match(/\.controller-shell-badge em \{[^}]+\}/)?.[0] ?? "";
-  const controllerBadgeStaleRule = css.match(/\.controller-shell-badge\.is-stale \{[^}]+\}/)?.[0] ?? "";
-
-  assert.match(viewTreeRowRule, /grid-template-columns:\s*18px minmax\(0, 1fr\)/);
-  assert.match(viewTreeRowRule, /clamp\(0px, var\(--tree-depth\) \* 14px, 112px\)/);
-  assert.match(treeNodeRule, /align-items:\s*flex-start/);
-  assert.match(treeTitleRule, /white-space:\s*normal/);
-  assert.match(treeStatusStaleRule, /background:\s*rgba\(216, 168, 111, 0\.1\)/);
-  assert.match(copyRule, /white-space:\s*normal/);
-  assert.match(typeRule, /overflow-wrap:\s*anywhere/);
-  assert.match(typeRule, /white-space:\s*normal/);
-  assert.match(labelRule, /overflow-wrap:\s*anywhere/);
-  assert.match(labelRule, /white-space:\s*normal/);
-  assert.doesNotMatch(typeRule, /text-overflow:\s*ellipsis/);
-  assert.doesNotMatch(labelRule, /text-overflow:\s*ellipsis/);
-  assert.match(deviceStageRule, /position:\s*relative/);
-  assert.match(deviceStageRule, /grid-template-rows:\s*auto minmax\(0, 1fr\)/);
-  assert.match(deviceStageRule, /row-gap:\s*8px/);
-  assert.match(controllerBadgeRule, /pointer-events:\s*auto/);
-  assert.match(controllerBadgeRule, /user-select:\s*text/);
-  assert.match(controllerBadgeStatusRule, /font-style:\s*normal/);
-  assert.match(controllerBadgeStaleRule, /background:\s*rgba\(30, 22, 12, 0\.82\)/);
-  assert.match(controllerBadgeNameRule, /overflow-wrap:\s*anywhere/);
-  assert.match(controllerBadgeNameRule, /white-space:\s*normal/);
-  assert.doesNotMatch(controllerBadgeNameRule, /text-overflow:\s*ellipsis/);
+test("keeps long hierarchy text readable in the active semantic tree", () => {
+  const css = readFileSync(new URL("../src/components/inspectorPanel.css", import.meta.url), "utf8");
+  const row = css.match(/\.rhine-inspector-tree-row \{[^}]+\}/)?.[0] ?? "";
+  assert.match(row, /minmax\(0, 1fr\)/);
+  assert.match(row, /overflow-wrap:\s*anywhere/);
+  assert.match(row, /min\(calc\(var\(--rhine-inspector-depth\)/);
+  assert.doesNotMatch(row, /text-overflow:\s*ellipsis/);
 });
 
-test("keeps real portrait screenshots from collapsing inside the device stage grid", () => {
-  const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
-  const portraitRealFrameRule =
-    css.match(/\.device-frame\.has-real-frame\.orientation-portrait,\s*\.device-frame\.has-real-frame\.orientation-unknown \{[^}]+\}/)?.[0] ?? "";
-  const portraitRealFrameRules = [
-    ...css.matchAll(/\.device-frame\.has-real-frame\.orientation-portrait,\s*\.device-frame\.has-real-frame\.orientation-unknown \{[^}]+\}/g),
-  ].map((match) => match[0]);
-  const portraitRealFrameMobileRule = portraitRealFrameRules.at(-1) ?? "";
-
-  assert.match(portraitRealFrameRule, /height:\s*min\(720px, calc\(100dvh - 160px\)\)/);
-  assert.doesNotMatch(portraitRealFrameRule, /height:\s*min\([^;]*100%/);
-  assert.match(portraitRealFrameMobileRule, /height:\s*min\(620px, calc\(100dvh - 150px\)\)/);
-  assert.doesNotMatch(portraitRealFrameMobileRule, /height:\s*min\([^;]*100%/);
+test("keeps screenshot viewport nonzero while controls scroll in a short pane", () => {
+  const css = readFileSync(new URL("../src/components/streamPanel.css", import.meta.url), "utf8");
+  const viewport = css.match(/\.rhine-stream-viewport \{[^}]+\}/)?.[0] ?? "";
+  assert.match(viewport, /min-height:\s*240px/);
+  assert.match(viewport, /position:\s*relative/);
+  assert.match(css, /overflow:\s*auto/);
 });
 
 test("keeps the Web workbench scoped to read-only runtime slots", () => {
@@ -144,8 +107,8 @@ test("opens new layouts with stream and run atlas workbench visible", () => {
 });
 
 test("keeps browser device surfaces free of Web write dispatch", () => {
-  const streamCard = readFileSync(new URL("../src/components/StreamCard.tsx", import.meta.url), "utf8");
-  const inspectorCard = readFileSync(new URL("../src/components/InspectorCard.tsx", import.meta.url), "utf8");
+  const streamCard = readFileSync(new URL("../src/components/StreamPanel.tsx", import.meta.url), "utf8");
+  const inspectorCard = readFileSync(new URL("../src/components/InspectorPanel.tsx", import.meta.url), "utf8");
   const bridge = readFileSync(new URL("./ios-bridge/index.mjs", import.meta.url), "utf8");
 
   assert.doesNotMatch(streamCard, /\/web\/host-input/);
