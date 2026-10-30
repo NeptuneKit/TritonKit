@@ -4,7 +4,7 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，33仓日检22完整/11 partial、两仓HEAD变化。新增SP-221只读资源暂态重试/SP-222有限主控，显式gpt-6.1-sol真实会话创建成功、已通过独立与合后门禁，合本地main a0eebff0；旧13条采用已合main，旧源码/许可缺口保留。
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（249/249 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（250/250 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-10-30（SP248/249 已合远端 main；现场验收保留）
 
@@ -400,3 +400,7 @@
 
 ## SP-249-issue-237-webview-snapshot
 - [SP-249-issue-237-webview-snapshot](./SP-249-issue-237-webview-snapshot/README.md)：#237 已经 PR #240 合入远端 main；候选 CI 通过，现场待验，未发布，issue OPEN。
+
+## v0.2.37 验收与发布
+
+- [SP-250-release-v0-2-37](./SP-250-release-v0-2-37/README.md)：用户授权立即验收并发版，独立工作区，不混入其他WIP。
