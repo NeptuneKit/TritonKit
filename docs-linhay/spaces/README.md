@@ -396,11 +396,11 @@
 | 待原任务整合 | [SP-246-rhine-web-migration](./SP-246-rhine-web-migration/README.md) | 设备预览、层级、分屏和外壳的Rhine迁移；仅登记 | 产品WIP与验收由原任务维护 |
 | 待原任务整合 | [SP-247-rhine-page-preferences](./SP-247-rhine-page-preferences/README.md) | Web页面组合及视觉偏好调整；仅登记 | 产品WIP与验收由原任务维护 |
 
-- [SP-248-issue-238-arkweb-transport](./SP-248-issue-238-arkweb-transport/README.md)：#238 已经 PR #239 合入远端 main；候选 CI 通过，现场待验，未发布，issue OPEN。
+- [SP-248-issue-238-arkweb-transport](./SP-248-issue-238-arkweb-transport/README.md)：#238 已经 PR #239 合入远端 main；机制真实验收通过，已随v0.2.37发布，原私有App未验，issue OPEN。
 
 ## SP-249-issue-237-webview-snapshot
-- [SP-249-issue-237-webview-snapshot](./SP-249-issue-237-webview-snapshot/README.md)：#237 已经 PR #240 合入远端 main；候选 CI 通过，现场待验，未发布，issue OPEN。
+- [SP-249-issue-237-webview-snapshot](./SP-249-issue-237-webview-snapshot/README.md)：#237 已经 PR #240 合入远端 main；机制真实验收通过，已随v0.2.37发布，原私有App未验，issue OPEN。
 
 ## v0.2.37 验收与发布
 
-- [SP-250-release-v0-2-37](./SP-250-release-v0-2-37/README.md)：用户授权立即验收并发版，独立工作区，不混入其他WIP。
+- [SP-250-release-v0-2-37](./SP-250-release-v0-2-37/README.md)：v0.2.37已发布，CI/双架构制品/Homebrew/机制验收通过；原私有App未验，#224实时流黑图保留。

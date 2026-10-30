@@ -93,4 +93,4 @@
 
 - 2026-10-28 PR #235 已合并（`5d0bba7b`），历史溯源已归档，#214复查OPEN；H1/H2与原18.66 GB的关联仍未证实，未查明项全部保留。见[SP-240](../spaces/SP-240-issue-214-deriveddata-ownership/README.md)。
 
-- 2026-10-30：[SP248 / #238](../spaces/SP-248-issue-238-arkweb-transport/plans/20261030-merged-validation.md) 与 [SP249 / #237](../spaces/SP-249-issue-237-webview-snapshot/plans/20261030-merged-validation.md) 已经 PR #239 / #240 合入远端 main；精确候选 CI 通过，组合 root 404 项 / 64 suites、CLI Release 和标准 CocoaPods lint 通过。未发布，真实 ArkWeb / iOS 原 App 验收待续，两个 issue 保持 OPEN。主目录其他提交与 WIP 保留，自动任务持续执行开发到 CI 通过后合并 main，不重复等待授权。
+- 2026-10-30：[SP248 / #238](../spaces/SP-248-issue-238-arkweb-transport/plans/20261030-merged-validation.md) 与 [SP249 / #237](../spaces/SP-249-issue-237-webview-snapshot/plans/20261030-merged-validation.md) 已经 PR #239 / #240 合入远端 main；精确候选 CI 通过，组合 root 404 项 / 64 suites、CLI Release 和标准 CocoaPods lint 通过。已随[v0.2.37](../spaces/SP-250-release-v0-2-37/plans/20261030-release.md)发布：真实ArkWeb自有probe、iOS App-host 3测试与17字段往返、完整local/CI、双架构制品及Homebrew安装验证通过；原私有App未验，两个issue保持OPEN，#224实时流黑图保留。主目录其他提交与 WIP 保留，自动任务持续执行开发到 CI 通过后合并 main，不重复等待授权。
