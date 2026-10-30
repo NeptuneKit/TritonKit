@@ -3,7 +3,7 @@
 
 2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-29（v0.2.36 发布验收）
+> 最近同步：2026-10-30（真实前序Space登记及SP-248本地提交）
 > 覆盖范围：249/249 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
@@ -323,6 +323,6 @@
 | `SP-246-rhine-web-migration` | [`SP-246-rhine-web-migration`](./SP-246-rhine-web-migration/README.md) | 仅登记，产品未整合 | 真实既有Space；原负责人WIP不随本次提交 |
 | `SP-247-rhine-page-preferences` | [`SP-247-rhine-page-preferences`](./SP-247-rhine-page-preferences/README.md) | 仅登记，产品未整合 | 真实既有Space；原负责人WIP不随本次提交 |
 
-| `SP-248-issue-238-arkweb-transport` | [`SP-248-issue-238-arkweb-transport`](./SP-248-issue-238-arkweb-transport/README.md) | 本地验证通过，待真实ArkWeb | #238 text frame与错误分型；CLI1582+94、root402通过；独立worktree未提交/合并/发布 |
+| `SP-248-issue-238-arkweb-transport` | [`SP-248-issue-238-arkweb-transport`](./SP-248-issue-238-arkweb-transport/README.md) | 已本地提交，待docs复验/远端交付 | #238以dba41b6e重放，e6258339/8d18670f；CLI1582+94、root402通过；前序登记就绪；未推送/PR/合并/发布，真实ArkWeb未验 |
 
 | `SP-249-issue-237-webview-snapshot` | [`SP-249-issue-237-webview-snapshot`](./SP-249-issue-237-webview-snapshot/README.md) | 已本地提交，整合验证中 | 根包403及JSC/WK通过；前序已登记，待PR/main CI，真实iOS未验 |

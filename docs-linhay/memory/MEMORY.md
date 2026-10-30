@@ -93,8 +93,7 @@
 
 - 2026-10-28 PR #235 已合并（`5d0bba7b`），历史溯源已归档，#214复查OPEN；H1/H2与原18.66 GB的关联仍未证实，未查明项全部保留。见[SP-240](../spaces/SP-240-issue-214-deriveddata-ownership/README.md)。
 
-- 2026-10-30：[SP-248 / #238](../spaces/SP-248-issue-238-arkweb-transport/README.md)在独立worktree完成CDP text frame和transport/protocol分型本地修复；CLI1582+94、root402通过。真实ArkWeb及分发未验收，未提交合并发布。
+- 2026-10-30：[SP-248 / #238](../spaces/SP-248-issue-238-arkweb-transport/README.md)已以远端dba41b6e重放并本地提交e6258339/8d18670f；CDP text frame与错误分型验证CLI1582+94、root402通过且9个源码/测试hash不变。持续交付已获授权，真实前序Space登记就绪；最新docs待复验，尚未推送/PR/合并/发布，真实ArkWeb与分发未验收。
 
 - 2026-10-30：[SP-247 #237 snapshot](../spaces/SP-249-issue-237-webview-snapshot/README.md)本地修复、JSC/macOS WebKit与根包403项通过；待联合文档门禁和真实iOS匹配SDK验收，未提交发布。
-
 - #237当前：已改SP249并在远端main+SP248前置上独立提交；已获持续提交/合并授权，前序登记缺口已解除，当前等待整合测试/PR CI。上述未提交与缺前序描述仅为首轮历史；真实iOS验收仍未完成。
