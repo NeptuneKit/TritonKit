@@ -1,6 +1,7 @@
 # SP-235 · #224 Simulator 显示状态诊断
 
-当前状态：用户要求继续处理#224；v0.2.35后反馈仍有queryFailed，原诊断缺口修复不能视为根因解决。已定位iPad能力拒绝并完成最小分类修复/失败测试/真实验证，#224已恢复OPEN，iPad默认截图/输入仍受限，显式主屏截图续作见下方验收，按用户追加要求仅验收Xcode27.1；旧completed记录保留历史含义，后续不据它判定问题全部解决。
+当前状态：#224保持OPEN。v0.2.38已发布，SP251在Xcode27.1/iOS27的独占iPhone17上验证真实native主屏JPEG及安装包预览内容、双订阅和隐藏/恢复；v0.2.37的8K黑图不能继续作为当前iPhone流状态。iPad默认截图/输入的unsupportedDevice边界仍未解除，原私有App未验；显式单LCD still截图不能替代默认捕获或触控验收。详见[0.2.38巡查接替](plans/20261030-release038-followup.md)。
+
 ## 边界和现状
 
 基线 main `a0d187ac`。只补显式目标 doctor 的 appResize/displays 只读事实与精确恢复指令，不绕过 unknown geometry 截图/触摸拒绝。#224全文及三条评论已经核对；Xcode27.1 topology bug 由 SP-218/v0.2.33 修复，Xcode26.6 旧 appResize 兼容性不能从该证据推断。影响 CLI host diagnostics/schema/failure envelope；无新 Web/HTTP 控制面。
