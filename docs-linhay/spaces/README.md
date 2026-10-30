@@ -4,7 +4,7 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，33仓日检22完整/11 partial、两仓HEAD变化。新增SP-221只读资源暂态重试/SP-222有限主控，显式gpt-6.1-sol真实会话创建成功、已通过独立与合后门禁，合本地main a0eebff0；旧13条采用已合main，旧源码/许可缺口保留。
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（248/248 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（249/249 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-10-30（真实前序Space登记及SP-248本地提交；保留既有参考追踪）
 
@@ -397,3 +397,6 @@
 | 待原任务整合 | [SP-247-rhine-page-preferences](./SP-247-rhine-page-preferences/README.md) | Web页面组合及视觉偏好调整；仅登记 | 产品WIP与验收由原任务维护 |
 
 - [SP-248-issue-238-arkweb-transport](./SP-248-issue-238-arkweb-transport/README.md)：#238已以dba41b6e重放并本地提交e6258339/8d18670f；CLI1582+94、root402通过；前序登记已就绪，最新docs待复验。交付已授权，尚未推送/PR/合并/发布，真实ArkWeb未验收。
+
+## SP-249-issue-237-webview-snapshot
+[SP-249-issue-237-webview-snapshot](./SP-249-issue-237-webview-snapshot/README.md)：修复已独立提交，首轮根包403及JSC/WK通过，前序已登记；当前复验整合候选，待PR/main CI，真实iOS未验。
