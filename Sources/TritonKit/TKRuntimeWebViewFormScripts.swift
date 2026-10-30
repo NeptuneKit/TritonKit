@@ -57,14 +57,6 @@ private let runtimeWebViewFormFieldHelpers = """
         if (selector.indexOf("#") === 0 && selector.indexOf(" ") < 0 && selector.indexOf("[") < 0) {
           return document.getElementById(selector.slice(1));
         }
-        if (selector.indexOf("[name=") === 0 && selector.lastIndexOf("]") === selector.length - 1) {
-          var nameValue = selector.slice(7, -1).replace(/^"|"$/g, "");
-          var named = Array.prototype.slice.call(document.querySelectorAll("[name]"));
-          for (var index = 0; index < named.length; index += 1) {
-            if (String(named[index].getAttribute("name") || "") === nameValue) { return named[index]; }
-          }
-          return null;
-        }
         if (selector.indexOf("form-") === 0) {
           var targetIndex = parseInt(selector.slice(5), 10);
           var fields = formFieldElements();

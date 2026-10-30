@@ -94,3 +94,5 @@
 - 2026-10-28 PR #235 已合并（`5d0bba7b`），历史溯源已归档，#214复查OPEN；H1/H2与原18.66 GB的关联仍未证实，未查明项全部保留。见[SP-240](../spaces/SP-240-issue-214-deriveddata-ownership/README.md)。
 
 - 2026-10-30：[SP-248 / #238](../spaces/SP-248-issue-238-arkweb-transport/README.md)在独立worktree完成CDP text frame和transport/protocol分型本地修复；CLI1582+94、root402通过。真实ArkWeb及分发未验收，未提交合并发布。
+
+- 2026-10-30：[SP-247 #237 snapshot](../spaces/SP-249-issue-237-webview-snapshot/README.md)本地修复、JSC/macOS WebKit与根包403项通过；待联合文档门禁和真实iOS匹配SDK验收，未提交发布。

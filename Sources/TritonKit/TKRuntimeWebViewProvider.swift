@@ -41,11 +41,11 @@ func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextB
     }
     let maxNodesLiteral = maxDOMNodes.map(String.init) ?? "80"
     let maxBytesLiteral = maxTextBytes.map(String.init) ?? "8192"
-    return """
+    return #"""
     (function() {
-      var include = new Set(\(includeLiteral));
-      var maxNodes = Math.max(0, \(maxNodesLiteral));
-      var maxBytes = Math.max(0, \(maxBytesLiteral));
+      var include = new Set(\#(includeLiteral));
+      var maxNodes = Math.max(0, \#(maxNodesLiteral));
+      var maxBytes = Math.max(0, \#(maxBytesLiteral));
       var text = [];
       var dom = [];
       var forms = [];
@@ -54,8 +54,15 @@ func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextB
       var truncated = false;
       var truncationReason = null;
 
+      // Attribute values are CSS strings, not JavaScript source or CSS selectors.
+      function attributeSelector(attribute, value) {
+        var escaped = String(value).replace(/[\x00-\x1f\x7f"\\]/g, function(character) {
+          return "\\" + character.charCodeAt(0).toString(16) + " ";
+        });
+        return "[" + attribute + "=\"" + escaped + "\"]";
+      }
       function clean(value) {
-        return String(value || "").replace(/\\s+/g, " ").trim();
+        return String(value || "").replace(/\s+/g, " ").trim();
       }
       function appendText(value) {
         var cleaned = clean(value);
@@ -112,7 +119,7 @@ func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextB
 
       if (include.has("text")) {
         var bodyText = document.body ? document.body.innerText || document.body.textContent : "";
-        clean(bodyText).split(/\\n+/).forEach(appendText);
+        clean(bodyText).split(/\n+/).forEach(appendText);
       }
 
       var elements = Array.prototype.slice.call(document.querySelectorAll("body *"));
@@ -144,9 +151,9 @@ func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextB
           var inputType = tag === "input" ? String(element.getAttribute("type") || "text").toLowerCase() : formKind;
           var rawValue = formKind === "contenteditable" ? (element.textContent || "") : (element.value || "");
           var fieldSelector = element.id
-            ? ("#" + element.id)
+            ? (/^-?[_a-zA-Z][-_a-zA-Z0-9]*$/.test(element.id) ? ("#" + element.id) : attributeSelector("id", element.id))
             : (element.getAttribute("name")
-                ? ("[name=\"" + element.getAttribute("name") + "\"]")
+                ? attributeSelector("name", element.getAttribute("name"))
                 : ("form-" + formIndex));
           forms.push({
             name: element.getAttribute("name") || element.id || null,
@@ -194,7 +201,7 @@ func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextB
         redaction: { secureText: "length-only" }
       });
     })()
-    """
+    """#
 }
 
 func bridgeCallScript(method: String, arguments: [String: TKJSONValue]) throws -> String {
