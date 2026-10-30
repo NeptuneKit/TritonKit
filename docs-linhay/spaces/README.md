@@ -4,7 +4,7 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，33仓日检22完整/11 partial、两仓HEAD变化。新增SP-221只读资源暂态重试/SP-222有限主控，显式gpt-6.1-sol真实会话创建成功、已通过独立与合后门禁，合本地main a0eebff0；旧13条采用已合main，旧源码/许可缺口保留。
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（243/243 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（247/247 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-10-29（SP-243 v0.2.36 发布验收；保留既有参考追踪）
 
@@ -390,3 +390,8 @@
 - [SP-241-open-issues-validation](./SP-241-open-issues-validation/README.md)：已合并归档，12关/1留；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
 
 - [SP-242-release-v0-2-35](./SP-242-release-v0-2-35/README.md)：v0.2.35已发布；双架构/Homebrew通过，默认实时流Resize未知、工作台通过；#214 OPEN，主目录WIP未变。
+
+| 待原任务整合 | [SP-244-emulator-service-slimming](./SP-244-emulator-service-slimming/README.md) | Android/Harmony模拟器资源管理与预览生命周期；仅登记 | 产品WIP与验收由原任务维护 |
+| 待原任务整合 | [SP-245-rhine-design-adoption](./SP-245-rhine-design-adoption/README.md) | Rhine固定制品接入及设计先行；仅登记 | 产品WIP与验收由原任务维护 |
+| 待原任务整合 | [SP-246-rhine-web-migration](./SP-246-rhine-web-migration/README.md) | 设备预览、层级、分屏和外壳的Rhine迁移；仅登记 | 产品WIP与验收由原任务维护 |
+| 待原任务整合 | [SP-247-rhine-page-preferences](./SP-247-rhine-page-preferences/README.md) | Web页面组合及视觉偏好调整；仅登记 | 产品WIP与验收由原任务维护 |
