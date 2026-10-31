@@ -1,0 +1,15 @@
+{
+  "sha": "56ef7719266d90f79548b649054710058266f78f",
+  "command": [
+    "docs-linhay/scripts/verify.sh",
+    "--local"
+  ],
+  "environment": {
+    "TRITON_VERIFY_XCODE": "0"
+  },
+  "exit_code": 0,
+  "seconds": 184.73009204864502,
+  "not_run": [
+    "Xcode simulator build / device validation"
+  ]
+}

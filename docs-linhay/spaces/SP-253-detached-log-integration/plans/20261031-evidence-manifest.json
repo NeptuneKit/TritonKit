@@ -1,0 +1,511 @@
+{
+  "schema_version": 1,
+  "main": "56ef7719266d90f79548b649054710058266f78f",
+  "candidate": "02e7b1ae53de192a2892e874b6ac381c51a2ecc8",
+  "entries": [
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/SHA256SUMS.json",
+      "type": "file",
+      "bytes": 3766,
+      "sha256": "eb99cd481505b7d489a162a741883d534b250f1d25dcf87feb619a24d410c8cc"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/candidate-commits.txt",
+      "type": "file",
+      "bytes": 193,
+      "sha256": "8574d348ad4d2eb4c1057a9cf99b09005616ffb22d4efa419fdd090b58f555f7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/candidate.diff",
+      "type": "file",
+      "bytes": 18405,
+      "sha256": "aaa4c40d4e200f6f461d657c8db19587cacda507ca03876ff68a7725a5ce757c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/check-docs.exit",
+      "type": "file",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/check-docs.log",
+      "type": "file",
+      "bytes": 213,
+      "sha256": "6e4b8d02968a293e31484cdb2419714cf42bb3d053d3afd52e16c7cbe0591429"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ci-docs-v02.exit",
+      "type": "file",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ci-docs-v02.log",
+      "type": "file",
+      "bytes": 1731,
+      "sha256": "cff65482f85e508454d2fb8a15154736bb08164290ecad0a19678ea69c14a17a"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ci-docs.exit",
+      "type": "file",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ci-docs.log",
+      "type": "file",
+      "bytes": 1731,
+      "sha256": "d408aa455289e0a845d259e8b6869b98feb70cc54cf8347b7d3ee8514627f8bc"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/diff-check.exit",
+      "type": "file",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/diff-check.log",
+      "type": "file",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/environment.json",
+      "type": "file",
+      "bytes": 428,
+      "sha256": "698c06fb9d8dac286b189254c04fd1a9cabdb81eef6a01d3c4b925029828eb88"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/focused-green.exit",
+      "type": "file",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/focused-green.log",
+      "type": "file",
+      "bytes": 3037,
+      "sha256": "eac94d86efb850b6207941e7cf1eedca4a9fe93138d0825335cd5242db1f9b53"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/focused-red-v02.exit",
+      "type": "file",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/focused-red-v02.log",
+      "type": "file",
+      "bytes": 8412,
+      "sha256": "5e33dc3b416901ab2e7e5161fc6ee26e60ecb73296077145dcbf990b9cd7d80a"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/focused-red.exit",
+      "type": "file",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/focused-red.log",
+      "type": "file",
+      "bytes": 58147,
+      "sha256": "cf59a59b12ccd3390810e33766c8c02af03affeefc685a41e93b0ead9c7a8659"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/frozen-candidate.json",
+      "type": "file",
+      "bytes": 1761,
+      "sha256": "545e840d3748ee768d2266b5f31da3f57e56175d0ef824465df83a5be317271b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/frozen-source/CLI/Tests/TritonKitCLITests/HostDetachedOutputTests.swift",
+      "type": "file",
+      "bytes": 7118,
+      "sha256": "6fc3b28bf3ac7a83b3c36385ee730db5538c5ee1ea40cb7b25c185b2464a35e7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/frozen-source/Sources/TritonKitCLI/CLIHostProcessRuntime.swift",
+      "type": "file",
+      "bytes": 64319,
+      "sha256": "fe437b79507a14d27296d56366465d30a69f3355fc8bfa88ad7d3ed02f27b624"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/frozen-source/docs-linhay/spaces/SP-252-detached-log-exclusive-create/README.md",
+      "type": "file",
+      "bytes": 2815,
+      "sha256": "3691c2fac1e700264919d7d4262b584eba5baa4192e67b42a895b2cb439e666e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/frozen-source/docs-linhay/spaces/SP-252-detached-log-exclusive-create/plans/20261031-validation.md",
+      "type": "file",
+      "bytes": 4836,
+      "sha256": "0cf360218bb4ad5a26f77b4869331b5d2b34c39262274adaaebe4778998057dc"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/full-cli.exit",
+      "type": "file",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/full-cli.log",
+      "type": "file",
+      "bytes": 415926,
+      "sha256": "791ed6020d4912c5c851c78c0709850ee219dbe59de52693fa23baf4c572a6c8"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ignored-evidence/CLI/.triton/build/android-275D0562-4CDD-4D97-A00D-E43C6254809A/stderr.log",
+      "type": "file",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ignored-evidence/CLI/.triton/build/android-275D0562-4CDD-4D97-A00D-E43C6254809A/stdout.log",
+      "type": "file",
+      "bytes": 6,
+      "sha256": "56f6e6304d02d413bb7d5d463ac5cdc58551266dc7269b467fc385815f39b913"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ignored-evidence/CLI/.triton/build/android-99FEA33C-B736-4A0F-A041-4A70DEBD13BC/stderr.log",
+      "type": "file",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ignored-evidence/CLI/.triton/build/android-99FEA33C-B736-4A0F-A041-4A70DEBD13BC/stdout.log",
+      "type": "file",
+      "bytes": 103,
+      "sha256": "14466884bc3c067a871ff7394d32014436a53241f0a98745bfb951bdbb39741c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ignored-evidence/CLI/.triton/build/harmony-78B2B7A1-D345-43C5-9C16-D082A393820B/stderr.log",
+      "type": "file",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ignored-evidence/CLI/.triton/build/harmony-78B2B7A1-D345-43C5-9C16-D082A393820B/stdout.log",
+      "type": "file",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ignored-evidence/CLI/.triton/build/harmony-89A8F60E-9696-4E56-96A3-8F0E947240C9/stderr.log",
+      "type": "file",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ignored-evidence/CLI/.triton/build/harmony-89A8F60E-9696-4E56-96A3-8F0E947240C9/stdout.log",
+      "type": "file",
+      "bytes": 11,
+      "sha256": "0a8b53dd8043e3670306030426b9d46873ac4004c29dfb3ede5504d8c9b52703"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ignored-evidence/CLI/.triton/build/harmony-EA5ED973-94BB-45F6-BDE6-3E2606811BC1/stderr.log",
+      "type": "file",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ignored-evidence/CLI/.triton/build/harmony-EA5ED973-94BB-45F6-BDE6-3E2606811BC1/stdout.log",
+      "type": "file",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/ignored-evidence/MANIFEST.json",
+      "type": "file",
+      "bytes": 2073,
+      "sha256": "0f929d44dd70df06ac3764fc62e3f73e3ce8cef938ce2a21e5eb77cc517e6db3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/implementation-sha.txt",
+      "type": "file",
+      "bytes": 41,
+      "sha256": "742a143ff70730b5ecf7467f5ec1d68542cc71c029da3201d0d3d0ca605d9c2a"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/red-runtime.diff",
+      "type": "file",
+      "bytes": 1724,
+      "sha256": "bffc9f3aa0d872a5105c54820caa8e5804b3b4af8236e5a7dfdb31250b17a4dc"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/red-tests.swift",
+      "type": "file",
+      "bytes": 6187,
+      "sha256": "68340b8cd480429d83ebc05a677fa3bd6b65e0b62d3bd09620bae48c7f6f9a38"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/red-v02-tests.swift",
+      "type": "file",
+      "bytes": 7118,
+      "sha256": "6fc3b28bf3ac7a83b3c36385ee730db5538c5ee1ea40cb7b25c185b2464a35e7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/staged-diff-check.exit",
+      "type": "file",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/staged-diff-check.log",
+      "type": "file",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-252-detached-log-exclusive-create/swift-test-help.txt",
+      "type": "file",
+      "bytes": 11837,
+      "sha256": "b921feb18e071c02caec6f212db25dc19480a4b238b58e52eaf3855c41977fa3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/cleanup-preconditions.json",
+      "type": "file",
+      "bytes": 352,
+      "sha256": "ca70f5ac2ddf12f7e7372f152ecfe3ba6066842c5db30a50097b1e00bb6c957d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/closeout-check-docs.log",
+      "type": "file",
+      "bytes": 213,
+      "sha256": "ed827069572c92d9f59ab651dc3064f03ae023b45d6e347ad45043f0049b64df"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/closeout-docs.log",
+      "type": "file",
+      "bytes": 1731,
+      "sha256": "b1ce0e13d0c1b710267b9acb1cca24c2af0d5e275062a602a58433724bd99f65"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/final-check-docs.log",
+      "type": "file",
+      "bytes": 213,
+      "sha256": "06f46ad03dfacfb9869358fb90de326d75e423b536ab74e273ecefd114852384"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/final-docs.log",
+      "type": "file",
+      "bytes": 1731,
+      "sha256": "e7d5bfd40f3962a67195edc0c904f7f2db770269e3455c7d1398bf61ecf86e06"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/main-cli.json",
+      "type": "file",
+      "bytes": 205,
+      "sha256": "c8be3d00cf6d92562500d5b7e35071af27dda4db5097994002d2e1755e34a55b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/main-cli.log",
+      "type": "file",
+      "bytes": 460935,
+      "sha256": "28ce92d38499d5e00b98dbc223b47826ae07d90fef33e4e10ba3630756060f13"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/main-local.json",
+      "type": "file",
+      "bytes": 301,
+      "sha256": "dea9072a95a9a132684772596c1a6ef7e11fc9b63cb975d9d28f4befc9a4e4fa"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/main-local.log",
+      "type": "file",
+      "bytes": 108128,
+      "sha256": "b9fd811962ea31f3a05db8b10f67a4850657e5759aead40b66784bedda85639f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-binary/triton",
+      "type": "file",
+      "bytes": 61539800,
+      "sha256": "98ac58df807ba2aea05babf3571e2e8f1f5394abbc4c599089f99e791b54ded3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/app-inspect.json",
+      "type": "file",
+      "bytes": 1212,
+      "sha256": "26ad3150ca013febd5a698b122c57c69bc348aadad5032e39d814a74e44ec9b4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/app-install-invalid.json",
+      "type": "file",
+      "bytes": 184,
+      "sha256": "aa649c29f0af2451b3201ca772510a8be60665722cfa507728a6c83239cfbc53"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/app-install.json",
+      "type": "file",
+      "bytes": 1915,
+      "sha256": "ae5ba472d68cb751ecb54dc0594abcef3c5e9e3460908a72c4a248e26c23fc53"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/app-launch.json",
+      "type": "file",
+      "bytes": 1946,
+      "sha256": "24d32398ed07c0207fe1d49a3fe768bf5085d0c75675167536c9d130b13a201f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/app-open-url.json",
+      "type": "file",
+      "bytes": 1992,
+      "sha256": "8af4ec5681e43932638c6dbbfd7c4e0f307ad7d3042fd5d48d09b840963b4a64"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/app-terminate.json",
+      "type": "file",
+      "bytes": 1901,
+      "sha256": "7ffb331ee2875f43b81855175743869184b5bd37489ee4dd0248cd680af56370"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/ax.json",
+      "type": "file",
+      "bytes": 1132,
+      "sha256": "2553662a14b9c8396c9a114845dcd9116f22dd3059f37ab2f51ae6fd3a3eb1e7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/fake-hdc.sh",
+      "type": "file",
+      "bytes": 2511,
+      "sha256": "25a6bb5947f4e942e556fc3f60e44b6e9eaf58bc82e93dd2b6fd0b2a83e4bb93"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/hdc-calls.log",
+      "type": "file",
+      "bytes": 2275,
+      "sha256": "5bfe08c4471e8797daa74199a0dad42ec561de7d186a200b03cfb78820a489c6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/layout.json",
+      "type": "file",
+      "bytes": 530,
+      "sha256": "2d9cfe19f4579294597c5a99d2c0941bf60c9eb315c109498e34429d53997287"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/observe-layout.json",
+      "type": "file",
+      "bytes": 530,
+      "sha256": "2d9cfe19f4579294597c5a99d2c0941bf60c9eb315c109498e34429d53997287"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/observe-tree.json",
+      "type": "file",
+      "bytes": 4488,
+      "sha256": "58ab30684a044ad883a2903dccb6bc6cde7934acd597fcc469ff5c46bbe4dee9"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/schema-act.json",
+      "type": "file",
+      "bytes": 139299,
+      "sha256": "20a97b930b0fadbc19265a427c198f8f6301c28cd2569213ae7c384bf8541063"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/schema-app.json",
+      "type": "file",
+      "bytes": 84489,
+      "sha256": "243a1b2836d01a51732e606760c9056f21860a8e43bfacfccc76b70565c71ee0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/schema-debug.json",
+      "type": "file",
+      "bytes": 69223,
+      "sha256": "03e5bee2ce01f4e25f1526073e29ed9499bef902fc238f3639e5c8d74ab1e31a"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/schema-observe.json",
+      "type": "file",
+      "bytes": 30469,
+      "sha256": "ef1b207cb23719b0cac6c68c06b91b904139fe79c1105791b44b16060c68ffcc"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/schema-screenshot.json",
+      "type": "file",
+      "bytes": 14107,
+      "sha256": "7b0f5f0e8474958556ed3473a449ba24e5361398bd0e97e0a39dcc3d5a1e930e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/schema-wait.json",
+      "type": "file",
+      "bytes": 20587,
+      "sha256": "c26250bf98472a0b493bb0f0648a1fe8cb0d6324502b63b4832a99162bbbf07b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/screenshot.jpeg",
+      "type": "file",
+      "bytes": 9,
+      "sha256": "42f114e0f62e883f51ee40aba3670315c6fefcb88f36b4058e5a99eab2c5f534"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/screenshot.json",
+      "type": "file",
+      "bytes": 2098,
+      "sha256": "99843cb4dc67e978500d6e127c9a21aa7be581389dae343552f9f1e6c506df0a"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/tap-at.json",
+      "type": "file",
+      "bytes": 745,
+      "sha256": "6ac84fb5cc57bd5fc8635f6651424ba098d84670bfc92412f4409f29a692178a"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/tap-text.json",
+      "type": "file",
+      "bytes": 1343,
+      "sha256": "848026ae50499a8c29906cf682dd8c581f7452997394bd78d2ba36d37208db87"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/tap-unsupported.json",
+      "type": "file",
+      "bytes": 278,
+      "sha256": "73800466654bd5bbab522fc995b2fc3536be19edac6e6b75fdb24a999ce278da"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/wait-gone.json",
+      "type": "file",
+      "bytes": 1050,
+      "sha256": "154599f29c6a5345bf74aedcd6498cdc9f58042d26bfa197df0da9920218fc97"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/harmony-host-smoke/wait-text.json",
+      "type": "file",
+      "bytes": 1187,
+      "sha256": "5c8505c75e8cff293323cff9b6ea7b36c8179e4a63255838b60aa7a7f6360b84"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/ios-runtime-observe-smoke/node-resolve.json",
+      "type": "file",
+      "bytes": 1404,
+      "sha256": "2c8f9f864be5ffb3e7c4d76f5b02ace3243764fa731f2350e0dada070279121f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/ios-runtime-observe-smoke/observe-current.json",
+      "type": "file",
+      "bytes": 2929,
+      "sha256": "4296688fb8f16af08c7de679e9f191dd7df041308bb9864287f81e7c21422d40"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/ios-runtime-observe-smoke/observe-tree.json",
+      "type": "file",
+      "bytes": 2337,
+      "sha256": "00be53ae07c8b3bd702bc8e530dc8a9b26ae97943638d9411830fc9e11f3f476"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/ios-runtime-observe-smoke/schema-debug.json",
+      "type": "file",
+      "bytes": 69223,
+      "sha256": "03e5bee2ce01f4e25f1526073e29ed9499bef902fc238f3639e5c8d74ab1e31a"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/smoke-evidence/ios-runtime-observe-smoke/schema-observe.json",
+      "type": "file",
+      "bytes": 30469,
+      "sha256": "ef1b207cb23719b0cac6c68c06b91b904139fe79c1105791b44b16060c68ffcc"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/SP-253-detached-log-integration/thread-archive-result.json",
+      "type": "file",
+      "bytes": 141,
+      "sha256": "b220b0b9a2114b1099db2f9b5fb40139ab9e8a2ad0d994245854ee55f165bd31"
+    }
+  ]
+}

@@ -571,12 +571,12 @@
       "requirement_key": "host-detached-log-leaf-race-safety",
       "source_revision": "1025dd070fc934986dec9ea25458b0ab03bc54c7",
       "decision": "adopt",
-      "state": "implementing",
+      "state": "local_merged",
       "space": "SP-252-detached-log-exclusive-create",
       "controller_space": "SP-253-detached-log-integration",
       "execution_thread_id": "01a18fb4-0f41-73e2-a0b7-741aa13b2bc5",
       "controller_thread_id": "01a18a91-f44e-7fd0-8e4b-c891b44377e0",
-      "controller_state": "static_review_passed_waiting_full_cli",
+      "controller_state": "accepted_local_merged",
       "branch": "feat/SP-252-detached-log-exclusive-create",
       "worktree": "../TritonKit-worktrees/SP-252-detached-log-exclusive-create",
       "scope": "final leaf exclusive creation; parent directory races not claimed; no device or remote operations",
@@ -587,7 +587,17 @@
       "controller_worktree_status": "reused_main_not_to_be_removed",
       "controller_thread_status": "long_running_kept_open",
       "host_id": "local",
-      "acceptance_candidate_sha": "86662bfe"
+      "acceptance_candidate_sha": "02e7b1ae53de192a2892e874b6ac381c51a2ecc8",
+      "implementation_sha": "86662bfebe23b4ae549544125e3b3b783942468a",
+      "local_merge_sha": "56ef7719266d90f79548b649054710058266f78f",
+      "last_verified_on": "2026-10-31",
+      "state_evidence": "docs-linhay/spaces/SP-253-detached-log-integration/plans/20261031-main-closeout.md",
+      "worktree_status": "removed_after_verified_archive",
+      "branch_status": "deleted_merged",
+      "execution_thread_status": "archived",
+      "execution_thread_closed_on": "2026-10-31",
+      "cleanup_evidence": "docs-linhay/spaces/SP-253-detached-log-integration/plans/20261031-main-closeout.md",
+      "verification_note": "Leaf replacement proven by red/green; no hardlink target write-through or lasting ARC leak claim. Full CLI postmerge and applicable local passed; no device/Xcode/live attack/push/tag/release."
     }
   ],
   "new_thread_policy": {
@@ -599,10 +609,10 @@
     "reasoning_effort": "unchanged"
   },
   "last_updated_on": "2026-10-31",
-  "last_update_note": "33 repos checked; 16 prior merges reachable; SP252 execution created with explicit gpt-6.1-sol, SP253 scoped controller reuses current chat. No implementation or merge claim yet.",
+  "last_update_note": "SP252/253 accepted; merged56ef7719; postmerge full CLI 162+1665 and applicable local passed; archive verified, worktree/branch removed, execution thread archived; all17 merges reachable.",
   "session_closeout": {
-    "verified_main": "607cdf1c025547ce8b5be21eaa00548e25400bb4",
-    "verified_on": "2026-10-27",
+    "verified_main": "56ef7719266d90f79548b649054710058266f78f",
+    "verified_on": "2026-10-31",
     "archived_thread_ids": [
       "01a14284-df87-7d13-8373-a4d3a56fd470",
       "01a14285-3be0-7213-9433-374c139189bd",
@@ -614,9 +624,10 @@
       "01a1773d-1703-7152-bfa0-a6e452491809",
       "01a1773d-8556-7a01-a885-a0f5d0c68a6d",
       "01a17b28-ccf7-7593-b589-72fa36290516",
-      "01a17b29-206c-7b73-bfc4-6bded108ca9d"
+      "01a17b29-206c-7b73-bfc4-6bded108ca9d",
+      "01a18fb4-0f41-73e2-a0b7-741aa13b2bc5"
     ],
-    "evidence": "docs-linhay/spaces/SP-226-files-recents-integration/plans/20261027-main-closeout.md",
+    "evidence": "docs-linhay/spaces/SP-253-detached-log-integration/plans/20261031-main-closeout.md",
     "long_running_controller": "kept_open"
   },
   "monitor_controller": {

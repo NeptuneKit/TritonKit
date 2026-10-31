@@ -12,7 +12,7 @@
 
 ## 采用与完整性边界
 
-Mobile MCP的最终输出文件独占/原子策略提示本机detached日志预检后重开窗口，已批准[SP252](../../SP-252-detached-log-exclusive-create/README.md)先红测再最小修复；[SP253](../../SP-253-detached-log-integration/README.md)负责验收及本地合并，不能把静态候选当已实现。clear-app-data保留观察：数据范围、默认/多用户、目标拒绝与机器确认契约尚需设计，不直接把能力名空缺等同现有缺陷。
+Mobile MCP的最终输出文件独占/原子策略提示本机detached日志预检后重开窗口，已完成[SP252](../../SP-252-detached-log-exclusive-create/README.md)两轮red/green后修复并验收合main56ef7719；[SP253](../../SP-253-detached-log-integration/README.md)已完成独立审查、合后CLI/local与清理关闭，见[收口](../../SP-253-detached-log-integration/plans/20261031-main-closeout.md)。clear-app-data保留观察：数据范围、默认/多用户、目标拒绝与机器确认契约尚需设计，不直接把能力名空缺等同现有缺陷。
 
 iCTRL HEAD c1e4268859ba/v1.98.16/Apache-2.0全文hash未变，SP193独立保存检查时间；9个旧许可/二进制/hosted来源缺口保留，不因本轮文本增量完整而推进旧partial成功点。serve-sim匿名curl失败经已有gh认证恢复，记录了真实恢复路径；不关闭TLS。
 
@@ -55,3 +55,7 @@ iCTRL HEAD c1e4268859ba/v1.98.16/Apache-2.0全文hash未变，SP193独立保存�
 | mobile-dev-inc/Maestro | `5ca5313b4c65` | cli-2.12.0 | 完整 |
 | linhay/SKProcessRunner | `24e036604b9e` | 0.0.17 | partial |
 | mobile-next/mobile-mcp | `1025dd070fc9` | 1.0.15 | 完整 |
+
+## 交付结果
+
+SP252/253已验收合本地main56ef7719；合后完整CLI162 XCTest+1665 Swift Testing及适用local通过，3 CLI环境skip与1根包Bonjour skip明确保留。执行工作区/分支已正常清理，执行聊天已归档；当前长期主控继续。17条采用合并均可达main。今日884份上游证据与本批开发/主控证据均在scratch外核验，昨日raw缺失仍未恢复。未push/tag/release或执行设备。
