@@ -165,24 +165,33 @@ func configureHostProcessExecutable(_ process: Process, command: TKHostCommand) 
     }
 }
 
-private func hostDetachedOutputHandle(path: String?) throws -> FileHandle {
+func hostDetachedOutputHandle(path: String?, beforeCreate: () throws -> Void = {}) throws -> FileHandle {
     guard let path else {
         return try FileHandle(forWritingTo: URL(fileURLWithPath: "/dev/null"))
     }
     try prepareHostArtifactOutputPath(path)
-    FileManager.default.createFile(atPath: path, contents: nil)
-    return try FileHandle(forWritingTo: URL(fileURLWithPath: path))
+    try beforeCreate()
+    // The precheck improves diagnostics; only exclusive creation protects the leaf race.
+    let fd = open(path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, S_IRUSR | S_IWUSR)
+    guard fd >= 0 else {
+        let reason = String(cString: strerror(errno))
+        throw HostArtifactOutputError.rejected(path: path, reason: reason)
+    }
+    return FileHandle(fileDescriptor: fd, closeOnDealloc: true)
 }
 
 func runHostCommandDetached(
     _ command: TKHostCommand,
     stdoutLogPath: String? = nil,
-    stderrLogPath: String? = nil
+    stderrLogPath: String? = nil,
+    outputHandle: (String?) throws -> FileHandle = { try hostDetachedOutputHandle(path: $0) }
 ) throws -> HostDetachedProcessResult {
     let process = Process()
     configureHostProcessExecutable(process, command: command)
-    let stdout = try hostDetachedOutputHandle(path: stdoutLogPath)
-    let stderr = try hostDetachedOutputHandle(path: stderrLogPath)
+    let stdout = try outputHandle(stdoutLogPath)
+    defer { try? stdout.close() }
+    let stderr = try outputHandle(stderrLogPath)
+    defer { try? stderr.close() }
     process.standardOutput = stdout
     process.standardError = stderr
     process.standardInput = FileHandle.nullDevice
@@ -190,12 +199,8 @@ func runHostCommandDetached(
     do {
         try process.run()
     } catch {
-        try? stdout.close()
-        try? stderr.close()
         throw HostCommandRunError.launchFailed(error.localizedDescription)
     }
-    try? stdout.close()
-    try? stderr.close()
     return HostDetachedProcessResult(
         pid: process.processIdentifier,
         sourceCommand: hostSourceCommand(command),
