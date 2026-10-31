@@ -1,0 +1,12 @@
+{
+  "sha": "56ef7719266d90f79548b649054710058266f78f",
+  "command": [
+    "swift",
+    "test",
+    "--package-path",
+    "CLI",
+    "--no-parallel"
+  ],
+  "exit_code": 0,
+  "seconds": 196.34870290756226
+}

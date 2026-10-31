@@ -248,7 +248,7 @@
 
 | `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30已发布 | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
 
-| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月31日33仓24完整/9 partial，5仓更新；16条已合main，新增SP252/253安全采用待实现；证据已改存仓外 |
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月31日33仓24完整/9 partial，5仓更新；17条已合main，SP252/253合后CLI/local通过并清理关闭；证据已改存仓外 |
 
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 
@@ -333,5 +333,5 @@
 
 | `SP-251-release-v0-2-38` | [`SP-251-release-v0-2-38`](./SP-251-release-v0-2-38/README.md) | 已随v0.2.38发布 | 双边main整合、skills更新；双架构/Homebrew/两处skills/三端公开包通过，自有资源清理 |
 
-| `SP-252-detached-log-exclusive-create` | [`SP-252-detached-log-exclusive-create`](./SP-252-detached-log-exclusive-create/README.md) | 待分派 | detached日志独占创建与句柄失败释放，先红测 |
-| `SP-253-detached-log-integration` | [`SP-253-detached-log-integration`](./SP-253-detached-log-integration/README.md) | 等待候选 | 仅验收SP252并本地合并/归档 |
+| `SP-252-detached-log-exclusive-create` | [`SP-252-detached-log-exclusive-create`](./SP-252-detached-log-exclusive-create/README.md) | 已验收合本地main | 56ef7719；CLI162+1665/local通过，已归档清理关闭 |
+| `SP-253-detached-log-integration` | [`SP-253-detached-log-integration`](./SP-253-detached-log-integration/README.md) | 已验收合本地main | 独立审查、合后门禁及证据/工作区/会话闭环完成 |

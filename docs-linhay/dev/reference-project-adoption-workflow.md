@@ -31,6 +31,8 @@
 
 2026-10-30用户要求新聊天接管：原`ictrl`已迁入`01a18a91-f44e-7fd0-8e4b-c891b44377e0`，原聊天`01a139bf-ab78-7783-b37a-ed336be2ef38`保留历史；每日北京时间10:00与完整任务prompt不变。配置已重读确认，见[接管记录](../spaces/SP-207-reference-adoption-pipeline/plans/20261030-controller-takeover.md)。
 
+2026-10-31 [SP252/253](../spaces/SP-253-detached-log-integration/plans/20261031-main-closeout.md)按既有授权完成detached日志安全修复、独立验收、合main56ef7719、合后CLI162+1665与适用local及清理/执行聊天归档。当前17条采用均在main。首次静态审查发现测试flags/FIFO前置不足，补强后重跑旧逻辑red；真实复现是竞争者叶子被替换，不是链接目标写穿。
+
 ## 新会话模型
 
 2026-10-16用户指定：今后本项目由agent创建的新会话（执行和主控）锁定为 `gpt-6.1-sol`。调用 `create_thread` 必须显式传入 `model: "gpt-6.1-sol"`，后续主控分派同样遵守；不省略后依赖默认模型，不使用latest别名，不自动回退其他模型。模型不可用则记录创建失败/待重试并报告，不冒充创建成功。本次不切换既有会话，也不改变推理强度。

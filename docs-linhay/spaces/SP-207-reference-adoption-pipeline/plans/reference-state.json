@@ -3251,14 +3251,14 @@
       },
       "last_error": null,
       "last_notified_observation": {
-        "head_sha": "6c945971b6b16832f7fa2a69ae23d33e8b9beb71",
-        "release_tag": "1.0.14",
+        "head_sha": "1025dd070fc934986dec9ea25458b0ab03bc54c7",
+        "release_tag": "1.0.15",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
         "fault_classes": [],
-        "fingerprint": "3cdfa5e360c98bf29fc5880a2330813d1231a3b11dab8705dd0784e46f8c99c7",
+        "fingerprint": "a3773d260dc8654e9d1b04155b6262285810bfecba504542595126dc11684527",
         "coverage": "complete",
-        "reported_on": "20261027",
-        "summary": "20261027-reference-update-report.md"
+        "reported_on": "20261031",
+        "summary": "20261031-reference-update-report.md"
       }
     }
   ],
@@ -3275,6 +3275,7 @@
     "current": "available",
     "archive_root": "../TritonKit-worktrees/archives/reference-monitor/20261031",
     "historical_20261030": "missing",
-    "details": "20261031-evidence-custody.json"
+    "details": "20261031-evidence-custody.json",
+    "historical_missing_notice_on": "2026-10-31"
   }
 }
