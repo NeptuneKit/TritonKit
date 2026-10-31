@@ -571,16 +571,23 @@
       "requirement_key": "host-detached-log-leaf-race-safety",
       "source_revision": "1025dd070fc934986dec9ea25458b0ab03bc54c7",
       "decision": "adopt",
-      "state": "pending_dispatch",
+      "state": "implementing",
       "space": "SP-252-detached-log-exclusive-create",
       "controller_space": "SP-253-detached-log-integration",
-      "execution_thread_id": null,
+      "execution_thread_id": "01a18fb4-0f41-73e2-a0b7-741aa13b2bc5",
       "controller_thread_id": "01a18a91-f44e-7fd0-8e4b-c891b44377e0",
-      "controller_state": "waiting_candidate",
+      "controller_state": "static_review_passed_waiting_full_cli",
       "branch": "feat/SP-252-detached-log-exclusive-create",
       "worktree": "../TritonKit-worktrees/SP-252-detached-log-exclusive-create",
       "scope": "final leaf exclusive creation; parent directory races not claimed; no device or remote operations",
-      "assessment": "20261031-mobile-next-mobile-mcp-review.md"
+      "assessment": "20261031-mobile-next-mobile-mcp-review.md",
+      "execution_model": "gpt-6.1-sol",
+      "controller_branch": "main",
+      "controller_worktree": "/Users/linhey/Desktop/linhay-open-sources/TritonKit",
+      "controller_worktree_status": "reused_main_not_to_be_removed",
+      "controller_thread_status": "long_running_kept_open",
+      "host_id": "local",
+      "acceptance_candidate_sha": "86662bfe"
     }
   ],
   "new_thread_policy": {
@@ -591,8 +598,8 @@
     "existing_threads_changed": false,
     "reasoning_effort": "unchanged"
   },
-  "last_updated_on": "2026-10-27",
-  "last_update_note": "SP225/226 accepted, merged607cdf1c, postmerge full CLI/offline JSON/docs passed; 53-file hash archive verified; both worktrees/branches removed and threads archived. All16 adoption entries merged.",
+  "last_updated_on": "2026-10-31",
+  "last_update_note": "33 repos checked; 16 prior merges reachable; SP252 execution created with explicit gpt-6.1-sol, SP253 scoped controller reuses current chat. No implementation or merge claim yet.",
   "session_closeout": {
     "verified_main": "607cdf1c025547ce8b5be21eaa00548e25400bb4",
     "verified_on": "2026-10-27",
