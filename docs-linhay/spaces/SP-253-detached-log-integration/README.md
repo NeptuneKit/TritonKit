@@ -1,6 +1,6 @@
 # SP-253 — Detached 日志安全主控
 
-状态：等待SP-252候选。仅接管[SP-252](../SP-252-detached-log-exclusive-create/README.md)；当前长期主控聊天01a18a91-f44e-7fd0-8e4b-c891b44377e0承担整合，独立subagent审查，执行聊天另登记。
+状态：等待SP-252候选。仅接管[SP-252](../SP-252-detached-log-exclusive-create/README.md)；当前长期主控聊天01a18a91-f44e-7fd0-8e4b-c891b44377e0承担整合，独立subagent审查，执行聊天`01a18fb4-0f41-73e2-a0b7-741aa13b2bc5`以显式gpt-6.1-sol创建成功。
 
 ## BDD 与验收
 
