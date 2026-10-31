@@ -9,7 +9,7 @@
     "docs-linhay/dev/20261014-reference-project-updates.md",
     "docs-linhay/dev/mobile-mcp-reference.md"
   ],
-  "coverage_note": "24/33 complete, 9 partial on 20261028; partial checkpoints preserved; iCTRL independent SP193.",
+  "coverage_note": "24/33 complete, 9 partial on 20261031; partial checkpoints preserved; iCTRL independent SP193.",
   "repositories": [
     {
       "repository": "tddworks/baguette",
@@ -32,8 +32,8 @@
           "binary_source_provenance",
           "incremental_review_incomplete"
         ],
-        "observed_at": "2026-10-28T02:07:09.693815+00:00",
-        "head_sha": "201de19842d4d6964f1e37989d69fcda24d5eefc",
+        "observed_at": "2026-10-31T01:56:54.241963+00:00",
+        "head_sha": "94b78d3603acf661e1f593aff7891c3bd7a86c44",
         "details": [
           "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
           "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: docs/features/companion-screens/DiPlay.apk",
@@ -53,7 +53,7 @@
           "commit patch omitted 8a65e97f7e6c8976d95b42a82bf6fcd1af74b01b: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
           "binary source provenance incomplete; sensitive/binary retrieval filter corrected; content removed"
         ],
-        "summary": "20261028-reference-update-report.md"
+        "summary": "20261031-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "201de19842d4d6964f1e37989d69fcda24d5eefc",
@@ -84,9 +84,9 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:09.693669+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:09.693669+00:00",
-        "head_sha": "0193e65c481fc9b64a62427f32fcf143dbc3d2c0",
+        "checked_at": "2026-10-31T01:56:54.242264+00:00",
+        "last_successful_check_at": "2026-10-31T01:56:54.242264+00:00",
+        "head_sha": "ede4c21ee3021a36fbee1fec106b388a50a5ce4e",
         "default_branch": "main",
         "release_tag": null,
         "latest_release": {},
@@ -96,10 +96,10 @@
           "spdx": "Apache-2.0",
           "sha256": "9024cdf56dfe7e66523698a9f63d3a0061eb15f43bd5ea8e3833a56017ae37fd",
           "path": "LICENSE",
-          "html_url": "https://github.com/EvanBacon/serve-sim/blob/0193e65c481fc9b64a62427f32fcf143dbc3d2c0/LICENSE"
+          "html_url": "https://github.com/EvanBacon/serve-sim/blob/ede4c21ee3021a36fbee1fec106b388a50a5ce4e/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
@@ -129,8 +129,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:09.693929+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:09.693929+00:00",
+        "checked_at": "2026-10-31T01:56:54.243845+00:00",
+        "last_successful_check_at": "2026-10-31T01:56:54.243845+00:00",
         "head_sha": "c02295edfd2f442249b869096dda3dc7bfcd308d",
         "default_branch": "main",
         "release_tag": "v0.16.0",
@@ -203,7 +203,7 @@
               "state": "uploaded",
               "size": 11828674,
               "digest": "sha256:1cab866e83cde89bcac5bcd77554a5c687c8b85a27ec1c5e8222ef826411e906",
-              "download_count": 647,
+              "download_count": 861,
               "created_at": "2026-10-21T03:11:06Z",
               "updated_at": "2026-10-21T03:11:07Z",
               "browser_download_url": "https://github.com/lycorp-jp/sim-use/releases/download/v0.16.0/sim-use-v0.16.0.tar.gz"
@@ -239,7 +239,7 @@
               "state": "uploaded",
               "size": 89,
               "digest": "sha256:cb1e3e069fbd63f3484c55ea5245123b53c297fa16bec72e7b82cb3b62c67665",
-              "download_count": 33,
+              "download_count": 47,
               "created_at": "2026-10-21T03:11:06Z",
               "updated_at": "2026-10-21T03:11:06Z",
               "browser_download_url": "https://github.com/lycorp-jp/sim-use/releases/download/v0.16.0/sim-use-v0.16.0.tar.gz.sha256"
@@ -270,8 +270,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/lycorp-jp/sim-use/blob/c02295edfd2f442249b869096dda3dc7bfcd308d/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official metadata/all non-draft release pages including prerelease/fixed full license; all commit files, reconstructed omitted parent-child text, mechanism review against actualmain; runtime not executed."
       },
       "last_notified_observation": {
@@ -301,8 +301,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:09.695064+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:09.695064+00:00",
+        "checked_at": "2026-10-31T01:56:54.247097+00:00",
+        "last_successful_check_at": "2026-10-31T01:56:54.247097+00:00",
         "head_sha": "d594c230fe9ed5080189b0ce76afabda6104bae0",
         "default_branch": "main",
         "release_tag": "v0.13.0",
@@ -375,7 +375,7 @@
               "state": "uploaded",
               "size": 2335665,
               "digest": "sha256:f57b67347a9e5d33f1810d67b966c39204d05c7d08082e2eb85ef79a4a016e65",
-              "download_count": 219,
+              "download_count": 1344,
               "created_at": "2026-10-26T16:01:07Z",
               "updated_at": "2026-10-26T16:01:07Z",
               "browser_download_url": "https://github.com/MobAI-App/simslim/releases/download/v0.13.0/simslim-0.13.0.arm64_sonoma.bottle.tar.gz"
@@ -411,7 +411,7 @@
               "state": "uploaded",
               "size": 4126700,
               "digest": "sha256:76807efb5beb57b73b40959eea04defe21fc18265811a495db1509b5e7be07c1",
-              "download_count": 76,
+              "download_count": 923,
               "created_at": "2026-10-26T16:01:07Z",
               "updated_at": "2026-10-26T16:01:10Z",
               "browser_download_url": "https://github.com/MobAI-App/simslim/releases/download/v0.13.0/simslim-v0.13.0-macos-arm64.tar.gz"
@@ -430,8 +430,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/MobAI-App/simslim/blob/d594c230fe9ed5080189b0ce76afabda6104bae0/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
@@ -461,8 +461,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:09.694847+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:09.694847+00:00",
+        "checked_at": "2026-10-31T01:56:54.248699+00:00",
+        "last_successful_check_at": "2026-10-31T01:56:54.248699+00:00",
         "head_sha": "e50f07f1f4480cb14d57f192df7bf598ca26e708",
         "default_branch": "dev",
         "release_tag": "v0.2.0",
@@ -571,7 +571,7 @@
               "state": "uploaded",
               "size": 3868299,
               "digest": "sha256:56d66270a7b18727dc8b13dbdb55c9772d79124461ec7d439370650094bc4b63",
-              "download_count": 52,
+              "download_count": 53,
               "created_at": "2026-09-27T23:14:47Z",
               "updated_at": "2026-09-27T23:14:48Z",
               "browser_download_url": "https://github.com/Mastersam07/OpenDeviceHub/releases/download/v0.2.0/OpenDeviceHub-0.2.0.dmg"
@@ -607,7 +607,7 @@
               "state": "uploaded",
               "size": 3868299,
               "digest": "sha256:56d66270a7b18727dc8b13dbdb55c9772d79124461ec7d439370650094bc4b63",
-              "download_count": 147,
+              "download_count": 150,
               "created_at": "2026-09-27T23:14:47Z",
               "updated_at": "2026-09-27T23:14:48Z",
               "browser_download_url": "https://github.com/Mastersam07/OpenDeviceHub/releases/download/v0.2.0/OpenDeviceHub.dmg"
@@ -662,8 +662,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/Mastersam07/OpenDeviceHub/blob/e50f07f1f4480cb14d57f192df7bf598ca26e708/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
@@ -683,8 +683,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:13.432303+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:13.432303+00:00",
+        "checked_at": "2026-10-31T01:56:59.128927+00:00",
+        "last_successful_check_at": "2026-10-31T01:56:59.128927+00:00",
         "head_sha": "3779e12aa00c08bb34805fef8ffe375838cbe815",
         "default_branch": "main",
         "release_tag": null,
@@ -697,8 +697,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/JaviSoto/device-hub-ios/blob/3779e12aa00c08bb34805fef8ffe375838cbe815/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official metadata/all non-draft release pages including prerelease/fixed full license; all commit files, reconstructed omitted parent-child text, mechanism review against actualmain; runtime not executed."
       },
       "last_notified_observation": {
@@ -728,8 +728,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:13.728233+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:13.728233+00:00",
+        "checked_at": "2026-10-31T01:56:59.278757+00:00",
+        "last_successful_check_at": "2026-10-31T01:56:59.278757+00:00",
         "head_sha": "ff1351242e6dbaba4a0b4de40d10350a668f03b8",
         "default_branch": "main",
         "release_tag": "v0.5.1",
@@ -802,7 +802,7 @@
               "state": "uploaded",
               "size": 4629164,
               "digest": "sha256:aa996b660ac956ed6d5ec7b46f4a974f827484e155c6083e4de505cbd5722a82",
-              "download_count": 99,
+              "download_count": 114,
               "created_at": "2026-10-14T08:10:15Z",
               "updated_at": "2026-10-14T08:10:16Z",
               "browser_download_url": "https://github.com/heoblitz/Loupe/releases/download/v0.5.1/loupe-0.5.1.arm64_sequoia.bottle.tar.gz"
@@ -820,8 +820,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/heoblitz/Loupe/blob/ff1351242e6dbaba4a0b4de40d10350a668f03b8/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
@@ -841,17 +841,17 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:14.238738+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:14.238738+00:00",
-        "head_sha": "317dc15fa21b63cf3e6b997784bd1c4ce6607392",
+        "checked_at": "2026-10-31T01:56:59.627811+00:00",
+        "last_successful_check_at": "2026-10-31T01:56:59.627811+00:00",
+        "head_sha": "485416f3641dfb83b2e2a894fc0bb288ff706a28",
         "default_branch": "main",
-        "release_tag": "runner-v0.4.0",
+        "release_tag": "v0.42.0",
         "latest_release": {
-          "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/426093154",
-          "assets_url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/426093154/assets",
-          "upload_url": "https://uploads.github.com/repos/jfarcand/mirroir-mcp/releases/426093154/assets{?name,label}",
-          "html_url": "https://github.com/jfarcand/mirroir-mcp/releases/tag/runner-v0.4.0",
-          "id": 426093154,
+          "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/429496925",
+          "assets_url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/429496925/assets",
+          "upload_url": "https://uploads.github.com/repos/jfarcand/mirroir-mcp/releases/429496925/assets{?name,label}",
+          "html_url": "https://github.com/jfarcand/mirroir-mcp/releases/tag/v0.42.0",
+          "id": 429496925,
           "author": {
             "login": "github-actions[bot]",
             "id": 41898282,
@@ -873,22 +873,22 @@
             "user_view_type": "public",
             "site_admin": false
           },
-          "node_id": "RE_kwDORKZYrs4ZZapi",
-          "tag_name": "runner-v0.4.0",
+          "node_id": "RE_kwDORKZYrs4ZmZpd",
+          "tag_name": "v0.42.0",
           "target_commitish": "main",
-          "name": "mirroir-run v0.4.0",
+          "name": "v0.42.0",
           "draft": false,
           "immutable": true,
           "prerelease": false,
-          "created_at": "2026-10-27T22:04:10Z",
-          "updated_at": "2026-10-27T23:20:24Z",
-          "published_at": "2026-10-27T23:20:24Z",
+          "created_at": "2026-10-30T21:15:19Z",
+          "updated_at": "2026-10-30T21:15:25Z",
+          "published_at": "2026-10-30T21:15:25Z",
           "assets": [
             {
-              "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/assets/683182422",
-              "id": 683182422,
-              "node_id": "RA_kwDORKZYrs4ouIlW",
-              "name": "mirroir-run-v0.4.0-aarch64-apple-darwin.tar.gz",
+              "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/assets/693442781",
+              "id": 693442781,
+              "node_id": "RA_kwDORKZYrs4pVRjd",
+              "name": "mirroir-mcp-darwin-arm64.tar.gz",
               "label": "",
               "uploader": {
                 "login": "github-actions[bot]",
@@ -911,20 +911,20 @@
                 "user_view_type": "public",
                 "site_admin": false
               },
-              "content_type": "application/gzip",
+              "content_type": "application/x-gtar",
               "state": "uploaded",
-              "size": 2755400,
-              "digest": "sha256:4fd13f9522cc50d5d8545b369f5eba9f755b54d670e742cb8c4f1c4f267ee4c3",
-              "download_count": 0,
-              "created_at": "2026-10-27T23:20:23Z",
-              "updated_at": "2026-10-27T23:20:24Z",
-              "browser_download_url": "https://github.com/jfarcand/mirroir-mcp/releases/download/runner-v0.4.0/mirroir-run-v0.4.0-aarch64-apple-darwin.tar.gz"
+              "size": 2015282,
+              "digest": "sha256:6d71767055a6d47745ab5584a761e7e17cb5208dcfd3daaf087c9b6fabd64167",
+              "download_count": 239,
+              "created_at": "2026-10-30T21:15:24Z",
+              "updated_at": "2026-10-30T21:15:24Z",
+              "browser_download_url": "https://github.com/jfarcand/mirroir-mcp/releases/download/v0.42.0/mirroir-mcp-darwin-arm64.tar.gz"
             },
             {
-              "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/assets/683182419",
-              "id": 683182419,
-              "node_id": "RA_kwDORKZYrs4ouIlT",
-              "name": "mirroir-run-v0.4.0-aarch64-apple-darwin.tar.gz.sha256",
+              "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/assets/693442782",
+              "id": 693442782,
+              "node_id": "RA_kwDORKZYrs4pVRje",
+              "name": "SHA256SUMS",
               "label": "",
               "uploader": {
                 "login": "github-actions[bot]",
@@ -949,305 +949,17 @@
               },
               "content_type": "application/octet-stream",
               "state": "uploaded",
-              "size": 113,
-              "digest": "sha256:b1aec806b2505bb917aa7ab1cef535cd7574406a5baf03fde2416668798287d5",
-              "download_count": 0,
-              "created_at": "2026-10-27T23:20:23Z",
-              "updated_at": "2026-10-27T23:20:23Z",
-              "browser_download_url": "https://github.com/jfarcand/mirroir-mcp/releases/download/runner-v0.4.0/mirroir-run-v0.4.0-aarch64-apple-darwin.tar.gz.sha256"
-            },
-            {
-              "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/assets/683182421",
-              "id": 683182421,
-              "node_id": "RA_kwDORKZYrs4ouIlV",
-              "name": "mirroir-run-v0.4.0-x86_64-apple-darwin.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/gzip",
-              "state": "uploaded",
-              "size": 3007352,
-              "digest": "sha256:b8125b30cfb65ad70fe04bd4daa74ad93a04343660e0fd467c0238dec803cd38",
-              "download_count": 0,
-              "created_at": "2026-10-27T23:20:23Z",
-              "updated_at": "2026-10-27T23:20:24Z",
-              "browser_download_url": "https://github.com/jfarcand/mirroir-mcp/releases/download/runner-v0.4.0/mirroir-run-v0.4.0-x86_64-apple-darwin.tar.gz"
-            },
-            {
-              "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/assets/683182420",
-              "id": 683182420,
-              "node_id": "RA_kwDORKZYrs4ouIlU",
-              "name": "mirroir-run-v0.4.0-x86_64-apple-darwin.tar.gz.sha256",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/octet-stream",
-              "state": "uploaded",
-              "size": 112,
-              "digest": "sha256:4bcd794a46592ed6b12649ddd0351462aeb774a902bea6c3b6d591a1e9670f11",
-              "download_count": 0,
-              "created_at": "2026-10-27T23:20:23Z",
-              "updated_at": "2026-10-27T23:20:24Z",
-              "browser_download_url": "https://github.com/jfarcand/mirroir-mcp/releases/download/runner-v0.4.0/mirroir-run-v0.4.0-x86_64-apple-darwin.tar.gz.sha256"
-            },
-            {
-              "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/assets/683182426",
-              "id": 683182426,
-              "node_id": "RA_kwDORKZYrs4ouIla",
-              "name": "mirroir-run-v0.4.0-x86_64-pc-windows-msvc.zip",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/zip",
-              "state": "uploaded",
-              "size": 2997960,
-              "digest": "sha256:ad248383d3b8e52ecf8785e732fe65783273c6e3b5e057c83113fd4ee32c3914",
-              "download_count": 0,
-              "created_at": "2026-10-27T23:20:23Z",
-              "updated_at": "2026-10-27T23:20:24Z",
-              "browser_download_url": "https://github.com/jfarcand/mirroir-mcp/releases/download/runner-v0.4.0/mirroir-run-v0.4.0-x86_64-pc-windows-msvc.zip"
-            },
-            {
-              "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/assets/683182427",
-              "id": 683182427,
-              "node_id": "RA_kwDORKZYrs4ouIlb",
-              "name": "mirroir-run-v0.4.0-x86_64-pc-windows-msvc.zip.sha256",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/octet-stream",
-              "state": "uploaded",
-              "size": 66,
-              "digest": "sha256:f8110597cf8a8d4ecbf88ab8e79241accb03aa6f8512df1711aa04762c2452bf",
-              "download_count": 0,
-              "created_at": "2026-10-27T23:20:23Z",
-              "updated_at": "2026-10-27T23:20:24Z",
-              "browser_download_url": "https://github.com/jfarcand/mirroir-mcp/releases/download/runner-v0.4.0/mirroir-run-v0.4.0-x86_64-pc-windows-msvc.zip.sha256"
-            },
-            {
-              "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/assets/683182423",
-              "id": 683182423,
-              "node_id": "RA_kwDORKZYrs4ouIlX",
-              "name": "mirroir-run-v0.4.0-x86_64-unknown-linux-gnu.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/gzip",
-              "state": "uploaded",
-              "size": 3183561,
-              "digest": "sha256:f437744a1619792f5afb43017087dd7b34c16071d007a7b749de2215303e8324",
-              "download_count": 0,
-              "created_at": "2026-10-27T23:20:23Z",
-              "updated_at": "2026-10-27T23:20:24Z",
-              "browser_download_url": "https://github.com/jfarcand/mirroir-mcp/releases/download/runner-v0.4.0/mirroir-run-v0.4.0-x86_64-unknown-linux-gnu.tar.gz"
-            },
-            {
-              "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/assets/683182415",
-              "id": 683182415,
-              "node_id": "RA_kwDORKZYrs4ouIlP",
-              "name": "mirroir-run-v0.4.0-x86_64-unknown-linux-gnu.tar.gz.sha256",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/octet-stream",
-              "state": "uploaded",
-              "size": 117,
-              "digest": "sha256:2f1ad3186634dc1d908bf6c3b1f7bea4a91e5333fdbafa0890a48b6f9c18601a",
-              "download_count": 0,
-              "created_at": "2026-10-27T23:20:23Z",
-              "updated_at": "2026-10-27T23:20:23Z",
-              "browser_download_url": "https://github.com/jfarcand/mirroir-mcp/releases/download/runner-v0.4.0/mirroir-run-v0.4.0-x86_64-unknown-linux-gnu.tar.gz.sha256"
-            },
-            {
-              "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/assets/683182417",
-              "id": 683182417,
-              "node_id": "RA_kwDORKZYrs4ouIlR",
-              "name": "mirroir-run-v0.4.0-x86_64-unknown-linux-musl.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/gzip",
-              "state": "uploaded",
-              "size": 3283760,
-              "digest": "sha256:d0df1ea4b13f41138481a10394073f6f190c9f26245fabd038e575861207313e",
-              "download_count": 0,
-              "created_at": "2026-10-27T23:20:23Z",
-              "updated_at": "2026-10-27T23:20:24Z",
-              "browser_download_url": "https://github.com/jfarcand/mirroir-mcp/releases/download/runner-v0.4.0/mirroir-run-v0.4.0-x86_64-unknown-linux-musl.tar.gz"
-            },
-            {
-              "url": "https://api.github.com/repos/jfarcand/mirroir-mcp/releases/assets/683182418",
-              "id": 683182418,
-              "node_id": "RA_kwDORKZYrs4ouIlS",
-              "name": "mirroir-run-v0.4.0-x86_64-unknown-linux-musl.tar.gz.sha256",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/octet-stream",
-              "state": "uploaded",
-              "size": 118,
-              "digest": "sha256:76536334a211dd92727d65ed6f5c21fccd4c37e0b0ad467ea7dd97c66bd8258f",
-              "download_count": 0,
-              "created_at": "2026-10-27T23:20:23Z",
-              "updated_at": "2026-10-27T23:20:24Z",
-              "browser_download_url": "https://github.com/jfarcand/mirroir-mcp/releases/download/runner-v0.4.0/mirroir-run-v0.4.0-x86_64-unknown-linux-musl.tar.gz.sha256"
+              "size": 98,
+              "digest": "sha256:9c3f951a34e089b92a37e485ba95a65bb3472664deeeb64db2bd8100152a7e4e",
+              "download_count": 224,
+              "created_at": "2026-10-30T21:15:24Z",
+              "updated_at": "2026-10-30T21:15:24Z",
+              "browser_download_url": "https://github.com/jfarcand/mirroir-mcp/releases/download/v0.42.0/SHA256SUMS"
             }
           ],
-          "tarball_url": "https://api.github.com/repos/jfarcand/mirroir-mcp/tarball/runner-v0.4.0",
-          "zipball_url": "https://api.github.com/repos/jfarcand/mirroir-mcp/zipball/runner-v0.4.0",
-          "body": "**Full Changelog**: https://github.com/jfarcand/mirroir-mcp/compare/v0.41.0...runner-v0.4.0"
+          "tarball_url": "https://api.github.com/repos/jfarcand/mirroir-mcp/tarball/v0.42.0",
+          "zipball_url": "https://api.github.com/repos/jfarcand/mirroir-mcp/zipball/v0.42.0",
+          "body": "## What's Changed\n\n### Features\n- **compiled:** replay verifies each step — checked taps, icon arrival, confirmed paste/launch (M2)\n\n### Bug Fixes\n- **mirroring:** revealed toolbar buttons no longer classify a live session as paused (#78)\n- **targets:** drop nonisolated(unsafe) from the Sendable builder and profile tables\n- **record_step:** refuse an icon tap that left the screen unchanged — replay could never prove it\n- **m1:** honesty floor — CSA keyboard, settings merge, compiled replay (carnet#3 #24 #25)\n\n### Chores\n- bump version to 0.42.0\n\n**Full Changelog**: https://github.com/jfarcand/mirroir-mcp/compare/runner-v0.4.0...v0.42.0\n"
         },
         "license_spdx": "Apache-2.0",
         "license_sha256": "52327c57e955a3e63f872960938e814acc19eb1b77c501999f5fd1e543b21346",
@@ -1255,10 +967,10 @@
           "spdx": "Apache-2.0",
           "sha256": "52327c57e955a3e63f872960938e814acc19eb1b77c501999f5fd1e543b21346",
           "path": "LICENSE",
-          "html_url": "https://github.com/jfarcand/mirroir-mcp/blob/317dc15fa21b63cf3e6b997784bd1c4ce6607392/LICENSE"
+          "html_url": "https://github.com/jfarcand/mirroir-mcp/blob/485416f3641dfb83b2e2a894fc0bb288ff706a28/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
@@ -1288,8 +1000,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:14.273672+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:14.273672+00:00",
+        "checked_at": "2026-10-31T01:56:59.728598+00:00",
+        "last_successful_check_at": "2026-10-31T01:56:59.728598+00:00",
         "head_sha": "de791b63e7f9b5df49f127524a5c9320e675eb23",
         "default_branch": "main",
         "release_tag": "v0.41.0",
@@ -1398,7 +1110,7 @@
               "state": "uploaded",
               "size": 43672137,
               "digest": "sha256:ddd545cc380a29bcfdae826844a8e19a56d64c26570cffb37ce036f19fa2d750",
-              "download_count": 941,
+              "download_count": 1025,
               "created_at": "2026-10-08T07:05:32Z",
               "updated_at": "2026-10-08T07:05:42Z",
               "browser_download_url": "https://github.com/RockxyApp/Rockxy/releases/download/v0.41.0/Rockxy-0.41.0-62.dmg"
@@ -1434,7 +1146,7 @@
               "state": "uploaded",
               "size": 87,
               "digest": "sha256:a3b9b6b07a5bf47d399761a2f0155b6e661837b8073b6cbc01e9a7e646df460c",
-              "download_count": 23,
+              "download_count": 24,
               "created_at": "2026-10-08T07:05:32Z",
               "updated_at": "2026-10-08T07:05:32Z",
               "browser_download_url": "https://github.com/RockxyApp/Rockxy/releases/download/v0.41.0/Rockxy-0.41.0-62.dmg.sha256"
@@ -1488,8 +1200,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/RockxyApp/Rockxy/blob/de791b63e7f9b5df49f127524a5c9320e675eb23/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
@@ -1509,8 +1221,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:14.759960+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:14.759960+00:00",
+        "checked_at": "2026-10-31T01:57:00.077340+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:00.077340+00:00",
         "head_sha": "cc059013de8778072b4fea6453b45e964e4202fe",
         "default_branch": "main",
         "release_tag": "2.0.0",
@@ -1576,8 +1288,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/ProxymanApp/atlantis/blob/cc059013de8778072b4fea6453b45e964e4202fe/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
@@ -1627,8 +1339,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:18.567932+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:18.567932+00:00",
+        "checked_at": "2026-10-31T01:57:04.414673+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:04.414673+00:00",
         "head_sha": "2998ac77ebbca59544e88a27f34bfb830db9d924",
         "default_branch": "main",
         "release_tag": "v2.7.1",
@@ -1701,7 +1413,7 @@
               "state": "uploaded",
               "size": 59166493,
               "digest": "sha256:75bb08fbb27306ccab6c52b435d16a39fef01921b49d021142a4bdaa93dbe82b",
-              "download_count": 1828,
+              "download_count": 2080,
               "created_at": "2026-09-23T20:22:11Z",
               "updated_at": "2026-09-23T20:22:13Z",
               "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1-darwin-arm64.tar.gz"
@@ -1737,7 +1449,7 @@
               "state": "uploaded",
               "size": 65,
               "digest": "sha256:593690de90c1c2c1db0628f114011bb3cb61c029c7bb21b977d8ac74455513b0",
-              "download_count": 46,
+              "download_count": 48,
               "created_at": "2026-09-23T20:22:11Z",
               "updated_at": "2026-09-23T20:22:11Z",
               "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1-darwin-arm64.tar.gz.sha256"
@@ -1773,7 +1485,7 @@
               "state": "uploaded",
               "size": 99572666,
               "digest": "sha256:c8cccaf4537390d5f526f3f0ebd8fe4b27bdd1a31a54365695d1d73909ebbb7d",
-              "download_count": 102,
+              "download_count": 116,
               "created_at": "2026-09-23T20:22:11Z",
               "updated_at": "2026-09-23T20:22:13Z",
               "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1-darwin-universal.tar.gz"
@@ -1809,7 +1521,7 @@
               "state": "uploaded",
               "size": 65,
               "digest": "sha256:e17282dd2b904db7b3327231fe3b369b665fa3d5d4b7bf69a4ae49410fe0f24f",
-              "download_count": 4,
+              "download_count": 5,
               "created_at": "2026-09-23T20:22:12Z",
               "updated_at": "2026-09-23T20:22:12Z",
               "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1-darwin-universal.tar.gz.sha256"
@@ -1845,7 +1557,7 @@
               "state": "uploaded",
               "size": 60399043,
               "digest": "sha256:73a57ce96c78887feadbcf0818e7fd6177e6c161462617bfac3e63a0c287ddf3",
-              "download_count": 144,
+              "download_count": 158,
               "created_at": "2026-09-23T20:22:11Z",
               "updated_at": "2026-09-23T20:22:13Z",
               "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1-darwin-x64.tar.gz"
@@ -1881,7 +1593,7 @@
               "state": "uploaded",
               "size": 65,
               "digest": "sha256:30a24b4e2c43b5884fae178aadd02ff41aa2a09a0d1d8bb1b3d482cee65531ef",
-              "download_count": 8,
+              "download_count": 9,
               "created_at": "2026-09-23T20:22:11Z",
               "updated_at": "2026-09-23T20:22:11Z",
               "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1-darwin-x64.tar.gz.sha256"
@@ -1917,7 +1629,7 @@
               "state": "uploaded",
               "size": 9615980,
               "digest": "sha256:caf15f8e7e7f5775efbcdd7f788bc129439f2921ba57a6ee010b204761a4f7e8",
-              "download_count": 105,
+              "download_count": 120,
               "created_at": "2026-09-23T20:18:32Z",
               "updated_at": "2026-09-23T20:18:33Z",
               "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1.tgz"
@@ -1947,8 +1659,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/getsentry/MobileBuildMCP/blob/2998ac77ebbca59544e88a27f34bfb830db9d924/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
@@ -1978,8 +1690,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:18.598587+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:18.598587+00:00",
+        "checked_at": "2026-10-31T01:57:05.051111+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:05.051111+00:00",
         "head_sha": "3f58c077ded131cca71d75efb05c5d325f0ed18f",
         "default_branch": "main",
         "release_tag": "v0.8.4",
@@ -2052,7 +1764,7 @@
               "state": "uploaded",
               "size": 14287432,
               "digest": "sha256:6d7feb1c828effa65297d542bff24ffeb506c064e0e61dd50fc6127bf6c97cf2",
-              "download_count": 47,
+              "download_count": 51,
               "created_at": "2026-09-02T19:54:11Z",
               "updated_at": "2026-09-02T19:54:12Z",
               "browser_download_url": "https://github.com/awizemann/harness/releases/download/v0.8.4/Harness-v0.8.4-Universal.zip"
@@ -2070,8 +1782,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/awizemann/harness/blob/3f58c077ded131cca71d75efb05c5d325f0ed18f/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
@@ -2100,8 +1812,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:18.873382+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:18.873382+00:00",
+        "checked_at": "2026-10-31T01:57:05.408518+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:05.408518+00:00",
         "head_sha": "d339057bc64aa85002570765e2a20d45e0391bae",
         "default_branch": "main",
         "release_tag": "v0.8.0",
@@ -2155,8 +1867,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/dongxinsuperman/ai-phone/blob/d339057bc64aa85002570765e2a20d45e0391bae/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
@@ -2208,14 +1920,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-28T02:07:18.925992+00:00",
+        "observed_at": "2026-10-31T01:57:05.797356+00:00",
         "head_sha": "eef71926e613c3242643923bb21c92beab439990",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261028-reference-update-report.md"
+        "summary": "20261031-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "eef71926e613c3242643923bb21c92beab439990",
@@ -2274,20 +1986,22 @@
           "incremental_review_incomplete",
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-28T02:07:21.134237+00:00",
-        "head_sha": "8ecfb9f8b1591ac35ad3a3576e9d1df016dd2c33",
+        "observed_at": "2026-10-31T01:57:09.055195+00:00",
+        "head_sha": "34a9587752f06cdc41cfce7acd46d408c8f799e8",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license_full_text_unavailable_http404",
           "binary_pyc_semantics_unreviewed_4_paths",
+          "extensionless_VERSION_content_not_requested",
           "historical_hosted_source_gap_preserved",
+          "no_extension_VERSION_content_not_requested",
           "license_full_text_unavailable: existing official 404 retained",
           "prior_large_increment_generated_hosted_and_binary_provenance_not_closed",
           "4_changed_pyc_paths_not_requested_semantic_gap_retained",
           "license: gh: Not Found (HTTP 404)",
           "4_changed_pyc_paths_not_requested"
         ],
-        "summary": "20261028-reference-update-report.md"
+        "summary": "20261031-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "8ecfb9f8b1591ac35ad3a3576e9d1df016dd2c33",
@@ -2341,14 +2055,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-28T02:07:22.537865+00:00",
+        "observed_at": "2026-10-31T01:57:10.832867+00:00",
         "head_sha": "b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261028-reference-update-report.md"
+        "summary": "20261031-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e",
@@ -2379,8 +2093,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:22.621752+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:22.621752+00:00",
+        "checked_at": "2026-10-31T01:57:10.832962+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:10.832962+00:00",
         "head_sha": "fcb36e395bd4ae20448f2535382baecba9396fd9",
         "default_branch": "main",
         "release_tag": "v0.2.0",
@@ -2453,7 +2167,7 @@
               "state": "uploaded",
               "size": 410,
               "digest": "sha256:5f7d55cb10ed76364aa56af328e2bf3c5f2ba2db268745f03e35859e0404bb18",
-              "download_count": 3188,
+              "download_count": 3343,
               "created_at": "2026-07-28T20:17:15Z",
               "updated_at": "2026-07-28T20:17:15Z",
               "browser_download_url": "https://github.com/RevylAI/greenlight/releases/download/v0.2.0/checksums.txt"
@@ -2489,7 +2203,7 @@
               "state": "uploaded",
               "size": 4242851,
               "digest": "sha256:f609cd2b8b810131d46ac231b6b7d124e9f22ab3ca13c646370c5d334ee36920",
-              "download_count": 44,
+              "download_count": 45,
               "created_at": "2026-07-28T20:17:14Z",
               "updated_at": "2026-07-28T20:17:15Z",
               "browser_download_url": "https://github.com/RevylAI/greenlight/releases/download/v0.2.0/greenlight_0.2.0_darwin_amd64.tar.gz"
@@ -2525,7 +2239,7 @@
               "state": "uploaded",
               "size": 3970711,
               "digest": "sha256:4ccba1ab1608f80f9a89e7a7d092937116a63273ac9be9310ec95b696de43b5b",
-              "download_count": 3738,
+              "download_count": 3841,
               "created_at": "2026-07-28T20:17:14Z",
               "updated_at": "2026-07-28T20:17:15Z",
               "browser_download_url": "https://github.com/RevylAI/greenlight/releases/download/v0.2.0/greenlight_0.2.0_darwin_arm64.tar.gz"
@@ -2561,7 +2275,7 @@
               "state": "uploaded",
               "size": 4165609,
               "digest": "sha256:1e075a588a3b7968de903e53d904cabc983904dadb76906cb5aa149acf07dfff",
-              "download_count": 1351,
+              "download_count": 1433,
               "created_at": "2026-07-28T20:17:14Z",
               "updated_at": "2026-07-28T20:17:15Z",
               "browser_download_url": "https://github.com/RevylAI/greenlight/releases/download/v0.2.0/greenlight_0.2.0_linux_amd64.tar.gz"
@@ -2597,7 +2311,7 @@
               "state": "uploaded",
               "size": 3816440,
               "digest": "sha256:66a2a1b8066bf468d4e352fa97492022d3596d69f45d6aa0b84c26aedb332d80",
-              "download_count": 13,
+              "download_count": 14,
               "created_at": "2026-07-28T20:17:14Z",
               "updated_at": "2026-07-28T20:17:15Z",
               "browser_download_url": "https://github.com/RevylAI/greenlight/releases/download/v0.2.0/greenlight_0.2.0_linux_arm64.tar.gz"
@@ -2615,8 +2329,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/RevylAI/greenlight/blob/fcb36e395bd4ae20448f2535382baecba9396fd9/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
@@ -2667,14 +2381,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-28T02:07:22.721569+00:00",
+        "observed_at": "2026-10-31T01:57:11.220825+00:00",
         "head_sha": "efc1dae5da089ec08108a39f1ead39324c11b410",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261028-reference-update-report.md"
+        "summary": "20261031-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "efc1dae5da089ec08108a39f1ead39324c11b410",
@@ -2727,14 +2441,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-28T02:07:23.008191+00:00",
+        "observed_at": "2026-10-31T01:57:11.316975+00:00",
         "head_sha": "ba1250c72f56a08f3718aefc82dc911c1b3a2f23",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261028-reference-update-report.md"
+        "summary": "20261031-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "ba1250c72f56a08f3718aefc82dc911c1b3a2f23",
@@ -2787,14 +2501,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-28T02:07:25.913374+00:00",
+        "observed_at": "2026-10-31T01:57:15.698435+00:00",
         "head_sha": "2758e8a88f4efb3a251b675e0984c091bf8abeb8",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261028-reference-update-report.md"
+        "summary": "20261031-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "2758e8a88f4efb3a251b675e0984c091bf8abeb8",
@@ -2847,14 +2561,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-28T02:07:26.273145+00:00",
+        "observed_at": "2026-10-31T01:57:15.750623+00:00",
         "head_sha": "8b4e5cea045dcff5c30aa723b923e514d2cdc07a",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261028-reference-update-report.md"
+        "summary": "20261031-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "8b4e5cea045dcff5c30aa723b923e514d2cdc07a",
@@ -2885,8 +2599,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:26.413726+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:26.413726+00:00",
+        "checked_at": "2026-10-31T01:57:16.076795+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:16.076795+00:00",
         "head_sha": "3d8902e011981b93cb0ebfafba1794eab93b053e",
         "default_branch": "main",
         "release_tag": null,
@@ -2899,8 +2613,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/RevylAI/CogniSim/blob/3d8902e011981b93cb0ebfafba1794eab93b053e/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
@@ -2930,8 +2644,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:26.512740+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:26.512740+00:00",
+        "checked_at": "2026-10-31T01:57:16.189686+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:16.189686+00:00",
         "head_sha": "95e30fdcc8151092678387c5262bce790a0d9530",
         "default_branch": "Develop",
         "release_tag": "1.0.7",
@@ -2998,8 +2712,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/hughkli/Lookin/blob/95e30fdcc8151092678387c5262bce790a0d9530/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
@@ -3019,8 +2733,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:26.752053+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:26.752053+00:00",
+        "checked_at": "2026-10-31T01:57:17.791194+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:17.791194+00:00",
         "head_sha": "8974f95b0685f139a6257f82d6b13895db3356cf",
         "default_branch": "main",
         "release_tag": null,
@@ -3033,8 +2747,8 @@
           "path": "LICENSE.txt",
           "html_url": "https://github.com/OSU-NLP-Group/UGround/blob/8974f95b0685f139a6257f82d6b13895db3356cf/LICENSE.txt"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
@@ -3054,8 +2768,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:29.804604+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:29.804604+00:00",
+        "checked_at": "2026-10-31T01:57:20.445619+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:20.445619+00:00",
         "head_sha": "582f3a7ea5d285ee8ed9e2e84048d1ab01453c49",
         "default_branch": "main",
         "release_tag": null,
@@ -3068,8 +2782,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/bytedance/UI-TARS/blob/582f3a7ea5d285ee8ed9e2e84048d1ab01453c49/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
@@ -3089,8 +2803,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:30.046195+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:30.046195+00:00",
+        "checked_at": "2026-10-31T01:57:20.454104+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:20.454104+00:00",
         "head_sha": "2168ae21b1bed1cdb88736d422934825795a9fd7",
         "default_branch": "main",
         "release_tag": null,
@@ -3103,8 +2817,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/OpenBMB/AgentCPM-GUI/blob/2168ae21b1bed1cdb88736d422934825795a9fd7/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
@@ -3124,9 +2838,9 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:30.371702+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:30.371702+00:00",
-        "head_sha": "11cea575561fb7800b5fb6b6cafa56f7a91de11f",
+        "checked_at": "2026-10-31T01:57:20.777186+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:20.777186+00:00",
+        "head_sha": "81fa28b564ef7a695521500bc15a0e1324b2b394",
         "default_branch": "main",
         "release_tag": null,
         "latest_release": {},
@@ -3136,10 +2850,10 @@
           "spdx": "MIT",
           "sha256": "961819a89dacd1f4f161e1d2ebf616b538bf095a2eecfa3ef40b7ccec633fac4",
           "path": "LICENSE",
-          "html_url": "https://github.com/X-PLUG/MobileAgent/blob/11cea575561fb7800b5fb6b6cafa56f7a91de11f/LICENSE"
+          "html_url": "https://github.com/X-PLUG/MobileAgent/blob/81fa28b564ef7a695521500bc15a0e1324b2b394/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
@@ -3159,8 +2873,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:30.404374+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:30.404374+00:00",
+        "checked_at": "2026-10-31T01:57:21.223293+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:21.223293+00:00",
         "head_sha": "0ef37ac4d7aaf37ba7b990e3e3c3ca77e1fb8f93",
         "default_branch": "main",
         "release_tag": null,
@@ -3173,8 +2887,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/njucckevin/SeeClick/blob/0ef37ac4d7aaf37ba7b990e3e3c3ca77e1fb8f93/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null
@@ -3194,8 +2908,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:30.752369+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:30.752369+00:00",
+        "checked_at": "2026-10-31T01:57:22.226701+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:22.226701+00:00",
         "head_sha": "55ddaf5edc6f6c25673aed343907d5b9dca66f84",
         "default_branch": "main",
         "release_tag": null,
@@ -3208,8 +2922,8 @@
           "path": "LICENSE",
           "html_url": "https://github.com/google-research/android_world/blob/55ddaf5edc6f6c25673aed343907d5b9dca66f84/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
@@ -3239,9 +2953,9 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:33.593467+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:33.593467+00:00",
-        "head_sha": "0df4cf3c8cad946e0494f462c6ce4987145cd36f",
+        "checked_at": "2026-10-31T01:57:25.189406+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:25.189406+00:00",
+        "head_sha": "5ca5313b4c6516bb66ff2537cdeb8edc01d61228",
         "default_branch": "main",
         "release_tag": "cli-2.12.0",
         "latest_release": {
@@ -3313,7 +3027,7 @@
               "state": "uploaded",
               "size": 78,
               "digest": "sha256:690af621922b0aefdfc8d0c8145618679ea0ce061dcc0ef6d50affd0a7f4d986",
-              "download_count": 400,
+              "download_count": 1088,
               "created_at": "2026-10-26T11:52:11Z",
               "updated_at": "2026-10-26T11:52:11Z",
               "browser_download_url": "https://github.com/mobile-dev-inc/Maestro/releases/download/cli-2.12.0/checksums_sha256.txt"
@@ -3349,7 +3063,7 @@
               "state": "uploaded",
               "size": 349408958,
               "digest": "sha256:a6044a84542f522f434c5dc3d609e60c7446d423f3ed1b2ae513f5c48663ec5e",
-              "download_count": 20768,
+              "download_count": 58808,
               "created_at": "2026-10-26T11:52:11Z",
               "updated_at": "2026-10-26T11:52:22Z",
               "browser_download_url": "https://github.com/mobile-dev-inc/Maestro/releases/download/cli-2.12.0/maestro.zip"
@@ -3357,7 +3071,19 @@
           ],
           "tarball_url": "https://api.github.com/repos/mobile-dev-inc/Maestro/tarball/cli-2.12.0",
           "zipball_url": "https://api.github.com/repos/mobile-dev-inc/Maestro/zipball/cli-2.12.0",
-          "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#2120"
+          "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#2120",
+          "reactions": {
+            "url": "https://api.github.com/repos/mobile-dev-inc/Maestro/releases/424188255/reactions",
+            "total_count": 1,
+            "+1": 1,
+            "-1": 0,
+            "laugh": 0,
+            "hooray": 0,
+            "confused": 0,
+            "heart": 0,
+            "rocket": 0,
+            "eyes": 0
+          }
         },
         "license_spdx": "Apache-2.0",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -3365,10 +3091,10 @@
           "spdx": "Apache-2.0",
           "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
           "path": "LICENSE",
-          "html_url": "https://github.com/mobile-dev-inc/Maestro/blob/0df4cf3c8cad946e0494f462c6ce4987145cd36f/LICENSE"
+          "html_url": "https://github.com/mobile-dev-inc/Maestro/blob/5ca5313b4c6516bb66ff2537cdeb8edc01d61228/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
@@ -3431,12 +3157,12 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-10-28T02:07:34.011234+00:00",
+        "observed_at": "2026-10-31T01:57:25.261128+00:00",
         "head_sha": "24e036604b9e2b28e14c3f55e75a686be1a8bd8a",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)"
         ],
-        "summary": "20261028-reference-update-report.md"
+        "summary": "20261031-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "24e036604b9e2b28e14c3f55e75a686be1a8bd8a",
@@ -3464,17 +3190,17 @@
         "coverage": "historical_reference_snapshot"
       },
       "checkpoint": {
-        "checked_at": "2026-10-28T02:07:34.066221+00:00",
-        "last_successful_check_at": "2026-10-28T02:07:34.066221+00:00",
-        "head_sha": "6c945971b6b16832f7fa2a69ae23d33e8b9beb71",
+        "checked_at": "2026-10-31T01:57:25.333676+00:00",
+        "last_successful_check_at": "2026-10-31T01:57:25.333676+00:00",
+        "head_sha": "1025dd070fc934986dec9ea25458b0ab03bc54c7",
         "default_branch": "main",
-        "release_tag": "1.0.14",
+        "release_tag": "1.0.15",
         "latest_release": {
-          "url": "https://api.github.com/repos/mobile-next/mobile-mcp/releases/424549587",
-          "assets_url": "https://api.github.com/repos/mobile-next/mobile-mcp/releases/424549587/assets",
-          "upload_url": "https://uploads.github.com/repos/mobile-next/mobile-mcp/releases/424549587/assets{?name,label}",
-          "html_url": "https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.14",
-          "id": 424549587,
+          "url": "https://api.github.com/repos/mobile-next/mobile-mcp/releases/429234383",
+          "assets_url": "https://api.github.com/repos/mobile-next/mobile-mcp/releases/429234383/assets",
+          "upload_url": "https://uploads.github.com/repos/mobile-next/mobile-mcp/releases/429234383/assets{?name,label}",
+          "html_url": "https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.15",
+          "id": 429234383,
           "author": {
             "login": "gmegidish",
             "id": 2457607,
@@ -3496,20 +3222,20 @@
             "user_view_type": "public",
             "site_admin": false
           },
-          "node_id": "RE_kwDOOQVw5c4ZThzT",
-          "tag_name": "1.0.14",
+          "node_id": "RE_kwDOOQVw5c4ZlZjP",
+          "tag_name": "1.0.15",
           "target_commitish": "main",
-          "name": "Version 1.0.14",
+          "name": "Version 1.0.15",
           "draft": false,
           "immutable": false,
           "prerelease": false,
-          "created_at": "2026-10-26T15:26:49Z",
-          "updated_at": "2026-10-26T17:22:08Z",
-          "published_at": "2026-10-26T17:22:08Z",
+          "created_at": "2026-10-30T15:59:06Z",
+          "updated_at": "2026-10-30T16:15:44Z",
+          "published_at": "2026-10-30T16:10:58Z",
           "assets": [],
-          "tarball_url": "https://api.github.com/repos/mobile-next/mobile-mcp/tarball/1.0.14",
-          "zipball_url": "https://api.github.com/repos/mobile-next/mobile-mcp/zipball/1.0.14",
-          "body": "* Feat: `npx @mobilenext/mobile-mcp@latest install` detects the MCP clients on the machine and adds mobile-mcp to the ones you pick, or to all of them with `--yes` ([#531](https://github.com/mobile-next/mobile-mcp/pull/531))"
+          "tarball_url": "https://api.github.com/repos/mobile-next/mobile-mcp/tarball/1.0.15",
+          "zipball_url": "https://api.github.com/repos/mobile-next/mobile-mcp/zipball/1.0.15",
+          "body": "* Feat: `mobile_clear_app_data` clears an app's data on Android and iOS Simulator ([#524](https://github.com/mobile-next/mobile-mcp/pull/524))\r\n* Fix: `mobile_save_screenshot` and `mobile_get_device_logs` replace the output file by rename, so a hard link at `saveTo` is never written through ([#533](https://github.com/mobile-next/mobile-mcp/pull/533)), thanks to [@Daniel-GrunbergerCA](https://github.com/Daniel-GrunbergerCA)\r\n* Chore: Upgrade `@modelcontextprotocol/node` to 2.1.2 ([#539](https://github.com/mobile-next/mobile-mcp/pull/539))\r\n"
         },
         "license_spdx": "Apache-2.0",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -3517,10 +3243,10 @@
           "spdx": "Apache-2.0",
           "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
           "path": "LICENSE",
-          "html_url": "https://github.com/mobile-next/mobile-mcp/blob/6c945971b6b16832f7fa2a69ae23d33e8b9beb71/LICENSE"
+          "html_url": "https://github.com/mobile-next/mobile-mcp/blob/1025dd070fc934986dec9ea25458b0ab03bc54c7/LICENSE"
         },
-        "summary": "20261028-reference-update-report.md",
-        "observation": "20261028-observations.json",
+        "summary": "20261031-reference-update-report.md",
+        "observation": "20261031-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
       "last_error": null,
@@ -3536,13 +3262,19 @@
       }
     }
   ],
-  "latest_summary": "20261028-reference-update-report.md",
-  "latest_observation": "20261028-observations.json",
+  "latest_summary": "20261031-reference-update-report.md",
+  "latest_observation": "20261031-observations.json",
   "latest_transport_event": {
     "observed_on": "2026-10-23",
     "first_attempt_failed_repositories": 13,
     "bounded_secure_retry_recovered": 13,
     "summary": "20261023-read-failures.json"
   },
-  "latest_full_inventory_observation": "20261028-observations.json"
+  "latest_full_inventory_observation": "20261031-observations.json",
+  "raw_evidence_status": {
+    "current": "available",
+    "archive_root": "../TritonKit-worktrees/archives/reference-monitor/20261031",
+    "historical_20261030": "missing",
+    "details": "20261031-evidence-custody.json"
+  }
 }

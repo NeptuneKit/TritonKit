@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "observed_on": "2026-10-31",
+  "historical_manifest": "20261030-evidence-manifest.json",
+  "file_count": 716,
+  "bytes": 45364312,
+  "missing_count": 716,
+  "raw_evidence_availability": "missing",
+  "cause": "unknown",
+  "restore_status": "not_restored",
+  "search_scope": [
+    "original .build/reference-monitor/20261030 paths",
+    "../TritonKit-worktrees/archives bounded listing and matching archive names",
+    "related docs and memory"
+  ],
+  "new_evidence_root": "../TritonKit-worktrees/archives/reference-monitor/20261031",
+  "prior_success_checkpoints_rolled_back": false
+}
