@@ -220,7 +220,7 @@
 
 | `SP-191-default-xcode-deriveddata` | [`SP-191-default-xcode-deriveddata`](./SP-191-default-xcode-deriveddata/README.md) | 已发布 | 默认使用 Xcode 全局 DerivedData；`v0.2.26` 已发布，CLI/root tests、schema smoke、docs 门禁与远端 CI 通过；`--derived-data-path` 仅显式隔离/恢复，可能造成高磁盘占用 |
 | `SP-192-ictrl-adoption-feasibility` | [`SP-192-ictrl-adoption-feasibility`](./SP-192-ictrl-adoption-feasibility/README.md) | 已合入本地 main | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12及真实只读AX/alias/OCR/settle通过；iOS115、Android52与完整APK通过，本地门禁复跑通过；源码已合入本地main，worktree已清理 |
-| `SP-193-ictrl-reference-tracking` | [`SP-193-ictrl-reference-tracking`](./SP-193-ictrl-reference-tracking/README.md) | 长期追踪已启用 | 正式参考档案、基线与本聊天每日 10:00 自动化已登记；有价值变化通知；采用按SP-207独立立项并验证合并 |
+| `SP-193-ictrl-reference-tracking` | [`SP-193-ictrl-reference-tracking`](./SP-193-ictrl-reference-tracking/README.md) | 长期追踪已启用 | 正式参考档案、基线与每日10:00自动化已于10月30日迁入新主控；有价值变化通知；采用按SP-207独立立项并验证合并 |
 | `SP-194-reference-project-updates` | [`SP-194-reference-project-updates`](./SP-194-reference-project-updates/README.md) | 已归档 | 23主要仓库+9候选，上游版本/增量/限制与借鉴建议已汇总；docs门禁与来源校验通过 |
 
 | `SP-195-ios-runner-product` | [`SP-195-ios-runner-product`](./SP-195-ios-runner-product/README.md) | 已引入本地main | Runner统一CLI/HTTP/随包；CLI1297+36、完整门禁与真机/Simulator通过；主仓门禁exit0；参考文档与产品分别提交，未push/release；已完成worktree收口见SP195计划；本地完成分支已清理/归档 |
@@ -248,7 +248,7 @@
 
 | `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30已发布 | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
 
-| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月28日33仓日检24完整/9 partial，3仓更新无新采用；16条已合main，11个执行/主控会话已归档 |
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月31日33仓24完整/9 partial，5仓更新；16条已合main，新增SP252/253安全采用待实现；证据已改存仓外 |
 
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 
@@ -332,3 +332,6 @@
 | `SP-250-release-v0-2-37` | [`SP-250-release-v0-2-37`](./SP-250-release-v0-2-37/README.md) | 已发布并安装验证 | #237/#238机制真实验收通过，v0.2.37已发布；原私有App未验，#224黑图保留 |
 
 | `SP-251-release-v0-2-38` | [`SP-251-release-v0-2-38`](./SP-251-release-v0-2-38/README.md) | 已随v0.2.38发布 | 双边main整合、skills更新；双架构/Homebrew/两处skills/三端公开包通过，自有资源清理 |
+
+| `SP-252-detached-log-exclusive-create` | [`SP-252-detached-log-exclusive-create`](./SP-252-detached-log-exclusive-create/README.md) | 待分派 | detached日志独占创建与句柄失败释放，先红测 |
+| `SP-253-detached-log-integration` | [`SP-253-detached-log-integration`](./SP-253-detached-log-integration/README.md) | 等待候选 | 仅验收SP252并本地合并/归档 |

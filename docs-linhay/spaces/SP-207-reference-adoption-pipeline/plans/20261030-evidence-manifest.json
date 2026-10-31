@@ -1,0 +1,3587 @@
+{
+  "schema_version": 1,
+  "evidence_root": ".build/reference-monitor/20261030",
+  "file_count": 716,
+  "files": [
+    {
+      "path": ".build/reference-monitor/20261030/EvanBacon__serve-sim/LICENSE.full",
+      "bytes": 11341,
+      "sha256": "9024cdf56dfe7e66523698a9f63d3a0061eb15f43bd5ea8e3833a56017ae37fd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/EvanBacon__serve-sim/head.json",
+      "bytes": 4904,
+      "sha256": "21a7df25811606f572a960b210638b9dcb20618ebf7c64063b44c116b10cd833"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/EvanBacon__serve-sim/license.json",
+      "bytes": 16734,
+      "sha256": "0b9dfb52adf49c9133bd9f8d946a0747a64474b9daf089ba0f3a91f0333cd7fe"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/EvanBacon__serve-sim/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/EvanBacon__serve-sim/repository.json",
+      "bytes": 5383,
+      "sha256": "e1b226d7453b3d9ec7496fcd1551582ab699ff83eea05ba96783de9b2c867813"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/EvanBacon__serve-sim/result.json",
+      "bytes": 1184,
+      "sha256": "bf0d636db053b02e5c4c91735687486e76149b1555a39d723e2ab74309d0a9f9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/JaviSoto__device-hub-ios/LICENSE.full",
+      "bytes": 1071,
+      "sha256": "4410cda18cd6959d53106c0ed799b3bc483993f5e44f4457a6d9baa1b1f43dfe"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/JaviSoto__device-hub-ios/head.json",
+      "bytes": 3933,
+      "sha256": "141def69fee5b05f81a3b68ade583a2f3dcd57764e417f670fcc5fb1dd4060e5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/JaviSoto__device-hub-ios/license.json",
+      "bytes": 2579,
+      "sha256": "0a9ec8bd583bb805d10e2dd2c45db9940596b1d5becee7e3521490a76c927290"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/JaviSoto__device-hub-ios/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/JaviSoto__device-hub-ios/repository.json",
+      "bytes": 5573,
+      "sha256": "61fa7516e438cf0bd7f66c8677c8f1c1079e9c33c44c321039f6aff1478e093f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/JaviSoto__device-hub-ios/result.json",
+      "bytes": 1182,
+      "sha256": "4f2202d3030a26205a56f284bb3b5b022e81cceb5e6a00c56ef863cc29502c54"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/Mastersam07__OpenDeviceHub/LICENSE.full",
+      "bytes": 1069,
+      "sha256": "327d9a7d16c78d62abbdbbcd9a48c3334b6d8a0e3e4da11ac5be3a40645a7584"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/Mastersam07__OpenDeviceHub/head.json",
+      "bytes": 8176,
+      "sha256": "64a84c51a5b8c7160c385ca25144cefe0c0c29e3bd3ddb4fa11532f6ca56ce31"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/Mastersam07__OpenDeviceHub/license.json",
+      "bytes": 2593,
+      "sha256": "d50697362ba57de3323df13a1dd8b0c0d69bdc18ba0dfa7d4e2f0ee128a571a4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/Mastersam07__OpenDeviceHub/releases-1.json",
+      "bytes": 22211,
+      "sha256": "3bf9737d3cb9b42bc68eb8cf780a45ff72a524e9304b8351a3644d44eb071011"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/Mastersam07__OpenDeviceHub/repository.json",
+      "bytes": 5872,
+      "sha256": "a4056975f4cf5c15790a83676064e014cdf5ca1756335fd97775d116d989b882"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/Mastersam07__OpenDeviceHub/result.json",
+      "bytes": 15374,
+      "sha256": "d9e152e175f9ef8217607c357c0ce2048bf51dd274193d2ddd6b8cbeaa9fa384"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/MobAI-App__simslim/LICENSE.full",
+      "bytes": 1065,
+      "sha256": "8b65667572b02a584c03c2977372eeb5fe8de0e228211b6f83033c458cc10b4e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/MobAI-App__simslim/head.json",
+      "bytes": 4548,
+      "sha256": "a5fdfebd27ce0c1b0f16c4b26f0560202afe282e5c58ed6c0ded72e2542ccdbd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/MobAI-App__simslim/license.json",
+      "bytes": 2529,
+      "sha256": "42c43e593caf722cfa3529dbe68a8ef791502298dd018c41c08c0d781cf169a5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/MobAI-App__simslim/releases-1.json",
+      "bytes": 96247,
+      "sha256": "65b5ed6d6821febf19f0ce8ffd3d54e949cea218ca7ef66a30d75fa02222d90d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/MobAI-App__simslim/repository.json",
+      "bytes": 6277,
+      "sha256": "7127878ca3efa5493f89147c9e93b083911cf357b748b243270efc1341be4965"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/MobAI-App__simslim/result.json",
+      "bytes": 8290,
+      "sha256": "0e273dbc32c916ee0480e2b1edac33df3bb3053fa90ede7888e9609dcaef3442"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OSU-NLP-Group__UGround/LICENSE.full",
+      "bytes": 1088,
+      "sha256": "93b43d692b033b76129504448695bfe76ef22d18b11e51352bfab4b5622e5aaa"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OSU-NLP-Group__UGround/head.json",
+      "bytes": 4334,
+      "sha256": "91e7166c9f68e847e0b46661b0bce1074f9d9dc8562f6b62360d3ff3af01712f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OSU-NLP-Group__UGround/license.json",
+      "bytes": 2619,
+      "sha256": "385f0c292909c793af492cd2809fb01d2a2b9e932a66edf8a18b7602a346507e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OSU-NLP-Group__UGround/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OSU-NLP-Group__UGround/repository.json",
+      "bytes": 6605,
+      "sha256": "d6cbcd10bbd3a705a099ae5e27c0370d679bf44c7784ca863951fd258334e1ba"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OSU-NLP-Group__UGround/result.json",
+      "bytes": 1184,
+      "sha256": "e19836d3bb130fec55c8d2729eb3e279d84b850a41e2d91ca4f96bfb05089d0b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OpenBMB__AgentCPM-GUI/LICENSE.full",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OpenBMB__AgentCPM-GUI/head.json",
+      "bytes": 4539,
+      "sha256": "fc1e0e64eb9392f6065b0bf7ec17dac5c77c1bb8296da38700d5cec2f4ba89c7"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OpenBMB__AgentCPM-GUI/license.json",
+      "bytes": 16761,
+      "sha256": "85e146fda34fe0fb6526ff8f339bec05e5c9e5e1a5b20393bed04c8583acb0cd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OpenBMB__AgentCPM-GUI/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OpenBMB__AgentCPM-GUI/repository.json",
+      "bytes": 6492,
+      "sha256": "2b043b67a1c71451dcc8881cddd4698c54025d5750c371951a2ef0eb29535dfd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OpenBMB__AgentCPM-GUI/result.json",
+      "bytes": 1187,
+      "sha256": "7596487d0365c71e6ba57f00a8641963840abe7730ac70d2c5adf053ad1e17ea"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OpenMinis__iCTRL/LICENSE.full",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OpenMinis__iCTRL/head.json",
+      "bytes": 4726,
+      "sha256": "a87ecc8eb378053d0b109f0ba8452c92e9a43358f9663fbe32ad2b44f6f18d29"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OpenMinis__iCTRL/license.json",
+      "bytes": 16726,
+      "sha256": "f5e1b2ae0c83407eccf321cc161b8cce388ca6fa214063e81db1511813957632"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OpenMinis__iCTRL/releases-1.json",
+      "bytes": 54088,
+      "sha256": "a2ba7a389577228aef89304175855093ebfbd1249122d42746f31d5d712c9aa9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OpenMinis__iCTRL/repository.json",
+      "bytes": 6414,
+      "sha256": "632188dbe8e0c18743b893e878bf3cffe025b2be682d0b3619fdbe4a89f51267"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/OpenMinis__iCTRL/result.json",
+      "bytes": 9582,
+      "sha256": "3c4bf50462c391bef605ecd0debefd2a848944bfd036b1e8e7bc18d5f7183150"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/ProxymanApp__atlantis/LICENSE.full",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/ProxymanApp__atlantis/head.json",
+      "bytes": 12245,
+      "sha256": "e093b9eba409b0f56847ca131920ca0859ab876b62330854e068ba8c0711155c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/ProxymanApp__atlantis/license.json",
+      "bytes": 16761,
+      "sha256": "34f8071aec880ab9ba83c1602392520814cf9433e00d7f3a286265c240b4f7b1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/ProxymanApp__atlantis/releases-1.json",
+      "bytes": 101708,
+      "sha256": "f8d3a3040aecfc5be5d882cd78fa02f947cd4281b2bbae66a6856503698755c8"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/ProxymanApp__atlantis/repository.json",
+      "bytes": 6603,
+      "sha256": "9a9a1f6f913951c6db6a6b502bf171afc2f00613e04054e1267a6ecb3e14df6b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/ProxymanApp__atlantis/result.json",
+      "bytes": 3638,
+      "sha256": "950a8295a2625905e0137515b01681fc1ed37dc83c8310a1137d75a1a19068c2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__CogniSim/LICENSE.full",
+      "bytes": 1094,
+      "sha256": "0b62f99f70ef4368aa74efec94d64c4dca5f31d7f5eb8261f4166160fe1ee93d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__CogniSim/head.json",
+      "bytes": 3564,
+      "sha256": "b4f071530a7fbe58952472a8b4c1be8e842667571c8cabaa513a1b51846a0359"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__CogniSim/license.json",
+      "bytes": 2564,
+      "sha256": "bfc2c2765bb033ffeca10a0120cc80f1146c472166829af68a0f47f1ff94487e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__CogniSim/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__CogniSim/repository.json",
+      "bytes": 6162,
+      "sha256": "74a17657deb06d8c28276d9ade85c62e00d737f333c64bc40761966f804708ba"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__CogniSim/result.json",
+      "bytes": 1161,
+      "sha256": "d3bbf3370a37370832cb2c85483da8fb5d3458c399e97695aa8b57b9600c6077"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__app-explorer/head.json",
+      "bytes": 4957,
+      "sha256": "abf3da4fb105a0540963306ddccfb22263f58bab73bffef8347affffc2b1e1be"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__app-explorer/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__app-explorer/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__app-explorer/repository.json",
+      "bytes": 6247,
+      "sha256": "41a89340ea368b13cc5ae31aa9d68cb92e9e7e0c41dc34f0df601ce6ae0b2178"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__app-explorer/result.json",
+      "bytes": 1080,
+      "sha256": "06332bd11fe02b3d03f050257a90c7dbdbbb7ab9bf046707f1317fc1f2e05f93"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__figma-design-checker/head.json",
+      "bytes": 4771,
+      "sha256": "031e51df0c8e83533b6deaef0b05f8a4616b360d3c21d62d501edfd167cc3aac"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__figma-design-checker/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__figma-design-checker/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__figma-design-checker/repository.json",
+      "bytes": 6637,
+      "sha256": "fb44438722d1902668ba195886aaa532ebd7b6bae85cd78f2200f85bd3c4b8f3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__figma-design-checker/result.json",
+      "bytes": 1096,
+      "sha256": "2a7b13609166d28bd94ebb983c7d0ae9599af05f231c8c1f405a3858d8000048"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__greenlight/LICENSE.full",
+      "bytes": 1062,
+      "sha256": "960890e59731cd6468788d6045407429c1c6ff1e1508d1c8bd77dd0b1a5807ca"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__greenlight/head.json",
+      "bytes": 4559,
+      "sha256": "3c02aa3b5da1a31b54e02a33eadf775e6d878d1ce128a7d6de09ee6d4a032483"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__greenlight/license.json",
+      "bytes": 2532,
+      "sha256": "857bcaab427c8580f4acdf98adf6bc89ab43c9c5427f1d5a0cf0be0e4f74fd87"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__greenlight/releases-1.json",
+      "bytes": 18405,
+      "sha256": "afc99722f5cb60ce1cd3ee7b076cee05c9932d795ffebfdcf9de51292c68407e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__greenlight/repository.json",
+      "bytes": 6556,
+      "sha256": "13a8adf3d3763174c6ddfb37d9780a982fa9608ea7a85c02fec56771e37ef2c0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__greenlight/result.json",
+      "bytes": 19960,
+      "sha256": "c991fb250a42d9db5ef92713f6e203546c50e3c46bfa944e86d5a6dff02d22f9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__mobile-devtools/head.json",
+      "bytes": 4994,
+      "sha256": "5d93acdda1db2bb0ea5d57cdf0df3757c21c93599bacbd1b86218851b7c68870"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__mobile-devtools/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__mobile-devtools/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__mobile-devtools/repository.json",
+      "bytes": 6433,
+      "sha256": "b215d6f1659bf07fd980d5c72567db4d25d770c67ad8344a88934ba146148713"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__mobile-devtools/result.json",
+      "bytes": 1086,
+      "sha256": "9a5f10a6d043b6a12770705b86170ac00d76014b71b815c8c42c626e592e6fba"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__mobile-pr-reviewer/head.json",
+      "bytes": 4987,
+      "sha256": "ecab2d35e23c72bc98452284e897c5f4bfb70db122cb6474e1828868a6442e62"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__mobile-pr-reviewer/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__mobile-pr-reviewer/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__mobile-pr-reviewer/repository.json",
+      "bytes": 6543,
+      "sha256": "6eaf47086795579b9a0844a0808172068798d19d740e983f1847cb143fc2183d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__mobile-pr-reviewer/result.json",
+      "bytes": 1092,
+      "sha256": "dc0976a54182576f5100ed59d5e5083f8d6de60f2d176507788d8bbf61eabe74"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/base-tree.json",
+      "bytes": 358126,
+      "sha256": "d3f781e98303bdfc9376d7a191eff4e85f594e0edfe3a71783ced094fa51ae94"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/changed-files.json",
+      "bytes": 32055,
+      "sha256": "76781e1a3a7ce15f75549e9854d64c85f27eaa42af47060de53df8fd7d00fb93"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/collect.py",
+      "bytes": 1443,
+      "sha256": "3a3e8617be0bff02cbb9555fa9300a2435b3691eccc6e4631187269ffc850b7c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/commits-1.json",
+      "bytes": 429102,
+      "sha256": "f67c37562e3943299b5ffd092e3c554c83808048aa764fde113b6757dbcf6465"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/commits-summary.json",
+      "bytes": 2092,
+      "sha256": "ee3d946ffa97adf9bbf9b2be278b2b97875ea3ecf4fa8c989c7181fc0c079035"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/go-diffs.txt",
+      "bytes": 54782,
+      "sha256": "5bc37fd6a30aa7700d2e20c62d9d03356566c4a6c95b67c407fd51405056cabd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/head-tree.json",
+      "bytes": 359318,
+      "sha256": "57352e90fa4ce4b9f6267e37f38aaac9d3c2ef47b49b0bbc2d791367159a3581"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/head.json",
+      "bytes": 3650,
+      "sha256": "3bac6dd03be24e6ecb5eccc0faa4743d05d61348de87680be1bca3510dd4997a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/07986ef28208e598478f321979af812ac2ec0ef3",
+      "bytes": 2377,
+      "sha256": "c7fd183f38d4529557f6015610cd21115ce357ebfd87f8ca73e0af48a698ad81"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/08f23168ef76a85ed85a23d41e4eaa2a1a0cfcde",
+      "bytes": 15669,
+      "sha256": "c6cd7b2a540e9d1a0b63bdb451fcacf8bf4c79ea998fb1683127829a05586eea"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/091e869a058a7448d82bc95bb8849ac1bfaa9bfb",
+      "bytes": 1551,
+      "sha256": "7272e3349f6af4d21fca987e0a9936001909d3b0fe1e9fe7b0c78dd5715e81a5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/0f4b1e53fb4b0d485dedf3ac1d26c761c1f63c6e",
+      "bytes": 110610,
+      "sha256": "42f226e6fbfa2c1fa3f07a64ce071b26c9c63d843ace84da41ee37da72e06279"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/0f607b715384d8d7f224bf31c280a47063f2a1c4",
+      "bytes": 254479,
+      "sha256": "2ea54a8ef6fce6a23456242450132a5a538dc7369d20ddc3dbc2da048e42a297"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/1263c67de8d4bd2ea25798a3c332a533c6b40df1",
+      "bytes": 140429,
+      "sha256": "f4dd155efabfdb611caa8170b3be3e1c27fd71c925325f5d5d7622e84dcd5bc3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/16414338e651640b53f0270e9c87c63871f83458",
+      "bytes": 1776,
+      "sha256": "c312dc8607cba101aa805e39165ecc3656d96c5bb4e63fdd622f50217b9761c8"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/17d21780b68b0e0ba5e2601ca651a39feabb40b1",
+      "bytes": 18367,
+      "sha256": "45497de4dadeaf81c743405362b0c6fb70e2a651bfbb3e89721ec50ccdb8cc69"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/18b17a1003d85374fdfbaf85373bd190086c9654",
+      "bytes": 1610,
+      "sha256": "99e5b24faace2ca88cec3a8f536fe727ed438c071b31fd2da7ae5f97c50fd36f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/19e4f34d3024c2a3bcc0463bafb9a06713411b22",
+      "bytes": 168370,
+      "sha256": "a21c81ce83a6bf0f6d7302efced5c6c1e6619e0706ebe95ec1b311dbbdb41e07"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/1d55c81028eeee8c699794d2bbede4a94c2364c1",
+      "bytes": 817,
+      "sha256": "81a7939298910d2df650c1ed8e7253be67f91c3e9b07fb780b9400bba159001f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/1e53f9884bef54318315b3be23d314b7465ae9cf",
+      "bytes": 135088,
+      "sha256": "8ca5f6dbf95fb0c50a7d124942c0c5c1082f2dd66ebeefc7a665e6ff1e5dac53"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/1ecb9d14f4310eb0178f7fc9747e626cba1f9155",
+      "bytes": 3149,
+      "sha256": "9185e71cb5f21dc31acee20a9dfe5361179b79243964bdffafa6d9ee6ab15caf"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/22271dc3f8d38033b0f83977a36126ff5f6c8639",
+      "bytes": 817,
+      "sha256": "9212f48b09c1c4990a10c35a664bc13c16bd89c1be22a01616d14b433fc04c6a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/2349136883cf22d2dba626d45605f20e74b54789",
+      "bytes": 1386,
+      "sha256": "be725664f1dbb9d833f8cde7d2068cb415063f4b1cea6e9a60319673d8a45164"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/25e2cdbdfab00efc08566f8f7419618500b75a7f",
+      "bytes": 140465,
+      "sha256": "e56439b8837a5c8ad900748363ed14db24157416719402b229f61308e3bc21e1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/2627a29ecaffefe0648490705de7708bc3fe62bd",
+      "bytes": 18367,
+      "sha256": "51ee9abe6cd85e214ed2a50e9d275e0c5fb069cfb58ea09fc9c0f7e54b2484d2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/26d3d7c369bdae65191f9fecba9ca495c167b7f5",
+      "bytes": 1610,
+      "sha256": "48cb611b7ca9d069bc852e976fb08ea50c6d8c9684699f3ecf3c942cb2ad8481"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/282451d37ebee589a5085ea2b491f4bc936299e0",
+      "bytes": 72873,
+      "sha256": "136ff5b7ebae0e67dfce54695646ea27163baac3b7c6d9da9456e3ae87cae535"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/3a960e279fb523d43aa21493274a16b7f7298333",
+      "bytes": 18500,
+      "sha256": "4baed4acbe03e4954da9443724984931e4937c9c677298bd3bd646e920aefca0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/3abbc412d5acfefdc3c200b7b8370c309fa70c47",
+      "bytes": 15304,
+      "sha256": "c84a0b68012c41dffee646ac298d1f67d04401e91d74a933f7bf47e9a4195c58"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/3b0527502ba5bd3b10c68b66bee47c842c4b1fa7",
+      "bytes": 8110,
+      "sha256": "18a9150b8e379c81b607bf53bf6ae1402afb8aa729bb45b0b5a0296521a04af1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/3f97d90110b34c0b460c697f60f4578488a997a4",
+      "bytes": 31125,
+      "sha256": "1936b9b9f3dba9ef094df16d7644d934a856dd6dfd24405e1882535fb03d5465"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/41310f62e77a0d95e95a6947a270076537d58352",
+      "bytes": 119931,
+      "sha256": "99c0c5149aacc5ae59d709d24f3db45b7ab6e32d37c9ba4542186d8047a0a0c9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/448e8d7e70fe980412f72026863bffee2c10048f",
+      "bytes": 817,
+      "sha256": "7b36b28227e0eaaf7b465445758dbc9038cc88494b864bbda092bfdfa1540514"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/450590d662bee9bf466e953ac20c72bf3e71d3cc",
+      "bytes": 3149,
+      "sha256": "4f04baa213c8f88f428ad8fea39be783a3d3d7ec9b0af716622c6938a55d4369"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/4b801dc792a80a9a5701ab1684801ad1ddd641f1",
+      "bytes": 18367,
+      "sha256": "24aca603d90153a574ecd7c2cef3333b96d1ddfdcc9a8de34b1d1611df353b16"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/4d41e0bf1f1f51c8d7c216f0dd79f72741074bea",
+      "bytes": 3149,
+      "sha256": "102b5da8746fce3f3aec5ed717212252c7b75edf4d168cddb887647fe3e8fe89"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/4f3698d11778a7c356991e42246f1a58cb839a92",
+      "bytes": 23651,
+      "sha256": "28cf8d9cc9404ddc3d3e25a63707db4109db8d5c837217a2da487d6613bf3b3e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/529e3cacd6db4c05ea017f7640c4594c1f60b1f2",
+      "bytes": 11621,
+      "sha256": "65bec24d9a7111add1752baac367dae597486c6e2f28c94668c8cdc738261380"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/53529981e77bf53abe946987c113f3c733a332c8",
+      "bytes": 173952,
+      "sha256": "8eee07237892a7c5bd0e7dd379b507bfcc77da677de15f3c47531e95423c3350"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/53577ec0ca0733dc26e371f16d10dd3768ab56f1",
+      "bytes": 738715,
+      "sha256": "865180349fd98137635c3b60232d55a20d0c5e922078e8d5ccafdd8422ff5a42"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/57f69ae3e5039a45ac338f1d12a0b24c76edf98d",
+      "bytes": 23669,
+      "sha256": "c62ea43d91022e926fe6174b3fa91251d6bc5aca1c3a9ad303cab24d20fda4cc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/58bdb6b0846b66cd48b924072f154b8d1dbedc9c",
+      "bytes": 1610,
+      "sha256": "0da893ef54646036c4e84322923f8f7c8e8654a46c40917d37f437eabc4811c9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/59a6563d97df0b6eb09025a03821fff589563249",
+      "bytes": 18367,
+      "sha256": "20636a4f0a38dafcaef47c8cb3f37f45b70ff82005c68044fcd5f6e5f35777e9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/5a46bc6185ea5a1bb6df84cd26f385fac5381850",
+      "bytes": 254507,
+      "sha256": "f48b4506291aed5cff5d755714e22fd9efabd5dab2b314df9854738416f5b2e1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/5cc3de48044fccd480caa08d9fff755f2e48ba59",
+      "bytes": 729,
+      "sha256": "d8cc5ceadccd86ea81e872ef069c6f08409a3c51d3fec80e3fb9f7bd7b0aa25c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/5ce8fcf4cb87e6f62c06b59276a836ccc43c880b",
+      "bytes": 16762,
+      "sha256": "1c31f86e1a985db1561fe2fff7b4b32af8413f0064fdc84f3dcefc98e3d138f4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/5ced90cb6ba3c8ffdebac4331ef99e45423136af",
+      "bytes": 168341,
+      "sha256": "1f04cfc00e80951393cde152ff8eb128174418a28d7b58bf1189adaf7c220eeb"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/5ec9b95460b0813229149fc44201c2e4c4ec64c1",
+      "bytes": 906,
+      "sha256": "fcf1e15cd6fdd876b4d316ec33b12b580c00a4ef3c24eda5800a1e6251d90d0b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/5efadc6b91ef2ba96339b848c87a23a99193f811",
+      "bytes": 137841,
+      "sha256": "92e5c0d30c4afc45456d5a5ec430dcc52972716a002736bcd21c6f5d0f3f576b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/62c0444c87640d0a439782bfedd12da8d1ae9d2b",
+      "bytes": 5880,
+      "sha256": "6667ac83107b77b8182eedaa335bb24359f0a4cc6f4f1ad54bf3154938b44ee3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/6493b912c52879b7304a5601d9abab6b951d45b6",
+      "bytes": 14824,
+      "sha256": "dca6e870b94dda2ed33005d06e0b2aecd108366773d15fec6fdc637d1b73bfac"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/65bf0bb045328cae65933bd34ea93213041aec6e",
+      "bytes": 73063,
+      "sha256": "2b37ef241e944e3bc93ad87e52a9d2ae41f6407830133fdd9db5ce09f4df7d9f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/685ece2681efb13425ba4563a6a110d67457ab32",
+      "bytes": 2607,
+      "sha256": "436329e4da567e107cacea135d50ea2990fa2e29a877b1207cc04e15ef4ff7fc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/68f6f06c332f8d53db6ce79dc7255b553273050f",
+      "bytes": 2475,
+      "sha256": "0f71bbc9946ccdb36178c5ab4e1bc1b66890ffe82362a07d5779e95a633cbc83"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/6a7c86cd7680dd2eb1bf8b69b377447c76f7f36b",
+      "bytes": 16593,
+      "sha256": "6ed0d62df49b0196421d05c2e764c5fe8e378ed5f3a71a3e2ff1e2e26031c4e2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/6a980cd48d50f2488873ec2cd8cbb2d7cf3ab5f5",
+      "bytes": 110610,
+      "sha256": "b1f13f30c961ff2fa959bbc09c8fad15d03f6b4c3dd24f910292af7e028ed821"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/6ace9aac0dd625de1084f97a2833fedcb14c25c9",
+      "bytes": 18367,
+      "sha256": "cb460af0c7a59609148457081a364515b66582098869fadd759ed5b1675e0278"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/6affe8b1b9f4fda3e5d946331ee3e0c1308d8770",
+      "bytes": 817,
+      "sha256": "83cfcd198377b4d0b6b94dd5ed8c1a2c1db1f0c88686c65fb3f986dd74baea87"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/6c557641fdf28c7185a20176f2b6533e23dfffda",
+      "bytes": 18367,
+      "sha256": "e085bd3b1aba63ee000b795c4f91603b70c44d9d51e4c24bb4ef4b7c2400a019"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/6c610f6963afe45fd835379997047be89a1db4c1",
+      "bytes": 110610,
+      "sha256": "fbe7a7c772c30cc05b8082659c661cb1011907a6c5931b2363e2cc5e83b86f79"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/6ea033ace58f3a69577d134147cb394b7037ee71",
+      "bytes": 2015,
+      "sha256": "be8d399f3b3e6942dfd736c90c259b9a31ee5e711a74e67fe327884d05aba803"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/6eab851efe28f0330556aa4592f56980735a025a",
+      "bytes": 28021,
+      "sha256": "4a9386e34e0f2c48829c83d00404a6ca17c1bb735408962d00e36e51754d96f3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/704df1ad712a36ce68063f796fe8e0536eb40a55",
+      "bytes": 2699,
+      "sha256": "6b0cedcee3636f5167a6659f633592307242c1261369689023a3f61af3c66abf"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/70d8c22e13aeb328b801bea17a3c9d923efaea3d",
+      "bytes": 9793,
+      "sha256": "c50de55dca297ce6dfab5869a728462851c83fde652575056cca9c64258f61a0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/72686ec72feccdff14066eb2df4d60c5c42fb370",
+      "bytes": 173975,
+      "sha256": "c21e0b7659cc9fb5d2c6ec5ac6478737a8a2d130d2f4d0683e09bfcc33b90870"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/7447a6b171dd5b4aac5b2307d0d56e85810bd437",
+      "bytes": 27833,
+      "sha256": "f23321e1edde75018944ce05a8cca666b40dc07dbd3a555ca39d9c2fe85e9d6a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/75586c08f3f23d1739030585babbb946d13e0331",
+      "bytes": 1494,
+      "sha256": "ab3e5441fa0bbb4e66e70c442cde7a1e4707a9671f5c9bf6713d00921fe01436"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/7b1dfd1065e3f0219acd1f779acc7c15b5262e33",
+      "bytes": 17337,
+      "sha256": "dcbb3036ae1811405d0201803056f75a781dd7622484558ef8a2e8e53e7c5d54"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/7eadd930f6110cabf184d92f224d5f435905fd4c",
+      "bytes": 9896,
+      "sha256": "bb35aba3fdc6367139d2f9b9b77cf8766aa557890de972189cc77a325cb1866e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/7fa75b1df2c0f19eefdadbafe4f927f41678d703",
+      "bytes": 817,
+      "sha256": "e63b7888fbc5f7859d9513a5e4d5af0789a1afc19c32ae39e139cda384e37ca0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/809a007c747ee86df901950c8b43d470a59ed339",
+      "bytes": 225,
+      "sha256": "d011cfabd111c30a1141a1cfb266348834b084ddfb537b53515dbda8b5753245"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/832e81e64b7572ce8634b7bd2f994d9f4082d175",
+      "bytes": 110610,
+      "sha256": "3010bd75b990ce2c22c415ed0e191574c5ba31c33846283a4840b57ace7c0abf"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/83609118fca5d510459998d890dd94c179eacc42",
+      "bytes": 30967,
+      "sha256": "4f84c31b8925e4996c03d9dc89df8a605b917116a639dc3557c24d08f5800ca3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/837273237416004c5d4ee0b32aa8eebfc0b20979",
+      "bytes": 1610,
+      "sha256": "d42bfced431de0c9697b271a1bc6debf10bffd2448306872cac63897e0fe3b61"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/8429861b8e6ebc14755e8c4663e221e878981337",
+      "bytes": 3149,
+      "sha256": "82f6c9d769c23d4bf6e530aa7c619cc526eaadf461685563262ae42331c66dd5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/84a95149fbf44b43c0deab5af84d0bae4d2a103c",
+      "bytes": 862,
+      "sha256": "aaa4ec276ca26ccc79173c757c0d910a3677b3a7f0670d52f6783e1c827d51b5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/85f50f27c1e75c518ea3e702638091640a83b811",
+      "bytes": 135102,
+      "sha256": "7e077f99e0c7d44ef0c947d2540426d7a41c0e341a0f05fc3b5dac37ed9cc1e0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/870bdc81c8d588163e47fb9ea5822498d924b8dd",
+      "bytes": 2911,
+      "sha256": "2a76511cef0370228d44d57396f4efa9430f99b7381ab57be66e2403c645dd09"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/87ef6295ba148c61d3cb685600821cc89ae8f8bc",
+      "bytes": 5816,
+      "sha256": "0c1ba15b8f18c1ee834515ac5f781ee3e05f3b95804f8f543a16051ada08e86f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/888502c2a031e9510bf989afcadaf08746a495a9",
+      "bytes": 1610,
+      "sha256": "bd45de06b7b94a6ea8332b8ca027160e07b794f707bbe13c768b8cd915682bd6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/892f67c629366a8562af11d2f3793f9bfc9cf8c2",
+      "bytes": 4786,
+      "sha256": "0052401a8cb80cc507ff760854515c30a2200b654aac80f8148e04c4dce84947"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/8da9d6459e6173f55da0e42d9692353dfb62299b",
+      "bytes": 12158,
+      "sha256": "478e9c476dca725c563db659eb78b8dd05d2e2c5e4d9ded8ae7808a0b29e0730"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/91ff7659d459b71bab30f781b12fc80a5f745b0f",
+      "bytes": 750986,
+      "sha256": "1ccee847a788e0d430be40c6454b572e1047b09b51d224557869ca0ddfad62e4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/92528d5bfc6b6781a5637850e98fbefc4cc7a09b",
+      "bytes": 2015,
+      "sha256": "6e78e1099810fc366fdbb54ee446a6684adab8f34588f7316140215727dfca49"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/93d919ea472d22def405d2fe0d38bf4c20932313",
+      "bytes": 4840,
+      "sha256": "267baa595337779283b5fc6855514bc6140e3f77c9e392633f0b1c1c59c237ef"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/979d52988103d40fbf4357389a6de4054fc7f0c3",
+      "bytes": 5816,
+      "sha256": "6f8d38dee8d6861521b1e2152b9eb310b2820fe9f327bfd6f9e20fe8a3412126"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/987b708715233263fba508362ee5af940e5222e0",
+      "bytes": 2492,
+      "sha256": "7a1f9f1876687a376d0731c6ee7ebdd55072056196a8c1298daed7503ef91d80"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/9b40124cfb2974a077a1ce5d54f15da35c04ae06",
+      "bytes": 110610,
+      "sha256": "b628d9de14f4b7fb8ad7da95d5aaa8f1f83ef85c8b013e191c20bb5759aa30b0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/9e86f79eb3effe4e0490ff3664f7a1234cff3239",
+      "bytes": 3054,
+      "sha256": "ce93096b3cce30d3b0d473b2fd5f05b4f9e21fa83a6a19a024aee1ea779c086f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/9eb90d8bf7888de788e1cf68659eaca0437b3534",
+      "bytes": 19429,
+      "sha256": "7ff8365a861035259435f645393ff5ad109ce8667b1b7a2bc9c6a8897ba1f707"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/a07e5043ad13be21a6da927fcdd26e517d60efc5",
+      "bytes": 3149,
+      "sha256": "e0cabb6dd9db11880fe65d5c22c1909e7b4d1c9104cd662221e2860f0cc8e62f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/a2799811711812b667bdca765b02973a9dfb199e",
+      "bytes": 3149,
+      "sha256": "b4952704887c9d9ce71d00cfcfcf4aba4237ef4463837c2733816a16c6128f30"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/a2d1cfe0d577eda600b8ec8a2c9321ca42cf6dd7",
+      "bytes": 17045,
+      "sha256": "2f95d16c1704223e7a268f7e7011de6122293faa1a28cd90af49ce76f4101c26"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/a37f7457735794ee2a5917dbe689829d9e186fe5",
+      "bytes": 168956,
+      "sha256": "71fedd8a97e2031a547dd11956e99b26a1e7c83fc88f80cc745645cc107c753a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/a8f873683745c451e4351987b3d30a714e514583",
+      "bytes": 7854,
+      "sha256": "42709180c83799a5cf55101ba54d6bf0819add890325e12330d77e12fefe77fa"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/ab2c8a4d8f4c4fe0dc3eff18754aede0a6b84ffa",
+      "bytes": 4417,
+      "sha256": "77765f29bd7b4a858d1fb63af9267f42962cec881b4d071cb4cbb5c0327e73bf"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/ac1024dae7283dee15c375f9c0a21f98cdf5cf8b",
+      "bytes": 19311,
+      "sha256": "ccf72659dc245a3cd4ee0b4f1cc42dca7916c946ba501869d81114cf2c24fdc0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/ace7149163222763619785228d1dde774e2f4e4b",
+      "bytes": 662110,
+      "sha256": "1c6026db13d23987a4223b91d8525bb60830c19758e207fc1f6c7e232bc72e79"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/b162a67e5ea0b276b3312df0ec68afe8a6be22c7",
+      "bytes": 1610,
+      "sha256": "c1a531b82350a0f0b55d6d57eb70bf4153e285fb0f508f68a114367bc4df9517"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/b1740a8b6b1118875ace02b2fbd27f1f69ffd461",
+      "bytes": 4718,
+      "sha256": "0395a1d937404282cc62b985b99556a6819062db35a82a00dcb0b560c041bd2c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/b3ef46b0a06e3651fdf062934f8028113a6544b7",
+      "bytes": 657330,
+      "sha256": "ba1dbad3b52ca589c6ca6e4b5c601a9d7b9c3952a1f32bb7bd081efc3f0d06d9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/b4ea457382ffcc42b55621cf086669781297c647",
+      "bytes": 817,
+      "sha256": "224363fb02c6e0b3aad511e22bdd8ded15c3e82e6a5ff957521f051d6508356b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/b553db6cd0387aa29b5697c29d3e065acd926314",
+      "bytes": 12183,
+      "sha256": "b2cccd75cd86ab76bca07fc970dca8c7cdf256733df670d22f2a6a19412e243b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/b78005a925cfa657349c512e044fd370a94c4faf",
+      "bytes": 613,
+      "sha256": "2d7693fc758a45c25a6b8bf653a41b10fbd6fc1374987c220d87fef742f5cb9b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/b982559e8b1f508319ae7476a689333a4ae33f84",
+      "bytes": 3149,
+      "sha256": "6a521561f89533addd7b2848d9163d560e51903249863b0228bf100aacd20ef1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/ba164efde01f5a3cf5d4ace31a93c775a44df804",
+      "bytes": 14273,
+      "sha256": "f217e5becae514d79cf416b61629a57164021b956054de7bc51b540856cf28b6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/bb1374c141fe18872a10767d1a3919a5efb5837c",
+      "bytes": 1658,
+      "sha256": "2eb1f8519d72ace78e47bec7b83beb60dd55ab7bf57b1c32b6c9a53e9c4d42a0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/c013f34962cec267cbcd26b47a302e731d9bb549",
+      "bytes": 6611,
+      "sha256": "4778d48191e4793a6be3af3359e77d6e0e6d14f4215b025ffd06811af66b0d4c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/c22ad7d66ef38f562c94221d22b77c6ca4cd1967",
+      "bytes": 729,
+      "sha256": "8247ef2fbe82a27463f7da787216aaa3dd4c9d4f67f592f4ecb304c62d8c0cdb"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/c28ce96fd68cae7474b0d7204734b49063767d8d",
+      "bytes": 10899,
+      "sha256": "190a883f2d9294a6446e341daa404149f6d6302106c30bd1c6452418ccaf9298"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/c3fdd63865d8c371b349fd6aed028e4d8508645e",
+      "bytes": 14109,
+      "sha256": "1a5b68fae66fc0e6794ff8969765e5e83223cec3df208f01a493cfe471ab7866"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/c78d94469c56f020dea17e81efe6dc462ccd78e7",
+      "bytes": 1610,
+      "sha256": "43c29581c6d52b2d77d0c5cc96350ee0f9558a6b9c485ba9827d4b62776380d8"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/c95dab1893c531c8d372635d0714a99124ce5e16",
+      "bytes": 739767,
+      "sha256": "c8a437a29b26d3487d801c0d5a3101b4bfcf14558fcf590bab6a3e4fc8ed1445"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/c98e898f7600253f76a1a61242f05b1665f278f5",
+      "bytes": 11650,
+      "sha256": "16d640ce6acebf18d788e6628c7a8bbab75a6659e106f616d7b29f446e976f53"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/d6d3a2ca5a6c59e1ae445a1c442addcdb08b22a4",
+      "bytes": 1610,
+      "sha256": "1de7aa09ae79271ce42de2622278a067155ad204ca6e0cca618fa296f7c6d088"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/d823a1367dd53093adff1d9581cc5e285709e5b4",
+      "bytes": 502,
+      "sha256": "ab5ad1ab9e9f6eaa3ab2604b985bf4b40582b1f020fece2b3715d4af3750e63c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/db409640bde11c62f544b94fbe80bc525de3842c",
+      "bytes": 6125,
+      "sha256": "bc83833f04ecfde5cf1850bab17a5616194aa3e5a41b9b4d8045fa1be73d45e5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/dc1aa530f9c9346cbacaaebb3797a0f7b4d53a48",
+      "bytes": 254004,
+      "sha256": "b2a6c3db92a6ccfcfefb5c1efa97719ea643f332993e3f134801a9d81dbc6583"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/df995a8118494dde37124c502d14dd55489c249b",
+      "bytes": 613,
+      "sha256": "49fc5fb1f34a945a3fa9025715c798921924f3ba4ae4e0f6dc394efb49f542b5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/e047b62f2ae806622545ec26705359056b8d978d",
+      "bytes": 3149,
+      "sha256": "44e05616efc801e03d0d4f8423f3bdff795a6e5f8f637ca75e6a229e375a99a9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/e58980023de1437e7398132f6ae754906c8dc60d",
+      "bytes": 18336,
+      "sha256": "e3504cf75c117cac612632e066265afb6521195e5a0f7d3f150b1782e840eb11"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/e75d00d905e72b409d4efae97126ee8729c336cf",
+      "bytes": 18367,
+      "sha256": "2e7f025c1bc7c124b5cd933c9715eb2f45c28bb93b4dbec35370b2533fff92d3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/ece1371dccce230a1ee978571c2e1d8f769c4c7b",
+      "bytes": 817,
+      "sha256": "7fa0e23001f4fd9d955c549c905c40faa3f6f18aaa6d45742ecab6f3e1320430"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/ef362aff5f90be6273953684e7c471d738ce3681",
+      "bytes": 10943,
+      "sha256": "ca821f5aeb3196c98f8cfdac3825abfcad112ba65e964d970766481a5f3fd4fc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/ef37c991311e12b66e64a1192004495e8c410cd6",
+      "bytes": 656629,
+      "sha256": "b984007c6f7dacae8e21f7e6796b04bf5aa7de94f2817b51e8943cc572dc625b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/ef6d0670903f5d56d74c68b97c1d9a6c3176f7f0",
+      "bytes": 16617,
+      "sha256": "47e6f1ca8583ef34892a37e731d6b7596b7ecb112aa2d7d11bb922f6b37372ce"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/f12bfe07841642d21b2b6a67c7811ebe9c2f4fbb",
+      "bytes": 2492,
+      "sha256": "4614e417631b7d29d933dac406744448f8406bf1b182687b63e97cf51891c07a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/f4d2b9419d770f848d1abd8347d5ffdc0cff701d",
+      "bytes": 3324,
+      "sha256": "48ba8b7089924118e8255b8a9607f436c667a176a47b4e78a64c0382ca9b8d27"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/f51ee648a485f5368f5ba5908718d7e994307973",
+      "bytes": 9793,
+      "sha256": "1579e3fc4b6dab84a2c296b930727f9c23b265ae8ced51ccf590a30bf9fc370c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/f6b958cafe6cc986a9f2e1e0579cd12fead49b58",
+      "bytes": 110610,
+      "sha256": "72da5d2907d51a4045b11bd5c8b1dc21fb34f2786ff8011de8f461e30dc38614"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/f78accf64795150565b73376d5049771f712b359",
+      "bytes": 19870,
+      "sha256": "caabf74f6eb847b4b6c444c0a0d5d8dd9bedb2007983c1a1bec2b6682f3a21b3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/f7af714670f4df9706a1d4d0d0ee2294260d0d24",
+      "bytes": 6003,
+      "sha256": "715661ac6aea7bf7cd9d6ed3cd3bfdc1e510096e6f0700d57aba08fa2e12d0d9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/f9315a644b4eeea8c23d5bbb6b067760123e906e",
+      "bytes": 110610,
+      "sha256": "5ecdaf639f2a1cfdd4280ada47deb45c0dc695dd51fa68f2f01358d764112601"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/fbb1881e0e60539db1c828d3172f08da0532e9af",
+      "bytes": 817,
+      "sha256": "f576490fec908c212b82a82d906dc9241e2c7054e1000af9c7fe5461ccf400f2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/fbdf5a8e8ab5344dab7355cf79256115eff14af0",
+      "bytes": 18367,
+      "sha256": "761f32a06df0a92e18ef68276c4ddab93a6f2079b743f85bb644a5454bf79d5b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/fe96a1f502fe714f9566f45a68bda65a7b0d34f6",
+      "bytes": 3944,
+      "sha256": "231c931a5f56639f98151d468ab87bfb3e785e1beb9b3054baec225066c621f5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-blobs/ff24d0d89e106f26ea26a5e957474a7e44c9e453",
+      "bytes": 336,
+      "sha256": "46f52109a29f5de65924af7ef814472a3a9201b9057a3e9642186e03465bdd3a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-code-diffs.txt",
+      "bytes": 73206,
+      "sha256": "0899ea965881ffbd32c5a42cb3d2d72ce82491cac4c1febabca3411941d90ffc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-diffs.txt",
+      "bytes": 164420,
+      "sha256": "ac7be61338948d8e8d465a8806ee62458e455169642f7f7d2100ed3c05ab51e2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history-path-screening.json",
+      "bytes": 40582,
+      "sha256": "2a1fbfcfa20d96dde5c6fa83acd47c3e35ac4f1c5bc8afbbe5dbd0e0e1dbbef5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/history.py",
+      "bytes": 2168,
+      "sha256": "b36dcc6aa5c4e67fb62d6c638956324e6ea746e99be43709fe040890142b4207"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/local-main/CLI/Tests/TritonKitCLITests/DeviceEnvironmentTests.swift",
+      "bytes": 7491,
+      "sha256": "2b3a21c8aaac93110e9e9e758877cae60ecab77d1291df741a0535ed77949d6c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/local-main/CLI/Tests/TritonKitCLITests/DeviceRecordingTests.swift",
+      "bytes": 3462,
+      "sha256": "bf1db44081bc2c5e88e53081055b1913397bbcbac7be8fac8119e96b8f7a5354"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/local-main/Sources/TritonKitCLI/CLIDeviceEnvironmentRuntime.swift",
+      "bytes": 22580,
+      "sha256": "a425e2bb58ebdb3a75850ead93b1fc14ebb4c141f41b51e3fc4174a0dc9ddb31"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/local-main/Sources/TritonKitCLI/CLIDeviceRecordingModels.swift",
+      "bytes": 3545,
+      "sha256": "9fc773b3cffd1051acaace3a3724640567ca8af57dc7461c00ab60734705d91d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/local-main/Sources/TritonKitCLI/CLIDeviceRecordingRuntime.swift",
+      "bytes": 32566,
+      "sha256": "20c88e8ac2bfd70ba3c7394c41dd39f294255043b1086da9fa3e9cf6b1385ada"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/local-main/Sources/TritonKitCLI/CLIWorkspaceActionExecutionRuntime.swift",
+      "bytes": 11961,
+      "sha256": "57818ce9b1b705ce05ec42f29e651628f4be5e4ef09f638f5def04034049e65a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/lock-summary.json",
+      "bytes": 8793,
+      "sha256": "c2717a68e14c53173ed9b50cb7ab9500fd5ad7a2eb00875a8e24232af4411b6d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/path-screening.json",
+      "bytes": 6647,
+      "sha256": "04edc127e9e2c13996cc483d7990bb64c6a49080a1717f5ec22b7eea6039449d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/release-notes.txt",
+      "bytes": 6594,
+      "sha256": "0a602d8a04368d10ddf4520a90ee4fe5ec67720cfbafae73f1861768aa25b4eb"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/releases-1.json",
+      "bytes": 1800898,
+      "sha256": "53163393015443711ac14de1dfd67455f858dfeb3b55b1f2016c1ade08afac58"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/releases-2.json",
+      "bytes": 26420,
+      "sha256": "09dcafedcd0cd2ef37573065ddc65880f52aa0e12b480757c7635e50368ec7ca"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/repository.json",
+      "bytes": 6016,
+      "sha256": "aaca99a317562897d17a7375ceb3a9162e2efa3752274cf8c6ff70717fcd17a7"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/result.json",
+      "bytes": 33301,
+      "sha256": "0e388466659f6c0b7fa314d9c0be5bd59ebe5b2965de9c10727908d74a8f24c5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/review-manifest.json",
+      "bytes": 45057,
+      "sha256": "314a449ba6b53a09d8115df30ff97c56301274acc8494e568997780acb18cd96"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/review.json",
+      "bytes": 1762,
+      "sha256": "f8f2cf789892ea272af815c6a0e6de5441d6e59a3afe9266d07c0824349475d3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/review.md",
+      "bytes": 4246,
+      "sha256": "02875eab6e9fcb6947af351e4a2819e3de6fde59762f0b8aadb805cf48aa5fd5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/schema-diffs.json",
+      "bytes": 11009,
+      "sha256": "5ae0bf9e3fb9e36849a13088b6b5844936f32e86244b400d373ba12d01a89b45"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/README.md",
+      "bytes": 18367,
+      "sha256": "24aca603d90153a574ecd7c2cef3333b96d1ddfdcc9a8de34b1d1611df353b16"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/cmd/revyl/build.go",
+      "bytes": 72873,
+      "sha256": "136ff5b7ebae0e67dfce54695646ea27163baac3b7c6d9da9456e3ae87cae535"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/cmd/revyl/build_project.go",
+      "bytes": 30967,
+      "sha256": "4f84c31b8925e4996c03d9dc89df8a605b917116a639dc3557c24d08f5800ca3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/cmd/revyl/computer.go",
+      "bytes": 23669,
+      "sha256": "c62ea43d91022e926fe6174b3fa91251d6bc5aca1c3a9ad303cab24d20fda4cc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/cmd/revyl/device.go",
+      "bytes": 135102,
+      "sha256": "7e077f99e0c7d44ef0c947d2540426d7a41c0e341a0f05fc3b5dac37ed9cc1e0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/cmd/revyl/device_web.go",
+      "bytes": 5880,
+      "sha256": "6667ac83107b77b8182eedaa335bb24359f0a4cc6f4f1ad54bf3154938b44ee3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/device-targets.json",
+      "bytes": 862,
+      "sha256": "aaa4ec276ca26ccc79173c757c0d910a3677b3a7f0670d52f6783e1c827d51b5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/docs/builds.md",
+      "bytes": 7854,
+      "sha256": "42709180c83799a5cf55101ba54d6bf0819add890325e12330d77e12fefe77fa"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/docs/code-execution.md",
+      "bytes": 2699,
+      "sha256": "6b0cedcee3636f5167a6659f633592307242c1261369689023a3f61af3c66abf"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/docs/computer-runs.md",
+      "bytes": 15304,
+      "sha256": "c84a0b68012c41dffee646ac298d1f67d04401e91d74a933f7bf47e9a4195c58"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/docs/device-infrastructure.md",
+      "bytes": 19311,
+      "sha256": "ccf72659dc245a3cd4ee0b4f1cc42dca7916c946ba501869d81114cf2c24fdc0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/docs/explore.md",
+      "bytes": 12183,
+      "sha256": "b2cccd75cd86ab76bca07fc970dca8c7cdf256733df670d22f2a6a19412e243b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/docs/proof-of-changes.md",
+      "bytes": 1776,
+      "sha256": "c312dc8607cba101aa805e39165ecc3656d96c5bb4e63fdd622f50217b9761c8"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/analytics/failure_class.go",
+      "bytes": 4718,
+      "sha256": "0395a1d937404282cc62b985b99556a6819062db35a82a00dcb0b560c041bd2c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/api/client.go",
+      "bytes": 254004,
+      "sha256": "b2a6c3db92a6ccfcfefb5c1efa97719ea643f332993e3f134801a9d81dbc6583"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/api/computer_contract.go",
+      "bytes": 16762,
+      "sha256": "1c31f86e1a985db1561fe2fff7b4b32af8413f0064fdc84f3dcefc98e3d138f4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/api/computer_runs.go",
+      "bytes": 9793,
+      "sha256": "1579e3fc4b6dab84a2c296b930727f9c23b265ae8ced51ccf590a30bf9fc370c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/api/generated.go",
+      "bytes": 738715,
+      "sha256": "865180349fd98137635c3b60232d55a20d0c5e922078e8d5ccafdd8422ff5a42"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/config/contracts.go",
+      "bytes": 27833,
+      "sha256": "f23321e1edde75018944ce05a8cca666b40dc07dbd3a555ca39d9c2fe85e9d6a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/config/contracts_test.go",
+      "bytes": 14109,
+      "sha256": "1a5b68fae66fc0e6794ff8969765e5e83223cec3df208f01a493cfe471ab7866"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/config/device.go",
+      "bytes": 4417,
+      "sha256": "77765f29bd7b4a858d1fb63af9267f42962cec881b4d071cb4cbb5c0327e73bf"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/device/start.go",
+      "bytes": 11621,
+      "sha256": "65bec24d9a7111add1752baac367dae597486c6e2f28c94668c8cdc738261380"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/devicetargets/targets_generated.go",
+      "bytes": 1494,
+      "sha256": "ab3e5441fa0bbb4e66e70c442cde7a1e4707a9671f5c9bf6713d00921fe01436"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/mcp/device_session.go",
+      "bytes": 168341,
+      "sha256": "1f04cfc00e80951393cde152ff8eb128174418a28d7b58bf1189adaf7c220eeb"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/mcp/device_tools.go",
+      "bytes": 140429,
+      "sha256": "f4dd155efabfdb611caa8170b3be3e1c27fd71c925325f5d5d7622e84dcd5bc3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/mcp/device_web.go",
+      "bytes": 10899,
+      "sha256": "190a883f2d9294a6446e341daa404149f6d6302106c30bd1c6452418ccaf9298"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/internal/mcp/server.go",
+      "bytes": 173952,
+      "sha256": "8eee07237892a7c5bd0e7dd379b507bfcc77da677de15f3c47531e95423c3350"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/npm/package.json",
+      "bytes": 817,
+      "sha256": "9212f48b09c1c4990a10c35a664bc13c16bd89c1be22a01616d14b433fc04c6a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/openapi.json",
+      "bytes": 656629,
+      "sha256": "b984007c6f7dacae8e21f7e6796b04bf5aa7de94f2817b51e8943cc572dc625b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/plugins/revyl-claude/.claude-plugin/plugin.json",
+      "bytes": 613,
+      "sha256": "2d7693fc758a45c25a6b8bf653a41b10fbd6fc1374987c220d87fef742f5cb9b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/plugins/revyl-claude/README.md",
+      "bytes": 2492,
+      "sha256": "4614e417631b7d29d933dac406744448f8406bf1b182687b63e97cf51891c07a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/plugins/revyl-claude/skills/revyl-workspace/SKILL.md",
+      "bytes": 2607,
+      "sha256": "436329e4da567e107cacea135d50ea2990fa2e29a877b1207cc04e15ef4ff7fc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/plugins/revyl-grok/.grok-plugin/plugin.json",
+      "bytes": 729,
+      "sha256": "d8cc5ceadccd86ea81e872ef069c6f08409a3c51d3fec80e3fb9f7bd7b0aa25c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/plugins/revyl-grok/README.md",
+      "bytes": 2015,
+      "sha256": "6e78e1099810fc366fdbb54ee446a6684adab8f34588f7316140215727dfca49"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/plugins/revyl-grok/skills/revyl-workspace/SKILL.md",
+      "bytes": 2475,
+      "sha256": "0f71bbc9946ccdb36178c5ab4e1bc1b66890ffe82362a07d5779e95a633cbc83"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/plugins/revyl-openai/plugin.json",
+      "bytes": 5816,
+      "sha256": "6f8d38dee8d6861521b1e2152b9eb310b2820fe9f327bfd6f9e20fe8a3412126"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/plugins/revyl-openai/skills/revyl-workspace/SKILL.md",
+      "bytes": 6125,
+      "sha256": "bc83833f04ecfde5cf1850bab17a5616194aa3e5a41b9b4d8045fa1be73d45e5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/python/pyproject.toml",
+      "bytes": 1610,
+      "sha256": "99e5b24faace2ca88cec3a8f536fe727ed438c071b31fd2da7ae5f97c50fd36f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/python/uv.lock",
+      "bytes": 110610,
+      "sha256": "42f226e6fbfa2c1fa3f07a64ce071b26c9c63d843ace84da41ee37da72e06279"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/base/scripts/openapi-schema-roots.txt",
+      "bytes": 225,
+      "sha256": "d011cfabd111c30a1141a1cfb266348834b084ddfb537b53515dbda8b5753245"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/README.md",
+      "bytes": 18367,
+      "sha256": "51ee9abe6cd85e214ed2a50e9d275e0c5fb069cfb58ea09fc9c0f7e54b2484d2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/cmd/revyl/build.go",
+      "bytes": 73063,
+      "sha256": "2b37ef241e944e3bc93ad87e52a9d2ae41f6407830133fdd9db5ce09f4df7d9f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/cmd/revyl/build_project.go",
+      "bytes": 31125,
+      "sha256": "1936b9b9f3dba9ef094df16d7644d934a856dd6dfd24405e1882535fb03d5465"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/cmd/revyl/computer.go",
+      "bytes": 23651,
+      "sha256": "28cf8d9cc9404ddc3d3e25a63707db4109db8d5c837217a2da487d6613bf3b3e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/cmd/revyl/device.go",
+      "bytes": 137841,
+      "sha256": "92e5c0d30c4afc45456d5a5ec430dcc52972716a002736bcd21c6f5d0f3f576b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/cmd/revyl/device_fold_state.go",
+      "bytes": 1386,
+      "sha256": "be725664f1dbb9d833f8cde7d2068cb415063f4b1cea6e9a60319673d8a45164"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/cmd/revyl/device_web.go",
+      "bytes": 6003,
+      "sha256": "715661ac6aea7bf7cd9d6ed3cd3bfdc1e510096e6f0700d57aba08fa2e12d0d9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/device-targets.json",
+      "bytes": 906,
+      "sha256": "fcf1e15cd6fdd876b4d316ec33b12b580c00a4ef3c24eda5800a1e6251d90d0b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/docs/builds.md",
+      "bytes": 8110,
+      "sha256": "18a9150b8e379c81b607bf53bf6ae1402afb8aa729bb45b0b5a0296521a04af1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/docs/code-execution.md",
+      "bytes": 3324,
+      "sha256": "48ba8b7089924118e8255b8a9607f436c667a176a47b4e78a64c0382ca9b8d27"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/docs/computer-runs.md",
+      "bytes": 18500,
+      "sha256": "4baed4acbe03e4954da9443724984931e4937c9c677298bd3bd646e920aefca0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/docs/device-infrastructure.md",
+      "bytes": 19870,
+      "sha256": "caabf74f6eb847b4b6c444c0a0d5d8dd9bedb2007983c1a1bec2b6682f3a21b3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/docs/explore.md",
+      "bytes": 12158,
+      "sha256": "478e9c476dca725c563db659eb78b8dd05d2e2c5e4d9ded8ae7808a0b29e0730"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/docs/proof-of-changes.md",
+      "bytes": 2377,
+      "sha256": "c7fd183f38d4529557f6015610cd21115ce357ebfd87f8ca73e0af48a698ad81"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/analytics/failure_class.go",
+      "bytes": 4786,
+      "sha256": "0052401a8cb80cc507ff760854515c30a2200b654aac80f8148e04c4dce84947"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/api/client.go",
+      "bytes": 254507,
+      "sha256": "f48b4506291aed5cff5d755714e22fd9efabd5dab2b314df9854738416f5b2e1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/api/computer_contract.go",
+      "bytes": 17337,
+      "sha256": "dcbb3036ae1811405d0201803056f75a781dd7622484558ef8a2e8e53e7c5d54"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/api/computer_runs.go",
+      "bytes": 9896,
+      "sha256": "bb35aba3fdc6367139d2f9b9b77cf8766aa557890de972189cc77a325cb1866e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/api/computer_wire.go",
+      "bytes": 1658,
+      "sha256": "2eb1f8519d72ace78e47bec7b83beb60dd55ab7bf57b1c32b6c9a53e9c4d42a0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/api/device_fold_state.go",
+      "bytes": 502,
+      "sha256": "ab5ad1ab9e9f6eaa3ab2604b985bf4b40582b1f020fece2b3715d4af3750e63c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/api/generated.go",
+      "bytes": 750986,
+      "sha256": "1ccee847a788e0d430be40c6454b572e1047b09b51d224557869ca0ddfad62e4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/config/contracts.go",
+      "bytes": 28021,
+      "sha256": "4a9386e34e0f2c48829c83d00404a6ca17c1bb735408962d00e36e51754d96f3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/config/contracts_test.go",
+      "bytes": 14273,
+      "sha256": "f217e5becae514d79cf416b61629a57164021b956054de7bc51b540856cf28b6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/config/device.go",
+      "bytes": 4840,
+      "sha256": "267baa595337779283b5fc6855514bc6140e3f77c9e392633f0b1c1c59c237ef"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/device/start.go",
+      "bytes": 11650,
+      "sha256": "16d640ce6acebf18d788e6628c7a8bbab75a6659e106f616d7b29f446e976f53"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/devicetargets/targets_generated.go",
+      "bytes": 1551,
+      "sha256": "7272e3349f6af4d21fca987e0a9936001909d3b0fe1e9fe7b0c78dd5715e81a5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/mcp/device_fold_state.go",
+      "bytes": 3944,
+      "sha256": "231c931a5f56639f98151d468ab87bfb3e785e1beb9b3054baec225066c621f5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/mcp/device_session.go",
+      "bytes": 168956,
+      "sha256": "71fedd8a97e2031a547dd11956e99b26a1e7c83fc88f80cc745645cc107c753a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/mcp/device_tools.go",
+      "bytes": 140465,
+      "sha256": "e56439b8837a5c8ad900748363ed14db24157416719402b229f61308e3bc21e1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/mcp/device_web.go",
+      "bytes": 10943,
+      "sha256": "ca821f5aeb3196c98f8cfdac3825abfcad112ba65e964d970766481a5f3fd4fc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/internal/mcp/server.go",
+      "bytes": 173975,
+      "sha256": "c21e0b7659cc9fb5d2c6ec5ac6478737a8a2d130d2f4d0683e09bfcc33b90870"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/npm/package.json",
+      "bytes": 817,
+      "sha256": "224363fb02c6e0b3aad511e22bdd8ded15c3e82e6a5ff957521f051d6508356b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/openapi.json",
+      "bytes": 662110,
+      "sha256": "1c6026db13d23987a4223b91d8525bb60830c19758e207fc1f6c7e232bc72e79"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/plugins/revyl-claude/.claude-plugin/plugin.json",
+      "bytes": 613,
+      "sha256": "49fc5fb1f34a945a3fa9025715c798921924f3ba4ae4e0f6dc394efb49f542b5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/plugins/revyl-claude/README.md",
+      "bytes": 2492,
+      "sha256": "7a1f9f1876687a376d0731c6ee7ebdd55072056196a8c1298daed7503ef91d80"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/plugins/revyl-claude/skills/revyl-workspace/SKILL.md",
+      "bytes": 3054,
+      "sha256": "ce93096b3cce30d3b0d473b2fd5f05b4f9e21fa83a6a19a024aee1ea779c086f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/plugins/revyl-grok/.grok-plugin/plugin.json",
+      "bytes": 729,
+      "sha256": "8247ef2fbe82a27463f7da787216aaa3dd4c9d4f67f592f4ecb304c62d8c0cdb"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/plugins/revyl-grok/README.md",
+      "bytes": 2015,
+      "sha256": "be8d399f3b3e6942dfd736c90c259b9a31ee5e711a74e67fe327884d05aba803"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/plugins/revyl-grok/skills/revyl-workspace/SKILL.md",
+      "bytes": 2911,
+      "sha256": "2a76511cef0370228d44d57396f4efa9430f99b7381ab57be66e2403c645dd09"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/plugins/revyl-openai/plugin.json",
+      "bytes": 5816,
+      "sha256": "0c1ba15b8f18c1ee834515ac5f781ee3e05f3b95804f8f543a16051ada08e86f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/plugins/revyl-openai/skills/revyl-workspace/SKILL.md",
+      "bytes": 6611,
+      "sha256": "4778d48191e4793a6be3af3359e77d6e0e6d14f4215b025ffd06811af66b0d4c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/python/pyproject.toml",
+      "bytes": 1610,
+      "sha256": "bd45de06b7b94a6ea8332b8ca027160e07b794f707bbe13c768b8cd915682bd6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/python/uv.lock",
+      "bytes": 110610,
+      "sha256": "b1f13f30c961ff2fa959bbc09c8fad15d03f6b4c3dd24f910292af7e028ed821"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/source/head/scripts/openapi-schema-roots.txt",
+      "bytes": 336,
+      "sha256": "46f52109a29f5de65924af7ef814472a3a9201b9057a3e9642186e03465bdd3a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/text-diffs.txt",
+      "bytes": 1397368,
+      "sha256": "b0ccacb48b746afab73bb030c32dfaea21fa896ae0304df9e93dfd4ba76441fa"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/texts.py",
+      "bytes": 1236,
+      "sha256": "218a3c62af85b9097537c7446bd598ffd684eceac778012660ce325bfc2c321d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-316d13b7f0fbf7821aca39c6c83f9c7db781a750.json",
+      "bytes": 303736,
+      "sha256": "6d91c002d90dd5cb6e4b63c2e460b290c14cfd05eef93b1ce15f0850c643bfee"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-36dd9555c6e1320e6df28e4e24fcfd2a4fca3785.json",
+      "bytes": 304494,
+      "sha256": "8585abb6dbd4c0386cec53015fc53f05bf9ea2aeb880441ef73aa018c7784a2d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-3b2a324d8de23dee2851e7a4c1b634ae562e2549.json",
+      "bytes": 304494,
+      "sha256": "e090343afcae675630ce0430d18d1d587e699fbea9f89d03f06a38676fb8ea61"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-4bd52f6c4aeb8ea1553ba432138b8e43d269e7c2.json",
+      "bytes": 304494,
+      "sha256": "7b5768fc4ce445d9d1f38e1c8748267730e53830666c69229cbfd09b45225185"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-51a3d00f798c180f0920e42e54425cb76cee525b.json",
+      "bytes": 304494,
+      "sha256": "15fc94505d80bfde08fecdd4b77db1063b4c992c9bc08760844f21b48aad0e70"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-94b13f749645f30cb8b201484070aac2699385ab.json",
+      "bytes": 303486,
+      "sha256": "521e5e9f0bc4dfc36c0226716e16ac85133d5ed126d7df39962d3199c009f773"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-9f2935f7d55e3cb62e930bcc26306854c14b1f93.json",
+      "bytes": 303486,
+      "sha256": "a96a455d162b8a7531129a8eac239e6fc48b069e31ecafde36ef0f4e14b3655c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-ada6e1ffa6b6a591546ea3a7fc1dc8b3c10d2328.json",
+      "bytes": 303486,
+      "sha256": "e09368703c72cb46322eb85ea7a240f9c5ac7a2da74858e8236fe748a57345ca"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-af8c514e0dd0989553b76098b7aeab3877f8e905.json",
+      "bytes": 303486,
+      "sha256": "413c0201ab92811d6b515363b8da30a56e520efbf10ad3e5fe6c208f72461edc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-b00f96d7da366764d66a70bfd75c2b073a7bd67d.json",
+      "bytes": 304494,
+      "sha256": "28b381a01e2f49adc62036628b21372b11e0a66201b0a776f6168047582a0845"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-b0ed197cc6a1e6d130769154ce9e238ceec81118.json",
+      "bytes": 304494,
+      "sha256": "b2267306b9c8cffc495ac2f57566eaea34eb4558f12e3517bf1357cf914326cb"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-b6194f927fc3550fbd8144c56db313787e468b29.json",
+      "bytes": 304494,
+      "sha256": "c0e5dbaf061e2067741a26b30076311c5344cf02565c089f93c3fd977a8b9dc7"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-c3ce74e20b7c07d74b8d00a1b785e787c2344a9b.json",
+      "bytes": 303736,
+      "sha256": "f6309168da1c783af5b7f72de8dc2e6b421c1c0204186ea70b86577e88fae008"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-d0416409e8a1d52d572c0fc130dc081ffc22eacd.json",
+      "bytes": 303486,
+      "sha256": "e289031bf17843617e714257f35213a40798cf1c0337c0699b1827cde2235b7c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-d160fa1408705994fef6ef4ec58d7a5bce7592e3.json",
+      "bytes": 304494,
+      "sha256": "d26f2c1241027bd1436ca0d85ee8d76d95cea03b0d669be5f98372beb013a1ed"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-f1ae375ad72ef14453495bf7a61ed9146bfb41c7.json",
+      "bytes": 304494,
+      "sha256": "ad47031d2e4e10ab70488d9b98a9490456489724f0302bb75d44bd3137078bc3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-f8dcc79bd04b16162f94c31188b07f4b5951af95.json",
+      "bytes": 304494,
+      "sha256": "5f24d80e302d5b3f710fd4c5cff9675bac4b0b1c523e8972d2a018ea2f70cf5d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-f92aba5f605e1e7a14b5f3b76695f75bd5c6b0ad.json",
+      "bytes": 303736,
+      "sha256": "b0723a4779795183fd2495d3a3b03b9171791b4322777a7110b3ae4f11ba16ee"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__revyl-cli/tree-f97b1dfa1147ad4a37e034a18bdefffe68b5199e.json",
+      "bytes": 303736,
+      "sha256": "26b7ef8c295401edcd2ea80700a70935a10da76036511b66eb7e739ec6386d2c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__visual-regression/head.json",
+      "bytes": 3482,
+      "sha256": "343c30a421e4b5ab7088baefa97c8e85a2ab0c883a6dd13abd1772f6c87d207c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__visual-regression/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__visual-regression/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__visual-regression/repository.json",
+      "bytes": 6520,
+      "sha256": "8146178cc8f119d4e99eefa60f0acdc66db35c76be8a38792d61445bd5434008"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RevylAI__visual-regression/result.json",
+      "bytes": 1090,
+      "sha256": "51158ea5e765f72258ead0fb161b682494e63a49a64546a29fd5ee2ed78173ce"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RockxyApp__Rockxy/LICENSE.full",
+      "bytes": 34695,
+      "sha256": "73312c21c21d7ab7fa66c300993f3dd0dcbd53cfa62dded2fa7e6d4adf69c552"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RockxyApp__Rockxy/head.json",
+      "bytes": 4791,
+      "sha256": "854748b3fb6e27b4894c4f1bb804c1597029c9156c2bcc06bff7887275ef1e0c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RockxyApp__Rockxy/license.json",
+      "bytes": 48828,
+      "sha256": "557ab0754de0f704877c970ede1d5e599f5c5a2bfbdb63fe534d6efe1accb46f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RockxyApp__Rockxy/releases-1.json",
+      "bytes": 429460,
+      "sha256": "fa7435ec5fa922cd91945fb2085b07d11b3831518c90f0dbf76695b176179941"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RockxyApp__Rockxy/repository.json",
+      "bytes": 6659,
+      "sha256": "22422d0f1e98e07964b9f1ae7ea35dacb2030afa532f2e9dbb36f7ce10038fb7"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/RockxyApp__Rockxy/result.json",
+      "bytes": 13956,
+      "sha256": "e13cf25a8ab21c864aa9a27f4fe834fde9dde7f0bf8888b5bcfe52fb154cf0a3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/LICENSE.full",
+      "bytes": 1062,
+      "sha256": "961819a89dacd1f4f161e1d2ebf616b538bf095a2eecfa3ef40b7ccec633fac4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/audit_intermediate.py",
+      "bytes": 2532,
+      "sha256": "2e2c72dc0c9f550ccbe3eb623bc39d2da40d16cca13f5a69eab6e4548199aed7"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/commits-1.json",
+      "bytes": 414538,
+      "sha256": "58359519aa766bc8720c925344c04554d82d53fd3c3b39d05da0898f71702104"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/head.json",
+      "bytes": 4973,
+      "sha256": "089fb7197256b7a243a2e7796552d27e5a96d6a42ae28ffd84cb270d907df933"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/increment-manifest.json",
+      "bytes": 2948,
+      "sha256": "a8726bc5fb3dc5531867c7c0ffa8a058b92e92f743e6c91ce13e1ecfd7bbd086"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/increment.diff",
+      "bytes": 26666,
+      "sha256": "d97c16ea97d5660fee78b679a6152f295a9e0eef7147517860e88deead9ef5a8"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/1a35546e8814a796c684bb2e1dcc234e426adf73/Mobile-Agent-v3.5/android_world_v3.5/android_world/env/actuation.py",
+      "bytes": 9971,
+      "sha256": "69d1190d1c6dd250d1ca228ea91ffb5fea3fd133b21995b3b298b500612ed925"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/1b0682d3e586e014f64ddde0c0c492aadcc603d3/Mobile-Agent-v3.5/android_world_v3.5/android_world/agents/gui_owl_test.py",
+      "bytes": 1286,
+      "sha256": "816339803bf1c106ca024c60b4fa58d5853611c0bc049bdd67691f817ac1bb62"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/465a8333a781649059c30e48e21ab60589fc737b/Mobile-Agent-E/README.md",
+      "bytes": 7916,
+      "sha256": "365213d88f86afbbda77f41bd2354365a6cb4eaa7a4594693b1ab59f83392c88"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/47c0015180aac71ddaf46f60b055ee6e9ca8d413/Mobile-Agent-E/MobileAgentE/api.py",
+      "bytes": 11178,
+      "sha256": "6630417b3508eaeec2d3b659c4a78fd9a4a2e033728d952a4ba68a87326ba89c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/4bd2c9eb660f5873951a952897c947e5aaaf39ae/Mobile-Agent-v3.5/android_world_v3.5/android_world/agents/gui_owl.py",
+      "bytes": 15171,
+      "sha256": "c31014a29be7b248a9a1aad4b572cc65fb92ee65d1b4ce16169c19c75b7a82b9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/67dccd1245c72d84d94eb08738f6652b5b1417cf/Mobile-Agent-E/README.md",
+      "bytes": 7868,
+      "sha256": "31ef7293b1b3eaafa5dcd6253ea38c0e1973906882acc3cf3398d984547e3621"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/69178e4d246718a07365b64f739d0cf74e873a0a/Mobile-Agent-E/tests/test_api.py",
+      "bytes": 5967,
+      "sha256": "f56ab28d48a53436578c662644fd1fd582c53bb89e74490c8ac7df719f2905e1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/76f6087092ee3700593aa9b557306bf4422efe58/Mobile-Agent-v3.5/android_world_v3.5/android_world/env/actuation_test.py",
+      "bytes": 12750,
+      "sha256": "75877d743271c8f2d6fa6cafb5be72b2aac99a309e8bad9a7b3686c01dd0e33f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/8e41a125930cb140b39e9cc42ad58905b523eb62/Mobile-Agent-E/inference_agent_E.py",
+      "bytes": 48281,
+      "sha256": "4cb8f16b045ca996656ba32553d7ef84c4036431e5948d51f6ac1fb531a563a1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/9c0c847de7bef6f7e40b934635b826f2c87a3f87/Mobile-Agent-E/MobileAgentE/api.py",
+      "bytes": 9023,
+      "sha256": "af6cf638dbd155f6385445daca35e5886ead95038fa075ec1c3a7ece6ae11b49"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/b1c8cad8f156f7a58faf7b43d1d34f277c527bee/Mobile-Agent-v3.5/android_world_v3.5/android_world/agents/gui_owl.py",
+      "bytes": 15049,
+      "sha256": "3a15d46fe8ded82495e72b47223d350271c38c1ba99f144bd705bce4e3e58fe9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/b5a07a5d99ba177065c9e6f6bab81c6aa83534fe/Mobile-Agent-E/MobileAgentE/api.py",
+      "bytes": 5457,
+      "sha256": "fe02dfaaf07a1557bd62ba2f3871869b1c9945c1c3f38abdd52832c81a51f597"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/b79da4d1f31a5c0c3527d0d5998ec8fdf821a572/Mobile-Agent-v3.5/android_world_v3.5/android_world/agents/gui_owl_test.py",
+      "bytes": 1435,
+      "sha256": "2302655db627251fe657e438c4b87764780990dc06122acb6a80a97e96be8a8e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/bb17f4438173e43272c5f278c418c2d80c47afae/Mobile-Agent-E/inference_agent_E.py",
+      "bytes": 48926,
+      "sha256": "c57c6fe5b5236a6b11de39cef7a72942e94181e9350a969986ab0931cd58044d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/c1bb9d3da6a75f57af8ad83eba7266b3029f70f3/Mobile-Agent-E/README.md",
+      "bytes": 6313,
+      "sha256": "f8515fbce73ea0ef3d1d558d4567bb949244e6384e61c956ba3ddbc27294f0ae"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/c827fc983618c9a9717d2ba3cb3e5fd01cb665bd/Mobile-Agent-v3.5/android_world_v3.5/android_world/env/actuation_test.py",
+      "bytes": 11212,
+      "sha256": "b01be051a3afeb51ebad705a36943c7e423ee4397780d196cdb60ecfa63e2255"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/d72f92a75762fc415932d590012652c68984566e/Mobile-Agent-E/inference_agent_E.py",
+      "bytes": 46664,
+      "sha256": "c21507f32cd643f5ce4a4c290ed02e32dd80679ee83b2eecf525df0fb22617ec"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/db8e1c45bac8ea0013edbd248189485b993f81fa/Mobile-Agent-v3.5/android_world_v3.5/android_world/env/actuation_test.py",
+      "bytes": 12685,
+      "sha256": "6bf3c938dbff6145af28e436c5b08731f24f11a5042f639009fe9dc13d95d655"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/e09cf4d2ab9a552729d37b4fc203ae2e1d102780/Mobile-Agent-E/tests/test_api.py",
+      "bytes": 5205,
+      "sha256": "822110152d010f7ce470c0c646413a8986c2c4e6341acc5957ae4c4df06923e4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/text/f4122345d7c612119b33b1bc9a477b3cc78b1d3e/Mobile-Agent-v3.5/android_world_v3.5/android_world/env/actuation.py",
+      "bytes": 9797,
+      "sha256": "b96532d176b0244773bb7d1c16ca7e4ec5a3776598e206415c45838c5df93b36"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/trees/11cea575561fb7800b5fb6b6cafa56f7a91de11f.json",
+      "bytes": 635933,
+      "sha256": "7293efadde7c96b64ff8483b2157241e17d0b0fbfff4839de9c7b11485b07cbb"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/trees/17643b3b22e1e0211da8002524d6c725e7b98428.json",
+      "bytes": 636676,
+      "sha256": "5913bd4f3486bfb3db3ed5498ef0630565fb59a1ef2c65e87a1bc657fdc5f14e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/trees/1b93ea1c6ee6e2460d7f004a9d5b9bb68127d464.json",
+      "bytes": 636393,
+      "sha256": "809e7393ae912145978d56eb52dc648be49690ad55068882673d548ac1088432"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/trees/1efbfddac935c26e50d5d4c15b998b99c2d57fbd.json",
+      "bytes": 635933,
+      "sha256": "2858db47bb5e803e81bf7dcc1fedd5801692220bf63e1cdfa1c97e9e2c59b402"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/trees/5f35e2b0913b478750650d4fc394af54de99e232.json",
+      "bytes": 636216,
+      "sha256": "d6c32b28ba47075d2e1156d290910b58ceae07e71a34a4e3da9e5ba4cd1ce46e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/trees/65c3384d1c2a12f4d77ac3e600de4450a5ffb1d0.json",
+      "bytes": 635933,
+      "sha256": "f3057b7bc1b26926a1f0bb6403aac843cbd2029d2d9fb1c64f55a7582e2cb821"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/trees/7c3a896d7025162ee8fc03ed17fed105ad62f32c.json",
+      "bytes": 636216,
+      "sha256": "90888e9e2b4491035ed355815d41b84caf89647c7347f3d73ed62319526624dd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/trees/81fa28b564ef7a695521500bc15a0e1324b2b394.json",
+      "bytes": 636676,
+      "sha256": "58e26dc998533fd2d7db9ddd568ea2c6233183b656ea82e1959152e9ecae1a60"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/trees/ca741ed8951c76e83c012f9a40f82980209c878d.json",
+      "bytes": 636394,
+      "sha256": "849fdf4f13b6640dd6372dc963f8307394064c10af973acd317a5893a1086ad6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate/trees/d1d5c3ccde2bc65a2b0d293c6dcb4bfec35817d0.json",
+      "bytes": 636393,
+      "sha256": "526f7a34266166716b64ff0d0dba11ef8c76fb323b987c0e3c7416032420bfcc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate-audit.json",
+      "bytes": 11064,
+      "sha256": "404f8dec92f816fa10dd7b344ae0586c57c57cd3a5a467a3f45569e31796291a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/intermediate-vs-head.diff",
+      "bytes": 18234,
+      "sha256": "b163e8a52597bb59c4ade9a5afc43cab385e8f39dced3b5041fbf7a4e7f4881e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/license.json",
+      "bytes": 2532,
+      "sha256": "2aad3b11596f227080d801fb1b8cfbe61685f39b81b5043c5a5a5feb970974bc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/local-main-evidence.txt",
+      "bytes": 103263,
+      "sha256": "083c964bf2ff165d82ebfa8e2a0eed917523b2c2efa7fb32a7d99197ede5ba6c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/repository.json",
+      "bytes": 6362,
+      "sha256": "31717db950d39a052959374fbc4f0247e3fce21281b85d4a1b711ec1f02eeae5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/result.json",
+      "bytes": 1208,
+      "sha256": "4b5271cfb119ff9eb0d3c43c7ccf66ea644ab49b81621a34e353b610f6e5e330"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/review.json",
+      "bytes": 2197,
+      "sha256": "29442ed86641ec9850d0135595e79f7e20f8511219e7b37d636735637a7f8836"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/review.md",
+      "bytes": 4874,
+      "sha256": "ce40719038360d15440b89fdfded579a60dd87fd6680c60a5531d8a1e007507c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/base/Mobile-Agent-E/MobileAgentE/api.py",
+      "bytes": 5457,
+      "sha256": "fe02dfaaf07a1557bd62ba2f3871869b1c9945c1c3f38abdd52832c81a51f597"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/base/Mobile-Agent-E/README.md",
+      "bytes": 6313,
+      "sha256": "f8515fbce73ea0ef3d1d558d4567bb949244e6384e61c956ba3ddbc27294f0ae"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/base/Mobile-Agent-E/inference_agent_E.py",
+      "bytes": 46664,
+      "sha256": "c21507f32cd643f5ce4a4c290ed02e32dd80679ee83b2eecf525df0fb22617ec"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/base/Mobile-Agent-v3.5/android_world_v3.5/android_world/agents/gui_owl.py",
+      "bytes": 15049,
+      "sha256": "3a15d46fe8ded82495e72b47223d350271c38c1ba99f144bd705bce4e3e58fe9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/base/Mobile-Agent-v3.5/android_world_v3.5/android_world/env/actuation.py",
+      "bytes": 9971,
+      "sha256": "69d1190d1c6dd250d1ca228ea91ffb5fea3fd133b21995b3b298b500612ed925"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/base/Mobile-Agent-v3.5/android_world_v3.5/android_world/env/actuation_test.py",
+      "bytes": 11212,
+      "sha256": "b01be051a3afeb51ebad705a36943c7e423ee4397780d196cdb60ecfa63e2255"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/head/Mobile-Agent-E/MobileAgentE/api.py",
+      "bytes": 9023,
+      "sha256": "af6cf638dbd155f6385445daca35e5886ead95038fa075ec1c3a7ece6ae11b49"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/head/Mobile-Agent-E/README.md",
+      "bytes": 7868,
+      "sha256": "31ef7293b1b3eaafa5dcd6253ea38c0e1973906882acc3cf3398d984547e3621"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/head/Mobile-Agent-E/inference_agent_E.py",
+      "bytes": 48281,
+      "sha256": "4cb8f16b045ca996656ba32553d7ef84c4036431e5948d51f6ac1fb531a563a1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/head/Mobile-Agent-E/tests/test_api.py",
+      "bytes": 5205,
+      "sha256": "822110152d010f7ce470c0c646413a8986c2c4e6341acc5957ae4c4df06923e4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/head/Mobile-Agent-v3.5/android_world_v3.5/android_world/agents/gui_owl.py",
+      "bytes": 15171,
+      "sha256": "c31014a29be7b248a9a1aad4b572cc65fb92ee65d1b4ce16169c19c75b7a82b9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/head/Mobile-Agent-v3.5/android_world_v3.5/android_world/agents/gui_owl_test.py",
+      "bytes": 1435,
+      "sha256": "2302655db627251fe657e438c4b87764780990dc06122acb6a80a97e96be8a8e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/head/Mobile-Agent-v3.5/android_world_v3.5/android_world/env/actuation.py",
+      "bytes": 9797,
+      "sha256": "b96532d176b0244773bb7d1c16ca7e4ec5a3776598e206415c45838c5df93b36"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/source/head/Mobile-Agent-v3.5/android_world_v3.5/android_world/env/actuation_test.py",
+      "bytes": 12750,
+      "sha256": "75877d743271c8f2d6fa6cafb5be72b2aac99a309e8bad9a7b3686c01dd0e33f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/tree-base.json",
+      "bytes": 635933,
+      "sha256": "7293efadde7c96b64ff8483b2157241e17d0b0fbfff4839de9c7b11485b07cbb"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/X-PLUG__MobileAgent/tree-head.json",
+      "bytes": 636676,
+      "sha256": "58e26dc998533fd2d7db9ddd568ea2c6233183b656ea82e1959152e9ecae1a60"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/automation-confirmation.json",
+      "bytes": 251,
+      "sha256": "65dbe8de52d4aa0cfea55688a12738965411a445562eebe09cd52e525887d739"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/awizemann__harness/LICENSE.full",
+      "bytes": 1070,
+      "sha256": "e92a5a769096faed8e22dea8d940ce64a6a00638f0f0a4f74a056eb61c52549c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/awizemann__harness/head.json",
+      "bytes": 3389,
+      "sha256": "572a09dbccb3b680fa91530c5b1ca04acbdd15221a0a8728a3dfde3e78c3df79"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/awizemann__harness/license.json",
+      "bytes": 2537,
+      "sha256": "e80dcb8c679031e1898e96abda230a8486e6ecb44da09397020a3e5f5efd8b81"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/awizemann__harness/releases-1.json",
+      "bytes": 109917,
+      "sha256": "8dccbf8b51efd99125bb341559ce23e409792b9a2343a897a16d13903b844586"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/awizemann__harness/repository.json",
+      "bytes": 5595,
+      "sha256": "e25ae6e87b1a4d78958ef329c0d33f93671cc98cd6c4ec14de15f6a6b0591a84"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/awizemann__harness/result.json",
+      "bytes": 7721,
+      "sha256": "73cdaf9cb52fdb9d0f4b30689d9eaacc2e33e292de1470c392c5620ce586614a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/before-reference-state.json",
+      "bytes": 220286,
+      "sha256": "8aef208a2ec057c5de37ee9c9bbd8ed75f899779a2b58955cb46a930a100dbd7"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/before-upstream-state.json",
+      "bytes": 1186,
+      "sha256": "acc5bf0041e7368374d801d6676f597dc6e39650b5476b860f5a83d9a479febb"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/bytedance__UI-TARS/LICENSE.full",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/bytedance__UI-TARS/head.json",
+      "bytes": 4660,
+      "sha256": "b024e4b2e6df9f86e85727911a9700748e0164a429c4fdbe8fd1f077c10be20c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/bytedance__UI-TARS/license.json",
+      "bytes": 16740,
+      "sha256": "405322d972655016d3b24b81cdc1a47a22d96bb35d08bd88240d8a6f52d86ec6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/bytedance__UI-TARS/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/bytedance__UI-TARS/repository.json",
+      "bytes": 6320,
+      "sha256": "fdcec23f315a059ed6dbc47b499538cb7e424e12f1c7ed2cddb48e213b107cf3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/bytedance__UI-TARS/result.json",
+      "bytes": 1178,
+      "sha256": "7ef71d402e6fe8b081ea3a8022339c767d99c85eaa14459f028b9e6207b7b125"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/check.py",
+      "bytes": 4760,
+      "sha256": "16da400eccc1dd83d61f1d595ef92306719142f1760b185ca4feff825d42055a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/dongxinsuperman__ai-phone/LICENSE.full",
+      "bytes": 1090,
+      "sha256": "b825925aa35feb626875db9db2afc4f71e8cf0abeb1f1bcecfa23efa307a17ce"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/dongxinsuperman__ai-phone/head.json",
+      "bytes": 1497,
+      "sha256": "bc36714a9ac1f13c083c4128a5587706881431c96f7fe8836a4c427041964fa2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/dongxinsuperman__ai-phone/license.json",
+      "bytes": 2616,
+      "sha256": "3684915409813448a5f5bc5e60af11e6a3602b33586eed5b2d086be55097ed7f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/dongxinsuperman__ai-phone/releases-1.json",
+      "bytes": 31051,
+      "sha256": "a74e0b21a97ba63259c54bba74469bd9a52f18bcabc55fc65e6c595c4205cc6c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/dongxinsuperman__ai-phone/repository.json",
+      "bytes": 5907,
+      "sha256": "71208bf768596cf54c42ff7e78efb5d34950123312f915fa7e500261689d4282"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/dongxinsuperman__ai-phone/result.json",
+      "bytes": 6596,
+      "sha256": "0f542203712bb0b7c5dd70cae433943825984f79740776a04f69d841c193bcad"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/finalize_takeover.py",
+      "bytes": 8393,
+      "sha256": "2499b1ac04c33ea771058cd5464c84ba2fc7634025ac525036483bd2745d4b0e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/getsentry__MobileBuildMCP/LICENSE.full",
+      "bytes": 1070,
+      "sha256": "fef28fc4165c72b1f0e4ce94654ba44ad7ff7d5d2538b3d01e66e9cc5be3c4f6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/getsentry__MobileBuildMCP/head.json",
+      "bytes": 4797,
+      "sha256": "27d7328255e2d73647acdd4cfcc691e00434e42ebab7c869782a1631596f17e0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/getsentry__MobileBuildMCP/license.json",
+      "bytes": 2557,
+      "sha256": "1d62cc1486d403d49eb10f8c68352e4301396908a2e5f39a5700dd7ef1ae9953"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/getsentry__MobileBuildMCP/releases-1.json",
+      "bytes": 453040,
+      "sha256": "df26206db8613be78c14dbca1861d8dd25349199e03f3514d123f8774580a180"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/getsentry__MobileBuildMCP/repository.json",
+      "bytes": 6771,
+      "sha256": "eae62f6516ca1b7e6336b52f29183295b43cb4abc246dadd85c647e9a4aaa1da"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/getsentry__MobileBuildMCP/result.json",
+      "bytes": 20189,
+      "sha256": "5504099e81302b02652e341ebfc4a039ed7de93b14c94d65de30525c76fffba7"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/google-research__android_world/LICENSE.full",
+      "bytes": 12664,
+      "sha256": "b09fcaf4fbc265223c2479c410beef2b98c5e687c78ecedf3452aa12ffc465f1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/google-research__android_world/head.json",
+      "bytes": 3443,
+      "sha256": "83864b9ea319bcd7cbfa623eb2fdac769fedcc660de7104770e097a42088b6b6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/google-research__android_world/license.json",
+      "bytes": 18626,
+      "sha256": "87f8363cf747ba5d93bd50eac8724811f663c9ecae0a14b9ffe490d93b22e15d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/google-research__android_world/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/google-research__android_world/repository.json",
+      "bytes": 7201,
+      "sha256": "40af9bdd3d755b1681ba1935c0c6f440f3047e6629d9d3b393fd9f106d796315"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/google-research__android_world/result.json",
+      "bytes": 1214,
+      "sha256": "f6670e2f222d291c395d65bf0453daf1c8101e19017b74862a32efa0d6578376"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/heoblitz__Loupe/LICENSE.full",
+      "bytes": 1065,
+      "sha256": "0d7ebd755456885dba28523a5c468e59d06a26c8df2b896938632c9322c9e7e3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/heoblitz__Loupe/head.json",
+      "bytes": 3650,
+      "sha256": "ae062f6ac2e962864300ce0dd4ee112be24514858aa82e3e59821a582540550a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/heoblitz__Loupe/license.json",
+      "bytes": 2479,
+      "sha256": "ad33de398e37ac473f63e78cc4676e70846249e3ce311e4fd6408589103feb52"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/heoblitz__Loupe/releases-1.json",
+      "bytes": 33087,
+      "sha256": "a96fdb02938be62a11d36e8cafbca3f54a5686db310d9e30f464074d879202bf"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/heoblitz__Loupe/repository.json",
+      "bytes": 5127,
+      "sha256": "583a960d05ab2dd01e607a24e398c2c32dabb075d428f84cffdc90a1a3690a56"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/heoblitz__Loupe/result.json",
+      "bytes": 5520,
+      "sha256": "8a2adcffe4fbb74bef86404b6c1d4474b774dd57e18ae195cec396ce45f4864c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/hughkli__Lookin/LICENSE.full",
+      "bytes": 35149,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/hughkli__Lookin/head.json",
+      "bytes": 3171,
+      "sha256": "d4e3179ec432f965b6a91e0e8c99a9e271024ff607999b6c8ec1f9e805af1621"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/hughkli__Lookin/license.json",
+      "bytes": 49505,
+      "sha256": "eafee01852503c48977295071fcbb9988890b4c2f6e4409db61a3d5005d9f686"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/hughkli__Lookin/releases-1.json",
+      "bytes": 16464,
+      "sha256": "990b427a405dc92645837f2898307d4fb876e00dbda52e7523ece5de69ac1e1e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/hughkli__Lookin/repository.json",
+      "bytes": 5128,
+      "sha256": "271b59a2d560d6b4afbf8d55d199d07daaed3f389f93ca9b37307adbeeeda36d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/hughkli__Lookin/result.json",
+      "bytes": 4494,
+      "sha256": "367c72da9151fee61dee21b77c8bf58a6772dc175ceb9117de8fecf0a6139138"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/LICENSE.full",
+      "bytes": 10771,
+      "sha256": "52327c57e955a3e63f872960938e814acc19eb1b77c501999f5fd1e543b21346"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/audit_fetch.py",
+      "bytes": 1615,
+      "sha256": "6695ce4f4edf41f4c8e63678086b0e9b8bb4674d416c57d1a8d51de00ad8cd22"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/audit_text.py",
+      "bytes": 1363,
+      "sha256": "3266663977c574c8fff3ad1c0eae898f2dcde861dcc5c4bfaafd4015e344d6fe"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/base-tree.json",
+      "bytes": 192923,
+      "sha256": "4f5bc4247215d350d4c86174de21d3294df7700650157e7ae28d9d888eb87eff"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/commit-tree-03ef82b8895dd1e943752a0eb2c8da11864637d2.json",
+      "bytes": 192923,
+      "sha256": "11b8f50555431a2890d091ffd358e669f72472e04834daf7c88e2edc1b7bc5ca"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/commit-tree-b127c05adf039df8ca44925c02e68099260341ef.json",
+      "bytes": 192923,
+      "sha256": "a10eebe18b1a1afabeeccb38320388c6e94474d52c6e50df6ae69c1d50299387"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/commit-tree-coverage.json",
+      "bytes": 8797,
+      "sha256": "ac1b7d27b5f1560e922739b4e9ebbd1905e6d152888373ddaf7ddce4ff2aa725"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/commits-1.json",
+      "bytes": 417157,
+      "sha256": "147a3a5fa67e87c9463ff4bda2f420daf0fc076c94bbeefab754590b9cbf0761"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/head-tree.json",
+      "bytes": 196808,
+      "sha256": "8a0c05aea0771a219ae01aaed07f695bd2b41598b1949212785fdf13c6df9624"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/head.json",
+      "bytes": 4155,
+      "sha256": "60ca9f9b2f0466296346366c493f1cffd60892df642d093558d98752573f9332"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/inventory.json",
+      "bytes": 4530,
+      "sha256": "2d8c370bcf774172b164ddc035f1b1d131022c365daa5ba2d021f0ccfc3afe81"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/license.json",
+      "bytes": 15955,
+      "sha256": "93b186c854645ecea6c3d27f3fea2a2386da60af3ab642ab4daecd96d0605fe7"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/main-text/CLIEvidenceReplayRuntime.swift",
+      "bytes": 31094,
+      "sha256": "d878559fdee64208ebc84ea2d4cebb389b7722e7450d0d56367d7629a93568dd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/main-text/CLIHostProcessDrain.swift",
+      "bytes": 5815,
+      "sha256": "bcaf33cc9a908cb5be8bc9bba9099bd6f54f2f5efba4d4acdc263689b5a96a84"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/main-text/CLIHostRuntime.swift",
+      "bytes": 20768,
+      "sha256": "f7fccb5baaee03ebeed9bb33ff3f208e3001a35067229dba07d743aee7899285"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/main-text/CLIHostSimulatorPrimaryFramebufferCapture.swift",
+      "bytes": 4054,
+      "sha256": "139cdbe610dc5a3a1a06aa9e1c163a02933079e15d03b677d8b3054d91d0565d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/main-text/CLIHostWorkspaceConfigStorage.swift",
+      "bytes": 9004,
+      "sha256": "e7167d925328060a5c563bbae8a08af61e9888b6b641512e83643940dc30586a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/main-text/ReplayCommandTests.swift",
+      "bytes": 37412,
+      "sha256": "98060ba9de4de77ad53ca82d7c19a2fd8bc60a89e59dd0af5c95c78f6e3d9db7"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/main-text/TKReplayPlanModels.swift",
+      "bytes": 79341,
+      "sha256": "f5ef549165dd9627259eaea033db3ea8883eefabf71c0052f152c7640c109313"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/main-text/WorkspaceConfigStorageTests.swift",
+      "bytes": 7471,
+      "sha256": "4f8dfe6bac7accc9e6266e6aad8b78dc22f811ab7caec9ee68b820ccb71bcb41"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/main-text/main-sha.txt",
+      "bytes": 41,
+      "sha256": "cbfdbaf7f7834ce0b80c4f83ca54cd9ea347215e490fd161495fbd1562184304"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/releases-1.json",
+      "bytes": 428388,
+      "sha256": "be7e360ff563b141e571831663444d80dee7d8e78ba701b390d665042ae3d534"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/repository.json",
+      "bytes": 5627,
+      "sha256": "0bb4dcf9442fc74181595fe77bee2270b8f897f5f75e0df00fa76b1aa811c76e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/result.json",
+      "bytes": 24591,
+      "sha256": "5fd11ff036789c8d9e68c284c1fc386e5bb5d965d54afb27510b024fb4ce0c9e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/review.json",
+      "bytes": 4688,
+      "sha256": "2a154e38c563b94eafc571b382005550b44b714eefbf88711ab0686a6f8b7d74"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/review.md",
+      "bytes": 5529,
+      "sha256": "1c045f226e6e0216e76cd7dc84435ff21aa94f2de7e7be0cc4eb4c2dca5b5231"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/safe-local.diff",
+      "bytes": 336363,
+      "sha256": "fb34aa0b2ea1af9a8fcd0bd9eea2abc85d7b337d06ece7529015b8b37badcaaa"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/text-coverage.json",
+      "bytes": 18665,
+      "sha256": "1afe73e209804cfee7db45a975640eeedc81e2acda4a6d61bea47f0f9be0dd0c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/text-manifest.json",
+      "bytes": 26252,
+      "sha256": "0e9982f5bf21c961ef12bfe37a320c2b5e7d45927559721b05d1f6b8239521aa"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/.github/workflows/build.yml",
+      "bytes": 18142,
+      "sha256": "5cf9a80e54573f93b65e2a182ca501dddf543f925b79c56a606bceeb34d2d897"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/README.md",
+      "bytes": 34672,
+      "sha256": "a6558928e712ed430d5c8b0c4432e236156e92f544cbf2145c4148b844ee1f94"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/HelperLib/EnvConfig.swift",
+      "bytes": 13627,
+      "sha256": "11912c143c696fb0af70d25923373f43904b7893bdfb7018eb71f4abde97e351"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/HelperLib/EnvConfigFeatures.swift",
+      "bytes": 16831,
+      "sha256": "b27b01f8482d07c8159f44a63e8aef185e7afdf2c8742c5a186fffc5be023a1c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/HelperLib/LayoutMapper.swift",
+      "bytes": 8263,
+      "sha256": "3d7fcbf08bfeb88bd662350713ea334fe13dadc925ab205fc5b088255e150697"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/CompilationTools.swift",
+      "bytes": 22695,
+      "sha256": "c153ca97692451b0a389a9d08c14566075390a946b9f8e9fae4d5b850cb0b071"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/CompileCommand.swift",
+      "bytes": 15676,
+      "sha256": "375b8678072ef8a7117b5b8fa251e8b0c53a1bf2a9837f620d77d3036db2463b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/CompiledSkill.swift",
+      "bytes": 12616,
+      "sha256": "60ce813df09edd3b4c20ee88e16a0720af82a982c7c8f02db96d8b2b98214adc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/CompiledStepExecutor.swift",
+      "bytes": 11591,
+      "sha256": "28de023e2944114eefab6dffab7e6cac8c7e4b7e472bd5ee069717ada02d9a8b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/ConfigureCommand.swift",
+      "bytes": 5497,
+      "sha256": "d935b8e4e06ce0d782a6514558fe43f602f176112d528a19a50e2eb9234e87fb"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/ConsoleReporter.swift",
+      "bytes": 4314,
+      "sha256": "1d0222264f8068e4f83f2d0590bee5a32be86d9037e11a385f58c2f147169460"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/IPhoneMirroringTarget.swift",
+      "bytes": 4068,
+      "sha256": "444f9d4f47faf58b193b2733f7f981c979028e410e776b6b233ae01f296c9593"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/InputSimulation.swift",
+      "bytes": 22812,
+      "sha256": "45e5cb224d9fa4f373bf7ba874015c5448d2f84e4835612d726836c248f2f776"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/InputSimulationKeyboard.swift",
+      "bytes": 14314,
+      "sha256": "c4a5afc54e5b75ef30b32211213306c6cad5691c618d376824b79341dbc5a73e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/InvalidStepGate.swift",
+      "bytes": 2469,
+      "sha256": "30d7199b51a337216ae8b41f373cee872390dbaa3932aa06732c0e5631edd513"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/JUnitReporter.swift",
+      "bytes": 4255,
+      "sha256": "6919a8a3631cd744b0c96469f6e26cbb2eeb42a24b25f616238f6ba6dc000abf"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/Protocols.swift",
+      "bytes": 16397,
+      "sha256": "27ce5c004c0bbb36bde13c67852f42a27114e4c5a40670a54fefedd699663484"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/RecordingDescriber.swift",
+      "bytes": 1435,
+      "sha256": "e6e1243a718a049af5bccbbd7bdb192eb944a330088cdfdfa4145e0c1dc28a95"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/ScreenCapture.swift",
+      "bytes": 7485,
+      "sha256": "738f21fd1028eab8dda940751a7675fa9239cb7534d1322ab89b9fd4324c503a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/ScreenCaptureKitShot.swift",
+      "bytes": 3594,
+      "sha256": "614113e1ebeaf97ec52e93188f7da219f75f7bc12a439218fb314d8ece6c592b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/SkillParser.swift",
+      "bytes": 13662,
+      "sha256": "f73d788a40b876cd90f9e94d9936f2ac1cafe0e125c44647c9e8e1d749fd82d2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/SkillTools.swift",
+      "bytes": 19619,
+      "sha256": "e31ab76f006a8ab86138ae5e37e665b67969dc369d0e5f9c13d55c46bb56e80b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/StepExecutor.swift",
+      "bytes": 18948,
+      "sha256": "3e9abaec44f96d078809db2bf4127289838e1de10a259d47d09056fc6c3cf93c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/TestRunner.swift",
+      "bytes": 12977,
+      "sha256": "f4c104a8a81fae2c35834c002df15708f287909bedb7903d0b556c62405a0378"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/TestRunnerArguments.swift",
+      "bytes": 12354,
+      "sha256": "12cfe807f8949ca1283be1bcdbe65f9e623268e75436229c529fddc6b971ef92"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/TestRunnerCompiled.swift",
+      "bytes": 8377,
+      "sha256": "183397445ce5edd62e35a08b09b857767a4a0c23893842a82ea2bb32f60bafbd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Sources/mirroir-mcp/ToolHandlers.swift",
+      "bytes": 1584,
+      "sha256": "442035d130acd240d6fe665ac429c790adc1a37880ca120108f62ce6a4ab7073"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/HelperLibTests/LayoutMapperTests.swift",
+      "bytes": 8909,
+      "sha256": "3eef374cc8adba0e527da629ef9358c2738af9401ffc2fdc389389c5ca401946"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/IntegrationTests/CompiledSkillIntegrationTests.swift",
+      "bytes": 17208,
+      "sha256": "ae92208766005ef4184bf6b105c693bbcaa7902b19c167108cab0c2400ffdfa9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/IntegrationTests/FakeMirroringIntegrationTests.swift",
+      "bytes": 9948,
+      "sha256": "d09acab8ea13fc1cf10e539af693432a2a4c579a115f99669fb33ce797a99bca"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/MCPServerTests/GesturePlaybackTests.swift",
+      "bytes": 16304,
+      "sha256": "be2a6eb5574aa0c31b6351569e084b82b390cc1ad1fd573a1d999e267c23b036"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/MCPServerTests/HeldKeysPlaybackTests.swift",
+      "bytes": 21316,
+      "sha256": "839d4d06671635adc8291e390240fad594f32826a823487310903a332e58e072"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/MCPServerTests/InputSimulationLogicTests.swift",
+      "bytes": 10554,
+      "sha256": "153fb1326788b3a4266b058a1081e3327c4ecbca7309f53164380d7c33822282"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/MCPServerTests/NavigationToolHandlerTests.swift",
+      "bytes": 8963,
+      "sha256": "8b2ad72e8ad06811f806f6515375ed32c17f8b3b4a20ab0d148435513601ebe1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/MCPServerTests/PausedSessionRecoveryTests.swift",
+      "bytes": 2538,
+      "sha256": "7a64cfc1d5f551d637141a36e5895142070a826b618c831651c87f55087b4957"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/MCPServerTests/RecordStepHandlerTests.swift",
+      "bytes": 6652,
+      "sha256": "7c0671e0e1f19a511440dc741be198dca33649200a252049ea9941170830c1bd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/MCPServerTests/TouchHeldRefusalTests.swift",
+      "bytes": 6667,
+      "sha256": "ad4de7d6bf494eea302addd706455d1b02234a0d41e88bc68c4d9ee68d963685"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/TestRunnerTests/CompiledSkillTests.swift",
+      "bytes": 19430,
+      "sha256": "ad511d3801f05dca00fbd4e50e446ea0c7acbb3f3eb64c06afa16b048d9eb8d7"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/TestRunnerTests/CompiledStepExecutorTests.swift",
+      "bytes": 14799,
+      "sha256": "57a9991449ca0c9883fb77672bbb2b2d85fb193f1dd36892a8e6558779c69d9a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/TestRunnerTests/ConsoleReporterTests.swift",
+      "bytes": 5611,
+      "sha256": "8ac3a09e80234f9a341e725c778768d6786a9a3e4b8a621afcaa77126146d16a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/TestRunnerTests/PlaywrightReportWriterTests.swift",
+      "bytes": 6254,
+      "sha256": "b45f0a0349f87154a7082587f760da472a1c0d9dad2919cac401c061a81ba3d4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/TestRunnerTests/StepExecutorTests.swift",
+      "bytes": 11753,
+      "sha256": "3ca943bc984d2e0a51bccaf556ab1b7f939a9c83153a4555df947726f3aa1258"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/TestRunnerTests/TargetSelectorTests.swift",
+      "bytes": 5409,
+      "sha256": "02883547aa0cfb67c9606cd96bf4f715a375400a20df8a3bda34c3a77645993c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/Tests/TestRunnerTests/TestRunnerTests.swift",
+      "bytes": 5987,
+      "sha256": "36b414c081c16e30b2080168675d9659a70b994d43100a8a92f7b008c5d84865"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/docs/compiled-skills.md",
+      "bytes": 17052,
+      "sha256": "063f77b775cf3d9a2a724d4ddb3635c062343fd58667225432c5c8c80571aba8"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/docs/configuration.md",
+      "bytes": 11416,
+      "sha256": "b96b24fa17a8a8d9e04c1a37392b9f1b260534bcc349878bb1ba38d22bf7eecc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/docs/faq.md",
+      "bytes": 8415,
+      "sha256": "1aefa3314fdf009597b2c8b5fd906cb14197032e18baee13e42a946d9cba008f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/docs/limitations.md",
+      "bytes": 6602,
+      "sha256": "892e869c0b6df7ff7d31d364010d663e3161ea7e8088ccf99bb08c01340179a1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/docs/testing.md",
+      "bytes": 15445,
+      "sha256": "10e50d9a6d89569c6fbc81dbaba001f1e47f8237a51c91cc62d21e0da0ff8178"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/docs/web-and-ios.md",
+      "bytes": 6634,
+      "sha256": "e1aa5936876babd5648f8d086f4b20f6990d3cc839697ef941f262a7543cac2a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/llms.txt",
+      "bytes": 23038,
+      "sha256": "38d7de313be3a44bd22ee91dd05874944930c8e282838cf6dde86c4a7100a7bd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/Cargo.lock",
+      "bytes": 49418,
+      "sha256": "20d93cbf1be08a7e5cb4da99039293ac24a5210203287be0147c698d261a65fd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/docs/sample-md-format.md",
+      "bytes": 7074,
+      "sha256": "8f8084a88c134c72a50b7100cbc6f22bcafb1d7b069774949aaf019eb9c0e162"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/docs/scenario-grammar.md",
+      "bytes": 24077,
+      "sha256": "2380c62ed8e2da3d8ac70a16ed2bc0b25f9e83b1faa21979ab9a9b97a89a5179"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/src/compile/mirroir_block.rs",
+      "bytes": 11961,
+      "sha256": "697f3ba0acde16b6dda09e50f24fc6c711f54737cb935ce6b78a8c65928de2d7"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/src/compile/playwright_emit.rs",
+      "bytes": 17626,
+      "sha256": "3d59582cfbcd365022b92e82a85d6fbbdd2fd4c357bae80083742c625dc36644"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/src/ios_error.rs",
+      "bytes": 1980,
+      "sha256": "d9bb5f26e1aae2e5c824f77cd1979c2baccf5f60ab290382980b479725c1de8b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/src/parser/surface.rs",
+      "bytes": 7457,
+      "sha256": "a89bbaec584c939b07113b3764c7b4eb3625cf14c8de3230af840944df07c1cc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/src/replay.rs",
+      "bytes": 18253,
+      "sha256": "a5fc4a56cfd9dcfa0f83a12caf4a2e8d267ac3d296f8fd1b5067586d495a0090"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/src/replay_plan.rs",
+      "bytes": 18274,
+      "sha256": "b9b02aa0b809f1218088c3e47d97812a9a4ec69aef7791ea91e757f6d1386942"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/src/replay_target.rs",
+      "bytes": 5059,
+      "sha256": "1d5976ddb030af5fb002617878f74940fa15ee3b4cd957b54d8aae9b6c904641"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/src/target/ios.rs",
+      "bytes": 12393,
+      "sha256": "8af0865e0b5e85ad3bb8596824f89704803637b24276acd80a3ae4841a35d481"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/src/target/mod.rs",
+      "bytes": 400,
+      "sha256": "2ab7dfb2ab4fa14b5d9e439495e5ce74f7e2de7b9a222f7da4071baacc0edd09"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/src/target/process_log.rs",
+      "bytes": 9779,
+      "sha256": "e325e6678e09981a9ac99556c639547a45ecc9d886bc5f0eb8d3a7eab07b9c06"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/runner/tests/common/mod.rs",
+      "bytes": 12638,
+      "sha256": "39510a0c3d122a07246e609a58974cffc1c5197eacfd6053ab3327c376d7155b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/website/package-lock.json",
+      "bytes": 143368,
+      "sha256": "f68d73a57bbfaea70f1f46beb39a6b3828fc2bdd1ee940dbc02a7e4eda374579"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/website/package.json",
+      "bytes": 366,
+      "sha256": "d0bd71c2dfbb7bfa027471dd5152a5e5788c14355d7df70d1381b2c618968d0e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/base/website/src/pages/index.astro",
+      "bytes": 41571,
+      "sha256": "fde7eef77ac4e065e07b62c7b33d6d7843b3ecf66839eb450334bf69c22afafc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/.github/workflows/build.yml",
+      "bytes": 19542,
+      "sha256": "b99432c01c8956eaa9f0e7dc6d7be6c7aaa63da23235a5de17503e13c6ff1377"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/README.md",
+      "bytes": 36032,
+      "sha256": "05146186fd3fa949db0b4d1e2fe83fc7357379a7506f400511db2b9ef739ce47"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/HelperLib/EnvConfig.swift",
+      "bytes": 14258,
+      "sha256": "38359b2a0fc77d27e2c528f96c91e3859a1d9f0101e880414f608d9b48358a45"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/HelperLib/EnvConfigFeatures.swift",
+      "bytes": 16827,
+      "sha256": "270264962a063a95e4635a74b73a51fa3765455e38f05b49307933b74e8e5a49"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/HelperLib/LayoutMapper.swift",
+      "bytes": 10822,
+      "sha256": "96e958a5ee448d9bc31c34c9a5a4440ad6e039c340ea9f76fb64d4ca2c037cba"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/CaptureStats.swift",
+      "bytes": 2119,
+      "sha256": "1a141342e7f8e76e9ea65eb9bf7d19bcff8d318e22d4482916367802ef6a0383"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/CompilationSession.swift",
+      "bytes": 2931,
+      "sha256": "60ee116ed1a82ceffa88c09caa1f19cda78726c08d8d42caba357051281a0307"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/CompilationTools.swift",
+      "bytes": 22363,
+      "sha256": "70ac5fcbab890ff4e682b36e109ea3a8513beb25aef0f6ef6de695482e7ce711"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/CompileCommand.swift",
+      "bytes": 15873,
+      "sha256": "e9478185a4791f8573148cc08cc95a432bd2c75e81193c73ed50b2a26fc5db5a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/CompiledSkill.swift",
+      "bytes": 12005,
+      "sha256": "87397f2ad0936d11d4421e9dff1899bcb0cf5c164c56c83decdff973113b64cf"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/CompiledStepExecutor.swift",
+      "bytes": 11803,
+      "sha256": "125e80e068aa3868bfd5d9b73416664c63a9363906fb7b45d45404d1c66af757"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/ConfigureCommand.swift",
+      "bytes": 5401,
+      "sha256": "ea0f98979e3118f82937bb9ae6669a2185315ca44b16df2f7c19f1778bc8506b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/ConsoleReporter.swift",
+      "bytes": 5191,
+      "sha256": "e72871c555a30d1f07040d5bfb46760ec2b129e4bc5a1f47c99059d4a42ed102"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/IPhoneKeyboardLayout.swift",
+      "bytes": 3751,
+      "sha256": "78be48626fff86a3e12ee2e05f8c06b50827541be541bfbb645b8c22157bd4b2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/IPhoneMirroringTarget.swift",
+      "bytes": 3924,
+      "sha256": "d9236dd0c448885c186fd90d035603e11746db981ea06e3ca44a8fc9e3566d9b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/InputSimulation.swift",
+      "bytes": 21931,
+      "sha256": "f9d9694e6b1bc17cef815f7b0fd1b8f25bf4874b515fd6aa62322f3e72e6e855"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/InputSimulationKeyboard.swift",
+      "bytes": 14090,
+      "sha256": "1142df9966570df6ceaee3271b976c4dff44bde74c94c99d7752e9fc1db1a280"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/InvalidStepGate.swift",
+      "bytes": 3198,
+      "sha256": "4b09235b96f9f321784fc3bf191c029105a9d55511b51e04c1f1f4a9050556a6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/JUnitReporter.swift",
+      "bytes": 4487,
+      "sha256": "7f9efa645cb7b68f6de8702d822306749a2f57e2d02b1508d05faba17e96cc7f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/Protocols.swift",
+      "bytes": 17287,
+      "sha256": "f07c75551152bb3304ddb64f273166236fe9e3748f23db8fa7d6f46edcb6c70c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/RecordingDescriber.swift",
+      "bytes": 1181,
+      "sha256": "2d3bc5faab83148548da57db620ad6beafba4213916650ca255b2ecce762a3d1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/ScreenCapture.swift",
+      "bytes": 8050,
+      "sha256": "22078de50d066aadc9a21899b2d5c51bc8358bf44453988c3b0a030204eff5af"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/ScreenCaptureKitShot.swift",
+      "bytes": 7055,
+      "sha256": "488fdf6650ec36559dd7eb1f34da6f4dd57bc94f8306d26ef3ec3514baeb7b25"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/SkillParser.swift",
+      "bytes": 14097,
+      "sha256": "e3d9aa807f9eb8be6be77694846ce1c87fc0c4592e6239dc8a9f2679419cab09"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/SkillTools.swift",
+      "bytes": 20109,
+      "sha256": "247751e016ac18b805a61992b204cb199e36d3ecad7cec4babf7276c146d4d90"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/StepExecutor.swift",
+      "bytes": 19823,
+      "sha256": "c2ffadf2455c07c042c9a132ca75cdbc6f75abaf00b3a25905f70c6b1de9bc83"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/TestRunner.swift",
+      "bytes": 10566,
+      "sha256": "ecac8d30d75037986d47271e0575e2a4f8aac7adccbc43499655631d476874fe"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/TestRunnerArguments.swift",
+      "bytes": 13955,
+      "sha256": "f54ebe430030547824acbb270519e375fee0c9b3b26c80788cd06ff57a4e25f1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/TestRunnerCompiled.swift",
+      "bytes": 7473,
+      "sha256": "3b01e172b0474f3ef7cd7bb5a845c797790266bceb475df1468b51521ad28530"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Sources/mirroir-mcp/ToolHandlers.swift",
+      "bytes": 1799,
+      "sha256": "ce3f67b84d8d5818afc1a60fef62bdecbe270ba6c89afb2dcae5be2f886c170f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/HelperLibTests/EnvConfigSettingsMergeTests.swift",
+      "bytes": 2808,
+      "sha256": "b3d67c5a48c39ffb812ab192abd6274c2401a0b09880b4fb1eaca07d4b989e05"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/HelperLibTests/LayoutMapperTests.swift",
+      "bytes": 10508,
+      "sha256": "a03ee1e879c5b3136488f52d677077c1293d3fd667e28aeadad4a3dd4023fbdf"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/IntegrationTests/CompiledSkillIntegrationTests.swift",
+      "bytes": 17281,
+      "sha256": "c3f33b754824ad68f33bcb97060c5989ce61a6e88c1b6b685b54e9f30b93be51"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/IntegrationTests/FakeMirroringIntegrationTests.swift",
+      "bytes": 10699,
+      "sha256": "d914f07547e1413b3201f21b1f843d15e64ef02d8968aedc975a4c42a8aa4037"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/MCPServerTests/CaptureStatsTests.swift",
+      "bytes": 4100,
+      "sha256": "31559b061d4916f35057756a67e62bd95cadb5daf2082b6746b3efd7d8423d99"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/MCPServerTests/CompiledStartFingerprintTests.swift",
+      "bytes": 8320,
+      "sha256": "8394f2df8750d5b4b7a646f698e6d910171ee4eeb1028691b1695d82a70a5c37"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/MCPServerTests/GesturePlaybackTests.swift",
+      "bytes": 16306,
+      "sha256": "bf0c192e24aa9ba0243aa884fa10b3eb0e8b1cafc668c27edc9f673a70d94de0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/MCPServerTests/HeldKeysPlaybackTests.swift",
+      "bytes": 21320,
+      "sha256": "a9f8f8b5d82b006848ebe82c0dca1b1d9786bcd77ff0010b0cf38c3d68a8f499"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/MCPServerTests/IPhoneKeyboardLayoutTests.swift",
+      "bytes": 4953,
+      "sha256": "e2afa9dff28c1bb9c0a224494a9fdc2510e67e17782a569c4186dd6ad0803310"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/MCPServerTests/InputSimulationLogicTests.swift",
+      "bytes": 9212,
+      "sha256": "8b60cf0c7084510adf0c57cef03bf3f5818a637f730bc6bc4ffc1798c0276a9a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/MCPServerTests/NavigationToolHandlerTests.swift",
+      "bytes": 9411,
+      "sha256": "0c755b65b7bb43d1de7d2da2600a679bbc3216791cc52678c1d17af858776a80"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/MCPServerTests/PausedSessionRecoveryTests.swift",
+      "bytes": 2540,
+      "sha256": "f4e79291cdf9e8d08fad8c2fa032ad4e87d8c99d62262a769ac46dc8b5616fef"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/MCPServerTests/RecordStepHandlerTests.swift",
+      "bytes": 6696,
+      "sha256": "a9474cb9397ba34d141eb953ccb31511e3c816a4e6466a844d4d20b1cb8d707c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/MCPServerTests/ScreenCaptureKitShotTests.swift",
+      "bytes": 5334,
+      "sha256": "436c96cb39162d81f82158820addfcdf9a697c2f31b41c072f6b392bae53ef56"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/MCPServerTests/TouchHeldRefusalTests.swift",
+      "bytes": 6669,
+      "sha256": "33c5addc1b111f34521ce7f4bbb3ba43b4681f9c5a2f1d56cba452800bea3c33"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/TestRunnerTests/AIOnlyStepContractTests.swift",
+      "bytes": 2982,
+      "sha256": "93f9a14ee90bf4fcab76fb08ae4814d20b608a9b699a3f741193cee253582bd5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/TestRunnerTests/CompiledSkillTests.swift",
+      "bytes": 15456,
+      "sha256": "59636c9cc6ee3d5f7484351abf1769a3ea3581b4cf55cb44c84e14433977c3fc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/TestRunnerTests/CompiledStepExecutorTests.swift",
+      "bytes": 15933,
+      "sha256": "c7ab79f8bbe2025ab512385f545a061f5311931377ba7ce3797e7b59eab51bfe"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/TestRunnerTests/ConsoleReporterTests.swift",
+      "bytes": 6495,
+      "sha256": "e7ed41366e01fda651fb021469b03116c3d3991370d6d955966cf6e886a5a6aa"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/TestRunnerTests/PlaywrightReportWriterTests.swift",
+      "bytes": 6265,
+      "sha256": "cb0ff3280c0f6eb0b9e00fb3f3570681bee7c4216520ef19acc5ab31b91eee31"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/TestRunnerTests/StepExecutorTests.swift",
+      "bytes": 12104,
+      "sha256": "eade569b444868f2811926c083257bc580ec0a6075e9730423fdf5a7fcf02a35"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/TestRunnerTests/TargetSelectorTests.swift",
+      "bytes": 6406,
+      "sha256": "a0a4c97ab94a734f6d876b778cf223e63f899339ae6cd76c226a8a21d6a3cb1b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/TestRunnerTests/TestRunnerHonestyTests.swift",
+      "bytes": 8836,
+      "sha256": "5748cda4d5a95000336a2021fdd057fec8158ab6ff038941861be890a3708ccd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/Tests/TestRunnerTests/TestRunnerTests.swift",
+      "bytes": 8980,
+      "sha256": "527bc46f1b851abb572cb20fdb2bf260c845a53dd30abd0ade6b42bacbe47480"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/docs/compiled-skills.md",
+      "bytes": 17673,
+      "sha256": "6f86d0ae1059870fef4bca2fc7ad9bd736306b65a81b0131d90a5f96ac89b008"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/docs/configuration.md",
+      "bytes": 11469,
+      "sha256": "9fc2f4d4dcee742a1f693b99ac5d8affa7b6baa6280dc70a94c23c79514ea629"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/docs/faq.md",
+      "bytes": 8499,
+      "sha256": "3157ce222debd6c3d4138ce59aee7da79f64b14516eda9940789ef21f16773d1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/docs/limitations.md",
+      "bytes": 6305,
+      "sha256": "7a6ba219cfae69f04d3690025e741629cefc8dab8a790ad1dff6df0997e9f654"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/docs/testing.md",
+      "bytes": 15711,
+      "sha256": "890085335ca34a05737cb25c0cabd08f66e7ceb468c19039c2ad8c7f1d9a6678"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/docs/web-and-ios.md",
+      "bytes": 6626,
+      "sha256": "c45fedc807642585f284b541a6be3830299a7494492544014f0fdcef2502ee9b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/llms.txt",
+      "bytes": 23535,
+      "sha256": "7c5a549ab80d739c0c5a5041d426f6e92c12d87f8f4762e8cc0534230665a188"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/Cargo.lock",
+      "bytes": 49418,
+      "sha256": "ddf32b7ec3c50b920a56c473e52244f04b5c2079c050ec36769e7813118b096b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/docs/sample-md-format.md",
+      "bytes": 7263,
+      "sha256": "915c5563a36d9823dc3b516cadf12e48e923cd620590e55fedebe6ce2b882490"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/docs/scenario-grammar.md",
+      "bytes": 25152,
+      "sha256": "223859ea472df9a3c08bd47b2b473a49d544be3ea251f80978a574ad0de8af9f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/compile/mirroir_block.rs",
+      "bytes": 12518,
+      "sha256": "1c457b73f90380ba66641ff2d8a22cda3229447f5949f3d4c815339f2e7a6ec6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/compile/playwright_emit.rs",
+      "bytes": 17728,
+      "sha256": "9d7844ed59645278e685f07f0d9147c5a3a05e8802b3ddddd6452fe6fa60eddf"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/ios_error.rs",
+      "bytes": 4017,
+      "sha256": "50138c971e3d406ff0d55d2365cb917a07d6980e4e16765442d5d285b886e823"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/parser/surface.rs",
+      "bytes": 9865,
+      "sha256": "1a56997236df783e7e0fc790afcf7685a9508421b0b2efea12f0ba641bb26a52"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/replay.rs",
+      "bytes": 18277,
+      "sha256": "aa5e3e9e6cafc3afa8362e1a04fa870f985b5d35c7f3666443a5b7fa4d37c215"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/replay_plan.rs",
+      "bytes": 18661,
+      "sha256": "fcb5288af9063e586bbdd8936ac12694b5d2e43cc1628b7953d2cfadd27ae4fe"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/replay_target.rs",
+      "bytes": 7113,
+      "sha256": "3377c6c19e1430d40674b2b74a9293e44296ddb1334f709a55ecb70301d861c7"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/target/fixtures/ai-only-step-kinds.json",
+      "bytes": 71,
+      "sha256": "dcd17362af2313ba45b86c277375362d30f33d1ff8c2176bc9cc8176de6a6af0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/target/fixtures/mirroir-mcp-report-not-evaluated.json",
+      "bytes": 1192,
+      "sha256": "2d86d150151ca2b8b7265115b22e95bcd1872783c5e43b09f9d62f403baae180"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/target/ios.rs",
+      "bytes": 18108,
+      "sha256": "f3889d98853eb3d6bbe54a13c332eb2f5f4ec1f895b09e39d3220966caa66489"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/target/ios_budget.rs",
+      "bytes": 6921,
+      "sha256": "4f4f2ba752d30988f738ca1f7146b5f2425231723d442d04cc01882d7b216ea5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/target/ios_report_contract.rs",
+      "bytes": 1669,
+      "sha256": "8cc37e199b18bee0687e431164a0356ce5189dceb9971e89d03dd5571714be12"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/target/mod.rs",
+      "bytes": 515,
+      "sha256": "d8cd454550087b0de55f54d059d6a7ea9572def2d7e5a47970ca11a135af6f10"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/src/target/process_log.rs",
+      "bytes": 10714,
+      "sha256": "aff9a089b33934f3f4c8aecf859e32ef816948723018621924f45315a836936b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/tests/common/mod.rs",
+      "bytes": 12846,
+      "sha256": "97de48eeca956535a6bc461100ba097a874d23d84fa415848c1262a90297f955"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/runner/tests/ios_block_bounds.rs",
+      "bytes": 4026,
+      "sha256": "238c0204b3b838467d8c8aa8afe60cf384079ad5d2b20eca612b35409a09aaff"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/website/package-lock.json",
+      "bytes": 129484,
+      "sha256": "2c8ebc5742abb60349fb8a0900b73d730ef887f3d7239322d4753a9bab5eb09f"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/website/package.json",
+      "bytes": 366,
+      "sha256": "739d83ee3b19fdebf48e78b75cb6c2129b316cab31ba7d5739db18f8783547cc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/jfarcand__mirroir-mcp/texts/head/website/src/pages/index.astro",
+      "bytes": 41636,
+      "sha256": "a6a4382ea664d93ca5f68ae7d0ef87650cf95f3741606e77d76ac25934eb2f54"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/karminski__eyes-on-my-phone/head.json",
+      "bytes": 3337,
+      "sha256": "7632a1ca83df142f25b652b454f8b86608410f1fb1a3833af4e036ff18ca2a40"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/karminski__eyes-on-my-phone/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/karminski__eyes-on-my-phone/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/karminski__eyes-on-my-phone/repository.json",
+      "bytes": 5605,
+      "sha256": "7a24b95bdc0570f18ecafefdbcca0cb015817f21e2130ac2b8e7add42fdb3878"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/karminski__eyes-on-my-phone/result.json",
+      "bytes": 1092,
+      "sha256": "0232b7df26c5db229b3d2740cff7600963c6e4b7377b849a738177abce5f86d8"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/linhay__SKProcessRunner/head.json",
+      "bytes": 4363,
+      "sha256": "d10d96c2641fdfc1407890695e086753f6f9d0a44e76b642acb1cc7881a3c583"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/linhay__SKProcessRunner/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/linhay__SKProcessRunner/releases-1.json",
+      "bytes": 1824,
+      "sha256": "1e02fb367e14a1eca6f11baacb895aac57838ad73125e41e34278f59505c7802"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/linhay__SKProcessRunner/repository.json",
+      "bytes": 5911,
+      "sha256": "38d48e49e4de64c86b767d49c58c19bd19aad6a9cff30f339c19e3e9adbefed2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/linhay__SKProcessRunner/result.json",
+      "bytes": 3084,
+      "sha256": "801b8e6bd249867a1cb761178529319fe7acd3f383d999d74779369d75a88319"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/lycorp-jp__sim-use/LICENSE.full",
+      "bytes": 11344,
+      "sha256": "8c0fe2892344358b49aa07d9a184bd8d0891832baf642f19161f271acc075d32"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/lycorp-jp__sim-use/head.json",
+      "bytes": 4440,
+      "sha256": "dbbabe3ccebf478a2d5e0eb1eefcbd8c978649c35f0970d8629145a36f8dfa71"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/lycorp-jp__sim-use/license.json",
+      "bytes": 16667,
+      "sha256": "876dc52d39ec47f133d44db016e619dafaa88fd0629ae9952d321085cd37c3f2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/lycorp-jp__sim-use/releases-1.json",
+      "bytes": 114449,
+      "sha256": "30589e6ea7304447740e529d90242e225ef718cd7a04c136dc4311adebaa23fd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/lycorp-jp__sim-use/repository.json",
+      "bytes": 11442,
+      "sha256": "f966da0c0d93b5754abf282ddceddd067b6cd3f89902b24256f463a5a292995e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/lycorp-jp__sim-use/result.json",
+      "bytes": 12370,
+      "sha256": "1e506cdb9182fe995b5e2a042a5695f730b45219ab305457b7bcf31eb8e04776"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/CHANGELOG.fixed-head.md",
+      "bytes": 71127,
+      "sha256": "553306c0d9b5756a431e20e5b4bb4ae285ef320b9b13f217e0ab0134185a8945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/LICENSE.full",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/collect_review.py",
+      "bytes": 1946,
+      "sha256": "00a10a5b4914c55c504f32f6a65970ac6a922a633149b693b82c4ae9cee229bf"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/commits-1.json",
+      "bytes": 721870,
+      "sha256": "0dd132c6f4194be14431c487858823acae67f744d0d3b435627951772b60340d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/fetch_text.py",
+      "bytes": 1322,
+      "sha256": "9847a73aefacaeca2f58d12a7126989940e29b8d565aaf0ca41b27dc42b184cb"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/head.json",
+      "bytes": 4717,
+      "sha256": "88e21efe2eb2c2b3016f8be497d2fb1df6d7275acecb15b8f2218d0366bd0ae1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/increment-manifest.json",
+      "bytes": 630,
+      "sha256": "1d69ddacbc56b0214950730b65ef7816be451b445dfe8dba0b4d7f5c71c72e1e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/increment.diff",
+      "bytes": 484,
+      "sha256": "0f0784474615756b456775ca75c662a077573c6efd73a1fcfb9adda3923568cd"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/license.json",
+      "bytes": 16775,
+      "sha256": "c8ee41b6ebd65c301db3963cd166808ac1f781d1e0982b42a6ce49494c5a7247"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/local-main-evidence.txt",
+      "bytes": 103263,
+      "sha256": "083c964bf2ff165d82ebfa8e2a0eed917523b2c2efa7fb32a7d99197ede5ba6c"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/releases-1.json",
+      "bytes": 525183,
+      "sha256": "058ae9a3893cc461c632fec43b56536f91e89f8f86fb09286b79b8fd9f0d61a2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/releases-2.json",
+      "bytes": 227266,
+      "sha256": "5144c169f2e7cd50d067cfebee1c2b84f7667e23f41af1ee753ba8348d2b01d0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/repository.json",
+      "bytes": 6711,
+      "sha256": "20fea37cce3ae728747bacd92004e213c03aa9de342776b25be66d3eff811dbf"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/result.json",
+      "bytes": 8066,
+      "sha256": "db0b4915d921ee3ff26513ad059f038cc9ca873f88252216b29d119c8c45b4c0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/review.json",
+      "bytes": 995,
+      "sha256": "db64141847bc4ba04a04d87b4fba6b937fa595715ec1f547adfcec7df3a149e2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/review.md",
+      "bytes": 2421,
+      "sha256": "6f46369c77ffe476e3f9afc8e1e6532362b85596ce8276b1a471fcba0dfcc0be"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/source/base/gradle/libs.versions.toml",
+      "bytes": 10330,
+      "sha256": "e808d0664e92dd956697a5a465a9ea637978a62a72213c09c1ca3cb8183ebca5"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/source/head/gradle/libs.versions.toml",
+      "bytes": 10331,
+      "sha256": "c6cac46cfca73c736e88265bea30a9afdaa69e4bedeb0abf13a64df0a731c359"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/tree-base.json",
+      "bytes": 563955,
+      "sha256": "29db0f720c31da217cc4ecaea5c604dd2c53a96a2e47dbc25e6efea93d0873d9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/tree-head.json",
+      "bytes": 563955,
+      "sha256": "f1430b755238f199826a9e5739a94a3ec8b78790c8741cb371664660f34143c4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-dev-inc__Maestro/write_reviews.py",
+      "bytes": 5740,
+      "sha256": "6ff8a87f8e93e20c7ce3347f1e3539dc69c77687ea296a64b8a309b1138b1058"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-next__mobile-mcp/LICENSE.full",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-next__mobile-mcp/head.json",
+      "bytes": 4375,
+      "sha256": "f4b192b3f66bbc0b62601c7e26109c3715cf6a32518df2dff26c1e93e875b5b9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-next__mobile-mcp/license.json",
+      "bytes": 16775,
+      "sha256": "a893333f614e616f28f76975e57954a9aed6fc905b32d028911b81e216e59a2d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-next__mobile-mcp/releases-1.json",
+      "bytes": 154713,
+      "sha256": "b64eaf0e3b66bfb7ebf097ea1da90dddde4ef3b83d6c09d9641d58d91751daa2"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-next__mobile-mcp/repository.json",
+      "bytes": 6770,
+      "sha256": "e72e631ab76935bd08d4b8ee10f5101fae658a94b081beab79f5c80b16ffc383"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/mobile-next__mobile-mcp/result.json",
+      "bytes": 3762,
+      "sha256": "b7bd8a75d6b336945b2a4cc5338b1f9ee6085e2ae6e040e480b53280dbd16cc3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/njucckevin__SeeClick/LICENSE.full",
+      "bytes": 11356,
+      "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/njucckevin__SeeClick/head.json",
+      "bytes": 4356,
+      "sha256": "53959d6e5f27ddc9b20cf2b7ea2412474cc5afa9802ec01c56dd6af9c2e4327a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/njucckevin__SeeClick/license.json",
+      "bytes": 16754,
+      "sha256": "e648905f87f71039e350b1024aa619dc6afb904842fdf25151cee4f70737249e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/njucckevin__SeeClick/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/njucckevin__SeeClick/repository.json",
+      "bytes": 5377,
+      "sha256": "332357820b6e42e8d95245fb72e17f59f7d5ba824cc18a15d13c8289bd98b929"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/njucckevin__SeeClick/result.json",
+      "bytes": 1184,
+      "sha256": "96ee592181a4a0aed249617a8ed7339901e33fc0f6b9b7d9f58b6d8cf93e5eee"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/results.json",
+      "bytes": 234078,
+      "sha256": "75a5bfd30fe48568e6189c9143d9517fa2507956caebdc06b3e9b7e7478fb963"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/takeover-wip-sha256.json",
+      "bytes": 4179,
+      "sha256": "8fab1a89c3f85390fbbbf9831276c56918ee7f3da458016b2fe7238d04a668b0"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/CHANGELOG.diff",
+      "bytes": 1008,
+      "sha256": "946a9d9be106eea9999500be8c69c9b76c82c308aadb56ede32794e813cb85a9"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/LICENSE.full",
+      "bytes": 11280,
+      "sha256": "0509ebb2d8d399fb183d1973d3f6ad585e209ca4c2c42a90f3c22c0f32c1ab3e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/base-CHANGELOG.md",
+      "bytes": 13350,
+      "sha256": "d43172cc6dbd19ee9237ab419657b4327f013ad508cd0596a45524ebb15b4a3e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/base-tree.json",
+      "bytes": 384163,
+      "sha256": "4c788e466ac6710b4bd8c1cc7d6c5dda256a65290f70af5d1d18f342cb65837b"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/collect_review.py",
+      "bytes": 1526,
+      "sha256": "03b3b72bb178dbb41ab395fcb311f06dfe74e0178821a3332d5ae17084ddb11a"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/commits-1.json",
+      "bytes": 461476,
+      "sha256": "f6473e1f653ffa40567b083da3fb838c539dbf612f6753c25d3bba7bfe197148"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/head-CHANGELOG.md",
+      "bytes": 13454,
+      "sha256": "8c4b5eaa9694d329a832643082f1d5ff049ddc055698a9335e05c3b2fe8786cc"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/head-tree.json",
+      "bytes": 384163,
+      "sha256": "59a2d249df8a33e07a40020e9b9b1359e5f6cad7030f671bed1b12fbf14dc8ee"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/head.json",
+      "bytes": 3671,
+      "sha256": "b5c9e9baefa567cccb5fc734133d678dd3593688337db290d649342d1f2bb4da"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/increment-manifest.json",
+      "bytes": 964,
+      "sha256": "8c97742542f594801e14a4f38a351f5f73dc3c8e762577291d3c3af3b1cb3b15"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/license.json",
+      "bytes": 16632,
+      "sha256": "27d9e966ad59aa0a5ada9d89d74e664c2bc4b757d0a2a2a0c15fc5d48d04ddac"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/main-Sources__TritonKitCLI__CLIDeviceEnvironmentRuntime.swift",
+      "bytes": 22580,
+      "sha256": "a425e2bb58ebdb3a75850ead93b1fc14ebb4c141f41b51e3fc4174a0dc9ddb31"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/main-Sources__TritonKitCLI__CLIHostNativeHIDRuntime.swift",
+      "bytes": 12481,
+      "sha256": "3b330838cd1f8e57efe225cf3fbfbb41ac38a299d6fc7317599e51991b96fbb6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/main-docs-linhay__spaces__SP-192-ictrl-adoption-feasibility__README.md",
+      "bytes": 6682,
+      "sha256": "daec1160cf50bc4d1c84c728a0785fadd3010b720f7692b91f5f8af95f21813d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/main-docs-linhay__spaces__SP-196-upstream-optimization-delivery__README.md",
+      "bytes": 4749,
+      "sha256": "5a78f25442b7cc9338cf28e797dd6f572d02fc6622ae58106f4057a580c5dae6"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/main-docs-linhay__spaces__SP-200-mobile-device-parity__README.md",
+      "bytes": 4685,
+      "sha256": "69cc9cf1fccbcf51ca1af211998d63e92b6b854a218661183b1d0b3c65a9fa35"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/main-docs-linhay__spaces__SP-207-reference-adoption-pipeline__plans__adoption-state.json",
+      "bytes": 37195,
+      "sha256": "e1bf3700536a7cdf2cca3f1f8a7a6894501aa8be5366fd7484d2144c9998d38e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/releases-1.json",
+      "bytes": 447992,
+      "sha256": "1002feb5209a85a923bacc4a7eabd3b616771ae24837a01caa40f911182690c3"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/repository.json",
+      "bytes": 6430,
+      "sha256": "f3c7ce96e31485f782c65d7c72b8146cab69c828b1acdb2f95efacd905f5f99e"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/result.json",
+      "bytes": 8478,
+      "sha256": "77b5c6e1e3b049dd5f5c1fa14a22a93c889a9fbb40f4167cf2d4289ea4c3577d"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/review.json",
+      "bytes": 3109,
+      "sha256": "676976cbb6d39dd45815aa9afc6fb15bad1937e75d5536f5ab3c1080b3b72eb1"
+    },
+    {
+      "path": ".build/reference-monitor/20261030/tddworks__baguette/review.md",
+      "bytes": 2272,
+      "sha256": "6ad4ee2735f93ee052e54c96ee48db7404914f9d8ffbb2fe6716e817afea124e"
+    }
+  ]
+}

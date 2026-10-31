@@ -563,6 +563,24 @@
       "controller_thread_closed_on": "2026-10-27",
       "cleanup_evidence": "../TritonKit-worktrees/archives/20261027-sp225-sp226/MANIFEST.json",
       "verification_note": "Independent focused10 XCTest+132 SwiftTesting passed; first full had existing framebuffer marker missing, root cause unknown; isolated11+1 and second full94+1528/154 passed. Actualmain postmerge full94+1528/154 (3 explicit skips), default features/profiles single JSON, docs gates passed. Service-overrides-only, no real UI/device, root/local total not applicable to unchanged shared core; no push/tag/release."
+    },
+    {
+      "key": "mobile-next/mobile-mcp:detached-log-exclusive-create",
+      "repository": "mobile-next/mobile-mcp",
+      "mechanism": "exclusive private detached log creation and failure handle cleanup",
+      "requirement_key": "host-detached-log-leaf-race-safety",
+      "source_revision": "1025dd070fc934986dec9ea25458b0ab03bc54c7",
+      "decision": "adopt",
+      "state": "pending_dispatch",
+      "space": "SP-252-detached-log-exclusive-create",
+      "controller_space": "SP-253-detached-log-integration",
+      "execution_thread_id": null,
+      "controller_thread_id": "01a18a91-f44e-7fd0-8e4b-c891b44377e0",
+      "controller_state": "waiting_candidate",
+      "branch": "feat/SP-252-detached-log-exclusive-create",
+      "worktree": "../TritonKit-worktrees/SP-252-detached-log-exclusive-create",
+      "scope": "final leaf exclusive creation; parent directory races not claimed; no device or remote operations",
+      "assessment": "20261031-mobile-next-mobile-mcp-review.md"
     }
   ],
   "new_thread_policy": {
@@ -593,5 +611,14 @@
     ],
     "evidence": "docs-linhay/spaces/SP-226-files-recents-integration/plans/20261027-main-closeout.md",
     "long_running_controller": "kept_open"
+  },
+  "monitor_controller": {
+    "previous_thread_id": "01a139bf-ab78-7783-b37a-ed336be2ef38",
+    "thread_id": "01a18a91-f44e-7fd0-8e4b-c891b44377e0",
+    "host_id": "local",
+    "takeover_on": "2026-10-30",
+    "automation_id": "ictrl",
+    "automation_binding_verified": true,
+    "evidence": "20261030-reference-update-report.md"
   }
 }

@@ -25,9 +25,11 @@
 
 自动流程只做本地合并、本地清理及已交付会话归档；push、tag、release、依赖安装、第三方代码、设备动作、签名和 DDI 仍需单独明确授权。状态通知必须区分“实现完成”“验收通过”“已合并”“已清理”，不能把其中一个阶段冒充全部完成。
 
-每日任务复用id `ictrl`，名称“参考项目更新与采用推进”，保持当前聊天、ACTIVE与北京时间10:00；不新增重叠任务。现有iCTRL检查点仍由SP-193管理，其他仓库从SP-194/SP-199历史快照开始，首次完整读取后才建立对应成功点。本轮配置未重新查询全体仓库。
+每日任务复用id `ictrl`，名称“参考项目更新与采用推进”，保持ACTIVE与北京时间10:00，2026-10-30起绑定接管聊天`01a18a91-f44e-7fd0-8e4b-c891b44377e0`；不新增重叠任务。现有iCTRL检查点仍由SP-193管理，其他仓库从SP-194/SP-199历史快照开始，首次完整读取后才建立对应成功点。历史配置轮次未重新查询全体仓库；2026-10-30接管后的33仓补查见[日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261030-reference-update-report.md)。
 
 2026-10-27闭环已执行：[33仓日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261027-reference-update-report.md)24完整/9 partial，6仓更新；SP-225/226 Files Recents只读诊断完成开发、独立验收、main合并607cdf1c、合后完整CLI与docs、53份证据归档以及两个会话关闭。当前16条采用均已合main；首次既有夹具失败原因未知并保留证据，多点HID和软件键盘真实兼容前置继续观察。详见[收口](../spaces/SP-226-files-recents-integration/plans/20261027-main-closeout.md)。
+
+2026-10-30用户要求新聊天接管：原`ictrl`已迁入`01a18a91-f44e-7fd0-8e4b-c891b44377e0`，原聊天`01a139bf-ab78-7783-b37a-ed336be2ef38`保留历史；每日北京时间10:00与完整任务prompt不变。配置已重读确认，见[接管记录](../spaces/SP-207-reference-adoption-pipeline/plans/20261030-controller-takeover.md)。
 
 ## 新会话模型
 
@@ -39,6 +41,8 @@
 - [采用登记](../spaces/SP-207-reference-adoption-pipeline/plans/adoption-state.json)与读取状态分开，按仓库+机制以及跨仓库本地需求去重；先核对SP-192/196/200及各space当前实现，不能把旧差距重复排期。
 - 开始对照前同时核对 `git branch --show-current`、`git rev-parse main` 与 `git worktree list --porcelain`。主目录HEAD不一定是实际main；用实际main固定blob核对产品差距，较新的授权/追踪文档可能仍在另一分支，不因main占号页而丢弃。集成只按批准文件清单提取，索引/历史人工合并，不整分支回灌旧产品。
 - 会话创建成功才记录真实ID，部分失败先补缺项；建立实现/主控空间时串行登记编号。执行会话停止写入后冻结候选，不整目录复制其门禁上下文；测试绑定联合候选，主控复核后才能合并。
+- 长期原始证据不能仅保存在`.build`/scratch；检查点提交前写入仓外`TritonKit-worktrees/archives/reference-monitor/YYYYMMDD/`等明确持久归档，并在正式plans登记路径、size/hash与复核时间。历史读取成功和当前raw evidence可用性分别记录；缺失先记unknown原因，固定SHA重取标恢复副本，不伪造旧API响应或日志。见[10月31日保管缺口](../spaces/SP-207-reference-adoption-pipeline/plans/20261031-evidence-custody.md)。
+- 恢复旧partial时逐项核对本轮许可证/文本/来源证据，仅清除已闭合缺口；不能把`prior.complete`作为永远拒绝恢复的条件。复用日检脚本前排除硬编码历史版本、日期、待办数量与旧main断言，先保存候选摘要再提交检查点，实际通知与成功点分别记录。
 - 通知去重另存 `last_notified_observation`（HEAD/tag/许可hash/覆盖状态指纹），不推进未完成仓库的成功点。相同未完成增量或模型校验故障不重复通知；覆盖恢复或故障变化再报告。采用登记的 `last_dispatch_failure_notice` 同样不代表会话创建成功。
 - 上游取证在请求 contents/blob 前检查路径用途和文本白名单；二进制、身份目录、密钥和证书只记录路径/来源缺口，不自动获取内容。仅靠扩展名黑名单会漏掉无扩展名二进制和身份材料。过滤失误须停止相应读取、移除意外内容、禁用原脚本并复核残留；不得因此把未审来源标为完整。许可证按固定 SHA 全文与 hash 核对，API NOASSERTION和人工识别分别保留，不沿用历史误记。
 - 新批次创建或复用范围适合的主控。现有SP-206负责SP-203～205，不因此无限扩张；后续若复用需明确更新其有限范围。允许主控协调本批次执行会话，但不授权外部消息。

@@ -2,7 +2,7 @@
 
 ## 状态与范围
 
-- 最新检查：2026-10-28，HEAD `c1e4268859ba858d1579f7b846a56cb40641b7f6`、Release v1.98.16、Apache-2.0全文hash均未变；无新采用项或读取故障，见[专项检查](./plans/20261028-reference-review.md)。连续多点HID仍沿用10月27日观察结论。
+- 最新检查：2026-10-31，HEAD `c1e4268859ba858d1579f7b846a56cb40641b7f6`、Release v1.98.16、Apache-2.0全文hash均未变；无新采用项或读取故障，见[专项检查](./plans/20261031-reference-review.md)。连续多点HID仍沿用10月27日观察结论。
 - 状态：长期追踪已启用；2026-10-16 用户授权评估通过的采用项自动进入独立开发与主控验证/本地合并流程。
 - 用户请求：将 [OpenMinis/iCTRL](https://github.com/OpenMinis/iCTRL) 列为参考项目，长期追踪更新。
 - 影响层：追踪与采用流程、文档、memory 和本聊天自动任务；本次流程配置不直接修改产品代码，后续产品变更分别归属独立实现 space。
@@ -14,7 +14,7 @@
 - 正式参考档案：[iCTRL 参考与追踪](../../dev/ictrl-reference-tracking.md)。该文件进入版本管理。
 - 本地参考入口：`docs-linhay/references/ictrl.md`；references 目录按既有规则忽略，长期记录以正式档案为准。
 - 机器可读检查点：[upstream-state.json](./plans/upstream-state.json)。
-- 自动化：复用 `ictrl` / `参考项目更新与采用推进`，ACTIVE，绑定当前聊天，每天北京时间 10:00 检查；范围扩到全部参考，iCTRL专项来源与检查点继续保留。
+- 自动化：复用 `ictrl` / `参考项目更新与采用推进`，ACTIVE，2026-10-30已迁入新主控聊天`01a18a91-f44e-7fd0-8e4b-c891b44377e0`，每天北京时间 10:00 检查；范围扩到全部参考，iCTRL专项来源与检查点继续保留。
 - 首次核对：2026-10-14；默认分支 `main`，HEAD `99dbfecdb39836ba26a0b2b0dcfde90f705a6835`；最新稳定版本 [v1.97.1](https://github.com/OpenMinis/iCTRL/releases/tag/v1.97.1)，发布于 2026-10-13 19:33:32（北京时间），许可证 Apache-2.0。
 
 ## BDD 与验收

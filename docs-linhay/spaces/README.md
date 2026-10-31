@@ -49,7 +49,7 @@
 | 已合本地main | [SP-221-simulator-resource-read-retry](./SP-221-simulator-resource-read-retry/README.md) | 同目标print-disabled明确launchd暂态有限只读重试 | a0eebff0；focused37/fullCLI/root/local/docs通过，mutation不重放 |
 | 已验收合本地main | [SP-222-simulator-resource-retry-integration](./SP-222-simulator-resource-retry-integration/README.md) | SP-221有限主控，真实runner失败路径与预算 | 独立报告95a1dc8f与actualmain合后门禁通过，未发布 |
 | v0.2.30已发布 | [SP-208-update-version-alignment](./SP-208-update-version-alignment/README.md) | 修复更新误报、安装版本核验与skills对齐 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
-| 持续追踪与采用 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 33仓统一追踪与采用流程已合入main | 10月28日33仓日检24完整/9 partial，3仓更新无新采用；16条已合main，11个执行/主控会话已归档 |
+| 持续追踪与采用 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 33仓统一追踪与采用流程已合入main | 10月31日33仓24完整/9 partial，5仓更新；16条已合main，新增SP252/253安全采用待实现；证据已改存仓外 |
 | v0.2.30已发布 | [SP-206-ictrl-security-integration](./SP-206-ictrl-security-integration/README.md) | 负责 SP-203～205 交付审查、集成与联合验证 | 057d1012补齐收口历史；worktree/分支已清理，已随v0.2.30发布，用户原机另验 |
 | v0.2.30已发布 | [SP-203-ictrl-discovery-hardening](./SP-203-ictrl-discovery-hardening/README.md) | 发现与连接安全，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，已随v0.2.30发布，用户原机另验；worktree/分支已清理 |
 | v0.2.30已发布 | [SP-204-ictrl-log-privacy](./SP-204-ictrl-log-privacy/README.md) | 日志脱敏与降噪，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，已随v0.2.30发布，用户原机另验；worktree/分支已清理 |
@@ -62,7 +62,7 @@
 | 本地提交归档 | [SP-198-agent-experience-loop](./SP-198-agent-experience-loop/README.md) | 按主题读取与默认自动沉淀已接线；28用例通过 | 后续任务按命中主题执行；CI配置已接入、远端未运行 |
 | 已发布v0.2.28 | [SP-196-upstream-optimization-delivery](./SP-196-upstream-optimization-delivery/README.md) | 主线集成与双架构/Homebrew验收完成 | active Resize/跨OS专项证明与性能量测另行推进；worktree/分支已清理 |
 | 已归档 | [SP-194-reference-project-updates](./SP-194-reference-project-updates/README.md) | 23主要仓库+9候选更新报告与分组来源已完成；文档门禁与来源结构校验通过 | 后续可纳入项按SP-207独立实施、验收与本地合并 |
-| 长期追踪 | [SP-193-ictrl-reference-tracking](./SP-193-ictrl-reference-tracking/README.md) | 正式列为长期参考；初始基线 main@99dbfec / v1.97.1；本聊天每日北京时间 10:00 追踪 | 有价值变化通知，增量归档后更新检查点；后续按SP-207直接评估、独立立项与验收合并 |
+| 长期追踪 | [SP-193-ictrl-reference-tracking](./SP-193-ictrl-reference-tracking/README.md) | 正式列为长期参考；初始基线 main@99dbfec / v1.97.1；新主控每日北京时间10:00追踪 | 有价值变化通知，增量归档后更新检查点；后续按SP-207直接评估、独立立项与验收合并 |
 | 已集成（本地 main） | [SP-192-ictrl-adoption-feasibility](./SP-192-ictrl-adoption-feasibility/README.md) | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12、iOS115、Android52与完整APK及真实只读AX/alias/OCR/settle通过 | `e308a2eb` / merge `da76a708`，main总门禁通过；真实设备与OCR输入坐标边界见限制收口计划；worktree已清理 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-190-open-issues-integration](./SP-190-open-issues-integration/README.md) | #214–#220 本地集成与统一验收；保留各项证据边界，#215～220 已关闭，#214 继续开放 | main CI / Release / Homebrew 通过，已回复关闭 |
 | v0.2.25 已发布／#215–220 已关闭 | [SP-189-issue-220-package-result-path](./SP-189-issue-220-package-result-path/README.md) | #220：package result 路径与 inline parser 一致；49 + 2 focused tests 通过，夹具贯通执行结果路径解析，非实际 Xcode test | main CI / Release / Homebrew 通过，已回复关闭 |
@@ -411,3 +411,8 @@
 ## v0.2.37 验收与发布
 
 - [SP-250-release-v0-2-37](./SP-250-release-v0-2-37/README.md)：v0.2.37已发布，CI/双架构制品/Homebrew/机制验收通过；原私有App未验，#224实时流黑图保留。
+
+## 2026-10-31 参考安全采用
+
+- [SP-252-detached-log-exclusive-create](./SP-252-detached-log-exclusive-create/README.md)：detached日志叶子独占创建；待分派。
+- [SP-253-detached-log-integration](./SP-253-detached-log-integration/README.md)：本批有限主控，负责验收、本地合并与清理。
