@@ -44,7 +44,7 @@
 - 开始对照前同时核对 `git branch --show-current`、`git rev-parse main` 与 `git worktree list --porcelain`。主目录HEAD不一定是实际main；用实际main固定blob核对产品差距，较新的授权/追踪文档可能仍在另一分支，不因main占号页而丢弃。集成只按批准文件清单提取，索引/历史人工合并，不整分支回灌旧产品。
 - 会话创建成功才记录真实ID，部分失败先补缺项；建立实现/主控空间时串行登记编号。执行会话停止写入后冻结候选，不整目录复制其门禁上下文；测试绑定联合候选，主控复核后才能合并。
 - 长期原始证据不能仅保存在`.build`/scratch；检查点提交前写入仓外`TritonKit-worktrees/archives/reference-monitor/YYYYMMDD/`等明确持久归档，并在正式plans登记路径、size/hash与复核时间。历史读取成功和当前raw evidence可用性分别记录；缺失先记unknown原因，固定SHA重取标恢复副本，不伪造旧API响应或日志。见[10月31日保管缺口](../spaces/SP-207-reference-adoption-pipeline/plans/20261031-evidence-custody.md)。
-- 恢复旧partial时逐项核对本轮许可证/文本/来源证据，仅清除已闭合缺口；不能把`prior.complete`作为永远拒绝恢复的条件。复用日检脚本前排除硬编码历史版本、日期、待办数量与旧main断言，先保存候选摘要再提交检查点，实际通知与成功点分别记录。
+- 恢复旧partial时逐项核对本轮许可证/文本/来源证据，仅清除已闭合缺口；不能把`prior.complete`作为永远拒绝恢复的条件。复用日检脚本前排除硬编码历史版本、日期、待办数量与旧main断言，先保存候选摘要再提交检查点，实际通知与成功点分别记录。 汇总器必须强校验review的repository、base/head与actual main，不能以当前main作为缺字段默认值。跨SP193/SP207检查点分别原子写入前保存带before/after的持久publication记录；中断后仅接受精确before或after并先验manifest，再补写未完成项，不能为重跑回退成功点。
 - 通知去重另存 `last_notified_observation`（HEAD/tag/许可hash/覆盖状态指纹），不推进未完成仓库的成功点。相同未完成增量或模型校验故障不重复通知；覆盖恢复或故障变化再报告。采用登记的 `last_dispatch_failure_notice` 同样不代表会话创建成功。
 - 上游取证在请求 contents/blob 前检查路径用途和文本白名单；二进制、身份目录、密钥和证书只记录路径/来源缺口，不自动获取内容。仅靠扩展名黑名单会漏掉无扩展名二进制和身份材料。过滤失误须停止相应读取、移除意外内容、禁用原脚本并复核残留；不得因此把未审来源标为完整。许可证按固定 SHA 全文与 hash 核对，API NOASSERTION和人工识别分别保留，不沿用历史误记。
 - 新批次创建或复用范围适合的主控。现有SP-206负责SP-203～205，不因此无限扩张；后续若复用需明确更新其有限范围。允许主控协调本批次执行会话，但不授权外部消息。

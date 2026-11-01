@@ -638,5 +638,8 @@
     "automation_id": "ictrl",
     "automation_binding_verified": true,
     "evidence": "20261030-reference-update-report.md"
-  }
+  },
+  "last_verified_on": "2026-11-01",
+  "last_verified_main": "4b4b6a841446243c3fb76af800483cda65bbc738",
+  "latest_monitor_summary": "20261101-reference-update-report.md"
 }

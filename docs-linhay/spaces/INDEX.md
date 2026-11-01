@@ -248,7 +248,7 @@
 
 | `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30已发布 | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
 
-| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月31日33仓24完整/9 partial，5仓更新；17条已合main，SP252/253合后CLI/local通过并清理关闭；证据已改存仓外 |
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 11月1日33仓24完整/9 partial，2仓更新保留观察；17条已合main，无待分派；昨日证据完整，本日428份持久归档 |
 
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 
