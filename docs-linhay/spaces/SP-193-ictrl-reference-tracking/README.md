@@ -47,6 +47,8 @@
 
 ## 最近成功追踪
 
+2026-11-01：[摘要](./plans/20261101-check-summary.json)与[专项记录](./plans/20261101-reference-review.md)确认HEAD c1e4268859ba、v1.98.16和许可全文hash未变；SP193独立推进成功时间，无新采用/故障。
+
 2026-10-26：[摘要](./plans/20261026-check-summary.json)与[专项记录](./plans/20261026-reference-review.md)确认官方读取正常，HEAD `874f528`、Release `v1.98.12`、许可全文hash未变。无新增采用或故障，成功时间独立更新；本日新开发项来自simslim而非iCTRL。
 
 2026-10-25：[摘要](./plans/20261025-check-summary.json)与[专项记录](./plans/20261025-reference-review.md)确认官方读取正常，HEAD `874f528`、Release `v1.98.12`、许可全文hash均未变。无新采用或故障；摘要保存后推进独立成功时间，不在SP-207复制。
