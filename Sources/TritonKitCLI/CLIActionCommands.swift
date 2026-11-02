@@ -422,8 +422,7 @@ struct Wait: AsyncParsableCommand {
                 throw ExitCode.failure
             }
         } catch {
-            if error is ExitCode { throw error }
-            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+            try failWaitCommand(error, platform: platform, hdc: hdc, outputFormat: outputFormat, host: host, port: port)
         }
     }
 

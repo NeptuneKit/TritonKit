@@ -940,7 +940,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton act find <text> --all --json",
             ],
             outputContracts: [waitResultOutputContract(), hostIOSWaitOutputContract(), hostAndroidWaitOutputContract(), hostHarmonyWaitOutputContract()],
-            failureCodes: ["timeout", "validation_failed", "unsupported_capability", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"] + schemaIOSHostAXFailureCodes,
+            failureCodes: ["timeout", "validation_failed", "unsupported_capability", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed", "target_offline", "harmony_hdc_not_found", "host_action_failed", "harmony_discovery_timeout", "host_command_timeout", "harmony_layout_path_not_found", "harmony_layout_failed", "harmony_artifact_recv_failed"] + schemaIOSHostAXFailureCodes,
             providedCapabilities: ["wait", "ios-simulator-host-wait", "android-wait-text", "harmony-wait-text"]
         ),
         TKCommandSchema(
