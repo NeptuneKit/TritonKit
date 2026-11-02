@@ -437,3 +437,5 @@
 - 2026-11-02 [SP-263-issue-252-harmony-wait-errors](./SP-263-issue-252-harmony-wait-errors/README.md)：执行；Harmony wait保留target与host工具失败原因。
 
 SP260整合候选：Python21项与公开skill打包门禁通过，Swift parser对照待联合回归；无设备动作。
+
+SP262已修正审阅发现的DTO类型名和--format --json识别缺口，整合测试待执行；只处理parse阶段，不包装runtime失败。

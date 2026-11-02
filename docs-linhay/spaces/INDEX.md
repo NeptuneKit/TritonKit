@@ -353,6 +353,6 @@
 
 | `SP-261-issue-250-leaf-option-parity` | [`SP-261-issue-250-leaf-option-parity`](./SP-261-issue-250-leaf-option-parity/README.md) | 执行 | #250：sim.boot/act.tap/device.stop有效参数与输出，整合验证中 |
 
-| `SP-262-issue-251-json-parser-errors` | [`SP-262-issue-251-json-parser-errors`](./SP-262-issue-251-json-parser-errors/README.md) | 执行 | #251：JSON parser失败契约与值脱敏 |
+| `SP-262-issue-251-json-parser-errors` | [`SP-262-issue-251-json-parser-errors`](./SP-262-issue-251-json-parser-errors/README.md) | 执行 | #251：JSON parser失败候选已整合，待真实进程与完整回归 |
 
 | `SP-263-issue-252-harmony-wait-errors` | [`SP-263-issue-252-harmony-wait-errors`](./SP-263-issue-252-harmony-wait-errors/README.md) | 执行 | #252：Harmony wait保留target与host工具失败原因 |

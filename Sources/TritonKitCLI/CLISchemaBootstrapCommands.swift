@@ -253,13 +253,13 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
             ],
             examples: ["triton schema --json", "triton schema --command input --json"],
             successShape: "{ schemaVersion, commands[] }",
-            outputSemantics: "Use schema as the command contract fact source before executing or planning a Triton command.",
+            outputSemantics: "Use schema as the command contract fact source before executing or planning a Triton command. " + parserFailureOutputSemantics,
             nextCommands: [
                 "triton schema --command <command> --json",
                 "triton capabilities --format json",
                 "triton plan --format json",
             ],
-            outputContracts: [schemaCommandsOutputContract(), compactSchemaOutputContract()],
+            outputContracts: [schemaCommandsOutputContract(), compactSchemaOutputContract(), parserFailureOutputContract()],
             failureCodes: ["unknown_command_schema", "compact_schema_requires_leaf", "compact_schema_requires_json", "compact_schema_incomplete"]
         ),
     ]

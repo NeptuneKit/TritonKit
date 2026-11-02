@@ -28,7 +28,8 @@ struct TritonKitEntry {
         let newPath = ([currentPath] + extraPaths).joined(separator: ":")
         setenv("PATH", newPath, 1)
 
-        if let retiredRoot = retiredRootInvocation() {
+        let arguments = Array(CommandLine.arguments.dropFirst())
+        if let retiredRoot = retiredRootInvocation(), !parserRequestsJSON(arguments) {
             writeStandardError(
                 """
                 Error: Unknown subcommand '\(retiredRoot)'
@@ -44,7 +45,7 @@ struct TritonKitEntry {
             printChineseHelp()
             return
         }
-        await TritonKitCLI.main()
+        await runCLIWithParserFailures(arguments)
     }
 
     private static let retiredRootCommandNames: Set<String> = [
