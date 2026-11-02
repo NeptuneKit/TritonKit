@@ -12,6 +12,7 @@ struct CLIParserFailureEnvelope: Encodable, Equatable {
 struct CLIParserFailureDetail: Encodable, Equatable {
     let code: String
     let message: String
+    let hint: String?
     let retryable = false
     let details: CLIParserFailureArguments
     let nextAction: TKCLINextAction

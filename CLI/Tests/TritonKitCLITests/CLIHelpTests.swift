@@ -38,12 +38,29 @@ struct CLIHelpTests {
 
     @Test("retired state root suggests current debug and observation commands")
     func retiredStateRootSuggestsCurrentDebugAndObservationCommands() throws {
-        let result = try runTritonHelp(["state", "route", "--json"])
+        let result = try runTritonHelp(["state", "route"])
 
         #expect(result.exitCode != 0)
         #expect(result.stderr.contains("Unknown subcommand 'state'"))
         #expect(result.stderr.contains("triton debug state route --json"))
         #expect(result.stderr.contains("triton observe current --json"))
+    }
+
+    @Test("retired state JSON preserves safe migration guidance in one envelope")
+    func retiredStateJSONPreservesMigrationGuidance() throws {
+        let result = try runTritonHelp(["state", "route", "secret-state-value-251", "--json"])
+        #expect(result.exitCode == 64)
+        #expect(result.stderr.isEmpty)
+        let object = try #require(JSONSerialization.jsonObject(with: Data(result.stdout.utf8)) as? [String: Any])
+        #expect(object["ok"] as? Bool == false)
+        #expect(object["action"] as? String == "cli.parse")
+        let error = try #require(object["error"] as? [String: Any])
+        let hint = try #require(error["hint"] as? String)
+        #expect(hint.contains("triton debug state route --json"))
+        #expect(hint.contains("triton observe current --json"))
+        #expect(error["retryable"] as? Bool == false)
+        #expect((error["nextAction"] as? [String: Any])?["command"] as? String == "schema")
+        #expect(!result.stdout.contains("secret-state-value-251"))
     }
 
     @Test("root node command exposes current UI resolve workflow")

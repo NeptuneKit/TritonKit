@@ -10,6 +10,7 @@ func parserFailureOutputContract() -> TKCommandOutputContract {
         ("error", "CLIParserFailureDetail", true, "Pre-execution validation failure; distinct from runtime/domain errors"),
         ("error.code", "String", true, "Stable parser category; custom/unknown validation falls back to argument_validation_failed"),
         ("error.message", "String", true, "Static safe summary; original parser messages and values are never returned"),
+        ("error.hint", "String?", false, "Static migration guidance for recognized retired roots; never supplied argument values"),
         ("error.retryable", "Bool", true, "Always false until arguments are corrected"),
         ("error.details", "CLIParserFailureArguments", true, "Safe argument diagnostics without raw argv"),
         ("error.details.kind", "String", true, "missing|missing-value|missing-command|unknown-option|unexpected|invalid-value|conflict|unexpected-value|validation"),
