@@ -1085,6 +1085,7 @@ public struct TKXcodeOutputDiagnostic: Codable, Equatable {
     public let samples: [TKXcodeOutputDiagnosticSample]
     public let recovery: String
     public let nextAction: TKCLINextAction
+    public let coverage: TKXcodeDiagnosticCoverage?
 
     public init(
         kind: String,
@@ -1092,7 +1093,8 @@ public struct TKXcodeOutputDiagnostic: Codable, Equatable {
         matchCount: Int,
         samples: [TKXcodeOutputDiagnosticSample],
         recovery: String,
-        nextAction: TKCLINextAction
+        nextAction: TKCLINextAction,
+        coverage: TKXcodeDiagnosticCoverage? = nil
     ) {
         self.kind = kind
         self.message = message
@@ -1100,6 +1102,7 @@ public struct TKXcodeOutputDiagnostic: Codable, Equatable {
         self.samples = samples
         self.recovery = recovery
         self.nextAction = nextAction
+        self.coverage = coverage
     }
 }
 

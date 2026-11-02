@@ -426,7 +426,7 @@
 
 - 2026-11-02 [SP-258-issue-247-schema-effects](./SP-258-issue-247-schema-effects/README.md)：执行；副作用契约与保守unknown。
 
-- 2026-11-02 [SP-259-issue-248-xcode-diagnostics](./SP-259-issue-248-xcode-diagnostics/README.md)：执行；有界失败诊断及日志覆盖。
+- 2026-11-02 [SP-259-issue-248-xcode-diagnostics](./SP-259-issue-248-xcode-diagnostics/README.md)：候选整合；97项局部测试与三组CLI验收通过，完整回归/CI待完成。
 
 - 2026-11-02 [SP-260-issue-249-skill-wait-syntax](./SP-260-issue-249-skill-wait-syntax/README.md)：执行；公开skill语法与parser parity。
 

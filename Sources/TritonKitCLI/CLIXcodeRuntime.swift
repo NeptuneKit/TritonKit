@@ -1192,12 +1192,7 @@ func xcodeBuildOutputDiagnostics(
     _ result: HostProcessResult,
     redacting command: TKHostCommand? = nil
 ) -> [TKXcodeOutputDiagnostic]? {
-    let stdout = command.map { redactedXcodePublicText(result.stdout, command: $0) } ?? result.stdout
-    let stderr = command.map { redactedXcodePublicText(result.stderr, command: $0) } ?? result.stderr
-    guard let diagnostic = XcodeBuildOutputDiagnosticsParser.parse(stdout: stdout, stderr: stderr) else {
-        return nil
-    }
-    return [diagnostic]
+    xcodeBoundedBuildOutputDiagnostics(result, redacting: command)
 }
 
 func redactingXcodeRealDeviceCommand(

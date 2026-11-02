@@ -29,7 +29,22 @@ enum XcodeBuildOutputDiagnosticsParser {
 
         let samples = lines
             .compactMap(parseStaleDerivedDataLine)
-        guard !samples.isEmpty else { return nil }
+        guard !samples.isEmpty else {
+            let fatalSamples = lines.compactMap { line -> TKXcodeOutputDiagnosticSample? in
+                let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard trimmed.hasPrefix("fatal error:") || trimmed.contains(": fatal error:") else { return nil }
+                return TKXcodeOutputDiagnosticSample(path: "<compiler>", message: trimmed)
+            }
+            guard !fatalSamples.isEmpty else { return nil }
+            return TKXcodeOutputDiagnostic(
+                kind: "compiler-fatal-error",
+                message: "xcodebuild reported a fatal compiler diagnostic.",
+                matchCount: fatalSamples.count,
+                samples: Array(fatalSamples.prefix(maximumSamples)),
+                recovery: "Inspect the diagnostic and preserved stdout/stderr artifacts. This summary does not establish a safe cache cleanup or automatic rebuild recovery.",
+                nextAction: TKCLINextAction(command: "schema", args: ["--command", "xcode.build", "--json"], category: "project")
+            )
+        }
 
         return TKXcodeOutputDiagnostic(
             kind: "stale-derived-data-outside-root",
