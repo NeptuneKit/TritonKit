@@ -356,3 +356,5 @@
 | `SP-262-issue-251-json-parser-errors` | [`SP-262-issue-251-json-parser-errors`](./SP-262-issue-251-json-parser-errors/README.md) | 执行 | #251：JSON parser失败候选已整合，待真实进程与完整回归 |
 
 | `SP-263-issue-252-harmony-wait-errors` | [`SP-263-issue-252-harmony-wait-errors`](./SP-263-issue-252-harmony-wait-errors/README.md) | 执行 | #252：typed failure候选已整合，fake-HDC验收待执行 |
+
+| `SP-264-release-v0-2-39` | [`SP-264-release-v0-2-39`](./SP-264-release-v0-2-39/README.md) | 执行 | v0.2.39独立issue交付、完整发布与安装验收 |
