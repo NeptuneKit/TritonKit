@@ -57,6 +57,17 @@ struct IOSHostHIDProbeTests {
         #expect(!json.contains("/fixture"))
     }
 
+    @Test func dtuhidSymbolsAllowDeferredDeviceNegotiationWithoutLegacyClass() {
+        let probe = probeIOSHostHID(selectedDevice: "SIM-1", developerDirectory: developer, fileExists: { _ in true }, loader: { _ in
+            .init(loaded: true, legacyClientAvailable: false, modernClientAvailable: false, error: nil, dtuhidEndpointAvailable: true)
+        })
+        #expect(probe.compatible)
+        #expect(!probe.available && !probe.inputDispatchVerified)
+        #expect(probe.code == "ios_host_hid_framework_compatible")
+        #expect(probe.backend == "dtuhid-or-legacy")
+        #expect(probe.message.contains("not been tested"))
+    }
+
     @Test func doctorParserAcceptsSelectedDevice() throws {
         let doctor = try DeviceDoctor.parse(["--platform", "ios", "--device", "SIM-1", "--json"])
         #expect(doctor.device == "SIM-1")

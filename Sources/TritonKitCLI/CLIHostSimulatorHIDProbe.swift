@@ -45,6 +45,7 @@ struct IOSHostHIDFrameworkLoadResult: Codable, Equatable {
     let legacyClientAvailable: Bool
     let modernClientAvailable: Bool
     let error: String?
+    var dtuhidEndpointAvailable = false
 }
 
 typealias IOSHostHIDFrameworkLoader = (String) -> IOSHostHIDFrameworkLoadResult
@@ -108,14 +109,14 @@ func probeIOSHostHIDFramework(
         )
     }
     let result = loader(candidate.path)
-    if result.loaded, result.legacyClientAvailable {
+    if result.loaded, result.legacyClientAvailable || result.dtuhidEndpointAvailable {
         return IOSHostHIDProbe(
             target: "",
             compatible: true,
             code: "ios_host_hid_framework_compatible",
-            message: "The selected SimulatorKit exposes the legacy HID class; device input dispatch has not been tested.",
+            message: "The selected toolchain exposes HID bootstrap prerequisites; device DTUHID lookup, liveness and input dispatch have not been tested.",
             hint: "Host HID acknowledgement is submission-only; verify the settled business state separately.",
-            backend: "SimulatorKit.SimDeviceLegacyHIDClient",
+            backend: result.dtuhidEndpointAvailable ? "dtuhid-or-legacy" : "SimulatorKit.SimDeviceLegacyHIDClient",
             frameworkLayout: candidate.layout,
             sourceCommands: []
         )
@@ -124,7 +125,7 @@ func probeIOSHostHIDFramework(
         : result.modernClientAvailable ? "ios_host_hid_modern_backend_unsupported"
         : "ios_host_hid_legacy_backend_unavailable"
     let message = result.loaded && result.modernClientAvailable
-        ? "The selected SimulatorKit exposes a modern HID client, but the current adapter only supports the legacy client contract."
+        ? "The selected SimulatorKit exposes a modern HID class, but the DTUHID endpoint prerequisites and legacy client are unavailable; class presence is not a service probe."
         : (!result.loaded ? "SimulatorKit could not be loaded from the selected Xcode." : "SimulatorKit loaded without a compatible legacy HID client; the input backend is unavailable.")
     return IOSHostHIDProbe(
         target: "",
@@ -221,6 +222,8 @@ struct DeviceHIDBootstrap: ParsableCommand {
         let loaded = dlopen(framework, RTLD_LAZY | RTLD_LOCAL) != nil
         let legacy = loaded && (NSClassFromString("_TtC12SimulatorKit24SimDeviceLegacyHIDClient") != nil || NSClassFromString("SimulatorKit.SimDeviceLegacyHIDClient") != nil || NSClassFromString("SimDeviceLegacyHIDClient") != nil)
         let modern = loaded && (NSClassFromString("SimulatorKit.SimDeviceHIDClient") != nil || NSClassFromString("SimDeviceHIDClient") != nil)
-        print(try encodeJSON(IOSHostHIDFrameworkLoadResult(loaded: loaded, legacyClientAvailable: legacy, modernClientAvailable: modern, error: loaded ? nil : "dlopen_failed")))
+        let symbols = UnsafeMutableRawPointer(bitPattern: -2)
+        let dtuhid = loaded && ["xpc_endpoint_create_mach_port_4sim", "xpc_connection_create_from_endpoint", "xpc_connection_enable_sim2host_4sim"].allSatisfy { name in name.withCString { dlsym(symbols, $0) != nil } }
+        print(try encodeJSON(IOSHostHIDFrameworkLoadResult(loaded: loaded, legacyClientAvailable: legacy, modernClientAvailable: modern, error: loaded ? nil : "dlopen_failed", dtuhidEndpointAvailable: dtuhid)))
     }
 }
