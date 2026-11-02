@@ -824,7 +824,15 @@
         "observation": "20261102-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
-      "last_error": null
+      "last_error": null,
+      "last_notified_observation": {
+        "head_sha": "180c60584867500b93b43ca6c8b556995bf8be7b",
+        "release_tag": "v0.5.1",
+        "reported_on": "20261102",
+        "summary": "20261102-reference-update-report.md",
+        "coverage": "complete",
+        "decision": "adopted_offline_local_merged"
+      }
     },
     {
       "repository": "jfarcand/mirroir-mcp",

@@ -12,3 +12,7 @@
 - 离线失败测试→最小实现→focused/完整CLI→主控diff复核及合后门禁；真实设备未授权、未执行，不能据fixture声称实际兼容。
 
 执行：SP-254-simulator-dtuhid-transport；主控：SP-255-dtuhid-integration，复用当前长期聊天。证据归plans；主控负责本地合并、证据归档、清理及执行聊天关闭，不push/tag/release。
+
+## 2026-11-02 主线验收
+
+已合main c4a14e52，合后完整CLI/local通过，Git工作区/分支清理、执行聊天归档完成；真实兼容未验证，managed UI附件清理失败单列跟进。见[主控收口](../SP-255-dtuhid-integration/plans/20261102-main-closeout.md)。

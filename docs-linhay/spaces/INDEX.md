@@ -248,7 +248,7 @@
 
 | `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30已发布 | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
 
-| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 11月2日33仓24完整/9 partial，4仓更新；17条旧采用已合main，新SP254/255实现中，证据持久归档 |
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 11月2日33仓24完整/9 partial，4仓更新；17条旧采用已合main，SP254/255已离线验收合main，证据持久归档 |
 
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 
@@ -336,6 +336,6 @@
 | `SP-252-detached-log-exclusive-create` | [`SP-252-detached-log-exclusive-create`](./SP-252-detached-log-exclusive-create/README.md) | 已验收合本地main | 56ef7719；CLI162+1665/local通过，已归档清理关闭 |
 | `SP-253-detached-log-integration` | [`SP-253-detached-log-integration`](./SP-253-detached-log-integration/README.md) | 已验收合本地main | 独立审查、合后门禁及证据/工作区/会话闭环完成 |
 
-| `SP-254-simulator-dtuhid-transport` | [`SP-254-simulator-dtuhid-transport`](./SP-254-simulator-dtuhid-transport/README.md) | 已评估待分派 | CLI host DTUHID；离线契约与真实验收分开 |
+| `SP-254-simulator-dtuhid-transport` | [`SP-254-simulator-dtuhid-transport`](./SP-254-simulator-dtuhid-transport/README.md) | 已离线验收合本地main | c4a14e52；CLI/local通过、Git清理/聊天归档；真实兼容未验 |
 
-| `SP-255-dtuhid-integration` | [`SP-255-dtuhid-integration`](./SP-255-dtuhid-integration/README.md) | 已评估待分派 | CLI host DTUHID；离线契约与真实验收分开 |
+| `SP-255-dtuhid-integration` | [`SP-255-dtuhid-integration`](./SP-255-dtuhid-integration/README.md) | 已离线验收合本地main | c4a14e52；CLI/local通过、Git清理/聊天归档；真实兼容未验 |

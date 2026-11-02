@@ -41,3 +41,7 @@
 经验检查完成：本轮poison缺陷及已验证修复沉淀至本space契约/测试。只读独立审查无当前单手势helper阻断问题，session正常up后应立即finish，不作多手势复用；公共长期资料由主控按最终整合结论写回。
 
 集成主控：[SP-255](../SP-255-dtuhid-integration/README.md)。主控保留候选验收边界，负责本地合后门禁、证据/工作区清理及会话关闭；不推送/发布。
+
+## 2026-11-02 主线验收
+
+已合main c4a14e52，合后完整CLI/local通过，Git工作区/分支清理、执行聊天归档完成；真实兼容未验证，managed UI附件清理失败单列跟进。见[主控收口](../SP-255-dtuhid-integration/plans/20261102-main-closeout.md)。
