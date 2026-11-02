@@ -24,7 +24,7 @@ struct DeviceNativeHIDInput: ParsableCommand {
             }
             let environment = ["DEVELOPER_DIR": developer]
             let backend = try performNativeHIDInput(input: input, preflightOnly: preflightOnly, snapshot: {
-                try nativeHIDGuardSnapshot(target: device, environment: environment)
+                try nativeHIDGuardSnapshot(target: device, environment: environment, allowActiveDTUHID: true)
             }, makeDriver: {
                 try NativeSimulatorDigitizer(target: device, developerDirectory: developer)
             })
@@ -73,8 +73,17 @@ func performNativeHIDInput(input: TKInputRequest, preflightOnly: Bool = false,
     sleep: (Double) -> Void = { Thread.sleep(forTimeInterval: $0) }) throws -> String? {
     let screen = try snapshot()
     let sequence = try nativeHIDContacts(input: input, screen: screen)
-    if preflightOnly { return nil }
+    if preflightOnly {
+        guard !screen.dtuhidActive else { throw NativeHIDControlError(code: "ios_host_hid_device_hub_attached") }
+        return nil
+    }
     let driver = try makeDriver()
+    // active only describes the target-bound guest daemon observation. It is
+    // not exclusive host-UI ownership. A negotiated modern session is required;
+    // unknown remains rejected by snapshot(), and legacy never bypasses this.
+    guard !screen.dtuhidActive || driver.backend == "dtuhid" else {
+        throw NativeHIDControlError(code: "ios_host_hid_device_hub_attached")
+    }
     guard abs(driver.pointSize.width - screen.pointSize.width) < 0.01,
           abs(driver.pointSize.height - screen.pointSize.height) < 0.01 else {
         throw NativeHIDControlError(code: "ios_host_hid_display_unsupported")
