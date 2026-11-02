@@ -386,14 +386,16 @@ struct Wait: AsyncParsableCommand {
                     )
                 }
                 let query = text ?? gone ?? exists ?? ""
-                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+                let startedAt = Date()
+                let selected = try resolveHarmonyTarget(target: target, hdc: hdc, deadline: startedAt.addingTimeInterval(timeout))
                 let response = try await waitForHarmonyText(
                     selected: selected,
                     hdc: hdc,
                     text: query,
                     timeout: timeout,
                     interval: interval,
-                    gone: gone != nil
+                    gone: gone != nil,
+                    startedAt: startedAt
                 )
                 switch outputFormat {
                 case .json:

@@ -14,7 +14,17 @@ struct HarmonyWaitFailureTests {
         let source = """
         #!/bin/sh
         printf '%s\\n' "$*" >> '\(root.path)/calls'
-        \(fails ? "echo 'synthetic host transport failure' >&2; exit 7" : "printf 'fake-one TCP Connected localhost\\n'")
+        \(fails ? "echo 'synthetic host transport failure' >&2; exit 7" : "")
+        case "$*" in
+            'list targets'*) printf 'fake-one TCP Connected localhost\\n' ;;
+            *'dumpLayout'*) printf 'DumpLayout saved to: /data/local/tmp/sp263.json\\n' ;;
+            *'file recv'*)
+                for path in "$@"; do :; done
+                printf '%s' '{"attributes":{"text":"Other","bounds":"[0,0][100,50]"}}' > "$path"
+                printf 'File recv finish\\n'
+                ;;
+            *) exit 9 ;;
+        esac
         """
         try source.write(to: tool, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: tool.path)
@@ -94,7 +104,7 @@ struct HarmonyWaitFailureTests {
     @Test func conditionTimeoutIsNotAHostOrServerError() async throws {
         let root = try fixture()
         defer { try? FileManager.default.removeItem(at: root) }
-        let command = try Wait.parse(["--platform", "harmony", "--target", "fake-one", "--text", "Absent", "--timeout", "0.001", "--hdc", root.appendingPathComponent("hdc").path, "--json"])
+        let command = try Wait.parse(["--platform", "harmony", "--target", "fake-one", "--text", "Absent", "--timeout", "2", "--interval", "0.01", "--hdc", root.appendingPathComponent("hdc").path, "--json"])
         let output = try await capture { try await command.run() }
         let json = try #require(JSONSerialization.jsonObject(with: Data(output.0.utf8)) as? [String: Any])
         #expect(json["timedOut"] as? Bool == true)

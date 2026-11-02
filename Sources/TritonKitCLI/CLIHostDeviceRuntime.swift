@@ -3,8 +3,8 @@ import TritonKitShared
 
 typealias HostDeviceCommandRunner = (TKHostCommand) throws -> HostProcessResult
 
-func resolveHarmonyTarget(target: String?, hdc: String) throws -> TKHarmonyTarget {
-    let targets = try harmonyTargets(hdc: hdc).targets
+func resolveHarmonyTarget(target: String?, hdc: String, deadline: Date? = nil) throws -> TKHarmonyTarget {
+    let targets = try harmonyTargets(hdc: hdc, deadline: deadline).targets
     if let target {
         guard let selected = targets.first(where: { $0.target == target || $0.id == target }) else {
             throw HostDeviceRunError.targetNotFound(target)
@@ -20,8 +20,8 @@ func resolveHarmonyTarget(target: String?, hdc: String) throws -> TKHarmonyTarge
     throw HostDeviceRunError.ambiguousTarget(targets.filter(\.isConnected))
 }
 
-func resolveHarmonyTarget(target: String, hdc: String) throws -> TKHarmonyTarget {
-    try resolveHarmonyTarget(target: target == TKLocalTargetID ? nil : target, hdc: hdc)
+func resolveHarmonyTarget(target: String, hdc: String, deadline: Date? = nil) throws -> TKHarmonyTarget {
+    try resolveHarmonyTarget(target: target == TKLocalTargetID ? nil : target, hdc: hdc, deadline: deadline)
 }
 
 func hostDeviceTargets(platform: HostDevicePlatform, scope: HostDeviceScope? = nil, hdc: String, adb: String = "adb") throws -> (targets: [HostDeviceTarget], sourceCommand: String) {
@@ -69,18 +69,37 @@ func harmonyHostDeviceTargets(
 
 func harmonyTargets(
     hdc: String,
+    deadline: Date? = nil,
     runner: HostDeviceCommandRunner = { command in try runHostCommand(command) }
 ) throws -> (targets: [TKHarmonyTarget], sourceCommand: String) {
-    let verboseResult = try runner(TKHarmonyHDCCommand.listTargets(executable: hdc))
+    func runDiscovery(_ command: TKHostCommand) throws -> HostProcessResult {
+        guard let deadline else { return try runner(command) }
+        let remaining = deadline.timeIntervalSinceNow
+        guard remaining > 0 else {
+            throw HostCommandRunError.timeout(command: command, timeoutSeconds: 0, stdoutLogPath: nil, stderrLogPath: nil)
+        }
+        let bounded = command.withTimeout(min(command.defaultTimeoutSeconds, remaining))
+        let result = try runner(bounded)
+        // A runner may finish while the budget expires; do not report a stale
+        // discovery result or start the fallback with a fresh command budget.
+        guard Date() < deadline else {
+            throw HostCommandRunError.timeout(command: bounded, timeoutSeconds: bounded.defaultTimeoutSeconds, stdoutLogPath: result.stdoutLogPath, stderrLogPath: result.stderrLogPath)
+        }
+        return result
+    }
+    let verboseResult = try runDiscovery(TKHarmonyHDCCommand.listTargets(executable: hdc))
     let verboseTargets = parseHarmonyTargets(from: verboseResult)
     guard verboseTargets.isEmpty else {
         return (verboseTargets, verboseResult.sourceCommand)
     }
     do {
-        let plainResult = try runner(TKHarmonyHDCCommand.listTargetsPlain(executable: hdc))
+        let plainResult = try runDiscovery(TKHarmonyHDCCommand.listTargetsPlain(executable: hdc))
         let plainTargets = parseHarmonyTargets(from: plainResult)
         return (plainTargets, [verboseResult.sourceCommand, plainResult.sourceCommand].joined(separator: "\n"))
     } catch {
+        // The optional plain-format retry must not turn an exhausted wait
+        // deadline into an ordinary empty target list / target_not_found.
+        if deadline != nil, case HostCommandRunError.timeout = error { throw error }
         return (verboseTargets, verboseResult.sourceCommand)
     }
 }

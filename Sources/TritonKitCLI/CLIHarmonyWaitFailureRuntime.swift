@@ -16,6 +16,17 @@ func harmonyWaitFailureDetail(_ error: Error, hdc: String) -> TKCLIErrorDetail? 
         )
     }
     switch error {
+    case HostCommandRunError.timeout(let command, _, _, _)
+        where command.executable == hdc && (command.arguments == ["list", "targets", "-v"] || command.arguments == ["list", "targets"]):
+        // --hdc accepts custom executable names. At this wait boundary the
+        // configured tool and discovery argv are authoritative; do not infer
+        // its identity from the basename or widen the global host classifier.
+        return TKCLIErrorDetail(
+            code: "harmony_discovery_timeout",
+            message: "\(error)",
+            hint: "Harmony target discovery timed out within the wait budget. Check the configured --hdc executable and retry with an appropriate --timeout; no layout condition was evaluated.",
+            nextAction: toolCheck
+        )
     case HostDeviceRunError.targetNotFound:
         return TKCLIErrorDetail(code: "target_not_found", message: "\(error)", hint: "List Harmony targets with the configured --hdc, then pass an explicit --target or --device from that result.", nextAction: discovery)
     case HostDeviceRunError.ambiguousTarget:

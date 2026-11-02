@@ -449,6 +449,7 @@ func waitForHarmonyText(
     timeout: Double,
     interval: Double,
     gone: Bool = false,
+    startedAt: Date? = nil,
     captureLayout: (
         _ selected: TKHarmonyTarget,
         _ hdc: String,
@@ -458,7 +459,7 @@ func waitForHarmonyText(
         try dumpHarmonyLayout(selected: selected, hdc: hdc, output: output, timeout: timeout)
     }
 ) async throws -> HostHarmonyWaitOutput {
-    let startedAt = Date()
+    let startedAt = startedAt ?? Date()
     let deadline = startedAt.addingTimeInterval(timeout)
     var pollCount = 0
     var lastMatch: TKHarmonyLayoutTextMatch?
