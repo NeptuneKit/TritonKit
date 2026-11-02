@@ -1,8 +1,10 @@
 # SP-266 Harmony wait 总 deadline
 
+当前交付状态（2026-11-02）：十二项独立修复已随 [v0.2.39](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.39) 发布，发布提交/tag 为 `026d329e5346fce77ae62a2828e3d27ed2d94c2e`；候选、main/tag/Release CI、双架构制品与安装验证通过。公开安装版三端 HTTP/浏览器预览及自有资源清理已完成；完整状态见 [SP264](../SP-264-release-v0-2-39/README.md)，不将发布等同于原私有现场恢复。
+
 ## 边界与状态
 
-针对 [#147 新反馈](https://github.com/NeptuneKit/TritonKit/issues/147#issuecomment-6573083668)，历史基线 `572b4afb`；当前已由 PR #265 合入远端 main `64c15d9e`，精确候选 CI 与完整联合 CLI/local preflight 通过，待 v0.2.39 发布。影响 CLI host Harmony wait 的发现与条件轮询预算；不操作真实设备，不修改 role 匹配，不扩大 Android/iOS 范围。#252 的 missing/offline/ambiguous 分类保留，发现超时复用 `harmony_discovery_timeout`，不伪造未解析目标。
+针对 [#147 新反馈](https://github.com/NeptuneKit/TritonKit/issues/147#issuecomment-6573083668)，历史基线 `572b4afb`；当前已由 PR #265 合入远端 main `64c15d9e`，精确候选 CI 与完整联合 CLI/local preflight 通过，已随 v0.2.39 发布，制品与安装验证通过。影响 CLI host Harmony wait 的发现与条件轮询预算；不操作真实设备，不修改 role 匹配，不扩大 Android/iOS 范围。#252 的 missing/offline/ambiguous 分类保留，发现超时复用 `harmony_discovery_timeout`，不伪造未解析目标。
 
 ## BDD
 

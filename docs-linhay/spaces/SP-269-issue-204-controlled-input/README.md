@@ -1,8 +1,10 @@
 # SP-269 #204 受控 WebView 输入回归
 
+当前交付状态（2026-11-02）：十二项独立修复已随 [v0.2.39](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.39) 发布，发布提交/tag 为 `026d329e5346fce77ae62a2828e3d27ed2d94c2e`；候选、main/tag/Release CI、双架构制品与安装验证通过。公开安装版三端 HTTP/浏览器预览及自有资源清理已完成；完整状态见 [SP264](../SP-264-release-v0-2-39/README.md)，不将发布等同于原私有现场恢复。
+
 ## 当前状态
 
-2026-11-02发布前增量巡查发现已关闭 #204 的新反馈；本地最小修复与真实自有验收通过，尚未远端整合或发布。来源：[新增评论](https://github.com/NeptuneKit/TritonKit/issues/204#issuecomment-6575448569)。不修改 issue 开关状态。
+2026-11-02发布前增量巡查发现已关闭 #204 的新反馈；最小修复、真实自有验收与精确 PR CI 通过，已由 [PR #268](https://github.com/NeptuneKit/TritonKit/pull/268) 合入 main `026d329e`，已随 v0.2.39 发布。来源：[新增评论](https://github.com/NeptuneKit/TritonKit/issues/204#issuecomment-6575448569)。不修改 issue 开关状态。
 
 ## 边界与 BDD
 
@@ -16,9 +18,9 @@
 
 ## 隔离与验证
 
-复用本聊天干净、已整合的 SP256 warm worktree `/Users/linhey/.codex/worktrees/sp-256-issue-245-compact-schema/TritonKit`，新分支 `feat/SP-269-issue-204-controlled-input`，基线远端 main `dd2ef7a6`。主控拥有空间、索引、集成；实现文件待只读调查后明确委派，Git/构建/设备动作串行。原 SP257 WIP 与主目录保持原状。
+复用本聊天干净、已整合的 SP256 warm worktree `/Users/linhey/.codex/worktrees/sp-256-issue-245-compact-schema/TritonKit`，实现分支 `feat/SP-269-issue-204-controlled-input`，基线远端 main `dd2ef7a6`。主控拥有空间、索引、集成；实现仅覆盖已审阅的 WebView legacy 脚本/provider 与独立回归测试，Git/构建/设备动作串行。原 SP257 WIP 与主目录保持原状。
 
-计划先真实失败 fixture，再最小修改、正负对照、root/CLI/标准 pod lint 与真实 iOS App-host 验收；必要发布门禁重新绑定最终候选。复用已有自有 App-host 的方法，原始证据单独归档，不改写旧验收记录。
+已按真实失败 fixture、最小修改、正负对照、root/CLI/标准 pod lint 与真实 iOS App-host 完成验收；发布门禁绑定最终候选。复用已有自有 App-host 的方法，原始证据单独归档，不改写旧验收记录。
 
 ## 当前验收
 

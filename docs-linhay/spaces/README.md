@@ -1,6 +1,6 @@
 # TritonKit Spaces Index
 
-2026-11-02：SP256/258–263 的七项issue修复已合入main，SP264 v0.2.39尚未发布；用户追加全量并行处理，SP265–268已合入main；新增[SP269](./SP-269-issue-204-controlled-input/README.md)核对#204受控textarea新反馈，验收后统一发布。#214暂停、#246人工依赖部分排除、#224未解决边界保留。
+2026-11-02：SP256、SP258–263、SP265–269 十二项独立修复已随 [v0.2.39](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.39)发布，发布提交/tag `026d329e`；main/tag/Release CI、标准Pod lint、双架构制品、Homebrew/skills安装及安装版23项只读smoke通过。正式三端预览和自有清理通过，由 [SP264](./SP-264-release-v0-2-39/README.md)收口。#214暂缓、#246人工依赖部分排除、#224和原私有现场未验证边界保留。
 
 2026-10-30：[SP-251 v0.2.38](./SP-251-release-v0-2-38/README.md)已发布；内存优化/Rhine/WebView联合候选、双架构与Homebrew、两处skills、三端公开包验收通过。原WIP保留，自有测试资源已清理。
 
@@ -422,38 +422,32 @@
 
 - [SP-255-dtuhid-integration](./SP-255-dtuhid-integration/README.md)：独立参考流程占号，本候选仅登记需求，未整合产品。
 
-- [SP-256-issue-245-compact-schema](./SP-256-issue-245-compact-schema/README.md)：#245 opt-in叶子schema，CLI只读契约；完整CLI通过，本地总门禁及CI推进中。
+- [SP-256-issue-245-compact-schema](./SP-256-issue-245-compact-schema/README.md)：#245 opt-in叶子schema，CLI只读契约；已合并 PR #253；最终联合门禁通过，随 v0.2.39 发布，资产/安装通过，三端预览与清理通过。
 
 - 2026-11-02 [SP-257-issue-246-harmony-verified-input](./SP-257-issue-246-harmony-verified-input/README.md)：本轮排除；本地候选与证据保留；自有HVD出现IME许可交互，正向输入未验收；不把人工步骤交给用户；20本地测试及真实负例不代替完整验收。
 
-- 2026-11-02 [SP-258-issue-247-schema-effects](./SP-258-issue-247-schema-effects/README.md)：已合并 PR #259；定向/组合与精确 CI 通过，随 SP264 待发布。
+- 2026-11-02 [SP-258-issue-247-schema-effects](./SP-258-issue-247-schema-effects/README.md)：已合并 PR #259；定向/组合与精确 CI 通过，随 v0.2.39 发布，资产/安装通过，三端预览与清理通过。
 
-- 2026-11-02 [SP-259-issue-248-xcode-diagnostics](./SP-259-issue-248-xcode-diagnostics/README.md)：已合并 PR #260；定向/组合与精确 CI 通过，随 SP264 待发布。
+- 2026-11-02 [SP-259-issue-248-xcode-diagnostics](./SP-259-issue-248-xcode-diagnostics/README.md)：已合并 PR #260；定向/组合与精确 CI 通过，随 v0.2.39 发布，资产/安装通过，三端预览与清理通过。
 
-- 2026-11-02 [SP-260-issue-249-skill-wait-syntax](./SP-260-issue-249-skill-wait-syntax/README.md)：已合并 PR #256；定向/组合与精确 CI 通过，随 SP264 待发布。
+- 2026-11-02 [SP-260-issue-249-skill-wait-syntax](./SP-260-issue-249-skill-wait-syntax/README.md)：已合并 PR #256；定向/组合与精确 CI 通过，随 v0.2.39 发布，资产/安装通过，三端预览与清理通过。
 
-- 2026-11-02 [SP-261-issue-250-leaf-option-parity](./SP-261-issue-250-leaf-option-parity/README.md)：已合并 PR #255；定向/组合与精确 CI 通过，随 SP264 待发布。
+- 2026-11-02 [SP-261-issue-250-leaf-option-parity](./SP-261-issue-250-leaf-option-parity/README.md)：已合并 PR #255；定向/组合与精确 CI 通过，随 v0.2.39 发布，资产/安装通过，三端预览与清理通过。
 
-- 2026-11-02 [SP-262-issue-251-json-parser-errors](./SP-262-issue-251-json-parser-errors/README.md)：已合并 PR #257；定向/组合与精确 CI 通过，随 SP264 待发布。
+- 2026-11-02 [SP-262-issue-251-json-parser-errors](./SP-262-issue-251-json-parser-errors/README.md)：已合并 PR #257；定向/组合与精确 CI 通过，随 v0.2.39 发布，资产/安装通过，三端预览与清理通过。
 
-- 2026-11-02 [SP-263-issue-252-harmony-wait-errors](./SP-263-issue-252-harmony-wait-errors/README.md)：已合并 PR #258；定向/组合与精确 CI 通过，随 SP264 待发布。
+- 2026-11-02 [SP-263-issue-252-harmony-wait-errors](./SP-263-issue-252-harmony-wait-errors/README.md)：已合并 PR #258；定向/组合与精确 CI 通过，随 v0.2.39 发布，资产/安装通过，三端预览与清理通过。
 
-SP260整合候选：Python21项与公开skill打包门禁通过，Swift parser对照待联合回归；无设备动作。
+历史整合检查点：SP260最初只有Python21项与公开skill打包通过，SP262修正DTO/format识别，SP263等待fake-HDC与联合回归，SP258完成58项声明后等待shared/CLI回归；这些当时待办已由后续定向、完整回归及发布验收覆盖。#147 deadline与#5 role后续由SP266/SP267独立处理。当前结果统一见[SP264最终验收](./SP-264-release-v0-2-39/plans/20261102-release.md)，上述历史不再作为执行队列。
 
-SP262已修正审阅发现的DTO类型名和--format --json识别缺口，整合测试待执行；只处理parse阶段，不包装runtime失败。
+- 2026-11-02 [SP-264-release-v0-2-39](./SP-264-release-v0-2-39/README.md)：十二项随v0.2.39发布；main/tag/Release CI、公开包/安装通过，正式三端预览与清理通过。
 
-SP263已独立审阅，Harmony wait保留host原因与定向诊断；runtime路径/idle拒绝保持，待fake-HDC和联合回归。#147 discovery deadline及#5 role缺口不在本修复范围。
+- [SP-265-issue-118-skill-budget](./SP-265-issue-118-skill-budget/README.md)：已合并；PR #263 已合入main；预算/打包/安装与精确CI通过，v0.2.39已发布且安装通过。
 
-SP258整合58个act/app/sim/build声明和保守unknown，条件效果保留full/compact scope；不改变执行guard。shared与CLI完整回归待执行。
+- [SP-266-issue-147-wait-deadline](./SP-266-issue-147-wait-deadline/README.md)：已合并；PR #265 已合入main；18定向/5实际CLI与精确CI通过，v0.2.39已发布且安装通过。
 
-- 2026-11-02 [SP-264-release-v0-2-39](./SP-264-release-v0-2-39/README.md)：执行；独立issue组合验证与完整发布。
+- [SP-267-issue-5-wait-role](./SP-267-issue-5-wait-role/README.md)：已合并；PR #266 已合入main；24组合/18实际CLI/6真实Harmony与精确CI通过，v0.2.39已发布且安装通过。
 
-- [SP-265-issue-118-skill-budget](./SP-265-issue-118-skill-budget/README.md)：已合并；PR #263 已合入main；预算/打包/安装与精确CI通过，待0.2.39发布。
+- [SP-268-issue-139-host-plan](./SP-268-issue-139-host-plan/README.md)：已合并；PR #264 已合入main；8定向/4实际CLI与精确CI通过，v0.2.39已发布且安装通过。
 
-- [SP-266-issue-147-wait-deadline](./SP-266-issue-147-wait-deadline/README.md)：已合并；PR #265 已合入main；18定向/5实际CLI与精确CI通过，待0.2.39发布。
-
-- [SP-267-issue-5-wait-role](./SP-267-issue-5-wait-role/README.md)：已合并；PR #266 已合入main；24组合/18实际CLI/6真实Harmony与精确CI通过，待0.2.39发布。
-
-- [SP-268-issue-139-host-plan](./SP-268-issue-139-host-plan/README.md)：已合并；PR #264 已合入main；8定向/4实际CLI与精确CI通过，待0.2.39发布。
-
-| 候选验收 | [SP-269-issue-204-controlled-input](./SP-269-issue-204-controlled-input/README.md) | #204新增受控textarea/ambiguity反馈 | 真实React state/rerender/拒绝/ambiguity通过；待CI整合和0.2.39 |
+| 已发布，验收完成 | [SP-269-issue-204-controlled-input](./SP-269-issue-204-controlled-input/README.md) | #204新增受控textarea/ambiguity反馈 | PR #268 合入 main026d329e；真实无opt-in与完整门禁/标准Pod/精确CI通过，v0.2.39已发布，安装通过 |
