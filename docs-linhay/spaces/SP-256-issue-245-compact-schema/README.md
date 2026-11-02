@@ -1,6 +1,8 @@
 # SP-256-issue-245-compact-schema
 
-状态：PR #253 已合入 main 137afac6，发布待后续候选整合。关联 GitHub #245；影响 CLI schema 只读契约，保留默认完整输出模式与 response 模型/选择行为；权威元数据补齐见下，不改变设备动作。
+当前交付状态（2026-11-02）：十二项独立修复已随 [v0.2.39](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.39) 发布，发布提交/tag 为 `026d329e5346fce77ae62a2828e3d27ed2d94c2e`；候选、main/tag/Release CI、双架构制品与安装验证通过。公开安装版三端 HTTP/浏览器预览及自有资源清理已完成；完整状态见 [SP264](../SP-264-release-v0-2-39/README.md)，不将发布等同于原私有现场恢复。
+
+状态：PR #253 已合入 main 137afac6，已随 v0.2.39 发布并通过制品/安装验证。关联 GitHub #245；影响 CLI schema 只读契约，保留默认完整输出模式与 response 模型/选择行为；权威元数据补齐见下，不改变设备动作。
 
 ## BDD与验收
 
@@ -24,4 +26,4 @@
 
 ## 整合检查点
 
-精确候选296f1b07，经独立审阅、完整CLI、root与本地总门禁及PR CI通过，2026-11-02 09:06 UTC合入远端main 137afac6。合后CI单独核对。源schema遗漏由#247/#250继续修正，compact成功不证明全库parser parity；未关闭issue、未发布新tag。
+精确候选296f1b07，经独立审阅、完整CLI、root与本地总门禁及PR CI通过，2026-11-02 09:06 UTC合入远端main 137afac6。合后CI已通过，发布验收见顶部SP264。源schema遗漏由#247/#250继续修正，compact成功不证明全库parser parity；未关闭issue；此段为初次整合证据，后续v0.2.39已发布。

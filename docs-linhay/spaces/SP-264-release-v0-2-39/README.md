@@ -2,7 +2,11 @@
 
 ## 当前状态
 
-准备发布；无新tag或Release。2026-11-02本轮十一项独立修复（SP256/258–263、265–268）已合入main，精确CI与联合CLI/root/Web/local门禁通过。发布前增量巡查新增closed #204的受控textarea反馈，已立[SP269](../SP-269-issue-204-controlled-input/README.md)独立调查并补必要验证；不能用此前候选门禁代替新增差异门禁。#246依赖人工IME许可的正向验收排除，保留成果，不安排人工步骤；本流程不关闭issue。
+十二项独立修复（SP256、SP258–263、SP265–269）已随 [v0.2.39](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.39) 正式发布（2026-11-02 14:57:32 UTC），发布提交/tag `026d329e5346fce77ae62a2828e3d27ed2d94c2e`。最终 PR #268 head `7ab6de0654936870370594ea8cb18373432e7583` 与合并整树/762文件hash一致，本地完整门禁、main/tag/Release CI与标准Pod lint通过。正式双架构CLI/checksums/skills/嵌入Web、Homebrew安装和两处skills更新、安装版23项只读CLI smoke通过；公开安装版三端 HTTP/浏览器预览通过，自有资源已清理。
+
+发布脚本因runner排队约10分钟叠加后续构建导致观察期超时退出1，远端随后完成全部发布工作，保留失败日志且未重建/移动tag。Homebrew默认cleanup移除了仍由共享旧serve使用的0.2.38文件，已从已验证旧公开包恢复42个runtime文件；共享进程与新版本symlink保持，状态仍可达。后续升级禁用自动cleanup的规则已写入发布skill，详见验收报告。
+
+#246 依赖人工 IME 许可的正向验收排除，保留成果与失败；#214 暂缓、#224 iPad 默认截图/输入及原私有 App 未验证边界保留，不安排人工接手，不修改 issue 状态。
 
 ## BDD与边界
 
@@ -13,6 +17,9 @@
 
 ## 隔离与证据
 
-候选分支`feat/SP-264-release-v0-2-39`复用本聊天隔离SP256 warm worktree（`/Users/linhey/.codex/worktrees/sp-256-issue-245-compact-schema/TritonKit`）；实际tag发布复用本聊天既有、干净的同级独立main克隆`../TritonKit-worktrees/SP-250-release-v0-2-37-publish`（使用前快进到最终远端main；旧名称不代表本轮版本），避免触碰主目录WIP及main占用。构建、Git和设备动作主控串行。
+版本准备分支`feat/SP-264-release-v0-2-39`与当前文档收尾分支`codex/sp264-release039-closeout`复用本聊天隔离SP256 warm worktree（`/Users/linhey/.codex/worktrees/sp-256-issue-245-compact-schema/TritonKit`）；实际tag发布复用本聊天既有、干净的同级独立main克隆`../TritonKit-worktrees/SP-250-release-v0-2-37-publish`（使用前快进到最终远端main；旧名称不代表本轮版本），避免触碰主目录WIP及main占用。构建、Git和设备动作主控串行。
 
 [发布验收](plans/20261102-release.md)，原始证据在同级`archives/SP256`与`archives/SP264`。CocoaPods标准lint与trunk发布分别报告。
+
+
+本轮源码、正式发布、安装与 agent 可独立完成的真实验收已闭环；剩余仅由主控执行本份文档收尾的精确提交/PR/合并及必要 CI。文档收尾 SHA 尚未产生，不将发布提交当作之后的最新 main。公开预览证据与 iOS 后端直接观测限制均见发布验收报告。

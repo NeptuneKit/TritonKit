@@ -1,8 +1,10 @@
 # SP-268 Host goal planning
 
+当前交付状态（2026-11-02）：十二项独立修复已随 [v0.2.39](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.39) 发布，发布提交/tag 为 `026d329e5346fce77ae62a2828e3d27ed2d94c2e`；候选、main/tag/Release CI、双架构制品与安装验证通过。公开安装版三端 HTTP/浏览器预览及自有资源清理已完成；完整状态见 [SP264](../SP-264-release-v0-2-39/README.md)，不将发布等同于原私有现场恢复。
+
 ## 边界与状态
 
-处理 #139 的 host goal-specific 路由反馈，连同 #31 参数保留反例。当前为本地候选；不执行生成的设备动作、不宣称真实 App 路由恢复。原有 iOS bootstrap 与 afterRecoverySteps 保持。
+处理 #139 的 host goal-specific 路由反馈，连同 #31 参数保留反例。已由 PR #264 合入 main，8 项定向与 4 项实际只读 CLI、精确 CI 通过；不执行生成的设备动作、不宣称真实 App 路由恢复。原有 iOS bootstrap 与 afterRecoverySteps 保持。
 
 ## BDD
 
