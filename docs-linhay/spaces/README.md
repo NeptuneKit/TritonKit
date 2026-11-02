@@ -439,3 +439,5 @@
 SP260整合候选：Python21项与公开skill打包门禁通过，Swift parser对照待联合回归；无设备动作。
 
 SP262已修正审阅发现的DTO类型名和--format --json识别缺口，整合测试待执行；只处理parse阶段，不包装runtime失败。
+
+SP263已独立审阅，Harmony wait保留host原因与定向诊断；runtime路径/idle拒绝保持，待fake-HDC和联合回归。#147 discovery deadline及#5 role缺口不在本修复范围。
