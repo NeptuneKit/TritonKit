@@ -2,7 +2,7 @@
 
 ## 边界与状态
 
-针对 [#147 新反馈](https://github.com/NeptuneKit/TritonKit/issues/147#issuecomment-6573083668)，当前基线 `572b4afb`。影响 CLI host Harmony wait 的发现与条件轮询预算；不操作真实设备，不修改 role 匹配，不扩大 Android/iOS 范围。#252 的 missing/offline/ambiguous 分类保留，发现超时复用 `harmony_discovery_timeout`，不伪造未解析目标。
+针对 [#147 新反馈](https://github.com/NeptuneKit/TritonKit/issues/147#issuecomment-6573083668)，历史基线 `572b4afb`；当前已由 PR #265 合入远端 main `64c15d9e`，精确候选 CI 与完整联合 CLI/local preflight 通过，待 v0.2.39 发布。影响 CLI host Harmony wait 的发现与条件轮询预算；不操作真实设备，不修改 role 匹配，不扩大 Android/iOS 范围。#252 的 missing/offline/ambiguous 分类保留，发现超时复用 `harmony_discovery_timeout`，不伪造未解析目标。
 
 ## BDD
 

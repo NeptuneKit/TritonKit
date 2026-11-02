@@ -2,7 +2,7 @@
 
 ## 边界与状态
 
-对应 [issue #5 新反馈](https://github.com/NeptuneKit/TritonKit/issues/5#issuecomment-6573214473)。基线 main `572b4afb`；当前 RED 已复现、最小修复待主控构建验证，尚未整合或发布。影响 CLI Harmony host wait 的 `--text` / `--exists` / `--gone`；不涉及设备输入、真实 App 或 #147 总超时逻辑。独立 worktree：`../TritonKit-worktrees/SP-267-issue-5-wait-role`，分支 `feat/SP-267-issue-5-wait-role`。
+对应 [issue #5 新反馈](https://github.com/NeptuneKit/TritonKit/issues/5#issuecomment-6573214473)。历史基线 main `572b4afb`；当前已由 PR #266 合入远端 main `ac2c3b2e`，精确候选 CI、24 项组合与 18 项实际 CLI fixture 通过，待 v0.2.39 发布。影响 CLI Harmony host wait 的 `--text` / `--exists` / `--gone`；不涉及设备输入或私有 App；已与 #147 总超时修复联合回归。独立 worktree：`../TritonKit-worktrees/SP-267-issue-5-wait-role`，分支 `feat/SP-267-issue-5-wait-role`。
 
 ## BDD
 
@@ -18,3 +18,5 @@
 实际 CLI fake-HDC fixture 通过 `--hdc` 显式注入；只输出合成目标和布局，不委托任何真实 backend。保留旧候选失败、最小函数/等待回归、最新二进制进程验收及源码 hash。Git/构建与最终索引由主控串行处理。
 
 [验收记录](plans/20261102-validation.md)
+
+2026-11-02最终优化候选真实 Harmony 只读验收 6/6 通过：自有 HVD 锁屏稳定文本的正确 native Text role、错误 role 与 gone 正负对照，8秒负例实际8.03–8.04秒；单 JSON、空 stderr 与退出码符合契约，无输入/解锁/IME操作。二进制SHA `83ea863040ff2b9764b837145befb0e2b6f6b3a56def93bb8dfd6bf0695b664c`；自有HVD已停。原始报告在同级 `archives/SP264/acceptance/harmony-role-candidate/`，这不是尚未发布的公开包验收。
