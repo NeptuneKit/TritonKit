@@ -1,6 +1,6 @@
 # SP-254-simulator-dtuhid-transport — Simulator DTUHID transport
 
-状态：候选实现与离线CLI验证完成，待SP-255主控复核/集成；文档门禁受分支公共索引缺登记阻断。影响CLI host隔离helper；不修改embedded/Web/真机。
+状态：已由SP-255验收合入本地main，真实模拟器兼容验证完成（限定下述工具链与fixture）。历史候选门禁记录保留。影响CLI host隔离helper；不修改embedded/Web/真机。
 
 来源：[Loupe固定增量](https://github.com/heoblitz/Loupe/commit/180c60584867500b93b43ca6c8b556995bf8be7b)，MIT全文已核；idb协议来源已固定SHA并核MIT全文，完整通知随CLI native-hid资源携带。基线main44e81f5d仅legacy client。
 
@@ -16,7 +16,7 @@
 ## 当前候选与交接
 
 - [实施契约、许可与验收边界](plans/20261102-transport-contract.md)。实现为 modern-first DTUHID + strict unsupported-only legacy；modern 不预先要求 IOHID/Indigo legacy 符号。保留 helper 的目标/booted、geometry、Resize、ownership 与发送后检查。
-- Device Hub `dtuhidd.active=1`/unknown 仍拒绝，不能把新增 transport 称为 claimed Device Hub 输入接管。现代 `target=0` 不是显示绑定证明。
+- 初始候选曾拒绝`dtuhidd.active=1`；真实验证后改为backend-aware admission：已握手DTUHID可继续，legacy+active和unknown仍拒绝。daemon active不等于UI独占；现代`target=0`不是显示绑定证明。
 - 无事件 barrier 初始化/结束各至多4秒；真实XPC匿名本机peer覆盖有序收发、pending取消和超时后迟到回包。发送失败 session 永久poison，只留一次同连接 terminal-up 清理，不重试down/move/finish、不fallback。
 - 公共 `TKInputResult` 不扩字段；source/strategy/required verification 保留，message中的backend仅是诊断文本，不是独立机器字段。doctor只检查框架/endpoint前提，available/inputDispatchVerified仍为false，不发送设备barrier或输入。
 - focused `42 tests / 7 suites` 通过（含自有匿名XPC peer，非设备）。完整CLI状态与冻结SHA见下方验证交接记录；只在本地commit，不合main、不push。
@@ -44,4 +44,4 @@
 
 ## 2026-11-02 主线验收
 
-已合main c4a14e52，合后完整CLI/local通过，Git工作区/分支清理、执行聊天归档完成；真实兼容未验证，managed UI附件清理失败单列跟进。见[主控收口](../SP-255-dtuhid-integration/plans/20261102-main-closeout.md)。
+已合main c4a14e52；真实验证发现active误判并以5e1c0b74修复。Xcode27.1/iOS27.0/iPhone17的Release tap/swipe、无事件barrier、Resize拒绝/恢复通过；专用设备已删除，既有设备未变。完整CLI162+1680通过，应用附件清理受工具归属/primary限制阻塞，见[清理结果](../SP-255-dtuhid-integration/plans/20261102-app-attachment-cleanup.md)。见[真实验收](../SP-255-dtuhid-integration/plans/20261102-live-validation.md)与[离线历史收口](../SP-255-dtuhid-integration/plans/20261102-main-closeout.md)。

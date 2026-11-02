@@ -15,4 +15,4 @@
 
 ## 2026-11-02 主线验收
 
-已合main c4a14e52，合后完整CLI/local通过，Git工作区/分支清理、执行聊天归档完成；真实兼容未验证，managed UI附件清理失败单列跟进。见[主控收口](../SP-255-dtuhid-integration/plans/20261102-main-closeout.md)。
+已合main c4a14e52；真实验证发现active误判并以5e1c0b74修复。Xcode27.1/iOS27.0/iPhone17的Release tap/swipe、无事件barrier、Resize拒绝/恢复通过；专用设备已删除，既有设备未变。完整CLI162+1680通过，应用附件清理受工具归属/primary限制阻塞，见[清理结果](../SP-255-dtuhid-integration/plans/20261102-app-attachment-cleanup.md)。见[真实验收](../SP-255-dtuhid-integration/plans/20261102-live-validation.md)与[离线历史收口](../SP-255-dtuhid-integration/plans/20261102-main-closeout.md)。

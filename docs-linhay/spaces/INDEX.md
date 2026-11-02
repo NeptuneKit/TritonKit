@@ -336,6 +336,6 @@
 | `SP-252-detached-log-exclusive-create` | [`SP-252-detached-log-exclusive-create`](./SP-252-detached-log-exclusive-create/README.md) | 已验收合本地main | 56ef7719；CLI162+1665/local通过，已归档清理关闭 |
 | `SP-253-detached-log-integration` | [`SP-253-detached-log-integration`](./SP-253-detached-log-integration/README.md) | 已验收合本地main | 独立审查、合后门禁及证据/工作区/会话闭环完成 |
 
-| `SP-254-simulator-dtuhid-transport` | [`SP-254-simulator-dtuhid-transport`](./SP-254-simulator-dtuhid-transport/README.md) | 已离线验收合本地main | c4a14e52；CLI/local通过、Git清理/聊天归档；真实兼容未验 |
+| `SP-254-simulator-dtuhid-transport` | [`SP-254-simulator-dtuhid-transport`](./SP-254-simulator-dtuhid-transport/README.md) | 已验收合本地main | 5e1c0b74；Xcode27.1/iOS27.0真实输入/Resize通过，专用模拟器已删除 |
 
-| `SP-255-dtuhid-integration` | [`SP-255-dtuhid-integration`](./SP-255-dtuhid-integration/README.md) | 已离线验收合本地main | c4a14e52；CLI/local通过、Git清理/聊天归档；真实兼容未验 |
+| `SP-255-dtuhid-integration` | [`SP-255-dtuhid-integration`](./SP-255-dtuhid-integration/README.md) | 已验收合本地main | 5e1c0b74；Xcode27.1/iOS27.0真实输入/Resize通过，专用模拟器已删除 |

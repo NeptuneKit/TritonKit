@@ -35,3 +35,7 @@ send出错后session永久poison，仅允许尚未尝试的同target、自有act
 ## 离线验收结果
 
 2026-11-02 focused42项/7suites及完整CLI1677项/178suites均exit0。参数拒绝两条实际helper命令均exit1且单JSON，未触及目标。当前执行分支基于44e81f5d，公共索引未登记SP-254；check-docs和verify --ci-docs均因此exit1，按主控独占登记边界保留失败，等待SP-255集成后门禁。独立只读审查没有当前单手势路径阻断项；session限定为单gesture，正常up后立即finish，不作为多手势复用连接。完整命令/退出码/hash在sibling evidence保存。
+
+## 后续真实验收修订
+
+本契约保留初始候选历史。5e1c0b74将active=1无条件拒绝修正为实际DTUHID握手后的backend-aware准入；unknown/legacy-active/Resize及状态变化拒绝保留。工具链限定的业务证明与测试见[SP-255真实验收](../../SP-255-dtuhid-integration/plans/20261102-live-validation.md)。

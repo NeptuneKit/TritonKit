@@ -1,0 +1,15 @@
+# DTUHID真实修复独立审查
+
+基线71b878c5，当前4文件变更：CLIHostNativeHIDRuntime/Command、DTUHIDTransportTests和DTUHIDLiveIntegrationTests。只读审查未发现阻断项。
+
+生产snapshot明确接受dtuhidActive观测而非泛化所有异常；unknown/Resize先拒绝，active需实际DTUHID init barrier成功、legacy仍拒绝。同一个performNativeHIDInput用于实际helper及测试；双向active翻转发送前零contact，发送后surface_changed/无自动重放。parser fixture进入同一生产解析函数，不宣称模拟了完整xcrun查询。
+
+live test调用生产snapshot/真实driver/finish，不发送contact；默认禁用不算真实验收。需要配合保存的active=1回执、前后fixture计数/输入/列表不变与真实tap/swipe后置，不能把单个barrier应答当guest业务证明。
+
+审查hash：
+- Runtime 10ce0b473536554db0f2eb5ff3594db5865d04e07803caade13d3d9171fb60ef
+- Command ed7fa2bd115e6c4f09a49340d7a035979d15587f75c48f7961136608b8717538
+- TransportTests dbbb3334f9c6b78f999e40efedca1b4370571ea0c45e54ba36eef33b1e4020c1
+- LiveIntegrationTests 9c016942f4a4050aad9e0c613fe2c599f437fd2d4620e69698cc72c8b9c95b47
+
+快照不能锁住发送期间状态；dtuhidd.active不证明用户Hub独占。主控已独立读取tap/swipe JSON（backend=dtuhid，verification仍required）并查看before/swipe-after截图：Complex harness0→1，横向列表item1–4→7–10。最终测试、Release复验与清理由实际证据收口，不靠此静态审查代替。

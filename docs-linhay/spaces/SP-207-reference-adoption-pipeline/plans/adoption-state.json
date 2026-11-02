@@ -616,15 +616,20 @@
       "assessment": "20261102-heoblitz-Loupe-review.md",
       "execution_model": "gpt-6.1-sol",
       "host_id": "local",
-      "controller_state": "accepted_offline_local_merged",
+      "controller_state": "accepted_live_local_merged",
       "execution_thread_status": "archived",
       "implementation_sha": "27437c0ab7eb2a73aa9f23b14f1393b71aefe3ac",
       "local_merge_sha": "c4a14e5282479b3fa10da0b1bbb3f720e1393d2d",
       "worktree_status": "removed_after_verified_archive",
       "branch_status": "deleted_merged",
-      "managed_attachment_status": "archive_tool_failed_primary_checkout_verification_stale_attachment",
+      "managed_attachment_status": "blocked_old_attachment_other_task_current_checkout_primary",
       "last_verified_on": "2026-11-02",
-      "state_evidence": "docs-linhay/spaces/SP-255-dtuhid-integration/plans/20261102-main-closeout.md"
+      "state_evidence": "docs-linhay/spaces/SP-255-dtuhid-integration/plans/20261102-live-validation.md",
+      "live_validation_sha": "5e1c0b74feca26bc8b04d94c47a66cdc15823b2b",
+      "live_validation_evidence": "docs-linhay/spaces/SP-255-dtuhid-integration/plans/20261102-live-validation.md",
+      "live_device_cleanup": "owned_simulator_deleted_existing_inventory_unchanged",
+      "verification_note": "Xcode27.1/iOS27.0/iPhone17 Release tap/swipe, no-event barrier, Resize refusal/restoration passed. CLI162+1680; other runtimes/displays not claimed; no push.",
+      "managed_attachment_evidence": "docs-linhay/spaces/SP-255-dtuhid-integration/plans/20261102-app-attachment-cleanup.md"
     }
   ],
   "new_thread_policy": {
@@ -636,7 +641,7 @@
     "reasoning_effort": "unchanged"
   },
   "last_updated_on": "2026-11-02",
-  "last_update_note": "SP254 offline contract accepted, merged c4a14e52; full CLI/local passed, git worktree removed, execution archived; managed UI attachment cleanup failed separately",
+  "last_update_note": "SP254/255 live DTUHID accepted at5e1c0b74; CLI/local/docs passed, dedicated simulator removed; app attachment cleanup blocked by other-task/primary tool constraints",
   "session_closeout": {
     "verified_main": "c4a14e5282479b3fa10da0b1bbb3f720e1393d2d",
     "verified_on": "2026-11-02",
@@ -668,6 +673,6 @@
     "evidence": "20261030-reference-update-report.md"
   },
   "last_verified_on": "2026-11-02",
-  "last_verified_main": "c4a14e5282479b3fa10da0b1bbb3f720e1393d2d",
+  "last_verified_main": "5e1c0b74feca26bc8b04d94c47a66cdc15823b2b",
   "latest_monitor_summary": "20261102-reference-update-report.md"
 }

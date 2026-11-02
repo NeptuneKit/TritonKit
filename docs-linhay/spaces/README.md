@@ -417,6 +417,6 @@
 - [SP-252-detached-log-exclusive-create](./SP-252-detached-log-exclusive-create/README.md)：detached日志叶子独占创建；已验收合main56ef7719并清理关闭。
 - [SP-253-detached-log-integration](./SP-253-detached-log-integration/README.md)：本批有限主控已完成验收、合并后门禁、归档和清理。
 
-- [SP-254-simulator-dtuhid-transport](./SP-254-simulator-dtuhid-transport/README.md)：DTUHID有限批次已合main；真实兼容未验，UI附件清理另记。
+- [SP-254-simulator-dtuhid-transport](./SP-254-simulator-dtuhid-transport/README.md)：DTUHID已合main；真实输入/Resize验收通过，专用模拟器已清理，应用附件清理另记。
 
-- [SP-255-dtuhid-integration](./SP-255-dtuhid-integration/README.md)：DTUHID有限批次已合main；真实兼容未验，UI附件清理另记。
+- [SP-255-dtuhid-integration](./SP-255-dtuhid-integration/README.md)：DTUHID已合main；真实输入/Resize验收通过，专用模拟器已清理，应用附件清理另记。

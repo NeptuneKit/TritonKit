@@ -1,6 +1,6 @@
 # 2026-11-02 DTUHID 真模拟器验证
 
-阶段：真实验证与最小修复已完成，待主控最终收口；不将离线交付或protocol ACK当业务成功。用户本轮明确授权新建专用模拟器、必要输入、发现问题直接修复/测试并合本地main；未授权push。基线main `71b878c592a7b5691248f6d65988f8bce9533898`。所有device/build动作由同一执行者串行处理，不操作既有用户booted设备或关闭现有DeviceHub。
+阶段：真实验证与最小修复已完成，主控已复核源码hash、182项证据及实际main local门禁；不将离线交付或protocol ACK当业务成功。用户本轮明确授权新建专用模拟器、必要输入、发现问题直接修复/测试并合本地main；未授权push。基线main `71b878c592a7b5691248f6d65988f8bce9533898`。所有device/build动作由同一执行者串行处理，不操作既有用户booted设备或关闭现有DeviceHub。
 
 ## 事实与首次反证
 
@@ -39,3 +39,7 @@
 - focused35/6通过（含1个默认disabled live），完整CLI XCTest162/SwiftTesting1680项179 suites通过，2个live默认disabled；DTUHID显式live单项两次独立通过。未执行新root/iOS SDK测试：改动仅CLI host路径，无embedded变更，Release Demo构建/真实输入另行通过。文档门禁与diff结果保留同归档。
 
 所有原始失败、红/绿、真实动作、no-event barrier、Resize进程与清理回执均保留，不只留成功摘要。公开文档不含私有device UUID；归档manifest绑定来源/源码/测试及release二进制hash。公共skill/memory/当前入口由主控统一同步，不在本切片混写。
+
+## 主控验收
+
+产品修复提交5e1c0b74feca26bc8b04d94c47a66cdc15823b2b位于实际main；4文件hash与独审、完整CLI测试候选一致。主控重新校验182项manifest全部匹配，并运行实际main `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local` exit0：根包5 XCTest、110+294 SwiftTesting，以及Release CLI/smoke/fake Harmony/mock iOS/docs/diff通过。该门禁跳过Xcode build，真实Release Demo构建已在上文独立通过。未push/tag/release。
