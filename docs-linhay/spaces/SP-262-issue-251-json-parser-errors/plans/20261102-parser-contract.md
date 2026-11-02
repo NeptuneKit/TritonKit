@@ -9,3 +9,7 @@ Given 显式机器输出请求，When ArgumentParser 在执行前拒绝参数，
 安全边界：ArgumentParser公开接口没有typed内部ParserError；只对公开诊断的固定类别前缀作保守识别，不序列化原始诊断、未知参数名、值或整个argv。不识别的校验错误返回通用argument_validation_failed。字段名只能来自当前命令静态help的受信任定义；无法精确归属时返回空名单，不推测。依赖升级需重跑真实parser/进程测试。
 
 非法format本身无法确定JSON意图时沿用原文本诊断；如同时存在独立`--json`则使用安全JSON。重复format以最后一次为准，`--json`优先于format。JSON探测仅处理`--`前选项；不扩充成功命令接受的参数，不重写原argv，不重试失败命令。
+
+## 整合 argv 验收中的测试夹具修正
+
+2026-11-02，主控使用实际整合 binary 发现 `sim boot --SECRET_251 --json` 同时缺少必填 UDID，ArgumentParser 优先报告 `missing_argument`，原 unknown-option 测试的预期错误。因此只将该用例补为 `sim boot fixture-udid --SECRET_251 --json`，单独触发未知选项；合成 UDID 不表示真实设备，解析失败必须发生在执行前。生产分类及优先级未改。本次子任务仅修改测试与此记录，未构建或运行测试；GREEN 由主控串行复验后记录，不把夹具修正本身当通过。
