@@ -1,4 +1,5 @@
 import ArgumentParser
+import CoreGraphics
 import Foundation
 import TritonKitShared
 
@@ -22,26 +23,17 @@ struct DeviceNativeHIDInput: ParsableCommand {
                 throw NativeHIDControlError(code: "validation_failed")
             }
             let environment = ["DEVELOPER_DIR": developer]
-            let screen = try nativeHIDGuardSnapshot(target: device, environment: environment)
-            let sequence = try nativeHIDContacts(input: input, screen: screen)
-            if preflightOnly {
+            let backend = try performNativeHIDInput(input: input, preflightOnly: preflightOnly, snapshot: {
+                try nativeHIDGuardSnapshot(target: device, environment: environment)
+            }, makeDriver: {
+                try NativeSimulatorDigitizer(target: device, developerDirectory: developer)
+            })
+            guard let backend else {
                 print(try encodeJSON(NativeHIDPreflightOutput(ok: true, inputDispatchVerified: false, inputSent: false)))
                 return
             }
-            let driver = try NativeSimulatorDigitizer(target: device, developerDirectory: developer)
-            guard abs(driver.pointSize.width - screen.pointSize.width) < 0.01,
-                  abs(driver.pointSize.height - screen.pointSize.height) < 0.01 else {
-                throw NativeHIDControlError(code: "ios_host_hid_display_unsupported")
-            }
-            try executeGuardedNativeHIDGesture(expectedScreen: screen, snapshot: {
-                try nativeHIDGuardSnapshot(target: device, environment: environment)
-            }) {
-                try executeNativeHIDContacts(sequence.contacts, cadence: sequence.cadence) { contact in
-                    try driver.send(point: contact.point, phase: contact.phase, identifier: 1)
-                }
-            }
             print(try encodeJSON(TKInputResult.success(action: input.type.rawValue,
-                message: "The built-in native Simulator HID adapter completed transport submission; guest touch delivery and business state require separate verification.",
+                message: "The built-in native Simulator HID adapter completed transport submission (backend=\(backend)); guest touch delivery and business state require separate verification.",
                 strategy: input.type == .tap ? "host-hid-coordinate-tap" : "host-hid-swipe", source: "host-hid",
                 verification: .init(hint: "Transport completion only; verify the same Simulator's UI and business postcondition. Do not equate AX activation or framebuffer readability with physical touch.", suggestedCommands: ["triton sim ax --device <simulator> --json", "triton sim screenshot --simulator <simulator> --output <new-path> --json"]),
                 sourceCommands: ["triton device hid-input --device <simulator> --request <coordinate-gesture>"])))
@@ -65,4 +57,33 @@ private struct NativeHIDPreflightOutput: Encodable {
     let ok: Bool
     let inputDispatchVerified: Bool
     let inputSent: Bool
+}
+
+
+protocol NativeHIDInputDriver: NativeDigitizerTransport {
+    var pointSize: CGSize { get }
+}
+
+/// The exact helper admission/dispatch chain, injectable only in-process for
+/// offline tests. Production supplies native snapshots and the isolated driver.
+/// No CLI/env override, alternative executable or weakened admission exists.
+func performNativeHIDInput(input: TKInputRequest, preflightOnly: Bool = false,
+    snapshot: () throws -> NativeHIDScreen,
+    makeDriver: () throws -> NativeHIDInputDriver,
+    sleep: (Double) -> Void = { Thread.sleep(forTimeInterval: $0) }) throws -> String? {
+    let screen = try snapshot()
+    let sequence = try nativeHIDContacts(input: input, screen: screen)
+    if preflightOnly { return nil }
+    let driver = try makeDriver()
+    guard abs(driver.pointSize.width - screen.pointSize.width) < 0.01,
+          abs(driver.pointSize.height - screen.pointSize.height) < 0.01 else {
+        throw NativeHIDControlError(code: "ios_host_hid_display_unsupported")
+    }
+    try executeGuardedNativeHIDGesture(expectedScreen: screen, snapshot: snapshot) {
+        try executeNativeHIDContacts(sequence.contacts, cadence: sequence.cadence, sleep: sleep) { contact in
+            try driver.send(point: contact.point, phase: contact.phase, identifier: 1)
+        }
+        try driver.finish()
+    }
+    return driver.backend
 }
