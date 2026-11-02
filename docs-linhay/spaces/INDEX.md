@@ -345,24 +345,24 @@
 
 | `SP-257-issue-246-harmony-verified-input` | [`SP-257-issue-246-harmony-verified-input`](./SP-257-issue-246-harmony-verified-input/README.md) | 本轮排除；本地候选与证据保留 | #246：自有HVD出现IME许可交互，正向输入未验收；不把人工步骤交给用户；20本地测试及真实负例不代替完整验收 |
 
-| `SP-258-issue-247-schema-effects` | [`SP-258-issue-247-schema-effects`](./SP-258-issue-247-schema-effects/README.md) | 执行 | #247：58声明及条件效果已独立审阅，shared/CLI整合门禁待执行 |
+| `SP-258-issue-247-schema-effects` | [`SP-258-issue-247-schema-effects`](./SP-258-issue-247-schema-effects/README.md) | 已合并 | #247：PR #259 合入 main，定向/组合与精确 CI 通过；随 SP264 待发布，原验收边界保留 |
 
-| `SP-259-issue-248-xcode-diagnostics` | [`SP-259-issue-248-xcode-diagnostics`](./SP-259-issue-248-xcode-diagnostics/README.md) | 候选整合 | #248：97项局部测试、三组CLI验收通过；完整回归/CI待完成 |
+| `SP-259-issue-248-xcode-diagnostics` | [`SP-259-issue-248-xcode-diagnostics`](./SP-259-issue-248-xcode-diagnostics/README.md) | 已合并 | #248：PR #260 合入 main，定向/组合与精确 CI 通过；随 SP264 待发布，原验收边界保留 |
 
-| `SP-260-issue-249-skill-wait-syntax` | [`SP-260-issue-249-skill-wait-syntax`](./SP-260-issue-249-skill-wait-syntax/README.md) | 执行 | #249：官方wait示例与打包门禁已修正，整合Swift验证待执行 |
+| `SP-260-issue-249-skill-wait-syntax` | [`SP-260-issue-249-skill-wait-syntax`](./SP-260-issue-249-skill-wait-syntax/README.md) | 已合并 | #249：PR #256 合入 main，定向/组合与精确 CI 通过；随 SP264 待发布，原验收边界保留 |
 
-| `SP-261-issue-250-leaf-option-parity` | [`SP-261-issue-250-leaf-option-parity`](./SP-261-issue-250-leaf-option-parity/README.md) | 执行 | #250：sim.boot/act.tap/device.stop有效参数与输出，整合验证中 |
+| `SP-261-issue-250-leaf-option-parity` | [`SP-261-issue-250-leaf-option-parity`](./SP-261-issue-250-leaf-option-parity/README.md) | 已合并 | #250：PR #255 合入 main，定向/组合与精确 CI 通过；随 SP264 待发布，原验收边界保留 |
 
-| `SP-262-issue-251-json-parser-errors` | [`SP-262-issue-251-json-parser-errors`](./SP-262-issue-251-json-parser-errors/README.md) | 执行 | #251：JSON parser失败候选已整合，待真实进程与完整回归 |
+| `SP-262-issue-251-json-parser-errors` | [`SP-262-issue-251-json-parser-errors`](./SP-262-issue-251-json-parser-errors/README.md) | 已合并 | #251：PR #257 合入 main，定向/组合与精确 CI 通过；随 SP264 待发布，原验收边界保留 |
 
-| `SP-263-issue-252-harmony-wait-errors` | [`SP-263-issue-252-harmony-wait-errors`](./SP-263-issue-252-harmony-wait-errors/README.md) | 执行 | #252：typed failure候选已整合，fake-HDC验收待执行 |
+| `SP-263-issue-252-harmony-wait-errors` | [`SP-263-issue-252-harmony-wait-errors`](./SP-263-issue-252-harmony-wait-errors/README.md) | 已合并 | #252：PR #258 合入 main，定向/组合与精确 CI 通过；随 SP264 待发布，原验收边界保留 |
 
 | `SP-264-release-v0-2-39` | [`SP-264-release-v0-2-39`](./SP-264-release-v0-2-39/README.md) | 执行 | v0.2.39独立issue交付、完整发布与安装验收 |
 
-| `SP-265-issue-118-skill-budget` | [`SP-265-issue-118-skill-budget`](./SP-265-issue-118-skill-budget/README.md) | 执行 | 已登记独立候选；待主控整合验收 |
+| `SP-265-issue-118-skill-budget` | [`SP-265-issue-118-skill-budget`](./SP-265-issue-118-skill-budget/README.md) | 已合并 | PR #263 已合入main；预算/打包/安装与精确CI通过，待0.2.39发布 |
 
-| `SP-266-issue-147-wait-deadline` | [`SP-266-issue-147-wait-deadline`](./SP-266-issue-147-wait-deadline/README.md) | 执行 | 已登记独立候选；待主控整合验收 |
+| `SP-266-issue-147-wait-deadline` | [`SP-266-issue-147-wait-deadline`](./SP-266-issue-147-wait-deadline/README.md) | 候选验收 | 18定向与5实际CLI通过；PR #265，完整联合CLI通过，待CI合并 |
 
-| `SP-267-issue-5-wait-role` | [`SP-267-issue-5-wait-role`](./SP-267-issue-5-wait-role/README.md) | 执行 | 已登记独立候选；待主控整合验收 |
+| `SP-267-issue-5-wait-role` | [`SP-267-issue-5-wait-role`](./SP-267-issue-5-wait-role/README.md) | 候选验收 | 24组合与18实际CLI通过；PR #266，完整联合CLI通过，待CI合并 |
 
-| `SP-268-issue-139-host-plan` | [`SP-268-issue-139-host-plan`](./SP-268-issue-139-host-plan/README.md) | 执行 | 已登记独立候选；待主控整合验收 |
+| `SP-268-issue-139-host-plan` | [`SP-268-issue-139-host-plan`](./SP-268-issue-139-host-plan/README.md) | 已合并 | PR #264 已合入main；8定向/4实际CLI与精确CI通过，待0.2.39发布 |

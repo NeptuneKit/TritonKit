@@ -426,17 +426,17 @@
 
 - 2026-11-02 [SP-257-issue-246-harmony-verified-input](./SP-257-issue-246-harmony-verified-input/README.md)：本轮排除；本地候选与证据保留；自有HVD出现IME许可交互，正向输入未验收；不把人工步骤交给用户；20本地测试及真实负例不代替完整验收。
 
-- 2026-11-02 [SP-258-issue-247-schema-effects](./SP-258-issue-247-schema-effects/README.md)：执行；副作用契约与保守unknown。
+- 2026-11-02 [SP-258-issue-247-schema-effects](./SP-258-issue-247-schema-effects/README.md)：已合并 PR #259；定向/组合与精确 CI 通过，随 SP264 待发布。
 
-- 2026-11-02 [SP-259-issue-248-xcode-diagnostics](./SP-259-issue-248-xcode-diagnostics/README.md)：候选整合；97项局部测试与三组CLI验收通过，完整回归/CI待完成。
+- 2026-11-02 [SP-259-issue-248-xcode-diagnostics](./SP-259-issue-248-xcode-diagnostics/README.md)：已合并 PR #260；定向/组合与精确 CI 通过，随 SP264 待发布。
 
-- 2026-11-02 [SP-260-issue-249-skill-wait-syntax](./SP-260-issue-249-skill-wait-syntax/README.md)：执行；公开skill语法与parser parity。
+- 2026-11-02 [SP-260-issue-249-skill-wait-syntax](./SP-260-issue-249-skill-wait-syntax/README.md)：已合并 PR #256；定向/组合与精确 CI 通过，随 SP264 待发布。
 
-- 2026-11-02 [SP-261-issue-250-leaf-option-parity](./SP-261-issue-250-leaf-option-parity/README.md)：执行；sim.boot/act.tap有效参数默认值。
+- 2026-11-02 [SP-261-issue-250-leaf-option-parity](./SP-261-issue-250-leaf-option-parity/README.md)：已合并 PR #255；定向/组合与精确 CI 通过，随 SP264 待发布。
 
-- 2026-11-02 [SP-262-issue-251-json-parser-errors](./SP-262-issue-251-json-parser-errors/README.md)：执行；JSON parser失败契约与值脱敏。
+- 2026-11-02 [SP-262-issue-251-json-parser-errors](./SP-262-issue-251-json-parser-errors/README.md)：已合并 PR #257；定向/组合与精确 CI 通过，随 SP264 待发布。
 
-- 2026-11-02 [SP-263-issue-252-harmony-wait-errors](./SP-263-issue-252-harmony-wait-errors/README.md)：执行；Harmony wait保留target与host工具失败原因。
+- 2026-11-02 [SP-263-issue-252-harmony-wait-errors](./SP-263-issue-252-harmony-wait-errors/README.md)：已合并 PR #258；定向/组合与精确 CI 通过，随 SP264 待发布。
 
 SP260整合候选：Python21项与公开skill打包门禁通过，Swift parser对照待联合回归；无设备动作。
 
@@ -448,10 +448,10 @@ SP258整合58个act/app/sim/build声明和保守unknown，条件效果保留full
 
 - 2026-11-02 [SP-264-release-v0-2-39](./SP-264-release-v0-2-39/README.md)：执行；独立issue组合验证与完整发布。
 
-- [SP-265-issue-118-skill-budget](./SP-265-issue-118-skill-budget/README.md)：独立候选登记，待整合与验收。
+- [SP-265-issue-118-skill-budget](./SP-265-issue-118-skill-budget/README.md)：已合并；PR #263 已合入main；预算/打包/安装与精确CI通过，待0.2.39发布。
 
-- [SP-266-issue-147-wait-deadline](./SP-266-issue-147-wait-deadline/README.md)：独立候选登记，待整合与验收。
+- [SP-266-issue-147-wait-deadline](./SP-266-issue-147-wait-deadline/README.md)：候选验收；18定向与5实际CLI通过；PR #265，完整联合CLI通过，待CI合并。
 
-- [SP-267-issue-5-wait-role](./SP-267-issue-5-wait-role/README.md)：独立候选登记，待整合与验收。
+- [SP-267-issue-5-wait-role](./SP-267-issue-5-wait-role/README.md)：候选验收；24组合与18实际CLI通过；PR #266，完整联合CLI通过，待CI合并。
 
-- [SP-268-issue-139-host-plan](./SP-268-issue-139-host-plan/README.md)：独立候选登记，待整合与验收。
+- [SP-268-issue-139-host-plan](./SP-268-issue-139-host-plan/README.md)：已合并；PR #264 已合入main；8定向/4实际CLI与精确CI通过，待0.2.39发布。

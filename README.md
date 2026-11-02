@@ -847,6 +847,8 @@ Harmony `device list --platform harmony --json` also attempts a read-only foregr
 
 When Triton starts a Harmony HVD through its `triton-harmony-emulator` launchd keepalive job, close it with `triton device stop --platform harmony ... --confirm --json` instead of raw `Emulator -stop`. The Triton command unloads `gui/<uid>/triton-harmony-emulator` before calling DevEco `Emulator -stop`, so launchd does not restart the emulator after a successful stop.
 
+Harmony host `wait --timeout` shares one deadline from target discovery through condition polling inside `Wait.run`; CLI startup and bounded host-process cleanup are outside a strict wall-clock guarantee. Discovery exhaustion reports `harmony_discovery_timeout`; condition exhaustion remains a structured `timedOut=true` result. Preserve the configured `--hdc` path in recovery and evidence. For `--text`, `--exists` and `--gone`, `--role` matches the same node’s native ArkUI type after trimming and case-insensitive comparison; it does not infer Button from clickable state. Empty/whitespace roles fail with `validation_failed` before any backend call.
+
 Harmony host-side `ax/wait/tap/screenshot` wrap `uitest dumpLayout`, `uitest uiInput click`, and `snapshot_display` with JSON envelopes. Layout and screenshot outputs can contain private UI data; inspect or redact artifacts before attaching them to public issues.
 
 For repeatable regression flows, wait for asynchronous UI state before the next action or assertion:
@@ -939,7 +941,7 @@ triton plan open-url --platform harmony --device harmony-a --bundle com.example.
 triton plan webview-check --expected-url https://example.com --text Loaded --json
 ```
 
-When `plan open-url` is requested while the local server is unavailable, the JSON response keeps bootstrap recovery in `steps[]` and preserves the goal-specific workflow in `afterRecoverySteps[]`. Agents should start with `steps[]`, then execute `afterRecoverySteps[].argv` after recovery instead of re-planning from memory.
+For default/iOS `plan open-url`, an unavailable local server keeps bootstrap recovery in `steps[]` and the goal-specific workflow in `afterRecoverySteps[]`. Explicit `--platform harmony|android` uses host planning before embedded bootstrap, starting with device doctor/list/readiness regardless of server availability. Harmony preserves device, bundle, ability, optional HAP install, URL, text and evidence in a single host smoke sequence; it does not submit the URL twice. Android provides host open-url/wait/screenshot, but a requested evidence bundle returns `ok=false` with `unsupported_capability`: this plan interface has no Android package input, and iOS/Harmony identity options cannot substitute for it. General host planning is `triton plan --platform harmony --json` with no action argument. Prefer each step’s `argv` so spaces and URL ampersands remain individual tokens. Plan exit 0 means a response was produced; inspect `ok`, errors and placeholders, and execute/verify supported steps explicitly before claiming readiness.
 
 For repeatable short smoke flows, store the command sequence in a `.tritonplan` and replay it:
 

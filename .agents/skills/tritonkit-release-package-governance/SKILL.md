@@ -72,6 +72,7 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 - x86_64 CLI is a backfill asset. Build it on the arm64 macOS runner with `swift build --package-path CLI --scratch-path .build/cli-x86 -c release --product triton --triple x86_64-apple-macosx14.0`, then verify `file` reports `Mach-O 64-bit executable x86_64` before upload.
 - Release SwiftPM cache keys are architecture-specific: keep separate `release-cli-arm64` and `release-cli-x86_64` cache keys so dependency/build cache does not force the release path back onto the Intel runner.
 - `publish-x86-release-asset` must checkout the repository before calling `gh release download`; the GitHub CLI requires git repository context for release lookup.
+- Keep `tritonkit-dev-feedback/SKILL.md` as a routing entry: at most 8192 UTF-8 bytes, 150 lines, and 600 characters per line. Measure bytes, not line count alone; move specialized material to existing directly linked references and read only matched routes. `verify-public-skill-layout.py` checks mandatory routes, containment and duplicated long paragraphs before packaging and again on the extracted version-stamped archive through `verify-skill-package.sh`. Do not bypass a budget failure by flattening references into the entry.
 - Public skill packaging must fail before tarball creation when a Markdown command uses a root absent from the checked CLI command snapshot. Keep `act` and `debug` subcommands strict so retired action/inspection roots cannot silently re-enter release documentation.
 
 ## Update Version Evidence

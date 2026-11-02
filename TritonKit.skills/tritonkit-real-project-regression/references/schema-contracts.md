@@ -44,3 +44,12 @@ Prefer `plan.steps[].argv` over parsing `plan.steps[].command`.
 Use the same recovery category vocabulary across doctor, capabilities, plan, and errors:
 
 `diagnose`, `discover`, `prepare-target`, `project`, `observe`, `act`, `verify`, `archive`, `replay`, `smoke`, `plan`.
+
+
+## Platform-bound task plans
+
+General planning uses `triton plan --platform harmony --json` with no action argument. Explicit Android/Harmony `plan open-url` chooses host steps before embedded bootstrap, even with an unavailable server. Default/iOS open-url retains bootstrap and `afterRecoverySteps`; do not apply its runtime recovery chain to a host-only goal.
+
+Harmony plans preserve target, bundle, ability, optional HAP install, URL, wait text and evidence in an existing host smoke sequence. Run the URL-bearing smoke once; do not prepend another URL action. Android can plan host open-url/wait/screenshot, but requested package-bound evidence returns `unsupported_capability` because the plan interface has no Android package input. Do not reinterpret iOS bundle-id or Harmony bundle/ability as a package, or replace unavailable host proof with embedded capture.
+
+Prefer `argv` tokens for URLs containing `&` and paths/text containing spaces. A constructed plan can exit 0 while `ok=false`; inspect the JSON error and supported steps. Replace placeholders and check prerequisites before execution. A plan response proves neither device readiness nor business completion. Inspect the installed `schema --command plan --json` before relying on these contracts in an older release.

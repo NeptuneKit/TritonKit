@@ -13,6 +13,6 @@
 
 ## 隔离与证据
 
-候选分支`feat/SP-264-release-v0-2-39`复用本聊天隔离SP256 warm worktree（`/Users/linhey/.codex/worktrees/sp-256-issue-245-compact-schema/TritonKit`）；实际tag发布在同级独立main克隆`../TritonKit-worktrees/SP-264-release-v0-2-39-publish`，避免触碰主目录WIP及main占用。构建、Git和设备动作主控串行。
+候选分支`feat/SP-264-release-v0-2-39`复用本聊天隔离SP256 warm worktree（`/Users/linhey/.codex/worktrees/sp-256-issue-245-compact-schema/TritonKit`）；实际tag发布复用本聊天既有、干净的同级独立main克隆`../TritonKit-worktrees/SP-250-release-v0-2-37-publish`（使用前快进到最终远端main；旧名称不代表本轮版本），避免触碰主目录WIP及main占用。构建、Git和设备动作主控串行。
 
 [发布验收](plans/20261102-release.md)，原始证据在同级`archives/SP256`与`archives/SP264`。CocoaPods标准lint与trunk发布分别报告。
