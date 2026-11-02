@@ -1,0 +1,18 @@
+{
+  "source": "private sibling archives/SP-255-dtuhid-live",
+  "implementation_sha": "5e1c0b74feca26bc8b04d94c47a66cdc15823b2b",
+  "private_manifest_sha256": "b21ceb1e175bfbb23098afb703e4a22a52e880e6a5185c722e6a97d990c596ea",
+  "verified_private_evidence_count": 182,
+  "controller_logs": [
+    {
+      "path": "controller-local.log",
+      "bytes": 95343,
+      "sha256": "fdd123ee4cd58f40db4b63001ae9a4f9b261737139ca7ee248a976507642080c"
+    },
+    {
+      "path": "controller-docs.log",
+      "bytes": 1944,
+      "sha256": "a9b155b162016ecb8f4e02fcfac5b561c136459d2acb716e4ebce93b1ab4f35d"
+    }
+  ]
+}

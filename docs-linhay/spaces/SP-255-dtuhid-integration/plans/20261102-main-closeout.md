@@ -18,3 +18,7 @@
 应用managed worktree工具只支持自己的路径，无法登记按repo规范移至同级的工作区；清理时移回原managed路径并调用archive_worktree仍报“Could not verify the task's primary checkout”。未伪造工具归档成功；已验证证据后按既有授权正常git移除。应用中的旧worktree附件可能残留，单列为待后续工具恢复清理；不影响本地Git源码交付和执行聊天归档。后续命令显式使用原项目绝对路径，避免陈旧附件路径。
 
 未push/tag/release、依赖安装/升级、上游执行、签名/DDI或设备动作。
+
+## 后续真实验证
+
+本页为初次离线收口历史；用户随后明确授权专用模拟器与输入，5e1c0b74修复active误判并完成真实验收，见[验证记录](20261102-live-validation.md)。上文未执行真实动作与active拒绝是该历史时点事实。
