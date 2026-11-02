@@ -421,3 +421,17 @@
 - [SP-255-dtuhid-integration](./SP-255-dtuhid-integration/README.md)：独立参考流程占号，本候选仅登记需求，未整合产品。
 
 - [SP-256-issue-245-compact-schema](./SP-256-issue-245-compact-schema/README.md)：#245 opt-in叶子schema，CLI只读契约；完整CLI通过，本地总门禁及CI推进中。
+
+- 2026-11-02 [SP-257-issue-246-harmony-verified-input](./SP-257-issue-246-harmony-verified-input/README.md)：本轮排除；本地候选与证据保留；自有HVD出现IME许可交互，正向输入未验收；不把人工步骤交给用户；20本地测试及真实负例不代替完整验收。
+
+- 2026-11-02 [SP-258-issue-247-schema-effects](./SP-258-issue-247-schema-effects/README.md)：执行；副作用契约与保守unknown。
+
+- 2026-11-02 [SP-259-issue-248-xcode-diagnostics](./SP-259-issue-248-xcode-diagnostics/README.md)：执行；有界失败诊断及日志覆盖。
+
+- 2026-11-02 [SP-260-issue-249-skill-wait-syntax](./SP-260-issue-249-skill-wait-syntax/README.md)：执行；公开skill语法与parser parity。
+
+- 2026-11-02 [SP-261-issue-250-leaf-option-parity](./SP-261-issue-250-leaf-option-parity/README.md)：执行；sim.boot/act.tap有效参数默认值。
+
+- 2026-11-02 [SP-262-issue-251-json-parser-errors](./SP-262-issue-251-json-parser-errors/README.md)：执行；JSON parser失败契约与值脱敏。
+
+- 2026-11-02 [SP-263-issue-252-harmony-wait-errors](./SP-263-issue-252-harmony-wait-errors/README.md)：执行；Harmony wait保留target与host工具失败原因。
