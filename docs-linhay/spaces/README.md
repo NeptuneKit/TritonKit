@@ -443,3 +443,5 @@ SP262已修正审阅发现的DTO类型名和--format --json识别缺口，整合
 SP263已独立审阅，Harmony wait保留host原因与定向诊断；runtime路径/idle拒绝保持，待fake-HDC和联合回归。#147 discovery deadline及#5 role缺口不在本修复范围。
 
 SP258整合58个act/app/sim/build声明和保守unknown，条件效果保留full/compact scope；不改变执行guard。shared与CLI完整回归待执行。
+
+- 2026-11-02 [SP-264-release-v0-2-39](./SP-264-release-v0-2-39/README.md)：执行；独立issue组合验证与完整发布。
