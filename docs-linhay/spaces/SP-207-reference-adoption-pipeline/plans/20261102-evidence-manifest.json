@@ -1,0 +1,2282 @@
+{
+  "schema_version": 1,
+  "evidence_root": "../TritonKit-worktrees/archives/reference-monitor/20261102",
+  "file_count": 455,
+  "files": [
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/EvanBacon__serve-sim/LICENSE.full",
+      "bytes": 11341,
+      "sha256": "9024cdf56dfe7e66523698a9f63d3a0061eb15f43bd5ea8e3833a56017ae37fd"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/EvanBacon__serve-sim/head.json",
+      "bytes": 6056,
+      "sha256": "b65337d051b062179dc17154457ddff291982c22895e77529859a8a3ab66c844"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/EvanBacon__serve-sim/license.json",
+      "bytes": 16734,
+      "sha256": "dc77bea3ee3acc42ea30c353e1383f2d1e8d0e67a09999a6bb569eb705466d5b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/EvanBacon__serve-sim/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/EvanBacon__serve-sim/repository.json",
+      "bytes": 5383,
+      "sha256": "02ac33b48192e1235ef8fd548e18416366df28ce6b6142eb7c5dc03fe2858043"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/EvanBacon__serve-sim/result.json",
+      "bytes": 1209,
+      "sha256": "31440b1202f599b1ce0ac09e028f3f84090bb00eae78db12f85c92f32ef62fe4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/JaviSoto__device-hub-ios/LICENSE.full",
+      "bytes": 1071,
+      "sha256": "4410cda18cd6959d53106c0ed799b3bc483993f5e44f4457a6d9baa1b1f43dfe"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/JaviSoto__device-hub-ios/head.json",
+      "bytes": 3933,
+      "sha256": "141def69fee5b05f81a3b68ade583a2f3dcd57764e417f670fcc5fb1dd4060e5"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/JaviSoto__device-hub-ios/license.json",
+      "bytes": 2579,
+      "sha256": "0a9ec8bd583bb805d10e2dd2c45db9940596b1d5becee7e3521490a76c927290"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/JaviSoto__device-hub-ios/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/JaviSoto__device-hub-ios/repository.json",
+      "bytes": 5573,
+      "sha256": "61fa7516e438cf0bd7f66c8677c8f1c1079e9c33c44c321039f6aff1478e093f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/JaviSoto__device-hub-ios/result.json",
+      "bytes": 1207,
+      "sha256": "fa3d32965d7c73e822af7473b41a1651092cde8bdffb318189dcc1971510e308"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/Mastersam07__OpenDeviceHub/LICENSE.full",
+      "bytes": 1069,
+      "sha256": "327d9a7d16c78d62abbdbbcd9a48c3334b6d8a0e3e4da11ac5be3a40645a7584"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/Mastersam07__OpenDeviceHub/head.json",
+      "bytes": 8176,
+      "sha256": "64a84c51a5b8c7160c385ca25144cefe0c0c29e3bd3ddb4fa11532f6ca56ce31"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/Mastersam07__OpenDeviceHub/license.json",
+      "bytes": 2593,
+      "sha256": "d50697362ba57de3323df13a1dd8b0c0d69bdc18ba0dfa7d4e2f0ee128a571a4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/Mastersam07__OpenDeviceHub/releases-1.json",
+      "bytes": 22211,
+      "sha256": "98e6297a4528e006a274fbe4d06fe21ea85353ecdcf21b6b63e0fa3ac52daa83"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/Mastersam07__OpenDeviceHub/repository.json",
+      "bytes": 5872,
+      "sha256": "a4056975f4cf5c15790a83676064e014cdf5ca1756335fd97775d116d989b882"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/Mastersam07__OpenDeviceHub/result.json",
+      "bytes": 15399,
+      "sha256": "3562f218970076e608824a580001d3bbec687e11d9d97ae88d1572682a77d87f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/MobAI-App__simslim/LICENSE.full",
+      "bytes": 1065,
+      "sha256": "8b65667572b02a584c03c2977372eeb5fe8de0e228211b6f83033c458cc10b4e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/MobAI-App__simslim/head.json",
+      "bytes": 4548,
+      "sha256": "a5fdfebd27ce0c1b0f16c4b26f0560202afe282e5c58ed6c0ded72e2542ccdbd"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/MobAI-App__simslim/license.json",
+      "bytes": 2529,
+      "sha256": "42c43e593caf722cfa3529dbe68a8ef791502298dd018c41c08c0d781cf169a5"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/MobAI-App__simslim/releases-1.json",
+      "bytes": 96249,
+      "sha256": "ca8c341549e64438204cefd1c97258bd8df37ab41bfb7e6822c955c2b4dc3aff"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/MobAI-App__simslim/repository.json",
+      "bytes": 6277,
+      "sha256": "b02f37b76f00ad36fd404c25d61a3624573d2a9fa73f0343eae31cbf4e48d545"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/MobAI-App__simslim/result.json",
+      "bytes": 8317,
+      "sha256": "e2696fce81ff183e6342fd15e3103f11bff4e0cc0739b29c872919c9da0fddd9"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OSU-NLP-Group__UGround/LICENSE.full",
+      "bytes": 1088,
+      "sha256": "93b43d692b033b76129504448695bfe76ef22d18b11e51352bfab4b5622e5aaa"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OSU-NLP-Group__UGround/head.json",
+      "bytes": 4334,
+      "sha256": "91e7166c9f68e847e0b46661b0bce1074f9d9dc8562f6b62360d3ff3af01712f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OSU-NLP-Group__UGround/license.json",
+      "bytes": 2619,
+      "sha256": "385f0c292909c793af492cd2809fb01d2a2b9e932a66edf8a18b7602a346507e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OSU-NLP-Group__UGround/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OSU-NLP-Group__UGround/repository.json",
+      "bytes": 6605,
+      "sha256": "d6cbcd10bbd3a705a099ae5e27c0370d679bf44c7784ca863951fd258334e1ba"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OSU-NLP-Group__UGround/result.json",
+      "bytes": 1209,
+      "sha256": "05d68dd4d4199dfe4dd611c77b58bd2245054410255dd3dab5986ca9880b90f3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OpenBMB__AgentCPM-GUI/LICENSE.full",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OpenBMB__AgentCPM-GUI/head.json",
+      "bytes": 4539,
+      "sha256": "fc1e0e64eb9392f6065b0bf7ec17dac5c77c1bb8296da38700d5cec2f4ba89c7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OpenBMB__AgentCPM-GUI/license.json",
+      "bytes": 16761,
+      "sha256": "85e146fda34fe0fb6526ff8f339bec05e5c9e5e1a5b20393bed04c8583acb0cd"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OpenBMB__AgentCPM-GUI/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OpenBMB__AgentCPM-GUI/repository.json",
+      "bytes": 6492,
+      "sha256": "00247ff3b9fa0e0b2d560fc09e5f68c011ada0e460a5d714b154f6bc6705b843"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OpenBMB__AgentCPM-GUI/result.json",
+      "bytes": 1212,
+      "sha256": "9b51d4552d4964f5e912ec6dfa7019db1a827dd10315bfd7b936fbf3c2ce4e08"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OpenMinis__iCTRL/LICENSE.full",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OpenMinis__iCTRL/head.json",
+      "bytes": 4726,
+      "sha256": "a87ecc8eb378053d0b109f0ba8452c92e9a43358f9663fbe32ad2b44f6f18d29"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OpenMinis__iCTRL/license.json",
+      "bytes": 16726,
+      "sha256": "f5e1b2ae0c83407eccf321cc161b8cce388ca6fa214063e81db1511813957632"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OpenMinis__iCTRL/releases-1.json",
+      "bytes": 54090,
+      "sha256": "f71f570af6378e2ad45b2fb060f3e1989667a6847c91c23d4cef7a95c23529da"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OpenMinis__iCTRL/repository.json",
+      "bytes": 6414,
+      "sha256": "4ee52e713d2c482898ed484fa1f5b7ff6a240cbb7c4e0f3e1b6e095a695e7877"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/OpenMinis__iCTRL/result.json",
+      "bytes": 9609,
+      "sha256": "51d65c7cfc7b81e4b94e2490dee4e2d2c1e46683ed48240aa23eb1a7c3216885"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/ProxymanApp__atlantis/LICENSE.full",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/ProxymanApp__atlantis/head.json",
+      "bytes": 12245,
+      "sha256": "e093b9eba409b0f56847ca131920ca0859ab876b62330854e068ba8c0711155c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/ProxymanApp__atlantis/license.json",
+      "bytes": 16761,
+      "sha256": "34f8071aec880ab9ba83c1602392520814cf9433e00d7f3a286265c240b4f7b1"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/ProxymanApp__atlantis/releases-1.json",
+      "bytes": 101708,
+      "sha256": "f8d3a3040aecfc5be5d882cd78fa02f947cd4281b2bbae66a6856503698755c8"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/ProxymanApp__atlantis/repository.json",
+      "bytes": 6603,
+      "sha256": "e8932648233f29ed40730da68a14b54f3914552ddd13057568d9aa578c15bb01"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/ProxymanApp__atlantis/result.json",
+      "bytes": 3663,
+      "sha256": "e5ff4d4678bbb8529025167afd4d3b3e969998a00f0efd1cfc55344121509f8c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__CogniSim/LICENSE.full",
+      "bytes": 1094,
+      "sha256": "0b62f99f70ef4368aa74efec94d64c4dca5f31d7f5eb8261f4166160fe1ee93d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__CogniSim/head.json",
+      "bytes": 3564,
+      "sha256": "b4f071530a7fbe58952472a8b4c1be8e842667571c8cabaa513a1b51846a0359"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__CogniSim/license.json",
+      "bytes": 2564,
+      "sha256": "bfc2c2765bb033ffeca10a0120cc80f1146c472166829af68a0f47f1ff94487e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__CogniSim/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__CogniSim/repository.json",
+      "bytes": 6162,
+      "sha256": "74a17657deb06d8c28276d9ade85c62e00d737f333c64bc40761966f804708ba"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__CogniSim/result.json",
+      "bytes": 1186,
+      "sha256": "f76abbc1cc0881612d566bf48bc4fbe69721a175458d5080a0910f2a25bc130e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__app-explorer/head.json",
+      "bytes": 4957,
+      "sha256": "abf3da4fb105a0540963306ddccfb22263f58bab73bffef8347affffc2b1e1be"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__app-explorer/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__app-explorer/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__app-explorer/repository.json",
+      "bytes": 6247,
+      "sha256": "41a89340ea368b13cc5ae31aa9d68cb92e9e7e0c41dc34f0df601ce6ae0b2178"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__app-explorer/result.json",
+      "bytes": 1105,
+      "sha256": "630a41cc502325608ecdd97dc3d020d4a325b8f99182832e9a0edcab7065c2e7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__figma-design-checker/head.json",
+      "bytes": 4771,
+      "sha256": "031e51df0c8e83533b6deaef0b05f8a4616b360d3c21d62d501edfd167cc3aac"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__figma-design-checker/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__figma-design-checker/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__figma-design-checker/repository.json",
+      "bytes": 6637,
+      "sha256": "fb44438722d1902668ba195886aaa532ebd7b6bae85cd78f2200f85bd3c4b8f3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__figma-design-checker/result.json",
+      "bytes": 1121,
+      "sha256": "4d2d00c86ac59327ed0e0a379e7b0cbbc51812e61e41c7c15500d3b7c34e62e3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__greenlight/LICENSE.full",
+      "bytes": 1062,
+      "sha256": "960890e59731cd6468788d6045407429c1c6ff1e1508d1c8bd77dd0b1a5807ca"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__greenlight/head.json",
+      "bytes": 4559,
+      "sha256": "3c02aa3b5da1a31b54e02a33eadf775e6d878d1ce128a7d6de09ee6d4a032483"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__greenlight/license.json",
+      "bytes": 2532,
+      "sha256": "857bcaab427c8580f4acdf98adf6bc89ab43c9c5427f1d5a0cf0be0e4f74fd87"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__greenlight/releases-1.json",
+      "bytes": 18405,
+      "sha256": "0a297a9e903750814c37b3ae44c632232814b1e7d25676bfebf0a78249445a72"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__greenlight/repository.json",
+      "bytes": 6556,
+      "sha256": "9b3094749f50fd6b9df7442f9b783f9c4eb36bdacda46c677ea87a1658d9e213"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__greenlight/result.json",
+      "bytes": 19985,
+      "sha256": "fec6e65e64830e9c0f0c5a6eb23f969e0b6c32650efa46054d3b5ae2a956442d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__mobile-devtools/head.json",
+      "bytes": 4994,
+      "sha256": "5d93acdda1db2bb0ea5d57cdf0df3757c21c93599bacbd1b86218851b7c68870"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__mobile-devtools/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__mobile-devtools/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__mobile-devtools/repository.json",
+      "bytes": 6433,
+      "sha256": "7b16fc5b86400e2446392f7f8a8f113b5708ca4503cb4a4dadd87eb347f7db35"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__mobile-devtools/result.json",
+      "bytes": 1111,
+      "sha256": "1ce115108c60b61ab5f3dc144896e4fc95dc8d8f3c311d0a654d9d5aa6d5f2ef"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__mobile-pr-reviewer/head.json",
+      "bytes": 4987,
+      "sha256": "ecab2d35e23c72bc98452284e897c5f4bfb70db122cb6474e1828868a6442e62"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__mobile-pr-reviewer/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__mobile-pr-reviewer/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__mobile-pr-reviewer/repository.json",
+      "bytes": 6543,
+      "sha256": "6eaf47086795579b9a0844a0808172068798d19d740e983f1847cb143fc2183d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__mobile-pr-reviewer/result.json",
+      "bytes": 1117,
+      "sha256": "2e9ea290a0bda5cd3895a62bb6c29cf62c985def5f5f1a6b8771da687f9eb75b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/adoption-snapshot.json",
+      "bytes": 39984,
+      "sha256": "ddfe2e4099cd5e63a2a698f1584333adb36e034448fabeeb083b48619bb7fa9e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/collect-review.py",
+      "bytes": 2885,
+      "sha256": "b02edaadd5d24fe824fef8494d86664c155a57d4bc2f2bccb98971c848bb434b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/commits-1.json",
+      "bytes": 364901,
+      "sha256": "1d2fc4c29e2c6338c180a35f12f1dbe1835ad0e5154b11bdb9c93cf4a3aaebda"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/diffs.txt",
+      "bytes": 377,
+      "sha256": "86430e4a2eee37c11e768af89e1a2b5905db3c560c4252d4732953492564f0c0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/head.json",
+      "bytes": 3650,
+      "sha256": "430066052d6c16a1d57601ca22917b40db1aba362a7e445546304babfa2a1ccd"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/local-main/Sources/TritonKitCLI/CLIDeviceRecordingRuntime.swift",
+      "bytes": 32566,
+      "sha256": "20c88e8ac2bfd70ba3c7394c41dd39f294255043b1086da9fa3e9cf6b1385ada"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/local-main/docs-linhay/spaces/SP-192-ictrl-adoption-feasibility/README.md",
+      "bytes": 6682,
+      "sha256": "daec1160cf50bc4d1c84c728a0785fadd3010b720f7692b91f5f8af95f21813d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/local-main/docs-linhay/spaces/SP-196-upstream-optimization-delivery/README.md",
+      "bytes": 4749,
+      "sha256": "5a78f25442b7cc9338cf28e797dd6f572d02fc6622ae58106f4057a580c5dae6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/local-main/docs-linhay/spaces/SP-200-mobile-device-parity/README.md",
+      "bytes": 4685,
+      "sha256": "69cc9cf1fccbcf51ca1af211998d63e92b6b854a218661183b1d0b3c65a9fa35"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/path-screening.json",
+      "bytes": 1129,
+      "sha256": "e9edbd16cf02d0f6ea18489eedceff1b2eaa2ec6420c983511e89cf0292603c3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/release-notes.txt",
+      "bytes": 1638,
+      "sha256": "3a80db3d5313f2c38b2d36e1b042d3b2451e0e2285309784d12c12ad3dde52a5"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/releases-1.json",
+      "bytes": 1814108,
+      "sha256": "cfcff72ae82742595cab37acd819e739091203b6fb23176ce8b27b9b4b6cf8f4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/releases-2.json",
+      "bytes": 39360,
+      "sha256": "98d75fb5fd09f5f4ffcfb460db22ca1a45adaf8aebd54b99ec29de09e0f33874"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/repository.json",
+      "bytes": 6016,
+      "sha256": "5d9219095896cf2f1972f8053f64b580989b7918e28ab0d8525c1b59f69edc93"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/result.json",
+      "bytes": 33329,
+      "sha256": "abedb1ec85e666f193ff410b00311354fe079756fd3267406f4b5bb33370bf93"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/review-manifest.json",
+      "bytes": 3094,
+      "sha256": "72dbb9b9d45ac22463d05cebd654d46ff7b8cbb401a69b9bbcbeee80ba78b354"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/review.json",
+      "bytes": 1646,
+      "sha256": "e9a4efe789e36cdc344d12f810d308a70bc4b3cb10a1377749b412286fbf28f5"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/review.md",
+      "bytes": 2319,
+      "sha256": "9c20fcea4e0a54171ff44a064c5fe47c24a7530c000a4d820e8a2ad5923e2b0b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/tree-13462d32e2ff87ee7ee1feff418fdcb7e18c2f57.json",
+      "bytes": 290987,
+      "sha256": "c80675db4f212bbe7d4a16216c35a88259abbd5524aaa47858bac320d75420ca"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__revyl-cli/tree-a50ee179e5c01a1f25f15cef951a78eddab5fa3e.json",
+      "bytes": 290987,
+      "sha256": "927dbed0f33b693c08ae5ba506efe2784f5103a4d2665a9f818e585fcd36b35e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__visual-regression/head.json",
+      "bytes": 3482,
+      "sha256": "343c30a421e4b5ab7088baefa97c8e85a2ab0c883a6dd13abd1772f6c87d207c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__visual-regression/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__visual-regression/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__visual-regression/repository.json",
+      "bytes": 6520,
+      "sha256": "917bb3561f1733c7aeae3c3e1606e7c8ecd26f3d5e5af34e153672703a654557"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RevylAI__visual-regression/result.json",
+      "bytes": 1115,
+      "sha256": "497ce8de9097414f61c590eedad2b52321fdfc635d48afadf8a447ac6d6f5551"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RockxyApp__Rockxy/LICENSE.full",
+      "bytes": 34695,
+      "sha256": "73312c21c21d7ab7fa66c300993f3dd0dcbd53cfa62dded2fa7e6d4adf69c552"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RockxyApp__Rockxy/head.json",
+      "bytes": 4791,
+      "sha256": "854748b3fb6e27b4894c4f1bb804c1597029c9156c2bcc06bff7887275ef1e0c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RockxyApp__Rockxy/license.json",
+      "bytes": 48828,
+      "sha256": "557ab0754de0f704877c970ede1d5e599f5c5a2bfbdb63fe534d6efe1accb46f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RockxyApp__Rockxy/releases-1.json",
+      "bytes": 429460,
+      "sha256": "68393b43224f3938a97fdb2879c1a2b508831647a286679e013e6d511f19de81"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RockxyApp__Rockxy/repository.json",
+      "bytes": 6659,
+      "sha256": "15ef9969f03032739ceff56c984ed4382409296c88369c1c4ee8b73a6a5ee203"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/RockxyApp__Rockxy/result.json",
+      "bytes": 13981,
+      "sha256": "a72abb0098eaeb2046231db40ca45d8bb0f2f1ba3682aeddd673c2aedee3f902"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/X-PLUG__MobileAgent/LICENSE.full",
+      "bytes": 1062,
+      "sha256": "961819a89dacd1f4f161e1d2ebf616b538bf095a2eecfa3ef40b7ccec633fac4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/X-PLUG__MobileAgent/head.json",
+      "bytes": 4973,
+      "sha256": "089fb7197256b7a243a2e7796552d27e5a96d6a42ae28ffd84cb270d907df933"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/X-PLUG__MobileAgent/license.json",
+      "bytes": 2532,
+      "sha256": "2aad3b11596f227080d801fb1b8cfbe61685f39b81b5043c5a5a5feb970974bc"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/X-PLUG__MobileAgent/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/X-PLUG__MobileAgent/repository.json",
+      "bytes": 6362,
+      "sha256": "bdd817a49f9ef9af54b40f45e092b3bbcd223f14b470ef21a67f0131b3a8e46c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/X-PLUG__MobileAgent/result.json",
+      "bytes": 1192,
+      "sha256": "6a8f079d9a4969eb256a3f6963c151d501db9cbabc8af187310a272826012326"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/awizemann__harness/LICENSE.full",
+      "bytes": 1070,
+      "sha256": "e92a5a769096faed8e22dea8d940ce64a6a00638f0f0a4f74a056eb61c52549c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/awizemann__harness/head.json",
+      "bytes": 3389,
+      "sha256": "572a09dbccb3b680fa91530c5b1ca04acbdd15221a0a8728a3dfde3e78c3df79"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/awizemann__harness/license.json",
+      "bytes": 2537,
+      "sha256": "e80dcb8c679031e1898e96abda230a8486e6ecb44da09397020a3e5f5efd8b81"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/awizemann__harness/releases-1.json",
+      "bytes": 109917,
+      "sha256": "5869bb8f05ec924f3ff78bca96b1039dca006fef79d0ba4f70c545a273d2af3e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/awizemann__harness/repository.json",
+      "bytes": 5595,
+      "sha256": "e25ae6e87b1a4d78958ef329c0d33f93671cc98cd6c4ec14de15f6a6b0591a84"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/awizemann__harness/result.json",
+      "bytes": 7746,
+      "sha256": "be1ae0d3f4af026b906ef13f2d1cb5bfbf3d94bcfe470f8023bd156f30030260"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/before-reference-state.json",
+      "bytes": 203228,
+      "sha256": "05f4a0e6afe2b1545977962c7bf95008dd038824da697d7d7cdd8d437ce9801f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/before-upstream-state.json",
+      "bytes": 1186,
+      "sha256": "aaaf8e560592ce3c527f884909bcea43905cf036ee2da029aabaf398e67c61a5"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/bytedance__UI-TARS/LICENSE.full",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/bytedance__UI-TARS/head.json",
+      "bytes": 4660,
+      "sha256": "b024e4b2e6df9f86e85727911a9700748e0164a429c4fdbe8fd1f077c10be20c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/bytedance__UI-TARS/license.json",
+      "bytes": 16740,
+      "sha256": "405322d972655016d3b24b81cdc1a47a22d96bb35d08bd88240d8a6f52d86ec6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/bytedance__UI-TARS/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/bytedance__UI-TARS/repository.json",
+      "bytes": 6320,
+      "sha256": "19142eed6a00b74e74fdea552c66327a566480a5497d346a52f2a2e97bac5cfd"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/bytedance__UI-TARS/result.json",
+      "bytes": 1203,
+      "sha256": "a4a27b80d80ecf62e5b423ae0d9e797dd5d8f364a713315563734cbeafd36fb4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/check.py",
+      "bytes": 5405,
+      "sha256": "c86c5a1f7b170e7387bbf85b56372da2b13070a37e48bdd5dcd156fab268ee3b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/checkpoint-publication.json",
+      "bytes": 448925,
+      "sha256": "3b5a31de554eb7e16d9102b86388cb569531ad291323bc126fc491b270adcedd"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/dongxinsuperman__ai-phone/LICENSE.full",
+      "bytes": 1090,
+      "sha256": "b825925aa35feb626875db9db2afc4f71e8cf0abeb1f1bcecfa23efa307a17ce"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/dongxinsuperman__ai-phone/head.json",
+      "bytes": 1497,
+      "sha256": "bc36714a9ac1f13c083c4128a5587706881431c96f7fe8836a4c427041964fa2"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/dongxinsuperman__ai-phone/license.json",
+      "bytes": 2616,
+      "sha256": "3684915409813448a5f5bc5e60af11e6a3602b33586eed5b2d086be55097ed7f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/dongxinsuperman__ai-phone/releases-1.json",
+      "bytes": 31051,
+      "sha256": "a74e0b21a97ba63259c54bba74469bd9a52f18bcabc55fc65e6c595c4205cc6c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/dongxinsuperman__ai-phone/repository.json",
+      "bytes": 5907,
+      "sha256": "77e26c9c110e880e77d6a180f3e428fa8ceb0802fc9ccb33e4a94b12a59baf30"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/dongxinsuperman__ai-phone/result.json",
+      "bytes": 6621,
+      "sha256": "d6794e2ae73a71a898b1dd8823735ce20dddc0dc91f5d7eb3e4a1e813eab21ac"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/finalize.py",
+      "bytes": 10283,
+      "sha256": "42cbc0e3580f5279dfe15213c554557db2856d538e1aa6db1a423c77a58a9d25"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/getsentry__MobileBuildMCP/LICENSE.full",
+      "bytes": 1070,
+      "sha256": "fef28fc4165c72b1f0e4ce94654ba44ad7ff7d5d2538b3d01e66e9cc5be3c4f6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/getsentry__MobileBuildMCP/head.json",
+      "bytes": 4797,
+      "sha256": "27d7328255e2d73647acdd4cfcc691e00434e42ebab7c869782a1631596f17e0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/getsentry__MobileBuildMCP/license.json",
+      "bytes": 2557,
+      "sha256": "1d62cc1486d403d49eb10f8c68352e4301396908a2e5f39a5700dd7ef1ae9953"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/getsentry__MobileBuildMCP/releases-1.json",
+      "bytes": 453040,
+      "sha256": "658a19e78f487b4bfeb3e6ff03b363224829db39c0032dd9e2b982c9d05cb8bd"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/getsentry__MobileBuildMCP/repository.json",
+      "bytes": 6771,
+      "sha256": "5da6cbe826cfcdc59e1ffe6eacbb14953e84f325b849b3819cb1ddf58b3dbeb8"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/getsentry__MobileBuildMCP/result.json",
+      "bytes": 20214,
+      "sha256": "2af8a004b4c948511a82071270557fe32e45336f06fd687c4e8a688ebad7a6e2"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/google-research__android_world/LICENSE.full",
+      "bytes": 12664,
+      "sha256": "b09fcaf4fbc265223c2479c410beef2b98c5e687c78ecedf3452aa12ffc465f1"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/google-research__android_world/head.json",
+      "bytes": 3443,
+      "sha256": "83864b9ea319bcd7cbfa623eb2fdac769fedcc660de7104770e097a42088b6b6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/google-research__android_world/license.json",
+      "bytes": 18626,
+      "sha256": "87f8363cf747ba5d93bd50eac8724811f663c9ecae0a14b9ffe490d93b22e15d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/google-research__android_world/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/google-research__android_world/repository.json",
+      "bytes": 7201,
+      "sha256": "b0768ef02f1b6f6fb76c89d9a728ebcbfd217bbd95339482233cfeaa3ff83113"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/google-research__android_world/result.json",
+      "bytes": 1239,
+      "sha256": "9f08ec84eb2e5a4e50b1e97665ddacd0c3539564247d9767d18abcb8450fa353"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/LICENSE.full",
+      "bytes": 1065,
+      "sha256": "0d7ebd755456885dba28523a5c468e59d06a26c8df2b896938632c9322c9e7e3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/collect.py",
+      "bytes": 2732,
+      "sha256": "917e56ef7fbc3cef048f8f3c9ea3ccb804e7af18a213f51b053c2efee5ef07aa"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/diff_review.py",
+      "bytes": 1029,
+      "sha256": "ccdf1fcc4968f9700906e0cfcbddbebd2bf558db55c9beeb34d21a4dfe6ae7f6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/head.json",
+      "bytes": 3271,
+      "sha256": "2145c95386ea35c1edfe2014961eb96e7f13105050f4fa035cc0b9fa5a9d198e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/license.json",
+      "bytes": 2479,
+      "sha256": "351f636da1d9f5b185bd6c74b9632f720704e6143f69420a7e89b8fd1afaa3c8"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/local-main-evidence.txt",
+      "bytes": 124019,
+      "sha256": "b8d3cacf65ee7aa3170dc09134c3c34cef85b7c1d8dec767565154339a4fbe01"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/releases-1.json",
+      "bytes": 33087,
+      "sha256": "91f2e9e88aeebbdac927e8bad1ecb59af3f88c5b8516656df7efdfa85931e836"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/repository.json",
+      "bytes": 5127,
+      "sha256": "8e9a99d49498557b1e542bdf1764ac129f4f543b6371e21d17d563329d960c37"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/result.json",
+      "bytes": 5586,
+      "sha256": "dabb1d3a328fbd5bd3cb7935ab9c248d52d04611483d9b509424643fc2d44670"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-commits-1.json",
+      "bytes": 352988,
+      "sha256": "6144c01b495f8006a6dc436d2cf46f2354ccc1742a413deb2718891b5a1b5981"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-increment.diff",
+      "bytes": 97034,
+      "sha256": "b8548551338d000107abbbaf0d155f5e51bddaf4c33cad3a02e4a1620aa71670"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-manifest.json",
+      "bytes": 20023,
+      "sha256": "1160d3d0278e56e71ed067dbe4dae5d03e2de2070bda5f69386a3c7d07179b96"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/08f615aa7cc75110df4b40dec26d59ccaafa5d48/Sources/LoupeHID/LoupeDTUHID.h",
+      "bytes": 516,
+      "sha256": "e002648abb90ced07437d4dd79db3c91af005e0ea44eeb8c61283838181c924e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/0ca1c70a140d76f2c0719bcd8cd85978dd6fe5ac/Examples/LoupeExample/verify-devicehub-drag.py",
+      "bytes": 1375,
+      "sha256": "78505377974b6e652b1ed20abad86aff55fcc11430a41c53182b01a3189d022e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/0dd2cf99a52147d2f51f0656e3fb36dfa56c95dc/Examples/LoupeExample/LoupeExample/ViewController.swift",
+      "bytes": 74927,
+      "sha256": "a1e2646ffef2760be7c0c04f98a8c7a3e171957309d6ad5c6bf2106f452a7224"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/142bbc73e308df87f5d0c973c9a2773258a21099/README.md",
+      "bytes": 5025,
+      "sha256": "495d4ac6b80ae820bc5e7d448dee7028ff8ee94899710c4b4e2ba1dde064089f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/1a1b0ccda00ffdcc37e3970f5811e58bbd0d217a/.github/workflows/verify.yml",
+      "bytes": 7277,
+      "sha256": "a396dd73a334f3c2bcdadcc3fe3f79b26abff0141ae837a7327744dc7d84dd75"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/1a5cf070cb2bf6d89df46755b9757a73efd05d9f/README.md",
+      "bytes": 6232,
+      "sha256": "05d983ee0581c59b14e7e43abec6db7cb5cbac2301317da643e355095cb8c7b6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/1dd1ba386418e4a91df5d3fb1a48bd7249b502a1/Examples/LoupeExample/LoupeExample/ViewController.swift",
+      "bytes": 74608,
+      "sha256": "913c0f945a9f5adc96a7ca2f0b1706b4a2abfce417a3c2434c3a88f9dbd08e9a"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/1ee31152f2412887f9a60e2464bda1277c2c19d1/Sources/LoupeCLI/CommandGroups.swift",
+      "bytes": 5608,
+      "sha256": "a348b867605e5ea47be982e0e986bb58d843f16a1bea82375c299f901bb40c6d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/20a2d938aa17e35244d157244a5b1355d2f91984/Sources/LoupeCLI/RuntimeFetchOptions.swift",
+      "bytes": 2937,
+      "sha256": "1ec5da1dfb0dcc4c3475376b8668c18e873e3b0192193bc55ec4ea0117d7ce1b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/269409c69d21d259c95245778d6babc533c63360/Sources/LoupeCLIModel/ActionTargetAliases.swift",
+      "bytes": 22573,
+      "sha256": "ced5b57e8ee938fd6d640b3f00b6ca1fe090fa8b62d93adec9e5cac06b4c0590"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/26ee261ca273233f47630708ed524d91bb9e5637/Sources/LoupeCLI/RuntimeFetchOptions.swift",
+      "bytes": 2970,
+      "sha256": "de706a30297833347c7a662d6d106beadaf92c0c373590f6cf0e31221edba897"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/2c368bf70a50ab74a452f1cd5589a2e50b353386/Examples/LoupeExample/verify-web-accessibility.sh",
+      "bytes": 3373,
+      "sha256": "9c7b1b96ef8aefafbe0cb900b7d1901007389c0bd47b101154d3f8d141cd0d16"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/31075f20ca92eb6b9d2a9ff347780f561a7d8de9/scripts/verify-hid-framework-loading.sh",
+      "bytes": 3038,
+      "sha256": "ae060bf3ebdbd6ae43f1cd98da405ae0a0a0bf9c0c1afd52b0ffaee11a5fbb51"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/38f1f95c4e4490a9245e9729f6a021382bf0dc47/Tests/LoupeCLITests/ActTargetsOptionsTests.swift",
+      "bytes": 1307,
+      "sha256": "8b5a3889c8dffdb45fef1087cce9f4d610424649dba1543554666d4c6f770902"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/44ee5fc923a4373493f89524fac11cf10a51fa3f/scripts/verify-ax-grid.sh",
+      "bytes": 3449,
+      "sha256": "5358e07648f94d292db92893051ce36650f5eb2882b807bc9ea4f0e6f5330f90"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/4752f055c2774dddf983e6e18dab58b7d6926713/scripts/verify-hid-touch-messages.sh",
+      "bytes": 2964,
+      "sha256": "30afbe8349efbee9092745cd2a1fc767aeb1ab3415aedc135c1c2b5508286fc0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/4a84f102731d72685c046606815f67b60b567e21/Examples/MacLoupeExample/main.swift",
+      "bytes": 32047,
+      "sha256": "c2f0a536bb107ebd85f7b8b4d5a6663e3fe4fa0716d33166e7a3310d843eba1c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/4f63940612f488b5ca0c30a9623e90e72e603bcd/scripts/verify-dtuhid-transport.sh",
+      "bytes": 5390,
+      "sha256": "044d3b09c3903be2888684a0cbd9e0ef5919b70a3a4c84c887802db37e509a11"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/511bffb1b1fb593cf33a70e53d1db8d2dc4c2800/skills/loupe/SKILL.md",
+      "bytes": 2833,
+      "sha256": "a500a5676ecec2cbd0222963e022b5a4448ade191fd4a9e950b20c9c470dab68"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/533ea22d3e9969664adcb281d4c6e29a941fb1f1/Sources/LoupeKit/LoupeSwiftUITouchDebugData.swift",
+      "bytes": 2859,
+      "sha256": "85f1541bab340c9403c7bc295ca46dc7c412cbc8098a8dbe3600160b6ae2d50d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/63188fdca9403576716d70b4bd2e43ceccfb2a27/skills/loupe/SKILL.md",
+      "bytes": 3139,
+      "sha256": "4fe4e1357633331165224e48f460fc7dda628054576a61ce98f45bddf80e26d1"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/70f605155fcc305708eb56a833e8564e4ae86d0e/Formula/loupe.rb",
+      "bytes": 2515,
+      "sha256": "97510e07d78640655b69c63a162fd8338608da0746a190326a73181bdc173125"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/7107a5c606daf773694d5dd41ae0d1dc1a2a24bf/Sources/LoupeCLIModel/ActionTargetAliases.swift",
+      "bytes": 22534,
+      "sha256": "6477090c3532fe30dca342b292d9b7d8e9d7934abafe2c8e7327f9438f01e6fd"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/7172e4351cdd49482d1b52d568142eb349c8cd65/Tests/LoupeCLIModelTests/RuntimeActionModelsTests.swift",
+      "bytes": 33441,
+      "sha256": "ebd6f57c29a8a524c5dd2794a750ebfcc192dfb9174593f9051304a21a15c3b5"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/7962954a843787819bcb1aed9de3c5f32892c3ba/Sources/LoupeCLI/ActTargets.swift",
+      "bytes": 5039,
+      "sha256": "bd708cd18ec7f42cafce13e01c196aa7ec78a403cf8e7c26c4b86eed3280d16f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/7acf3381b0ea11c421736c7297ab50d9a53d43e7/Sources/LoupeCLI/LoupeCLI.swift",
+      "bytes": 252744,
+      "sha256": "78d1365fd5b94e5786351e73bccd8b2d591d45744ae2e6a217d603441d54d91e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/7d4e60b85b2f89d521aebe6a4a56a584dafb3ddf/Sources/LoupeCLI/LoupeCLIUsage.swift",
+      "bytes": 14978,
+      "sha256": "182e0815fed4ca7ec1af2770af7045ea57584a8c7ea8633011526410fc84c157"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/813625c1fe7d263a1ba6140460d1593d20a23615/scripts/verify-agent-work.sh",
+      "bytes": 1344,
+      "sha256": "fcf5fc282ada5dfab888577d8d9fbe582916b971cb8d7d16909eb88803ca47f8"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/88ae6c7928cf3ead5169dad94492e4b73e1168d8/Examples/LoupeExample/run-native-scenarios.sh",
+      "bytes": 32171,
+      "sha256": "e7d1db53e6c910f4230a4bdfe1759bb1570dc96fcb6b3cd28aab561accad027d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/88ef3798745aa135259b795969038d04cd9398aa/scripts/verify-agent-work.sh",
+      "bytes": 1143,
+      "sha256": "b0a3d7e8b541fdca06dcc74b5efe879aec4fff3a14e402f7dc8d047f5c410135"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/89108b5df2b75ec77abceb55a81674fd4f8d80dc/Sources/LoupeHID/include/LoupeHID.h",
+      "bytes": 1082,
+      "sha256": "6d3354fa841878c51cba2de4e43698d32be0ef6f8d2a9755bb82be38e13f1853"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/8c35f04bfb163bdea34ceb88c886a55baa75d466/Tests/LoupeCLITests/WebAccessibilityTests.swift",
+      "bytes": 1400,
+      "sha256": "dceb5f7eb1a1966fcef3da2554d704f151a3a650e2418995582a73e07a1370d0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/8faea3b01dd89d689e50b1139e880800a49df759/Formula/loupe.rb",
+      "bytes": 2329,
+      "sha256": "375f7b696e58322ab8efd34101195a716e41b17a0c71406ded15633d739ece78"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/918e9cc9c28647963ce7bb6c23f1e2dffc770b6a/Sources/LoupeKit/LoupeSwiftUITouchDebugData.swift",
+      "bytes": 3762,
+      "sha256": "32b19ebb8b385b0e2853b431ade89b5453ea284f13100124b3dad33b8305ad10"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/95267ee2593bfcffdcb7b8bdf220d56700fa34de/Sources/LoupeHID/include/LoupeHID.h",
+      "bytes": 1242,
+      "sha256": "664fa80090b983ae76238b376b4c9a623be3763fdf81005b4d32dc33918e5ccb"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/962e5cc132aff97491d7376607f95ba23e88deb0/Sources/LoupeCLI/CommandGroups.swift",
+      "bytes": 5673,
+      "sha256": "c2778b87c22d05344a12d6bc2ecfcf32fd001aab17a0ab80090ac3e8c43e3b60"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/9d6745346d21f7f2193ec923acd6931d5d630259/Tests/LoupeCLITests/ActTargetsOptionsTests.swift",
+      "bytes": 2013,
+      "sha256": "fcbd501fe589f2a226becd1a4318c78f7819bd8001cb255d7e9839147e261907"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/a3924c042fd9c80e0313ae508918e40891a60e58/Tests/LoupeCLIModelTests/RuntimeActionModelsTests.swift",
+      "bytes": 34647,
+      "sha256": "62015223890bd71e8cf1af88ccb0536e9d17ab0d6ef8b8374b88199f77a4e0c8"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/a3d46b9311e81b363dd083e8f393cd25e83acac2/Sources/LoupeCLI/AccessibilityActions.swift",
+      "bytes": 11870,
+      "sha256": "d34cbf06073e87bac5648fa5471ee405dec557cb9950280272fa2081ddf69054"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/a9d19c8dcec9cb9b4b5747d738d77ed33f474e16/Sources/LoupeHID/LoupeDTUHID.m",
+      "bytes": 7946,
+      "sha256": "39db7386e38101115f7db965122c58b48038225aaaacb0d91825ded7daca00e6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/af60da53c7502e9c82af6e4b34df63443d7f6ebd/scripts/verify-xcode27-observation.sh",
+      "bytes": 3030,
+      "sha256": "1e350b42a462b27ed20f2bb8b0b34c0b52c5b38498d30336fac4cea7bab2ae79"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/b642dbd9216584b5cdb58642fcbca02b18bc4286/Sources/LoupeHID/LoupeHID.m",
+      "bytes": 48963,
+      "sha256": "bbe5cd648bdae6e3fc20ba6ac6e23cdb5cd46fb0fcee332b536c23069f28c903"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/ce4426bead2294c586fa4c7d728994c91c479c74/Examples/MacLoupeExample/run-macos-e2e.sh",
+      "bytes": 35403,
+      "sha256": "f46b91f696116ab69cf40be227b497d3ad1434edd6ec44039932b60a63110be8"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/d4b2492fedeca5ddf940880dfc072f49eefb3af9/.github/workflows/verify.yml",
+      "bytes": 9186,
+      "sha256": "89aec1319b04d2684642a802cf9c4c6577b615ecd7c688d22fa584e06108d93e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/ea3304d4d59503898c9b6f14a466339f9ad946b9/Sources/LoupeCLI/LoupeCLIUsage.swift",
+      "bytes": 14485,
+      "sha256": "0302be0a31beaeaec7ccc163ee970d2a1b1d13fcd79d3548d46412d1198f0733"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/eacff7837f1f89ce73a7208abb544407532e4d13/scripts/verify-hid-framework-loading.sh",
+      "bytes": 3751,
+      "sha256": "06abc7da566beb2bb6ed66a6a60c25565d6a715dad0fc3097f695950a12750e5"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/eddb4b9d045e79f33a983747003a3e9d8ecb1a42/Sources/LoupeCLI/AccessibilityActions.swift",
+      "bytes": 10473,
+      "sha256": "e738952039810d14bec3fc3f97deb0f20579f9dfe562ad34931f6bdc18e30aae"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/ef84a8a62cbb34ee4167c77ec7130c3984b6a813/Sources/LoupeHID/LoupeHID.m",
+      "bytes": 32303,
+      "sha256": "59ed4d633bfb95b61b3eda22d78d2aabe99e756346ed2ffcffae1e40c5bc9a36"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/f0c8b5b663dba1e801cb4a5414fd894de9c7a167/Sources/LoupeCLI/LoupeCLI.swift",
+      "bytes": 252040,
+      "sha256": "79e2f72bc5bf3b4479e5b0c05366444739df2b0b965901fef03e6c8bc94c3f3e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/f4f8778f169445482db2b733e4d26f806bf082c3/Sources/LoupeCLI/WebAccessibility.swift",
+      "bytes": 7568,
+      "sha256": "178a692c23eb13e20ac77815168fabeac51e772a17c10b0a3a67679b209d1454"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/f8f682997d52720199c67667f697778f368adf1a/Examples/MacLoupeExample/main.swift",
+      "bytes": 32253,
+      "sha256": "20937c2a8cce7f5d98c7a261b2215974ee68aa6ae9e3f245328db0b2dd230caf"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/fa15a5403ab5caaa84929298bb9256475b9fb948/Examples/MacLoupeExample/run-macos-e2e.sh",
+      "bytes": 35453,
+      "sha256": "b0375931a4243b12d0d608e587750958ae4de520c1645b4d99e64ec9f86ca262"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/fb923ca750c7baacabe4c6b2e58eb07f8dee5573/Examples/LoupeExample/run-native-scenarios.sh",
+      "bytes": 32103,
+      "sha256": "cbb11bd36dac5548126fd441654be8d10cb598fafff6f0153e09c8fde9c15eb8"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-source/fc80104fcfcc6e9c52e2e21116d71917fd524a78/Sources/LoupeCLI/ActTargets.swift",
+      "bytes": 4559,
+      "sha256": "e8cbcc11edb93801fb5c8de62275764225208b815d6708fbc45e5b86455264e0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-trees/180c60584867500b93b43ca6c8b556995bf8be7b.json",
+      "bytes": 81949,
+      "sha256": "8eadb0a31d22aed45eba211a32a48e9f4fbc541900b2e4626ad81eccf60b097b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-trees/c4da89490375c2696b44a933cfa68c7348842d8e.json",
+      "bytes": 81949,
+      "sha256": "ec839b27496ba5c9f2fd086e826b76fb75dfec3af6235dd71851f620b4537ec0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review-trees/ff1351242e6dbaba4a0b4de40d10350a668f03b8.json",
+      "bytes": 79517,
+      "sha256": "7520a24466af2c1e3af76308840b9970d590a84f66ea67f7e92197b437e7279e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review.json",
+      "bytes": 2621,
+      "sha256": "4fc49915b731541e444a9823ac8caf3b8c27f399a1d2a4220b493393620fb6e0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/heoblitz__Loupe/review.md",
+      "bytes": 5802,
+      "sha256": "bde3e21b763d19137428f0ab54dddcebe20cf1fef521e7610ca50c1ea4109180"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/hughkli__Lookin/LICENSE.full",
+      "bytes": 35149,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/hughkli__Lookin/head.json",
+      "bytes": 3171,
+      "sha256": "d4e3179ec432f965b6a91e0e8c99a9e271024ff607999b6c8ec1f9e805af1621"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/hughkli__Lookin/license.json",
+      "bytes": 49505,
+      "sha256": "eafee01852503c48977295071fcbb9988890b4c2f6e4409db61a3d5005d9f686"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/hughkli__Lookin/releases-1.json",
+      "bytes": 16464,
+      "sha256": "990b427a405dc92645837f2898307d4fb876e00dbda52e7523ece5de69ac1e1e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/hughkli__Lookin/repository.json",
+      "bytes": 5128,
+      "sha256": "4ed79eab48d1bd277dd982da910b3eaaa4516003c40003761552d2639e2d92a9"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/hughkli__Lookin/result.json",
+      "bytes": 4519,
+      "sha256": "c37d46907393c1cbcce810371969768cef2b1d2c69a39f4d8cf8fdfc2b5d9a01"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/LICENSE.full",
+      "bytes": 10771,
+      "sha256": "52327c57e955a3e63f872960938e814acc19eb1b77c501999f5fd1e543b21346"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/collect.py",
+      "bytes": 2722,
+      "sha256": "dc78d7087d2bb8d39970475a71a489ddd0d7592749378ea0ca9479803234d8f1"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/complete-parent-edges.diff",
+      "bytes": 297234,
+      "sha256": "86a7ebf0d56fb8b76669f761ff7d0a9828de309ed9a1414d7ddc5acdb5619795"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/head.json",
+      "bytes": 4173,
+      "sha256": "72248743ac40cd19b5a5cb92c741241d5d0918f9793e670ca5d5c69a07a5b415"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/license.json",
+      "bytes": 15955,
+      "sha256": "72db23779d55c1c4ca7e9490d22cf33c669e0d32f2e3f363bca7a7d739335ca8"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/main-evidence/Sources/TritonKitCLI/CLINodeAliasFreshness.swift",
+      "bytes": 6317,
+      "sha256": "2c004eae17fed937de55b90d9d4e6b2aeae7d7c84f0ed34f537179cc3bb33c25"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/main-evidence/Sources/TritonKitCLI/CLISchemaTestCommands.swift",
+      "bytes": 39519,
+      "sha256": "ce55a08b426d5457e82b1604c7452ad147fc3e32585fc58630fe091e485d8bff"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/main-evidence/Sources/TritonKitCLI/CLITestImportRuntime.swift",
+      "bytes": 26197,
+      "sha256": "da2326d90c629df2676572374b8191f258f287260b782f86571b8974edb086c1"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/main-evidence/Sources/TritonKitCLI/CLITestRecorderFingerprintRuntime.swift",
+      "bytes": 9112,
+      "sha256": "d761a2c45b0a44c77538d1b341c29d3e8ecc9148449398edb35f156c71e1044d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/main-evidence/Sources/TritonKitCLI/CLITestRecorderReplayRuntime.swift",
+      "bytes": 36352,
+      "sha256": "14006544e4c8e63ccdc128ff835f93ca04db8ff719a3992258c9005be3971b81"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/main-evidence/Sources/TritonKitCLI/CLITestRecorderRuntime.swift",
+      "bytes": 60081,
+      "sha256": "2b7c660429eb4875acc2d54411166a3dcf1d03a8e1d15f3d475e26f55dee075c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/main-evidence/docs-linhay/spaces/SP-192-ictrl-adoption-feasibility/README.md",
+      "bytes": 6682,
+      "sha256": "daec1160cf50bc4d1c84c728a0785fadd3010b720f7692b91f5f8af95f21813d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/main-evidence/docs-linhay/spaces/SP-196-upstream-optimization-delivery/README.md",
+      "bytes": 4749,
+      "sha256": "5a78f25442b7cc9338cf28e797dd6f572d02fc6622ae58106f4057a580c5dae6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/main-evidence/docs-linhay/spaces/SP-200-mobile-device-parity/README.md",
+      "bytes": 4685,
+      "sha256": "69cc9cf1fccbcf51ca1af211998d63e92b6b854a218661183b1d0b3c65a9fa35"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/main-evidence/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/adoption-state.json",
+      "bytes": 39984,
+      "sha256": "ddfe2e4099cd5e63a2a698f1584333adb36e034448fabeeb083b48619bb7fa9e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/releases-1.json",
+      "bytes": 434277,
+      "sha256": "dce38abb504606a8f31c6f9c8e8fc1215561832abf3800153557b2097743054e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/repository.json",
+      "bytes": 5627,
+      "sha256": "0168eb374b7ea163759b32b53f8c08522d442a0e8000a5e077239a1d19929349"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/result.json",
+      "bytes": 8202,
+      "sha256": "aa2d20656d3591b75ca20afc8963f2019605974b4ad8052aacde6bb3b8f94cbf"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-commits-1.json",
+      "bytes": 418146,
+      "sha256": "390764eb015178fef5fd451054783704ddd9c8215d2a03baa0584621ea1a6ae0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-manifest.json",
+      "bytes": 51658,
+      "sha256": "86fa3f30186a0b1b5307cc12896b57965c55deb5d3f82c9acbb6fd73648ca067"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/00bb552479a63cfad7075f4f49c327eca4dd0b48/Sources/mirroir-mcp/CompileCommand.swift",
+      "bytes": 16815,
+      "sha256": "20196bbb0bb0c459440b75f2e99ac8d0c3336f8327a1cfaa267e1c2c1121a67e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/029319c984552a7b93b3118a307a9d4f46e8472b/runner/tests/fixtures/emitted/.mirroir/apps/clock/scenarios/world-clock.ios.yaml",
+      "bytes": 292,
+      "sha256": "ad922bacb0d2cf78024ae0f73e21492f014f84388a5a17eedde77950d2537223"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/041b5af31f3da56a204e7c1351a505588a5addef/runner/tests/fixtures/emitted/.mirroir/apps/clock/SAMPLE.md",
+      "bytes": 585,
+      "sha256": "1ab5b741d3e1f61a4258ee6267fe2953e336486c2d0fb0aa603b0cd8b99d042f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/04470baba4a7941221b32f1b508345789029880a/Tests/TestRunnerTests/EventClassifierTests.swift",
+      "bytes": 8972,
+      "sha256": "b2d8b6f4aacc28d0b3f7e38583578903a9406be3a3b10cdfacc409cd36659750"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/0a404a04209e0a216173838a8f7fca4b37b822c7/Sources/mirroir-mcp/MirroirAppTreeEmitter.swift",
+      "bytes": 18180,
+      "sha256": "95c7a396adc1dbaf444bc40bba7556655e7609b7c19cef31fee7833da90da7c2"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/0c5eb064881078d5ccf79437365a276399d871a0/runner/docs/drift-and-accept.md",
+      "bytes": 15202,
+      "sha256": "cad933da8e275facfd11c89cf9b803019ebca3306f08f2fcf9a17411f7516520"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/0ded2d0585f0490a4b54735a9386facca1fdf174/docs/troubleshooting.md",
+      "bytes": 5640,
+      "sha256": "2005cd10b5d19f4f4ce16381326e45b98475ee14c2df73fc3f10d72cc12e9883"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/11fb510e1d787123ff21b980b7af172e13d36d6d/runner/src/oracle/screen_drift.rs",
+      "bytes": 17806,
+      "sha256": "db780925a6ece19fb35f85580957aa264245536cb6bb7f4696e89ea1e7927a0b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/1319e283538a166d787e6b3bb1049e4cf84dd1ff/runner/tests/fixtures/compiled/world-clock.ios.compiled.json",
+      "bytes": 2608,
+      "sha256": "809635d4d085a11a17ea81720d07f08c0be49f25d684d432655119cf0aa1a325"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/1db899f8815f393a40bcef96de2c2f6c2d5123e4/Tests/MCPServerTests/AppSwitcherRestingCardTests.swift",
+      "bytes": 3931,
+      "sha256": "738af212a5fff8ba133dfddba8309c8dd0d4a2e6551ece21dc236083706b2363"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/1e582c09146e6423c5182346bf6fa684cba57026/Sources/mirroir-mcp/StructuralFingerprint.swift",
+      "bytes": 10544,
+      "sha256": "2433388fb6a05ceb755a766d5545315b8e2dd9dcc449e6f2be222984a785baff"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/1f9fc2aa6bd40ae8563581a69d564b8546a1fd69/Sources/mirroir-mcp/CompiledWalkBuilder.swift",
+      "bytes": 7165,
+      "sha256": "d07c402bace3986889cc3eb3f4529807758f97cf728fc716ae452e180c19b7d6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/213cc341157b638ba4d64e4046438b1ce91ca0c7/docs/exploring-a-new-app.md",
+      "bytes": 7077,
+      "sha256": "0228a93d0180e2a39564f6ad3340396c263929a00a9c561c987c7c72d475ce64"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/23e33832d39e55e4108027413776432bce2b262a/Sources/mirroir-mcp/ActionStepFormatter.swift",
+      "bytes": 5444,
+      "sha256": "92407b804365d5f20605a890cf256fa6c6703f44381acbe4a5ee523602f2d663"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/25052b552fd58e065d90d6a5bb13d325e4a3b216/Tests/MCPServerTests/CompiledWalkBuilderTests.swift",
+      "bytes": 7045,
+      "sha256": "6c4e7c17ff5d6ed1b51715c747e23d37e5e8bb28ef9ea4507be61a9e7110e536"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/284d589c9510ed402e3cbf8eeb3eedf463f29081/docs/web-and-ios.md",
+      "bytes": 9926,
+      "sha256": "3f1ff372217a4b02228da32246e3c88261f2ae872afd5c8b0aace96e53e7fe37"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/2851b38cd523bb4e48a2685dd4894174b9d5cff0/Tests/Fixtures/recordings/calculator-fixme.recording.json",
+      "bytes": 8375,
+      "sha256": "10544ea7fce3dc0130a87d1637cea378613c91e91b0730f700b94f09e030206c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/2b76a62a7d735e864ea40e28ea08d5412761ec8a/Sources/HelperLib/TapPointCalculator.swift",
+      "bytes": 11474,
+      "sha256": "d2cf1faad4a8014ca88d0318c552eeb0c6f0ef1bad70bac03eb31f7050fa9a11"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/3094f110f1447afd8fd8223ae0ce50ce3d64eef9/runner/tests/fixtures/emitted/.mirroir/apps/clock/scenarios/add-alarm.ios.yaml",
+      "bytes": 318,
+      "sha256": "edb71dd7a7dcfb916ec5a810371d5f59991cb91ac3baacb6581325175619cb10"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/32576782ee68aa91f99030cc281d61cbb16a0cf8/Tests/MCPServerTests/ScenarioLabelAndLandmarkTests.swift",
+      "bytes": 10487,
+      "sha256": "722db6ca17df53fe30202134071f2b654d0562e6f94105d4311f3305982e2c6e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/32b07199b5c5f6079b8cae61218cf4b222e258f3/runner/docs/scenario-grammar.md",
+      "bytes": 27743,
+      "sha256": "32d5ec1d84a3d8af2c0bf1a39d2462a20cf204e51cc3f90932328e6fee4286f7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/32bd5895902ffc57d83a9eb8e29a45d26fc3a893/Sources/mirroir-mcp/DriftDefaultsSeeder.swift",
+      "bytes": 3077,
+      "sha256": "765ece74fd446ca5119a9da4153986f299129410cd330ee983916db7962035f7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/344734dff3d1bb8901c872d8489cfa006d28f653/Tests/MCPServerTests/DescriberRoutingTests.swift",
+      "bytes": 14850,
+      "sha256": "2e29e6a23639e5d4f6b4bf9b7024f2fec6be04d81975ed63dec3bc568d75a711"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/3493ad52f9fea55f0053d1b069c9198c8c736c97/Tests/MCPServerTests/SpotlightAppTileTests.swift",
+      "bytes": 4914,
+      "sha256": "cfec6c596720cf1c27b74f0480aa4f51e03bc442bccbbf1f4dc44cae414942cd"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/35c9ca111425d718aa145a073936e896c0aaef89/Tests/MCPServerTests/DescriberRoutingTests.swift",
+      "bytes": 14911,
+      "sha256": "6f794caca6d7bb8876aff2edc009d4f2213522c10ce9f8eb233c5cb7d09c9e33"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/36b13f819cdeafea0b4fdbfbbd6633c6bdb157cf/Sources/mirroir-mcp/RecipeLoader.swift",
+      "bytes": 7885,
+      "sha256": "85fef392ff0cbe6edd70adfd20aba5529c6d6aab37a8317771465534d3fa28da"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/3828a685fced04f991ab84bc40a8e432ce08ed27/Sources/mirroir-mcp/EventRecorder.swift",
+      "bytes": 10934,
+      "sha256": "c05cebaaf311ab13c3ad96025810bdcb2c56f426a6aa4c523ef871bc839adc3d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/39d927bbf26022c3e7572c18524315c7bd5e64ed/llms.txt",
+      "bytes": 24279,
+      "sha256": "965a3c5c2aff8c1041207124ed2841e3b781431ec1cac0be9435ce0b0ad0773d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/3ad69ae7b458086f4d34ab3b25ca378d96d81f69/Tests/Fixtures/recordings/calculator-add.recording.json",
+      "bytes": 14518,
+      "sha256": "099c70ea976c7443d6ea7ed026ee5aea8d2e9f7ba5d143c6f44735fd987b8751"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/3c9679bfec6fe64b8dd2e52d1823ad2e83033ce2/Tests/MCPServerTests/SaveCompiledEmitTests.swift",
+      "bytes": 7400,
+      "sha256": "9730f9b601ada3161357df4daf67f02b89381ebb26682b1c18b36300e368669e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/3d06747c86278152f30b15b6f9cceb47a15ca646/runner/docs/scenario-grammar.md",
+      "bytes": 27457,
+      "sha256": "375026df7741f29b055e6f7d00d31af036385d8cdbf6a6de167f3731fbff2840"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/3e195da75293604aaf05388d69f1b1a1d7dc7564/Sources/mirroir-mcp/mirroir_mcp.swift",
+      "bytes": 12924,
+      "sha256": "b4711945c3c3cc7dc2d8376e0b3fe86042838f2677e9b2c147cdfbd508680327"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/3ec25bf39ba91d6bc41b9818ef90209c97d86644/Tests/MCPServerTests/CompiledStartFingerprintTests.swift",
+      "bytes": 8320,
+      "sha256": "8394f2df8750d5b4b7a646f698e6d910171ee4eeb1028691b1695d82a70a5c37"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/3f53bc7111e91548c2a02b5686357fb771e25662/Sources/mirroir-mcp/RecordCommand.swift",
+      "bytes": 14110,
+      "sha256": "07e76f24463d2bb66babbc0d37f0e8e857f089881e6eee5c063d61b23671a438"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/3fc95f3c1410456f4a65f9e21966ea5707f1face/docs/testing.md",
+      "bytes": 17198,
+      "sha256": "932b4e635a57720db107538b09dac0cf171d7911582117290f4d1eb2a65bf8a4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/3ffd3313b4d4ebc32efc68646f85009628a931d4/Sources/mirroir-mcp/ComponentLoader.swift",
+      "bytes": 9178,
+      "sha256": "f21b2f4f1f1b38f1261ccca7f480b450c5ffb195fbd357906e2e91b7b8144db3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/438919cb46f145b3987cd545bfe7db25e3c0c572/Sources/mirroir-mcp/MirroirAppTreeEmitter.swift",
+      "bytes": 16821,
+      "sha256": "557496a539c4ab7e91e96c2552efce9746059c367616a40cda3bee96cf855592"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/44eb9ab41e75c988a02e48ace9e46a5758fd9788/Sources/mirroir-mcp/MirroirManifestUpsert.swift",
+      "bytes": 9089,
+      "sha256": "ea20a7b704d1d03c820b36af1c9bf6a810b48ac4ec056f589c698547d8e93e69"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/47ba2d14aca7074ff79b0e9c8642d20db629e508/Sources/mirroir-mcp/RecordCommand.swift",
+      "bytes": 6537,
+      "sha256": "fa9749bc633a8c6e75acc5e8491afbab620474ebb39ab616247a31adda9919ac"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/4a0984c2e0616a02df71d7702d91ea4997c59828/Sources/mirroir-mcp/CompilationSession.swift",
+      "bytes": 3882,
+      "sha256": "1aeba38f33fc7a7ebdae5d5dc3e86b36ed4ebf8ec3de87b74e756d994e1645b6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/4ac046f1a708b84f60ea38e6eb47c77709732c15/runner/src/replay_ios.rs",
+      "bytes": 7580,
+      "sha256": "dc2c50c8efda8e04f2c1e1ac549bad2afa1bea35aa8b8640b0217fc5bbfe24ee"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/4b3a42fc982724698f23633e36d898ad3fe4f92b/runner/tests/fixtures/emitted/.mirroir/mirroir.yaml",
+      "bytes": 293,
+      "sha256": "102e4e739bb95078a4dd47b15cb5d3e9b514e4240ed8fc607f3a2d46566167d4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/4b4eefccf51b1019453c081b01fee185b1df391d/runner/src/replay_ios.rs",
+      "bytes": 7737,
+      "sha256": "4442fc9b527d516c6de04e5b9baf424f4ecfb5b34cb8709dadbf0aa50600e6fe"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/50ec9578af160ce0d2b79b87e96d78e2804a05b8/Tests/TestRunnerTests/YAMLGeneratorTests.swift",
+      "bytes": 6238,
+      "sha256": "a3664c2478bf623bc6fe90df91ac85c2278cad3ff8237cf65ed66b858959fbb7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/51cc95f2c0da54b2455d64bcc88837a274231450/Sources/mirroir-mcp/EventRecorder.swift",
+      "bytes": 14019,
+      "sha256": "83238e72c53fc70bf164dd181dd11b7a71d28617c9b3a4b8a06dd65897d65a2a"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/55a218fd5ebaaf55961011c44841ff8f67fd6485/Tests/MCPServerTests/EmittedLandmarkSegmentTests.swift",
+      "bytes": 10330,
+      "sha256": "7cc591a24441645170ea8869be8e2c554f84a0306f911e106447d406b7255132"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/584f05be47b29a3ec38eb8a92a2e83206028e1b9/runner/docs/mirroir-dotfile.md",
+      "bytes": 17309,
+      "sha256": "5c69cba693fdd253be37197f2d9a048b964f96015634a18b9481c0ecdfaeea6c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/587a28882026473a623dd7f7116517010330cfbf/Sources/mirroir-mcp/AppSwitcherDismissal.swift",
+      "bytes": 8420,
+      "sha256": "8f8376a232545fe31340528760f0d023b07bcbe4694e35f36445288973a9b75c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/5cd6f841e1821090c136f242a2512ef37e7846bc/Sources/mirroir-mcp/CompileCommand.swift",
+      "bytes": 16878,
+      "sha256": "a53ae5beacfcb1f3cce8ccec1f7fc517da16deaa1bce2c09007f3805cdd4af88"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/5cd7c761bf2722e239fb31366a8c9b146d6105cf/Sources/mirroir-mcp/SpotlightAppTile.swift",
+      "bytes": 2327,
+      "sha256": "f8f5dd3f8bc3b1cbe338c996671d66d6b191f39022dd88ce5bc244e508843178"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/5d406cc927a66386e71f3da905f72622a82cc403/Tests/MCPServerTests/RecordStepHandlerTests.swift",
+      "bytes": 12446,
+      "sha256": "789c1e9d79525c5bcbe88cc2b3720104de7ab3cbc3a4f8596f4670cc9ee4faa6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/60bc63383e5a141e84800439f4ab540292b856fe/docs/compiled-skills.md",
+      "bytes": 20786,
+      "sha256": "a10b9c7aea7ffc36b85b641576ef89eebdf853be4dda9e04f701fafdb8c0eb10"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/618a2662c43b3f68fa7c9a42c385aa555d7af8c2/runner/src/replay.rs",
+      "bytes": 17621,
+      "sha256": "2cea5ce2a925d4ed23e34c06cdd858d16dc22146b3b101f0c2b9a3592208070f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/65eb6a06b6b60763f08f246ab0c4a2902bb893e7/runner/src/replay.rs",
+      "bytes": 17740,
+      "sha256": "0469380e8cb214afd755d119785c53c175ba1bce54533ced8ca56a1067afd29b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/66c3fa9dde5f1cbfdc5c578cb844d620bf07c6ed/README.md",
+      "bytes": 37261,
+      "sha256": "440a35427ee4b26bd76168ffb1fd6490ebfc9923229a7edc6af22f89f85320a7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/6798a1fda5f57b4d7ed4f5f567078063aa2ee63c/Sources/mirroir-mcp/StructuralFingerprint.swift",
+      "bytes": 10885,
+      "sha256": "8303e248c23c5847b9f29c81c2688cd2bd40b997df9e6b9952c379609d84e0db"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/690824784260c8b406ce88704e3507ebafbeaf64/Sources/mirroir-mcp/TestRunner.swift",
+      "bytes": 13321,
+      "sha256": "33b2b39a36701ca7f6e03afa33b4a35dacc2473cfd0c1d7184a93921ee916c0b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/6bc2fba5d2835a1dee9dad37029796d139d32071/scripts/ci/generate-skill-manual-capture.py",
+      "bytes": 4404,
+      "sha256": "726cb62ec07cdac742e26cc17148aad5f09946a7216f5bf3cd4a54ab592f83b0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/6c8286f74e280a00a50be41400343aae4592bff3/runner/src/oracle/screen_drift.rs",
+      "bytes": 16388,
+      "sha256": "3e61a7d2cb8ac25b73aff399c0811f0c212373320d30e77139cdbda4f1a4cbf1"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/6e0a9f1276d871ffaa71c08985357de2607d6a74/docs/troubleshooting.md",
+      "bytes": 5591,
+      "sha256": "e5d487b86ceee2ea2fb83f4fbb1dd2f4bc42bdbc8772cb5591ea4de489b33be4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/6edb793ef44fa723e63664b7d04167c4c878b390/runner/tests/fixtures/emitted/every-verb.ios.yaml",
+      "bytes": 611,
+      "sha256": "9157dc31b231c43765329cf367be1ab8073077f58e1cc7a78e507d721c311c1d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/70d2e0426e5f610fae19fba15076429332e23557/runner/tests/fixtures/emitted/.mirroir/apps/clock/scenarios/gym-alarm.ios.yaml",
+      "bytes": 301,
+      "sha256": "ed033fce9058a874a42068128ded5e52af88655d8cfda1689a4c8e5aedbd449f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/7148dc2f257e5329afb7f167cc8abcc750bdc807/docs/troubleshooting.md",
+      "bytes": 5392,
+      "sha256": "007337b53d4e1d7836808cf74cc7130756fd5524ffcb5bdc69d65de0f67b0ec4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/72d5312c765a37620bb97637a9502840ae342324/docs/compiled-skills.md",
+      "bytes": 23966,
+      "sha256": "5ab7f2a61e20a8e2842f0ef2b51ca7f4d299ab912ca21f3619bcc29fd6a5d971"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/73b9558e32012f7f7e2c96b4083854d5a316a328/Tests/TestRunnerTests/StepScreenCaptureTests.swift",
+      "bytes": 15611,
+      "sha256": "c44cb21d4c6202b04e7ac79965ef1b77cd174eafd1fc3b3fdfd05a7c6b22faf8"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/75c1c4c83e98096cfbb645a4c39cbdd32c653191/README.md",
+      "bytes": 39057,
+      "sha256": "81b1a023a100314ffb31b94727744c82f6026f6a3651e1752591f6dcf39b5239"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/791a7d94e438d27172e0e301765974ca44b8224c/Sources/mirroir-mcp/RecordCommand.swift",
+      "bytes": 14053,
+      "sha256": "33b9a6fd68a64b6ae49212aa51f376dfb2a1d952bd539c8e15f92917dfdbcdda"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/7a63b99cd206d8d3ecffdce0ce5e35589bd8707a/Sources/mirroir-mcp/RecipeLoader.swift",
+      "bytes": 8034,
+      "sha256": "76f8b7b55021c5a2cc0f76df2dfa6ee0879c7dd2e708400f016d8e344d963c29"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/7b879e7c43aeeb08a275bdb3f4f4eb679269709f/Sources/mirroir-mcp/AppDescriptionLoader.swift",
+      "bytes": 9042,
+      "sha256": "dc8360ec0d4c195b42b7e062956d8a6641d1ad3be52a7a874d74428d59a18e10"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/7c17b96782c3bf7330dae57887c675205e8ba3a7/Sources/mirroir-mcp/ComponentLoader.swift",
+      "bytes": 8726,
+      "sha256": "bb4f10bf2c89c0a9e579cb2ccab74ac1d08c49e5344bfdbc46eb5e753c005b51"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/7da50fcea4019e56a7da173f5e7792dd75061ef9/Sources/HelperLib/PermissionPolicy.swift",
+      "bytes": 12073,
+      "sha256": "e6ab944da6a7d10a34b5726a897dd091e75367e0abf3616451dc729bd98ba1ea"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/8358ba89b96280db611e93bb7a03e378e2ac625d/Sources/mirroir-mcp/ScenarioStepFormatter.swift",
+      "bytes": 13475,
+      "sha256": "f3a91fd1581cb42311b052277d3f71bd2c1b790daf7cde27ebb07021108e27a0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/83cdf71b0d8fbcf354c759b7d948aacee92d2d43/Sources/mirroir-mcp/ScenarioStepFormatter.swift",
+      "bytes": 12984,
+      "sha256": "d81ec90cd560dfd677fc8aa17e447ab2589495abfb4092273089fe2162c11cf3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/8461412b51ea7e08737f6eea5f6c88566f7d1011/Sources/mirroir-mcp/ArrivalCheck.swift",
+      "bytes": 5272,
+      "sha256": "2495538868f6cd6ff7c96f83870820bacd46d8cc65063627ade298470d49f249"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/84f160455b04f8d2db8ba6cd6343ffc0ac0c30d9/Sources/mirroir-mcp/RecordingWalk.swift",
+      "bytes": 2499,
+      "sha256": "2f5752fea8ee08355de189bcd20d7c14da4523bed47375a7be661f3f030af529"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/854d7b4bcaca1cd096df29f1e4394f53b4b09b0a/runner/src/target/ios.rs",
+      "bytes": 11332,
+      "sha256": "1977dd027a6b1e6cea07f6836b60505c1746c10985c06b2734f5857ee539f746"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/8716c0205c613b9bd99523f7828faddd81771f5b/runner/docs/drift-and-accept.md",
+      "bytes": 15335,
+      "sha256": "07479f3fded0c01b246b4825139fe718534970ac2bf3e601eb14102ab3402f9a"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/874642c39af29cc5a4361fb92a8feab49b6a081d/docs/tools.md",
+      "bytes": 23776,
+      "sha256": "51c2312593243b290660f503cdb102107dbe4dfb3a858ac615956c7526cb8392"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/885c14c11f2a6d60b4c35697ae049cd33b8b7d9c/Tests/TestRunnerTests/StepScreenCaptureTests.swift",
+      "bytes": 15434,
+      "sha256": "03a004ab7022292aa0a0510712ca8e410a3a0626fafaeff41daf5da7e8f986ad"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/8864f515f3aa257d2601b767874cfc895b602aac/runner/tests/fixtures/emitted/every-verb.ios.yaml",
+      "bytes": 592,
+      "sha256": "f0aec47c05b6f01a528f7a002abd4fccd7b98e10a4eceb992710c770a1b5cf4e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/8a1ef0233da64ecd369aae156b7122461bddc771/Tests/TestRunnerTests/RecordCommandArgumentsTests.swift",
+      "bytes": 4668,
+      "sha256": "5fffa86ff0efd62b281dc93bbda51a704c6c7c3a9c65fca9e040e7be85921088"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/8ae827e0e79b7d97a60e42c9ef5a506615fb63b7/.github/workflows/installers.yml",
+      "bytes": 10396,
+      "sha256": "22a29e11d9823798fa644ac640d20b653995cf3effbbfd04e651f7409cf6ce30"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/8c64004daf2071cbf20dfd7221469a1e08197df6/Sources/HelperLib/PermissionPolicy.swift",
+      "bytes": 12956,
+      "sha256": "91e936a0cb37ab9c8174ebc78d72c599a9139a36c950255724bb6a68cb9597b1"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/8f7cdf9737dc5fc1883fc6e1be4f08cefc1fa5e2/CONTRIBUTING.md",
+      "bytes": 31867,
+      "sha256": "06cb396ff2e76a7bf0278f8d7b2338b60f85e473ffa11e189a62e7b9b64e7395"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/90840eb30bd55b1f21342e83b9dd7df2761e8999/runner/tests/fixtures/compiled/report-match.json",
+      "bytes": 2270,
+      "sha256": "69bde95b6fc6c0b5098c1b4b9f79307ed1e93f0c290f40b0c7a8b228b900548e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/91ef23a4c7e86731e42f899c2dca87b46c3c0493/docs/tools.md",
+      "bytes": 23360,
+      "sha256": "9733ce2d6fc0053d486aa126de6cd7e231926b94922f8f49aa26f268503b4b7c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/92d0db3de8c896db2b6a9dcc0b4d9df04296c0e4/runner/src/target/ios_tests.rs",
+      "bytes": 10097,
+      "sha256": "b0f6d3cdf1a663d1005b7d45c16c74596cef51e0f1d47bbfd6de0056efa3c4df"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/92d9b53cff031ce0cf83074e4933f5d6225502a6/Sources/mirroir-mcp/ActionStepFormatter.swift",
+      "bytes": 4524,
+      "sha256": "1c6f0ec0a959d8cca5f2e508d89d6bf8aac6beb9a57c61e270be297f21d7e711"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/935b7c48d668e5cbd7c5e2b6e1aaf40f33d240df/Sources/mirroir-mcp/TestRunner.swift",
+      "bytes": 13303,
+      "sha256": "da13c5248077cc59e03201593a71fa783a0ba18124c1b9fdcde02a36b51006aa"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/94c837c3ff580cac76e68cc4e3b310310ba2d326/Tests/MCPServerTests/SpotlightAppTileTests.swift",
+      "bytes": 3143,
+      "sha256": "734b59368e184b4f8716bb69926568e28e7718d9d3d19fe2bbcfc047c642cdd5"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/94cc589074aff5d082460b2e1f70e0bb7db92c4b/runner/tests/fixtures/compiled/report-drift.json",
+      "bytes": 2266,
+      "sha256": "c4d5ef6a0205a78ad00a6ca36fc82f029f233ec0319d34628c7755256c0737f6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/9602d06fab6a88c5c75e6e37dfdd3f11039cc340/runner/docs/mirroir-dotfile.md",
+      "bytes": 17606,
+      "sha256": "2ef06182c7f8a9f0e791dd8ea82ed27b0b941302a8a334e26bf953859758e84b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/97bb157f289cd464b9f3eba516a9335f88a76459/docs/exploring-a-new-app.md",
+      "bytes": 7323,
+      "sha256": "e7aa1bc447de048b8286fe135774e770c71570ac026f214e18065c5170cf2562"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/97cdf25de1a73597989b4a39cfb47d2bd8061906/.github/workflows/build.yml",
+      "bytes": 28777,
+      "sha256": "f25c5ced5c1195d24e76856806cea1ae54ee94df499973a9f46764bcdac96c80"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/990d1f7ddf6888400302c80a7151554913eaf00f/Tests/TestRunnerTests/EventClassifierTests.swift",
+      "bytes": 9099,
+      "sha256": "a2a17016f6b66e5433ca5995b9637a6897ec8b7083524797648abbc443ae9288"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/99c625ee5eb62b090f80c0d3a3b88266abdae607/runner/tests/fixtures/compiled/world-clock.ios.compiled.json",
+      "bytes": 2621,
+      "sha256": "49d12b51bae952556568e59f8ca8f92f2015f1dc5ad698894460e4d3e28adfcb"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/a32125b7766297b0031f73c2c0a0cf88da9c3b7d/docs/tools.md",
+      "bytes": 24248,
+      "sha256": "51781c83fc26f89eabfbb32af048f3918b7b74789cfb509912f0a97dd0e4194e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/a531bb51656084bf0590d3aea08e811e6d81ff1b/Sources/mirroir-mcp/MirroirAppTreeEmitter.swift",
+      "bytes": 16961,
+      "sha256": "d4bc1cd9ed6ee5d4b5a212505f241bd7737efeb2e4679a44b90d39d6bded3fc5"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/a86c8051a8c241ce6fb37ac892a75f490d1aaa84/.github/workflows/installers.yml",
+      "bytes": 10387,
+      "sha256": "4d910499df563362646c02a16e21bd547b09e5806facae08dc360b60e2fc6a55"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/acbc09054a770f59ed072bdb8b542dd956bed8da/Sources/mirroir-mcp/CompileCommand.swift",
+      "bytes": 16936,
+      "sha256": "fb62d482a3349899824a549a9386b9a86a924724e5545df22cee1a7cb6d5a3dd"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/af81a20f5c420b86ac6fddcf05a088a64c724243/Tests/MCPServerTests/CompiledStartFingerprintTests.swift",
+      "bytes": 8533,
+      "sha256": "151a20c860b8b1137ea4e736e377da775ee04b21e9764b34ff39e4504d08e46b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/b2934b0dd49a3e7298a1f9af8cbff3dab3cf43a5/Tests/TestRunnerTests/RecordingWalkTests.swift",
+      "bytes": 8977,
+      "sha256": "4d56852ccf67be9cd82ef6e073ffd0d7ca9e3fb5aacc5bb3a4d2878a423fbbcf"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/b8ce30d537dafb21dc3b5c80319cb996bfb78f30/runner/tests/fixtures/emitted/.mirroir/mirroir.yaml",
+      "bytes": 274,
+      "sha256": "87e8764f0bbe6968c6dff1c9d2cc559b0a3a25a0072757ff3a50b65a4fe957e7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/b8dad1ff046f16ab81c60211ae9887873184e1b5/Sources/mirroir-mcp/DriftDefaultsSeeder.swift",
+      "bytes": 3264,
+      "sha256": "8a61f6d435c749149cce05b327a60f219c6bb0a1ed10def00faaccfcc958a776"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/bb1a5683976cfa867e990d2b06ccb16b384aa02f/runner/tests/fixtures/emitted/.mirroir/apps/clock/scenarios/world-clock.ios.yaml",
+      "bytes": 273,
+      "sha256": "c36f9a542c6adb1c9a4354a7aaf575182d1ff5a67ce46ed2efecd12dff48ba72"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/be987a7dcbe87037be06688f64a692270a1511b4/Sources/HelperLib/TapPointCalculator.swift",
+      "bytes": 11494,
+      "sha256": "6ce6a0ff9dce93c344da6334b6a1caf2702d8e1eb7056556fb83b6d592c0f8f2"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/c281cdd1dfd1d0ca4e285b13ebb9c52c79f679d4/docs/testing.md",
+      "bytes": 17191,
+      "sha256": "29b3e4fdb702e2838af41900efce4336ea5553394843ce1d3e13cb0a1af870d3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/c54a6fe9131522333c6d13de55cfc376f13717a8/runner/tests/fixtures/emitted/.mirroir/apps/clock/SAMPLE.md",
+      "bytes": 571,
+      "sha256": "f3bbb39a7a5b5503539a1511626d012424a6fcc88b5a4adebaa761aa3ee2d078"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/c79c87793e58c85515dd5261f9521bdc832d328d/Sources/mirroir-mcp/CompilationTools.swift",
+      "bytes": 23330,
+      "sha256": "d19ecb7cb4519769b13a20386f9326b9449a1cb8058cba46b69c0579faa36efb"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/cc4ec269f53f40bfb53e727d225037d5cf2c7124/Sources/mirroir-mcp/SpotlightAppTile.swift",
+      "bytes": 3686,
+      "sha256": "2a59f5f880a470c3e76fb27961d71ad82db0c0e3f3803ee84ee5e7de6dfa1b44"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/cc5baf8dd48f7f8023aff60d7e2e3df6ba4a7ec2/Sources/mirroir-mcp/ScenarioStepFormatter.swift",
+      "bytes": 13181,
+      "sha256": "a49d84e10ac13b3aa3a1c67308aa3466480d3599141ffe1092531a5baabbc3c5"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/d115dd1f5220f2a98101e5ef729d87b7db2fd165/Tests/MCPServerTests/RecordStepHandlerTests.swift",
+      "bytes": 11601,
+      "sha256": "3137853ed3ebd491d3ce73c1111807c55d40b376aa8130e3c045edddddd59a7e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/d57bef01efb8f5d56e630f93ade2187b31a7087a/Tests/TestRunnerTests/StepExecutorDeviceStepTests.swift",
+      "bytes": 18279,
+      "sha256": "70d091f4b500238bc4a475beb5c1b8eab76e65c696f90bb4bd4142552a84f99b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/d5a45861d5d7be3acfaec9f2b0f05199b6b2ed14/docs/web-and-ios.md",
+      "bytes": 10337,
+      "sha256": "31800b2e5de7b52ee685f4511060a703eff357d2cc4f5a72327ac084078b5d2d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/d7caedb2b72d938b018abaed6d14caf325bccb03/Sources/mirroir-mcp/CompilationTools.swift",
+      "bytes": 18446,
+      "sha256": "24fa823acc8c373608aa143f4afba6f99ff0265a8fa6d4c4fa1853c45615283e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/d7d85e85c2e2ba2383a7343e7e738a7777c90d9a/runner/tests/fixtures/emitted/.mirroir/apps/clock/scenarios/add-alarm.ios.yaml",
+      "bytes": 337,
+      "sha256": "9f963a4cfaf6b045267c4974d34caa55bcbc925abc3a64c0bec1b6261009fd45"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/dce674aa35ff9e66a9deade26e9dd0c1441479a7/Sources/mirroir-mcp/mirroir_mcp.swift",
+      "bytes": 13088,
+      "sha256": "d7f738ccd1b039296a981b67d67371b0a6c1a52d1a98db8dc05f3265cf4ff888"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/de314ab8057c3d8916b19941614425a54bb18eb1/runner/tests/fixtures/compiled/report-drift.json",
+      "bytes": 2266,
+      "sha256": "a2b8f0dcc9df389ad2836e1f9b8b48770f06a805f12f0d69a500300e3edb0a26"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/e05cc266d82b77cd738edf2b2b719e3eb7844917/runner/tests/fixtures/emitted/.mirroir/apps/clock/APP.md",
+      "bytes": 998,
+      "sha256": "cb247c489cc213179aa0a76bfbdf2efab3f9422f5c51dc49a570615b826e9ca7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/e3a601d8bb08be0d71b6192e50fabea59714ce7a/CONTRIBUTING.md",
+      "bytes": 31402,
+      "sha256": "b451317ad5bb82e8f5dbe88b815769fd19dbf1f8431450f6909e6ba4ecc3db69"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/e405080ed3e0f57a6e4300e30d4064c795a529cc/runner/tests/fixtures/compiled/report-match.json",
+      "bytes": 2270,
+      "sha256": "b4fea8b2db70ef468404bcd959970765aec3c9036df8f795dc9ede0d2ae876f9"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/e4665e4088baf1f5bef3a64b0eacdde37165b27a/Sources/mirroir-mcp/EventClassifier.swift",
+      "bytes": 4724,
+      "sha256": "8f33e5965a005416dd937a89775695f27381d5a779b618e5e9b27870f3e32202"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/e83c3a5fa6f4e096d5836142ec73edd369dc3431/Tests/MCPServerTests/ScenarioLabelAndLandmarkTests.swift",
+      "bytes": 9474,
+      "sha256": "42b910835d7512c9af4afd0e6153030795328fc264caa96fcdb85606de0eda65"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/e8ee8fedab26e23ab893a1c0c671835c6ff9d475/runner/tests/fixtures/emitted/.mirroir/apps/clock/APP.md",
+      "bytes": 1122,
+      "sha256": "01fe617698cf97ccb3b15420f3eeb18a01e267cd45406f6a72b65d54bb9d7ce5"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/ec007f7d0c965327eef0024a6cf2016a89ac8165/Sources/mirroir-mcp/TestRunner.swift",
+      "bytes": 13258,
+      "sha256": "ca117dc21b6d17100002e24b6e0a7477a71d590d717811bc51e9aee30b0d8ea7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/ec6ff6c661343ae1a0f07e599a6dd45434fb6c8c/Sources/mirroir-mcp/SaveCompiledHandler.swift",
+      "bytes": 8995,
+      "sha256": "ba6e963354bc52e81d1cdf64ca9d1122b4dcb5755c5d9bcca579c55ef16e5c1c"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/ef7e6d9d5b660889aa9830022b8fb24fcce47f22/Sources/mirroir-mcp/MirroirManifestUpsert.swift",
+      "bytes": 9122,
+      "sha256": "03c59b00fcd7948fa331023fcb16aa69f4aa3de4e8694c3a81c9e46dbacbe0ae"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/f11dcbce3dc6daeb0c8ec3f3a03d6b707a6dac25/runner/src/target/ios.rs",
+      "bytes": 19231,
+      "sha256": "ec770a67614c13319b08f0731a435357d5dfcb52dd086b9521f25f3d9de587f3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/f2612bb14a3427bd0f56d671564ae6daacad06e7/Sources/mirroir-mcp/ArrivalCheck.swift",
+      "bytes": 5409,
+      "sha256": "01ddd2c2e5bce8b0d250712b8c792ecb7511349aec39dd7cbbff203a19911e7d"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/f32d67883e8aa4a25379f4c83b41abfd5e61e249/Sources/mirroir-mcp/AppSwitcherDismissal.swift",
+      "bytes": 11009,
+      "sha256": "3cd4c606afc5a8dc71fba80ecf5c0873a01fa066b42d03e936cbede4e60a9872"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/f3e6456ace6b699ac7eb1bd24a955f58dd2ad214/runner/tests/fixtures/emitted/.mirroir/apps/clock/scenarios/gym-alarm.ios.yaml",
+      "bytes": 282,
+      "sha256": "1da1c73ac1c8a5c27343539ded0cf42c4ee4ae370f1e5e5f6ede84e10316f072"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/f400f198d0d036ebd610640020854a11446697aa/Sources/mirroir-mcp/YAMLGenerator.swift",
+      "bytes": 4156,
+      "sha256": "d0018329b573cfa879759e2a063b07a7a9d7bca39da7557857a37e0a519d4bc9"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/f41ea29ea4fe289ac2d2160f283fe39c6caaeb8b/Tests/TestRunnerTests/StepExecutorDeviceStepTests.swift",
+      "bytes": 18232,
+      "sha256": "0d030db5347dfb9917dc267e190e15681f4bd2fcf27577d65523ab3441288fd6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/f66001e8f2b4ec612f11ab17ee2a8aea4d5756ba/.github/workflows/build.yml",
+      "bytes": 33172,
+      "sha256": "bae62e907917ebd3545a5b045da3d94043c06583d186bd179697bf9fabf82277"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/fa8f65e83968f8e02ae85b6168f3c58092e4eb06/Sources/mirroir-mcp/Recording.swift",
+      "bytes": 3533,
+      "sha256": "f262029c420ee75fd12b052eb85d978e5cc3b01ee692d3a97020ac3fe08ca939"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/fc260948ea765198fb5f42d4af8f87e33f18c8c1/Sources/mirroir-mcp/AppDescriptionLoader.swift",
+      "bytes": 9161,
+      "sha256": "1211c905eb51da54a2a052c8fa5e85bbe5a55e0478f287235873a7681cea10d7"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/fcb10348c99ac5d94423cd22305779c022d9eb33/llms.txt",
+      "bytes": 24132,
+      "sha256": "54068e6c6010e68f78ee667a58885f491030a0f0e9178d384f000491cf37aef3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-source/fe5817439b2d39abfdfd5e9f033590549f8c9ae6/Sources/mirroir-mcp/CompilationSession.swift",
+      "bytes": 4581,
+      "sha256": "e48f035ae54dd1459926fd2f707dbff1c159d3f3d42b9c8664f2572ac04289ed"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-trees/1166ac1517263d773703c08ceae762a20432d3a2.json",
+      "bytes": 215381,
+      "sha256": "386ea0c26dafa3726345bed97d6680e53d90021085f10b5aaf4738e663b5cfd3"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-trees/65e3a71755d41d392817b4f6417ef15ed9ab3e12.json",
+      "bytes": 214871,
+      "sha256": "0f3f86a9787d7b55fcfadf44672e533d188834bffce4c42faa9138dacebff16b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review-trees/b2509022e965dd2dc1060f58c8a9faa5cae068e4.json",
+      "bytes": 211779,
+      "sha256": "77dbced4f3807c6a8e994a90b8ba67b594a3a77ecdfc8da9e380d67d2d95c20f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review.json",
+      "bytes": 4711,
+      "sha256": "160703e32b6195a650e3e884173695f417558213162be39d044778e2aeda7ded"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/review.md",
+      "bytes": 4927,
+      "sha256": "8372c62ea3f0b5c85c70e2732e9c065069705f9b8561e06344aa592728558df6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/jfarcand__mirroir-mcp/text-integrity-ledger.json",
+      "bytes": 31007,
+      "sha256": "0ea71a42b621f217df15f0e4d87f57f32db926cce4dcc5ec7afcc74ff34c9ccf"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/karminski__eyes-on-my-phone/head.json",
+      "bytes": 3337,
+      "sha256": "7632a1ca83df142f25b652b454f8b86608410f1fb1a3833af4e036ff18ca2a40"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/karminski__eyes-on-my-phone/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/karminski__eyes-on-my-phone/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/karminski__eyes-on-my-phone/repository.json",
+      "bytes": 5605,
+      "sha256": "7a24b95bdc0570f18ecafefdbcca0cb015817f21e2130ac2b8e7add42fdb3878"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/karminski__eyes-on-my-phone/result.json",
+      "bytes": 1117,
+      "sha256": "6a648c70585eb4dd828648dd470ad429322911049800966a0ff90726ace6dbcd"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/linhay__SKProcessRunner/head.json",
+      "bytes": 4363,
+      "sha256": "d10d96c2641fdfc1407890695e086753f6f9d0a44e76b642acb1cc7881a3c583"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/linhay__SKProcessRunner/license.error-0.txt",
+      "bytes": 25,
+      "sha256": "d2c8985c89b29a842ac4946d13bdbc297709f44f20bb968faf9682664b211db6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/linhay__SKProcessRunner/releases-1.json",
+      "bytes": 1824,
+      "sha256": "1e02fb367e14a1eca6f11baacb895aac57838ad73125e41e34278f59505c7802"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/linhay__SKProcessRunner/repository.json",
+      "bytes": 5911,
+      "sha256": "38d48e49e4de64c86b767d49c58c19bd19aad6a9cff30f339c19e3e9adbefed2"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/linhay__SKProcessRunner/result.json",
+      "bytes": 3109,
+      "sha256": "15005a37793c163a6a38bc969accfb595d28f986eecfbe8e5a80e3b9ea428b94"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/lycorp-jp__sim-use/LICENSE.full",
+      "bytes": 11344,
+      "sha256": "8c0fe2892344358b49aa07d9a184bd8d0891832baf642f19161f271acc075d32"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/lycorp-jp__sim-use/head.json",
+      "bytes": 4440,
+      "sha256": "dbbabe3ccebf478a2d5e0eb1eefcbd8c978649c35f0970d8629145a36f8dfa71"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/lycorp-jp__sim-use/license.json",
+      "bytes": 16667,
+      "sha256": "876dc52d39ec47f133d44db016e619dafaa88fd0629ae9952d321085cd37c3f2"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/lycorp-jp__sim-use/releases-1.json",
+      "bytes": 114449,
+      "sha256": "ce7065e1332288bb9269a8bd44ed3214c9d90d5cb4630ea847a2a97444309925"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/lycorp-jp__sim-use/repository.json",
+      "bytes": 11442,
+      "sha256": "6d1e9806f5366169526f6e3adf63d4a62f227c4c7784f867d298f61873125085"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/lycorp-jp__sim-use/result.json",
+      "bytes": 12395,
+      "sha256": "1de22e976ab384ca8ba7d1286ce88821cfc9b9509eec2c5779598527dfdf3991"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/main-and-adoption.json",
+      "bytes": 89,
+      "sha256": "529aab98beb149e14a50493b03f3316253be42a309f4c731feca68a39c90dbf0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-dev-inc__Maestro/LICENSE.full",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-dev-inc__Maestro/head.json",
+      "bytes": 5479,
+      "sha256": "5ac0dd76bfdfa6efa74b90b2a5a473829fde8783e3f7a39093338c95acb0c33e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-dev-inc__Maestro/license.json",
+      "bytes": 16775,
+      "sha256": "2637d4707cfa9af354d786916a5307e89cd6a378a08ae8669b2520ce3aab7fb8"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-dev-inc__Maestro/releases-1.json",
+      "bytes": 525184,
+      "sha256": "33681217ae7e80173a82da9076f0c834ca1acf60dbb851b4a53e0c23e2657ef0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-dev-inc__Maestro/releases-2.json",
+      "bytes": 227266,
+      "sha256": "5144c169f2e7cd50d067cfebee1c2b84f7667e23f41af1ee753ba8348d2b01d0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-dev-inc__Maestro/repository.json",
+      "bytes": 6711,
+      "sha256": "88a103ccd2d7e401ea15655f70e2c9e340ea9eade9e38a83cad0bd6ade5aad21"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-dev-inc__Maestro/result.json",
+      "bytes": 8051,
+      "sha256": "28a5ddeca870d71c99aba886bf869e1762976df96f4183e91132f896f4c9b980"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/LICENSE.full",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/blobs/0c74c4f71e11b9ecd437f70ea722626c2840411b.json",
+      "bytes": 2972,
+      "sha256": "659b5bde869e4ec7a26b2a9f364854be7a0a97fde24dec0900a2981cd7962073"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/blobs/166b6f718b94d35fe98165f4770de71e4099ec80.json",
+      "bytes": 299920,
+      "sha256": "3dc79920caf0ef47ee55b3ea2863f854f4a037a9827e161c7994d2229d8720c1"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/blobs/aff59484a0f7a41a3af07221e9ab8e8739bfd2dd.json",
+      "bytes": 299920,
+      "sha256": "8f00d67f61fe631f37ee2bc7b0e0e83800c05da857d05a906fc88f9e1672aad9"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/blobs/b407ab6ea570fd34a38263061d755b9da9368b12.json",
+      "bytes": 2972,
+      "sha256": "322bc21745b54bcce60d7b240d78a16c0e7a3e0227303ce3b6dd170297f2a665"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/commits-1.json",
+      "bytes": 495331,
+      "sha256": "d04f3eedf9664a08d661c973e9044bfadcb032f8db9e2d0f55460ef47c1b2418"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/head.json",
+      "bytes": 4381,
+      "sha256": "a3582972fa8c944726d3ca7c16bf2816fc8ba017cb35c8930cf50c368d0d1603"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/license.json",
+      "bytes": 16775,
+      "sha256": "41baebb2df2fb1081d82f6c64ef8bcf16764ec3a1aa7584341763e5ff714082b"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/lock-delta.json",
+      "bytes": 17720,
+      "sha256": "b375d9a139a21a8e094188d2098b981ff69de5f38d592dd8b4c7d9a2e7433e46"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/releases-1.json",
+      "bytes": 157042,
+      "sha256": "fcf0d2967074c4c07bb68fdf411037217cff53f39e849122a73a21ab0ef4cfee"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/repository.json",
+      "bytes": 6906,
+      "sha256": "66f11583d834445d5eeb00ed5bb8001f20ea886de45d6d7c6fd183b0d917d2f6"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/result.json",
+      "bytes": 3867,
+      "sha256": "e9636d93c55163e6cb1ece595425a91cb1eec8bac3e812e4d6514c7fbe124c07"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/review-inventory.json",
+      "bytes": 617,
+      "sha256": "92266edbdc11fefee4585cf091b1718eb970ab3236b741fbd3adbb70aa65793a"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/review-text-coverage.json",
+      "bytes": 644,
+      "sha256": "cd8dba99b0c4551aa291781fe4130e250961d38890b395ff48a9f2cad2f2fbef"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/review.json",
+      "bytes": 927,
+      "sha256": "914e70f3fb17975ebd8236dfe0fbfd76ce0e6e88e45d0116191906b60f8f7f7e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/review.md",
+      "bytes": 1212,
+      "sha256": "bc326f061033cb4e598d2b80e216b35cf26a7ae5a56b055c0bee611979de81bf"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/review_fetch.py",
+      "bytes": 2833,
+      "sha256": "27ea3446cf1f82d4f7510d2ca58ae44f26e142659cd15bddaaa3925e72c06817"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/text-blobs/0c74c4f71e11b9ecd437f70ea722626c2840411b",
+      "bytes": 1946,
+      "sha256": "697288c58c99946a30271e08dacf0409a808b366a200bd3e08b974faf647dbef"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/text-blobs/166b6f718b94d35fe98165f4770de71e4099ec80",
+      "bytes": 217473,
+      "sha256": "f561e13b7f91635c10e12bfbe2658f2d4c1a3e03b957d2d37dc6eeef77c1aa1f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/text-blobs/aff59484a0f7a41a3af07221e9ab8e8739bfd2dd",
+      "bytes": 217473,
+      "sha256": "f5e3c574b1483606a4cc394d6c73f1f4f4b14922e5b1e414d01d99a874d76a59"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/text-blobs/b407ab6ea570fd34a38263061d755b9da9368b12",
+      "bytes": 1946,
+      "sha256": "b7a498d794eb7b2d45e986d3188550e75ab72e057757e36d72a3652b7fc09ea0"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/trees/1025dd070fc934986dec9ea25458b0ab03bc54c7.json",
+      "bytes": 25566,
+      "sha256": "3b395e264645867e628a06e902c521306e36ccb92a60d26f26421999d9a7b6d2"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/mobile-next__mobile-mcp/trees/1851dfaca835d644adb409acad8b173120804bbc.json",
+      "bytes": 25566,
+      "sha256": "be90b5cec8cbb876b22af12564b7d47e76aa4f15b4ad8fe7a40476ebd365099a"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/njucckevin__SeeClick/LICENSE.full",
+      "bytes": 11356,
+      "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/njucckevin__SeeClick/head.json",
+      "bytes": 4356,
+      "sha256": "53959d6e5f27ddc9b20cf2b7ea2412474cc5afa9802ec01c56dd6af9c2e4327a"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/njucckevin__SeeClick/license.json",
+      "bytes": 16754,
+      "sha256": "e648905f87f71039e350b1024aa619dc6afb904842fdf25151cee4f70737249e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/njucckevin__SeeClick/releases-1.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/njucckevin__SeeClick/repository.json",
+      "bytes": 5377,
+      "sha256": "332357820b6e42e8d95245fb72e17f59f7d5ba824cc18a15d13c8289bd98b929"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/njucckevin__SeeClick/result.json",
+      "bytes": 1209,
+      "sha256": "0216b9be25c4ca9ea7abe32806376466be98faf271387f189fa3e5890866b0ae"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/results.json",
+      "bytes": 220181,
+      "sha256": "5f7e96e67b90f5567ccefa229bc83e00ce294089ce48bb74b1b6e66af6a254a2"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/resume-checkpoints.py",
+      "bytes": 888,
+      "sha256": "e09482217f9c46a6d6e17d5b1508651eaebf9bfd12787a5da6daaaee60849469"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/tddworks__baguette/LICENSE.full",
+      "bytes": 11280,
+      "sha256": "0509ebb2d8d399fb183d1973d3f6ad585e209ca4c2c42a90f3c22c0f32c1ab3e"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/tddworks__baguette/head.json",
+      "bytes": 3671,
+      "sha256": "b5c9e9baefa567cccb5fc734133d678dd3593688337db290d649342d1f2bb4da"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/tddworks__baguette/license.json",
+      "bytes": 16632,
+      "sha256": "27d9e966ad59aa0a5ada9d89d74e664c2bc4b757d0a2a2a0c15fc5d48d04ddac"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/tddworks__baguette/releases-1.json",
+      "bytes": 447993,
+      "sha256": "e48a757ba21e1e6bb3b8f57950904e677a4d26c57857e863f9ff962c44dc46e8"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/tddworks__baguette/repository.json",
+      "bytes": 6430,
+      "sha256": "1dec31ebaa3bd1c48359734b44eca14a026463c11069460384bcbe612de9929f"
+    },
+    {
+      "path": "../TritonKit-worktrees/archives/reference-monitor/20261102/tddworks__baguette/result.json",
+      "bytes": 10714,
+      "sha256": "bf33e62105fda9764780a52fff7a503b839aea516151077cab283f355f07f3f9"
+    }
+  ]
+}
