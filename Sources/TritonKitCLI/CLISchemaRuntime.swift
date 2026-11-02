@@ -302,6 +302,7 @@ private func subcommandWithFailureFamilyRecovery(
         requiresTarget: subcommand.requiresTarget,
         requiresConfirmation: subcommand.requiresConfirmation,
         sideEffect: subcommand.sideEffect,
+        sideEffectCases: subcommand.sideEffectCases,
         optionOverrides: subcommand.optionOverrides,
         requiredOptions: subcommand.requiredOptions,
         oneOfRequiredOptions: subcommand.oneOfRequiredOptions,

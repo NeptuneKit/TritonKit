@@ -15,8 +15,8 @@ func buildCommandSchemas() -> [TKCommandSchema] {
             outputFormats: ["json", "jsonl"],
             options: [
                 TKCommandSchemaOption(name: "ios", type: "Subcommand", description: "Run an Xcode iphoneos build for a selected real device"),
-                TKCommandSchemaOption(name: "android", type: "Subcommand", description: "Run or plan a Gradle debug build and discover APK artifacts"),
-                TKCommandSchemaOption(name: "harmony", type: "Subcommand", description: "Run or plan an hvigor debug build and discover HAP artifacts"),
+                TKCommandSchemaOption(name: "android", type: "Subcommand", description: "Run a Gradle debug build and discover APK artifacts"),
+                TKCommandSchemaOption(name: "harmony", type: "Subcommand", description: "Run an hvigor debug build and discover HAP artifacts"),
                 TKCommandSchemaOption(name: "--workspace", type: "Path", description: "iOS .xcworkspace path for xcodebuild"),
                 TKCommandSchemaOption(name: "--project", type: "Path", description: "Project root for Android/Harmony or iOS .xcodeproj path when used with `ios`"),
                 TKCommandSchemaOption(name: "--scheme", type: "String", description: "iOS Xcode scheme"),
@@ -120,7 +120,7 @@ func buildCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "android",
-                    summary: "Run or plan a Gradle debug build and discover APK artifacts",
+                    summary: "Run a Gradle debug build and discover APK artifacts",
                     requiredOptions: ["--project"],
                     optionalOptions: ["--variant", "--gradle", "--output", "--timeout", "--jsonl", "--json"],
                     jsonlEvents: [
@@ -150,7 +150,7 @@ func buildCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "harmony",
-                    summary: "Run or plan an hvigor debug build and discover HAP artifacts",
+                    summary: "Run an hvigor debug build and discover HAP artifacts",
                     requiredOptions: ["--project"],
                     optionalOptions: ["--module", "--mode", "--hvigor", "--node", "--java-home", "--deveco-sdk-home", "--product", "--task", "--no-daemon", "--output", "--timeout", "--jsonl", "--json"],
                     jsonlEvents: [
@@ -178,7 +178,7 @@ func buildCommandSchemas() -> [TKCommandSchema] {
                         "validation_failed",
                     ]
                 ),
-            ]
+            ].map { schemaWithAuditedOperationEffect($0, root: "build") }
         ),
     ]
 }

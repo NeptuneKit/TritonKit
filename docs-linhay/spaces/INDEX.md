@@ -345,7 +345,7 @@
 
 | `SP-257-issue-246-harmony-verified-input` | [`SP-257-issue-246-harmony-verified-input`](./SP-257-issue-246-harmony-verified-input/README.md) | 本轮排除；本地候选与证据保留 | #246：自有HVD出现IME许可交互，正向输入未验收；不把人工步骤交给用户；20本地测试及真实负例不代替完整验收 |
 
-| `SP-258-issue-247-schema-effects` | [`SP-258-issue-247-schema-effects`](./SP-258-issue-247-schema-effects/README.md) | 执行 | #247：副作用契约与保守unknown |
+| `SP-258-issue-247-schema-effects` | [`SP-258-issue-247-schema-effects`](./SP-258-issue-247-schema-effects/README.md) | 执行 | #247：58声明及条件效果已独立审阅，shared/CLI整合门禁待执行 |
 
 | `SP-259-issue-248-xcode-diagnostics` | [`SP-259-issue-248-xcode-diagnostics`](./SP-259-issue-248-xcode-diagnostics/README.md) | 执行 | #248：有界失败诊断及日志覆盖 |
 

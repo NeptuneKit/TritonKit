@@ -112,7 +112,7 @@ func buildCompactSchemaResponse(
         guard !matching.isEmpty else { throw incomplete("Unresolved output selector: \(selector).") }
         contracts.append(contentsOf: matching)
     }
-    let effects = ancestry.map(\.sideEffect).filter { $0 != "none" && !$0.isEmpty }
+    let effects = ancestry.map(\.sideEffect).filter { $0 != "none" && $0 != "unknown" && !$0.isEmpty }
     var response = CLICompactSchemaResponse(
         command: canonical, summary: leaf?.summary ?? root.summary,
         options: selectedOptions, argumentForms: selectedArguments,
@@ -126,7 +126,8 @@ func buildCompactSchemaResponse(
         requiresTarget: root.requiresTarget || ancestry.contains(where: \.requiresTarget),
         requiresHierarchy: root.requiresHierarchy,
         requiresConfirmation: ancestry.contains(where: \.requiresConfirmation),
-        sideEffect: effects.isEmpty ? "unknown" : compactUnique(effects).joined(separator: "; "),
+        sideEffect: effects.isEmpty ? (leaf?.sideEffect == "none" ? "none" : "unknown") : compactUnique(effects).joined(separator: "; "),
+        sideEffectCases: compactUnique(ancestry.flatMap(\.sideEffectCases)),
         runtimeScope: root.runtimeScope, exitCodeOnFailure: root.exitCodeOnFailure,
         outputFormats: root.outputFormats,
         inheritsDefaultsFrom: compactUnique(root.inheritsDefaultsFrom + ancestry.flatMap(\.inheritsDefaultsFrom)),
