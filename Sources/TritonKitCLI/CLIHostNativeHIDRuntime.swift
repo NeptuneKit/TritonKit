@@ -9,7 +9,7 @@ struct NativeHIDControlError: Error {
         let message: String
         switch code {
         case "ios_host_hid_device_hub_attached":
-            message = "Device Hub has claimed this Simulator's HID surface. Legacy input can be acknowledged without reaching the guest; no gesture was sent."
+            message = "The selected Simulator reports an active DTUHID daemon. Legacy input is refused; no gesture was sent."
         case "ios_host_hid_attachment_unknown":
             message = "Device Hub HID ownership could not be verified; no gesture was sent."
         case "ios_host_hid_display_unsupported":
@@ -29,15 +29,20 @@ struct NativeHIDControlError: Error {
 
 struct NativeHIDScreen: Equatable {
     let pointSize: CGSize
+    var dtuhidActive: Bool = false
 }
 
 /// This reads the guest notify state, never the host's similarly named key.
-func classifyNativeHIDAttachment(_ text: String) throws {
+func nativeHIDDTUHIDActive(_ text: String) throws -> Bool {
     let words = text.split(whereSeparator: \.isWhitespace).map(String.init)
     guard words.count == 2, words[0] == "com.apple.coredevice.dtuhidd.active", ["0", "1"].contains(words[1]) else {
         throw NativeHIDControlError(code: "ios_host_hid_attachment_unknown")
     }
-    if words[1] == "1" { throw NativeHIDControlError(code: "ios_host_hid_device_hub_attached") }
+    return words[1] == "1"
+}
+
+func classifyNativeHIDAttachment(_ text: String) throws {
+    if try nativeHIDDTUHIDActive(text) { throw NativeHIDControlError(code: "ios_host_hid_device_hub_attached") }
 }
 
 /// Refuse unknown, multiple integrated, resizable-only, folded or rotated geometry.
@@ -80,6 +85,7 @@ func nativeHIDScreen(_ text: String) throws -> NativeHIDScreen {
 func nativeHIDGuardSnapshot(
     target: String,
     environment: [String: String],
+    allowActiveDTUHID: Bool = false,
     resizeProbe: IOSSimulatorResizeProbe = { probeIOSSimulatorResize(target: $0, environment: $1) }
 ) throws -> NativeHIDScreen {
     guard UUID(uuidString: target) != nil else { throw IOSSimulatorResizeError.invalidTarget }
@@ -99,8 +105,12 @@ func nativeHIDGuardSnapshot(
             return result.stdout
         } catch { throw NativeHIDControlError(code: failure) }
     }
-    try classifyNativeHIDAttachment(query(["simctl", "spawn", target, "notifyutil", "-g", "com.apple.coredevice.dtuhidd.active"], failure: "ios_host_hid_attachment_unknown"))
-    return try nativeHIDScreen(query(["simctl", "io", target, "enumerate"], failure: "ios_host_hid_display_unsupported"))
+    let attachment = try query(["simctl", "spawn", target, "notifyutil", "-g", "com.apple.coredevice.dtuhidd.active"], failure: "ios_host_hid_attachment_unknown")
+    let active = try nativeHIDDTUHIDActive(attachment)
+    guard allowActiveDTUHID || !active else { throw NativeHIDControlError(code: "ios_host_hid_device_hub_attached") }
+    var screen = try nativeHIDScreen(query(["simctl", "io", target, "enumerate"], failure: "ios_host_hid_display_unsupported"))
+    screen.dtuhidActive = active
+    return screen
 }
 
 struct NativeHIDContact {

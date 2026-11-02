@@ -171,4 +171,68 @@ struct DTUHIDTransportTests {
         #expect(mismatch.messages == [.barrier])
     }
 
+    @Test func activeObservationStrictAndTransitionsNeverReplay() throws {
+        #expect(try nativeHIDDTUHIDActive("com.apple.coredevice.dtuhidd.active 1"))
+        #expect(try !nativeHIDDTUHIDActive("com.apple.coredevice.dtuhidd.active 0"))
+        for text in ["", "com.apple.coredevice.dtuhidd.active unknown", "other 1", "com.apple.coredevice.dtuhidd.active 1 extra"] {
+            #expect(throws: NativeHIDControlError.self) { _ = try nativeHIDDTUHIDActive(text) }
+        }
+        let original = try nativeHIDScreen(NativeHIDRuntimeTests().fixture)
+        for initial in [false, true] {
+            for changeAt in [2, 3] {
+                let peer = DTUPeer()
+                var calls = 0
+                #expect(throws: NativeHIDControlError.self) {
+                    _ = try performNativeHIDInput(input: .tap(x: 100, y: 200), snapshot: {
+                        calls += 1
+                        var value = original
+                        value.dtuhidActive = calls >= changeAt ? !initial : initial
+                        return value
+                    }, makeDriver: { try DTUDriver(peer, size: original.pointSize) }, sleep: { _ in })
+                }
+                #expect(peer.messages.count == (changeAt == 2 ? 1 : 4))
+            }
+        }
+        let peer = DTUPeer(); var calls = 0
+        do {
+            _ = try performNativeHIDInput(input: .tap(x: 100, y: 200), snapshot: {
+                calls += 1
+                if calls == 3 { throw NativeHIDControlError(code: "ios_host_hid_attachment_unknown") }
+                return original
+            }, makeDriver: { try DTUDriver(peer, size: original.pointSize) }, sleep: { _ in })
+            Issue.record("post-send unknown must fail")
+        } catch let failure as NativeHIDControlError {
+            #expect(failure.code == "ios_host_hid_surface_changed")
+        }
+        #expect(peer.messages.count == 4)
+    }
+
+    @Test func claimedPrimaryRequiresNegotiatedModernDriver() throws {
+        let original = try nativeHIDScreen(NativeHIDRuntimeTests().fixture)
+        let screen = NativeHIDScreen(pointSize: original.pointSize, dtuhidActive: true)
+        let peer = DTUPeer()
+        #expect(try performNativeHIDInput(input: .tap(x: 100, y: 200), snapshot: { screen },
+            makeDriver: { try DTUDriver(peer, size: screen.pointSize) }, sleep: { _ in }) == "dtuhid")
+        #expect(peer.messages.count == 4)
+        let legacy = LegacyGateDriver(size: screen.pointSize)
+        #expect(throws: NativeHIDControlError.self) {
+            _ = try performNativeHIDInput(input: .tap(x: 100, y: 200), snapshot: { screen },
+                makeDriver: { legacy }, sleep: { _ in })
+        }
+        #expect(legacy.sends == 0)
+        #expect(throws: NativeHIDControlError.self) {
+            _ = try performNativeHIDInput(input: .tap(x: 100, y: 200), preflightOnly: true,
+                snapshot: { screen }, makeDriver: { legacy }, sleep: { _ in })
+        }
+    }
+
+}
+
+private final class LegacyGateDriver: NativeHIDInputDriver {
+    let backend = "legacy"
+    let pointSize: CGSize
+    var sends = 0
+    init(size: CGSize) { pointSize = size }
+    func send(point: CGPoint, phase: NativeDigitizerPhase, identifier: UInt32) throws { sends += 1 }
+    func finish() throws {}
 }
