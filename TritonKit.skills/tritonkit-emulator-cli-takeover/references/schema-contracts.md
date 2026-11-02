@@ -51,3 +51,9 @@ Formats stay in `json`, `jsonl`, or `archive`.
 - Positional args belong in `argumentForms[]`, not `options[]`.
 - Subcommand requirements must reference known parent options or argument forms.
 - Failure codes must be lower_snake_case and covered by parent command failure codes.
+
+## Compact leaf discovery
+
+On a CLI whose schema help advertises `--compact`, request a resolved leaf with `triton schema --command act.type --compact --json` or `triton schema --command test.run --compact --json`. The default remains the full command schema. Compact discovery is read-only and does not execute or validate the target action.
+
+Use the returned effective arguments, selector constraints, applicable output contracts, original safety semantics, version and fingerprint together. Unknown or unresolved metadata is not permission to act. Refresh a cached leaf when the CLI version/fingerprint changes; a smaller JSON payload is not evidence of faster command execution.

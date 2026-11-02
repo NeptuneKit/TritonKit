@@ -360,7 +360,7 @@ func isMachineReadableSchemaType(_ type: String) -> Bool {
             let keyValue = inner.split(separator: ":", omittingEmptySubsequences: false)
             return keyValue.count == 2 && keyValue.allSatisfy { isSchemaTypeUnion(String($0)) }
         }
-        return isSchemaTypeUnion(inner)
+        return isMachineReadableSchemaType(inner)
     }
     return isSchemaTypeUnion(nonOptional)
 }

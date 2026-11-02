@@ -45,6 +45,29 @@ func schemaCommandsOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
+func compactSchemaOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(selector: "schema.compact", format: "json", kind: "resolved-leaf-schema", model: "CLICompactSchemaResponse", fields: schemaContractFields([
+        ("projectionVersion", "Int", true, "Compact projection contract version"),
+        ("schemaVersion", "Int", true, "Source schema contract version"),
+        ("cliVersion", "String", true, "Running CLI build version"),
+        ("fingerprint", "String", true, "SHA256 of sorted-key JSON projection excluding fingerprint"),
+        ("command", "String", true, "Canonical dot-separated leaf command"),
+        ("options", "[TKCommandSchemaOption]", true, "Resolved effective options, including supported aliases and overrides"),
+        ("argumentForms", "[TKCommandArgumentForm]", true, "Resolved positional argument definitions"),
+        ("requiredOptions", "[String]", true, "Unconditionally required references"),
+        ("oneOfRequiredOptions", "[[String]]", true, "Original leaf legacy encoding; use selectorConstraints for unambiguous scoped alternatives"),
+        ("oneOfRequiredOptionSets", "[[String]]", true, "Original leaf alternative sets; ancestor sets remain separately scoped in selectorConstraints"),
+        ("selectorConstraints", "[CLICompactSelectorConstraint]", true, "Independent constraints per source: exactlyOneOf selects one reference; exactlyOneOptionSet selects one complete option set"),
+        ("outputContracts", "[TKCommandOutputContract]", true, "Contracts selected by the leaf"),
+        ("outputSemantics", "String?", false, "Inherited root semantics preserved verbatim, including safety and verification boundaries"),
+        ("sideEffect", "String", true, "Declared effects across ancestry; unknown when none are explicitly declared"),
+        ("safetyPolicy", "String", true, "Conservative inheritance and no automatic replay of unknown outcomes"),
+        ("failureCodes", "[String]", true, "Inherited and leaf failure codes"),
+        ("recoveryCommands", "[TKCommandRecoveryCommand]", true, "Inherited and leaf recovery guidance"),
+        ("fullSchemaCommand", "[String]", true, "Read-only discovery argv for the full schema"),
+    ]))
+}
+
 func updatePlanOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "update.plan",

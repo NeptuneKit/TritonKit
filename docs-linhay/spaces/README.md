@@ -411,3 +411,13 @@
 ## v0.2.37 验收与发布
 
 - [SP-250-release-v0-2-37](./SP-250-release-v0-2-37/README.md)：v0.2.37已发布，CI/双架构制品/Homebrew/机制验收通过；原私有App未验，#224实时流黑图保留。
+
+- [SP-252-detached-log-exclusive-create](./SP-252-detached-log-exclusive-create/README.md)：独立参考流程占号，本候选仅登记需求，未整合产品。
+
+- [SP-253-detached-log-integration](./SP-253-detached-log-integration/README.md)：独立参考流程占号，本候选仅登记需求，未整合产品。
+
+- [SP-254-simulator-dtuhid-transport](./SP-254-simulator-dtuhid-transport/README.md)：独立参考流程占号，本候选仅登记需求，未整合产品。
+
+- [SP-255-dtuhid-integration](./SP-255-dtuhid-integration/README.md)：独立参考流程占号，本候选仅登记需求，未整合产品。
+
+- [SP-256-issue-245-compact-schema](./SP-256-issue-245-compact-schema/README.md)：#245 opt-in叶子schema，CLI只读契约；完整CLI通过，本地总门禁及CI推进中。

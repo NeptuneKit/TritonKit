@@ -58,6 +58,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "capability-matrix",
         "cli-update-plan",
         "command-schema-list",
+        "resolved-leaf-schema",
         "diagnostic-checks",
         "envelope",
         "evidence-manifest",
@@ -406,7 +407,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "project"]
     case "swift_macro_plugin_malformed_response":
         return ["diagnose", "project", "archive"]
-    case "validation_error", "validation_failed", "unknown_command_schema", "unknown_step", "duplicate_step_id", "session_not_recording", "contract_quality_review_required", "redaction_review_required", "source_identity_mismatch", "truncated_source_contract", "unmapped_contract_feature", "compiled_digest_mismatch":
+    case "validation_error", "validation_failed", "unknown_command_schema", "compact_schema_requires_leaf", "compact_schema_requires_json", "compact_schema_incomplete", "unknown_step", "duplicate_step_id", "session_not_recording", "contract_quality_review_required", "redaction_review_required", "source_identity_mismatch", "truncated_source_contract", "unmapped_contract_feature", "compiled_digest_mismatch":
         return ["diagnose", "plan", "discover", "observe", "archive"]
     case "web_port_in_use":
         return ["diagnose", "plan"]
