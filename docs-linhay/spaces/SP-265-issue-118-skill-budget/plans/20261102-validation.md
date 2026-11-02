@@ -15,3 +15,7 @@
 ## 可复用经验
 
 公开 skill 入口必须同时约束 UTF-8 字节、行数和最长行；行数不能通过压成长句代替上下文预算。细节保持在按需参考，搬移保留内容与安全边界；发布打包和解包后的实际入口均走同一门禁。该方法由 `verify-public-skill-layout.py` 与测试固化；主控整合时在原发布治理入口/经验索引记录，不新增重复经验文件。
+
+## 主控整合复验
+
+2026-11-02：SP265–268 队列与索引已登记，`verify.sh --ci-docs`、`check-docs.sh`、`git diff --check` 均通过（`archives/SP264/skill-budget-docs.log`）。`verify-skill-package.sh` 整合复验通过（`skill-budget-integration.log`）。上述初次缺索引失败保留为历史，不再是当前阻塞。
