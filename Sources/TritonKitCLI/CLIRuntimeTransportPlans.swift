@@ -106,6 +106,10 @@ func buildWorkflowPlan(
         )
     }
 
+    if request.goal == "open-url", let platform = hostSideWorkflowPlatform(request.platform) {
+        return buildHostSideOpenURLWorkflowPlan(capabilities: capabilities, request: request, platform: platform)
+    }
+
     if !capabilities.serverReachable {
         let afterRecoverySteps = request.goal == "general"
             ? []
@@ -318,6 +322,91 @@ private func buildHostSidePlatformWorkflowPlan(
             hostDeviceScreenshotPlanStep(platform: platform, device: device),
         ],
         error: nil
+    )
+}
+
+// Host open-url is independent of the embedded runtime. Keep lifecycle arguments
+// in argv and use the existing host smoke primitive for its wait/assert/evidence
+// contract; app.go and generic verify/capture are embedded iOS workflows.
+private func buildHostSideOpenURLWorkflowPlan(
+    capabilities: TKCapabilitiesResponse,
+    request: WorkflowPlanRequest,
+    platform: String
+) -> TKWorkflowPlanResponse {
+    let device = planValue(request.device, "<selector>")
+    var steps = [
+        hostDeviceDoctorPlanStep(platform: platform),
+        hostDeviceListPlanStep(platform: platform),
+        hostDeviceWaitReadyPlanStep(platform: platform, device: device),
+    ]
+    var error: TKCLIErrorDetail?
+
+    func step(_ id: String, _ title: String, _ argv: [String], expected: String) -> TKWorkflowPlanStep {
+        TKWorkflowPlanStep(
+            id: id, title: title,
+            command: argv.map(shellEscaped).joined(separator: " "), argv: argv,
+            requiresServer: false, requiresTarget: false,
+            when: "after host prerequisites and target readiness pass; replace any placeholders before execution",
+            expected: expected,
+            requires: ["cli.available", "target.ready"],
+            stopConditions: ["command.failed"]
+        )
+    }
+
+    if platform == "harmony" {
+        if let hap = request.hap, !hap.isEmpty {
+            steps.append(step("app-install", "Install the explicitly supplied Harmony artifact", [
+                "triton", "app", "install", "--platform", platform, "--device", device,
+                "--hap", hap, "--json",
+            ], expected: "Install submission succeeds; artifact installability and app readiness are verified by execution, not this plan"))
+        }
+        let evidence = planValue(request.evidence, "<dir.tritonevidence>")
+        steps.append(step("host-open-url-smoke", "Open the Harmony URL once and verify host readiness", [
+            "triton", "smoke", "harmony", "--device", device,
+            "--bundle", planValue(request.bundle, "<bundle>"),
+            "--ability", planValue(request.ability, "<ability>"),
+            "--open-url", planValue(request.url, "<url>"),
+            "--wait-text", planValue(request.text, "<text>"),
+            "--screenshot", evidence + "/open-url.jpeg",
+            "--evidence", evidence, "--json",
+        ], expected: "One host URL submission followed by layout wait/assert, screenshot and evidence; require smoke status=pass, not merely action submission"))
+        steps.append(evidenceSummaryPlanStep(evidence: request.evidence))
+    } else {
+        // The plan API has no Android package input. Do not reinterpret iOS
+        // bundle-id or Harmony bundle/ability/HAP as Android identity.
+        if request.bundle != nil || request.ability != nil || request.hap != nil || request.bundleID != nil {
+            error = TKCLIErrorDetail(
+                code: "unsupported_capability",
+                message: "Android open-url planning cannot apply iOS bundle-id or Harmony bundle/ability/HAP options; no app action was planned.",
+                hint: "Inspect `triton schema --command app.open-url --json` for Android lifecycle options."
+            )
+        } else {
+            steps.append(step("app-open-url", "Submit the URL to the selected Android target", [
+                "triton", "app", "open-url", planValue(request.url, "<url>"),
+                "--platform", platform, "--device", device, "--json",
+            ], expected: "The Android VIEW intent is submitted; this does not prove business completion"))
+            steps.append(step("wait-text", "Wait for expected text on the same Android target", [
+                "triton", "wait", "--platform", platform, "--device", device,
+                "--text", planValue(request.text, "<text>"), "--json",
+            ], expected: "Require matched=true and timedOut=false before proceeding; failure is a stop condition"))
+            steps.append(hostDeviceScreenshotPlanStep(platform: platform, device: device))
+            if let evidence = request.evidence, !evidence.isEmpty {
+                error = TKCLIErrorDetail(
+                    code: "unsupported_capability",
+                    message: "Host open-url/wait/screenshot steps are available, but Android evidence bundle planning for \(evidence) requires an explicit package unavailable in this plan interface.",
+                    hint: "Use `triton schema --command smoke.android --json` to prepare a package-bound host smoke workflow; do not substitute embedded verify/evidence commands."
+                )
+            }
+        }
+    }
+    return TKWorkflowPlanResponse(
+        ok: error == nil,
+        serverReachable: capabilities.serverReachable,
+        connected: capabilities.connected,
+        runtime: capabilities.runtime,
+        mode: "task", goal: request.goal, nextStep: "device-doctor",
+        nextWorkflows: ["target", "app", "assert", "evidence"],
+        steps: steps, error: error
     )
 }
 

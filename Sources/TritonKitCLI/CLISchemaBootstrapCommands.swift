@@ -166,11 +166,11 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
             options: hostPort + [
                 TKCommandSchemaOption(name: "inspect <path>", type: "Subcommand", description: "Read a .tritonplan summary without connecting to runtime"),
                 TKCommandSchemaOption(name: "ios-smoke", type: "Task", description: "Plan target selection, iOS smoke execution, and evidence summary"),
-                TKCommandSchemaOption(name: "open-url", type: "Task", description: "Plan host app open-url, runtime readiness, wait/assert, and evidence capture"),
+                TKCommandSchemaOption(name: "open-url", type: "Task", description: "Plan platform-bound open-url: Harmony host smoke with optional HAP install; Android host open-url/wait/screenshot (package-bound evidence limitation is explicit); iOS runtime workflow"),
                 TKCommandSchemaOption(name: "webview-check", type: "Task", description: "Plan WebView metadata, route assertion, wait, and evidence capture"),
                 TKCommandSchemaOption(name: "network-proxy", type: "Task", description: "Plan host-side proxy probe, proxy serve, platform proxy ledger, export, evidence, and restore across iOS, Android, and Harmony emulators"),
                 TKCommandSchemaOption(name: "--device", type: "String", description: "Target selector used by task plans"),
-                TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Platform used by task plans; open-url supports harmony host planning and network-proxy uses the platform adapter"),
+                TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Platform used by task plans; explicit Android/Harmony open-url bypasses embedded bootstrap, and network-proxy uses the platform adapter"),
                 TKCommandSchemaOption(name: "--bundle-id", type: "String", description: "Bundle identifier used by iOS smoke task plans"),
                 TKCommandSchemaOption(name: "--bundle", type: "String", description: "Harmony bundle name used by open-url task plans"),
                 TKCommandSchemaOption(name: "--ability", type: "String", description: "Harmony ability name used by open-url task plans"),
@@ -203,8 +203,8 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
                 "triton plan inspect login-flow.tritonplan --json",
             ],
             successShape: "{ ok, serverReachable, connected, runtime, goal?, nextStep, steps[], afterRecoverySteps[], error? } or { ok, path, schemaVersion, name, variables, stepCount, actions, target?, steps[] }",
-            failureShape: "{ ok: false, error: { code: server_unavailable|target_unavailable|request_failed|validation_failed, message, endpoint, hint, nextAction? } }",
-            outputSemantics: "Use plan for recommended command sequences and as the Triton-first fallback gate before raw emulator/simulator tools. It does not execute actions; agents must run the returned commands explicitly and preserve Triton failure, unsupported, or missing-schema evidence before falling back.",
+            failureShape: "{ ok: false, error: { code: server_unavailable|target_unavailable|request_failed|validation_failed|unsupported_capability, message, endpoint, hint, nextAction? } }",
+            outputSemantics: "Use plan for recommended command sequences and as the Triton-first fallback gate before raw emulator/simulator tools. Explicit Android/Harmony general and open-url plans use host commands independently of embedded server availability. Android open-url can plan host URL/wait/screenshot steps, but requested package-bound evidence returns unsupported_capability because plan has no Android package input. Plan success means a command sequence was constructed, not that host readiness or business completion was verified; placeholders must be replaced before execution. It does not execute actions; agents must run the returned commands explicitly and preserve Triton failure, unsupported, or missing-schema evidence before falling back.",
             nextCommands: [
                 "triton doctor --format json",
                 "triton capabilities --format json",
@@ -212,7 +212,7 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
                 "triton schema --command <command> --json",
             ],
             outputContracts: [planNextStepsOutputContract(), planInspectOutputContract()],
-            failureCodes: ["server_unavailable", "target_unavailable", "request_failed", "validation_failed"],
+            failureCodes: ["server_unavailable", "target_unavailable", "request_failed", "validation_failed", "unsupported_capability"],
             providedCapabilities: ["plan", "plan-inspect"]
         ),
         TKCommandSchema(
