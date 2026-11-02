@@ -34,8 +34,18 @@ struct JSONParserFailureTests {
     func schemaContract() throws {
         let schema = try #require(try buildSchemaResponse(command: "schema").commands.first)
         #expect(schema.outputContracts.contains { $0.selector == "cli.parse.failure" })
+        let contract = try #require(schema.outputContracts.first { $0.selector == "cli.parse.failure" })
+        #expect(contract.fields.contains { $0.name == "error.hint" && $0.type == "String?" && !$0.required })
         #expect(schema.outputSemantics?.contains("exit 64") == true)
         #expect(schema.outputSemantics?.contains("text fallback") == true)
+    }
+
+    @Test("parser process executable stays beside the exact test bundle on macOS and Linux")
+    func executableLocation() {
+        for path in ["/fixture/debug/Tests.xctest", "/fixture/debug/Tests.xctest/Contents/MacOS/Tests"] {
+            #expect(parserTestExecutable(bundledAt: URL(fileURLWithPath: path))?.path == "/fixture/debug/triton")
+        }
+        #expect(parserTestExecutable(bundledAt: URL(fileURLWithPath: "/fixture/unrelated-runner")) == nil)
     }
 
     @Test("missing required arguments produce a safe machine envelope")
@@ -124,7 +134,7 @@ struct JSONParserFailureTests {
         } else {
             bundle = Bundle(for: BundleMarker.self).bundleURL
         }
-        let binary = bundle.deletingLastPathComponent().appendingPathComponent("triton")
+        let binary = try #require(parserTestExecutable(bundledAt: bundle), "Current test product must have an .xctest ancestor; no PATH fallback")
         #expect(FileManager.default.isExecutableFile(atPath: binary.path))
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("parser251-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -156,6 +166,18 @@ struct JSONParserFailureTests {
 }
 
 private final class BundleMarker: NSObject {}
+
+private func parserTestExecutable(bundledAt location: URL) -> URL? {
+    var candidate = location
+    while candidate.path != "/" {
+        // macOS: bundle directory or Contents/MacOS executable. Linux: .xctest file.
+        if candidate.pathExtension == "xctest" {
+            return candidate.deletingLastPathComponent().appendingPathComponent("triton")
+        }
+        candidate.deleteLastPathComponent()
+    }
+    return nil
+}
 
 private struct ExclusiveFixture: ParsableCommand {
     static let configuration = CommandConfiguration(commandName: "fixture")

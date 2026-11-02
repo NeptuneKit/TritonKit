@@ -84,9 +84,12 @@ func parserFailureEnvelope(
     }
 
     let path = context.path
+    // The lookup accepts only a fixed retired-root allowlist and never interpolates
+    // arbitrary arguments. Keep migration guidance in JSON as well as human errors.
+    let retiredHint = root._commandName == "triton" ? TritonKitEntry.retiredRootHint(arguments.first ?? "") : ""
     let schemaArgs = path.count > 1 ? ["--command", path.dropFirst().joined(separator: " "), "--json"] : ["--json"]
     return CLIParserFailureEnvelope(commandPath: path, error: .init(
-        code: code, message: summary,
+        code: code, message: summary, hint: retiredHint.isEmpty ? nil : retiredHint,
         details: .init(kind: kind, argumentNames: names, count: count),
         nextAction: .init(command: "schema", args: schemaArgs),
         help: .init(command: "help", args: Array(path.dropFirst()))
