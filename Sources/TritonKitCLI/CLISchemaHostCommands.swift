@@ -1071,7 +1071,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     outputSelectors: ["host.simulator-media-seed"],
                     failureCodes: ["media_seed_manifest_invalid", "host_command_failed", "host_command_timeout", "simulator_not_found", "validation_failed"]
                 ),
-            ],
+            ].map { schemaWithAuditedOperationEffect($0, root: "sim") },
             providedCapabilities: ["host-simulator", "ios-simulator-host-swipe", "ios-simulator-host-type", "ios-host-ax", "sim-video", "sim-logs", "sim-app-process-console", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "device-proxy-ios", "network-capture-export"]
         ),
         TKCommandSchema(
@@ -1381,7 +1381,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     outputSelectors: ["host.app-action"],
                     failureCodes: ["missing_preferences", "plist_not_found", "preference_key_not_found", "preferences_relaunch_failed", "host_action_failed", "validation_failed"]
                 ),
-            ],
+            ].map { schemaWithAuditedOperationEffect($0, root: "app") },
             providedCapabilities: ["host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "ios-real-app", "ios-real-app-pull", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-install", "harmony-app-open-url", "harmony-app-info"]
         ),
     ]

@@ -26,6 +26,7 @@ struct CLICompactSchemaResponse: Encodable {
     let requiresHierarchy: Bool
     let requiresConfirmation: Bool
     let sideEffect: String
+    let sideEffectCases: [TKCommandSideEffectCase]
     let requirementsResolution = "conservative-root-and-ancestor-union"
     let safetyPolicy = "False/none defaults in the full schema do not prove absence of an inherited requirement or side effect. Unknown outcomes must not be automatically replayed; inspect the result and verify the business postcondition before recovery. Output semantics are inherited verbatim and may include sibling context."
     let runtimeScope: String

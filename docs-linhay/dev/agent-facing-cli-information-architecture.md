@@ -615,3 +615,7 @@ triton replay <file.tritonplan> --json
 legacy `oneOfRequiredOptions`同时存在单列表与singleton alternatives编码，不能解释成“每个singleton都必填”；投影按ancestor source保留独立selectorConstraints，跨层complete option sets不得flatten。`optionOverrides.required`本身构成明确引用，不能因未重复列入optionalOptions而丢失；alias属于同一声明，positional仍落argumentForms。有效声明还需与实际解析器核对，compact自身成功不能证明父schema完整；本轮补齐test.run已支持的两个MLX参数。
 
 实现、失败反例及验收见[SP-256](../spaces/SP-256-issue-245-compact-schema/README.md)。
+
+### Side-effect metadata
+
+Missing subcommand effects are `unknown`, including when decoding an older schema without the field. Neither `unknown` nor an unmatched condition proves readonly behavior or permission to execute. `sideEffectCases` carries audited conditional metadata with `sourceCommand`, positional prefix/count and known parsed option values; apply a case only when every condition is known and satisfied for that exact source command. Preserve these fields when consuming compact schemas. An absent conditional confirmation value inherits the base; confirmation metadata is not execution authorization. Actual command validation, confirmation guards and unknown-outcome/no-replay rules remain authoritative. This release audits act/app/sim/build; it does not claim all other command effects are classified.

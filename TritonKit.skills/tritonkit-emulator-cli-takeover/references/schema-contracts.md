@@ -57,3 +57,7 @@ Formats stay in `json`, `jsonl`, or `archive`.
 On a CLI whose schema help advertises `--compact`, request a resolved leaf with `triton schema --command act.type --compact --json` or `triton schema --command test.run --compact --json`. The default remains the full command schema. Compact discovery is read-only and does not execute or validate the target action.
 
 Use the returned effective arguments, selector constraints, applicable output contracts, original safety semantics, version and fingerprint together. Unknown or unresolved metadata is not permission to act. Refresh a cached leaf when the CLI version/fingerprint changes; a smaller JSON payload is not evidence of faster command execution.
+
+### Side-effect metadata
+
+Missing subcommand effects are `unknown`, including when decoding an older schema without the field. Neither `unknown` nor an unmatched condition proves readonly behavior or permission to execute. `sideEffectCases` carries audited conditional metadata with `sourceCommand`, positional prefix/count and known parsed option values; apply a case only when every condition is known and satisfied for that exact source command. Preserve these fields when consuming compact schemas. An absent conditional confirmation value inherits the base; confirmation metadata is not execution authorization. Actual command validation, confirmation guards and unknown-outcome/no-replay rules remain authoritative. This release audits act/app/sim/build; it does not claim all other command effects are classified.

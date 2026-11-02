@@ -186,7 +186,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(name: "select-segment", summary: "Select a segmented-control option by title or index", requiredOptions: ["<selector>", "<value>"], optionalOptions: ["--target", "--host", "--port", "--runtime-base-url", "--index", "--within", "--at", "--format", "--json"], outputSelectors: ["semantic.action"], failureCodes: semanticActionFailureCodes),
                 TKCommandSubcommandSchema(name: "set-switch", summary: "Set or toggle a switch by selector", requiredOptions: ["<selector>", "<value>"], optionalOptions: ["--target", "--host", "--port", "--runtime-base-url", "--index", "--within", "--at", "--format", "--json"], outputSelectors: ["semantic.action"], failureCodes: semanticActionFailureCodes),
                 TKCommandSubcommandSchema(name: "input", summary: "Run newline-delimited JSON actions", optionalOptions: ["--target", "--device", "--host", "--port", "--format", "--json", "--fail-fast", "--summary", "--strict"], outputSelectors: ["input.result", "input.summary"], failureCodes: inputCommandFailureCodes + ["action_failed"]),
-            ],
+            ].map { schemaWithAuditedOperationEffect($0, root: "act") },
             inputActions: inputActionSchemas(),
             providedCapabilities: ["act", "tap", "webview-aware-tap", "type", "paste", "clear", "swipe", "press", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "input"]
         ),
