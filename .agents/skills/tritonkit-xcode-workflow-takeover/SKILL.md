@@ -184,3 +184,9 @@ Use temporary or explicit output paths such as `/tmp` or `.triton/`; do not scat
 - 前景scene、modal、键盘与WKWebView动作验证必须使用有实际UIApplication/SceneDelegate及foregroundActive窗口的App-hosted iOS测试；hostless或macOS条件跳过不能证明这些场景。测试先断言真实窗口挂载及生产选择器一致，不为夹具放宽安全策略。
 - 本地SwiftPM包引用的验证宿主、DerivedData与xcresult放在包目录之外的独立同级目录。SP-196中包内宿主及构建产物在Resolve Package Graph阶段超时；移到包外后同一源码实际执行56项全过。具体超时机制未归因，不能据此断言所有嵌套宿主必然失败。
 - 每次使用fresh结果路径，解析实际passed/failed/skipped及终态；编译失败、取消、包解析超时、空结果与目录存在都不能算通过。重跑前核对所选Xcode、实际destination及只属于本任务的存活进程。证据见[SP-196验证报告](../../../docs-linhay/spaces/SP-196-upstream-optimization-delivery/plans/20261014-validation-report.md)。
+
+## Bounded build-log diagnostics
+
+- Final diagnostics must read bounded raw artifacts when the in-memory prefix omits a failure. Report byte/line/sample budgets and partial coverage; diagnostic extraction does not change the build exit code or prove the original project recovered.
+- Line scanners must redact every nonempty logical-line fragment of sensitive argv values. Never output a truncated raw line on the assumption that whole-value replacement is sufficient. Cover CR/CRLF, encoded JSON secret bytes, and sample truncation with counterexamples.
+- Bind the opened file descriptor and path to device/inode/size/mtime/ctime before and after reading; mutation or replacement makes coverage partial. Preserve raw artifacts and test bounded failures without deleting caches or rebuilding private projects. See [SP259 evidence](../../../docs-linhay/spaces/SP-259-issue-248-xcode-diagnostics/plans/validation.md).

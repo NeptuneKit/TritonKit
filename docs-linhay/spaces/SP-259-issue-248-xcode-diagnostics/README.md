@@ -1,11 +1,15 @@
 # SP-259-issue-248-xcode-diagnostics
 
-状态：执行。关联 GitHub #248。
+状态：本地候选已冻结；行为 RED、审阅修订 RED、97 项相关测试及三项真实 CLI 受控验收通过，待主控整合与 CI。关联 GitHub #248。
 
 ## 边界与 BDD
 
-有界失败诊断及日志覆盖。Given 已登记的脱敏复现，When agent 独立执行受控验证，Then 结果可追溯且不把未知写为通过。无人工依赖的部分独立推进。
+影响 CLI Xcode 最终诊断和 shared Codable 诊断覆盖元数据。Given 日志超过内存前缀且尾部有 fatal，When 构建失败生成 summary，Then 有界读取本次日志并保留 fatal 原因、覆盖范围和原退出码；无命中时明确 diagnostics-unavailable，不再推荐缺失的字段。范围不包含原私有工程的编译修复或缓存操作。
+
+完整 BDD、预算和脱敏边界见 [诊断契约](plans/diagnostic-contract.md)；测试与运行证据见 [验收记录](plans/validation.md)。
 
 ## 归属与验收
 
-独立分支 feat/SP-259-issue-248-xcode-diagnostics，worktree ../TritonKit-worktrees/SP-259-issue-248-xcode-diagnostics；SP257实际使用桌面工具路径 /Users/linhey/.codex/worktrees/sp-257-issue-246-harmony-verified-input/TritonKit。本次提交仅登记队列与编号，不包含未完成产品实现；详细候选由对应负责人维护，主控整合后更新。Git/共享构建/设备动作串行，issue保持开放。
+分支 feat/SP-259-issue-248-xcode-diagnostics；worktree /Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-259-issue-248-xcode-diagnostics。主控串行运行共享构建与 Git 写操作。先 RED 后实现与 GREEN；独立审阅、完整回归和 CI 通过后合并，issue 保持开放。
+
+候选文件面：Xcode bounded diagnostic helper、既有 parser 与最终适配点、诊断 coverage DTO、Xcode schema 和专属测试。未修改通用进程 runner、Harmony wait、参数解析或设备流程。

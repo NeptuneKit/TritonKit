@@ -31,3 +31,5 @@
 | ArkWeb CDP/WebSocket 错误 | JSON text/binary frame须真实wire验证；HTTP discovery不证明WS成功；transport/protocol/page exception分型，断连送达未知不重放 | [CLI信息契约](../dev/ai-cli-readable-control.md)、[SP-248](../spaces/SP-248-issue-238-arkweb-transport/README.md) |
 
 | WebView snapshot脚本解析或selector失配 | CLI和嵌入SDK版本分开；执行生成JS及真实WebKit合成DOM，默认/forms-only与特殊属性snapshot→focus往返；语法错误不建议只降节点数，macOS fixture不替代iOS App验收 | [WebView规则](../../TritonKit.skills/tritonkit-emulator-cli-takeover/references/webview-actions.md)、[SP-249](../spaces/SP-249-issue-237-webview-snapshot/README.md) |
+
+- Xcode 大日志诊断、跨行脱敏或 artifact 变化：命中 [Xcode workflow skill](../../.agents/skills/tritonkit-xcode-workflow-takeover/SKILL.md) 的 bounded diagnostics；反例与预算见 [SP259](../spaces/SP-259-issue-248-xcode-diagnostics/plans/validation.md)。

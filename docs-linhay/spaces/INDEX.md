@@ -347,7 +347,7 @@
 
 | `SP-258-issue-247-schema-effects` | [`SP-258-issue-247-schema-effects`](./SP-258-issue-247-schema-effects/README.md) | 执行 | #247：58声明及条件效果已独立审阅，shared/CLI整合门禁待执行 |
 
-| `SP-259-issue-248-xcode-diagnostics` | [`SP-259-issue-248-xcode-diagnostics`](./SP-259-issue-248-xcode-diagnostics/README.md) | 执行 | #248：有界失败诊断及日志覆盖 |
+| `SP-259-issue-248-xcode-diagnostics` | [`SP-259-issue-248-xcode-diagnostics`](./SP-259-issue-248-xcode-diagnostics/README.md) | 候选整合 | #248：97项局部测试、三组CLI验收通过；完整回归/CI待完成 |
 
 | `SP-260-issue-249-skill-wait-syntax` | [`SP-260-issue-249-skill-wait-syntax`](./SP-260-issue-249-skill-wait-syntax/README.md) | 执行 | #249：官方wait示例与打包门禁已修正，整合Swift验证待执行 |
 
