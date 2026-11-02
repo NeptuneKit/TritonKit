@@ -22,4 +22,4 @@
 [发布验收](plans/20261102-release.md)，原始证据在同级`archives/SP256`与`archives/SP264`。CocoaPods标准lint与trunk发布分别报告。
 
 
-本轮源码、正式发布、安装与 agent 可独立完成的真实验收已闭环；剩余仅由主控执行本份文档收尾的精确提交/PR/合并及必要 CI。文档收尾 SHA 尚未产生，不将发布提交当作之后的最新 main。公开预览证据与 iOS 后端直接观测限制均见发布验收报告。
+本轮源码、正式发布、安装与 agent 可独立完成的真实验收已闭环。[文档收尾 PR #269](https://github.com/NeptuneKit/TritonKit/pull/269) 已合并为 `b99474ca54bdaeaf4c604a01c2e54b10a252c906`，候选 CI `41471241336` 与合并后 CI `41471520249` 均通过。后续文档记录不改变发布 tag；最新 main 以 GitHub 为准。公开预览证据与 iOS 后端直接观测限制均见发布验收报告。
