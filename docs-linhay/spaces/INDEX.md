@@ -361,10 +361,10 @@
 
 | `SP-265-issue-118-skill-budget` | [`SP-265-issue-118-skill-budget`](./SP-265-issue-118-skill-budget/README.md) | 已合并 | PR #263 已合入main；预算/打包/安装与精确CI通过，待0.2.39发布 |
 
-| `SP-266-issue-147-wait-deadline` | [`SP-266-issue-147-wait-deadline`](./SP-266-issue-147-wait-deadline/README.md) | 候选验收 | 18定向与5实际CLI通过；PR #265，完整联合CLI通过，待CI合并 |
+| `SP-266-issue-147-wait-deadline` | [`SP-266-issue-147-wait-deadline`](./SP-266-issue-147-wait-deadline/README.md) | 已合并 | PR #265 已合入main；18定向/5实际CLI与精确CI通过，待0.2.39发布 |
 
-| `SP-267-issue-5-wait-role` | [`SP-267-issue-5-wait-role`](./SP-267-issue-5-wait-role/README.md) | 候选验收 | 24组合与18实际CLI通过；PR #266，完整联合CLI通过，待CI合并 |
+| `SP-267-issue-5-wait-role` | [`SP-267-issue-5-wait-role`](./SP-267-issue-5-wait-role/README.md) | 已合并 | PR #266 已合入main；24组合/18实际CLI/6真实Harmony与精确CI通过，待0.2.39发布 |
 
 | `SP-268-issue-139-host-plan` | [`SP-268-issue-139-host-plan`](./SP-268-issue-139-host-plan/README.md) | 已合并 | PR #264 已合入main；8定向/4实际CLI与精确CI通过，待0.2.39发布 |
 
-| `SP-269-issue-204-controlled-input` | [`SP-269-issue-204-controlled-input`](./SP-269-issue-204-controlled-input/README.md) | 调查 | #204新增受控textarea/ambiguity反馈；自有fixture独立验收，纳入未发布0.2.39候选 |
+| `SP-269-issue-204-controlled-input` | [`SP-269-issue-204-controlled-input`](./SP-269-issue-204-controlled-input/README.md) | 候选验收 | #204新增受控textarea/ambiguity反馈；9单测/7真实无opt-in/完整根包CLI与local通过，待CI整合和0.2.39 |

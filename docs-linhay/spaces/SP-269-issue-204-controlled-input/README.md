@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-2026-11-02发布前增量巡查发现已关闭 #204 的新反馈；调查中，尚未验收或发布。来源：[新增评论](https://github.com/NeptuneKit/TritonKit/issues/204#issuecomment-6575448569)。不修改 issue 开关状态。
+2026-11-02发布前增量巡查发现已关闭 #204 的新反馈；本地最小修复与真实自有验收通过，尚未远端整合或发布。来源：[新增评论](https://github.com/NeptuneKit/TritonKit/issues/204#issuecomment-6575448569)。不修改 issue 开关状态。
 
 ## 边界与 BDD
 
@@ -19,3 +19,9 @@
 复用本聊天干净、已整合的 SP256 warm worktree `/Users/linhey/.codex/worktrees/sp-256-issue-245-compact-schema/TritonKit`，新分支 `feat/SP-269-issue-204-controlled-input`，基线远端 main `dd2ef7a6`。主控拥有空间、索引、集成；实现文件待只读调查后明确委派，Git/构建/设备动作串行。原 SP257 WIP 与主目录保持原状。
 
 计划先真实失败 fixture，再最小修改、正负对照、root/CLI/标准 pod lint 与真实 iOS App-host 验收；必要发布门禁重新绑定最终候选。复用已有自有 App-host 的方法，原始证据单独归档，不改写旧验收记录。
+
+## 当前验收
+
+旧源码 JSCore RED：8项/16个失败断言；旧真实React App-host：6项中4失败、2正向对照通过，共20失败断言。测试本体结束后Xcode收尾600秒超时、结果包不完整，原失败与工具超时分别保留。修复后9项JSCore通过；最终无opt-in真实iOS App-host v2 7项全部通过、0失败/跳过，Triton xcode test正常exit0且xcresult解析通过。覆盖React input/textarea的state、onChange、rerender、业务validation、contenteditable、同步拒绝、异步回滚、歧义零写和strict未optin拒绝。独立生产diff审阅无P1/P2；完整根包7+413、CLI162+1741及local preflight通过。
+
+[详细验证](plans/20261102-validation.md) · [包外可复现App-host源码](plans/fixture/README.md)。运行时仅50ms有界DOM验证，不承诺任意后续业务结果。原始日志与hash在同级 `archives/SP269`，原私有现场仍未验证。

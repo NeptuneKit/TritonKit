@@ -1,6 +1,6 @@
 # TritonKit Project Memory
 
-- 2026-11-02：[SP-264交付发布](../spaces/SP-264-release-v0-2-39/README.md)承接 #245/#247–252 已合并修复与 SP265–268 增量关闭issue反馈；v0.2.39未发布，最终联合门禁与包外验收进行中。#246人工IME许可正向验收排除，保留候选与失败；#214暂停、#224 iPad默认捕获/HID和原私有App未验证边界保留，主目录WIP不混入。
+- 2026-11-02：[SP-264交付发布](../spaces/SP-264-release-v0-2-39/README.md)承接 #245/#247–252 已合并修复与 SP265–268 增量关闭issue反馈已合并；SP269 #204新增受控输入已本地9单测/7真实无opt-in通过，待CI整合；v0.2.39未发布，最终联合门禁与包外验收进行中。#246人工IME许可正向验收排除，保留候选与失败；#214暂停、#224 iPad默认捕获/HID和原私有App未验证边界保留，主目录WIP不混入。
 
 - 2026-10-30：[v0.2.38发布验收](../spaces/SP-251-release-v0-2-38/plans/20261030-release.md)完成：tag74680bbd，main/tag/Release全绿；CLI1823（3条件跳过）/root411/Web159及build/local通过，iOS真实native1项补验。双架构、Runner、Web、skills/checksum、Homebrew升级与两处skills逐文件校验通过；三端公开包完整图像/隐藏重连通过，Android/Harmony最后订阅退出后采集负窗口通过。仅清理自有实例和服务，原23路径WIP保留。CocoaPods仅标准lint未trunk；原私有App/完整Wails边界及开放issue不变。
 

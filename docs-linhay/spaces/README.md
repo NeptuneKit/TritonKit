@@ -450,10 +450,10 @@ SP258整合58个act/app/sim/build声明和保守unknown，条件效果保留full
 
 - [SP-265-issue-118-skill-budget](./SP-265-issue-118-skill-budget/README.md)：已合并；PR #263 已合入main；预算/打包/安装与精确CI通过，待0.2.39发布。
 
-- [SP-266-issue-147-wait-deadline](./SP-266-issue-147-wait-deadline/README.md)：候选验收；18定向与5实际CLI通过；PR #265，完整联合CLI通过，待CI合并。
+- [SP-266-issue-147-wait-deadline](./SP-266-issue-147-wait-deadline/README.md)：已合并；PR #265 已合入main；18定向/5实际CLI与精确CI通过，待0.2.39发布。
 
-- [SP-267-issue-5-wait-role](./SP-267-issue-5-wait-role/README.md)：候选验收；24组合与18实际CLI通过；PR #266，完整联合CLI通过，待CI合并。
+- [SP-267-issue-5-wait-role](./SP-267-issue-5-wait-role/README.md)：已合并；PR #266 已合入main；24组合/18实际CLI/6真实Harmony与精确CI通过，待0.2.39发布。
 
 - [SP-268-issue-139-host-plan](./SP-268-issue-139-host-plan/README.md)：已合并；PR #264 已合入main；8定向/4实际CLI与精确CI通过，待0.2.39发布。
 
-| 调查 | [SP-269-issue-204-controlled-input](./SP-269-issue-204-controlled-input/README.md) | #204新增受控textarea/ambiguity反馈 | 自有真实fixture验证，不以closed或ACK替代完成 |
+| 候选验收 | [SP-269-issue-204-controlled-input](./SP-269-issue-204-controlled-input/README.md) | #204新增受控textarea/ambiguity反馈 | 真实React state/rerender/拒绝/ambiguity通过；待CI整合和0.2.39 |

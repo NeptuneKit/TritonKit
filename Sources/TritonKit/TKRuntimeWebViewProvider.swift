@@ -346,6 +346,20 @@ private let runtimeWebViewScriptBridge = RuntimeWebViewScriptBridge()
 private let runtimeWebViewScriptBridgeInstall = RuntimeWebViewScriptBridgeInstall()
 
 @MainActor
+func evaluateFocusedWebViewTextInsertion(text: String, in webView: WKWebView) async throws -> WebViewFocusedTextInsertionPayload {
+    let token = "__tritonLegacyReadback_" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
+    let value = try await evaluateJavaScript(try webViewFocusedTextInsertionScript(text: text, verificationToken: token), in: webView)
+    var payload = try decodeWebViewFocusedTextInsertionPayload(value as? String ?? "\(value)")
+    if payload.ok && payload.valueMatched == true {
+        // Observe a bounded DOM postcondition, not arbitrary later application state.
+        try await Task.sleep(nanoseconds: 50_000_000)
+        let checked = try await evaluateJavaScript(try runtimeWebViewFormReadbackScript(verificationToken: token), in: webView)
+        payload = try decodeWebViewFocusedTextInsertionPayload(checked as? String ?? "\(checked)")
+    }
+    return payload
+}
+
+@MainActor
 func performFocusedWebViewTextInsertionIfAvailable(
     responder: UIResponder,
     text: String,
@@ -360,6 +374,14 @@ func performFocusedWebViewTextInsertionIfAvailable(
     let selected: TKWebViewDescriptor
     do {
         selected = try TKSelectCurrentWebView(from: pairs.map(\.descriptor))
+    } catch let error as TKWebViewSelectionError {
+        return TKInputResult.failure(
+            action: action, message: error.detail.message,
+            targetOID: oid(for: responder), targetClassName: className,
+            error: TKCLIErrorDetail(code: error.detail.code.rawValue, message: error.detail.message,
+                hint: "Inspect `triton webview list --json` and the intended foreground surface before retrying.", candidateCount: error.detail.candidates?.count),
+            outcome: "not_started"
+        )
     } catch {
         return TKInputResult.failure(
             action: action,
@@ -380,16 +402,15 @@ func performFocusedWebViewTextInsertionIfAvailable(
         return TKInputResult.failure(action: action, message: "Selected WebView is not in the current foreground interaction surface")
     }
     do {
-        let script = try webViewFocusedTextInsertionScript(text: text)
-        let value = try await evaluateJavaScript(script, in: pair.webView)
-        let json = value as? String ?? "\(value)"
-        let payload = try decodeWebViewFocusedTextInsertionPayload(json)
+        let payload = try await evaluateFocusedWebViewTextInsertion(text: text, in: pair.webView)
         guard payload.ok else {
             return TKInputResult.failure(
                 action: action,
-                message: payload.message ?? "Focused WebView DOM input failed",
+                message: payload.error?.message ?? payload.message ?? "Focused WebView DOM input failed",
                 targetOID: oid(for: responder),
-                targetClassName: className
+                targetClassName: className,
+                error: payload.error.map { TKCLIErrorDetail(code: $0.code.rawValue, message: $0.message, hint: $0.hint) },
+                outcome: "unknown"
             )
         }
         return TKInputResult.success(
@@ -398,6 +419,9 @@ func performFocusedWebViewTextInsertionIfAvailable(
             targetOID: oid(for: responder),
             targetClassName: className,
             strategy: "webview-dom-active-element",
+            verification: TKInputVerificationBoundary(hint: payload.valueMatched == true
+                ? "The same DOM field matched after a bounded settle window; application state and business completion remain unverified."
+                : "Contenteditable event delivery does not verify application state or business completion."),
             secure: secure,
             redacted: secure,
             insertedLength: payload.insertedLength ?? text.count
@@ -405,9 +429,11 @@ func performFocusedWebViewTextInsertionIfAvailable(
     } catch {
         return TKInputResult.failure(
             action: action,
-            message: "Focused WebView DOM input failed: \(error)",
+            message: "Focused WebView DOM input could not be verified; inspect the field before retrying.",
             targetOID: oid(for: responder),
-            targetClassName: className
+            targetClassName: className,
+            error: TKCLIErrorDetail(code: "javascript_error", message: "Focused WebView DOM input could not be verified."),
+            outcome: "unknown"
         )
     }
 }
