@@ -76,7 +76,7 @@ struct TritonKitEntry {
         return nil
     }
 
-    private static func retiredRootHint(_ root: String) -> String {
+    static func retiredRootHint(_ root: String) -> String {
         let actionRoots: Set<String> = ["find", "tap", "type", "paste", "clear", "swipe", "press", "focus", "set-text", "select-segment", "set-switch", "input"]
         if actionRoots.contains(root) {
             return "Hint: use `triton act \(root) ...` for workflow UI actions, for example `triton act \(root) --json`."
