@@ -12,3 +12,20 @@ TritonKit changes: native Swift driver inside an isolated triton child process;
 selected toolchain only; main portrait screen and Device Hub ownership guards;
 strict allocation bounds; mandatory finger child; bounded completion; static
 error contracts; no chrome, pointer/mouse warm-up, external CLI, or automatic heal.
+
+DTUHID protocol and simulator endpoint portions adapted from:
+heoblitz/Loupe, Copyright (c) 2026 heoblitz, MIT (LICENSE.Loupe).
+https://github.com/heoblitz/Loupe/tree/180c60584867500b93b43ca6c8b556995bf8be7b
+Sources/LoupeHID/LoupeDTUHID.m
+facebook/idb (now meta/idb), Copyright (c) Meta Platforms, Inc. and affiliates,
+MIT (LICENSE.idb).
+https://github.com/meta/idb/tree/c793afad2a31092628f7013cf1aa96f266c85024
+FBSimulatorControl/HID/DTUHIDModels.swift
+FBSimulatorControl/HID/SimulatorDTUHIDConnection.swift
+FBSimulatorControl/XPC/SimulatorXPCConnection.swift
+
+TritonKit changes: isolated typed single-contact digitizer only; strict
+pre-mutation unsupported selection; no-event bounded liveness/finish barriers;
+thread-safe cancellation/late replies; no automatic reconnect/replay/fallback;
+existing primary-screen and guest-ownership guards remain mandatory.
+Barrier responsiveness does not verify guest delivery or business state.

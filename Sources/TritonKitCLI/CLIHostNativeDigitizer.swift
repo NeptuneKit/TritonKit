@@ -58,7 +58,9 @@ enum NativeDigitizerError: Error, Equatable {
 
 /// Loaded only inside the isolated native-input helper. This sender owns no
 /// pointer/mouse services and performs no accessibility actions or recovery.
-final class NativeSimulatorDigitizer {
+final class NativeLegacySimulatorDigitizer: NativeDigitizerTransport {
+    let backend = "legacy"
+    func finish() throws {}
     let pointSize: CGSize
     private let client: AnyObject
     private let createParent: CreateDigitizer
@@ -201,7 +203,7 @@ final class NativeSimulatorDigitizer {
         if result.failed { throw NativeDigitizerError.sendFailed }
     }
 
-    private static func resolveDevice(target: UUID, developerDirectory: String) throws -> NSObject {
+    static func resolveDevice(target: UUID, developerDirectory: String) throws -> NSObject {
         let shared = NSSelectorFromString("sharedServiceContextForDeveloperDir:error:")
         guard let cls = NSClassFromString("SimServiceContext"),
               let method = class_getClassMethod(cls, shared) else { throw NativeDigitizerError.symbolUnavailable }
@@ -257,4 +259,38 @@ private final class NativeDigitizerCompletion: @unchecked Sendable {
     private var didFail = false
     func finish(failed: Bool) { lock.lock(); didFail = failed; lock.unlock() }
     var failed: Bool { lock.lock(); defer { lock.unlock() }; return didFail }
+}
+
+
+/// Backend selection occurs before legacy-only IOHID/Indigo symbol loading.
+/// All target/Resize/display/ownership admission remains in the isolated helper.
+final class NativeSimulatorDigitizer: NativeHIDInputDriver {
+    let pointSize: CGSize
+    private let transport: NativeDigitizerTransport
+    var backend: String { transport.backend }
+
+    init(target: String, developerDirectory: String) throws {
+        guard let targetID = UUID(uuidString: target) else { throw NativeDigitizerError.targetUnavailable }
+        guard let plan = framebufferFrameworkPlan(developerDirectory: developerDirectory) else {
+            throw NativeDigitizerError.frameworkMissing
+        }
+        guard dlopen(plan.coreSimulator, RTLD_NOW | RTLD_LOCAL) != nil,
+              dlopen(plan.simulatorKit, RTLD_NOW | RTLD_LOCAL) != nil else {
+            throw NativeDigitizerError.frameworkLoadFailed
+        }
+        let device = try NativeLegacySimulatorDigitizer.resolveDevice(target: targetID, developerDirectory: plan.developerDirectory)
+        do { pointSize = try AXPTranslatorAccessibility.devicePointSize(for: device) }
+        catch { throw NativeDigitizerError.geometryUnavailable }
+        transport = try selectNativeDigitizer(modern: { try DTUHIDSession.open(device: device) }, legacy: {
+            try NativeLegacySimulatorDigitizer(target: target, developerDirectory: developerDirectory)
+        })
+    }
+    static func validate(point: CGPoint) throws { try NativeLegacySimulatorDigitizer.validate(point: point) }
+    static func patch(message: UnsafeMutableRawPointer, allocationSize: Int) throws {
+        try NativeLegacySimulatorDigitizer.patch(message: message, allocationSize: allocationSize)
+    }
+    func send(point: CGPoint, phase: NativeDigitizerPhase, identifier: UInt32) throws {
+        try transport.send(point: point, phase: phase, identifier: identifier)
+    }
+    func finish() throws { try transport.finish() }
 }
