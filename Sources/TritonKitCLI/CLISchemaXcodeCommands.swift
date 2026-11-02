@@ -193,7 +193,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                         ("testResultSummary", "TKXcresultSummaryMetrics?", false, "Inline parsed xcresult test counts for xcode.test when --result-bundle is available"),
                         ("topFailures", "[TKXcresultFailureRecord]?", false, "Default-redacted top test failures for xcode.test; execution-only physical target IDs are additionally redacted"),
                         ("xcresultNote", "String?", false, "Inline xcresult parsing note with execution-only physical target IDs redacted"),
-                        ("xcodeDiagnostics", "[TKXcodeOutputDiagnostic]?", false, "Bounded compiler-fatal and specialized diagnostics; failed builds explicitly report diagnostics-unavailable when extraction has no match"),
+                        ("xcodeDiagnostics", "[TKXcodeOutputDiagnostic]?", false, "Bounded compiler-fatal and specialized diagnostics, including stale DerivedData outside-root and Swift macro plugin malformed-response recovery; failed builds explicitly report diagnostics-unavailable when extraction has no match"),
                         ("xcodeDiagnostics[].coverage", "TKXcodeDiagnosticCoverage?", false, "Per-stream 64MiB scan limit, bytesScanned/observedBytes, sources, complete/truncated, linesTruncated/samplesTruncated and unavailableStreams; coverage is not universal parser support"),
                         ("xcodeDiagnostics[].coverage.sources", "[String]", false, "stdout/stderr artifact or inline scan provenance"),
                         ("xcodeDiagnostics[].coverage.bytesScanned", "Int", false, "Bytes inspected across both streams"),
