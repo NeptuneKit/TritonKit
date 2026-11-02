@@ -57,3 +57,10 @@ When changing this lane, update together:
 - A `javascript_error` with a parser diagnostic is not evidence that the page is too large. Preserve the diagnostic and verify the generated script against the matched SDK; reducing includes/node limits cannot repair invalid syntax.
 - Validate actual generated JavaScript, not just Swift compilation or substring assertions. Use a JavaScript parser/executor and a synthetic WebView page for default and forms-only snapshots. Test quote, backslash, control-character and selector-symbol attributes, plus snapshot-to-focus identity round trips; escaping JavaScript and escaping CSS attribute strings are distinct steps.
 - Keep bounds and field-value redaction assertions. A synthetic macOS WebKit fixture proves script/DOM behavior, not an upgraded SDK inside the user's iOS app; report that remaining acceptance separately.
+
+## Legacy Focused Text Input
+
+- The embedded iOS legacy active-element typing path and the opt-in form API are separate contracts. Legacy typing uses the native input/textarea value setter so framework change tracking can observe the input event; this does not opt the page into the strict form API.
+- An input ACK or screenshot does not prove framework state. Validate a controlled field's state after a rerender and the relevant application validation. The runtime checks the same DOM object immediately and after a bounded 50 ms settle window; this cannot promise arbitrary later renders or business completion. Successful input therefore retains a required, not-verified business boundary.
+- A refused or reverted attempted write returns failure with an unknown outcome. Inspect state before any further action; do not automatically replay. Multiple visible WebViews return typed `ambiguous_webview` and `not_started` before any input is sent. Legacy typing does not inherit the tap command's explicit WebView selection options.
+- SDK changes require a matching embedded SDK build. A CLI upgrade alone does not update the code inside an existing app; synthetic fixture acceptance is not private-app acceptance.
