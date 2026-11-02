@@ -349,7 +349,7 @@
 
 | `SP-259-issue-248-xcode-diagnostics` | [`SP-259-issue-248-xcode-diagnostics`](./SP-259-issue-248-xcode-diagnostics/README.md) | 执行 | #248：有界失败诊断及日志覆盖 |
 
-| `SP-260-issue-249-skill-wait-syntax` | [`SP-260-issue-249-skill-wait-syntax`](./SP-260-issue-249-skill-wait-syntax/README.md) | 执行 | #249：公开skill语法与parser parity |
+| `SP-260-issue-249-skill-wait-syntax` | [`SP-260-issue-249-skill-wait-syntax`](./SP-260-issue-249-skill-wait-syntax/README.md) | 执行 | #249：官方wait示例与打包门禁已修正，整合Swift验证待执行 |
 
 | `SP-261-issue-250-leaf-option-parity` | [`SP-261-issue-250-leaf-option-parity`](./SP-261-issue-250-leaf-option-parity/README.md) | 执行 | #250：sim.boot/act.tap/device.stop有效参数与输出，整合验证中 |
 

@@ -435,3 +435,5 @@
 - 2026-11-02 [SP-262-issue-251-json-parser-errors](./SP-262-issue-251-json-parser-errors/README.md)：执行；JSON parser失败契约与值脱敏。
 
 - 2026-11-02 [SP-263-issue-252-harmony-wait-errors](./SP-263-issue-252-harmony-wait-errors/README.md)：执行；Harmony wait保留target与host工具失败原因。
+
+SP260整合候选：Python21项与公开skill打包门禁通过，Swift parser对照待联合回归；无设备动作。

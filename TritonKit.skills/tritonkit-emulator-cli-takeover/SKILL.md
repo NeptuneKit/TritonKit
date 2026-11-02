@@ -84,8 +84,10 @@ triton act tap "登录" --target <ios-runtime-target-from-triton-list> --json
 triton act tap --device sim:<ios-simulator-udid> --at <x,y> --json
 triton act swipe --target <ios-runtime-target-from-triton-list> --start-x 110 --start-y 700 --end-x 110 --end-y 140 --duration 0.6 --json
 triton act tap --webview-aware --selector "#submit" --webview-id <webview-id> --page-session-id <page-session-id> --expect-text "成功" --json
-triton wait text "成功" --platform <ios|android|harmony> --device <selector> --json
+triton wait --text "成功" --platform <ios|android|harmony> --device <selector> --json
 ```
+
+`wait` takes a condition option such as `--text "成功"`; it has no positional text argument. `--device` is a valid alias for `--target`. Replace the platform and selector placeholders before running an example.
 
 Without `--platform`, the iOS coordinate-only form with `sim:<UDID>`, a raw Simulator UUID, `booted`, or `current` is a constrained host-HID path: it bypasses embedded target resolution so a stale/background runtime on the same Simulator cannot receive the action. Canonical `triton:ios-simulator:<UDID>` and `/app:<bundle-id>` selectors remain embedded-runtime targets. Treat host-HID success as submission-only and verify the business postcondition separately.
 
