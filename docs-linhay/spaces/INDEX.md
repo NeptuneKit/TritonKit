@@ -342,3 +342,17 @@
 | `SP-255-dtuhid-integration` | [`SP-255-dtuhid-integration`](./SP-255-dtuhid-integration/README.md) | 独立参考流程占号 | 仅需求登记；该产品未纳入本远端候选 |
 
 | `SP-256-issue-245-compact-schema` | [`SP-256-issue-245-compact-schema`](./SP-256-issue-245-compact-schema/README.md) | 本地CLI验收通过，CI待执行 | #245 compact resolved leaf schema；总门禁推进中 |
+
+| `SP-257-issue-246-harmony-verified-input` | [`SP-257-issue-246-harmony-verified-input`](./SP-257-issue-246-harmony-verified-input/README.md) | 本轮排除；本地候选与证据保留 | #246：自有HVD出现IME许可交互，正向输入未验收；不把人工步骤交给用户；20本地测试及真实负例不代替完整验收 |
+
+| `SP-258-issue-247-schema-effects` | [`SP-258-issue-247-schema-effects`](./SP-258-issue-247-schema-effects/README.md) | 执行 | #247：副作用契约与保守unknown |
+
+| `SP-259-issue-248-xcode-diagnostics` | [`SP-259-issue-248-xcode-diagnostics`](./SP-259-issue-248-xcode-diagnostics/README.md) | 执行 | #248：有界失败诊断及日志覆盖 |
+
+| `SP-260-issue-249-skill-wait-syntax` | [`SP-260-issue-249-skill-wait-syntax`](./SP-260-issue-249-skill-wait-syntax/README.md) | 执行 | #249：公开skill语法与parser parity |
+
+| `SP-261-issue-250-leaf-option-parity` | [`SP-261-issue-250-leaf-option-parity`](./SP-261-issue-250-leaf-option-parity/README.md) | 执行 | #250：sim.boot/act.tap有效参数默认值 |
+
+| `SP-262-issue-251-json-parser-errors` | [`SP-262-issue-251-json-parser-errors`](./SP-262-issue-251-json-parser-errors/README.md) | 执行 | #251：JSON parser失败契约与值脱敏 |
+
+| `SP-263-issue-252-harmony-wait-errors` | [`SP-263-issue-252-harmony-wait-errors`](./SP-263-issue-252-harmony-wait-errors/README.md) | 执行 | #252：Harmony wait保留target与host工具失败原因 |

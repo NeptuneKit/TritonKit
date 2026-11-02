@@ -1,6 +1,6 @@
 # SP-256-issue-245-compact-schema
 
-状态：本地实现与验收完成，待主控提交/合并/CI/发布。关联 GitHub #245；影响 CLI schema 只读契约，保留默认完整输出模式与 response 模型/选择行为；权威元数据补齐见下，不改变设备动作。
+状态：PR #253 已合入 main 137afac6，发布待后续候选整合。关联 GitHub #245；影响 CLI schema 只读契约，保留默认完整输出模式与 response 模型/选择行为；权威元数据补齐见下，不改变设备动作。
 
 ## BDD与验收
 
@@ -21,3 +21,7 @@
 - 第一版 focused GREEN：7/7；真实 JSON bytes：act.type 104181 → 26705，test.run 80698 → 28215（含终止换行）。本组数字属于第一版候选，后续约束审查修订后必须复测。
 - 主控审查后补强 scoped selectorConstraints：legacy singleton alternatives 不解释为每组必选；多层 complete sets 保留 source。补 alias narrowing、positional/required override 与 VLM parse-only 测试，最终 compact 13 项与 SchemaFactSource 124 项共 137 项 focused GREEN；真实进程复验通过；完整 CLI exit 0（XCTest 162，Swift Testing 1674 / 176 suites；3 项既有条件跳过单独登记）。当前候选字节与详细边界见 [验收记录](plans/20261102-validation.md)，不沿用第一版测量冒充当前数据。
 - 原始日志保存在 worktree 外 `TritonKit-worktrees/archives/SP256/`；没有复制其它 worktree build products，没有设备/模型调用。
+
+## 整合检查点
+
+精确候选296f1b07，经独立审阅、完整CLI、root与本地总门禁及PR CI通过，2026-11-02 09:06 UTC合入远端main 137afac6。合后CI单独核对。源schema遗漏由#247/#250继续修正，compact成功不证明全库parser parity；未关闭issue、未发布新tag。
