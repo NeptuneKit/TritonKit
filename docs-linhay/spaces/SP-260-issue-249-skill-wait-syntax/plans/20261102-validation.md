@@ -24,4 +24,3 @@
 `verify-public-skill-commands.py` 原先仅检查 command root 与少数 subcommand，不能据它通过宣称完整 argv 有效。本次仅对字面 `triton` 开头的完整 fenced wait 命令增加不执行 shell 的引号/续行/选项 arity 检查；正文的参数片段保留原 root 检查，不误认作完整命令。参数名与 alias 从现有 schema 快照登记，Swift 测试绑定当前 `commandSchemas()`；真实 parser 测试读取官方文本，避免仅重写一个正确示例掩盖文档回归。它不是任意 shell 脚本或 runtime 语义验证器。
 
 原权威公开 skill 的 Common Agent Commands 已写明 flag 语法与有效 alias；无须新增 AGENTS 或重复经验条目。全局索引/memory 由主控收口。
-
