@@ -607,3 +607,11 @@ triton replay <file.tritonplan> --json
 111. Round 177：收敛 simulator gate 稳定性；`verify-simulator-gate.sh` 在执行 iOS runtime observe smoke 前自动注入随机 `TRITON_IOS_RUNTIME_SMOKE_PORT`，降低连续轮询中的固定端口冲突噪声。
 110. Round 176：按会话执行要求定义 simulator 测试门禁脚本 `docs-linhay/scripts/verify-simulator-gate.sh`；`quick` 固定跑 simulator domain 的核心测试与三条 schema 门禁，`full` 叠加 iOS runtime observe 与 WebView harness 场景，用于后续轮询提交前的主动校验。
 109. Round 175：新增文本参数占位符门禁；`nextAction` 的 `--text`、`--wait-text` 与 `assert text-exists` 必须统一使用 `<text>`，防止同一文本语义在不同命令下漂移成多套 placeholder 命名。
+
+## 2026-11-02：compact叶子schema（SP-256）
+
+`schema --command <leaf> --compact --json`是默认完整schema的只读投影。解析命令路径后只保留有效参数、相关输出合同和原文安全语义；未知引用/无输出合同/含糊约束返回typed incomplete，不据缺失声明推断安全。版本和canonical JSON SHA-256绑定实际投影，payload bytes与执行性能分别报告。
+
+legacy `oneOfRequiredOptions`同时存在单列表与singleton alternatives编码，不能解释成“每个singleton都必填”；投影按ancestor source保留独立selectorConstraints，跨层complete option sets不得flatten。`optionOverrides.required`本身构成明确引用，不能因未重复列入optionalOptions而丢失；alias属于同一声明，positional仍落argumentForms。有效声明还需与实际解析器核对，compact自身成功不能证明父schema完整；本轮补齐test.run已支持的两个MLX参数。
+
+实现、失败反例及验收见[SP-256](../spaces/SP-256-issue-245-compact-schema/README.md)。

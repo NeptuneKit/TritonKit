@@ -213,6 +213,7 @@ struct Schema: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Print machine-readable command schemas and examples")
 
     @Option(help: "Command name to filter, for example tap, export, or 'xcode run'") var command: String?
+    @Flag(help: "Resolve an explicit leaf into a compact JSON contract") var compact = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @OptionGroup var localization: LocalizationOptions
@@ -220,6 +221,13 @@ struct Schema: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            if compact {
+                guard outputFormat == .json else {
+                    throw CompactSchemaError(code: "compact_schema_requires_json", command: command, description: "--compact requires JSON output; omit --format text or add --json.")
+                }
+                print(try encodeJSON(buildCompactSchemaResponse(command: command)))
+                return
+            }
             let response = try buildSchemaResponse(command: command)
             switch outputFormat {
             case .json:
@@ -227,6 +235,12 @@ struct Schema: AsyncParsableCommand {
             case .text:
                 print(renderSchema(response, language: effectiveLanguage(localization.language)))
             }
+        } catch let error as CompactSchemaError {
+            switch outputFormat {
+            case .json: print(try encodeJSON(error.response))
+            case .text: print(error.description)
+            }
+            throw ExitCode.failure
         } catch let error as SchemaCommandLookupError {
             switch outputFormat {
             case .json:

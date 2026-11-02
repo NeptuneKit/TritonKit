@@ -332,3 +332,13 @@
 | `SP-250-release-v0-2-37` | [`SP-250-release-v0-2-37`](./SP-250-release-v0-2-37/README.md) | 已发布并安装验证 | #237/#238机制真实验收通过，v0.2.37已发布；原私有App未验，#224黑图保留 |
 
 | `SP-251-release-v0-2-38` | [`SP-251-release-v0-2-38`](./SP-251-release-v0-2-38/README.md) | 已随v0.2.38发布 | 双边main整合、skills更新；双架构/Homebrew/两处skills/三端公开包通过，自有资源清理 |
+
+| `SP-252-detached-log-exclusive-create` | [`SP-252-detached-log-exclusive-create`](./SP-252-detached-log-exclusive-create/README.md) | 独立参考流程占号 | 仅需求登记；该产品未纳入本远端候选 |
+
+| `SP-253-detached-log-integration` | [`SP-253-detached-log-integration`](./SP-253-detached-log-integration/README.md) | 独立参考流程占号 | 仅需求登记；该产品未纳入本远端候选 |
+
+| `SP-254-simulator-dtuhid-transport` | [`SP-254-simulator-dtuhid-transport`](./SP-254-simulator-dtuhid-transport/README.md) | 独立参考流程占号 | 仅需求登记；该产品未纳入本远端候选 |
+
+| `SP-255-dtuhid-integration` | [`SP-255-dtuhid-integration`](./SP-255-dtuhid-integration/README.md) | 独立参考流程占号 | 仅需求登记；该产品未纳入本远端候选 |
+
+| `SP-256-issue-245-compact-schema` | [`SP-256-issue-245-compact-schema`](./SP-256-issue-245-compact-schema/README.md) | 本地CLI验收通过，CI待执行 | #245 compact resolved leaf schema；总门禁推进中 |

@@ -245,7 +245,8 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
             exitCodeOnFailure: 1,
             outputFormats: jsonText,
             options: [
-                TKCommandSchemaOption(name: "--command", type: "String", description: "Optional command name to filter"),
+                TKCommandSchemaOption(name: "--command", type: "String", description: "Optional command name to filter; compact requires a leaf"),
+                TKCommandSchemaOption(name: "--compact", type: "Bool", defaultValue: "false", description: "Resolve explicit --command leaf into compact JSON; requires JSON output, fails closed on incomplete metadata"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 jsonAlias,
                 languageOption,
@@ -258,8 +259,8 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
                 "triton capabilities --format json",
                 "triton plan --format json",
             ],
-            outputContracts: [schemaCommandsOutputContract()],
-            failureCodes: ["unknown_command_schema"]
+            outputContracts: [schemaCommandsOutputContract(), compactSchemaOutputContract()],
+            failureCodes: ["unknown_command_schema", "compact_schema_requires_leaf", "compact_schema_requires_json", "compact_schema_incomplete"]
         ),
     ]
 }
