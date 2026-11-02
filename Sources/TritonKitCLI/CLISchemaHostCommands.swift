@@ -294,6 +294,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 deviceRecordingOutputContract(),
                 deviceEnvironmentOutputContract(),
                 deviceActionOutputContract(),
+                hostDeviceStopOutputContract(),
                 runtimeManifestOutputContract(),
             ],
             failureCodes: Array(Set(emulatorResourceFailureCodes + applePlatformRunnerFailureCodes + iosRunnerFailureCodes + [
@@ -525,7 +526,13 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "stop",
-                    summary: "Stop a selected Android or Harmony emulator"
+                    summary: "Stop a selected Android or Harmony emulator; --device selects Android, Harmony requires --hvd and --path; iOS is unsupported",
+                    requiresConfirmation: true,
+                    optionOverrides: [
+                        TKCommandSchemaOption(name: "--emulator", type: "Path", defaultValue: "/Applications/DevEco-Studio.app/Contents/tools/emulator/Emulator", description: "Harmony Emulator executable; unused for Android stop"),
+                    ],
+                    optionalOptions: ["--platform", "--device", "--adb", "--hvd", "--path", "--emulator", "--launchd-label", "--launchd-domain", "--skip-launchd", "--confirm", "--json", "--format"],
+                    outputSelectors: ["host.device-stop"]
                 ),
             ],
             providedCapabilities: iosRunnerCapabilityNames + ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "device-environment", "device-recording", "device-diagnostics", "device-crashes", "device-mirror", "device-actions", "ios-device", "ios-simulator-screenshot", "ios-host-ax", "ios-host-hid", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "harmony-device", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
@@ -668,6 +675,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--env", type: "KEY=VALUE", description: "Repeatable App process console launch environment; values use SIMCTL_CHILD_* and are redacted from sourceCommand"),
                 TKCommandSchemaOption(name: "--arg", type: "String", description: "Repeatable App process console launch argument"),
                 TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "300", description: "Host command timeout in seconds"),
+                TKCommandSchemaOption(name: "--interval", type: "Double", defaultValue: "1", description: "Polling interval in seconds for sim boot --wait"),
                 TKCommandSchemaOption(name: "--no-archive", type: "Bool", defaultValue: "false", description: "Leave simulator diagnostics uncompressed"),
                 TKCommandSchemaOption(name: "--all-logs", type: "Bool", defaultValue: "false", description: "Include all simulator logs"),
                 TKCommandSchemaOption(name: "--data-container", type: "Bool", defaultValue: "false", description: "Include booted simulator data containers in diagnostics"),
@@ -694,6 +702,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             argumentForms: [
                 TKCommandArgumentForm(name: "<name>", type: "String", required: true, description: "Simulator name for sim create"),
+                TKCommandArgumentForm(name: "<udid>", type: "String", description: "Explicit Simulator UDID for sim boot"),
             ],
             examples: [
                 "triton sim list --json",
@@ -851,7 +860,12 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "boot",
                     summary: "Boot a simulator",
-                    optionalOptions: ["--wait", "--jsonl", "--format", "--json"],
+                    optionOverrides: [
+                        TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "60", description: "Timeout in seconds when sim boot --wait is set"),
+                        TKCommandSchemaOption(name: "--interval", type: "Double", defaultValue: "1", description: "Polling interval in seconds when sim boot --wait is set"),
+                    ],
+                    requiredOptions: ["<udid>"],
+                    optionalOptions: ["--wait", "--timeout", "--interval", "--jsonl", "--format", "--json"],
                     outputSelectors: ["host.simulator-action"]
                 ),
                 TKCommandSubcommandSchema(
