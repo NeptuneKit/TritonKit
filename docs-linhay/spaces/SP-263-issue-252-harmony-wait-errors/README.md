@@ -1,6 +1,6 @@
 # SP-263-issue-252-harmony-wait-errors
 
-状态：最小候选已实现，等待主控串行Swift测试槽。关联 GitHub #252。
+状态：已通过 [PR #258](https://github.com/NeptuneKit/TritonKit/pull/258) 合入远端 main，合并提交 `dbe4ea08c96a839c77e20bcdbdf1e1db21729d2d`；最新联合主线 `572b4afb` 的必要 CI 已通过。#252 的机制修复和本轮自动验收已完成，待 v0.2.39 发布及安装复验；issue 保持开放。
 
 ## 边界与 BDD
 
@@ -8,8 +8,18 @@
 
 ## 归属与验收
 
-分支 feat/SP-263-issue-252-harmony-wait-errors；worktree /Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-263-issue-252-harmony-wait-errors。主控串行运行共享构建与 Git 写操作。先 RED 后实现与 GREEN；独立审阅、完整回归和 CI 通过后合并，issue 保持开放。
+分支 feat/SP-263-issue-252-harmony-wait-errors；worktree /Users/linhey/Desktop/linhay-open-sources/TritonKit-worktrees/SP-263-issue-252-harmony-wait-errors。主控串行运行共享构建与 Git 写操作。先 RED 后实现与 GREEN；独立审阅、完整回归和CI通过后已合并，issue保持开放。
 
-## 当前证据
+## 首轮证据
 
-现有v0.2.38 fake-HDC九场景复跑：5个待修复场景真实失败，4个原有边界通过（idle零后端、条件timeout、observe基准、runtime server错误）；证据`.triton/sp263-validation/baseline-cli/report.json`。新的10项Swift回归尚未执行。候选只改Wait catch、专属错误helper及wait schema.failureCodes；不修改#147轮询机制或设备状态。详见[契约](plans/contract.md)和[自动验收](plans/accept-wait-errors.py)。
+现有v0.2.38 fake-HDC九场景复跑：5个待修复场景真实失败，4个原有边界通过（idle零后端、条件timeout、observe基准、runtime server错误）；证据`.triton/sp263-validation/baseline-cli/report.json`。新的10项Swift回归在首轮尚未执行；后续均已通过，见下文。候选只改Wait catch、专属错误helper及wait schema.failureCodes；不修改#147轮询机制或设备状态。详见[契约](plans/contract.md)和[自动验收](plans/accept-wait-errors.py)。
+
+## 主控最终整合检查点（2026-11-02）
+
+- HarmonyWaitFailureTests全部10项及HarmonyWaitRuntimeTests在最终完整CLI回归通过；最终整合binary的fake-HDC九场景通过，保留missing/offline/ambiguous/executable与真实transport区别，以及unsupported idle零后端调用。
+- 上述实现及本issue精确head CI通过后独立合并；最新联合主线为 `572b4afb0881aa61d5f68e3b801c0aeb9e3fe1f3`，[主线CI 41427953350](https://github.com/NeptuneKit/TritonKit/actions/runs/41427953350)已成功。
+- 联合本地候选 `eb14f489218d80bf1072f0696b799939937b0131`（native祖先`71218395`）完成CLI 162 XCTest + 1719 Swift Testing、根包7 XCTest + 404 Swift Testing、Web159项串行测试、Web生产构建和完整 `verify.sh --local`。3项既有条件跳过单独保留；不是所有设备现场验收。
+- 原始证据在同级 `TritonKit-worktrees/archives/SP256/` 的 `integrated-cli-full-v2.log`、`integrated-root-v2.log` 以及 `archives/SP264/` 的 `web-test-v3.log`、`web-build.log`、`local-preflight.log`。首轮组合失败 `integrated-cli-full.log` 与各issue RED/审阅反例继续保留，不用后续GREEN覆盖。
+- 当前仅完成源码整合与所述自动验证；v0.2.39尚未发布，双架构资产、Homebrew、public skills安装与包外浏览器验收由[SP264](../SP-264-release-v0-2-39/README.md)继续收口。后续发布结果以该Space实际记录为准，不将本检查点解释为已发布。
+
+原plans中“待执行/未合并”等语句记录各自采样阶段，当前状态以上方整合检查点为准。范围外私有现场不借本轮测试宣称恢复，未执行GitHub issue关闭。

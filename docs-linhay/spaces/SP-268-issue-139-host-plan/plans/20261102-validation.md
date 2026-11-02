@@ -27,3 +27,5 @@ Plan 成功表示命令序列构造成功，不证明 target.ready、安装成�
 ## 主控整合验证
 
 8 项 HostGoalWorkflowPlanTests 通过，日志 `archives/SP264/issue139-green.log`。实际 CLI 对 Harmony/Android × general/open-url 四场景均通过（`.build/sp268/candidate-rerun/`），保留无监听端口、独立 argv、禁止执行生成命令的边界。初次 fixture 误用显式 `plan general` 返回 validation_failed 的原始记录保留 `.build/sp268/candidate/`；修正为无 action 入口后复验，不计为产品缺陷。
+
+独立最终审阅未发现P1/P2；PR264精确head `84b591600b00e602835f70c5df62679bc4519945` CI通过，合入main `8d897df399002b7cb341ff8fe40a6f9d66a316e2`。
