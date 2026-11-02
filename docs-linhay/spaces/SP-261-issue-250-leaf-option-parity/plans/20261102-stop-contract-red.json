@@ -1,0 +1,16 @@
+{
+  "source": "parent integration validation, independently read by issue238 subagent",
+  "worktree": "SP256 / codex/integrate-sp261",
+  "command": "swift test --package-path CLI --build-system native --jobs 2 --no-parallel --filter 'LeafOptionParityTests|CompactSchemaTests|SchemaFactSource'",
+  "log": "TritonKit-worktrees/archives/SP256/sp261-focused.log",
+  "size": 27035,
+  "sha256": "e57e9314b9428d7b0074235c4437d593a8bcda89494d9eecd72001105a136ce4",
+  "result": {
+    "tests": 142,
+    "suites": 3,
+    "issues": 1,
+    "failedTest": "LeafOptionParityTests.nestedStopCanonicalPathsRemainSelfContained",
+    "error": "No output selectors are declared for device.stop."
+  },
+  "scope": "Actual Swift RED prior to device.stop metadata repair. No stop operation executed."
+}

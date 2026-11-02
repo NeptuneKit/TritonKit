@@ -351,7 +351,7 @@
 
 | `SP-260-issue-249-skill-wait-syntax` | [`SP-260-issue-249-skill-wait-syntax`](./SP-260-issue-249-skill-wait-syntax/README.md) | 执行 | #249：公开skill语法与parser parity |
 
-| `SP-261-issue-250-leaf-option-parity` | [`SP-261-issue-250-leaf-option-parity`](./SP-261-issue-250-leaf-option-parity/README.md) | 执行 | #250：sim.boot/act.tap有效参数默认值 |
+| `SP-261-issue-250-leaf-option-parity` | [`SP-261-issue-250-leaf-option-parity`](./SP-261-issue-250-leaf-option-parity/README.md) | 执行 | #250：sim.boot/act.tap/device.stop有效参数与输出，整合验证中 |
 
 | `SP-262-issue-251-json-parser-errors` | [`SP-262-issue-251-json-parser-errors`](./SP-262-issue-251-json-parser-errors/README.md) | 执行 | #251：JSON parser失败契约与值脱敏 |
 
