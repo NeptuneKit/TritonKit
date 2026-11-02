@@ -598,6 +598,26 @@
       "execution_thread_closed_on": "2026-10-31",
       "cleanup_evidence": "docs-linhay/spaces/SP-253-detached-log-integration/plans/20261031-main-closeout.md",
       "verification_note": "Leaf replacement proven by red/green; no hardlink target write-through or lasting ARC leak claim. Full CLI postmerge and applicable local passed; no device/Xcode/live attack/push/tag/release."
+    },
+    {
+      "key": "heoblitz/Loupe:simulator-dtuhid-transport",
+      "repository": "heoblitz/Loupe",
+      "mechanism": "DTUHID typed digitizer transport and no-event barrier",
+      "requirement_key": "local-simulator-modern-hid-transport",
+      "source_revision": "180c60584867500b93b43ca6c8b556995bf8be7b",
+      "decision": "adopt",
+      "state": "implementing",
+      "space": "SP-254-simulator-dtuhid-transport",
+      "controller_space": "SP-255-dtuhid-integration",
+      "execution_thread_id": "01a19a07-826b-7453-8624-e46a38f9cb7d",
+      "controller_thread_id": "01a18a91-f44e-7fd0-8e4b-c891b44377e0",
+      "branch": "feat/SP-254-simulator-dtuhid-transport",
+      "worktree": "../TritonKit-worktrees/SP-254-simulator-dtuhid-transport",
+      "assessment": "20261102-heoblitz-Loupe-review.md",
+      "execution_model": "gpt-6.1-sol",
+      "host_id": "local",
+      "controller_state": "integration_pending",
+      "execution_thread_status": "running"
     }
   ],
   "new_thread_policy": {

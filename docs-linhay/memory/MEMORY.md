@@ -1,5 +1,7 @@
 # TritonKit Project Memory
 
+- 2026-11-02：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261102-reference-update-report.md)33仓24完整/9 partial、4仓更新；Loupe现代HID已分派SP254/255，其余观察，既有17项已合main。
+
 - 2026-11-01：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261101-reference-update-report.md)33仓24完整/9 partial、2仓更新保留观察，无新采用；17条交付均在main，昨日884+84份证据完整。review绑定与跨状态中断恢复已补现有采用流程。
 
 - 2026-10-31：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261031-reference-update-report.md)33仓24完整/9 partial、五仓变化；SP252/253日志安全修复已验收合main56ef7719，合后CLI162+1665/local通过并清理关闭。昨日raw证据缺失原因未知，今日证据已存scratch外；当前17条采用在main。
