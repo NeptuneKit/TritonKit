@@ -200,7 +200,7 @@ struct Wait: AsyncParsableCommand {
     @Flag(name: .customLong("hierarchy-change"), help: "Wait until the hierarchy snapshot changes") var hierarchyChange = false
     @Option(name: .customLong("since"), help: "Hierarchy change baseline; currently supports latest") var since: String = "latest"
     @Option(name: .customLong("predicate"), help: "Safe predicate using text.exists/gone with &&, ||, !") var predicate: String?
-    @Option(name: .customLong("role"), help: "Optional AX role filter for --text or --exists") var role: String?
+    @Option(name: .customLong("role"), help: "Optional role filter for text/exists/gone; Harmony uses case-insensitive native ArkUI type") var role: String?
     @Option(name: [.long, .customLong("device")], help: "Target id from `triton list`; --device is an alias") var target: String = TKLocalTargetID
     @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
@@ -385,6 +385,16 @@ struct Wait: AsyncParsableCommand {
                         outputFormat: outputFormat
                     )
                 }
+                do {
+                    _ = try normalizedHarmonyWaitRole(role)
+                } catch {
+                    try failHostValidation(
+                        code: "validation_failed",
+                        message: "Harmony --role must contain a non-whitespace native ArkUI type.",
+                        hint: "Use --role Button or --role Text, or omit --role for text-only matching.",
+                        outputFormat: outputFormat
+                    )
+                }
                 let query = text ?? gone ?? exists ?? ""
                 let startedAt = Date()
                 let selected = try resolveHarmonyTarget(target: target, hdc: hdc, deadline: startedAt.addingTimeInterval(timeout))
@@ -392,6 +402,7 @@ struct Wait: AsyncParsableCommand {
                     selected: selected,
                     hdc: hdc,
                     text: query,
+                    role: role,
                     timeout: timeout,
                     interval: interval,
                     gone: gone != nil,
