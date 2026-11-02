@@ -7,7 +7,7 @@
 1. 现代 lookup 有效：同一 XPC connection 完成无事件 keyboard usageCode=0/state=2/isBarrier=true 握手，再按 uint64 phase=0/1/2、double x/y 发送 tap/swipe；结束调用有界无事件 barrier。consumed 只表示 transport 边界，不是 guest delivery 或业务成功。
 2. 仅 lookup 方法缺失，或 booted 设备 lookup 返回 null 且精确 CoreSimulator SimError405，才允许创建 legacy client。port 非空附带错误、未知 lookup、符号/连接失败、握手超时一律错误，不回退。
 3. 发送/结束失败保持 unknown，绝不重连、重发 down 或自动 fallback；原有执行器仅在必要时 best-effort up 一次。连接错误记为永久失败，不复活 session。
-4. 纯离线 fake 验证 wire 类型、顺序、barrier 不产生字符、unsupported 分类及 no fallback/replay；真实兼容性未授权且未验证。
+4. 纯离线 fake 验证 wire 类型、顺序、barrier无事件wire字段、unsupported 分类及 no fallback/replay；真实兼容性未授权且未验证。
 
 ## 来源与许可
 

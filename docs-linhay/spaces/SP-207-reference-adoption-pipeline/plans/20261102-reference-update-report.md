@@ -52,3 +52,7 @@
 | mobile-dev-inc/Maestro | `5ca5313b4c65` | cli-2.12.0 | 完整 |
 | linhay/SKProcessRunner | `24e036604b9e` | 0.0.17 | partial |
 | mobile-next/mobile-mcp | `1851dfaca835` | 1.0.15 | 完整 |
+
+## 主控交付
+
+SP254/255已完成离线实现/验收，合main c4a14e52且合后CLI/local通过；共18条已合main。Git工作区/分支与聊天已清理关闭，managed UI附件工具失败单列；真实设备兼容未验，见[收口](../../SP-255-dtuhid-integration/plans/20261102-main-closeout.md)。日检读取/候选评估与后续交付阶段分别保留。

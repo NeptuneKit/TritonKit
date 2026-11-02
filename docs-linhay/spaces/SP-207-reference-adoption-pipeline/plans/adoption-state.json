@@ -606,7 +606,7 @@
       "requirement_key": "local-simulator-modern-hid-transport",
       "source_revision": "180c60584867500b93b43ca6c8b556995bf8be7b",
       "decision": "adopt",
-      "state": "implementing",
+      "state": "local_merged",
       "space": "SP-254-simulator-dtuhid-transport",
       "controller_space": "SP-255-dtuhid-integration",
       "execution_thread_id": "01a19a07-826b-7453-8624-e46a38f9cb7d",
@@ -616,8 +616,15 @@
       "assessment": "20261102-heoblitz-Loupe-review.md",
       "execution_model": "gpt-6.1-sol",
       "host_id": "local",
-      "controller_state": "integration_pending",
-      "execution_thread_status": "running"
+      "controller_state": "accepted_offline_local_merged",
+      "execution_thread_status": "archived",
+      "implementation_sha": "27437c0ab7eb2a73aa9f23b14f1393b71aefe3ac",
+      "local_merge_sha": "c4a14e5282479b3fa10da0b1bbb3f720e1393d2d",
+      "worktree_status": "removed_after_verified_archive",
+      "branch_status": "deleted_merged",
+      "managed_attachment_status": "archive_tool_failed_primary_checkout_verification_stale_attachment",
+      "last_verified_on": "2026-11-02",
+      "state_evidence": "docs-linhay/spaces/SP-255-dtuhid-integration/plans/20261102-main-closeout.md"
     }
   ],
   "new_thread_policy": {
@@ -628,11 +635,11 @@
     "existing_threads_changed": false,
     "reasoning_effort": "unchanged"
   },
-  "last_updated_on": "2026-10-31",
-  "last_update_note": "SP252/253 accepted; merged56ef7719; postmerge full CLI 162+1665 and applicable local passed; archive verified, worktree/branch removed, execution thread archived; all17 merges reachable.",
+  "last_updated_on": "2026-11-02",
+  "last_update_note": "SP254 offline contract accepted, merged c4a14e52; full CLI/local passed, git worktree removed, execution archived; managed UI attachment cleanup failed separately",
   "session_closeout": {
-    "verified_main": "56ef7719266d90f79548b649054710058266f78f",
-    "verified_on": "2026-10-31",
+    "verified_main": "c4a14e5282479b3fa10da0b1bbb3f720e1393d2d",
+    "verified_on": "2026-11-02",
     "archived_thread_ids": [
       "01a14284-df87-7d13-8373-a4d3a56fd470",
       "01a14285-3be0-7213-9433-374c139189bd",
@@ -645,9 +652,10 @@
       "01a1773d-8556-7a01-a885-a0f5d0c68a6d",
       "01a17b28-ccf7-7593-b589-72fa36290516",
       "01a17b29-206c-7b73-bfc4-6bded108ca9d",
-      "01a18fb4-0f41-73e2-a0b7-741aa13b2bc5"
+      "01a18fb4-0f41-73e2-a0b7-741aa13b2bc5",
+      "01a19a07-826b-7453-8624-e46a38f9cb7d"
     ],
-    "evidence": "docs-linhay/spaces/SP-253-detached-log-integration/plans/20261031-main-closeout.md",
+    "evidence": "docs-linhay/spaces/SP-255-dtuhid-integration/plans/20261102-main-closeout.md",
     "long_running_controller": "kept_open"
   },
   "monitor_controller": {
@@ -659,7 +667,7 @@
     "automation_binding_verified": true,
     "evidence": "20261030-reference-update-report.md"
   },
-  "last_verified_on": "2026-11-01",
-  "last_verified_main": "4b4b6a841446243c3fb76af800483cda65bbc738",
-  "latest_monitor_summary": "20261101-reference-update-report.md"
+  "last_verified_on": "2026-11-02",
+  "last_verified_main": "c4a14e5282479b3fa10da0b1bbb3f720e1393d2d",
+  "latest_monitor_summary": "20261102-reference-update-report.md"
 }

@@ -5,7 +5,7 @@
 - 用户于2026-10-16要求“后期评估可以纳入的改动可以直接按照这个流程直接进入开发”，随后明确“从 iCTRL 扩大到所有参考项目”。本页是当前流程事实源，替代各历史研究中逐项等待采用授权的说明。
 - 范围：全部已登记参考仓库，及登记为研究线索的候选；候选身份不等于已经采用。当前登记由 SP-194 的23主要仓库+9候选及 SP-199 的 Mobile MCP 组成，合计33个去重仓库。
 - 影响层：参考资料、自动任务、开发分派和治理规则；本次配置不修改CLI/HTTP/SDK产品代码。
-- 状态：持续追踪与采用。当前17条采用均已验收合本地main；最新SP252/253合并56ef7719，合后完整CLI/local与清理关闭完成，尚未推送或发布；真实边界见[主线收口](../SP-253-detached-log-integration/plans/20261031-main-closeout.md)。
+- 状态：持续追踪与采用。当前18条采用已合本地main（SP254为离线契约验收）；最新SP252/253合并56ef7719，合后完整CLI/local与清理关闭完成，尚未推送或发布；真实边界见[主线收口](../SP-253-detached-log-integration/plans/20261031-main-closeout.md)。
 - 正式说明：[参考项目追踪与采用](../../dev/reference-project-adoption-workflow.md)。
 - 仓库与读取状态：[reference-state.json](./plans/reference-state.json)；任务去重与授权：[adoption-state.json](./plans/adoption-state.json)。上游读取状态与采用交付状态分开。
 - 前次检查（历史）：2026-10-26，22完整/11 partial，simslim/Revyl两仓HEAD变化，Release/许可不变；[日报](./plans/20261026-reference-update-report.md)。用户要求继续后，两仓文本缺口已闭合并独立推进，当前合并视图24完整/9 partial，见[补查记录](./plans/20261026-partial-recovery.md)；本次仅重新查询2仓，其他31仓沿用日检。新SP-223/224已验收合本地main9fbda1d5；独立与合后完整CLI XCTest91/SwiftTesting1527、fakeCLI4场景和适用local通过，源worktree/branch已归档清理。新[SP-221](../SP-221-simulator-resource-read-retry/README.md)经[SP-222](../SP-222-simulator-resource-retry-integration/README.md)验收，候选eb9539f4合本地main `a0eebff0`；focused37、独立与合后完整CLI、root、适用local/docs均通过。显式gpt-6.1-sol真实执行/主控会话创建成功。旧13条采用保持，11旧源码/许可缺口不推进；未push/tag/release或执行设备恢复验证。
@@ -13,7 +13,7 @@
 
 - 2026-10-27主控接管自己开启会话的完整交付与关闭责任：15条合并提交再次确认在main，9个真实执行/主控会话已归档；本长期追踪聊天保留，见[关闭记录](./plans/20261027-session-closeout.md)。
 
-- 最近检查：2026-11-02，33仓24完整/9 partial，4仓变化；新增SP254/255 DTUHID采用已分派，17条旧采用已合main。见[日报](./plans/20261102-reference-update-report.md)。
+- 最近检查：2026-11-02，33仓24完整/9 partial，4仓变化；新增SP254/255 DTUHID已离线验收合main c4a14e52，合后完整CLI/local通过；共18条已合main。见[日报](./plans/20261102-reference-update-report.md)。
 
 - 2026-10-30接管：原主控因compact连接失败中断，用户指定当前聊天接手。原`ictrl`已重绑`01a18a91-f44e-7fd0-8e4b-c891b44377e0`，仍ACTIVE、每天北京时间10:00；重读配置确认，原prompt保持，未新建重复任务。16条采用再次通过当前main祖先校验，不重开已交付项，见[接管记录](./plans/20261030-controller-takeover.md)。
 
