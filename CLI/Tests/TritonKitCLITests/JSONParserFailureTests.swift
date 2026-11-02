@@ -55,7 +55,9 @@ struct JSONParserFailureTests {
         let extra = try invoke(["wait", "text", secret, "--platform", "harmony", "--target", secret, "--timeout", "0.01", "--json"])
         _ = try envelope(extra, code: "unexpected_argument")
         #expect(!extra.stdout.contains(secret))
-        let unknown = try invoke(["sim", "boot", "--" + secret, "--json"])
+        // Supply the required positional: otherwise the real parser reports the
+        // missing UDID before the unknown option. Do not override that precedence.
+        let unknown = try invoke(["sim", "boot", "fixture-udid", "--" + secret, "--json"])
         _ = try envelope(unknown, code: "unknown_option")
         #expect(!unknown.stdout.contains(secret))
     }
