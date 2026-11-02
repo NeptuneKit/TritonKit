@@ -134,6 +134,11 @@ def package_public_skills(
             stamp_skill(repo_root, version, destination / "SKILL.md")
 
         validate_skill_commands(repo_root, work_dir)
+        subprocess.run(
+            [sys.executable, str(repo_root / "docs-linhay/scripts/verify-public-skill-layout.py"),
+             "--skill-root", str(work_dir)],
+            cwd=repo_root, check=True, stdout=subprocess.DEVNULL,
+        )
 
         info = build_info(repo_root, work_dir, version, release_tag)
         (work_dir / "BUILD_INFO.json").write_text(json.dumps(info, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
