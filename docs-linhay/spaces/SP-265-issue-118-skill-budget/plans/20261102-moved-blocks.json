@@ -1,0 +1,96 @@
+{
+  "baselineEntrySHA256": "4e267fa6b720b955672f4a19def3023882b6aaf1e9a5b30730f0f4d3622f7a55",
+  "baselineEntryBytes": 28680,
+  "blocks": [
+    {
+      "destination": "references/discovery-migration.md",
+      "sha256": "21504e1eee31587dfdaf0016b92592ec0779bb3695a62ebf8a72ed6dca33fd4c",
+      "bytes": 1700
+    },
+    {
+      "destination": "references/runner-feedback.md",
+      "sha256": "bbd452b289926b62bc67b647435149cf27328bd07dc7f3fe8f316186573b7058",
+      "bytes": 713
+    },
+    {
+      "destination": "references/xcode-feedback.md",
+      "sha256": "8fc6e3d3848364f9183a72ae73ada0e943f08ddc5dc9ed8520e7f3436c42e6d9",
+      "bytes": 991
+    },
+    {
+      "destination": "references/device-hub-feedback.md",
+      "sha256": "b9aa6db557898394440cf5e66bc4eea7caa7a533364894ff18ab29b700b7767a",
+      "bytes": 878
+    },
+    {
+      "destination": "references/observation-feedback.md",
+      "sha256": "e4f38ca8e8aba7da33634cbc1b0d7b49dd156ea656959208c4676ae17f6397bd",
+      "bytes": 1097
+    },
+    {
+      "destination": "references/evidence-host-devices.md",
+      "sha256": "a164600a281675cdf8dbb2963a8c484b14b2818a54ed9fbe8d6e34033ce178a2",
+      "bytes": 420
+    },
+    {
+      "destination": "references/reliability-feedback.md",
+      "sha256": "2cc931522c9bb385a839c0f744c88cd4fe2a08b96a93cb668617b4119a2d462d",
+      "bytes": 4077
+    },
+    {
+      "destination": "references/xcode-feedback.md",
+      "sha256": "6feb4506733f2b2de7a86969b502d75de2e76d43854c5debfca9b6924f56d580",
+      "bytes": 1757
+    },
+    {
+      "destination": "references/evidence-ios-runtime.md",
+      "sha256": "b050d730640c9e8b0e3a1b2ec2024e1464d9899f1249ffd49fb20718d9cc530e",
+      "bytes": 541
+    },
+    {
+      "destination": "references/evidence-host-devices.md",
+      "sha256": "eb468947ea81825115cbde10330e808738dbb9b2a4ea362566794d50218c24de",
+      "bytes": 428
+    },
+    {
+      "destination": "references/picker-feedback.md",
+      "sha256": "f35e7a7cea16af06498246acf32e74749f98ddaf43b40722bac52e16937453fb",
+      "bytes": 589
+    },
+    {
+      "destination": "references/picker-feedback.md",
+      "sha256": "717ccfa7a5f63c6b8acbab88dfcdda44afc1b5623c54990c28d2a3af78cc4cfe",
+      "bytes": 3669
+    },
+    {
+      "destination": "references/evidence-host-devices.md",
+      "sha256": "87a5b4d011192db101594b34e3b1ea4d4d872a644907057900ebebfb2bcf6dfc",
+      "bytes": 730
+    },
+    {
+      "destination": "references/evidence-host-devices.md",
+      "sha256": "d2c9d1d1a30f1a462ec706c5ce1c0baf8d7f988dfe9ef3adcdd56966b4b35939",
+      "bytes": 1924
+    },
+    {
+      "destination": "references/device-hub-feedback.md",
+      "sha256": "f41616c881d54019508ca114c077ff81a4d2578156e7566c3b04da4328fd584e",
+      "bytes": 964
+    },
+    {
+      "destination": "references/evidence-host-devices.md",
+      "sha256": "c9992fc5463ef7ba6fb19486e09bce171d30acae294e289e14e7b74587d9ae24",
+      "bytes": 1963
+    },
+    {
+      "destination": "references/runner-feedback.md",
+      "sha256": "858e27b355bd6e4916fbe2895126c6ff3e6e5903efd685fddf27f8e14ff53871",
+      "bytes": 1838
+    },
+    {
+      "destination": "references/evidence-ios-runtime.md",
+      "sha256": "bb88d99796fa013b5d4af551e08500c622a67f87bc07c6eb33162a576dea4a83",
+      "bytes": 607
+    }
+  ]
+}
