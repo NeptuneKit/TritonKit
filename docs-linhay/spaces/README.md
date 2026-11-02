@@ -1,5 +1,7 @@
 # TritonKit Spaces Index
 
+2026-11-02：SP256/258–263 的七项issue修复已合入main，SP264 v0.2.39尚未发布；用户追加全量并行处理，新增SP265–268处理已关闭issue的新反馈，验收后统一发布。#214暂停、#246人工依赖部分排除、#224未解决边界保留。
+
 2026-10-30：[SP-251 v0.2.38](./SP-251-release-v0-2-38/README.md)已发布；内存优化/Rhine/WebView联合候选、双架构与Homebrew、两处skills、三端公开包验收通过。原WIP保留，自有测试资源已清理。
 
 2026-10-30：[SP-247 页面设计偏好](./SP-247-rhine-page-preferences/README.md) 四页设计偏好已同步主目录复验；固定 registry0.11.3，142项测试、两构建和浏览器布局/动态/焦点通过，已随v0.2.38发布，联合验收见SP-251。
@@ -12,7 +14,7 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，33仓日检22完整/11 partial、两仓HEAD变化。新增SP-221只读资源暂态重试/SP-222有限主控，显式gpt-6.1-sol真实会话创建成功、已通过独立与合后门禁，合本地main a0eebff0；旧13条采用已合main，旧源码/许可缺口保留。
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（251/251 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（268/268 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-10-30（SP251 v0.2.38发布与安装验收完成）
 
@@ -445,3 +447,11 @@ SP263已独立审阅，Harmony wait保留host原因与定向诊断；runtime路�
 SP258整合58个act/app/sim/build声明和保守unknown，条件效果保留full/compact scope；不改变执行guard。shared与CLI完整回归待执行。
 
 - 2026-11-02 [SP-264-release-v0-2-39](./SP-264-release-v0-2-39/README.md)：执行；独立issue组合验证与完整发布。
+
+- [SP-265-issue-118-skill-budget](./SP-265-issue-118-skill-budget/README.md)：独立候选登记，待整合与验收。
+
+- [SP-266-issue-147-wait-deadline](./SP-266-issue-147-wait-deadline/README.md)：独立候选登记，待整合与验收。
+
+- [SP-267-issue-5-wait-role](./SP-267-issue-5-wait-role/README.md)：独立候选登记，待整合与验收。
+
+- [SP-268-issue-139-host-plan](./SP-268-issue-139-host-plan/README.md)：独立候选登记，待整合与验收。
