@@ -299,8 +299,52 @@ func runWebViewSnapshot(
         if platform == .harmony, runtimeBaseURL == nil {
             try failHostCommand(error, outputFormat: outputFormat)
         }
-        try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
+        if let runtimeBaseURL {
+            let response = webViewSnapshotRuntimeErrorResponse(
+                error, platform: platform, target: target, runtimeBaseURL: runtimeBaseURL
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                // Direct runtime recovery must not pass through server-only localized hints.
+                fputs("\(response.error.code): \(response.error.message)\n", stderr)
+                if let endpoint = response.error.endpoint { fputs("endpoint: \(endpoint)\n", stderr) }
+                if let hint = response.error.hint { fputs("hint: \(hint)\n", stderr) }
+            }
+            throw ExitCode.failure
+        }
+        try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
     }
+}
+
+func webViewSnapshotRuntimeErrorResponse(
+    _ error: Error,
+    platform: ObservationPlatform,
+    target: String,
+    runtimeBaseURL: String
+) -> TKWebViewErrorResponse {
+    if let httpError = error as? CLIHTTPError {
+        // HTTP status does not discard the provider's platform, target, or optional evidence.
+        if let response = try? JSONDecoder().decode(TKWebViewErrorResponse.self, from: httpError.data) {
+            return response
+        }
+        if let response = httpError.response {
+            return TKWebViewErrorResponse(action: "webview.snapshot", platform: platform.rawValue, target: target, error: response.error)
+        }
+    }
+    let endpoint = (try? EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).requestURL(.webViewSnapshot).absoluteString) ?? runtimeBaseURL
+    let original = cliErrorDetail(for: error, endpoint: endpoint, host: "", port: 0)
+    let cancelled = error is CancellationError || (error as? URLError)?.code == .cancelled
+    let detail = TKCLIErrorDetail(
+        code: cancelled ? "request_failed" : original.code,
+        message: original.message,
+        endpoint: endpoint,
+        hint: cancelled
+            ? "The direct runtime request was cancelled; no recovery action was started."
+            : "Check the \(platform.rawValue) embedded HTTP runtime and --runtime-base-url, then retry the snapshot."
+    )
+    return TKWebViewErrorResponse(action: "webview.snapshot", platform: platform.rawValue, target: target, error: detail)
 }
 
 enum WebViewSnapshotRuntimeResult {

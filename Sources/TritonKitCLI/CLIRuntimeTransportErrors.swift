@@ -217,5 +217,10 @@ func cliErrorDetail(for error: Error, endpoint: String, host: String, port: Int)
 }
 
 func endpointURL(_ endpoint: String, host: String, port: Int) -> String {
-    "http://\(host):\(port)\(endpoint.hasPrefix("/") ? endpoint : "/\(endpoint)")"
+    if let url = URL(string: endpoint),
+       let scheme = url.scheme?.lowercased(),
+       ["http", "https"].contains(scheme), url.host != nil {
+        return endpoint
+    }
+    return "http://\(host):\(port)\(endpoint.hasPrefix("/") ? endpoint : "/\(endpoint)")"
 }

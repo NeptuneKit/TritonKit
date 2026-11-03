@@ -1,5 +1,7 @@
 # TritonKit Spaces Index
 
+2026-11-03：[SP-271-issue-139-runtime-diagnostics](./SP-271-issue-139-runtime-diagnostics/README.md)处理#139 direct runtime诊断新反馈；[SP-270-lookin-core](./SP-270-lookin-core/README.md)为其他负责人独立未整合候选，仅登记占号。
+
 2026-11-02：SP256、SP258–263、SP265–269 十二项独立修复已随 [v0.2.39](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.39)发布，发布提交/tag `026d329e`；main/tag/Release CI、标准Pod lint、双架构制品、Homebrew/skills安装及安装版23项只读smoke通过。正式三端预览和自有清理通过，由 [SP264](./SP-264-release-v0-2-39/README.md)收口。#214暂缓、#246人工依赖部分排除、#224和原私有现场未验证边界保留。
 
 2026-10-30：[SP-251 v0.2.38](./SP-251-release-v0-2-38/README.md)已发布；内存优化/Rhine/WebView联合候选、双架构与Homebrew、两处skills、三端公开包验收通过。原WIP保留，自有测试资源已清理。
@@ -14,7 +16,7 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，33仓日检22完整/11 partial、两仓HEAD变化。新增SP-221只读资源暂态重试/SP-222有限主控，显式gpt-6.1-sol真实会话创建成功、已通过独立与合后门禁，合本地main a0eebff0；旧13条采用已合main，旧源码/许可缺口保留。
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（269/269 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（271/271 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-10-30（SP251 v0.2.38发布与安装验收完成）
 
@@ -39,7 +41,7 @@
 
 ## 路线裁决
 
-当前发布：[SP-251 v0.2.38](./SP-251-release-v0-2-38/README.md)，双架构/Homebrew/skills及三端公开包预览通过；#224的iPad默认截图/输入仍未恢复，#214继续暂缓。历史发布[SP-243-release-v0-2-36](./SP-243-release-v0-2-36/README.md)与v0.2.37黑图记录保留原候选边界。
+当前发布：[SP-264 v0.2.39](./SP-264-release-v0-2-39/README.md)，双架构/Homebrew/skills及三端公开包预览通过；#224的iPad默认截图/输入仍未恢复，#214继续暂缓。历史发布[SP-243-release-v0-2-36](./SP-243-release-v0-2-36/README.md)与v0.2.37黑图记录保留原候选边界。
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |

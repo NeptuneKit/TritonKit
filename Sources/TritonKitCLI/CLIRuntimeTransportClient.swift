@@ -101,13 +101,21 @@ struct EmbeddedRuntimeHTTPClient {
             throw RuntimeError("Unsupported embedded runtime HTTP request: \(requestType.rawValue)")
         }
 
-        var request = URLRequest(url: try url(path: route.path, queryItems: queryItems))
+        var request = URLRequest(url: try requestURL(requestType, queryItems: queryItems))
         request.httpMethod = route.method.rawValue
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = body
         }
         return try await data(for: request)
+    }
+
+    /// Use the same route resolution for requests and their diagnostics.
+    func requestURL(_ requestType: TKRequestType, queryItems: [URLQueryItem] = []) throws -> URL {
+        guard let route = TKEmbeddedRuntimeHTTPRoute.route(for: requestType) else {
+            throw RuntimeError("Unsupported embedded runtime HTTP request: \(requestType.rawValue)")
+        }
+        return try url(path: route.path, queryItems: queryItems)
     }
 
     private func url(path: String, queryItems: [URLQueryItem]) throws -> URL {
