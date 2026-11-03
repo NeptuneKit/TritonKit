@@ -4,7 +4,7 @@
 
 自动 issue 流程复用原负责人已停止写入的精确候选，进行独立审阅、整合与标准 iOS 13 Pod CI。集成分支 `codex/sp270-lookin-integration`，worktree `../TritonKit-worktrees/SP-270-lookin-core-integration/`，基线 `9578782a7cbfd855228f8e996b07d93437725870`。原 `feat/SP-270-lookin-core` 未提交现场、原始证据和专属测试工程完整保留；当前 main 的占号登记由本完整 Space 替代。
 
-尚未提交本集成候选、未合并本功能、未发布。42 个源码/测试及两个旧候选二进制与原验收 SHA256 一致；Web/package.json 仅保留新主线 0.2.40 版本并接入既有测试清单。标准 Pod 与精确整合回归仍待，本地 iOS 15 lint 不替代。发布采用本定时任务持续授权，正式 tag 尚未创建。
+集成候选已由 PR #276 合入 main（merge `3b82824333467cf6d4e148cba04a97b3f70705aa`），PR 精确 CI（含标准 Pod）与合并后 main CI 均通过；尚未随正式 v0.2.40 tag 发布。42 个源码/测试及两个旧候选二进制与原验收 SHA256 一致；Web/package.json 仅保留新主线 0.2.40 版本并接入既有测试清单。标准 Pod 与精确整合回归已由 PR #276 完成；发布采用本定时任务持续授权，正式 v0.2.40 tag 尚未创建。
 
 ## 原候选交接记录（历史阶段）
 
