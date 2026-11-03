@@ -1,5 +1,7 @@
 # TritonKit Spaces Index
 
+2026-11-03：[SP-272-release-v0-2-40](./SP-272-release-v0-2-40/README.md)准备发布SP271诊断修复；0.2.39仍为当前正式版本，尚未创建新tag。
+
 2026-11-03：[SP-271-issue-139-runtime-diagnostics](./SP-271-issue-139-runtime-diagnostics/README.md)处理#139 direct runtime诊断新反馈；[SP-270-lookin-core](./SP-270-lookin-core/README.md)为其他负责人独立未整合候选，仅登记占号。
 
 2026-11-02：SP256、SP258–263、SP265–269 十二项独立修复已随 [v0.2.39](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.39)发布，发布提交/tag `026d329e`；main/tag/Release CI、标准Pod lint、双架构制品、Homebrew/skills安装及安装版23项只读smoke通过。正式三端预览和自有清理通过，由 [SP264](./SP-264-release-v0-2-39/README.md)收口。#214暂缓、#246人工依赖部分排除、#224和原私有现场未验证边界保留。
@@ -16,7 +18,7 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，33仓日检22完整/11 partial、两仓HEAD变化。新增SP-221只读资源暂态重试/SP-222有限主控，显式gpt-6.1-sol真实会话创建成功、已通过独立与合后门禁，合本地main a0eebff0；旧13条采用已合main，旧源码/许可缺口保留。
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（271/271 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（272/272 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-10-30（SP251 v0.2.38发布与安装验收完成）
 
