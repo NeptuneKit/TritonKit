@@ -25,7 +25,7 @@ func workspaceShouldUseBoundedActionLoop(
         && workspaceUsesRuntimeBusinessCheck(request)
         && runner.maxSteps > 1
         && initialBusinessCheckpoint?.ready != true
-        && (request.dryModelFixture || providerPreflight.providersReady)
+        && (request.dryModelFixture || (request.enableLLM && providerPreflight.providersReady))
 }
 
 func runWorkspaceActionLoop(
@@ -63,7 +63,7 @@ func runWorkspaceActionLoop(
             providerPreflight: providerPreflight,
             mode: modelLoopMode
         )
-        let modelDecision = try await modelDecisionProvider(modelRequest)
+        let modelDecision = try await workspaceInferenceDecision(dryFixture: request.dryModelFixture, provider: modelDecisionProvider, request: modelRequest)
         let actionCandidate = modelDecision.candidate
         let policyAllowed = workspacePolicyAllowsAction(actionCandidate.action, runner: runner)
         guard policyAllowed else {
@@ -263,8 +263,8 @@ private func workspaceActionLoopRunResponse(
         target: target,
         app: request.app,
         ai: TKWorkspaceRunAI(
-            llmEnabled: true,
-            vlmEnabled: true,
+            llmEnabled: request.enableLLM,
+            vlmEnabled: request.enableVLM,
             actionPolicy: request.actionPolicy,
             providersReady: providerPreflight.providersReady,
             providerStatus: providerPreflight.providerStatus,

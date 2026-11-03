@@ -374,3 +374,5 @@
 | `SP-271-issue-139-runtime-diagnostics` | [`SP-271-issue-139-runtime-diagnostics`](./SP-271-issue-139-runtime-diagnostics/README.md) | 执行 | closed #139新反馈：direct runtime endpoint及恢复上下文，隔离HTTP fixture独立验证 |
 
 | `SP-272-release-v0-2-40` | [`SP-272-release-v0-2-40`](./SP-272-release-v0-2-40/README.md) | 准备 | SP271 direct-runtime诊断修复的新patch，完整preflight/CI/资产安装验收后发布 |
+
+| `SP-273-issue-274-explicit-inference` | [`SP-273-issue-274-explicit-inference`](./SP-273-issue-274-explicit-inference/README.md) | 候选验证 | #274默认关闭/显式推理及有界失败；完整CLI与独立审阅通过，待精确CI/统一040发布 |

@@ -455,3 +455,7 @@
 - [SP-268-issue-139-host-plan](./SP-268-issue-139-host-plan/README.md)：已合并；PR #264 已合入main；8定向/4实际CLI与精确CI通过，v0.2.39已发布且安装通过。
 
 | 已发布，验收完成 | [SP-269-issue-204-controlled-input](./SP-269-issue-204-controlled-input/README.md) | #204新增受控textarea/ambiguity反馈 | PR #268 合入 main026d329e；真实无opt-in与完整门禁/标准Pod/精确CI通过，v0.2.39已发布，安装通过 |
+
+## 2026-11-03 新增可独立交付事项
+
+- [SP-273-issue-274-explicit-inference](./SP-273-issue-274-explicit-inference/README.md)：issue274显式推理与有界失败候选；完整CLI/独立审阅通过，实际CLI/HTTP隔离fixture16/16通过，精确CI后统一040发布。

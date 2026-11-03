@@ -3,17 +3,20 @@ import Foundation
 func workspaceProviderPreflight(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceProviderPreflight {
     let llm = try workspaceLLMProviderPreflight(request)
     let vlm = try workspaceVLMProviderPreflight(request)
-    let providersReady = llm.ready && vlm.ready
-    let providerStatus = providersReady ? "ready" : (llm.ready || vlm.ready ? "partial" : "missing")
+    let anyEnabled = request.enableLLM || request.enableVLM
+    let providersReady = anyEnabled && (llm.ready || !request.enableLLM) && (vlm.ready || !request.enableVLM)
+    let providerStatus = request.dryModelFixture ? "fixture" : (!anyEnabled ? "disabled" : (providersReady ? "ready" : (llm.ready || vlm.ready ? "partial" : "missing")))
 
     let nextActions: [TKWorkspaceNextAction]
-    if providersReady {
+    if !anyEnabled && !request.dryModelFixture {
+        nextActions = [TKWorkspaceNextAction(code: "external_agent_inference", message: "Inference is disabled; use observations with the outer agent, or explicitly opt in with --enable-llm / --enable-vlm (HTTP enableLLM / enableVLM).")]
+    } else if providersReady || request.dryModelFixture {
         nextActions = []
     } else if llm.provider == nil, vlm.provider == nil {
         nextActions = [
             TKWorkspaceNextAction(
                 code: "configure_ai_provider",
-                message: "LLM/VLM are enabled by default; configure a local or approved provider before autonomous actions."
+                message: "Explicitly enabled inference requires a configured local or approved provider before autonomous actions."
             ),
         ]
     } else {
@@ -27,13 +30,16 @@ func workspaceProviderPreflight(_ request: TKWorkspaceRunRequest) throws -> TKWo
         llmProviderStatus: llm.status,
         vlmProvider: vlm.provider,
         vlmProviderStatus: vlm.status,
-        providerEventPhase: workspaceProviderEventPhase(llm: llm, vlm: vlm),
-        bootstrapPhase: workspaceBootstrapPhase(llm: llm, vlm: vlm),
+        providerEventPhase: !anyEnabled ? "disabled" : (providersReady ? "ready" : workspaceProviderEventPhase(llm: llm, vlm: vlm)),
+        bootstrapPhase: !anyEnabled ? "inference_disabled" : (providersReady ? "provider_ready" : workspaceBootstrapPhase(llm: llm, vlm: vlm)),
         nextActions: nextActions
     )
 }
 
 private func workspaceLLMProviderPreflight(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceProviderComponentPreflight {
+    guard request.enableLLM, !request.dryModelFixture else {
+        return TKWorkspaceProviderComponentPreflight(provider: normalizedWorkspaceModelProvider(request.llmProvider), status: "disabled", phase: "llm_disabled", nextAction: nil)
+    }
     guard let rawProvider = workspaceNonEmpty(request.llmProvider)
     else {
         return TKWorkspaceProviderComponentPreflight(
@@ -74,6 +80,9 @@ private func workspaceLLMProviderPreflight(_ request: TKWorkspaceRunRequest) thr
 }
 
 private func workspaceVLMProviderPreflight(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceProviderComponentPreflight {
+    guard request.enableVLM, !request.dryModelFixture else {
+        return TKWorkspaceProviderComponentPreflight(provider: normalizedWorkspaceModelProvider(request.vlmProvider), status: "disabled", phase: "vlm_disabled", nextAction: nil)
+    }
     guard let rawProvider = workspaceNonEmpty(request.vlmProvider)
     else {
         return TKWorkspaceProviderComponentPreflight(

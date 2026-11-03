@@ -56,6 +56,12 @@ The helper writes only compact machine output to stdout:
 
 Progress logs, model loading diagnostics, and download progress must go to stderr. Triton parses stdout and continues to own response validation, coordinate transform, overlay generation, evidence artifacts, and error envelopes.
 
+## Inference deadlines
+
+OpenAI-compatible workspace LLM and VLM POSTs share a 30-second total monotonic transport deadline; ongoing bytes do not reset it. Timeout requests URLSession task cancellation, and callback result storage is synchronized. This does not establish a whole CLI/workspace deadline or immediate remote cancellation. The response still uses URLSession buffering without a new total-response byte cap, so deadline tests do not prove low-memory safety.
+
+MLX helper execution budgets remain 120 seconds for grounding and 3600 seconds for explicit download. Concurrent drains retain at most 1 MiB per stdout/stderr stream; truncated stdout is rejected instead of parsed. Execution timeout is followed by up to 4 seconds of TERM/KILL cleanup and a shared 0.25-second post-exit EOF drain budget. These are component budgets, not a strict end-to-end wall bound. Termination targets the direct helper, not every unknown descendant; fixture-owned descendants are cleaned separately. Preserve provider failure codes and diagnostic stderr without fallback or replay. Distinguish process exit, EOF, output completeness, and real model completion in evidence.
+
 ## Metal Runtime Resource
 
 SwiftPM pulls MLX Swift/C++ sources, but the external helper may not automatically colocate `mlx.metallib` / `default.metallib` beside the helper binary.
@@ -93,19 +99,21 @@ Required behavior:
 
 ## Workspace / Runner Policy
 
-The Agent Mobile Runtime Platform product direction now defaults LLM/VLM on for local `workspace run` and bounded explore flows:
+`workspace run` defaults to outer-agent inference: LLM and VLM are both disabled. The former default-on direction is superseded by [SP-273 / issue #274](../../../docs-linhay/spaces/SP-273-issue-274-explicit-inference/README.md).
 
-- LLM/VLM participates in flow bootstrap, flow recovery, scene understanding, selector disambiguation, Atlas labeling, next-action candidate generation, and workflow seed generation by default
-- direct VLM grounding commands still expose explicit flags/options for focused CLI use
-- local replay / stable regression keeps model participation on; policy can restrict actions to plan-first while LLM/VLM still helps bootstrap the flow, recover from drift, observe, verify, diagnose, and suggest repair
+- CLI `--enable-llm` and `--enable-vlm` independently opt into workspace inference; HTTP `enableLLM` and `enableVLM` are optional and default to `false`.
+- Provider, base URL, model, API-key environment name, helper path, and remote-access consent configure a provider; none enables it. Configured but disabled providers must not receive inference calls or launch/load a local helper/model. Ordinary observation, device control, and evidence remain available to the outer agent without model readiness.
+- Enabling only LLM does not require VLM readiness. A remote endpoint additionally needs `--allow-remote-llm` / `--allow-remote-vlm`; remote consent alone never enables inference. Missing configuration, authentication failures, and timeouts must remain explicit bounded errors, without a hidden local fallback.
+- `--dry-model-fixture` uses fixed synthetic mock events and does not consume online/helper configuration. It is not evidence of real inference.
+- Direct `vlm ground` / `vlm compare` retain default mock behavior; explicitly choosing `--provider` on those dedicated inference commands is itself an inference request. Model download remains a separate explicit action. Deterministic test replay retains its existing `--allow-vlm` gate.
 - pass/fail impact is still controlled by step / runner policy; model conclusions are assistive unless explicitly marked `required`
-- `workspace run` can now call a real local OpenAI-compatible LLM decision provider with `--llm-provider openai-compatible --llm-base-url <local /v1> --llm-model <model>`, can preflight/write evidence for OpenAI-compatible VLM with `--vlm-provider openai-compatible --vlm-base-url <local /v1> --vlm-model <model>`, can preflight/write evidence for local `mlx-swift-lm` VLM with `--vlm-provider mlx-swift-lm --vlm-model <id>` or `--vlm-model-path <path>` plus optional `--vlm-helper <helper>` / `TRITON_MLX_HELPER` / `TRITON_MLX_SWIFT_LM_HELPER` and `--vlm-allow-model-download`, can use VLM grounding before bounded tap actions when the selected observation has a readable local screenshot artifact, converts VLM grounding failures into `evidence/actions/vlm-<step>/vlm-failure.json`, failed action evidence, a `vlm_grounding_failed` recovery proposal, and `inspect_vlm_grounding_failure`, can prove business readiness through either runtime wait (`--business-ready-live-wait`) or runtime assertion provider (`--business-ready-assert` / HTTP `businessReadyAssert=true`), can continue a bounded recovery loop after post-action business checkpoint failure with step-indexed model/action/verify artifacts and Atlas deltas, writes `evidence/model/recovery-<step>.json` artifacts with `kind=triton.workspace.recovery-proposal`, `diagnosis`, `proposal`, evidence refs, policy decision, and next actions, projects the run-local Atlas into `atlas/app-map/`, and can merge that run-local app-map into a long-lived local map with `workspace merge-map` or `POST /workspace/runs/:runId/merge-map`; long-lived maps preserve screen `stateVariants`, expose coverage summaries, and expose state / transition health through `triton map health --json` / HTTP app-map health, including `stateHealth[]`, `transitionHealth[]`, unhealthy refs, suite coverage, replayability, and stable issue codes
+- `workspace run` can now call a real local OpenAI-compatible LLM decision provider with `--enable-llm --llm-provider openai-compatible --llm-base-url <local /v1> --llm-model <model>`, can preflight/write evidence for OpenAI-compatible VLM with `--enable-vlm --vlm-provider openai-compatible --vlm-base-url <local /v1> --vlm-model <model>`, can preflight/write evidence for local `mlx-swift-lm` VLM with `--enable-vlm --vlm-provider mlx-swift-lm --vlm-model <id>` or `--vlm-model-path <path>` plus optional `--vlm-helper <helper>` / `TRITON_MLX_HELPER` / `TRITON_MLX_SWIFT_LM_HELPER` and `--vlm-allow-model-download`, can use VLM grounding before bounded tap actions when the selected observation has a readable local screenshot artifact, converts VLM grounding failures into `evidence/actions/vlm-<step>/vlm-failure.json`, failed action evidence, a `vlm_grounding_failed` recovery proposal, and `inspect_vlm_grounding_failure`, can prove business readiness through either runtime wait (`--business-ready-live-wait`) or runtime assertion provider (`--business-ready-assert` / HTTP `businessReadyAssert=true`), can continue a bounded recovery loop after post-action business checkpoint failure with step-indexed model/action/verify artifacts and Atlas deltas, writes `evidence/model/recovery-<step>.json` artifacts with `kind=triton.workspace.recovery-proposal`, `diagnosis`, `proposal`, evidence refs, policy decision, and next actions, projects the run-local Atlas into `atlas/app-map/`, and can merge that run-local app-map into a long-lived local map with `workspace merge-map` or `POST /workspace/runs/:runId/merge-map`; long-lived maps preserve screen `stateVariants`, expose coverage summaries, and expose state / transition health through `triton map health --json` / HTTP app-map health, including `stateHealth[]`, `transitionHealth[]`, unhealthy refs, suite coverage, replayability, and stable issue codes
 
-Default-on must not weaken execution boundaries:
+Explicit model opt-in must preserve execution boundaries:
 
 - no direct model action execution
 - no model-generated multi-action plan execution
-- no hidden fallback from deterministic selectors to VLM; default VLM fallback must be reported as `usedVLM=true` with confidence, artifacts, and fallback reason
+- no hidden fallback from deterministic selectors to VLM; an explicitly authorized VLM fallback must be reported as `usedVLM=true` with confidence, artifacts, and fallback reason
 - no screenshot or evidence upload to remote models by default
 - every model participation must be evidence-backed and policy-gated
 
@@ -119,7 +127,7 @@ Current local baseline facts:
 
 - `mlx-community/Qwen2-VL-2B-Instruct-4bit` proves local helper execution and evidence wiring.
 - Qwen3-VL / Qwen2.5-VL family models are better candidates for future grounding quality comparison.
-- Real model quality gates must remain manual until latency, output stability, and point accuracy are measured on fixture screenshots.
+- Real model quality remains unverified until latency, output stability, and point accuracy are measured on controlled fixture screenshots. Work requiring human operation or acceptance stays outside the current autonomous delivery scope; historical helper smoke does not prove low-memory stability.
 
 ## Validation
 
@@ -138,7 +146,7 @@ For helper changes:
 swift build --package-path Tools/TritonMLXProvider -c debug --product triton-mlx-provider
 ```
 
-For real local model validation, keep it manual and evidence-backed:
+For explicitly authorized real local model validation, use an isolated fixture with a bounded resource budget and retain evidence; do not add it to default CI:
 
 ```bash
 TRITON_MLX_HELPER=<helper> swift run --package-path CLI triton vlm ground --provider mlx-swift-lm --model <model-id> --image <fixture.png> --target <text> --coordinate-contract <coordinate-contract.json> --evidence-dir <dir> --json
