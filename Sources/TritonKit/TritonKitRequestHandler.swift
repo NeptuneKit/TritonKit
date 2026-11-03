@@ -37,6 +37,12 @@ public class TritonKitRequestHandler: TritonKitDelegate {
 
     public func tritonKit(_ kit: TritonKit, didReceiveMessage message: TKMessage) async -> TKMessage? {
         guard TritonKit.isRuntimeEnabled else {
+            if message.type == .hierarchyDetails {
+                let response = TKHierarchyDetailsResponse(ok: false,
+                    error: .init(code: "runtime_disabled", message: "Inspection requires a Debug runtime"),
+                    outcome: "not_started")
+                return TKMessage(id: message.id, type: message.type, payload: try? JSONEncoder().encode(response))
+            }
             if [.selectionStatus, .selectionClear, .selectionCapabilities].contains(message.type) {
                 return await handleSelection(message)
             }

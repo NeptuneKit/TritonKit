@@ -84,6 +84,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "input-batch-summary",
         "input-result",
         "node-attributes",
+        "node-details",
         "node-object",
         "node-resolution",
         "observe-surface",
@@ -395,6 +396,8 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "prepare-target", "observe"]
     case "device_locked", "device_not_trusted", "ddi_missing", "android_debugging_disabled", "harmony_target_unauthorized", "harmony_debugging_disabled":
         return ["diagnose", "prepare-target"]
+    case "runtime_disabled", "unsupported_platform", "details_partial", "details_failed", "capability_disabled":
+        return ["diagnose", "plan"]
     case "debug_runtime_disabled":
         return ["diagnose", "prepare-target", "observe"]
     case "android_bridge_not_installed", "android_bridge_runner_not_configured":

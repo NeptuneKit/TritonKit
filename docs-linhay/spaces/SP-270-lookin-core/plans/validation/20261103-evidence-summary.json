@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "partial": false,
+  "error": null,
+  "skipped": [],
+  "artifactKinds": [
+    "status",
+    "list",
+    "version",
+    "hierarchy",
+    "screenshot",
+    "screenshot-metadata",
+    "screenshot.runtime",
+    "screenshot.runtime-metadata",
+    "geometry"
+  ],
+  "rawBundle": ".build/sp270-validation-host/live.tritonevidence"
+}

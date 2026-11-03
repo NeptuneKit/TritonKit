@@ -189,6 +189,9 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
     }
 
     public static func recoveryCategories(forFailureCode failureCode: String) -> [String] {
+        if ["runtime_disabled", "unsupported_platform", "details_partial", "details_failed", "capability_disabled"].contains(failureCode) {
+            return ["diagnose", "plan"]
+        }
         if let categories = emulatorResourceRecoveryCategories(forFailureCode: failureCode) { return categories }
         // Highlight recovery observes an existing operation/session before replanning.
         // It never suggests installing a provider, forcing restore, or replaying apply.

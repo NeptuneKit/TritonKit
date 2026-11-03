@@ -6,6 +6,8 @@ import { buildNodePropertyDraft, buildNodePropertyPatchPayload, hasNodePropertyC
 import { changedHierarchyTreeNodeIds, snapshotHierarchyTree } from "../inspect/treeUpdateHighlight";
 import { getInspectorTreeTabs } from "../inspectorTreeTabs";
 import type { HierarchyLayerNode } from "../types";
+import { HierarchyLayers } from "./HierarchyLayers";
+import { NodeImageEvidence } from "./NodeImageEvidence";
 import { InspectorHierarchyTree } from "./InspectorHierarchyTree";
 import "./inspectorPanel.css";
 
@@ -26,6 +28,7 @@ export function InspectorPanel({ nodeId, headerActions, copyText }: InspectorPan
   const [binding, setBinding] = useState<"follow" | "pinned">("follow");
   const [simplify, setSimplify] = useState(true);
   const [tab, setTab] = useState("view");
+  const [projection, setProjection] = useState<"2d" | "3d">("2d");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [draft, setDraft] = useState(() => buildNodePropertyDraft(selected));
   const [request, setRequest] = useState<{ key: string | null; busy: boolean; error?: string }>({ key: null, busy: false });
@@ -125,6 +128,12 @@ export function InspectorPanel({ nodeId, headerActions, copyText }: InspectorPan
       {error && <Notice tone="error" title="层级读取失败">{error}{nodes.length > 0 && " 以下保留上次读取的节点。"}</Notice>}
       {busy && (nodes.length ? <Notice title="更新中">保留上次读取的节点，等待新的结果。</Notice> : <Skeleton label="正在读取层级" lines={3} />)}
       {!target && <EmptyState title="等待连接" description="关联设备流后查看界面层级与节点属性。" />}
+      {target && <Inline gap={1} role="group" aria-label="层级展示方式">
+        <Button variant={projection === "2d" ? "secondary" : "quiet"} aria-pressed={projection === "2d"} onClick={() => setProjection("2d")}>2D 树</Button>
+        <Button variant={projection === "3d" ? "secondary" : "quiet"} aria-pressed={projection === "3d"} onClick={() => setProjection("3d")}>3D 分层</Button>
+      </Inline>}
+      {projection === "3d" && targetKey && session?.scene && <HierarchyLayers key={targetKey} scene={session.scene}
+        selectedNodeId={selectedId} onSelect={id => selectInspectNode(targetKey, id)} onHover={id => hoverInspectNode(targetKey, id)} />}
       {selected && <div className="rhine-inspector-selection">
         <Text as="strong" variant="label">选中：{selected.type || selected.className || "Unknown"}</Text>
         <Inline gap={2}>
@@ -140,6 +149,7 @@ export function InspectorPanel({ nodeId, headerActions, copyText }: InspectorPan
                 { key: "status", label: "状态", value: `${selected.visible === false ? "隐藏" : "可见"} · ${selected.interactive ? "可交互" : "只读"}` },
                 { key: "frame", label: "Frame", value: frame },
               ]} />
+              <NodeImageEvidence node={selected} />
               {draft && <InspectorPropertyEditor node={selected} draft={draft} onChange={updateDraft} />}
               <Divider />
               <div className="rhine-inspector-footer"><Text variant="caption" tone="muted">{hasChanges ? "只读草稿：请使用 CLI 显式应用" : "无改动"}</Text><Inline gap={2}>

@@ -1,5 +1,9 @@
 # 20260619 Lookin Hierarchy Viewer
 
+## 当前后续
+
+2026-11-03 用户明确选择把 Lookin 核心能力内置 TritonKit、沿用现有界面，执行转入 [SP-270](../SP-270-lookin-core/README.md)。当前不接外部 LookinServer；本页记录历史设计，Three.js 与旧设备画布入口不代表当前实现。
+
 ## 背景
 
 用户指出当前 Web Device Hub 的设备画布只展示平面 screenshot，不具备 Lookin 风格的视图层级分层、三维展开和旋转能力。TritonKit 面向 AI agent 与自动化脚本，真实业务控制仍以 CLI / HTTP 机器可读契约为事实入口；Web 只作为可视化 mock 与只读检查器，不承载新的控制闭环。

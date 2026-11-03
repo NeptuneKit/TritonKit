@@ -1,0 +1,230 @@
+{
+  "details": [
+    {
+      "alphaValue": 1,
+      "attributesGroupList": [
+        {
+          "attrSections": [
+            {
+              "attributes": [
+                {
+                  "attrType": 0,
+                  "displayTitle": "Class",
+                  "identifier": "class_name",
+                  "value": "CALayer"
+                },
+                {
+                  "attrType": 0,
+                  "displayTitle": "Address",
+                  "identifier": "address",
+                  "value": "<runtime-address>"
+                }
+              ],
+              "identifier": "class"
+            }
+          ],
+          "identifier": "class",
+          "userCustomTitle": "Class"
+        },
+        {
+          "attrSections": [
+            {
+              "attributes": [
+                {
+                  "attrType": 1,
+                  "displayTitle": "X",
+                  "identifier": "frame_x",
+                  "value": 24
+                },
+                {
+                  "attrType": 1,
+                  "displayTitle": "Y",
+                  "identifier": "frame_y",
+                  "value": 150
+                },
+                {
+                  "attrType": 1,
+                  "displayTitle": "Width",
+                  "identifier": "frame_w",
+                  "value": 240
+                },
+                {
+                  "attrType": 1,
+                  "displayTitle": "Height",
+                  "identifier": "frame_h",
+                  "value": 240
+                }
+              ],
+              "identifier": "frame"
+            },
+            {
+              "attributes": [
+                {
+                  "attrType": 1,
+                  "displayTitle": "X",
+                  "identifier": "bounds_x",
+                  "value": 0
+                },
+                {
+                  "attrType": 1,
+                  "displayTitle": "Y",
+                  "identifier": "bounds_y",
+                  "value": 0
+                },
+                {
+                  "attrType": 1,
+                  "displayTitle": "Width",
+                  "identifier": "bounds_w",
+                  "value": 240
+                },
+                {
+                  "attrType": 1,
+                  "displayTitle": "Height",
+                  "identifier": "bounds_h",
+                  "value": 240
+                }
+              ],
+              "identifier": "bounds"
+            }
+          ],
+          "identifier": "layout",
+          "userCustomTitle": "Layout"
+        },
+        {
+          "attrSections": [
+            {
+              "attributes": [
+                {
+                  "attrType": 3,
+                  "displayTitle": "Hidden",
+                  "identifier": "hidden",
+                  "value": false
+                },
+                {
+                  "attrType": 1,
+                  "displayTitle": "Alpha",
+                  "identifier": "alpha",
+                  "value": 1
+                }
+              ],
+              "identifier": "visibility"
+            },
+            {
+              "attributes": [
+                {
+                  "attrType": 1,
+                  "displayTitle": "Z Position",
+                  "identifier": "z_position",
+                  "value": 0
+                }
+              ],
+              "identifier": "position"
+            },
+            {
+              "attributes": [
+                {
+                  "attrType": 1,
+                  "displayTitle": "Red",
+                  "identifier": "bg_r",
+                  "value": 1
+                },
+                {
+                  "attrType": 1,
+                  "displayTitle": "Green",
+                  "identifier": "bg_g",
+                  "value": 0
+                },
+                {
+                  "attrType": 1,
+                  "displayTitle": "Blue",
+                  "identifier": "bg_b",
+                  "value": 0
+                },
+                {
+                  "attrType": 1,
+                  "displayTitle": "Alpha",
+                  "identifier": "bg_a",
+                  "value": 1
+                }
+              ],
+              "identifier": "bg_color"
+            },
+            {
+              "attributes": [
+                {
+                  "attrType": 1,
+                  "displayTitle": "Corner Radius",
+                  "identifier": "corner_radius",
+                  "value": 7
+                },
+                {
+                  "attrType": 3,
+                  "displayTitle": "Masks To Bounds",
+                  "identifier": "masks_to_bounds",
+                  "value": false
+                }
+              ],
+              "identifier": "corner"
+            },
+            {
+              "attributes": [
+                {
+                  "attrType": 1,
+                  "displayTitle": "Border Width",
+                  "identifier": "border_width",
+                  "value": 0
+                }
+              ],
+              "identifier": "border"
+            },
+            {
+              "attributes": [
+                {
+                  "attrType": 1,
+                  "displayTitle": "Shadow Opacity",
+                  "identifier": "shadow_opacity",
+                  "value": 0
+                },
+                {
+                  "attrType": 1,
+                  "displayTitle": "Shadow Radius",
+                  "identifier": "shadow_radius",
+                  "value": 3
+                }
+              ],
+              "identifier": "shadow"
+            }
+          ],
+          "identifier": "view_layer",
+          "userCustomTitle": "Layer"
+        }
+      ],
+      "boundsValue": [
+        [
+          0,
+          0
+        ],
+        [
+          240,
+          240
+        ]
+      ],
+      "customAttrGroupList": [],
+      "displayItemOid": 12,
+      "failureCode": 0,
+      "frameValue": [
+        [
+          24,
+          150
+        ],
+        [
+          240,
+          240
+        ]
+      ],
+      "hiddenValue": false
+    }
+  ],
+  "ok": true,
+  "partial": false
+}

@@ -18,6 +18,8 @@ public struct TKDisplayItemDetail: Codable {
     public let customAttrGroupList: [TKAttributesGroup]
     public let subitems: [TKDisplayItem]?
     public let failureCode: Int
+    public let failureReason: String?
+    public let screenshotScale: Double?
 
     public init(
         displayItemOid: UInt,
@@ -32,7 +34,9 @@ public struct TKDisplayItemDetail: Codable {
         attributesGroupList: [TKAttributesGroup] = [],
         customAttrGroupList: [TKAttributesGroup] = [],
         subitems: [TKDisplayItem]? = nil,
-        failureCode: Int = 0
+        failureCode: Int = 0,
+        failureReason: String? = nil,
+        screenshotScale: Double? = nil
     ) {
         self.displayItemOid = displayItemOid
         self.groupScreenshot = groupScreenshot
@@ -47,5 +51,7 @@ public struct TKDisplayItemDetail: Codable {
         self.customAttrGroupList = customAttrGroupList
         self.subitems = subitems
         self.failureCode = failureCode
+        self.failureReason = failureReason
+        self.screenshotScale = screenshotScale
     }
 }

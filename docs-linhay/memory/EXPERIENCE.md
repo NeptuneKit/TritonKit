@@ -36,3 +36,4 @@
 - Xcode 大日志诊断、跨行脱敏或 artifact 变化：命中 [Xcode workflow skill](../../.agents/skills/tritonkit-xcode-workflow-takeover/SKILL.md) 的 bounded diagnostics；反例与预算见 [SP259](../spaces/SP-259-issue-248-xcode-diagnostics/plans/validation.md)。
 
 | 推理默认启用、在线慢滴或本地helper管道卡住 | 配置不等于enable；CLI/HTTP分别验证默认零调用；inactivity不等于总deadline；先并发drain再等待，直接PID退出与继承FD的EOF分别有界；fixture不证明真实模型内存或未知后代回收 | [MLX规则](../../.agents/skills/tritonkit-local-mlx-vlm-provider/SKILL.md)、[SP-273验收](../spaces/SP-273-issue-274-explicit-inference/README.md) |
+| Lookin 核心、节点截图或3D检查器 | solo/group语义端到端分离；上传失败保留PNG须继续进入scene；能力开关覆盖新入口；裸层delegate不等于backing view；部分属性成功与全部失败区分；macOS跳过UIKit不算像素验收 | [核心契约与验证边界](../dev/20261103-lookin-core-inspection.md)、[SP-270](../spaces/SP-270-lookin-core/README.md) |

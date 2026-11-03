@@ -102,3 +102,12 @@ test('inspector places refresh and pane actions in one header and keeps source m
   const source = readFileSync(new URL('../src/components/InspectorPanel.tsx', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /height="min\(760px/);
 });
+
+test('inspector offers local 2D/3D projections while retaining source tabs and read-only controls', () => {
+  const html=renderPanel();
+  assert.match(html,/aria-label="层级展示方式"/);
+  assert.match(html,/>2D 树</); assert.match(html,/>3D 分层</);
+  assert.match(html,/aria-pressed="true"/);
+  assert.match(html,/role="tree"/);
+  assert.doesNotMatch(html,/执行 patch|应用到设备/);
+});

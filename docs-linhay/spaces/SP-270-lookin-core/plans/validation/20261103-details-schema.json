@@ -1,0 +1,317 @@
+{
+  "argumentForms": [],
+  "artifacts": [],
+  "cliVersion": "0.1.0-dev",
+  "command": "debug.details",
+  "defaultProviders": [],
+  "deprecatedForMainPath": false,
+  "exitCodeOnFailure": 1,
+  "failureCodes": [
+    "validation_failed",
+    "server_unavailable",
+    "target_unavailable",
+    "target_not_found",
+    "ambiguous_target",
+    "runtime_unavailable",
+    "runtime_ui_interrupted",
+    "runtime_ui_timeout",
+    "runtime_ui_busy",
+    "runtime_ui_circuit_open",
+    "request_timeout",
+    "invalid_payload",
+    "request_failed",
+    "hierarchy_unavailable",
+    "node_not_found",
+    "runtime_disabled",
+    "unsupported_platform",
+    "details_partial",
+    "details_failed",
+    "capability_disabled"
+  ],
+  "failureShape": "{ ok:false, error:{ code: validation_failed|server_unavailable|target_unavailable|runtime_unavailable|request_failed|hierarchy_unavailable|node_not_found, message, endpoint?, hint?, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+  "fingerprint": "e91c54bc1836e6373a98dfa7988d978544860dbf2cbd214ba51d21fba927d381",
+  "fingerprintAlgorithm": "sha256-sorted-json-without-fingerprint",
+  "fullSchemaCommand": [
+    "triton",
+    "schema",
+    "--command",
+    "debug.details",
+    "--json"
+  ],
+  "inheritsDefaultsFrom": [],
+  "jsonlEvents": [],
+  "nextCommands": [
+    "triton observe current --json",
+    "triton schema --command debug --json",
+    "triton doctor --json",
+    "triton target resolve <selector> --json"
+  ],
+  "oneOfRequiredOptionSets": [],
+  "oneOfRequiredOptions": [],
+  "optionalOptions": [
+    "--target",
+    "--device",
+    "--host",
+    "--port",
+    "--screenshots",
+    "--include-attributes",
+    "--no-include-attributes",
+    "--max-pixel-count",
+    "--format",
+    "--json",
+    "--language",
+    "--lang"
+  ],
+  "options": [
+    {
+      "defaultValue": "127.0.0.1",
+      "description": "Triton server host",
+      "name": "--host",
+      "required": false,
+      "type": "String"
+    },
+    {
+      "defaultValue": "19421",
+      "description": "Triton server port",
+      "name": "--port",
+      "required": false,
+      "type": "Int"
+    },
+    {
+      "defaultValue": "triton:local",
+      "description": "Runtime target selector; --device is an alias for --target and accepts target ids, iOS simulator UDIDs, booted, or the only connected target when omitted",
+      "name": "--target/--device",
+      "required": false,
+      "type": "String"
+    },
+    {
+      "description": "Repeat --oid or --id for 1...8 distinct positive object IDs from the selected runtime",
+      "name": "--oid/--id",
+      "required": true,
+      "type": "[UInt]"
+    },
+    {
+      "defaultValue": "both",
+      "description": "Node detail PNG modes; solo excludes descendants, group includes them",
+      "name": "--screenshots",
+      "required": false,
+      "type": "none|solo|group|both"
+    },
+    {
+      "defaultValue": "true",
+      "description": "Include live attribute groups in node details",
+      "name": "--include-attributes",
+      "required": false,
+      "type": "Bool"
+    },
+    {
+      "defaultValue": "false",
+      "description": "Skip live attributes in node details",
+      "name": "--no-include-attributes",
+      "required": false,
+      "type": "Bool"
+    },
+    {
+      "defaultValue": "262144",
+      "description": "Maximum pixels per node image, 1...1048576",
+      "name": "--max-pixel-count",
+      "required": false,
+      "type": "Int"
+    },
+    {
+      "defaultValue": "json",
+      "description": "Output format",
+      "name": "--format",
+      "required": false,
+      "type": "text|json"
+    },
+    {
+      "defaultValue": "false",
+      "description": "Alias for --format json",
+      "name": "--json",
+      "required": false,
+      "type": "Bool"
+    },
+    {
+      "defaultValue": "TRITON_LANGUAGE or en",
+      "description": "Human-readable output language",
+      "name": "--language/--lang",
+      "required": false,
+      "type": "en|zh"
+    }
+  ],
+  "outputContracts": [
+    {
+      "fields": [
+        {
+          "description": "True only when every requested node completes successfully",
+          "name": "ok",
+          "required": true,
+          "type": "Bool"
+        },
+        {
+          "description": "Some nodes succeeded and some failed; false does not imply success",
+          "name": "partial",
+          "required": true,
+          "type": "Bool"
+        },
+        {
+          "description": "Bounded per-object detail results for the selected runtime target",
+          "name": "details",
+          "required": true,
+          "type": "[TKDisplayItemDetail]"
+        },
+        {
+          "description": "Requested view or layer OID, scoped to the current runtime process",
+          "name": "details[].displayItemOid",
+          "required": true,
+          "type": "UInt"
+        },
+        {
+          "description": "Base64 PNG containing the selected layer without descendants",
+          "name": "details[].soloScreenshot",
+          "required": false,
+          "type": "Data?"
+        },
+        {
+          "description": "Base64 PNG containing the selected layer and visible descendants",
+          "name": "details[].groupScreenshot",
+          "required": false,
+          "type": "Data?"
+        },
+        {
+          "description": "Raster scale after the pixel budget is applied",
+          "name": "details[].screenshotScale",
+          "required": false,
+          "type": "Double?"
+        },
+        {
+          "description": "Current frame geometry",
+          "name": "details[].frameValue",
+          "required": true,
+          "type": "CGRect"
+        },
+        {
+          "description": "Current local bounds",
+          "name": "details[].boundsValue",
+          "required": true,
+          "type": "CGRect"
+        },
+        {
+          "description": "Live attributes, empty when not requested",
+          "name": "details[].attributesGroupList",
+          "required": true,
+          "type": "[TKAttributesGroup]"
+        },
+        {
+          "description": "Zero for successful detail; nonzero requires inspecting failureReason",
+          "name": "details[].failureCode",
+          "required": true,
+          "type": "Int"
+        },
+        {
+          "description": "Stable per-node failure reason",
+          "name": "details[].failureReason",
+          "required": false,
+          "type": "String?"
+        },
+        {
+          "description": "Global validation/platform failure or partial/failed summary",
+          "name": "error",
+          "required": false,
+          "type": "TKHierarchyDetailsError?"
+        },
+        {
+          "description": "Stable machine-readable error code",
+          "name": "error.code",
+          "required": false,
+          "type": "String"
+        },
+        {
+          "description": "Human-readable failure explanation",
+          "name": "error.message",
+          "required": false,
+          "type": "String"
+        },
+        {
+          "description": "Runtime UI admission outcome when capture could not begin",
+          "name": "outcome",
+          "required": false,
+          "type": "String?"
+        },
+        {
+          "description": "Runtime UI health attached to admission failures",
+          "name": "uiHealth",
+          "required": false,
+          "type": "TKRuntimeUIHealthSnapshot?"
+        }
+      ],
+      "format": "json",
+      "kind": "node-details",
+      "model": "TKHierarchyDetailsResponse",
+      "selector": "hierarchy.details"
+    }
+  ],
+  "outputFormats": [
+    "text",
+    "json",
+    "jsonl"
+  ],
+  "outputSemantics": "Use debug only when workflow commands such as observe, act, verify, or evidence are too high-level. Retired raw root commands are available through this explicit debug surface.",
+  "projectionVersion": 1,
+  "recoveryCommands": [
+    {
+      "category": "observe",
+      "command": "triton observe current --json"
+    },
+    {
+      "category": "diagnose",
+      "command": "triton schema --command debug --json"
+    },
+    {
+      "category": "diagnose",
+      "command": "triton doctor --json"
+    },
+    {
+      "category": "prepare-target",
+      "command": "triton target resolve <selector> --json"
+    }
+  ],
+  "requiredOptions": [
+    "--oid"
+  ],
+  "requirementsResolution": "conservative-root-and-ancestor-union",
+  "requiresConfirmation": false,
+  "requiresHierarchy": false,
+  "requiresServer": true,
+  "requiresTarget": true,
+  "retryable": false,
+  "runtimeScope": "embedded|host-adapter",
+  "safetyPolicy": "False/none defaults in the full schema do not prove absence of an inherited requirement or side effect. Unknown outcomes must not be automatically replayed; inspect the result and verify the business postcondition before recovery. Output semantics are inherited verbatim and may include sibling context.",
+  "schemaVersion": 1,
+  "selectorConstraints": [],
+  "sideEffect": "temporary_layer_visibility_for_capture",
+  "sideEffectCases": [
+    {
+      "argumentCount": 0,
+      "argumentPrefix": [],
+      "optionValues": {
+        "--screenshots": "none"
+      },
+      "sideEffect": "readonly",
+      "sourceCommand": "debug.details"
+    },
+    {
+      "argumentCount": 0,
+      "argumentPrefix": [],
+      "optionValues": {
+        "--screenshots": "group"
+      },
+      "sideEffect": "readonly",
+      "sourceCommand": "debug.details"
+    }
+  ],
+  "summary": "Read bounded live node details with separate solo/group images",
+  "surfaceLayer": "raw-engine",
+  "surfaceRationale": "Explicit P23 raw/debug surface for low-level engine inspection"
+}

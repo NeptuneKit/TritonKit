@@ -612,3 +612,44 @@ test("rejects unsupported /web/host-hierarchy platform with readonly unsupported
     },
   });
 });
+
+test('hydrates solo and group separately and does not duplicate a solo slice as subtree evidence', async () => {
+  const soloRef='33333333-3333-3333-3333-333333333333', groupRef='44444444-4444-4444-4444-444444444444';
+  const solo=pngBytes(6,4), group=pngBytes(8,6);
+  const dataServer=await createFakeRuntimeDataServer({[soloRef]:solo,[groupRef]:group});
+  try {
+    const rect={x:0,y:0,width:20,height:20};
+    const tritonPath=await createFakeTritonScript({stdout:JSON.stringify({ok:true,scene:{platform:'ios',rootId:'node',viewport:{width:20,height:20},nodes:[{
+      id:'node',type:'CALayer',name:'Layer',frame:rect,depth:0,visible:true,interactive:false,color:'#ccc',
+      slice:{available:true,mode:'solo-screenshot-ref',source:'triton-runtime-data-ref',dataRef:soloRef},
+      visualSources:[{kind:'layerOwnContents',dataRef:soloRef,rect},{kind:'subtreeSnapshot',dataRef:groupRef,rect,capturedBy:'CALayer.render'}],
+    }]}}),outputTemplate:'unused'});
+    const response=await invokeMiddleware(createIosSimulatorBridgeMiddleware({tritonPath,runtimeDataBaseURL:dataServer.baseURL}),{
+      method:'POST',url:'/web/host-hierarchy?platform=ios&target=SYNTHETIC'});
+    assert.equal(response.statusCode,200);
+    const node=JSON.parse(response.body).scene.nodes[0];
+    assert.deepEqual(node.visualSources.map(s=>s.kind),['layerOwnContents','subtreeSnapshot']);
+    assert.equal(node.visualSources[0].dataUrl,`data:image/png;base64,${solo.toString('base64')}`);
+    assert.equal(node.visualSources[1].dataUrl,`data:image/png;base64,${group.toString('base64')}`);
+  } finally { await dataServer.close(); }
+});
+
+test('inline PNG scenes retain solo/group identity without requesting runtime data refs', async () => {
+  const rect={x:0,y:0,width:20,height:20};
+  const solo=`data:image/png;base64,${pngBytes(6,4).toString('base64')}`;
+  const group=`data:image/png;base64,${pngBytes(8,6).toString('base64')}`;
+  const base={type:'CALayer',name:'Layer',frame:rect,depth:0,visible:true,interactive:false,color:'#ccc'};
+  const tritonPath=await createFakeTritonScript({stdout:JSON.stringify({ok:true,scene:{platform:'ios',rootId:'solo',viewport:{width:20,height:20},nodes:[
+    {...base,id:'solo',slice:{available:true,mode:'solo-screenshot-inline',source:'triton-runtime-inline-png',dataUrl:solo},visualSources:[{kind:'layerOwnContents',dataUrl:solo,rect},{kind:'subtreeSnapshot',dataUrl:group,rect,capturedBy:'CALayer.render'}]},
+    {...base,id:'group',slice:{available:true,mode:'group-screenshot-inline',source:'triton-runtime-inline-png',dataUrl:group}},
+  ]}}),outputTemplate:'unused'});
+  const response=await invokeMiddleware(createIosSimulatorBridgeMiddleware({tritonPath,runtimeDataBaseURL:'http://127.0.0.1:1'}),{
+    method:'POST',url:'/web/host-hierarchy?platform=ios&target=SYNTHETIC'});
+  assert.equal(response.statusCode,200);
+  const [soloNode,groupNode]=JSON.parse(response.body).scene.nodes;
+  assert.deepEqual(soloNode.visualSources.map(s=>s.kind),['layerOwnContents','subtreeSnapshot']);
+  assert.equal(soloNode.visualSources[0].dataUrl,solo);
+  assert.equal(groupNode.visualSources[0].kind,'subtreeSnapshot');
+  assert.equal(groupNode.visualSources[0].capturedBy,'CALayer.render');
+  assert.equal(groupNode.visualSources[0].dataUrl,group);
+});
