@@ -18,3 +18,7 @@
 独占 `CLIRuntimeTransportPlans.swift`、`CLISchemaBootstrapCommands.swift` 的 plan schema 块、独立 `HostGoalWorkflowPlanTests.swift` 与本 space。主控维护共享索引/memory、串行构建与 Git。以纯构造器矩阵、parser round-trip、只读实际 CLI 验证；不执行生成命令。证据保留 `.build/sp268/`。
 
 验证记录：[20261102-validation](plans/20261102-validation.md)。可复跑只读 CLI fixture：[verify-readonly-plan.py](plans/verify-readonly-plan.py)。
+
+## 2026-11-03 后续诊断反馈
+
+closed #139新增direct-runtime WebView transport错误envelope反馈，独立进入[SP271](../SP-271-issue-139-runtime-diagnostics/README.md)。后条fixture证明actual HTTP routing正确，不断言本space doctor/plan修复回归；原验收与发布证据保留。

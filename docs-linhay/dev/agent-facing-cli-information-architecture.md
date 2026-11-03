@@ -619,3 +619,9 @@ legacy `oneOfRequiredOptions`同时存在单列表与singleton alternatives编�
 ### Side-effect metadata
 
 Missing subcommand effects are `unknown`, including when decoding an older schema without the field. Neither `unknown` nor an unmatched condition proves readonly behavior or permission to execute. `sideEffectCases` carries audited conditional metadata with `sourceCommand`, positional prefix/count and known parsed option values; apply a case only when every condition is known and satisfied for that exact source command. Preserve these fields when consuming compact schemas. An absent conditional confirmation value inherits the base; confirmation metadata is not execution authorization. Actual command validation, confirmation guards and unknown-outcome/no-replay rules remain authoritative. This release audits act/app/sim/build; it does not claim all other command effects are classified.
+
+## Direct-runtime WebView 错误上下文（2026-11-03）
+
+`webview snapshot --runtime-base-url` 的错误 endpoint 应复用实际 client 的 route 解析，完整 HTTP(S) URL 不能再拼接 server host/port。direct-runtime失败保留 `action/platform/target`，恢复提示指向该平台 embedded HTTP runtime；不推荐与实际请求无关的 `serve`/iOS 动作。非2xx provider响应仍按原 WebView envelope 保留错误与 candidates/outcome/uiHealth，HTTP状态不能丢弃provider上下文。错误文字不是路由取证：用独立runtime/server listener的请求计数和bound非监听socket分别验证可达provider与连接失败，保持stdout单JSON和非零退出。
+
+[SP271](../spaces/SP-271-issue-139-runtime-diagnostics/README.md)保留旧版RED、候选与真实进程fixture。上述验收仅证明CLI诊断和HTTP转发边界，不证明真实App有DOM provider或原现场恢复。
