@@ -86,3 +86,5 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 ## Reporting
 
 State which surfaces were aligned, which validations passed, and whether CocoaPods was only linted or also pushed to a pod repo/trunk. If CocoaPods publishing is not performed, say that explicitly.
+
+- Web Node测试中的多个Vite createServer可能共用node_modules/.vite缓存；出现冷缓存rename ENOTEMPTY时保留失败与进程/路径证据，按共享缓存串行原则用--test-concurrency=1运行package.json原完整测试清单并绑定同候选CLI。不能仅凭缓存预热后的偶然重跑通过宣称并发问题已修复，不删除用例或跳过失败门禁。
