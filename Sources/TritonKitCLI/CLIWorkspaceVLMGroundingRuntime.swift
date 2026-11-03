@@ -74,7 +74,8 @@ func workspaceVLMGroundingForAction(
     vlmGroundingProvider: TKWorkspaceVLMGroundingProvider,
     artifactIndex: Int = 0
 ) async throws -> TKVLMGroundResponse? {
-    guard actionCandidate.action == "tap",
+    guard request.enableVLM, !request.dryModelFixture,
+          actionCandidate.action == "tap",
           providerPreflight.vlmProviderStatus == "ready",
           let provider = providerPreflight.vlmProvider,
           let image = workspaceObservationScreenshotPath(observation, runDir: runDir)

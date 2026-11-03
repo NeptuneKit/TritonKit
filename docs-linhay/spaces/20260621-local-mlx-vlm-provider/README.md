@@ -1,5 +1,17 @@
 # Local MLX Swift VLM Provider
 
+## Current governance — 2026-11-03
+
+[Issue #274](https://github.com/NeptuneKit/TritonKit/issues/274) and [SP-273](../SP-273-issue-274-explicit-inference/README.md) govern the current explicit-inference change. Both local inference (including llama-server) and OpenAI-compatible inference default to disabled; the outer agent consumes Triton observation/control/evidence. Saving provider/model/endpoint/API-key environment/helper configuration or granting remote access does not enable inference or authorize a daemon launch/model load.
+
+Workspace opt-in is CLI `--enable-llm` / `--enable-vlm`, or HTTP optional `enableLLM` / `enableVLM` (default `false`), independently. An LLM-only run does not need VLM readiness. `--dry-model-fixture` remains synthetic mock-only and does not consume online/helper configuration. Dedicated `vlm ground/compare --provider ...` requests retain their explicit inference meaning and default mock; model download and deterministic replay `--allow-vlm` remain separately authorized. Provider errors stay bounded and visible, with no hidden local fallback.
+
+BDD: configured-but-disabled providers receive no inference requests or helper launches; enabling only the requested provider preserves that separation; basic observation/control/evidence works without model readiness. New implementation and validation are tracked in SP-273, not asserted passed here. The reported llama-server process ownership, startup trigger, and low-memory slowdown have not been reproduced or attributed. Historical helper smoke does not establish low-memory stability. Human-dependent validation is outside the current autonomous delivery scope, without converting unknowns into passes.
+
+SP-273 budget contract: online POST transport has a 30-second total deadline with task cancellation requested on timeout, not an end-to-end command bound or a response-memory limit. MLX grounding/download retain 120/3600-second execution budgets plus up to 4 seconds of direct-helper TERM/KILL cleanup and a shared 0.25-second EOF drain budget; stdout/stderr retention is 1 MiB each and truncated stdout fails. Unknown descendants are not guaranteed terminated. Controlled timeout/pipe fixtures do not establish real-model inference, download, or low-memory acceptance.
+
+The P17–P23 plan below is historical scope and evidence. Its manual-gate references describe the original plan, not a new request for human work. Any later workspace default-on direction is superseded by the explicit-inference contract above.
+
 ## Background
 
 TritonKit already has a VLM grounding contract for screenshot + target text -> normalized point -> runtime-point evidence. The current providers are deterministic mock and OpenAI-compatible HTTP. This space adds a local MLX Swift provider track without making model inference part of the default runner path.

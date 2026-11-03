@@ -119,46 +119,59 @@ struct TKMLXSwiftLMHelperRequest: Codable, Equatable {
 }
 
 func runMLXSwiftLMHelper(path: String, requestURL: URL, timeoutSeconds: TimeInterval = 120) throws -> String {
-    let process = Process()
-    process.executableURL = URL(fileURLWithPath: path)
-    process.arguments = ["ground", "--request", requestURL.path]
+    try runMLXHelperCommand(
+        path: path, operation: "ground", requestURL: requestURL, timeoutSeconds: timeoutSeconds,
+        launchFailureCode: "mlx_model_load_failed", failureCode: "mlx_generation_failed"
+    )
+}
 
-    let stdout = Pipe()
-    let stderr = Pipe()
-    process.standardOutput = stdout
-    process.standardError = stderr
-
-    let semaphore = DispatchSemaphore(value: 0)
-    process.terminationHandler = { _ in semaphore.signal() }
+/// Reuse the host executor's concurrent capped pipe drains, TERM/KILL cleanup,
+/// and bounded post-exit EOF wait. The execution timeout is followed by the host
+/// executor's cleanup budget; arbitrary descendant process trees are not killed.
+func runMLXHelperCommand(
+    path: String,
+    operation: String,
+    requestURL: URL,
+    timeoutSeconds: TimeInterval,
+    launchFailureCode: String,
+    failureCode: String
+) throws -> String {
+    guard timeoutSeconds.isFinite, timeoutSeconds > 0 else {
+        throw TKVLMGroundingFailure(code: failureCode, message: "Invalid helper timeout", hint: "Use a positive finite timeout")
+    }
+    let command = TKHostCommand(
+        executable: URL(fileURLWithPath: path).path,
+        arguments: [operation, "--request", requestURL.path],
+        defaultTimeoutSeconds: timeoutSeconds
+    )
     do {
-        try process.run()
-    } catch {
+        let result = try runHostCommand(command, maximumOutputBytes: 1_048_576)
+        guard !result.stdoutTruncated else {
+            throw TKVLMGroundingFailure(
+                code: failureCode, message: "mlx-swift-lm helper stdout exceeded the 1048576-byte limit",
+                hint: "Write compact machine output to stdout and progress logs to stderr"
+            )
+        }
+        return result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+    } catch let failure as TKVLMGroundingFailure {
+        throw failure
+    } catch HostCommandRunError.launchFailed(let message) {
         throw TKVLMGroundingFailure(
-            code: "mlx_model_load_failed",
-            message: "Failed to launch mlx-swift-lm helper at \(path): \(error)",
-            hint: "Check TRITON_MLX_HELPER and executable permissions"
+            code: launchFailureCode, message: "Failed to launch mlx-swift-lm helper at \(path): \(message)",
+            hint: "Check --helper or TRITON_MLX_HELPER and executable permissions"
         )
-    }
-
-    if semaphore.wait(timeout: .now() + timeoutSeconds) == .timedOut {
-        process.terminate()
+    } catch HostCommandRunError.nonZeroExit(_, let result) {
         throw TKVLMGroundingFailure(
-            code: "mlx_generation_failed",
-            message: "mlx-swift-lm helper timed out after \(Int(timeoutSeconds)) seconds",
-            hint: "Use a smaller local model or inspect helper logs"
-        )
-    }
-
-    let stdoutText = String(data: stdout.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-    let stderrText = String(data: stderr.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-    guard process.terminationStatus == 0 else {
-        throw TKVLMGroundingFailure(
-            code: "mlx_generation_failed",
-            message: "mlx-swift-lm helper exited with status \(process.terminationStatus): \(stderrText.trimmingCharacters(in: .whitespacesAndNewlines))",
+            code: failureCode,
+            message: "mlx-swift-lm helper exited with status \(result.exitCode): \(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines))",
             hint: "Inspect helper stderr and model availability"
         )
+    } catch {
+        throw TKVLMGroundingFailure(
+            code: failureCode, message: "mlx-swift-lm helper \(operation) failed: \(error)",
+            hint: "Inspect helper logs, timeout, and output completeness"
+        )
     }
-    return stdoutText.trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
 func fakeMLXSwiftLMRawOutput(target: String) throws -> String {

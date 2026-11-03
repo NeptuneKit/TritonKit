@@ -353,46 +353,10 @@ private func runMLXModelDownloadHelper(
     let requestURL = tempDirectory.appendingPathComponent("request.json")
     try writeVLMJSON(request, to: requestURL)
 
-    let process = Process()
-    process.executableURL = URL(fileURLWithPath: path)
-    process.arguments = ["download", "--request", requestURL.path]
-
-    let stdout = Pipe()
-    let stderr = Pipe()
-    process.standardOutput = stdout
-    process.standardError = stderr
-
-    let semaphore = DispatchSemaphore(value: 0)
-    process.terminationHandler = { _ in semaphore.signal() }
-    do {
-        try process.run()
-    } catch {
-        throw TKVLMGroundingFailure(
-            code: "mlx_model_download_failed",
-            message: "Failed to launch mlx-swift-lm helper at \(path): \(error)",
-            hint: "Check --helper or TRITON_MLX_HELPER"
-        )
-    }
-
-    if semaphore.wait(timeout: .now() + timeoutSeconds) == .timedOut {
-        process.terminate()
-        throw TKVLMGroundingFailure(
-            code: "mlx_model_download_failed",
-            message: "mlx-swift-lm helper download timed out after \(Int(timeoutSeconds)) seconds",
-            hint: "Use a smaller model or inspect helper logs"
-        )
-    }
-
-    let stdoutText = String(data: stdout.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-    let stderrText = String(data: stderr.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-    guard process.terminationStatus == 0 else {
-        throw TKVLMGroundingFailure(
-            code: "mlx_model_download_failed",
-            message: "mlx-swift-lm helper exited with status \(process.terminationStatus): \(stderrText.trimmingCharacters(in: .whitespacesAndNewlines))",
-            hint: "Inspect helper stderr and model availability"
-        )
-    }
-    let trimmed = stdoutText.trimmingCharacters(in: .whitespacesAndNewlines)
+    let trimmed = try runMLXHelperCommand(
+        path: path, operation: "download", requestURL: requestURL, timeoutSeconds: timeoutSeconds,
+        launchFailureCode: "mlx_model_download_failed", failureCode: "mlx_model_download_failed"
+    )
     guard !trimmed.isEmpty else {
         return TKMLXModelDownloadHelperResponse(modelPath: request.outputPath, bytesDownloaded: nil)
     }

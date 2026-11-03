@@ -1,0 +1,78 @@
+# SP273 / issue274 独立产品与测试审阅
+
+时间：2026-11-03T05:16:48.068851+00:00。
+工作区：`<worktrees>/SP-273-issue-274-explicit-inference`。基线：`9578782a7cbfd855228f8e996b07d93437725870`。
+
+## 结论与审阅范围
+
+对冻结的产品与测试候选未发现已证实 P1/P2 阻塞，可以进入主控完整回归、schema/public skills、精确PR CI与发布验收。不是主线合并或发布通过结论。本agent只曾负责四份文档，没有实现本次产品；本报告独立审阅产品/测试与既有host executor依赖，不将自己的文档写回当独立产品证据。本次未build、未Git写、未操作设备。
+
+21个实现/测试文件与两个worker已冻结manifest逐个hash匹配；另审阅Demo smoke新增enable flags，共22文件。`git diff --binary -- <这22文件>`（只含tracked变更）SHA256 `90598c75b38a8600b9eeffda0c83dbb33a1710690556a76189eacafb2602b5be`。完整文件集hash（排序后每项 UTF-8 `path + NUL + sha256 + newline`，含untracked新增源码/测试）`85649c49ac53e206942873e75093fe867e3ccd664dd3532a0bebd8e4b77cab2a`；下面逐文件内容hash为事实入口。
+
+## 检查结果
+
+- 默认关闭贯通CLI flag、HTTP optional bool解码/默认false、内部request initializer、resolvingRunID与resolvingTarget。未发现仅给provider/baseURL/model/helper/API-env或allow-remote即可进入推理的路径。disabled preflight在配置解析/构造provider前返回，避免坏配置阻碍基础观察。
+- provider readiness只要求已启用组件；LLM-only且VLM disabled可进入LLM，不要求VLM ready。只启用VLM不会开启配置中的LLM。模型循环明确需要enableLLM；VLM grounding另有enableVLM与!dryModelFixture guard。VLM-only目前允许preflight，不代表本workspace会自行产生LLM动作候选；专用ground/compare入口保持。
+- 同步/异步run、bounded action loop、candidate action决策各处均约束模型循环；dryModelFixture通过workspaceInferenceDecision明确用synthetic default，default provider的dry-fixture额外保护，VLM helper路径也禁止。已有explicit execute-actions、app lifecycle及业务检查契约保留；dry-model-fixture不是全命令无设备副作用的总开关，不扩大为该承诺。
+- fixture/mock默认decision的usedVLM由true改false，避免没有真实视觉推理仍声明参与；相关显式VLM grounding证据保持独立。
+- postAIJSON在task.resume前建立单调总deadline，completion result以lock保护且闭包持有存储，取消后的晚回调不访问已失效局部栈。timeout路径调用cancel并抛URLError.timedOut，不返回半个响应。completion成功后才读取结果；provider层仍解释HTTP状态并保留LLM/VLM各自typed failure，不增加retry/fallback。URLSession dataTask通常单次completion，未发现此补丁新增竞态；取消是请求，不承诺远端立即停止。
+- MLX ground/download复用并发capped drains，避免wait-before-drain死锁；stdout截断明确拒绝解析。直接launch失败保留原操作failure code；非零退出保留exit/stderr，下载统一mlx_model_download_failed、ground launch/model与generation failure区分；EOF incomplete经既有HostProcessOutputFailure保留incomplete/exit/byte计数并映射操作failure。timeout不伪造成功且不重放。
+- host executor未在本diff被改：执行预算之后TERM 2s、必要KILL再2s、共享0.25s EOF drain。只针对direct child，未知后代不保证终止。Process launch和调度不是严格总wall实时保证；输出最多保留1MiB每stream但持续生产仍要drain，不等于模型内存上限。
+- 既有action/business/visual regression测试主要新增显式flags，没有删除业务断言；default run断言改为disabled/external-agent语义符合新要求。既有Demo e2e入口加两个flags以保留原模型链路覆盖。
+
+## 测试证据与局限
+
+已读取workspace-green终态86 tests /11 suites PASS，inference-green终态28 tests /7 suites PASS，并核对worker manifest一致。它们是主控/实现worker执行结果，本审阅没有重跑，也不把有重叠的测试计数相加为全量。旧RED与初始locator/build失败仍保留。
+
+新增覆盖包括CLI默认及显式flags、HTTP nil/false/true和非法类型、request传播、坏配置disabled不验证、VLM-only不调用LLM、dryfixture绕过online/helper、failure仅一次；transport stall/drip总时限取消和503原body/status；helper管道容量、忽略TERM直接PID结束、ground/download继承FD、stdout超限、exit42/resource stderr。已有VLM/cache/compare测试用于回归。
+
+未见确定性“completion与deadline恰好同刻”压力测试；源码同步保护清晰，现有stall/drip取消已覆盖基本晚回调生命周期，属于覆盖局限而非已证实缺陷。生产30s由短注入预算测机制，实际120s/3600s未等待完整时长，不能写成真实模型完整验收。真实在线API、下载、模型质量、低内存llama-server现场及未知后代回收均未证明；在线buffering没有总响应bytecap，这些限制已告知主控并写入边界。完整CLI/root、公开schema/打包与必要CI由主控继续。
+
+## 文档补强（非独立审阅对象）
+
+仅更新获分配的4文档：online30s total deadline/cancel请求与缓冲限制；MLX120/3600s执行、最多4s收尾+共享0.25s EOF drain、每stream1MiB、截断拒绝与未知后代边界。未宣称实现验收/发布完成。check-docs.sh通过（273spaces、28结构测试）、git diff --check通过。
+
+## 精确产品/测试manifest
+
+```text
+991009c2c43b39254410c20b988e813338c2bb260289f396276ac859128085f2  CLI/Tests/TritonKitCLITests/InferenceDeadlineTests.swift
+5e3dbe623c5927c0f5f04fb4ca303cb70d00cb8ccfda127747a232701c238044  CLI/Tests/TritonKitCLITests/InferenceHelperDeadlineTests.swift
+126c6274140233c238449a3c154f721fe35cad35e0a74aa5ea8609e1dc0b8fc5  CLI/Tests/TritonKitCLITests/WorkspaceActionExecutionTests.swift
+64289d6b46549c7ca85b771b5eaa001d8774cd77d00287a8574fdf5c0c62640b  CLI/Tests/TritonKitCLITests/WorkspaceBusinessReadinessTests.swift
+fcefb1eb5c4f6d3267332a4729bfbec13735c90918e0b519c0664f35c345a634  CLI/Tests/TritonKitCLITests/WorkspaceInferenceOptInTests.swift
+7244487836200fc4dd6e30250a7769f38426ebd4d4f9db34d68ebca4404770fb  CLI/Tests/TritonKitCLITests/WorkspaceRunTests.swift
+8d61c5b0b9e53ff992439fc751725e9fbc0d5a21db824529f6f9b5b7e784ec9d  CLI/Tests/TritonKitCLITests/WorkspaceVisualFeedbackTests.swift
+00deee8dee03b31c02b15ce56013ea93284fff785dda25f807726026c7ad022f  Sources/TritonKitCLI/CLIAIHTTPTransport.swift
+f171dfd9702251a51efd9afacdec81c0dcf4fe0ce5b169b3133c365429cefcab  Sources/TritonKitCLI/CLISchemaWorkspaceCommands.swift
+333f02abed681b10b018266ca725fd1cf6df84488eb5fb7fe4736c17fdf1a055  Sources/TritonKitCLI/CLIVLMMlxSwiftLMRuntime.swift
+190b3a056520132c37d3370ef295caa6b2bde97585261c3c6782dcdab3e3aa1c  Sources/TritonKitCLI/CLIVLMModelCacheRuntime.swift
+de380dcd7c2d431cdd20da0ece924524a4ffa837032602fccd35b5f02e6235ca  Sources/TritonKitCLI/CLIVLMRuntime.swift
+4cce6948283787682c81e57c92ae722fede45008a7eebcd718055395198be9ce  Sources/TritonKitCLI/CLIWorkspaceActionLoopRuntime.swift
+15ca5c449bdbe9171c8122385ba81dadf3fd5a818bc3a207937e61052606aa58  Sources/TritonKitCLI/CLIWorkspaceCommands.swift
+bc0248e9fbb5228268cbd6b37b4e88ad9326b59b871bccaac7ac86bfeacf559c  Sources/TritonKitCLI/CLIWorkspaceHTTPRuntime.swift
+52581513237c1330c805181f79edc51b22d9b702b52e3507091edda661fe7258  Sources/TritonKitCLI/CLIWorkspaceModelDecisionRuntime.swift
+8c3950dbf06010284aec2e9b4a6f6864ceb51280b80250d17517052c49f4cbcc  Sources/TritonKitCLI/CLIWorkspaceProviderPreflightRuntime.swift
+18193ca5968e9670718a773d2d012c9a087eaacc8d99c96293bf5a2206f494a6  Sources/TritonKitCLI/CLIWorkspaceRunModels.swift
+5ac8c4f931a8dde5199fa5365832861e972a0b358a788be1f0478c919fa0be40  Sources/TritonKitCLI/CLIWorkspaceRuntime.swift
+196620f6bda22a28da9355a7978bfd9755ef60f8724b285260895cbb1312268a  Sources/TritonKitCLI/CLIWorkspaceTargetRuntime.swift
+ee57dc0d4a323f21ef616d65ce647b7caf027cde5a2379788497fe6226792471  Sources/TritonKitCLI/CLIWorkspaceVLMGroundingRuntime.swift
+97296b9744a043da55ba9b265defc96fbf53da7b2f2f261316478214fa448f2c  docs-linhay/scripts/verify-ios-demo-e2e-smoke.sh
+```
+
+## 已读测试日志hash
+
+```text
+6c0f97e3440c24c345db37accb9caa6b9eded6bf8fd3df10703d7965bbbb72f7  workspace-green.log
+2c7b67b1fcf26ff29b05f2af87973e2d24b8f0de1d7bcfe4616548a454156993  inference-green.log
+ffaa249b07497225d0162e4ba195dabd62fe3f483f7ddd95fa2925f25adf64c8  opt-in-red.log
+f33a5eeca004b97738e88f7b4d8346e3969b49d4308b0653c2ce5c2c20cab13e  inference-red-reliable-pid.log
+```
+
+## 文档冻结hash
+
+```text
+82201da3ab213edb652c70ad56883c7375b763ba939b398c9639e88aa810b702  .agents/skills/tritonkit-local-mlx-vlm-provider/SKILL.md
+2a540e1a87905e864cc2b61c31310fc28d8ede11a3ee06506a99b77da08a2184  docs-linhay/dev/ai-cli-readable-control.md
+55e726baad40a8de24aeb215a0196cbb9f8f7c2852b1776dbe03ea8f3f84847a  docs-linhay/spaces/20260621-local-mlx-vlm-provider/README.md
+561f61eac85ac0e41b3243a8ec94c9f6d52b45d1d2cfb3bb6618afa71a085a2d  TritonKit.skills/tritonkit-emulator-cli-takeover/references/current-implemented-surface.md
+```

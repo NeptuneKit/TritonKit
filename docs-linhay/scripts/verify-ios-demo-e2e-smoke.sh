@@ -304,6 +304,8 @@ jq -e '.choices[0].message.content | contains("\"Primary\"")' "$out_dir/llm-prob
   --business-ready-text "Complex harness: 1" \
   --business-ready-assert \
   --execute-actions \
+  --enable-llm \
+  --enable-vlm \
   --llm-provider openai-compatible \
   --llm-base-url "http://127.0.0.1:$llm_port/v1" \
   --llm-model ios-demo-primary-action \
