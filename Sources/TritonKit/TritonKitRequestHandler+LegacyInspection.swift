@@ -10,7 +10,7 @@ extension TritonKitRequestHandler {
     func handleLegacyInspection(_ message: TKMessage) async -> TKMessage? {
         switch message.type {
         case .hierarchyDetails:
-            return handleHierarchyDetails(message)
+            return await handleHierarchyDetails(message)
         case .allAttrGroups:
             return await handleAllAttrGroups(message)
         case .modifyAttribute:
@@ -22,10 +22,6 @@ extension TritonKitRequestHandler {
         default:
             return unsupportedMessage(message)
         }
-    }
-
-    func handleHierarchyDetails(_ message: TKMessage) -> TKMessage? {
-        TKMessage(id: message.id, type: .hierarchyDetails, payload: try? JSONEncoder().encode([TKDisplayItemDetail]()))
     }
 
     func handleAllAttrGroups(_ message: TKMessage) async -> TKMessage? {
@@ -171,7 +167,7 @@ private func resolveNodePatchTargets(_ object: AnyObject) -> (view: UIView?, lay
         return (view, view.layer)
     }
     if let layer = object as? CALayer {
-        return (layer.delegate as? UIView, layer)
+        return (layer.tk_hostView, layer)
     }
     if let controller = object as? UIViewController {
         return (controller.view, controller.view.layer)

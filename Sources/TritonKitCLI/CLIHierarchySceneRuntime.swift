@@ -1,6 +1,7 @@
 import ArgumentParser
 import CoreGraphics
 import Foundation
+import ImageIO
 import TritonKit
 import TritonKitShared
 
@@ -148,7 +149,6 @@ private func appendLegacyIosHierarchyNode(
     currentControllerOID: UInt? = nil
 ) {
     if let maxNodes, nodes.count >= maxNodes { return }
-    guard item.frame.width > 0, item.frame.height > 0 else { return }
     let oid = item.layerObject?.oid ?? item.viewObject?.oid ?? UInt(nodes.count)
     let controllerOID = item.hostViewControllerObject?.oid
     let shouldInsertController = controllerOID != nil && controllerOID != currentControllerOID
@@ -210,8 +210,9 @@ private func appendLegacyIosHierarchyNode(
     let visible = !item.isHidden && alpha > 0.01 && frame.width > 0 && frame.height > 0
     let interactive = legacyIosHierarchyNodeIsInteractive(type: type, item: item)
     let color = legacyIosHierarchyNodeColor(item: item, interactive: interactive)
-    let slice = legacyIosHierarchyNodeSlice(item)
-    let visualSources = legacyIosHierarchyVisualSources(frame: frame, slice: slice)
+    let images = legacyIosHierarchyImages(item: item, frame: frame)
+    let slice = images.slice
+    let visualSources = images.visualSources
     nodes.append(TKHierarchyLayerNode(
         id: id,
         parentId: controllerId ?? parentId,
@@ -322,15 +323,15 @@ private func legacyIosViewport(displayItems: [TKDisplayItem], viewportOverride: 
 }
 
 private func legacyIosHierarchyClassName(_ item: TKDisplayItem) -> String {
-    item.layerObject?.classChainList.first
-        ?? item.viewObject?.classChainList.first
+    item.viewObject?.classChainList.first
+        ?? item.layerObject?.classChainList.first
         ?? item.hostViewControllerObject?.classChainList.first
         ?? "UIView"
 }
 
 private func legacyIosHierarchyClassChain(_ item: TKDisplayItem) -> [String]? {
-    item.layerObject?.classChainList
-        ?? item.viewObject?.classChainList
+    item.viewObject?.classChainList
+        ?? item.layerObject?.classChainList
         ?? item.hostViewControllerObject?.classChainList
 }
 
@@ -364,8 +365,9 @@ private func legacyIosHierarchyNodeStyle(item: TKDisplayItem, type: String, colo
     )
 }
 
-private func legacyIosHierarchyViewMetadata(item: TKDisplayItem, type: String) -> TKHierarchyViewMetadata {
-    TKHierarchyViewMetadata(
+private func legacyIosHierarchyViewMetadata(item: TKDisplayItem, type: String) -> TKHierarchyViewMetadata? {
+    guard item.viewObject != nil else { return nil }
+    return TKHierarchyViewMetadata(
         className: item.viewObject?.classChainList.first ?? type,
         isHidden: item.isHidden,
         alpha: Double(item.alpha),
@@ -419,41 +421,58 @@ private func tkRect(_ rect: CGRect) -> TKRect {
     )
 }
 
-private func legacyIosHierarchyNodeSlice(_ item: TKDisplayItem) -> TKHierarchyNodeSlice {
-    guard let ref = normalizedLegacyString(item.screenshotRef) else {
-        return TKHierarchyNodeSlice(
-            available: false,
-            mode: "node-screenshot-ref",
-            source: "triton-runtime-data-ref"
-        )
+private func legacyIosHierarchyImages(item: TKDisplayItem, frame: TKRect)
+    -> (slice: TKHierarchyNodeSlice, visualSources: [TKHierarchyVisualSource]) {
+    // A failed upload leaves PNG bytes in the DTO. Resolve each image once and
+    // preserve its capture semantics regardless of its transport representation.
+    let solo = legacyIosHierarchyImage(ref: item.soloScreenshotRef, bytes: item.soloScreenshot, mode: "solo")
+    let group = legacyIosHierarchyImage(ref: item.groupScreenshotRef, bytes: item.groupScreenshot, mode: "group")
+    let legacy = normalizedLegacyString(item.screenshotRef) != normalizedLegacyString(item.soloScreenshotRef)
+        ? legacyIosHierarchyImage(ref: item.screenshotRef, bytes: nil, mode: "node") : nil
+    let slice = solo ?? group ?? legacy
+        ?? TKHierarchyNodeSlice(available: false, mode: "node-screenshot-ref", source: "triton-runtime-data-ref")
+    var sources: [TKHierarchyVisualSource] = []
+    if let solo {
+        sources.append(TKHierarchyVisualSource(kind: "layerOwnContents", dataRef: solo.dataRef, dataUrl: solo.dataUrl, rect: frame))
     }
-    return TKHierarchyNodeSlice(
-        available: true,
-        mode: "node-screenshot-ref",
-        source: "triton-runtime-data-ref",
-        dataRef: ref
-    )
+    if let group {
+        sources.append(TKHierarchyVisualSource(kind: "subtreeSnapshot", dataRef: group.dataRef, dataUrl: group.dataUrl, rect: frame, capturedBy: "CALayer.render"))
+    } else if let legacy {
+        // Historical screenshotRef was produced by subtree capture. Never relabel it solo.
+        sources.append(TKHierarchyVisualSource(kind: "subtreeSnapshot", dataRef: legacy.dataRef, rect: frame, capturedBy: "UIView.render"))
+    }
+    if sources.isEmpty {
+        sources.append(TKHierarchyVisualSource(kind: "styledFallback", rect: frame, reason: "No usable node PNG or data reference available"))
+    }
+    return (slice, sources)
 }
 
-private func legacyIosHierarchyVisualSources(frame: TKRect, slice: TKHierarchyNodeSlice) -> [TKHierarchyVisualSource] {
-    guard slice.available, slice.dataRef != nil || slice.dataUrl != nil else {
-        return [
-            TKHierarchyVisualSource(
-                kind: "styledFallback",
-                rect: frame,
-                reason: "No subtree snapshot dataRef available"
-            )
-        ]
+private func legacyIosHierarchyImage(ref: String?, bytes: Data?, mode: String) -> TKHierarchyNodeSlice? {
+    if let ref = normalizedLegacyString(ref) {
+        return TKHierarchyNodeSlice(available: true, mode: "\(mode)-screenshot-ref", source: "triton-runtime-data-ref", dataRef: ref)
     }
-    return [
-        TKHierarchyVisualSource(
-            kind: "subtreeSnapshot",
-            dataRef: slice.dataRef,
-            dataUrl: slice.dataUrl,
-            rect: frame,
-            capturedBy: "UIView.render"
-        )
-    ]
+    guard let bytes, let url = legacyIosHierarchyInlinePNGURL(bytes) else { return nil }
+    return TKHierarchyNodeSlice(available: true, mode: "\(mode)-screenshot-inline", source: "triton-runtime-inline-png", dataUrl: url)
+}
+
+private func legacyIosHierarchyInlinePNGURL(_ data: Data) -> String? {
+    // Check encoded and decoded bounds before allocating a pixel buffer. The SDK
+    // additionally bounds total hierarchy capture pixels across all node images.
+    guard data.count <= 4 * 1024 * 1024,
+          data.starts(with: [137, 80, 78, 71, 13, 10, 26, 10]),
+          data.suffix(12).elementsEqual([0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]) else { return nil }
+    let options = [kCGImageSourceShouldCache: false] as CFDictionary
+    guard let source = CGImageSourceCreateWithData(data as CFData, options),
+          let type = CGImageSourceGetType(source), type as String == "public.png",
+          CGImageSourceGetCount(source) == 1,
+          CGImageSourceGetStatus(source) == .statusComplete,
+          CGImageSourceGetStatusAtIndex(source, 0) == .statusComplete,
+          let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, options) as? [CFString: Any],
+          let width = properties[kCGImagePropertyPixelWidth] as? Int,
+          let height = properties[kCGImagePropertyPixelHeight] as? Int,
+          width > 0, height > 0, width <= 1_048_576 / height,
+          CGImageSourceCreateImageAtIndex(source, 0, [kCGImageSourceShouldCacheImmediately: true] as CFDictionary) != nil else { return nil }
+    return "data:image/png;base64," + data.base64EncodedString()
 }
 
 private func legacyIosHierarchyRenderHints(

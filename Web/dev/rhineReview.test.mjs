@@ -12,9 +12,9 @@ const { default: catalog } = await server.ssrLoadModule('/design/catalog.tsx');
 const { parseReviewState } = await server.ssrLoadModule('/node_modules/@linhey/rhine-design/review/state.ts');
 const { makeWorkbenchFixture } = await server.ssrLoadModule('/design/fixtures.ts');
 
-test('review declares all four real surfaces, read-only role and recoverable synthetic states', () => {
+test('review declares all real surfaces, read-only role and recoverable synthetic states', () => {
   assert.deepEqual(catalog.widths, [400, 520, 880, 1280]);
-  assert.deepEqual(catalog.scenes.map(scene => scene.id), ['run-atlas', 'device-preview', 'hierarchy-inspector', 'workspace']);
+  assert.deepEqual(catalog.scenes.map(scene => scene.id), ['run-atlas', 'device-preview', 'hierarchy-inspector', 'workspace', 'layer-inspector']);
   for (const scene of catalog.scenes) assert.equal(scene.dimensions.find(d => d.id === 'role').options[0].id, 'reader');
   const state = parseReviewState('#scene=run-atlas&d.state=error&theme=arknights&width=400&zoom=2', catalog);
   assert.equal(state.dimensions.state, 'error');

@@ -63,5 +63,19 @@ export default defineReview({
         dispose() {},
       };
     },
-  }, ...pageScenes],
+  }, ...pageScenes, {
+    id: 'layer-inspector', title: '3D 分层检查', group: '只读工作台',
+    source: 'Web/src/components/HierarchyLayers.tsx',
+    description: 'SP-270：自有只读分层画布，复用真实组件与合成图像；树与图层共享选择。',
+    validation: '旋转/间距/双向选择/缺图/窄屏/缩放；只使用独立层素材，不用整棵子树冒充。',
+    dimensions: [
+      { id: 'state', label: '状态', options: [{id:'ready',label:'正常'},{id:'missing-images',label:'缺少独立截图'},{id:'empty',label:'空结果'},{id:'long',label:'长文本'},{id:'deep',label:'深层树'}] },
+      { id: 'platform', label: '平台', options: [{id:'ios',label:'iOS'},{id:'android',label:'Android'},{id:'harmony',label:'Harmony'}] },
+      { id: 'role', label: '角色', options: [{id:'reader',label:'只读观察者'}] },
+    ],
+    async setup(context) {
+      const { LayerScene } = await import('./LayerScene'); context.signal.throwIfAborted();
+      return {render: () => <LayerScene platform={context.dimensions.platform as DevicePlatform} state={context.dimensions.state} />, dispose() {}};
+    },
+  }],
 });

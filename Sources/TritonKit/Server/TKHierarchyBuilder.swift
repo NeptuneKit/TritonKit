@@ -35,6 +35,7 @@ public enum TKHierarchyBuilder {
             var context = TKCollectionBudgetState(limits: .init(maxNodes: maxNodes,
                 maxDepth: max(0, maxDepth - 1), maxChildren: maxChildrenPerNode, timeoutMilliseconds: timeoutMilliseconds))
             var remainingScreenshotItems = max(0, maxScreenshotItems)
+            var remainingScreenshotPixels = 4_194_304
             let windows: [UIWindow]
             if #available(iOS 15.0, *) {
                 windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap { $0.windows }
@@ -45,7 +46,8 @@ public enum TKHierarchyBuilder {
             for window in businessWindows.prefix(count) {
                 if context.isExhausted() { break }
                 if let item = collectLayerData(from: window.layer, depth: 0, context: &context,
-                    includeScreenshots: includeScreenshots, remainingScreenshotItems: &remainingScreenshotItems) {
+                    includeScreenshots: includeScreenshots, remainingScreenshotItems: &remainingScreenshotItems,
+                    remainingScreenshotPixels: &remainingScreenshotPixels) {
                     data.append(item)
                 }
             }
@@ -65,7 +67,8 @@ public enum TKHierarchyBuilder {
         let bounds: CGRect
         let isKeyWindow: Bool
         let bgCGColor: CGColor?
-        let classChain: [String]
+        let viewClassChain: [String]?
+        let layerClassChain: [String]
         let hostViewController: UIViewController?
         let vcClassChain: [String]?
         let layerPosition: CGPoint
@@ -86,7 +89,8 @@ public enum TKHierarchyBuilder {
         let layerShadowRadius: CGFloat
         let layerShadowOffset: CGSize
         let layerShadowColor: CGColor?
-        let screenshot: Data?
+        let groupScreenshot: Data?
+        let soloScreenshot: Data?
         let children: [LayerData]
     }
 
@@ -96,20 +100,23 @@ public enum TKHierarchyBuilder {
         depth: Int,
         context: inout TKCollectionBudgetState,
         includeScreenshots: Bool,
-        remainingScreenshotItems: inout Int
+        remainingScreenshotItems: inout Int,
+        remainingScreenshotPixels: inout Int
     ) -> LayerData? {
         guard context.admit(depth: depth) else { return nil }
-        guard let view = layer.tk_hostView else { return nil }
+        let view = layer.tk_hostView
+        guard !layer.tk_isInspectorOverlay else { return nil }
         let rawChildren = layer.sublayers ?? []
         let count = context.childCount(rawChildren.count)
         var children: [LayerData] = []
         for child in rawChildren.prefix(count) {
             if context.isExhausted() { break }
             if let data = collectLayerData(from: child, depth: depth + 1, context: &context,
-                includeScreenshots: includeScreenshots, remainingScreenshotItems: &remainingScreenshotItems) { children.append(data) }
+                includeScreenshots: includeScreenshots, remainingScreenshotItems: &remainingScreenshotItems,
+                    remainingScreenshotPixels: &remainingScreenshotPixels) { children.append(data) }
         }
 
-        let hostViewController = view.tk_hostViewController
+        let hostViewController = view?.tk_hostViewController
         let vcChain: [String]? = hostViewController.map { vc in
             var chain: [String] = []
             var cls: AnyClass = type(of: vc)
@@ -121,8 +128,9 @@ public enum TKHierarchyBuilder {
             return chain
         }
 
-        let absoluteFrame = view.superview?.convert(layer.frame, to: nil) ?? layer.frame
-        let screenshot: Data?
+        let absoluteFrame = layer.tk_inspectionFrame
+        var groupScreenshot: Data?
+        var soloScreenshot: Data?
         if !context.isExhausted(), shouldCaptureScreenshot(
             includeScreenshots: includeScreenshots,
             remaining: remainingScreenshotItems,
@@ -131,12 +139,18 @@ public enum TKHierarchyBuilder {
             frame: absoluteFrame,
             depth: depth
         ) {
-            screenshot = captureScreenshot(for: view)
-            if screenshot != nil {
-                remainingScreenshotItems -= 1
+            let pixelLimit = min(260_000, remainingScreenshotPixels / 2)
+            if pixelLimit > 0 {
+                let group = TKLayerScreenshotCapture.capture(layer, solo: false, maxPixelCount: pixelLimit)
+                remainingScreenshotPixels -= group.pixelCount
+                groupScreenshot = group.data
+                if !context.isExhausted(), !Task.isCancelled {
+                    let solo = TKLayerScreenshotCapture.capture(layer, solo: true, maxPixelCount: pixelLimit)
+                    remainingScreenshotPixels -= solo.pixelCount
+                    soloScreenshot = solo.data
+                }
+                if groupScreenshot != nil || soloScreenshot != nil { remainingScreenshotItems -= 1 }
             }
-        } else {
-            screenshot = nil
         }
 
         return LayerData(
@@ -148,7 +162,8 @@ public enum TKHierarchyBuilder {
             bounds: layer.bounds,
             isKeyWindow: (view as? UIWindow)?.isKeyWindow ?? false,
             bgCGColor: layer.backgroundColor,
-            classChain: view.tk_classChain,
+            viewClassChain: view?.tk_classChain,
+            layerClassChain: layer.tk_classChain,
             hostViewController: hostViewController,
             vcClassChain: vcChain,
             layerPosition: layer.position,
@@ -169,7 +184,8 @@ public enum TKHierarchyBuilder {
             layerShadowRadius: layer.shadowRadius,
             layerShadowOffset: layer.shadowOffset,
             layerShadowColor: layer.shadowColor,
-            screenshot: screenshot,
+            groupScreenshot: groupScreenshot,
+            soloScreenshot: soloScreenshot,
             children: children
         )
     }
@@ -187,34 +203,17 @@ public enum TKHierarchyBuilder {
     private static func shouldCaptureScreenshot(
         includeScreenshots: Bool,
         remaining: Int,
-        view: UIView,
+        view: UIView?,
         layer: CALayer,
         frame: CGRect,
         depth: Int
     ) -> Bool {
         guard includeScreenshots, remaining > 0 else { return false }
         guard depth > 0 else { return false }
-        guard !view.isHidden, !layer.isHidden, view.alpha > 0.01, layer.opacity > 0.01 else { return false }
-        guard frame.width >= 4, frame.height >= 4, view.bounds.width >= 4, view.bounds.height >= 4 else { return false }
-        let scale = view.window?.screen.scale ?? UIScreen.main.scale
-        let pixelArea = view.bounds.width * view.bounds.height * scale * scale
-        guard pixelArea <= 260_000 else { return false }
+        guard !(view?.isHidden ?? false), !layer.isHidden, (view?.alpha ?? 1) > 0.01, layer.opacity > 0.01 else { return false }
+        guard frame.width >= 4, frame.height >= 4, layer.bounds.width >= 4, layer.bounds.height >= 4 else { return false }
+        guard frame.width.isFinite, frame.height.isFinite else { return false }
         return true
-    }
-
-    @MainActor
-    private static func captureScreenshot(for view: UIView) -> Data? {
-        let bounds = view.bounds
-        guard bounds.width >= 1, bounds.height >= 1 else { return nil }
-        let format = UIGraphicsImageRendererFormat.default()
-        format.scale = view.window?.screen.scale ?? UIScreen.main.scale
-        format.opaque = view.isOpaque
-        let renderer = UIGraphicsImageRenderer(bounds: bounds, format: format)
-        return renderer.pngData { context in
-            context.cgContext.translateBy(x: 0, y: bounds.height)
-            context.cgContext.scaleBy(x: 1, y: -1)
-            view.layer.render(in: context.cgContext)
-        }
     }
 
     // MARK: - Item Building (no MainActor needed)
@@ -224,18 +223,16 @@ public enum TKHierarchyBuilder {
         indent: Int = 0
     ) -> TKDisplayItem {
         let registry = TKObjectRegistry.shared
-        let viewOid = data.view.map { registry.register($0) } ?? 0
         let layerOid = registry.register(data.layer)
-
-        let viewObj = TKObject(
-            oid: viewOid,
-            memoryAddress: data.view.map { "\(Unmanaged.passUnretained($0).toOpaque())" } ?? "",
-            classChainList: data.classChain
-        )
+        let viewObj = data.view.map { view in
+            TKObject(oid: registry.register(view),
+                     memoryAddress: "\(Unmanaged.passUnretained(view).toOpaque())",
+                     classChainList: data.viewClassChain ?? [])
+        }
         let layerObj = TKObject(
             oid: layerOid,
             memoryAddress: "\(Unmanaged.passUnretained(data.layer).toOpaque())",
-            classChainList: data.classChain
+            classChainList: data.layerClassChain
         )
 
         var vcObj: TKObject? = nil
@@ -281,10 +278,11 @@ public enum TKHierarchyBuilder {
             layerShadowRadius: data.layerShadowRadius,
             layerShadowOffset: data.layerShadowOffset,
             layerShadowColor: shadowColor,
-            shouldCaptureImage: data.screenshot != nil,
+            shouldCaptureImage: data.groupScreenshot != nil || data.soloScreenshot != nil,
             indentLevel: indent
         )
-        item.groupScreenshot = data.screenshot
+        item.groupScreenshot = data.groupScreenshot
+        item.soloScreenshot = data.soloScreenshot
         return item
     }
 }

@@ -5,15 +5,15 @@ import UIKit
 public enum TKAttributeGroupsBuilder {
 
     public static func build(for layer: CALayer) -> [TKAttributesGroup] {
-        guard let view = layer.tk_hostView else { return [] }
+        let view = layer.tk_hostView
 
         var groups: [TKAttributesGroup] = []
 
         // Class group
-        groups.append(buildClassGroup(for: view))
+        groups.append(buildClassGroup(for: view.map { $0 as NSObject } ?? layer))
 
         // Layout group
-        groups.append(buildLayoutGroup(for: layer, view: view))
+        groups.append(buildLayoutGroup(for: layer))
 
         // ViewLayer group
         groups.append(buildViewLayerGroup(for: layer, view: view))
@@ -34,7 +34,7 @@ public enum TKAttributeGroupsBuilder {
 
     // MARK: - Group Builders
 
-    private static func buildClassGroup(for view: UIView) -> TKAttributesGroup {
+    private static func buildClassGroup(for object: NSObject) -> TKAttributesGroup {
         let section = TKAttributesSection(
             identifier: "class",
             attributes: [
@@ -42,20 +42,20 @@ public enum TKAttributeGroupsBuilder {
                     identifier: "class_name",
                     displayTitle: "Class",
                     attrType: 0,
-                    value: .string(NSStringFromClass(type(of: view)))
+                    value: .string(NSStringFromClass(type(of: object)))
                 ),
                 TKAttribute(
                     identifier: "address",
                     displayTitle: "Address",
                     attrType: 0,
-                    value: .string("\(Unmanaged.passUnretained(view).toOpaque())")
+                    value: .string("\(Unmanaged.passUnretained(object).toOpaque())")
                 )
             ]
         )
         return TKAttributesGroup(identifier: "class", userCustomTitle: "Class", attrSections: [section])
     }
 
-    private static func buildLayoutGroup(for layer: CALayer, view: UIView) -> TKAttributesGroup {
+    private static func buildLayoutGroup(for layer: CALayer) -> TKAttributesGroup {
         var sections: [TKAttributesSection] = []
 
         // Frame section
@@ -85,19 +85,22 @@ public enum TKAttributeGroupsBuilder {
         return TKAttributesGroup(identifier: "layout", userCustomTitle: "Layout", attrSections: sections)
     }
 
-    private static func buildViewLayerGroup(for layer: CALayer, view: UIView) -> TKAttributesGroup {
+    private static func buildViewLayerGroup(for layer: CALayer, view: UIView?) -> TKAttributesGroup {
         var sections: [TKAttributesSection] = []
 
         // Visibility
-        sections.append(TKAttributesSection(
-            identifier: "visibility",
-            attributes: [
-                TKAttribute(identifier: "hidden", displayTitle: "Hidden", attrType: 3, value: .bool(layer.isHidden)),
-                TKAttribute(identifier: "alpha", displayTitle: "Alpha", attrType: 1, value: .number(Double(layer.opacity))),
-                TKAttribute(identifier: "clips_to_bounds", displayTitle: "Clips To Bounds", attrType: 3, value: .bool(view.clipsToBounds)),
-                TKAttribute(identifier: "user_interaction", displayTitle: "User Interaction", attrType: 3, value: .bool(view.isUserInteractionEnabled))
-            ]
-        ))
+        var visibility = [
+            TKAttribute(identifier: "hidden", displayTitle: "Hidden", attrType: 3, value: .bool(layer.isHidden)),
+            TKAttribute(identifier: "alpha", displayTitle: "Alpha", attrType: 1, value: .number(Double(layer.opacity)))
+        ]
+        if let view {
+            visibility.append(TKAttribute(identifier: "clips_to_bounds", displayTitle: "Clips To Bounds", attrType: 3, value: .bool(view.clipsToBounds)))
+            visibility.append(TKAttribute(identifier: "user_interaction", displayTitle: "User Interaction", attrType: 3, value: .bool(view.isUserInteractionEnabled)))
+        }
+        sections.append(TKAttributesSection(identifier: "visibility", attributes: visibility))
+        sections.append(TKAttributesSection(identifier: "position", attributes: [
+            TKAttribute(identifier: "z_position", displayTitle: "Z Position", attrType: 1, value: .number(Double(layer.zPosition)))
+        ]))
 
         // Background Color
         if let bg = TKColor(uiColor: layer.backgroundColor.flatMap { UIColor(cgColor: $0) }) {
@@ -138,15 +141,16 @@ public enum TKAttributeGroupsBuilder {
             ]
         ))
 
-        // Tag
-        sections.append(TKAttributesSection(
-            identifier: "tag",
-            attributes: [
-                TKAttribute(identifier: "tag", displayTitle: "Tag", attrType: 2, value: .number(Double(view.tag)))
-            ]
-        ))
-
-        return TKAttributesGroup(identifier: "view_layer", userCustomTitle: "View & Layer", attrSections: sections)
+        // A standalone CALayer does not have UIView tags or interaction state.
+        if let view {
+            sections.append(TKAttributesSection(
+                identifier: "tag",
+                attributes: [
+                    TKAttribute(identifier: "tag", displayTitle: "Tag", attrType: 2, value: .number(Double(view.tag)))
+                ]
+            ))
+        }
+        return TKAttributesGroup(identifier: "view_layer", userCustomTitle: view == nil ? "Layer" : "View & Layer", attrSections: sections)
     }
 
     private static func buildImageViewGroup(for imageView: UIImageView) -> TKAttributesGroup {

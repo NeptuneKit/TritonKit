@@ -3,6 +3,7 @@ import { after, test } from "node:test";
 import { createServer } from "vite";
 
 const viteServer = await createServer({
+  configFile: false,
   optimizeDeps: { noDiscovery: true },
   appType: "custom",
   server: {
@@ -250,4 +251,36 @@ test("resolveEvidenceSources returns all sources including legacy bridge", () =>
   assert.equal(sources.length, 2);
   assert.equal(sources[0].kind, "styledFallback");
   assert.equal(sources[1].kind, "subtreeSnapshot");
+});
+
+test('solo slice retains layer-own semantics and duplicate image refs are not repeated', () => {
+  const node = { id: 'solo', frame: {x:0,y:0,width:50,height:50}, slice: {
+    available: true, mode: 'solo-screenshot-ref', dataRef: 'solo-ref', dataUrl: 'data:image/png;base64,AAA=' },
+    visualSources: [{kind:'layerOwnContents',dataRef:'solo-ref',dataUrl:'data:image/png;base64,AAA=',rect:{x:0,y:0,width:50,height:50}}] };
+  assert.equal(effectiveVisualSources(node).length, 1);
+  assert.equal(resolveDefaultMaterialSource({...node,visualSources:[]})?.kind, 'layerOwnContents');
+});
+test('an unresolved dataRef is not proof of a displayable plane image', () => {
+  const node = { id:'unresolved', frame:{x:0,y:0,width:50,height:50}, visualSources:[
+    {kind:'layerOwnContents',dataRef:'not-hydrated',rect:{x:0,y:0,width:50,height:50}}] };
+  assert.equal(resolveDefaultMaterialSource(node), null);
+});
+
+test('inline solo remains own contents and inline group stays evidence without duplicate sources', () => {
+  const frame = {x:0,y:0,width:50,height:50};
+  const dataUrl = 'data:image/png;base64,AAA=';
+  const solo = {id:'inline',frame,slice:{available:true,mode:'solo-screenshot-inline',source:'triton-runtime-inline-png',dataUrl}};
+  assert.equal(resolveDefaultMaterialSource(solo)?.dataUrl, dataUrl);
+  assert.deepEqual(effectiveVisualSources({...solo,visualSources:[{kind:'layerOwnContents',rect:frame,dataUrl}]}).map(s=>s.kind), ['layerOwnContents']);
+  const group = {...solo,slice:{...solo.slice,mode:'group-screenshot-inline'}};
+  assert.equal(resolveDefaultMaterialSource(group), null);
+  assert.deepEqual(effectiveVisualSources(group).map(s=>s.kind), ['subtreeSnapshot']);
+});
+
+test('supplementary group evidence does not contradict an available solo material', () => {
+  const node={id:'both',depth:1,visible:true,frame:{x:0,y:0,width:1,height:1},visualSources:[
+    {kind:'layerOwnContents',dataUrl:'data:image/png;base64,AAA=',rect:{x:0,y:0,width:1,height:1}},
+    {kind:'subtreeSnapshot',dataUrl:'data:image/png;base64,BBB=',rect:{x:0,y:0,width:1,height:1},capturedBy:'CALayer.render'}]};
+  const claim=computeParityClaim({nodes:[node]});
+  assert.equal(claim.level,'layerOwnContents'); assert.deepEqual(claim.reasons,[]);
 });

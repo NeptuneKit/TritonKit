@@ -2,20 +2,21 @@ import type { HierarchyLayerNode, HierarchyScene, HierarchyVisualSource } from "
 
 export function effectiveVisualSources(node: HierarchyLayerNode): HierarchyVisualSource[] {
   const sources = [...(node.visualSources ?? [])];
-  if (node.slice?.available && (node.slice.dataUrl || node.slice.dataRef)) {
-    sources.push({
-      kind: "subtreeSnapshot",
-      dataUrl: node.slice.dataUrl,
-      dataRef: node.slice.dataRef,
-      rect: node.frame,
-      capturedBy: "unknown",
-    });
+  const slice = node.slice;
+  if (slice?.available && (slice.dataUrl || slice.dataRef)) {
+    const kind = ["solo-screenshot-ref", "solo-screenshot-inline"].includes(slice.mode ?? "") ? "layerOwnContents" : "subtreeSnapshot";
+    const duplicate = sources.some(source => source.kind === kind &&
+      ((slice.dataRef && "dataRef" in source && source.dataRef === slice.dataRef)
+        || (slice.dataUrl && "dataUrl" in source && source.dataUrl === slice.dataUrl)));
+    if (!duplicate) sources.push(kind === "layerOwnContents"
+      ? { kind, dataUrl: slice.dataUrl, dataRef: slice.dataRef, rect: node.frame }
+      : { kind, dataUrl: slice.dataUrl, dataRef: slice.dataRef, rect: node.frame, capturedBy: "unknown" });
   }
   return sources;
 }
 
 export function resolveDefaultMaterialSource(node: HierarchyLayerNode) {
-  return effectiveVisualSources(node).find((source) => source.kind === "layerOwnContents") ?? null;
+  return effectiveVisualSources(node).find((source): source is Extract<HierarchyVisualSource, {kind: "layerOwnContents"}> => source.kind === "layerOwnContents" && Boolean(source.dataUrl)) ?? null;
 }
 
 export function resolveEvidenceSources(node: HierarchyLayerNode) {
@@ -35,7 +36,7 @@ export function getMaterialExplanation(node: HierarchyLayerNode) {
 export function computeParityClaim(scene: Pick<HierarchyScene, "nodes">) {
   const visibleNonRoot = scene.nodes.filter((node) => node.visible !== false && node.depth > 0);
   const hasOnlySubtreeEvidence = visibleNonRoot.some((node) =>
-    effectiveVisualSources(node).some((source) => source.kind === "subtreeSnapshot")
+    !resolveDefaultMaterialSource(node) && effectiveVisualSources(node).some((source) => source.kind === "subtreeSnapshot")
   );
   const allHaveLayerOwnContents = visibleNonRoot.length > 0
     && visibleNonRoot.every((node) => resolveDefaultMaterialSource(node));

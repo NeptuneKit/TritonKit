@@ -1,0 +1,8 @@
+{
+  "Sources/TritonKitCLI/CLIDebugCommands.swift": "a89a9286ca32623d1269bc524ab4d270b953b637c5b78d2f266c9055e1aeaede",
+  "Sources/TritonKitCLI/CLIHierarchySceneRuntime.swift": "2239fc36ee1f91638ce25c694ef6bd1b45ec81dc92110669c6a2f539eddf8840",
+  "Sources/TritonKit/TritonKitRequestHandler+LegacyInspection.swift": "8295b6fa54fdafa548692886f81d645c1b2299e7be80448ef6c768272ee60b9b",
+  "Sources/TritonKit/TKRuntimeCapabilityGate.swift": "2a379f54fb51b19ac06bf0b7ecd88a3469864706f4bc384b67212ec5242bb675",
+  "Sources/TritonKit/TKRuntimeUIHealthResponses.swift": "f42ac5ab9761077b56f7bc76145090be663d643ac76418afdb3c3208c8888b63",
+  "actual_cli_details_exit": 64
+}

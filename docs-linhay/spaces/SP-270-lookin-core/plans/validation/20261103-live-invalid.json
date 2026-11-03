@@ -1,0 +1,44 @@
+{
+  "action": "cli.parse",
+  "commandPath": [
+    "triton",
+    "debug",
+    "details"
+  ],
+  "error": {
+    "code": "argument_validation_failed",
+    "details": {
+      "argumentNames": [],
+      "kind": "validation",
+      "valuesRedacted": true
+    },
+    "help": {
+      "args": [
+        "debug",
+        "details"
+      ],
+      "category": "plan",
+      "command": "help",
+      "finalEvents": [],
+      "readyEvents": [],
+      "requiresLongRunningProcess": false,
+      "terminationSignals": []
+    },
+    "message": "Command arguments failed validation. Correct the arguments before retrying.",
+    "nextAction": {
+      "args": [
+        "--command",
+        "debug details",
+        "--json"
+      ],
+      "category": "diagnose",
+      "command": "schema",
+      "finalEvents": [],
+      "readyEvents": [],
+      "requiresLongRunningProcess": false,
+      "terminationSignals": []
+    },
+    "retryable": false
+  },
+  "ok": false
+}

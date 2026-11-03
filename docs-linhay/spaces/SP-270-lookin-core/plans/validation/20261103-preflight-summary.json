@@ -1,0 +1,89 @@
+{
+  "method": "Triton-first; raw inventory retained locally because it includes unrelated devices",
+  "checks": [
+    {
+      "artifact": "20261103-triton-3-schema.stderr",
+      "retainedPrivately": true
+    },
+    {
+      "artifact": "20261103-triton-0-status.stdout",
+      "retainedPrivately": true,
+      "ok": true
+    },
+    {
+      "artifact": "20261103-triton-4-schema.stderr",
+      "retainedPrivately": true
+    },
+    {
+      "artifact": "20261103-triton-plan.json",
+      "retainedPrivately": true,
+      "ok": true
+    },
+    {
+      "artifact": "20261103-triton-4-schema.stdout",
+      "retainedPrivately": true,
+      "schemaVersion": 1
+    },
+    {
+      "artifact": "20261103-triton-3-schema.stdout",
+      "retainedPrivately": true,
+      "schemaVersion": 1
+    },
+    {
+      "artifact": "20261103-triton-0-status.stderr",
+      "retainedPrivately": true
+    },
+    {
+      "artifact": "20261103-triton-6-plan.stdout",
+      "retainedPrivately": true
+    },
+    {
+      "artifact": "20261103-triton-2-capabilities.stderr",
+      "retainedPrivately": true
+    },
+    {
+      "artifact": "20261103-triton-1-doctor.stderr",
+      "retainedPrivately": true
+    },
+    {
+      "artifact": "20261103-triton-5-schema.stdout",
+      "retainedPrivately": true,
+      "schemaVersion": 1
+    },
+    {
+      "artifact": "20261103-triton-5-schema.stderr",
+      "retainedPrivately": true
+    },
+    {
+      "artifact": "20261103-triton-1-doctor.stdout",
+      "retainedPrivately": true,
+      "ok": true
+    },
+    {
+      "artifact": "20261103-triton-2-capabilities.stdout",
+      "retainedPrivately": true,
+      "ok": true
+    },
+    {
+      "artifact": "20261103-triton-6-plan.stderr",
+      "retainedPrivately": true
+    },
+    {
+      "artifact": "20261103-ios-devices.json",
+      "retainedPrivately": true,
+      "ok": true
+    },
+    {
+      "artifact": "20261103-xcode-status.json",
+      "retainedPrivately": true,
+      "ok": true
+    }
+  ],
+  "fallbacks": [
+    {
+      "reason": "sim schema has no device-type inventory",
+      "command": "xcrun simctl list devicetypes --json",
+      "operation": "read only"
+    }
+  ]
+}
