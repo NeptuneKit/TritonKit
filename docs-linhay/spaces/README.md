@@ -459,3 +459,7 @@
 ## 2026-11-03 新增可独立交付事项
 
 - [SP-273-issue-274-explicit-inference](./SP-273-issue-274-explicit-inference/README.md)：issue274显式推理与有界失败候选；完整CLI/独立审阅通过，实际CLI/HTTP隔离fixture16/16通过，精确CI后统一040发布。
+
+## 2026-11-06 新增可独立交付事项
+
+- [SP-274-issue-277-resize-host-input](./SP-274-issue-277-resize-host-input/README.md)：精确 target-bound CoreDeviceError 1001/unsupportedDevice 不再阻断 Host HID 门禁；诊断仍保留 unknown，其他未知或活动状态继续 fail-closed；CLI focused/full tests 通过，真实 Simulator 运行验收范围外。
