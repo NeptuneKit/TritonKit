@@ -24,6 +24,17 @@ enum IOSSimulatorResizeState: Equatable {
     case unknown(IOSSimulatorResizeUnknownReason)
 }
 
+/// A target-bound capability rejection proves that Resize Mode cannot be
+/// active on this target. It remains `unknown(.unsupportedDevice)` in the
+/// diagnostic model so callers can preserve the native reason, but host
+/// coordinate input may continue through its independent HID/display guards.
+func iosSimulatorResizeAllowsHostInput(_ state: IOSSimulatorResizeState) -> Bool {
+    switch state {
+    case .inactive, .unknown(.unsupportedDevice): return true
+    case .active, .unknown: return false
+    }
+}
+
 typealias IOSSimulatorResizeProbe = (String, [String: String]) -> IOSSimulatorResizeState
 
 enum IOSSimulatorResizeError: Error, Equatable, LocalizedError {

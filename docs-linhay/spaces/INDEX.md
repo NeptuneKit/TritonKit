@@ -376,3 +376,4 @@
 | `SP-272-release-v0-2-40` | [`SP-272-release-v0-2-40`](./SP-272-release-v0-2-40/README.md) | 准备 | SP271 direct-runtime诊断修复的新patch，完整preflight/CI/资产安装验收后发布 |
 
 | `SP-273-issue-274-explicit-inference` | [`SP-273-issue-274-explicit-inference`](./SP-273-issue-274-explicit-inference/README.md) | 候选验证 | #274默认关闭/显式推理及有界失败；完整CLI与独立审阅通过，待精确CI/统一040发布 |
+| `SP-274-issue-277-resize-host-input` | [`SP-274-issue-277-resize-host-input`](./SP-274-issue-277-resize-host-input/README.md) | 执行 | #277精确unsupportedDevice拒绝允许独立Host HID/屏幕守卫继续；CLI测试通过，真实Simulator运行验收范围外 |

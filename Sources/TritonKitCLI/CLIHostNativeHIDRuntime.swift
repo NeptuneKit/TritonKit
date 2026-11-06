@@ -83,10 +83,13 @@ func nativeHIDGuardSnapshot(
     resizeProbe: IOSSimulatorResizeProbe = { probeIOSSimulatorResize(target: $0, environment: $1) }
 ) throws -> NativeHIDScreen {
     guard UUID(uuidString: target) != nil else { throw IOSSimulatorResizeError.invalidTarget }
-    switch resizeProbe(target, environment) {
-    case .inactive: break
-    case .active: throw IOSSimulatorResizeError.activeSession
-    case .unknown(let reason): throw IOSSimulatorResizeError.stateUnknown(reason)
+    let resize = resizeProbe(target, environment)
+    if !iosSimulatorResizeAllowsHostInput(resize) {
+        switch resize {
+        case .active: throw IOSSimulatorResizeError.activeSession
+        case .unknown(let reason): throw IOSSimulatorResizeError.stateUnknown(reason)
+        case .inactive: break
+        }
     }
     func query(_ arguments: [String], failure: String) throws -> String {
         let command = TKHostCommand(executable: "/usr/bin/xcrun", arguments: arguments, environment: environment, defaultTimeoutSeconds: 8, sensitiveOutput: true)
