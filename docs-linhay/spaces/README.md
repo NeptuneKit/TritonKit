@@ -463,3 +463,7 @@
 ## 2026-11-06 新增可独立交付事项
 
 - [SP-274-issue-277-resize-host-input](./SP-274-issue-277-resize-host-input/README.md)：精确 target-bound CoreDeviceError 1001/unsupportedDevice 不再阻断 Host HID 门禁；诊断仍保留 unknown，其他未知或活动状态继续 fail-closed；CLI focused/full tests 通过，真实 Simulator 运行验收范围外。
+
+## 2026-11-06 v0.2.41 发布准备
+
+- [SP-275-release-v0-2-41](./SP-275-release-v0-2-41/README.md)：#277 已合并 main，版本文件升级到 0.2.41，待完整 preflight、Release 资产、Homebrew 与仓库外 packaged Web 验收。
