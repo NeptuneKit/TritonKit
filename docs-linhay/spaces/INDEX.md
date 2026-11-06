@@ -377,4 +377,4 @@
 
 | `SP-273-issue-274-explicit-inference` | [`SP-273-issue-274-explicit-inference`](./SP-273-issue-274-explicit-inference/README.md) | 候选验证 | #274默认关闭/显式推理及有界失败；完整CLI与独立审阅通过，待精确CI/统一040发布 |
 | `SP-274-issue-277-resize-host-input` | [`SP-274-issue-277-resize-host-input`](./SP-274-issue-277-resize-host-input/README.md) | 执行 | #277精确unsupportedDevice拒绝允许独立Host HID/屏幕守卫继续；CLI测试通过，真实Simulator运行验收范围外 |
-| `SP-275-release-v0-2-41` | [`SP-275-release-v0-2-41`](./SP-275-release-v0-2-41/README.md) | 准备 | #277合并后的Host输入门控修复，待完整版本/资产/安装验收 |
+| `SP-275-release-v0-2-41` | [`SP-275-release-v0-2-41`](./SP-275-release-v0-2-41/README.md) | 已发布 | #277合并后的Host输入门控修复；v0.2.41资产、Homebrew、skills、packaged Web与安装验收通过，真实设备/私有App边界保留 |

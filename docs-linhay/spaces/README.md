@@ -466,4 +466,4 @@
 
 ## 2026-11-06 v0.2.41 发布准备
 
-- [SP-275-release-v0-2-41](./SP-275-release-v0-2-41/README.md)：#277 已合并 main，版本文件升级到 0.2.41，待完整 preflight、Release 资产、Homebrew 与仓库外 packaged Web 验收。
+- [SP-275-release-v0-2-41](./SP-275-release-v0-2-41/README.md)：#277 已合并 main；v0.2.41 已发布，双架构资产/checksum、Homebrew、skills、安装版与仓库外 packaged Web 验收通过，真实设备/私有 App 边界保留。
