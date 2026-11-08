@@ -255,8 +255,8 @@ public enum TKHarmonyLayoutParser {
                 result.append(TKHarmonyLayoutNodeSummary(
                     nodeID: nodeID,
                     type: cleanString(attributes["type"]),
-                    text: cleanString(attributes["text"]),
-                    originalText: cleanString(attributes["originalText"]),
+                    text: contentString(attributes["text"]),
+                    originalText: contentString(attributes["originalText"]),
                     identifier: cleanString(attributes["id"]),
                     key: cleanString(attributes["key"]),
                     accessibilityID: accessibilityID,
@@ -282,6 +282,13 @@ public enum TKHarmonyLayoutParser {
                 nodeSummaries(in: array[index], depth: depth + 1, fallbackPath: "\(fallbackPath).\(index)", context: &context, result: &result)
             }
         }
+    }
+
+    // Content is read back verbatim. Keep empty-string absence for the existing
+    // originalText fallback, but do not conflate whitespace with an empty value.
+    private static func contentString(_ value: Any?) -> String? {
+        guard let string = value as? String, !string.isEmpty else { return nil }
+        return string
     }
 
     private static func cleanString(_ value: Any?) -> String? {
