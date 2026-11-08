@@ -1,5 +1,7 @@
 # TritonKit Spaces Index
 
+2026-11-08：[SP-277-release-v0-2-42](./SP-277-release-v0-2-42/README.md)准备Harmony读取修复发布；尚未创建tag。
+
 2026-11-08：[SP-276-issue-246-whitespace-readback](./SP-276-issue-246-whitespace-readback/README.md)独立处理#246空白文本读取；当前正式发布为[v0.2.41](./SP-275-release-v0-2-41/README.md)，main bd0b1dbd、CI通过。以下日期段保留历史采样，不代表当前发布队列。
 
 2026-11-03：[SP-272-release-v0-2-40](./SP-272-release-v0-2-40/README.md)准备发布SP271诊断修复；0.2.39仍为当前正式版本，尚未创建新tag。
@@ -20,7 +22,7 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，33仓日检22完整/11 partial、两仓HEAD变化。新增SP-221只读资源暂态重试/SP-222有限主控，显式gpt-6.1-sol真实会话创建成功、已通过独立与合后门禁，合本地main a0eebff0；旧13条采用已合main，旧源码/许可缺口保留。
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（276/276 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（277/277 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-10-30（SP251 v0.2.38发布与安装验收完成）
 
