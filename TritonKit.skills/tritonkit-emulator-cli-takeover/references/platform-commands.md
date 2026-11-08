@@ -134,3 +134,6 @@ On the recorded real API34 Settings workload, four independent HTTP processes in
 Use one configured upstream for readiness, streaming and stream-internal fallback. Do not hide hardcoded addresses with test-only fetch rewrites. Record both reconnect-request time and decoded-first-frame time; hidden negative observation windows end before reconnection begins. Keep visible positive controls and distinguish process sampling from exact frame counts.
 
 Source iOS screenshot fallback sessions are scoped to upstream URL, CLI path and device. The last subscriber retires its generation and cancels pending HTTP capture/timers; an immediate reconnect must not revive the old loop or consume a different upstream's frames. Already-started native CLI work may finish, but its late result cannot publish into the new generation or schedule another capture.
+
+
+Harmony normalized `observe tree` preserves nonempty `text`/`originalText` content exactly, including whitespace-only values and leading/trailing whitespace. Empty/missing/non-string text keeps the existing absent-value and originalText fallback semantics; identifiers and type metadata are still trimmed. Use the exact value for find/wait readback. This parser guarantee does not establish IME delivery, focus, clear, or business success; transport receipts require an independent postcondition.

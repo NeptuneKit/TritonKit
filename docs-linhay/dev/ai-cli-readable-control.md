@@ -688,3 +688,10 @@ Public UIControl target/action and accessibilityActivate remain supported. If a 
 ## #224 显式主屏截图契约
 
 `sim screenshot --primary-framebuffer` 为独立opt-in单次PNG，和--display互斥。先fresh Resize inactive或严格unsupportedDevice，再fresh完整单LCD topology，按UUID捕获；默认入口不自动采用。仅此入口新增optional `primaryFramebuffer` DTO：captureScope=primary-display-framebuffer、displayUniqueID、resizeState/reason、resizeVerified、inputDispatchVerified=false、topologySource。unsupported状态保持unknown；额外off虚拟显示也拒绝。PNG必须新建可解码、正尺寸、最多64MiB/6400万像素，独占发布，不覆盖现有输出。查询非原子，不证明App内容完整或输入安全。参见[验收](../spaces/SP-235-issue-224-simulator-resize-query/plans/20261028-primary-framebuffer.md)。
+
+
+### Harmony 文本读取保真（SP-276）
+
+Harmony layout 的 `text` / `originalText` 属于内容：非空字符串原样保留空格、制表符、换行与Unicode空白。`observe tree` JSON、精确find与wait消费同一parser结果；不应将 `" test "` 匹配为 `"test"`。空串、缺失、null或非字符串继续表示无可用文本，并沿用 `originalText` 回退；type/id/hierarchy等元数据仍trim。纯空白值与空值因此可区分，但空串与缺失仍沿用现有合并语义。
+
+本转换由合成JSON → shared parser → CLI observe JSON / wait路径验收；不证明HDC设备输入送达、focus/clear支持或私有App业务验证，transport receipt仍需独立后置读取。#246人工IME部分保持范围外。
