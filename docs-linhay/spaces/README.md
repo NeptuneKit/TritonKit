@@ -1,8 +1,8 @@
 # TritonKit Spaces Index
 
-2026-11-08：[SP-277-release-v0-2-42](./SP-277-release-v0-2-42/README.md)准备Harmony读取修复发布；尚未创建tag。
+2026-11-09：[SP-277-release-v0-2-42](./SP-277-release-v0-2-42/README.md)已发布v0.2.42，精确main/tag/Release CI、双架构资产与安装验收通过；[验收报告](./SP-277-release-v0-2-42/plans/20261109-release.md)。
 
-2026-11-08：[SP-276-issue-246-whitespace-readback](./SP-276-issue-246-whitespace-readback/README.md)独立处理#246空白文本读取；当前正式发布为[v0.2.41](./SP-275-release-v0-2-41/README.md)，main bd0b1dbd、CI通过。以下日期段保留历史采样，不代表当前发布队列。
+2026-11-09：[SP-276-issue-246-whitespace-readback](./SP-276-issue-246-whitespace-readback/README.md)已合入并随v0.2.42发布，读取fixture3/3；#246人工IME/原私有现场仍未验证。以下日期段保留历史采样，不代表当前发布队列。
 
 2026-11-03：[SP-272-release-v0-2-40](./SP-272-release-v0-2-40/README.md)准备发布SP271诊断修复；0.2.39仍为当前正式版本，尚未创建新tag。
 

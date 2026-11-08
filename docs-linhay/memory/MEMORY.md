@@ -1,5 +1,7 @@
 # TritonKit Project Memory
 
+- 2026-11-09：[v0.2.42发布验收](../spaces/SP-277-release-v0-2-42/plans/20261109-release.md)完成，发布commit e821b7b4；SP276的Harmony空白读取修复已合入并发布，精确CI/标准Pod/双架构/安装CLI与skills/只读浏览器通过，IME及原私有现场未验证边界保留。
+
 - 2026-11-03：[SP-270 Lookin核心内置](../spaces/SP-270-lookin-core/README.md)独立候选完成，沿用检查器，补完整层树/节点详情/solo-group/只读3D；root/CLI/Web与真实iOS/HTTP/浏览器、本地门禁通过。标准Pod因Xcode27.1拒绝iOS13未过，iOS15兼容lint通过。未提交、合并或发布；[证据及边界](../spaces/SP-270-lookin-core/plans/20261103-validation.md)。
 
 - 2026-11-02：[SP-264交付发布](../spaces/SP-264-release-v0-2-39/README.md)十二项修复已随v0.2.39发布，发布提交/tag `026d329e`；main/tag/Release CI/标准Pod、双架构/checksum/Web/skills、Homebrew与两root skills安装、安装版23项只读smoke通过，正式三端预览和自有清理通过。release.sh观察超时保留，远端随后成功，未重tag。brew cleanup误删共享旧serve所用0.2.38文件后已按旧公开包恢复42文件，未动共享进程/新symlink；升级保护规则写回release skill。#246人工IME正向验收排除、#214暂缓、#224 iPad与原私有现场未验证边界保留。

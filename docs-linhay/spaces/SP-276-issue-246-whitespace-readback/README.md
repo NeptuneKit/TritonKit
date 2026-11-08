@@ -18,4 +18,4 @@
 
 ## 进度
 
-2026-11-08：基于远端main bd0b1dbd建立候选，独立只读审计确认cleanString误用于内容字段。测试与修复进行中。
+2026-11-09：PR280已合入bea7fc16，精确PR/main CI及标准Pod通过；已随v0.2.42发布。根/完整CLI回归通过，公开双架构与Homebrew安装CLI的只读fake-HDC fixture均3/3。见[发布验收](../SP-277-release-v0-2-42/plans/20261109-release.md)与[本地验证](plans/20261108-validation.md)。#246整体保持开放，IME/发送与原私有业务未验证。

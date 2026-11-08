@@ -14,4 +14,4 @@
 
 ## 状态
 
-2026-11-08：0.2.42未占用，版本预检旧值按预期失败；产品PR280精确CI等待中。版本候选准备，未发布。
+2026-11-09：v0.2.42已正式发布，PR280/281及精确main/tag/Release CI通过。双架构资产/checksum/Runner/Web/skills、Homebrew、两个skills roots、安装版空白fixture和真实浏览器只读离线验收通过。CocoaPods标准远端lint通过、未推trunk。详见[发布验收](plans/20261109-release.md)；人工IME、默认iPad与原私有现场不作通过声明。

@@ -379,6 +379,6 @@
 | `SP-274-issue-277-resize-host-input` | [`SP-274-issue-277-resize-host-input`](./SP-274-issue-277-resize-host-input/README.md) | 执行 | #277精确unsupportedDevice拒绝允许独立Host HID/屏幕守卫继续；CLI测试通过，真实Simulator运行验收范围外 |
 | `SP-275-release-v0-2-41` | [`SP-275-release-v0-2-41`](./SP-275-release-v0-2-41/README.md) | 已发布 | #277合并后的Host输入门控修复；v0.2.41资产、Homebrew、skills、packaged Web与安装验收通过，真实设备/私有App边界保留 |
 
-| `SP-276-issue-246-whitespace-readback` | [`SP-276-issue-246-whitespace-readback`](./SP-276-issue-246-whitespace-readback/README.md) | 执行 | #246空白文本parser与观察JSON保真；人工IME输入仍不在此切片 |
+| `SP-276-issue-246-whitespace-readback` | [`SP-276-issue-246-whitespace-readback`](./SP-276-issue-246-whitespace-readback/README.md) | 已发布 | #246独立读取切片经PR280/v0.2.42发布，双架构/安装fixture通过；人工IME仍未验证 |
 
-| `SP-277-release-v0-2-42` | [`SP-277-release-v0-2-42`](./SP-277-release-v0-2-42/README.md) | 准备 | Harmony空白文本读取修复；精确CI/preflight/发布与安装验收 |
+| `SP-277-release-v0-2-42` | [`SP-277-release-v0-2-42`](./SP-277-release-v0-2-42/README.md) | 已发布 | v0.2.42精确CI/preflight/双架构/安装与只读浏览器验收通过，人工现场边界保留 |
