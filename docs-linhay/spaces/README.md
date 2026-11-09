@@ -51,6 +51,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 0.1.1已验证／准备精确合并 | [SP-278-dsh-plugin](./SP-278-dsh-plugin/README.md) | DSH Host-only四工具；Node32、完整ci-docs/278结构及契约通过，当前profile applied与新目标guard生效 | 仅整合插件到最新远端main，主目录WIP/15条无关提交保留；GUI/真实动作未验，不创建发布tag |
 | 已随v0.2.38发布 | [SP-251-release-v0-2-38](./SP-251-release-v0-2-38/README.md) | skills更新、内存/Rhine/WebView联合候选 | SP251联合门禁、双架构/Homebrew/skills与三端公开包通过；历史候选边界保留 |
 | 已随v0.2.38发布 | [SP-247-rhine-page-preferences](./SP-247-rhine-page-preferences/README.md) | 四页标题/动作合并、渐进展示、无框组合与树语义；registry0.11.3不变 | SP251联合门禁、双架构/Homebrew/skills与三端公开包通过；历史候选边界保留 |
 | 已随v0.2.38发布 | [SP-244-emulator-service-slimming](./SP-244-emulator-service-slimming/README.md) | 资源选项、隐藏暂停、生命周期/编码峰值及Android PNG收口 | 已发布验收见SP251；后续量化采集FPS仲裁、PNG缓冲与HWUI净收益 |

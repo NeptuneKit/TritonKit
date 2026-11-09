@@ -1,5 +1,7 @@
 # TritonKit Project Memory
 
+- 2026-11-09：[SP-278 DSH插件](../spaces/SP-278-dsh-plugin/README.md)独立worktree实现；Host bundle四个受限CLI工具已在当前profile applied，已安装CLI0.2.42只读smoke与错误透传通过。13:02追加授权验证/提交/合并/推送，按最新远端main精确整合，不回灌本地主目录无关提交与WIP。真实设备动作/GUI展示未验；经验见[集成契约](../dev/dsh-plugin-integration.md)。
+
 - 2026-11-09：[v0.2.42发布验收](../spaces/SP-277-release-v0-2-42/plans/20261109-release.md)完成，发布commit e821b7b4；SP276的Harmony空白读取修复已合入并发布，精确CI/标准Pod/双架构/安装CLI与skills/只读浏览器通过，IME及原私有现场未验证边界保留。
 
 - 2026-11-03：[SP-270 Lookin核心内置](../spaces/SP-270-lookin-core/README.md)独立候选完成，沿用检查器，补完整层树/节点详情/solo-group/只读3D；root/CLI/Web与真实iOS/HTTP/浏览器、本地门禁通过。标准Pod因Xcode27.1拒绝iOS13未过，iOS15兼容lint通过。未提交、合并或发布；[证据及边界](../spaces/SP-270-lookin-core/plans/20261103-validation.md)。

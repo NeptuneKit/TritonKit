@@ -1,0 +1,32 @@
+{
+  "version": "0.1.1",
+  "base": "d592ea058101a4bf175139d7d2da652de81779c7",
+  "tests_passed": 32,
+  "archive": "DSH/dist/neptunekit-dsh-tritonkit-host-0.1.1.tgz",
+  "archive_sha256": "c38bda450de89b3cab57412b70681372a5c2fc09479900cb16b3d2482658b1d9",
+  "archive_bytes": 12158,
+  "packed_files": [
+    "package/README.md",
+    "package/commands.js",
+    "package/cordis.patch.yml",
+    "package/host.js",
+    "package/icon.svg",
+    "package/locale/en.json",
+    "package/locale/zh.json",
+    "package/package.json"
+  ],
+  "source_sha256": {
+    "host.js": "52f1d3e3beae2a82a22093dacab0b4aa60aa6658021fc4a74f82463ec0330585",
+    "commands.js": "68d7b92a40aeab3748300e9a83f55ff31029e6dadb6a9aa334f4c46d44e72984",
+    "package.json": "b0dc86552d078f8bdb31ab16ae7d7457e3088cad436cdcbeff0e21c6184241c5",
+    "README.md": "f26d075b2740e2d7636decd9d71827b74df181387a73da19177eaa010b4f0023",
+    "cordis.patch.yml": "cfa7f2d88be32b5df79a629e228c82540228146c912f44dad0f7ed0ec662457c",
+    "locale/en.json": "5022a2aef0a082292d506e99fb447dced34822803e571e4c28dd6917da451072",
+    "locale/zh.json": "da3eeef60695e1d1d511f16b64e91a1b3a7bb01aeef4f06de7b6489b9eca7193",
+    "icon.svg": "18c908de287b5ff38e9ee936c44699d65aec3b52185064f76abb733e7c298367"
+  },
+  "profile_application": "applied",
+  "live_new_guard": "bare alias + empty text rejected by new namespace guard before CLI lookup",
+  "live_version": "0.2.42; exit=0; cleanup=confirmed",
+  "devices_mutated": false
+}

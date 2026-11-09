@@ -382,3 +382,5 @@
 | `SP-276-issue-246-whitespace-readback` | [`SP-276-issue-246-whitespace-readback`](./SP-276-issue-246-whitespace-readback/README.md) | 已发布 | #246独立读取切片经PR280/v0.2.42发布，双架构/安装fixture通过；人工IME仍未验证 |
 
 | `SP-277-release-v0-2-42` | [`SP-277-release-v0-2-42`](./SP-277-release-v0-2-42/README.md) | 已发布 | v0.2.42精确CI/preflight/双架构/安装与只读浏览器验收通过，人工现场边界保留 |
+
+| `SP-278-dsh-plugin` | [`SP-278-dsh-plugin`](./SP-278-dsh-plugin/README.md) | 0.1.1已验证／准备精确合并 | Node32、完整ci-docs/278结构与契约通过，当前profile applied、新目标guard无派发负例通过；只整合插件，不推主目录无关提交/WIP，GUI/真实动作未验 |

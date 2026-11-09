@@ -1,0 +1,33 @@
+name: DSH plugin
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'DSH/**'
+      - '.github/workflows/dsh-plugin.yml'
+  pull_request:
+    paths:
+      - 'DSH/**'
+      - '.github/workflows/dsh-plugin.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Host plugin contracts (Node 22)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check DSH/host.js
+          node --check DSH/commands.js
+      - name: Test plugin contracts and package resources
+        run: node --test DSH/test/*.test.js
