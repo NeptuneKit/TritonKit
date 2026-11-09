@@ -2,7 +2,7 @@
 
 ## 状态与边界
 
-2026-11-09：首版实现与本地安装验收完成。13:02用户追加授权“验证，提交，合并，推送”；正在以最新远端main独立整合，仅纳入本插件，不夹带本地主目录15条无关提交或原有WIP。首轮旧基线文档编号失败、真实动作与GUI展示未验的边界见验收报告，后续提交/整合证据另行写回。
+2026-11-09：0.1.1实现、复验、提交、合并及推送完成；远端main合并提交 `f4efd202` 的DSH plugin/主CI均通过。当前profile已更新生效。原主目录15条无关提交及WIP保持原状，本地主目录main未被强行同步；真实设备动作和GUI展示未验边界保持。
 
 - 基线：`main@d94213c4`；独立分支 `feat/SP-278-dsh-plugin`，同级 worktree `../TritonKit-worktrees/SP-278-dsh-plugin`。主目录既有 WIP 不动。
 - 影响层：新增 `DSH/` Host-only Cordis bundle；复用已安装 macOS `triton` CLI，不改 Swift core、HTTP、Web/Wails、设备 provider。
@@ -21,12 +21,12 @@
 
 ## 验证计划
 
-先 Node 内置 test runner 失败测试，再最小实现；不新增外部依赖。验证包含配置、argv 安全、JSON/退出语义、取消/超时、串行与 unload、manifest 打包面、真实只读 CLI 和已安装 DSH 工具。文档运行 `verify.sh --ci-docs`、`check-docs.sh`、`git diff --check`。既有索引只登记至 SP-255，而其他注册 worktree 占用 SP-256～277；本轮使用 SP-278，不回灌其他 WIP 或放宽连续编号门禁，若因此阻断如实记录。
+先失败测试再最小实现；新Node插件/分发与匹配契约验收，真实设备动作与Swift全量另行声明。首轮基线只登记到255，编号失败日志保留为历史；本轮重放到最新远端main后已有完整登记，278个space和ci-docs通过，没有放宽校验或回灌其他WIP。
 
 ## 交付与证据
 
 - [使用与安装](../../../DSH/README.md)：`@neptunekit/dsh-tritonkit-host@0.1.1`，四个受限工具；当前profile已正式重装，application=applied，新namespaced目标guard真实无派发负例与版本读取通过。
-- [当前整合验收](plans/20261109-integration-validation.md)：Node **32/32**、278个space结构、完整ci-docs及分类/版本/skill/release/Homebrew契约通过；精确合并推送与CI待收口。
+- [当前整合验收](plans/20261109-integration-validation.md)：Node **32/32**、278个space结构、完整ci-docs及分类/版本/skill/release/Homebrew契约通过；精确合并提交f4efd202已推送远端main，两条CI通过，见报告链接。
 - [首轮历史报告](plans/20261109-validation.md)：0.1.0的Node29/经验28、只读接线与原始编号失败记录，不作为0.1.1候选结论。
 - [当前包hash](plans/20261109-package-v0.1.1-verification.json)：实际npm pack/tar恰含8文件；源码资源与files声明均有回归。
 - 本地可安装归档为 `DSH/dist/neptunekit-dsh-tritonkit-host-0.1.1.tgz`（构建产物，不随Git提交）；profile为目录link安装，保留本worktree，勿删除或移动。

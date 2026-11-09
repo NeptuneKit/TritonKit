@@ -383,4 +383,4 @@
 
 | `SP-277-release-v0-2-42` | [`SP-277-release-v0-2-42`](./SP-277-release-v0-2-42/README.md) | 已发布 | v0.2.42精确CI/preflight/双架构/安装与只读浏览器验收通过，人工现场边界保留 |
 
-| `SP-278-dsh-plugin` | [`SP-278-dsh-plugin`](./SP-278-dsh-plugin/README.md) | 0.1.1已验证／准备精确合并 | Node32、完整ci-docs/278结构与契约通过，当前profile applied、新目标guard无派发负例通过；只整合插件，不推主目录无关提交/WIP，GUI/真实动作未验 |
+| `SP-278-dsh-plugin` | [`SP-278-dsh-plugin`](./SP-278-dsh-plugin/README.md) | 已合并推送／0.1.1生效 | 实现7bc7fac4、修复4dd8f334、merge f4efd202已推远端main，Node32/完整文档契约/两条CI通过；主目录WIP和15条无关提交保留，GUI/真实动作未验 |

@@ -1,6 +1,6 @@
 # TritonKit Project Memory
 
-- 2026-11-09：[SP-278 DSH插件](../spaces/SP-278-dsh-plugin/README.md)独立worktree实现；Host bundle四个受限CLI工具已在当前profile applied，已安装CLI0.2.42只读smoke与错误透传通过。13:02追加授权验证/提交/合并/推送，按最新远端main精确整合，不回灌本地主目录无关提交与WIP。真实设备动作/GUI展示未验；经验见[集成契约](../dev/dsh-plugin-integration.md)。
+- 2026-11-09：[SP-278 DSH插件](../spaces/SP-278-dsh-plugin/README.md)0.1.1已通过实现7bc7fac4/修复4dd8f334/merge f4efd202推送远端main；Node32、完整文档契约与两条精确CI通过，当前profile applied且新目标guard生效。原主目录WIP/15条无关提交保持，不强行同步其main；真实设备动作/GUI展示未验。经验见[集成契约](../dev/dsh-plugin-integration.md)。
 
 - 2026-11-09：[v0.2.42发布验收](../spaces/SP-277-release-v0-2-42/plans/20261109-release.md)完成，发布commit e821b7b4；SP276的Harmony空白读取修复已合入并发布，精确CI/标准Pod/双架构/安装CLI与skills/只读浏览器通过，IME及原私有现场未验证边界保留。
 
