@@ -14,6 +14,9 @@ test('bundle exports include all runtime, metadata and original icon resources',
   assert.equal(manifest.engines.dsh, '0.2.2-rc.1');
   assert.equal(manifest.dependencies, undefined);
   assert.equal(manifest.scripts.postinstall, undefined);
+  for (const entry of ['host.js', 'commands.js', 'cordis.patch.yml', 'locale/*.json', 'icon.svg', 'README.md']) {
+    assert.ok(manifest.files.includes(entry), `Missing packed resource declaration: ${entry}`);
+  }
   const canonical = await realpath(root);
   for (const name of ['host.js', 'commands.js', 'cordis.patch.yml', 'README.md', 'icon.svg', 'locale/en.json', 'locale/zh.json']) {
     const path = await realpath(new URL(name, root));

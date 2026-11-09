@@ -25,8 +25,10 @@ function platform(args, argv) {
 }
 function target(args, argv, flag = '--target') {
   const value = text(args.target, 'target', { max: 512 });
-  if (/\s/u.test(value) || /(?:^|[:/])(local|current|booted|default|alias)(?:$|[:/])/iu.test(value)) {
-    throw fail('invalid_arguments', 'Use a concrete discovery target ID, not a default, dynamic selector or alias');
+  // CLI aliases are bare names and are resolved before raw IDs. Requiring the
+  // discovery namespace also rejects aliases shaped like raw serials or UUIDs.
+  if (!/^(?:sim|ios-real|android|harmony|triton):[^\s]+$/u.test(value) || /(?:^|[:/])(local|current|booted|default|alias)(?:$|[:/])/iu.test(value)) {
+    throw fail('invalid_arguments', 'Use a namespaced discovery ID (sim:, ios-real:, android:, harmony: or triton:), not a bare alias, raw ID or default selector');
   }
   argv.push(flag, value);
 }

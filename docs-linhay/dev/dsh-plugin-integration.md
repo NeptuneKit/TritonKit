@@ -7,7 +7,7 @@
 - DSH 运行实例：Desktop 内置 `0.2.2-rc.1`。shell 中另一个 `dsh --version` 返回 `0.2.1-rc.2`，不是本次运行接替验收对象。
 - live Inspect 核对 `tools.register`、`subprocess.resolveExecutable/spawn`、`workingDirectory.ensure`、`sandboxPolicy.resolve` 及相关类型；按这些 Service 编码，不把 Inspect 方法当业务 Service 调用。
 - CLI 验收对象：当前已安装的 `triton 0.2.42`，不是基线 worktree 的 Swift 编译产物。`schemaVersion=1` 本身不证明所有 CLI 版本兼容；更新 CLI 或 DSH 后应复跑定向契约和真实 smoke。
-- 新包 `@neptunekit/dsh-tritonkit-host@0.1.0`，当前 `private/UNLICENSED`，没有 npm 发布、外部依赖、install scripts 或 native build。包约束已测 DSH 版本；不自动申请版本豁免。
+- 新包 `@neptunekit/dsh-tritonkit-host@0.1.1`（0.1.0后补裸alias拒绝与真实打包回归），当前 `private/UNLICENSED`，没有 npm 发布、外部依赖、install scripts 或 native build。包约束已测 DSH 版本；不自动申请版本豁免。
 
 ## 执行契约
 
@@ -15,7 +15,7 @@
 2. CLI 固定为可信配置 `executable` / `TRITONKIT_TRITON_BIN` / PATH 的 triton；模型不能覆盖 executable、PATH、adb、hdc、endpoint 或 output 路径。`spawn.argv` 是数组，无 shell；文本内 `$()`、引号等保持字面量。
 3. 严格工具后端可能要求所有声明字段均提供。非必需字段显式支持 `null`；仅对已知可选字段规范化为 omission。未知字段即使为 null 仍拒绝，相关 operation 不接受有意义的无关字段。不能让 agent 用空字符串、0 或任意枚举值填不适用参数。
 4. 所有工具检查 session 存在及 DSH Full access；缺失或较低权限 fail closed。异步 cwd/可执行解析完成后，紧邻同步 spawn 再检查权限，防止准备期间降权仍执行。此检查不改变用户的权限配置，也不自动请求升级。
-5. `local/triton:local/current/booted/default`、带这些保留段的 selector 与显式 alias 被拒绝。传入真实 discovery ID；host selector 与 embedded runtime ID 不混用。插件不替 CLI 提供 provider fallback，也不保证所有 backend 支持每种 action。
+5. 所有有目标的请求必须保留discovery命名空间（`sim:`、`ios-real:`、`android:`、`harmony:`、`triton:`），裸名称/serial/UUID全部拒绝；CLI alias语法允许普通名称且优先于raw ID，所以仅拒绝 `alias:` 前缀不够。命名空间中的冒号不在CLI alias名称语法内，避免排队期间重新读取映射；同时拒绝`local/triton:local/current/booted/default`等保留段。host selector与embedded runtime ID不混用，不提供provider fallback或跨backend能力保证。
 6. iOS host observe 传 `--device`，Android/Harmony observe 传原生 `--target`。输入/按钮的 `platform:ios` 提前拒绝，以免杜撰 CLI 参数。`oid` 是有界 UInt64 十进制字符串，仅限无 host platform 的 embedded 输入，避免精度与 parser 错配。
 7. 同一插件的所有 session 共用串行队列；deadline 从入口开始，包含排队。排队取消立即返回，保留不再派发的占位维持序列。
 8. `handle.done` 只提供命令退出事实；结果发布与下一命令必须等 `waitForExit` 确认 provider 的管理范围清空。首次等待失败则 terminate 并重检，两级各1500ms；仍不能确认时保留 handle、返回 `cleanup_uncertain` 并阻止后续派发，卸载再清理。macOS fallback 无法证明未观察到的 escaped descendants；这是 provider 的既有边界，不宣称完全消除。
@@ -41,6 +41,8 @@
 - 独立审查发现权限 async 窗口、direct outcome 与 range quiescence 差异、动态 selector、UInt parser、队列取消和错误保留；均补生产边界与负例。权限竞态、动态 selector 和 oid 负例分别有失败再通过证据。
 - 包首次 registry 空字符串被管理工具拒绝，未误报成功；改为有效 registry URL 后 local link 安装 applied，无 build scripts。
 - 实际 GUI 的无凭据 URL返回 authentication required。只完成静态 display resource 验证，未声称插件面板中英文/图标渲染已通过；不为验收读取用户 cookie、token 或改写认证。
-- 本基线只有SP-001～255，而其他已注册 worktree 占到SP-277；使用278不复用编号，不复制其他WIP、不放宽门禁。完整文档门禁因此如实标失败，待既有占号登记整合后重跑。
+- 首轮旧基线只有SP-001～255，其他注册worktree占到277，故如实保留文档失败日志；13:02授权整合后，仅将本插件增量重放到最新远端main，保留远端权威登记与当日发布记忆，没有回灌旧DTUHID/日志产品结论，278个space结构与ci-docs已通过。
+- 合并前独立审查发现普通名称alias仍可通过旧字符串过滤；补命名空间强制与进程lookup前负例，32项回归通过。`package.json.files`声明及实际`npm pack`/tar内容进入自动测试和独立Node 22 CI；DSH-only分类contracts，混入Swift/Pod/未知路径仍分别升级门禁，不能以插件测试替代Swift产品测试。
+- 当前profile通过正式remove/install更新至0.1.1，观察applied后以“裸alias+空文本”双重无效输入验证新guard：旧版本也会在文本校验失败，确保两版本都不启动CLI；实际返回新namespaced错误，证明新目标检查已生效，不只看相同工具名。
 
-验证结果、打包 hash 与运行接替证据见 [本轮报告](../spaces/SP-278-dsh-plugin/plans/20261109-validation.md)。真实设备 mutation、全量 Swift/CLI 源码测试、所有 provider、GUI 实际展示和发布均不从本轮只读 smoke 推导。
+初始0.1.0事实见[首轮报告](../spaces/SP-278-dsh-plugin/plans/20261109-validation.md)，当前0.1.1、提交整合与CI见[整合报告](../spaces/SP-278-dsh-plugin/plans/20261109-integration-validation.md)。真实设备mutation、全量Swift/CLI源码测试、所有provider、GUI实际展示和发布均不从本轮只读smoke推导。

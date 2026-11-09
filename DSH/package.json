@@ -1,6 +1,6 @@
 {
   "name": "@neptunekit/dsh-tritonkit-host",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TritonKit CLI tools for local app discovery, observation, actions and verification in DSH.",
   "type": "module",
   "private": true,

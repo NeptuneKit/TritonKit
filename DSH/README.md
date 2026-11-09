@@ -64,7 +64,7 @@
 {"condition":"text-exists","target":"<observed-runtime-target>","text":"Done","count":1}
 ```
 
-目标不得凭空构造：先从 discovery 获取具体 ID，并读取对应命令的 schema；拒绝 `local`、`triton:local`、`current`、`booted`、`default` 及显式 alias 选择器，不在排队后重新选择默认设备。`oid` 采用 UInt64 十进制字符串，避免 JavaScript 整数精度损失，仅限无 host platform 的 embedded 输入。iOS observe 通过 `--device` 选择 host，iOS swipe/文本输入等走其原有 runtime/provider 契约，不能把 `sim:` 和 `triton:ios-simulator:` 混为一谈。`type`/`press` 不提供 `platform:ios`；需要 embedded runtime target 时省略 platform。部分设备按钮/平台可能 unsupported，插件不补 fallback。
+目标不得凭空构造：先从 discovery 获取带命名空间的具体 ID（`sim:`、`ios-real:`、`android:`、`harmony:` 或 `triton:`），并读取对应命令的 schema。裸名称alias（如 `phone`）、裸serial/UUID、`local`、`triton:local`、`current`、`booted`、`default`及显式alias选择器一律拒绝；即使裸serial/UUID看似具体，也可能被同名CLI alias抢先匹配，因此必须保留discovery返回的ID前缀，不在排队后重新选择设备。`oid` 采用 UInt64 十进制字符串，避免 JavaScript 整数精度损失，仅限无 host platform 的 embedded 输入。iOS observe 通过 `--device` 选择 host，iOS swipe/文本输入等走其原有 runtime/provider 契约，不能把 `sim:` 和 `triton:ios-simulator:` 混为一谈。`type`/`press` 不提供 `platform:ios`；需要 embedded runtime target 时省略 platform。部分设备按钮/平台可能 unsupported，插件不补 fallback。
 
 `query`、`type.text` 等选项值不接受前导 `-`、NUL、换行或超长内容；文本断言则通过 `--` 保留前导 dash。插件不暴露任意 argv、环境变量、`--adb` / `--hdc`、远端 endpoint、文件输出路径、target use、serve/web/update、Runner 生命周期、安装/卸载、删除或 replay。
 

@@ -5,7 +5,7 @@ export const inject = ['tools', 'subprocess', 'workingDirectory', 'sandboxPolicy
 const string = description => ({ type: 'string', description });
 const numeric = description => ({ type: 'number', description });
 const enumeration = (values, description) => ({ type: 'string', enum: values, description });
-const target = string('Concrete discovery target ID, not local/current/booted/default or aliases. iOS observation uses a host device selector; actions/verification use the selector required by that CLI command.');
+const target = string('Namespaced discovery ID (sim:, ios-real:, android:, harmony: or triton:). Bare aliases, raw serials/UUIDs and local/current/booted/default are rejected. iOS observation uses a host ID; actions/verification use the ID required by that CLI command.');
 const platform = enumeration(['ios', 'android', 'harmony'], 'Host adapter; omit for embedded runtime actions. iOS type/press require an embedded target without this field.');
 const definitions = [
   {
@@ -19,7 +19,7 @@ const definitions = [
     properties: {
       operation: enumeration(['version', 'status', 'doctor', 'capabilities', 'plan', 'targets', 'observe-current', 'observe-tree'], 'Query to run. version/status/doctor/capabilities/plan accept no other fields.'),
       platform: { ...platform, description: 'Required for targets and observe-* only: ios, android or harmony.' },
-      target: { ...target, description: 'Required for observe-* only. iOS: host device selector (sim:<UDID>); Android/Harmony: raw target id.' },
+      target: { ...target, description: 'Required for observe-* only. Use a namespaced discovery ID: sim:<UDID>, ios-real:<id>, android:<serial> or harmony:<id>; not raw IDs or aliases.' },
       maxNodes: { type: 'integer', minimum: 1, maximum: 1000, description: 'observe-* only; default 100, maximum 1000.' },
     }, required: ['operation'],
   },

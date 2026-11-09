@@ -25,9 +25,9 @@
 
 ## 交付与证据
 
-- [使用与安装](../../../DSH/README.md)：`@neptunekit/dsh-tritonkit-host@0.1.0`，四个受限工具；当前 profile 最终 `application=applied`。
-- [验收报告](plans/20261109-validation.md)：Node **29/29**、经验测试 **28/28**、语法/diff通过；已安装工具真实version/schema/status及未知schema错误透传通过，均cleanup confirmed。
-- [包与来源hash](plans/20261109-package-verification.json)：tarball恰含8个预期文件，无依赖/安装脚本；中英metadata/原创SVG静态校验通过。
-- 本地可安装归档位于 `DSH/dist/neptunekit-dsh-tritonkit-host-0.1.0.tgz`（构建产物，不随Git源码提交）；当前profile是目录link安装，保留本worktree，勿直接删除或移动。
-- [架构与经验](../../dev/dsh-plugin-integration.md)：权限重检、range退出、动态目标、严格后端null参数、CLI错误与副作用边界。
-- 文档结构和ci-docs均因255→278编号缺口exit1，未放宽检查；主目录既有WIP未混入。GUI认证限制、真实动作及未运行Swift全量门禁详见报告。
+- [使用与安装](../../../DSH/README.md)：`@neptunekit/dsh-tritonkit-host@0.1.1`，四个受限工具；当前profile已正式重装，application=applied，新namespaced目标guard真实无派发负例与版本读取通过。
+- [当前整合验收](plans/20261109-integration-validation.md)：Node **32/32**、278个space结构、完整ci-docs及分类/版本/skill/release/Homebrew契约通过；精确合并推送与CI待收口。
+- [首轮历史报告](plans/20261109-validation.md)：0.1.0的Node29/经验28、只读接线与原始编号失败记录，不作为0.1.1候选结论。
+- [当前包hash](plans/20261109-package-v0.1.1-verification.json)：实际npm pack/tar恰含8文件；源码资源与files声明均有回归。
+- 本地可安装归档为 `DSH/dist/neptunekit-dsh-tritonkit-host-0.1.1.tgz`（构建产物，不随Git提交）；profile为目录link安装，保留本worktree，勿删除或移动。
+- [架构与经验](../../dev/dsh-plugin-integration.md)：权限重检、range退出、命名空间目标、严格后端null参数、CLI错误与副作用边界。GUI认证限制及真实动作/Swift全量未验边界保持。

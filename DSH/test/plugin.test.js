@@ -228,6 +228,28 @@ test('dynamic target defaults cannot be used for actions or assertions', () => {
   }
 });
 
+test('plain CLI aliases and raw IDs are rejected before process lookup', async () => {
+  for (const target of ['phone', 'Pixel_8', 'emulator-5554', '00000000-0000-0000-0000-000000000000']) {
+    for (const kind of ['query', 'action', 'verify']) {
+      const f = fixture(); apply(f.ctx, {});
+      const args = kind === 'query' ? { operation: 'observe-tree', platform: 'android', target }
+        : kind === 'action' ? { action: 'tap', platform: 'android', target, x: 1, y: 2 }
+        : { condition: 'text-exists', target, text: 'Done' };
+      const result = await f.tools.get(`triton_${kind}`).execute(args, f.exec());
+      assert.equal(result.error?.code, 'invalid_arguments');
+      assert.equal(f.calls.length, 0);
+      await f.dispose();
+    }
+  }
+});
+
+test('namespaced discovery IDs survive argv mapping without alias normalization', () => {
+  for (const [platform, target] of [['android', 'android:emulator-5554'], ['harmony', 'harmony:127.0.0.1:10100'], ['ios', 'sim:00000000-0000-0000-0000-000000000000']]) {
+    const argv = buildCommand('action', { action: 'tap', platform, target, x: 1, y: 2 });
+    assert.equal(argv[argv.indexOf('--target') + 1], target);
+  }
+});
+
 test('oid is a bounded UInt string and not accepted with a host adapter', () => {
   assert.ok(buildCommand('action', { action: 'type', target: 'triton:fixture', text: 'x', oid: '18446744073709551615' }).includes('18446744073709551615'));
   for (const oid of ['node-12', '-1', '18446744073709551616', '1.2', 12]) assert.throws(() => buildCommand('action', { action: 'type', target: 'triton:fixture', text: 'x', oid }));

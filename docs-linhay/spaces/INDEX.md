@@ -383,4 +383,4 @@
 
 | `SP-277-release-v0-2-42` | [`SP-277-release-v0-2-42`](./SP-277-release-v0-2-42/README.md) | 已发布 | v0.2.42精确CI/preflight/双架构/安装与只读浏览器验收通过，人工现场边界保留 |
 
-| `SP-278-dsh-plugin` | [`SP-278-dsh-plugin`](./SP-278-dsh-plugin/README.md) | 首版已安装验收／独立 worktree 待集成 | 2026-11-09四个受限CLI工具，Node29/经验28与真实只读接线通过；文档门禁因256～277其他worktree占号未整合失败；GUI/真实动作未验，未提交/合并/发布 |
+| `SP-278-dsh-plugin` | [`SP-278-dsh-plugin`](./SP-278-dsh-plugin/README.md) | 0.1.1已验证／准备精确合并 | Node32、完整ci-docs/278结构与契约通过，当前profile applied、新目标guard无派发负例通过；只整合插件，不推主目录无关提交/WIP，GUI/真实动作未验 |
