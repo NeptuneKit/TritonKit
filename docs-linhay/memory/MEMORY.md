@@ -118,3 +118,5 @@
 - 2026-10-30巡查：[#224证据接替](../spaces/SP-235-issue-224-simulator-resize-query/plans/20261030-release038-followup.md)复用SP251真实公开包验收；主屏流修复已随0.2.38发布，不重复设备测试或发版。iPad Resize unsupported及原私有App未知保留，issue继续OPEN。
 
 - SP-273默认关闭workspace LLM/VLM并补在线/helper有界失败；实现/完整CLI/独立审阅通过，整合发布待完成，详见[SP-273](../spaces/SP-273-issue-274-explicit-inference/README.md)。
+
+- 2026-11-10 #237 增量复核：新评论来自仍嵌入 SDK 0.2.29 的原私有 App，不能归因当前 main；`ca91c2da` 上 `TKRuntimeWebViewSnapshotExecutionTests` 默认与 forms-only 执行通过。当前主线机制保持通过，私有 App 现场仍范围外未验证，issue 不关闭。详见 [SP-249 复核](../spaces/SP-249-issue-237-webview-snapshot/plans/20261110-private-app-followup.md)。
