@@ -33,6 +33,10 @@ expect_mode swift Package.resolved README.md
 expect_mode swift Sources/TritonKitCLI/TritonKitCLI.swift .github/workflows/ci.yml
 
 expect_mode contracts .github/workflows/ci.yml
+expect_mode contracts DSH/host.js DSH/test/plugin.test.js .github/workflows/dsh-plugin.yml
+expect_mode swift DSH/commands.js Sources/TritonKitCLI/TritonKitCLI.swift
+expect_mode podkit DSH/host.js Sources/TritonKit/TritonKit.swift
+expect_mode full DSH/host.js UnknownRuntime/source.js
 expect_mode contracts docs-linhay/scripts/ci-validate-mode.sh
 expect_mode contracts docs-linhay/scripts/check-docs.sh
 expect_mode contracts docs-linhay/scripts/check-agent-experience.py

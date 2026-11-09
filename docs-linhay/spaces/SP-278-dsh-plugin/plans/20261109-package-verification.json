@@ -1,0 +1,38 @@
+{
+  "package": "@neptunekit/dsh-tritonkit-host",
+  "version": "0.1.0",
+  "tested_dsh": "0.2.2-rc.1",
+  "tested_cli": "0.2.42",
+  "archive": "DSH/dist/neptunekit-dsh-tritonkit-host-0.1.0.tgz",
+  "archive_sha256": "235a83a36f53c294a857a7f30a0c06739d849b5464a6d308485c0c76bec6b152",
+  "archive_bytes": 11877,
+  "packed_files": [
+    "package/README.md",
+    "package/commands.js",
+    "package/cordis.patch.yml",
+    "package/host.js",
+    "package/icon.svg",
+    "package/locale/en.json",
+    "package/locale/zh.json",
+    "package/package.json"
+  ],
+  "source_sha256": {
+    "host.js": "54cb3d1e6f5e61272fb666c9a05d041d43a9efc0fca761cb2cf9965ecea49bb7",
+    "commands.js": "13bdc077900b77f9ab21a3d311f67352cd4fbad85f65739aff90eebfbc6a61dd",
+    "package.json": "cb07733792bfbb7ee601611f0bacde1d64f7c82ef24789c21670ee02a4e32cf9",
+    "cordis.patch.yml": "cfa7f2d88be32b5df79a629e228c82540228146c912f44dad0f7ed0ec662457c",
+    "README.md": "79b1598a351b3058a2509b03fa1b82fa5899a45e453d8ac51160d44cd9533855",
+    "locale/en.json": "5022a2aef0a082292d506e99fb447dced34822803e571e4c28dd6917da451072",
+    "locale/zh.json": "da3eeef60695e1d1d511f16b64e91a1b3a7bb01aeef4f06de7b6489b9eca7193",
+    "icon.svg": "18c908de287b5ff38e9ee936c44699d65aec3b52185064f76abb733e7c298367"
+  },
+  "svg_xml_valid": true,
+  "rendered_inventory": "unverified-authentication-required",
+  "node_tests_passed": 29,
+  "live_smoke": [
+    "version:success:cleanup-confirmed",
+    "schema-version:success:cleanup-confirmed",
+    "status:success:cleanup-confirmed",
+    "unknown-schema:expected-exit-1:original-error-preserved:cleanup-confirmed"
+  ]
+}

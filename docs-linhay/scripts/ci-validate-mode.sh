@@ -51,7 +51,9 @@ is_contract_only_path() {
   local path="$1"
 
   case "$path" in
-    .github/workflows/*)
+    .github/workflows/*|DSH/*)
+      # DSH has its own dependency-free Node contract workflow; it does not
+      # change the Swift/Pod products. Mixed paths still raise the scope below.
       return 0
       ;;
     docs-linhay/scripts/ci-validate-mode.sh|\

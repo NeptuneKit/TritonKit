@@ -12,6 +12,7 @@ Before filing a public issue, redact private project and personal information. D
 | --- | --- | --- |
 | Add in-app runtime to an iOS app | [iOS Embedded Runtime Integration Guide](#ios-embedded-runtime-integration-guide) | SwiftPM or CocoaPods, always visibly Debug-only in app source. |
 | Install or update the macOS agent CLI | [CLI Integration Guide](#cli-integration-guide) | Homebrew for released builds, local source build only for unreleased validation. |
+| Use TritonKit tools in DeepSeek Harness | [DSH plugin](DSH/README.md) | Optional local Host bundle; uses the installed CLI, requires DSH Full access; no extra Web server. |
 | Control iOS apps without adding an app SDK | [iOS Resident XCTest Runner](#ios-resident-xctest-runner) | The CLI bundles the Runner; Xcode builds and signs a bounded UI-test session. |
 | Build, test, run, and diagnose an unknown Apple repo | [CLI Integration Guide](#cli-integration-guide) | Use `triton xcode`, `triton xcresult`, and artifact commands before raw `xcodebuild`. |
 | Prepare a HarmonyOS / DevEco Emulator | [Harmony App Integration Guide](#harmony-app-integration-guide) | Host-side HDC adapter works without embedded runtime. |
