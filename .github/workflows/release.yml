@@ -208,7 +208,7 @@ jobs:
           set -euo pipefail
           tag="${GITHUB_REF_NAME}"
           if ! gh release view "${tag}" >/dev/null 2>&1; then
-            gh release create "${tag}" --title "${tag}" --notes "Automated TritonKit release for ${GITHUB_SHA}."
+            gh release create "${tag}" --title "${tag}" --generate-notes
           fi
           gh release upload "${tag}" dist/* --clobber
 
