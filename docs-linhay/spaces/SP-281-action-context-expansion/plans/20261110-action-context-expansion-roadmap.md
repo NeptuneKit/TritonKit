@@ -1,14 +1,14 @@
-# SP-258 — ActionContext 后续扩展路线
+# SP-280 — ActionContext 后续扩展路线
 
 ## 当前状态
 
 - 状态：路线规划完成，等待按优先级连续推进。
-- 前置批次：[SP-257 ActionContext / Action Admission 全量批次](../SP-257-action-context-admission-design/README.md)。
-- 目标：把 SP-257 的 runner/device.action 两条试点链路收敛为共享核心，再按边界扩展到其它 mutating surfaces。
+- 前置批次：[SP-279 ActionContext / Action Admission 全量批次](../SP-280-action-context-admission/README.md)。
+- 目标：把 SP-279 的 runner/device.action 两条试点链路收敛为共享核心，再按边界扩展到其它 mutating surfaces。
 
 ## 当前事实
 
-SP-257 已完成：
+SP-279 已完成：
 
 - ActionContext、canonical digest、AdmissionStore、generation guard；
 - iOS host runner admission、receipt、evidence writer、lease gate；
@@ -110,7 +110,7 @@ SP-257 已完成：
 - 审批 UI、Wails 写控制面；
 - 签名、发布、供应链和真实设备验收。
 
-这些能力不从 SP-258 自动扩大。
+这些能力不从 SP-280 自动扩大。
 
 ## 依赖顺序
 

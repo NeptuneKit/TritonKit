@@ -1,4 +1,4 @@
-# SP-257 ActionContext / Action Admission 全量实施计划
+# SP-279 ActionContext / Action Admission 全量实施计划
 
 ## 0. 计划目的
 
@@ -18,11 +18,11 @@
 ### 1.1 设计和静态研究
 
 - SP-256 Pinky 参考归档、正式深度调研和机制级评估已完成；
-- SP-257 已冻结 ActionContext、ActionAdmission、receipt、delivery/outcome/postcondition、二次 gate、BDD 和不采用项；
+- SP-279 已冻结 ActionContext、ActionAdmission、receipt、delivery/outcome/postcondition、二次 gate、BDD 和不采用项；
 - 设计依据见：
-  - `docs-linhay/spaces/SP-256-pinky-reference-research/plans/20261110-pinky-formal-research-report.md`
-  - `docs-linhay/spaces/SP-256-pinky-reference-research/plans/20261110-deep-technology-assessment.md`
-  - `docs-linhay/spaces/SP-257-action-context-admission-design/plans/20261110-action-context-admission-design.md`
+  - `docs-linhay/spaces/SP-279-pinky-reference/plans/20261110-pinky-formal-research-report.md`
+  - `docs-linhay/spaces/SP-279-pinky-reference/plans/20261110-deep-technology-assessment.md`
+  - `docs-linhay/spaces/SP-280-action-context-admission/plans/20261110-action-context-admission-design.md`
 
 ### 1.2 已落地代码
 
@@ -301,7 +301,7 @@ C 与 D 可以在文件面完全隔离时并行研究，但实现和共享测试
 
 ## 7. 最终完成定义
 
-只有以下全部满足，才将 SP-257 标记为全量完成：
+只有以下全部满足，才将 SP-279 标记为全量完成：
 
 - 至少两类 mutating action 接入统一 admission；
 - receipt metadata 能实际进入 evidence run event；
@@ -326,4 +326,4 @@ C 与 D 可以在文件面完全隔离时并行研究，但实现和共享测试
 
 ## 10. 批次关闭边界
 
-SP-257 完成本批次的合同和离线/fixture 验收。其它 action 的全量迁移、人工审批控制面、远程 session resume、真实设备 provider 和发布供应链仍需独立 scope，不由本批次隐式扩大。
+SP-279 完成本批次的合同和离线/fixture 验收。其它 action 的全量迁移、人工审批控制面、远程 session resume、真实设备 provider 和发布供应链仍需独立 scope，不由本批次隐式扩大。

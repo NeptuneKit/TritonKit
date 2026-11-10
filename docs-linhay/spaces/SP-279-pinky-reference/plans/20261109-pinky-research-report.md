@@ -1,4 +1,4 @@
-# SP-256 — Pinky 参考项目调研
+# SP-279 — Pinky 参考项目调研
 
 ## 任务与边界
 
@@ -17,7 +17,7 @@
 ## BDD 与验收边界
 
 - Given 用户指定 GitHub 仓库，When 参考归档完成，Then 本地目录保留可复核的完整 Git clone、远端 URL、固定提交和 tag。
-- Given 参考项目需要进入长期登记，When 调研资料写回，Then `reference-state.json`、SP-207 入口、SP-256 space 和本日 memory 互相链接，且不把研究注册写成产品采用。
+- Given 参考项目需要进入长期登记，When 调研资料写回，Then `reference-state.json`、SP-207 入口、SP-279 space 和本日 memory 互相链接，且不把研究注册写成产品采用。
 - Given 研究只基于源码和项目文档，When 输出结论，Then 明确区分源码观察、上游验收自述和本地未执行项。
 
 ## 项目定位

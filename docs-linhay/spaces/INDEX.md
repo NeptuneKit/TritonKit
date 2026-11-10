@@ -3,8 +3,8 @@
 
 2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-10-30（SP251整合skills与v0.2.38发布准备）
-> 覆盖范围：277/277 个已存在 space
+> 最近同步：2026-11-10（SP-281 ActionContext 后续扩展路线）
+> 覆盖范围：281/281 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -19,8 +19,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 277/277 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 277/277 | 每条记录链接到现有 space README |
+| 编号登记 | 281/281 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 281/281 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -384,3 +384,9 @@
 | `SP-277-release-v0-2-42` | [`SP-277-release-v0-2-42`](./SP-277-release-v0-2-42/README.md) | 已发布 | v0.2.42精确CI/preflight/双架构/安装与只读浏览器验收通过，人工现场边界保留 |
 
 | `SP-278-dsh-plugin` | [`SP-278-dsh-plugin`](./SP-278-dsh-plugin/README.md) | 已合并推送／0.1.1生效 | 实现7bc7fac4、修复4dd8f334、merge f4efd202已推远端main，Node32/完整文档契约/两条CI通过；主目录WIP和15条无关提交保留，GUI/真实动作未验 |
+
+| `SP-279-pinky-reference` | [`SP-279-pinky-reference`](./SP-279-pinky-reference/README.md) | 已完成静态研究 | DIYgod/pinky `v2026.1109.16` / `209aa9e4` 已归档并完成正式调研；未运行第三方代码 |
+
+| `SP-280-action-context-admission` | [`SP-280-action-context-admission`](./SP-280-action-context-admission/README.md) | 已完成全量批次 | ActionContext、AdmissionStore、runner/evidence/lease/generation、第二类 device.action、schema/recovery、并发验收已完成 |
+
+| `SP-281-action-context-expansion` | [`SP-281-action-context-expansion`](./SP-281-action-context-expansion/README.md) | 后续路线已冻结 | P0 shared coordinator/receipt → P1 device.action evidence/uncertain → P2 剩余 mutating surfaces；approval/HTTP/session resume/真实设备另立 scope |

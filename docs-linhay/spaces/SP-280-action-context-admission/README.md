@@ -1,9 +1,9 @@
-# SP-257 — ActionContext 与 Action Admission 设计
+# SP-279 — ActionContext 与 Action Admission 设计
 
 ## 当前状态
 
 - 状态：P0 全量批次已完成。ActionContext/AdmissionStore、runner/evidence/lease/generation、第二类 device.action、schema/recovery 和并发联合验收均已通过；其它 action、approval UI、HTTP admission、session resume 和真实设备另立 scope。
-- 来源依据：[SP-256 Pinky 正式调研](../SP-256-pinky-reference-research/README.md)。
+- 来源依据：[SP-256 Pinky 正式调研](../SP-279-pinky-reference/README.md)。
 - 目标：为 TritonKit 现有 mutating action 统一绑定 target、lease、observation、request、receipt 和 evidence。
 - 本轮边界：只冻结合同、状态机、门禁顺序和 BDD；不修改产品代码，不新增 Web/Wails 控制面，不接入 Pinky 真实手机能力。
 
@@ -122,7 +122,7 @@ P0 采用 `revise-first`：先在现有 CLI/HTTP/runner fixture 中验证 Action
 
 - [P0 全量实施计划](./plans/20261110-action-context-admission-full-rollout-plan.md)
 - [P0 设计说明](./plans/20261110-action-context-admission-design.md)
-- [Pinky 正式调研](../SP-256-pinky-reference-research/plans/20261110-pinky-formal-research-report.md)
+- [Pinky 正式调研](../SP-279-pinky-reference/plans/20261110-pinky-formal-research-report.md)
 - [当前 target lease 合同](../../../../Sources/TritonKitShared/TKTargetLeaseModels.swift)
 - [当前 evidence manifest 合同](../../../../Sources/TritonKitShared/TKEvidenceModels.swift)
 

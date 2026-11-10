@@ -1,4 +1,12 @@
+2026-11-10：[SP-281 ActionContext 后续扩展路线](./SP-281-action-context-expansion/README.md)已冻结：P0 shared coordinator/receipt、P1 device.action evidence/uncertain、P2 剩余 mutating surfaces；approval/HTTP/session resume/真实设备另立 scope。
+
+2026-11-10：[SP-280 ActionContext / Action Admission](./SP-280-action-context-admission/README.md)已完成全量批次：runner/evidence/lease/generation、第二类 device.action、schema/recovery 和并发验收通过；root 304 tests / 43 suites、CLI 1685 tests / 179 suites。
+
 # TritonKit Spaces Index
+
+- [SP-279-pinky-reference](./SP-279-pinky-reference/README.md)
+- [SP-280-action-context-admission](./SP-280-action-context-admission/README.md)
+- [SP-281-action-context-expansion](./SP-281-action-context-expansion/README.md)
 
 2026-11-09：[SP-277-release-v0-2-42](./SP-277-release-v0-2-42/README.md)已发布v0.2.42，精确main/tag/Release CI、双架构资产与安装验收通过；[验收报告](./SP-277-release-v0-2-42/plans/20261109-release.md)。
 

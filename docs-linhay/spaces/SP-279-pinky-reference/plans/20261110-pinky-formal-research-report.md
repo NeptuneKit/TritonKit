@@ -1,6 +1,6 @@
 # DIYgod/pinky 深度技术调研报告
 
-**报告编号**：SP-256 / 20261110  
+**报告编号**：SP-279 / 20261110
 **研究对象**：`DIYgod/pinky`  
 **来源**：<https://github.com/DIYgod/pinky>  
 **固定版本**：`v2026.1109.16` / `209aa9e4b2ff1fd81edec3c393a64b21b79162fb`  
