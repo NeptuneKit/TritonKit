@@ -1,7 +1,5 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 /// A public control callback or content-offset mutation cannot create UIKit
 /// touch sequences. Keep the same typed contract on every unsupported target.

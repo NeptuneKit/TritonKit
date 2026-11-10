@@ -1,6 +1,4 @@
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 enum TKRuntimeRequestDomain: Equatable {
     case control

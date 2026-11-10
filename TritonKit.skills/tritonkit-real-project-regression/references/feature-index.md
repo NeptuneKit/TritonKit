@@ -7,7 +7,7 @@ Use this file to choose the smallest reference needed for a real-project regress
 | Validate Device Hub metadata, physical management, App lifecycle or specialized Apple platforms | [device-hub-acceptance.md](device-hub-acceptance.md) |
 | Install, upgrade, or validate the `triton` CLI distribution | `cli-install.md` |
 | Run a real app regression end to end | `workflow.md` |
-| Add or validate iOS SwiftPM/CocoaPods embedded runtime integration | `ios-integration.md` |
+| Add or validate iOS SwiftPM embedded runtime integration | `ios-integration.md` |
 | Validate iOS Simulator lifecycle, Xcode run, media, semantic, or route checks | `ios-integration.md` |
 | Validate Harmony / DevEco host-side commands or HDC targets | `harmony-integration.md` |
 | Validate Harmony embedded runtime or package/source/HAR integration | `harmony-integration.md` |

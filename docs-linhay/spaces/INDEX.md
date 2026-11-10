@@ -369,7 +369,7 @@
 
 | `SP-269-issue-204-controlled-input` | [`SP-269-issue-204-controlled-input`](./SP-269-issue-204-controlled-input/README.md) | 已发布 | #204受控textarea/ambiguity：PR #268 合入 main026d329e；9单测/7真实无opt-in/完整门禁及标准Pod/精确CI通过，随v0.2.39发布，安装通过 |
 
-| `SP-270-lookin-core` | [`SP-270-lookin-core`](./SP-270-lookin-core/README.md) | 集成验证 | #273复用精确已验候选，独立集成worktree；标准iOS13Pod和main回归待完成 |
+| `SP-270-lookin-core` | [`SP-270-lookin-core`](./SP-270-lookin-core/README.md) | 已集成/待发布 | #273已随候选集成；当前仅支持SwiftPM/iOS16+，CocoaPods门禁已退休 |
 
 | `SP-271-issue-139-runtime-diagnostics` | [`SP-271-issue-139-runtime-diagnostics`](./SP-271-issue-139-runtime-diagnostics/README.md) | 执行 | closed #139新反馈：direct runtime endpoint及恢复上下文，隔离HTTP fixture独立验证 |
 

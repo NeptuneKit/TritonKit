@@ -86,7 +86,7 @@
 
 ## 5. 发布与维护
 
-1. 发布、Homebrew、SwiftPM/CocoaPods、public skills、checksum 和双架构 CLI 的详细流程使用 `tritonkit-release-package-governance`；已发布 tag 不移动，缺漏走下一 patch。
+1. 发布、Homebrew、SwiftPM（iOS 16+）、public skills、checksum 和双架构 CLI 的详细流程使用 `tritonkit-release-package-governance`；已发布 tag 不移动，缺漏走下一 patch。
 2. Release 产物至少包含 macOS arm64/x86_64 `triton`、checksum manifest 与由 `docs-linhay/scripts/package-public-skills.py` 生成的 `tritonkit-skills.tar.gz`（含 `TritonKit.skills/BUILD_INFO.json`）。
 3. 新增配置覆盖默认值、环境变量和非法值；新增外部依赖说明必要性。Swift 源文件超过 1500 行时按 Commands / Runtime(or Service) / Models 拆分。
 

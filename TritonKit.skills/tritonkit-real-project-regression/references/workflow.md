@@ -13,9 +13,8 @@
    - If the task only needs Harmony host-side emulator discovery, readiness, app inspect, or app launch, do not add an app dependency; use the Harmony host-side commands below.
    - If the task needs iOS embedded runtime access, use the iOS package path below.
    - If the task needs Harmony embedded runtime access, use the Harmony package/source path below and keep provider semantics opt-in.
-   - SwiftPM or CocoaPods as requested; CocoaPods examples must use `:configurations => ['Debug']`.
-   - For SwiftPM, distinguish build settings from product dependencies: TritonKit uses the package `TRITONKIT_RUNTIME_ENABLED` Debug compile flag, but SwiftPM still does not provide CocoaPods-style configuration-scoped product dependencies. Keep source-level `#if DEBUG` isolation, or create a separate Debug-only app target/scheme if Release must not link TritonKit at all.
-   - For CocoaPods, the `TritonKit` podspec defines `TRITONKIT_RUNTIME_ENABLED` for the pod target Debug configuration. Do not ask the app target to add custom `OTHER_SWIFT_FLAGS` for this macro.
+   - SwiftPM for iOS 16+ apps; keep the package product and app bootstrap visibly Debug-only.
+   - SwiftPM uses the package `TRITONKIT_RUNTIME_ENABLED` Debug compile flag. Keep source-level `#if DEBUG` isolation, or create a separate Debug-only app target/scheme if Release must not link TritonKit at all.
    - Put all app-side TritonKit code in a dedicated iOS file such as `TritonKitDebugBootstrap.swift`.
    - Wrap the entire file in `#if DEBUG`, including `import TritonKit` and `TritonKit.shared.start(...)`.
    - Call the bootstrap only from a `#if DEBUG` branch in AppDelegate, SceneDelegate, or SwiftUI `onAppear`.

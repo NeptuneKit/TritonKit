@@ -1,7 +1,5 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 func runtimeUIHealthErrorResponse(_ message: TKMessage, code: String, health: TKRuntimeUIHealthSnapshot) -> TKMessage {
     let timedOut = code == "runtime_ui_timeout"

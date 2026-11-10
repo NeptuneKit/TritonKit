@@ -4,7 +4,7 @@
 
 TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
 
-1. CI 只在 `v*` tag 或手动 `workflow_dispatch` 时进入发布物链路；普通 `main` push / PR 只跑 validate。`v*` tag 的 validate 固定走 contracts 快检，完整 Swift/CocoaPods 远端验证留给 main/PR，本地发布前仍由 `release.sh` 运行 preflight。
+1. CI 只在 `v*` tag 或手动 `workflow_dispatch` 时进入发布物链路；普通 `main` push / PR 只跑 validate。`v*` tag 的 validate 固定走 contracts 快检，完整 SwiftPM iOS 16 验证留给 main/PR，本地发布前仍由 `release.sh` 运行 preflight。
 2. 发布物链路在 macOS arm64 runner 上构建 arm64 release `triton`，并在 arm64 runner 上通过 SwiftPM `--triple x86_64-apple-macosx14.0` 交叉编译 x86_64 release `triton`；arm64 完成后即可发布 Release / Homebrew，x86_64 作为后补资产上传。
 3. 每个架构产出一个压缩包：
    - `triton-macos-arm64.tar.gz`
@@ -91,7 +91,7 @@ Formula 的 `install` 逻辑必须同时兼容两种 Homebrew staging 布局：
 
 Formula 的 `test` 逻辑必须解析 `triton version --json`，不要用紧凑 JSON 字符串匹配。CLI 的 JSON 输出允许 pretty-print 空格和换行。
 
-安装后只提供 `triton` CLI。iOS runtime 的 SwiftPM / CocoaPods 接入方式不变。
+安装后只提供 `triton` CLI。iOS runtime 的 SwiftPM 接入方式不变。
 
 ## Secrets
 

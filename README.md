@@ -10,7 +10,7 @@ Before filing a public issue, redact private project and personal information. D
 
 | Need | Start Here | Notes |
 | --- | --- | --- |
-| Add in-app runtime to an iOS app | [iOS Embedded Runtime Integration Guide](#ios-embedded-runtime-integration-guide) | SwiftPM or CocoaPods, always visibly Debug-only in app source. |
+| Add in-app runtime to an iOS app | [iOS Embedded Runtime Integration Guide](#ios-embedded-runtime-integration-guide) | SwiftPM (iOS 16+), always visibly Debug-only in app source. |
 | Install or update the macOS agent CLI | [CLI Integration Guide](#cli-integration-guide) | Homebrew for released builds, local source build only for unreleased validation. |
 | Use TritonKit tools in DeepSeek Harness | [DSH plugin](DSH/README.md) | Optional local Host bundle; uses the installed CLI, requires DSH Full access; no extra Web server. |
 | Control iOS apps without adding an app SDK | [iOS Resident XCTest Runner](#ios-resident-xctest-runner) | The CLI bundles the Runner; Xcode builds and signs a bounded UI-test session. |
@@ -129,33 +129,12 @@ https://github.com/NeptuneKit/TritonKit.git
 
 Add only the `TritonKit` product to the iOS app target. `TritonKitShared` is an internal shared-contract target pulled in transitively; app integrations should not select or import it directly. Keep every app-side source file that imports or starts TritonKit behind `#if DEBUG`; do not rely only on the package runtime guard.
 
-SwiftPM supports configuration-scoped build settings, so TritonKit defines `TRITONKIT_RUNTIME_ENABLED` only for Debug package builds and keeps the embedded runtime no-op in Release. SwiftPM / Xcode package product dependencies still do not have a CocoaPods-style `:configurations => ['Debug']` switch: the package product may remain attached to the target even though the runtime is disabled. If the production Release target must not link TritonKit at all, create a separate Debug-only app target or scheme and attach the `TritonKit` product only to that target.
+SwiftPM supports configuration-scoped build settings, so TritonKit defines `TRITONKIT_RUNTIME_ENABLED` only for Debug package builds and keeps the embedded runtime no-op in Release. SwiftPM / Xcode package products do not provide a configuration-scoped dependency switch: the package product may remain attached to the target even though the runtime is disabled. If the production Release target must not link TritonKit at all, create a separate Debug-only app target or scheme and attach the `TritonKit` product only to that target.
 
 For command-line package manifests:
 
 ```swift
 .package(url: "https://github.com/NeptuneKit/TritonKit.git", branch: "main")
-```
-
-#### CocoaPods
-
-During development, point CocoaPods at the repository and restrict the TritonKit pod to Debug configurations. Do not add `TritonKitShared` explicitly; the `TritonKit` podspec resolves the matching shared-contract pod transitively. The podspec defines `TRITONKIT_RUNTIME_ENABLED` for the TritonKit pod target only in Debug builds, so the app target should not need custom `OTHER_SWIFT_FLAGS` for this macro.
-
-```ruby
-target 'YourApp' do
-  use_frameworks!
-
-  pod 'TritonKit',
-      :git => 'https://github.com/NeptuneKit/TritonKit.git',
-      :branch => 'main',
-      :configurations => ['Debug']
-end
-```
-
-After versioned pod publication, this can become:
-
-```ruby
-pod 'TritonKit', '~> 0.1.0', :configurations => ['Debug']
 ```
 
 ### 2. Start TritonKit In The App
@@ -358,7 +337,7 @@ If your app blocks cleartext development traffic through App Transport Security,
 
 ### 5. iOS Runtime Boundary
 
-`TritonKit.isRuntimeEnabled` is `true` only when the package manager build defines `TRITONKIT_RUNTIME_ENABLED` (SwiftPM Debug package configuration, or the TritonKit CocoaPods pod target Debug configuration). In Release package builds the public API remains compileable, but the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
+`TritonKit.isRuntimeEnabled` is `true` only when the package manager build defines `TRITONKIT_RUNTIME_ENABLED` (SwiftPM Debug package configuration). In Release package builds the public API remains compileable, but the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
 
 ### 6. WebView Observation
 
@@ -415,7 +394,7 @@ brew upgrade triton
 
 For a machine-readable check, use `triton update --check --json`. A successful check resolves a target release; older versions may return `updateAvailable=false` with no target, which means the version was not checked. Use `triton update --yes --json` to upgrade, or add `--include-skills --skills-dir <agent-skills-root>` to align the public skills too. Execution verifies the Homebrew formula and installed CLI against the selected release; version mismatch is an error and stops skills installation. Check `installedVersion` and the installed skills `BUILD_INFO.json` before reporting alignment.
 
-Homebrew installs only the macOS CLI. The iOS runtime still needs SwiftPM or CocoaPods integration in the app target.
+Homebrew installs only the macOS CLI. The iOS runtime is distributed through SwiftPM and requires iOS 16 or newer.
 
 TritonKit's release workflow updates the default tap repository, `NeptuneKit/homebrew-tap`, when a tag matching `v*` is pushed. Maintainers should publish through `docs-linhay/scripts/release.sh <version>`, which checks the tap repository, `TAP_GITHUB_TOKEN`, local validation, the GitHub Actions run, GitHub Release assets, and Homebrew fetch.
 

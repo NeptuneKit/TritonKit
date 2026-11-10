@@ -40,16 +40,6 @@ def read(path):
     except FileNotFoundError:
         fail("missing " + path)
 
-# Check TritonKit.podspec
-podspec_path = os.path.join(root, "TritonKit.podspec")
-text = read(podspec_path)
-match = re.search(r'^\s*s\.version\s*=\s*[\'"]([^\'"]+)[\'"]', text, re.MULTILINE)
-if not match:
-    fail("missing s.version in TritonKit.podspec")
-actual = match.group(1)
-if actual != expected:
-    fail("TritonKit.podspec version " + actual + " does not match " + expected)
-
 # Check Web/package.json
 web_package_path = os.path.join(root, "Web/package.json")
 try:

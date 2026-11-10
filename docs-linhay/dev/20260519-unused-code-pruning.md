@@ -10,7 +10,7 @@
 
 - Given `TKAutoLayoutConstraint`、`TKConstraintItemType`、`TKAttributesSectionStyle` 没有被 runtime、CLI、测试或文档引用
 - When 删除这些类型
-- Then `swift test`、release CLI build 和 CocoaPods lint 仍通过
+- Then `swift test`、release CLI build 和 SwiftPM iOS 16 build 仍通过
 
 ### 场景 2：删除未使用 helper
 

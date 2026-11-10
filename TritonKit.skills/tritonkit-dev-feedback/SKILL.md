@@ -37,7 +37,7 @@ Repository: `NeptuneKit/TritonKit`.
 | Offline testrec, preflight, receipt-backed samples or Stage 1 reliability | [Reliability contracts](references/reliability-feedback.md) |
 | Optional highlight, floating picker, guarded selection or SDK hub | [Picker and highlight contracts](references/picker-feedback.md) |
 | Bundled iOS Runner setup, startup failures or observation geometry | [Runner contracts](references/runner-feedback.md) |
-| iOS SwiftPM/CocoaPods integration | [iOS integration](references/app-integration-ios.md) |
+| iOS SwiftPM integration | [iOS integration](references/app-integration-ios.md) |
 | Harmony host or embedded SDK integration | [Harmony integration](references/app-integration-harmony.md) |
 
 ## Always keep

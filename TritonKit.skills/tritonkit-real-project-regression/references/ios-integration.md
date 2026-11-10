@@ -1,6 +1,6 @@
 ## iOS App Integration Guide
 
-Use this exact shape when the real app needs TritonKit embedded runtime access.
+Use this exact shape when an iOS 16+ app needs TritonKit embedded runtime access.
 
 SwiftPM:
 
@@ -10,20 +10,7 @@ https://github.com/NeptuneKit/TritonKit.git
 
 Add only the `TritonKit` product to the iOS app target. App integrations should not select or import internal TritonKit targets directly. Keep every app-side source file that imports or starts TritonKit behind `#if DEBUG`; do not rely only on the package runtime guard.
 
-SwiftPM supports configuration-scoped build settings, so TritonKit defines `TRITONKIT_RUNTIME_ENABLED` only for Debug package builds and keeps the embedded runtime no-op in Release. SwiftPM / Xcode package product dependencies still do not have a CocoaPods-style `:configurations => ['Debug']` switch: the package product may remain attached to the target even though the runtime is disabled. If the production Release target must not link TritonKit at all, create a separate Debug-only app target or scheme and attach the `TritonKit` product only to that target.
-
-CocoaPods during development. Add only the `TritonKit` pod; do not add sibling TritonKit pods. The podspec defines `TRITONKIT_RUNTIME_ENABLED` for the TritonKit pod target Debug configuration, while Release remains no-op:
-
-```ruby
-target 'YourApp' do
-  use_frameworks!
-
-  pod 'TritonKit',
-      :git => 'https://github.com/NeptuneKit/TritonKit.git',
-      :branch => 'main',
-      :configurations => ['Debug']
-end
-```
+SwiftPM supports configuration-scoped build settings, so TritonKit defines `TRITONKIT_RUNTIME_ENABLED` only for Debug package builds and keeps the embedded runtime no-op in Release. SwiftPM / Xcode package products do not provide a configuration-scoped dependency switch: the package product may remain attached to the target even though the runtime is disabled. If the production Release target must not link TritonKit at all, create a separate Debug-only app target or scheme and attach the `TritonKit` product only to that target.
 
 Create a dedicated Debug bootstrap file. For team apps, prefer an opt-in Debug bootstrap so ordinary Debug builds do not expose the runtime unless the developer explicitly enables it:
 

@@ -35,7 +35,7 @@ expect_mode swift Sources/TritonKitCLI/TritonKitCLI.swift .github/workflows/ci.y
 expect_mode contracts .github/workflows/ci.yml
 expect_mode contracts DSH/host.js DSH/test/plugin.test.js .github/workflows/dsh-plugin.yml
 expect_mode swift DSH/commands.js Sources/TritonKitCLI/TritonKitCLI.swift
-expect_mode podkit DSH/host.js Sources/TritonKit/TritonKit.swift
+expect_mode full DSH/host.js Sources/TritonKit/TritonKit.swift
 expect_mode full DSH/host.js UnknownRuntime/source.js
 expect_mode contracts docs-linhay/scripts/ci-validate-mode.sh
 expect_mode contracts docs-linhay/scripts/check-docs.sh
@@ -56,11 +56,10 @@ if [[ "${tag_mode}" != "contracts" ]]; then
   exit 1
 fi
 
-expect_mode podkit Sources/TritonKit/TritonKit.swift
-expect_mode podkit TritonKit.podspec
-expect_mode podkit Sources/TritonKit/TritonKit.swift Sources/TritonKitCLI/TritonKitCLI.swift
+expect_mode full Sources/TritonKit/TritonKit.swift
+expect_mode full Sources/TritonKit/TritonKit.swift Sources/TritonKitCLI/TritonKitCLI.swift
 
-expect_mode podkit Sources/TritonKitShared/TKCLITransportModels.swift
+expect_mode full Sources/TritonKitShared/TKCLITransportModels.swift
 expect_mode full docs-linhay/scripts/verify.sh
 expect_mode full fixtures/harmony-collector-smoke/oh-package.json5
 

@@ -1,8 +1,6 @@
 #if canImport(UIKit)
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 import UIKit
 
 public enum TKHierarchyBuilder {
@@ -288,9 +286,7 @@ public enum TKHierarchyBuilder {
 }
 #else
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 public enum TKHierarchyBuilder {
     public static let defaultMaxDepth = 64
     public static let defaultMaxChildrenPerNode = 200

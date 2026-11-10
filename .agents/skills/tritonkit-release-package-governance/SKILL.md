@@ -1,6 +1,6 @@
 ---
 name: tritonkit-release-package-governance
-description: Use when preparing or publishing a TritonKit release, especially when the user says the release must be whole, asks about updating built-in packages across endpoints, or touches CLI/Homebrew/Web/SwiftPM/CocoaPods/public skill package version alignment.
+description: Use when preparing or publishing a TritonKit release, especially when the user says the release must be whole, asks about updating built-in packages across endpoints, or touches CLI/Homebrew/Web/SwiftPM/public skill package version alignment.
 metadata:
   version: 0.1.0-dev
 ---
@@ -9,7 +9,7 @@ metadata:
 
 开工与交付按[经验索引](../../../docs-linhay/memory/EXPERIENCE.md)只读命中主题，未命中再检索；读取、证据、修订与退出遵循[治理闭环](../../../docs-linhay/dev/20260619-agent-workflow-skill-governance.md)。
 
-Use this skill for maintainer-side release work. It is an internal `.agents/skills/` workflow and must not be packaged into `TritonKit.skills/`.
+Use this skill for maintainer-side release work. It is an internal `.agents/skills/` workflow and must not be packaged into `TritonKit.skills/`. The current iOS distribution path is SwiftPM for iOS 16+; CocoaPods is retired.
 
 ## Release Boundary
 
@@ -18,8 +18,8 @@ A whole TritonKit release means these public package surfaces are aligned to the
 - CLI binary release assets and `triton version --json` output, stamped by CI from the `v*` tag.
 - Bundled Web asset inside the CLI tarballs and Homebrew install.
 - Public skill bundle `tritonkit-skills.tar.gz`, stamped by CI from the `v*` tag.
-- iOS embedded SDK CocoaPods spec: `TritonKit.podspec`.
 - Web package manifests: `Web/package.json` and `Web/package-lock.json`.
+- iOS embedded SDK is distributed through the SwiftPM Git tag and supports iOS 16+.
 
 SwiftPM has no version field in `Package.swift`; consumers update by resolving the Git tag. Do not add a package version field to SwiftPM manifests.
 
@@ -27,7 +27,7 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 
 1. Pick the next tag. If a tag has already been published, never move it; create the next patch release.
 2. Before changing versions, run `docs-linhay/scripts/verify-release-package-versions.sh <version>` to prove the current manifests would fail for the target.
-3. Update `TritonKit.podspec`, `Web/package.json`, and `Web/package-lock.json`.
+3. Update `Web/package.json` and `Web/package-lock.json`; SwiftPM consumers resolve the release tag and `Package.swift` has no version field.
 4. Do not manually edit `Sources/TritonKitCLI/CLIBuildInfo.swift` for a release version. CI writes `TritonKitBuildInfo.cliVersion` during release builds.
 5. Run focused validation:
    - `docs-linhay/scripts/verify-release-package-versions.sh <version>`
@@ -35,12 +35,11 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
    - `git diff --check`
    - `docs-linhay/scripts/check-docs.sh`
    - `npm --prefix Web run build`
-   - `pod lib lint TritonKit.podspec --allow-warnings --skip-tests`
    - `docs-linhay/scripts/verify-skill-package.sh`; public skill Markdown commands must pass `verify-public-skill-commands.py`, and `public-skill-command-schema.json` must remain aligned with CLI `commandSchemas()`.
-   Run multiple gates fail-fast (`set -e` or one command per checked invocation). Do not treat the final command's zero exit as proof that earlier gates passed. For CocoaPods, require both a zero exit and the explicit `TritonKit passed validation.` result; compiler errors printed before a later successful command remain release blockers.
+   Run multiple gates fail-fast (`set -e` or one command per checked invocation). Do not treat the final command's zero exit as proof that earlier gates passed.
 6. Run release preflight with Xcode simulator checks disabled only when the local environment does not need that coverage: `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local`.
 7. Update `docs-linhay/dev/` and `docs-linhay/memory/YYYY-MM-DD.md` for release contract changes.
-8. Commit and push `main`, then wait for the exact candidate SHA’s complete main CI and confirm the standard pod lint job contains `TritonKit passed validation.` before publishing through `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/release.sh v<version> --yes`. `release.sh` does not enforce the main CI gate; tag contracts do not replace it. If using `--skip-local-verify` after an already completed local gate, record the tested SHA and prove unchanged native paths; rerun every affected Web/docs gate on the final candidate.
+8. Commit and push `main`, then wait for the exact candidate SHA’s complete main CI before publishing through `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/release.sh v<version> --yes`. `release.sh` does not enforce the main CI gate; tag contracts do not replace it. If using `--skip-local-verify` after an already completed local gate, record the tested SHA and prove unchanged native paths; rerun every affected Web/docs gate on the final candidate.
 9. After release, verify GitHub Release assets, GitHub Actions success including x86_64 backfill, Homebrew upgrade, `triton version --json`, packaged `triton web --print-command --json`, and a real `triton web` HTTP smoke.
    - If the release changes Web input routing, the smoke must POST the same complete gesture DTO used by the Web client. Coordinate taps include `x`, `y`, `width`, and `height`; an intentionally incomplete probe may return a contract error but is not success evidence.
    - Run the installed packaged binary from outside the repository on an isolated port first. When handing the canonical Web port back to another task, resolve and replace only that listener; preserve the shared `triton serve`, Simulator/Emulator, and App processes unless their owner explicitly authorizes a restart.
@@ -67,7 +66,7 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 
 ## CI / Release Performance Contract
 
-- `CI` handles validation only. `v*` tag validation must stay on the contracts fast path and must not wait for Swift tests or CocoaPods lint.
+- `CI` handles validation only. `v*` tag validation must stay on the contracts fast path and must not wait for Swift tests.
 - Release asset builds live in the independent `Release` workflow. Do not restore release builds as active jobs in the `CI` workflow.
 - arm64 release assets are the Apple Silicon publish gate: arm64 CLI, public skill bundle, checksum manifest, GitHub Release, and Homebrew tap must become available before waiting on x86_64.
 - x86_64 CLI is a backfill asset. Build it on the arm64 macOS runner with `swift build --package-path CLI --scratch-path .build/cli-x86 -c release --product triton --triple x86_64-apple-macosx14.0`, then verify `file` reports `Mach-O 64-bit executable x86_64` before upload.
@@ -85,6 +84,6 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 
 ## Reporting
 
-State which surfaces were aligned, which validations passed, and whether CocoaPods was only linted or also pushed to a pod repo/trunk. If CocoaPods publishing is not performed, say that explicitly.
+State which surfaces were aligned and which validations passed. iOS SDK distribution is SwiftPM-only; do not report or publish CocoaPods artifacts.
 
 - Web Node测试中的多个Vite createServer可能共用node_modules/.vite缓存；出现冷缓存rename ENOTEMPTY时保留失败与进程/路径证据，按共享缓存串行原则用--test-concurrency=1运行package.json原完整测试清单并绑定同候选CLI。不能仅凭缓存预热后的偶然重跑通过宣称并发问题已修复，不删除用例或跳过失败门禁。

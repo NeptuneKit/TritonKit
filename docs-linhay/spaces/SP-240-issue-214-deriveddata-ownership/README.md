@@ -1,4 +1,4 @@
-# SP-240 · #214 DerivedData 处理结论
+# SP-240 · #214 DerivedData 处理结论（not planned）
 
 当前收口：通用自动删除已取消，当前产品边界仅保留 inspect/preview 与 confirm fail-closed；本轮 not-planned 收口证据见 [20261110-not-planned-closeout](plans/20261110-not-planned-closeout.md)。原始 18.66 GB 现场映射仍未知，不将本 issue 写成已实现安全删除。
 
@@ -36,3 +36,6 @@
 本轮调查/删除记录位于 ../TritonKit-worktrees/SP-241-open-issues-validation，branch 为 codex/issue-214-cache-investigation；基线 32a85a9d。
 
 历史溯源切片沿用同一集成 worktree，branch 为 codex/issue-214-history-trace，基线 eefac94f；只读外部资料；本切片已通过 PR #235 合并交付脱敏调查文档，不关闭 #214。
+
+
+2026-11-10 收口：通用自动删除不纳入当前产品范围；inspect/preview 与 confirm fail-closed 继续保留。原现场 18.66GB 映射未知，因此 issue 按 not planned 回复并关闭，不宣称实现了安全自动清理。

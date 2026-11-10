@@ -1,4 +1,10 @@
-# CocoaPods support
+# CocoaPods support retired
+
+As of the iOS 16+ support decision on 2026-11-10, CocoaPods is not a supported TritonKit distribution path. `TritonKit.podspec` was removed, the single-pod compatibility macro was deleted, and CI/release no longer lint or publish CocoaPods artifacts. iOS apps must integrate the `TritonKit` product through SwiftPM and keep the bootstrap behind `#if DEBUG`.
+
+The historical design and acceptance notes below are retained for traceability only; they are not current product requirements.
+
+# Historical CocoaPods support design
 
 ## 背景
 

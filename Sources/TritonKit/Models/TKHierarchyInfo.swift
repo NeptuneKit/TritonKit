@@ -1,7 +1,5 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 public struct TKHierarchyInfo: Codable {
     public let displayItems: [TKDisplayItem]

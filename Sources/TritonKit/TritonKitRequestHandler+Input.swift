@@ -1,7 +1,5 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 extension TritonKitRequestHandler {
     func handleInput(_ message: TKMessage) async -> TKMessage? {

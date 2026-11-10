@@ -1,7 +1,5 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 #if canImport(UIKit)
 /// The generation fences queued starts/stops; UIKit objects are used only on MainActor.

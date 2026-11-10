@@ -1,7 +1,5 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 /// The selected layer's own pixels (solo), its rendered subtree (group), or both.
 public enum TKNodeScreenshotMode: String, Codable, CaseIterable {

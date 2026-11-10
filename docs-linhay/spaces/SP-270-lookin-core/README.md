@@ -2,13 +2,13 @@
 
 ## 当前集成阶段（2026-11-03）
 
-自动 issue 流程复用原负责人已停止写入的精确候选，进行独立审阅、整合与标准 iOS 13 Pod CI。集成分支 `codex/sp270-lookin-integration`，worktree `../TritonKit-worktrees/SP-270-lookin-core-integration/`，基线 `9578782a7cbfd855228f8e996b07d93437725870`。原 `feat/SP-270-lookin-core` 未提交现场、原始证据和专属测试工程完整保留；当前 main 的占号登记由本完整 Space 替代。
+自动 issue 流程复用原负责人已停止写入的精确候选，进行独立审阅、整合与 SwiftPM iOS 16+ 回归。集成分支 `codex/sp270-lookin-integration`，worktree `../TritonKit-worktrees/SP-270-lookin-core-integration/`，基线 `9578782a7cbfd855228f8e996b07d93437725870`。原 `feat/SP-270-lookin-core` 未提交现场、原始证据和专属测试工程完整保留；当前 main 的占号登记由本完整 Space 替代。
 
-集成候选已由 PR #276 合入 main（merge `3b82824333467cf6d4e148cba04a97b3f70705aa`），PR 精确 CI（含标准 Pod）与合并后 main CI 均通过；已随 v0.2.40（`232749b3`）正式发布；原私有 App 与 iOS 13 本机工具链边界仍不宣称已解决。42 个源码/测试及两个旧候选二进制与原验收 SHA256 一致；Web/package.json 仅保留新主线 0.2.40 版本并接入既有测试清单。标准 Pod 与精确整合回归已由 PR #276 完成；发布采用本定时任务持续授权，正式 v0.2.40 tag 已创建且固定。
+集成候选已由 PR #276 合入 main（merge `3b82824333467cf6d4e148cba04a97b3f70705aa`），PR 精确 CI（含标准 Pod）与合并后 main CI 均通过；已随 v0.2.40（`232749b3`）正式发布；原私有 App 现场边界仍不宣称已解决；CocoaPods 已从支持列表移除，iOS 仅支持 SwiftPM/iOS 16+。42 个源码/测试及两个旧候选二进制与原验收 SHA256 一致；Web/package.json 仅保留新主线 0.2.40 版本并接入既有测试清单。标准 Pod 与精确整合回归已由 PR #276 完成；发布采用本定时任务持续授权，正式 v0.2.40 tag 已创建且固定。
 
 ## 原候选交接记录（历史阶段）
 
-实现与本地验收完成，独立工作区候选未提交、未合并、未发布。用户 2026-11-03 明确“直接复刻”，并选择“把 Lookin 核心能力做进 TritonKit，沿用现有界面”。此决定替代 SP-061 调研的外部 LookinServer provider 建议；不要求安装 LookinServer 或兼容其 wire。iOS 13 标准 CocoaPods lint 受本机 Xcode 27.1 最低部署目标限制，须后续匹配工具链复验；iOS 15 兼容 lint 已通过。
+实现与本地验收完成，独立工作区候选未提交、未合并、未发布。用户 2026-11-03 明确“直接复刻”，并选择“把 Lookin 核心能力做进 TritonKit，沿用现有界面”。此决定替代 SP-061 调研的外部 LookinServer provider 建议；不要求安装 LookinServer 或兼容其 wire。历史 iOS 13 CocoaPods lint 记录已退休；当前发布契约为 SwiftPM/iOS 16+。
 
 - 影响层：embedded UIKit runtime、shared/SDK DTO、CLI/HTTP inspection、现有 Web 只读检查器。
 - 基线：origin/main edffb45e；主目录 main cbaf0641 有独立 WIP 与未推送改动，保持原样。相关检查器核心两基线一致。
