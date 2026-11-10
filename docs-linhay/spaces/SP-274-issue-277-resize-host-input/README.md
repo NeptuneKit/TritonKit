@@ -9,7 +9,7 @@
 ## BDD
 
 - Given 精确 target-bound capability rejection 1001，When 执行 host tap guard，Then 允许通过 Resize 门禁并继续现有 DTUHID、屏幕和坐标校验；诊断模型仍保留 `unknown/unsupportedDevice` 原因。
-- Given 同一 rejection，When 执行 primary LCD still route，Then 使用已验证单 LCD topology，保留 `resizeState=unknown` 与 `resizeReason=unsupportedDevice` 证据，不授予 stream 或额外 display 权限。
+- Given 同一 rejection，When 执行 primary LCD still route，Then 使用已验证 active primary integrated LCD；若清单还包含 inactive non-primary virtual display，仍可按该 LCD 截图，保留 `resizeState=unknown` 与 `resizeReason=unsupportedDevice` 证据，不授予 stream 或额外 display 权限。
 - Given 非绑定、错误域、错误 feature、活动 session、超时或 malformed JSON，Then 保持现有 fail-closed 行为。
 
 ## 验收记录

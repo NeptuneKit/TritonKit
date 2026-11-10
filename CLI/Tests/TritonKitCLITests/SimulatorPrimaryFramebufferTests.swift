@@ -22,8 +22,8 @@ struct SimulatorPrimaryFramebufferTests {
         mutate(&root)
         return try JSONSerialization.data(withJSONObject: root)
     }
-    func classify(_ data: Data, exitCode: Int32 = 0) -> IOSSimulatorPrimaryFramebufferDisplay {
-        classifyIOSSimulatorPrimaryFramebufferDisplay(data: data, target: target, exitCode: exitCode, expectedArguments: arguments)
+    func classify(_ data: Data, exitCode: Int32 = 0, allowInactiveVirtualDisplays: Bool = false) -> IOSSimulatorPrimaryFramebufferDisplay {
+        classifyIOSSimulatorPrimaryFramebufferDisplay(data: data, target: target, exitCode: exitCode, expectedArguments: arguments, allowInactiveVirtualDisplays: allowInactiveVirtualDisplays)
     }
 
     @Test func requiresCompleteTargetBoundSingleLCDInventory() throws {
@@ -49,6 +49,9 @@ struct SimulatorPrimaryFramebufferTests {
     @Test func rejectsExtraOffVirtualDisplayAndIncompleteOrConflictingLCDFields() throws {
         let virtual: [String: Any] = ["displayId": 4, "uniqueId": "22222222-2222-3333-4444-555555555555", "name": "Resizable", "primary": false, "backlightState": "off", "type": ["virtual": [:]]]
         #expect(classify(try document(displays: [lcd, virtual])) != .display(displayID))
+        #expect(classify(try document(displays: [lcd, virtual]), allowInactiveVirtualDisplays: true) == .display(displayID))
+        let activeVirtual = virtual.merging(["backlightState": "activeOn"]) { _, new in new }
+        #expect(classify(try document(displays: [lcd, activeVirtual]), allowInactiveVirtualDisplays: true) != .display(displayID))
         #expect(classify(try document(displays: [])) != .display(displayID))
         let mutations: [(inout [String: Any]) -> Void] = [
             { $0.removeValue(forKey: "uniqueId") }, { $0["uniqueId"] = "internal" },
