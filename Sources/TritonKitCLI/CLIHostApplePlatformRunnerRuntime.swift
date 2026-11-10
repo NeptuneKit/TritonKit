@@ -257,7 +257,7 @@ func executeApplePlatformRunner(
     generationStore: TKActionGenerationStore = TKActionGenerationStore()
 ) throws -> HostApplePlatformRunnerReceipt {
     let (actionContext, actionContextDigest) = try makeApplePlatformRunnerActionContext(request)
-    let generationToken = generationStore.begin(target: actionContext.target, actionID: actionContext.actionID)
+    let coordinator = TKActionAdmissionCoordinator(admissions: admissionStore, generations: generationStore, now: now)
     var consumedAdmissionID: String?
     var started = false
     var bound = false
@@ -281,22 +281,9 @@ func executeApplePlatformRunner(
         try leaseGate?()
         bound = true
         let admissionTTL = min(max(Int(request.timeout.rounded(.up)), TKActionAdmissionStore.minTTLSeconds), TKActionAdmissionStore.maxTTLSeconds)
-        let issued = try admissionStore.issue(
-            actionID: actionContext.actionID,
-            contextDigest: actionContextDigest,
-            target: actionContext.target,
-            leaseID: actionContext.leaseID,
-            now: now(),
-            ttlSeconds: admissionTTL
-        )
-        _ = try admissionStore.consume(
-            admissionID: issued.admissionID,
-            contextDigest: actionContextDigest,
-            target: actionContext.target,
-            leaseID: actionContext.leaseID,
-            now: now()
-        )
-        consumedAdmissionID = issued.admissionID
+        let handle = try coordinator.admit(context: actionContext, ttlSeconds: admissionTTL)
+        let generationToken = handle.generation
+        consumedAdmissionID = handle.admission.admissionID
         let command = try makeApplePlatformRunnerCommand(request, preparedPath: workspace + "/request.xctestrun")
         started = true
         let result = try runner?(command) ?? runApplePlatformRunnerProcess(command, logPrefix: workspace + "/xcodebuild")
