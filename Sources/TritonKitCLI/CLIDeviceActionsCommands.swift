@@ -148,9 +148,8 @@ func executeDeviceAction(
         else { try await enforceTargetLease(host: common.host, port: common.port, target: selected.target, leaseID: leaseID) }
     }
     let (context, contextDigest) = try makeDeviceActionContext(payload, selected: selected, leaseID: common.leaseID)
-    let generation = generationStore.begin(target: selected.id, actionID: payload.requestID)
-    let admission = try admissionStore.issue(actionID: context.actionID, contextDigest: contextDigest, target: context.target, leaseID: context.leaseID, now: Date())
-    _ = try admissionStore.consume(admissionID: admission.admissionID, contextDigest: contextDigest, target: context.target, leaseID: context.leaseID, now: Date())
+    let coordinator = TKActionAdmissionCoordinator(admissions: admissionStore, generations: generationStore)
+    let handle = try coordinator.admit(context: context)
     if selected.platform == "android" {
         let command: TKHostCommand
         switch payload.action {
@@ -166,7 +165,7 @@ func executeDeviceAction(
         let first = try hostRunner?(command) ?? runHostCommand(command)
         if payload.action == .doubleTap { usleep(80_000); _ = try hostRunner?(command) ?? runHostCommand(command) }
         let resultData = try JSONSerialization.data(withJSONObject: ["ok": true, "action": "device.\(payload.action.rawValue)", "target": selected.id, "sourceCommand": first.sourceCommand, "postconditionVerified": false], options: [.sortedKeys])
-        return try decorateDeviceActionResult(resultData, context: context, contextDigest: contextDigest, admissionID: admission.admissionID, generationStore: generationStore, generationToken: generation)
+        return try decorateDeviceActionResult(resultData, context: context, contextDigest: contextDigest, admissionID: handle.admission.admissionID, generationStore: generationStore, generationToken: handle.generation)
     }
     if selected.platform == "harmony" {
         let command: TKHostCommand
@@ -182,7 +181,7 @@ func executeDeviceAction(
         let first = try hostRunner?(command) ?? runHostCommand(command)
         if payload.action == .doubleTap { usleep(80_000); _ = try hostRunner?(command) ?? runHostCommand(command) }
         let resultData = try JSONSerialization.data(withJSONObject: ["ok": true, "action": "device.\(payload.action.rawValue)", "target": selected.id, "sourceCommand": first.sourceCommand, "postconditionVerified": false], options: [.sortedKeys])
-        return try decorateDeviceActionResult(resultData, context: context, contextDigest: contextDigest, admissionID: admission.admissionID, generationStore: generationStore, generationToken: generation)
+        return try decorateDeviceActionResult(resultData, context: context, contextDigest: contextDigest, admissionID: handle.admission.admissionID, generationStore: generationStore, generationToken: handle.generation)
     }
     guard let bundle = payload.bundleID, let sessionRoot = common.sessionRoot else { throw DeviceActionError.invalidSelector }
     let operation: String = payload.action == .tap ? "coordinateTap" : payload.action == .doubleTap ? "coordinateDoubleTap" : payload.action == .swipe ? "coordinateSwipe" : payload.action == .press ? "press" : "typeText"
@@ -194,7 +193,7 @@ func executeDeviceAction(
     let request: [String: Any] = ["device": selected.scope == "simulator" ? "sim:\(selected.rawTarget)" : selected.id, "sessionRoot": sessionRoot, "timeout": 60, "route": "/crossApp", "body": body, "requestID": payload.requestID]
     let data = try JSONSerialization.data(withJSONObject: request, options: [.sortedKeys])
     let result = try await (iosRunner?(data) ?? IOSRunnerService().execute(operation: "request", payload: data))
-    return try decorateDeviceActionResult(result, context: context, contextDigest: contextDigest, admissionID: admission.admissionID, generationStore: generationStore, generationToken: generation)
+    return try decorateDeviceActionResult(result, context: context, contextDigest: contextDigest, admissionID: handle.admission.admissionID, generationStore: generationStore, generationToken: handle.generation)
 }
 private func printDeviceActionResult(_ payload: DeviceActionPayload, common: DeviceActionCommonOptions) async throws {
     do { print(String(decoding: try await executeDeviceAction(payload, common: common), as: UTF8.self)) }
