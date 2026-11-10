@@ -35,6 +35,20 @@ struct HarmonyArkWebSocketIntegrationTests {
         } catch { Issue.record("Expected typed transport error, got \(error)") }
         await session.close()
     }
+
+    @Test("a binary CDP response is a protocol failure rather than a page exception")
+    func binaryResponseIsProtocolFailure() async throws {
+        let server = try SocketFixture(binaryResponse: true)
+        defer { server.stop() }
+        let session = HarmonyArkWebURLSessionCDPSession(url: try await server.start())
+        do {
+            _ = try await session.evaluate(expression: "'fixture'", timeoutSeconds: 2)
+            Issue.record("Expected protocol failure")
+        } catch let error as HarmonyArkWebBridgeCallError {
+            #expect(error.code.rawValue == "webview_protocol_error")
+        } catch { Issue.record("Expected typed protocol error, got \(error)") }
+        await session.close()
+    }
 }
 
 private final class SocketFixture: @unchecked Sendable {
@@ -46,10 +60,12 @@ private final class SocketFixture: @unchecked Sendable {
     var failure: String?
     var ready = false
     let disconnect: Bool
+    let binaryResponse: Bool
     var opcodes: [NWProtocolWebSocket.Opcode] { lock.withLock { received } }
 
-    init(disconnect: Bool = false) throws {
+    init(disconnect: Bool = false, binaryResponse: Bool = false) throws {
         self.disconnect = disconnect
+        self.binaryResponse = binaryResponse
         let parameters = NWParameters.tcp
         parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: .any)
         let webSocket = NWProtocolWebSocket.Options()
@@ -99,7 +115,7 @@ private final class SocketFixture: @unchecked Sendable {
             }
             let response: [String: Any] = ["id": id, "result": ["result": ["type": "string", "value": "fixture"]]]
             let content = try! JSONSerialization.data(withJSONObject: response)
-            let outgoing = NWProtocolWebSocket.Metadata(opcode: .text)
+            let outgoing = NWProtocolWebSocket.Metadata(opcode: self.binaryResponse ? .binary : .text)
             let context = NWConnection.ContentContext(identifier: "fixture", metadata: [outgoing])
             connection.send(content: content, contentContext: context, isComplete: true, completion: .contentProcessed { _ in })
         }
