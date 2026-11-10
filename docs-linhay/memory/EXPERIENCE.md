@@ -4,6 +4,7 @@
 
 | 触发条件 | 下次检查重点 | 权威链接 |
 | --- | --- | --- |
+| 开发分支、worktree、并行 issue 或参考采用 | 2026-11-11 起全部在当前 main 串行开发；Space 不绑定 branch/worktree，只读审查可并行；共享写入/测试/提交串行，保留其他 WIP，提交按精确文件面；历史隔离工作区指令不再作为当前流程 | [根规则](../../AGENTS.md)、[参考采用流程](../dev/reference-project-adoption-workflow.md)、[主控监督](../../.agents/skills/tritonkit-subagent-supervision/SKILL.md) |
 | DSH 插件、CLI 工具包装或严格工具参数 | subprocess不是权限沙箱；async后spawn前重检session权限；done≠range清空，未知须阻断；已知可选字段可null；裸名称/serial/UUID也可被alias抢占，必须保留discovery命名空间；真实npm pack/tar校验不能只看源码存在；原payload/退出码保留，动作不重放，绑定实际DSH/CLI版本 | [DSH集成契约与检查点](../dev/dsh-plugin-integration.md) |
 | 构建、测试或交付结果声明 | 固定候选差异与实际二进制，先核对SwiftPM默认build-system与实际并发，不能把swiftbuild的--jobs视为全局限流；长构建进度绑定本任务session/cwd/scratch及父子PID；代码冻结后重跑受影响检查；区分 fixture、真实运行与跳过，不累加重复测试 | [集成审计](../spaces/SP-190-open-issues-integration/plans/20261012-integration-review.md)、[缓存证据验证](../spaces/SP-175-issue-212-xcode-cache-evidence/README.md)、[上游优化真实验收与失败边界](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-validation-report.md) |
 | Simulator资源读取重试、launchd暂态或来源绑定 | typed nonZeroExit与返回result分别测；完整诊断/issued command/成功来源绑定；未知或复合错误不重试，mutation不重放；配置预算与清理耗时、fixture与真实恢复分开 | [host规则](../../.agents/skills/tritonkit-host-simulator-takeover/SKILL.md)、[修正与反例](../spaces/SP-222-simulator-resource-retry-integration/plans/20261026-audit-history.md) |

@@ -4,26 +4,28 @@
 
 ## 默认执行
 
-官方上游增量读取 → 当前main源码/测试/已交付差距评估 → 保存采用理由、BDD和文件面 → 独立space/worktree与执行会话开发验证 → 主控审查、修复冲突与联合验证 → 必要本地提交、本地main合并。可纳入且属于现有产品范围的变更无需逐项再次确认。现有明确授权持续有效，历史报告“不自动采用”只代表当时权限，不再作为当前阻断条件。
+2026-11-11 用户裁决：后续全部在当前 main 开发，不推荐或创建 branch/worktree；下方带日期的旧分支/合并记录仅保留历史事实。
+
+官方上游增量读取 → 当前main源码/测试/已交付差距评估 → 保存采用理由、BDD和文件面 → 在当前main串行开发验证 → 主控复核、联合验证、必要本地提交。可纳入且属于现有产品范围的变更无需逐项再次确认。现有明确授权持续有效，历史报告“不自动采用”只代表当时权限，不再作为当前阻断条件。
 
 2026-10-22用户再次明确“开发验证完成要合并到 main 分支”：开发验证通过后继续完成必要本地提交、合并与合并后门禁，不能停在候选分支或子会话完成状态；不逐项重问合并授权。仅有巡检报告或观察候选不算开发交付，未通过验收的候选继续修复，不提前合并。
 
 2026-10-27用户明确由本主控负责自己开启的会话任务：实现、验证、测试、必要本地提交、合入本地main、清理及关闭会话。该责任持续适用于后续分派，不能把收尾留给用户逐个跟进；失败继续修复，具体阻塞如实记录。关闭指归档已验收且已合并的执行/批次主控聊天，保留当前长期追踪聊天；不等于关闭GitHub issue或新增远端授权。
 
-## 自动推进、验收、合并与清理闭环
+## 自动推进、验收与 main 提交闭环
 
-当一个采用切片进入开发后，自动流程按以下阶段推进，并分别记录状态：读取、评估、分派、实现、验证、合并、清理。子会话完成只产生候选证据，不直接改变 `main` 状态。
+当一个采用切片进入开发后，自动流程按以下阶段推进，并分别记录状态：读取、评估、分派、实现、验证、main提交、收口。子会话完成只产生候选证据，不直接改变 `main` 状态。
 
-1. **隔离开发**：为每个 issue/机制使用独立 `SP-<三位序号>-<topic>`、branch 和 worktree；明确执行会话与主控会话的文件面，冻结后再交接。共享副作用串行执行，禁止 `git stash`，不得把其他 WIP 混入候选。
+1. **main 开发**：为每个 issue/机制建立或复用独立 Space，明确文件面、BDD 和验收边界；实现、测试和资料回写直接在当前 `main` 串行完成，不创建 branch/worktree，不混入其他 WIP。
 2. **候选验收**：主控必须核对实际 diff、候选 SHA、BDD 场景、focused 测试、受影响层完整测试和错误/unknown 语义；真实设备、签名、DDI、跨进程竞态或发布验收若未执行，单独记录为边界，不用离线绿色替代。
-3. **合并前检查**：在实际 `main` worktree 中确认干净状态，使用 `git merge-tree --write-tree main <candidate>` 预检。多个候选按顺序合并；同一文档发生 add/add 冲突时保留已验证实现，并把最新验收事实合并到主线索引/space README，不能整分支回灌历史 WIP。
-4. **合并后门禁**：合并后重跑受影响的完整测试、根包测试（适用时）、`docs-linhay/scripts/verify.sh --ci-docs`、`docs-linhay/scripts/check-docs.sh`、`git diff --check` 和适用的 local/release/smoke 门禁。只有门禁与主控验收都通过，采用登记才可标记 `local_merged`。
+3. **main 提交前检查**：在当前 `main` worktree 中确认目标文件面和 WIP 边界，核对实际 diff、BDD、测试证据和错误语义；不整分支回灌历史 WIP。同一文档的冲突通过当前文件逐段裁决。
+4. **main 提交后门禁**：提交后重跑受影响的完整测试、根包测试（适用时）、`docs-linhay/scripts/verify.sh --ci-docs`、`docs-linhay/scripts/check-docs.sh`、`git diff --check` 和适用的 local/release/smoke 门禁。只有门禁与主控验收都通过，采用登记才可标记 `local_merged`。
 5. **资料回写**：同步 space README、`spaces/INDEX.md`、`spaces/README.md`、SP-207 `adoption-state.json`、正式技术文档和当日 memory；写明实现 SHA、合并 SHA、测试数量、跳过项、未执行边界和远端操作状态。
-6. **清理**：门禁通过后先把需要保留的 ignored build 日志、未跟踪证据和继承文档复制到带 manifest/hash 的本地归档，再正常移除已合并 worktree，最后用 `git branch -d` 删除已合并分支。原工作区有用户 WIP 时保持原样，不能用清理动作覆盖或重置。 收尾还须核对原项目目录的分支：用户要求回归主线且目录干净时，先整合源分支独有提交并确认祖先关系，再解除临时 worktree 对 main 的占用，将原目录切回 main。归档 ignored 证据后正常移除临时 worktree，删除已合并分支；不能只因 main-integrated 已同步就宣称原目录收口完成。
+6. **收口**：门禁通过后先把需要保留的 ignored build 日志、未跟踪证据和继承文档复制到带 manifest/hash 的本地归档；确认 `main` 工作区只包含本次文件面后提交。原工作区有用户 WIP 时保持原样，不能用清理动作覆盖或重置。
 
 7. **会话关闭**：核对采用登记中的真实thread ID、最后执行状态、实际main祖先关系及验收/证据归档；确认任务没有剩余工作后，用会话归档工具关闭该批执行与主控聊天，记录工具成功结果。已归档可幂等核对，失败保留待关闭；不因聊天idle或子会话声称完成而提前关闭。当前长期追踪聊天保持可用。
 
-自动流程只做本地合并、本地清理及已交付会话归档；push、tag、release、依赖安装、第三方代码、设备动作、签名和 DDI 仍需单独明确授权。状态通知必须区分“实现完成”“验收通过”“已合并”“已清理”，不能把其中一个阶段冒充全部完成。
+自动流程只做 main 本地开发、提交、资料收口及已交付会话归档；push、tag、release、依赖安装、第三方代码、设备动作、签名和 DDI 仍需单独明确授权。状态通知必须区分“实现完成”“验收通过”“已提交”“已收口”，不能把其中一个阶段冒充全部完成。
 
 每日任务复用id `ictrl`，名称“参考项目更新与采用推进”，保持ACTIVE与北京时间10:00，2026-10-30起绑定接管聊天`01a18a91-f44e-7fd0-8e4b-c891b44377e0`；不新增重叠任务。现有iCTRL检查点仍由SP-193管理，其他仓库从SP-194/SP-199历史快照开始，首次完整读取后才建立对应成功点。历史配置轮次未重新查询全体仓库；2026-10-30接管后的33仓补查见[日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261030-reference-update-report.md)。
 
@@ -41,7 +43,7 @@
 
 - [上游登记与检查点](../spaces/SP-207-reference-adoption-pipeline/plans/reference-state.json)逐仓库独立更新；完整读取和摘要保存成功后原子推进。截断/失败不推进，不能伪装无变化；无旧SHA先建基线。
 - [采用登记](../spaces/SP-207-reference-adoption-pipeline/plans/adoption-state.json)与读取状态分开，按仓库+机制以及跨仓库本地需求去重；先核对SP-192/196/200及各space当前实现，不能把旧差距重复排期。
-- 开始对照前同时核对 `git branch --show-current`、`git rev-parse main` 与 `git worktree list --porcelain`。主目录HEAD不一定是实际main；用实际main固定blob核对产品差距，较新的授权/追踪文档可能仍在另一分支，不因main占号页而丢弃。集成只按批准文件清单提取，索引/历史人工合并，不整分支回灌旧产品。
+- 开始对照前同时核对 `git branch --show-current`、`git rev-parse main` 和 `git status --short --branch`。当前产品评估固定绑定实际 `main` blob；资料、索引和历史按 main 裁决，不整分支回灌旧产品。
 - 会话创建成功才记录真实ID，部分失败先补缺项；建立实现/主控空间时串行登记编号。执行会话停止写入后冻结候选，不整目录复制其门禁上下文；测试绑定联合候选，主控复核后才能合并。
 - 长期原始证据不能仅保存在`.build`/scratch；检查点提交前写入仓外`TritonKit-worktrees/archives/reference-monitor/YYYYMMDD/`等明确持久归档，并在正式plans登记路径、size/hash与复核时间。历史读取成功和当前raw evidence可用性分别记录；缺失先记unknown原因，固定SHA重取标恢复副本，不伪造旧API响应或日志。见[10月31日保管缺口](../spaces/SP-207-reference-adoption-pipeline/plans/20261031-evidence-custody.md)。
 - 恢复旧partial时逐项核对本轮许可证/文本/来源证据，仅清除已闭合缺口；不能把`prior.complete`作为永远拒绝恢复的条件。复用日检脚本前排除硬编码历史版本、日期、待办数量与旧main断言，先保存候选摘要再提交检查点，实际通知与成功点分别记录。 汇总器必须强校验review的repository、base/head与actual main，不能以当前main作为缺字段默认值。跨SP193/SP207检查点分别原子写入前保存带before/after的持久publication记录；中断后仅接受精确before或after并先验manifest，再补写未完成项，不能为重跑回退成功点。

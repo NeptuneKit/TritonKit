@@ -81,7 +81,7 @@
 ## 参考采用补充（2026-10-19）
 
 - 新会话模型锁定（2026-10-16）：本项目由agent创建的新会话（含执行和主控）在 `create_thread` 中显式指定 `model: "gpt-6.1-sol"`；不依赖默认值或自动回退。后续主控分派遵守同一约束，既有会话与推理强度保持原设置。
-- 全部参考项目采用授权（2026-10-16）：用户明确从iCTRL扩至所有参考；[SP-207](../spaces/SP-207-reference-adoption-pipeline/README.md) / [正式流程](../dev/reference-project-adoption-workflow.md)为当前事实源。评估可纳入项直接独立开发会话/worktree，由主控验证、必要本地提交与main合并，不逐项重问。原 `ictrl` 自动任务扩大范围并复用每日10:00计划；当前33仓（24参考+9研究候选），新正式登记项目后续加入，按机制/本地需求去重。push/发版、设备等按各自授权。
+- 全部参考项目采用授权（2026-10-16）：用户明确从iCTRL扩至所有参考；[SP-207](../spaces/SP-207-reference-adoption-pipeline/README.md) / [正式流程](../dev/reference-project-adoption-workflow.md)为当前事实源。评估可纳入项直接建立或复用 Space，在当前 `main` 串行实现、验证、提交与资料回写，不创建独立 branch/worktree，不逐项重问。原 `ictrl` 自动任务扩大范围并复用每日10:00计划；当前33仓（24参考+9研究候选），新正式登记项目后续加入，按机制/本地需求去重。push/发版、设备等按各自授权。
 - 2026-10-17参考采用批次：[日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261017-reference-update-report.md)；当时SP-210/SP-211已立项但桌面模型校验失败；该历史阻塞已由10月19日本聊天交付接替，当前均已验收合main。主目录HEAD不等于真实main，恢复集成按SP-211精确文件清单，不回灌旧产品或覆盖用户WIP。
 - 2026-10-18参考日检：[SP-207第二轮日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261018-reference-update-report.md)固定了19个完整、14个partial的结果；GitHub API 403不能伪装无变化，SKProcessRunner无许可证状态纠正为待复核，iCTRL仍由SP-193独立维护。SP-210/SP-211显式`gpt-6.1-sol`会话重试仍失败且无thread，不回退模型。
 

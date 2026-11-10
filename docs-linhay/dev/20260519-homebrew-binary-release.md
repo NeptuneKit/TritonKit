@@ -140,9 +140,9 @@ docs-linhay/scripts/release.sh 0.1.1 --dry-run --skip-local-verify
 
 ### 发版前 WIP 隔离
 
-发版脚本要求 `main` 与 `origin/main` 同步，并且 `git status --porcelain` 为空。若主仓存在 WebView、issue worktree 合并残留、memory 写回或截图等未完成工作，先用 `git status --short --branch` 与 `git diff --stat` 确认范围，再把非 release 内容暂存到 stash 或独立 worktree。不要为了让 release 脚本通过而 `git add -A`。
+发版脚本要求 `main` 与 `origin/main` 同步，并且 `git status --porcelain` 为空。若主仓存在 WebView、issue worktree 合并残留、memory 写回或截图等未完成工作，先用 `git status --short --branch` 与 `git diff --stat` 确认范围，在当前 main 按文件核对并完成本次相关提交；未完成且影响候选的工作应先完成或明确暂停发布，不使用 stash、新分支/worktree 或 `git add -A` 绕过干净门禁。
 
-如果 `docs-linhay/scripts/verify.sh --local` 在创建 tag 前暴露 release blocker，应只修复阻塞发版的最小问题，单独提交并推送 `main`，再重新运行 release 脚本。未完成的业务功能、issue 文档和 memory 继续保留在 stash / worktree 中，不进入 tag。
+如果 `docs-linhay/scripts/verify.sh --local` 在创建 tag 前暴露 release blocker，应只修复阻塞发版的最小问题，单独提交并推送 `main`，再重新运行 release 脚本。未完成的业务功能、issue 文档和 memory 保留原样；存在未完成产品改动时暂停发 tag，不能借目录搬移隐藏 WIP。
 
 `v0.1.6` 的本地门禁曾在 iOS Simulator build 暴露 UIKit runtime helper 的 MainActor 隔离缺口；最终只提交 `9a66260 fix: isolate runtime UIKit helpers on main actor` 作为 release blocker 修复，并在 clean worktree 下重新发版。`v0.1.6` Release 已包含 `triton-macos-arm64.tar.gz`、`tritonkit-skills.tar.gz` 和 `tritonkit_checksums.txt`；x86_64 资产仍按后补 job 处理。
 

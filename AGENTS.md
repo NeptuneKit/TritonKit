@@ -18,7 +18,7 @@
 ├── memory/            # 每日日志目录（过期，后续改为 docs-linhay/memory/）
 └── docs-linhay/       # 项目文档系统目录
     ├── spaces/        # 以 feature / topic / milestone 为单位的工作空间根目录
-    │   ├── README.md  # space 路线总览：状态、当前队列、worktree 与历史归档
+    │   ├── README.md  # space 路线总览：状态、当前队列与历史归档
     │   ├── INDEX.md   # space 编号索引：SP 编号、兼容目录与迁移进度
     │   └── <space-key>/ # 新 space 的 key 固定为 SP-<三位序号>-<topic>
     │       ├── README.md
@@ -33,13 +33,13 @@
     └── scripts/       # 自动化脚本
 ```
 
-### Space、worktree 与文档
+### Space 与文档
 
 1. 新需求先建立 `space`：规范名为 `SP-<三位序号>-<topic>`，序号全局递增且不复用；topic 为小写英文 slug，禁止空格、中文、`latest`、`final`。
 2. 历史日期 slug 目录以 `docs-linhay/spaces/INDEX.md` 为映射事实源；不得在普通任务中直接重命名。
-3. 每个 space 以 `README.md` 记录边界、BDD、验收和链接；新建、状态变化、worktree 集成或收口时同步更新 `INDEX.md` 与 `spaces/README.md`。
-4. 默认映射：`space = docs-linhay/spaces/SP-<三位序号>-<topic>/`、`branch = feat/SP-<三位序号>-<topic>`、`worktree = ../TritonKit-worktrees/SP-<三位序号>-<topic>/`。
-5. 多日、并行或频繁切换的 feature 必须使用同级独立 worktree；短小当天修复可在主工作区完成。不得在仓库内嵌套 worktree 或把常规 feature 放入 `/tmp`。
+3. 每个 space 以 `README.md` 记录边界、BDD、验收和链接；新建、状态变化或收口时同步更新 `INDEX.md` 与 `spaces/README.md`。
+4. 本项目所有实现、测试、提交和资料回写默认直接在当前 `main` 串行完成；不新建或推荐 feature branch/worktree。Space 负责需求、BDD、计划、证据和历史归档。
+5. 多日、并行或频繁切换的工作仍必须串行写入 `main`；并行只允许只读核对或互不共享写入面的准备工作。主工作区有 WIP 时不得覆盖、重置或混入其他任务。
 6. 设计稿放在对应 space 根目录；同一期只保留一个产品 HTML 入口，多方案在同一入口组织。官方评审工具可在 `design/` 或 `Web/design/` 维护源码并在 space 登记入口，其生成的壳与画布属于同一评审入口，不另算产品设计稿。截图优先归档到该 space 的 `screenshots/`，文件名为 `<YYYYMMDD>-<模块>-<场景>-<状态>-v<序号>.png`。
 
 ## 1. 基础工作方式
@@ -63,10 +63,10 @@
 1. 对可安全拆分、预计能明显提升速度或质量的任务，主控 agent 应主动使用 subagent；用户无需逐项授权。
 2. 简单任务、同一文件的紧耦合改动、共享环境或副作用冲突的操作保持单 agent 或串行执行。
 3. 主控始终负责需求边界、拆分、集成、冲突处理、验证、文档、memory 和最终 DoD；subagent 的“完成”只是证据，不是完成判定。
-4. 每个写入型 subagent 必须有明确文件面、非目标、验证命令和停止条件；不同 agent 不得同时拥有同一实现文件。多 issue 默认一 issue 一 space / branch / worktree。
+4. 每个写入型 subagent 必须有明确文件面、非目标、验证命令和停止条件；不同 agent 不得同时写入同一实现文件。多 issue 可以各自建立 space，但产品写入统一由主控在 `main` 串行完成。
 5. 主控可自行创建、分批调度、改派、停止或续跑 subagent；仅在需求边界变化、破坏性操作、权限/环境 blocker 或用户取舍时打断用户。
 6. 远端写入（push、PR、merge、tag、release、关闭 issue）仍须有用户明确授权；不要把未完成并行工作混入主分支或发布。
-7. 多 worktree 并行时禁止使用 `git stash`（stash 是仓库级全局、跨 worktree 共享，一次 push/pop 会串扰其它 worktree 的暂存内容）；需要保存中间态改用临时分支或独立文件，合并冲突由主控按文件逐一裁决。
+7. 本项目不使用 `git stash`；所有开发写入在 `main` 串行完成。需要保存中间态时使用明确提交、独立归档文件或 patch，主控按文件核对后继续。
 
 ## 3. 验证、文档与安全
 

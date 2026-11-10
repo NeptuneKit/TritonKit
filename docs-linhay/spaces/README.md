@@ -1,3 +1,5 @@
+- 当前开发方式：所有产品实现、测试、提交和资料回写在 `main` 串行完成；Space 只承载需求、BDD、计划、证据和历史归档。读取/评估可并行，产品文件写入和共享副作用不并行；不新建 branch/worktree。
+
 2026-11-10：[SP-281 ActionContext 后续扩展路线](./SP-281-action-context-expansion/README.md)已冻结：P0 shared coordinator/receipt、P1 device.action evidence/uncertain、P2 剩余 mutating surfaces；approval/HTTP/session resume/真实设备另立 scope。
 
 2026-11-10：[SP-280 ActionContext / Action Admission](./SP-280-action-context-admission/README.md)已完成全量批次：runner/evidence/lease/generation、第二类 device.action、schema/recovery 和并发验收通过；root 304 tests / 43 suites、CLI 1685 tests / 179 suites。
@@ -34,7 +36,7 @@
 >
 > 最近审计：2026-10-30（SP251 v0.2.38发布与安装验收完成）
 
-本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
+本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度和历史归档状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。当前实现统一在 main 串行完成。
 
 ## 2026-10-24 · 有限任务与范围收口
 
@@ -177,7 +179,9 @@
 | 已归档 | [20260702-cross-platform-framebuffer-stream](./20260702-cross-platform-framebuffer-stream/README.md) | Android/Harmony host pull stream、HTTP route、Web bridge 和截图证据已落地 | 作为 Web mock 原型归档，不再追加性能优化；正式产品化需重新定义边界和证据门禁 |
 | 已归档 | [20260617-issue-61-android-emulator-adapter](./20260617-issue-61-android-emulator-adapter/README.md) | 旧 Web 编译 blocker 已消失，当前 `DeviceCrossPlatformTests` 93 项通过；Android Emulator 主链已有历史真实 smoke | 不再单独执行；后续 Android 回归走现有 emulator takeover 与 strong-control spaces |
 
-## 独立 worktree 与本地集成状态
+## 历史 worktree 与本地集成记录
+
+以下表格保留原批次路径和阶段，不作为当前创建 worktree 的指令；当前开发固定在 main。
 
 | Space | Branch | Worktree | 基线 | 当前状态与后续 |
 | --- | --- | --- | --- | --- |
@@ -230,7 +234,7 @@
 
 1. 新建 space 后，同一提交内将其加入本索引的“路线裁决”或“历史归档”。
 2. 状态变化时更新“最近审计”日期、裁决和下一步，不只修改单个 space。
-3. 独立 worktree 必须记录路径、branch/commit 和后续动作；仅本地 integration branch 不等于合入 `main`，主分支收口后才可移入历史归档。
+3. 当前开发统一在 main 串行完成；历史 worktree、branch 和路径只作为历史归档，不作为新任务推荐入口。
 4. “执行”必须有有限停止条件；没有产品取舍结论的方向标记“待定”，不得继续堆实现。
 5. 被后续路线吸收或不再符合产品边界的独立计划标记“废弃”，但不删除历史文档和仍有价值的代码。
 6. space 完成本期 DoD、文档与 memory 写回后标记“已归档”。

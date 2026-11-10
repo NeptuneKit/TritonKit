@@ -32,7 +32,7 @@ description: TritonKit 监督交付模式：任务可安全拆分或用户要求
 审计另一个 agent 或 subagent 工作时，先建立 contract：
 
 1. 用户原始请求和后续范围变化。
-2. 明确约束：branch / worktree、禁止事项、验证要求、截图、文档、隐私和发布边界。
+2. 明确约束：当前 main、文件责任面、禁止事项、验证要求、截图、文档、隐私和发布边界。
 3. 隐含验收：用户可见行为、机器可读契约、测试、CI、docs / memory、截图或 evidence。
 4. 被审计 agent 的最终声明和无法完成项。
 
@@ -80,7 +80,7 @@ description: TritonKit 监督交付模式：任务可安全拆分或用户要求
 
 主控 agent 仍必须保留最终完成判断；subagent 的“完成”只能作为输入，不能替代 DoD。
 
-用户授权主控负责自己开启的会话全流程时，责任持续到实现、测试、验收、必要本地提交、合入main、证据与worktree清理及会话归档。依据真实thread ID与main合并证据关闭已完成执行/批次主控聊天；保留长期主控，归档失败单独记录，不能用idle或完成声明替代验收。该授权不扩大到push/tag/release或关闭远端issue；参考采用细则见[现有流程](../../../docs-linhay/dev/reference-project-adoption-workflow.md)。
+用户授权主控负责自己开启的会话全流程时，责任持续到在当前 main 串行实现、测试、验收、必要本地提交、证据归档及会话归档。依据真实thread ID与main合并证据关闭已完成执行/批次主控聊天；保留长期主控，归档失败单独记录，不能用idle或完成声明替代验收。该授权不扩大到push/tag/release或关闭远端issue；参考采用细则见[现有流程](../../../docs-linhay/dev/reference-project-adoption-workflow.md)。
 
 ## Handoff Packet
 
@@ -95,33 +95,16 @@ description: TritonKit 监督交付模式：任务可安全拆分或用户要求
 
 不要让多个 subagent 同时编辑同一批文件；只读审计可以并行，写入型任务必须按文件面隔离。
 
-## GitHub Issue 并行处理
+## GitHub Issue 处理与收口
 
-当用户要求用 subagent 处理多个 issue，且强调“不要串工作”时，默认按 issue 隔离执行：
+2026-11-11 用户裁决：所有开发在当前 `main` 完成，不创建或推荐 branch/worktree。下述规则替代历史按 issue 隔离工作区的流程。
 
-1. 一个 GitHub issue 对应一个 `space`、一个 branch、一个同 key worktree。
-2. worktree 路径使用 `../TritonKit-worktrees/<space-key>/`，不要放进主仓目录或 `/tmp`。
-3. branch 默认使用 `feat/SP-<三位序号>-<topic>`；space 规范名与 `docs-linhay/spaces/INDEX.md` 的登记一致，例如 `SP-001-issue-20-tap-activation`。
-4. 每个 subagent 只负责自己的 issue worktree，不跨 worktree 读取或修改同一批实现文件。
-5. 主控 agent 在主仓或独立只读上下文里监督，不把多个 issue 的代码、文档、memory 提交混在同一个 commit。
-6. 若主仓已有未提交改动，先记录为并行上下文，只读核对；除非用户明确要求，不 stage、不重置、不顺手修。
-7. issue 分支收尾时分别检查 `git status --short --branch`、最近 commit、测试结果、docs/memory 状态，再汇总给用户。
-8. 只有用户明确要求时才 push、开 PR、合并或删除 worktree。
-
-## GitHub Issue 全链路收口
-
-当用户在 issue 并行处理后明确要求“合并、清理、推送、关闭 issue”时，主控 agent 负责收口，不再让 subagent 各自操作远端：
-
-1. 合并前在主仓确认 `git status --short --branch` 干净，并用 `git worktree list --porcelain` 枚举仍注册的 issue worktree。
-2. 对每个 issue 分支核对 worktree clean status、最近提交和对应 issue 编号；主仓若已落后 `origin/main`，先更新或重新评估冲突风险。
-3. 合并前优先用无副作用预检确认冲突风险，例如 `git merge-tree --write-tree main <branch>`；预检通过后再在主仓按分支逐个 `git merge --no-ff`。
-4. 合并完成后跑与本轮改动匹配的 focused tests、必要 build、`git diff --check` 和 `docs-linhay/scripts/check-docs.sh`；若合并后才暴露测试不稳定或契约错位，允许在主仓补一个 integration fix commit。
-5. 只有门禁通过后才清理 worktree；清理顺序为 `git worktree remove <path>`，再用 `git branch -d <branch>` 删除已合并本地分支，不使用强制删除，除非用户明确授权并已确认无未合入提交。
-6. 推送前复查 `git status --short --branch` 和最近提交；推送成功后才关闭 GitHub issue。
-7. 关闭 issue 时只关闭本轮已处理的 issue，不顺手关闭新出现或未验证的 open issue；评论写明合并提交、关键验证命令和剩余风险。
-8. GitHub issue 评论包含命令片段、反引号或复杂 Markdown 时，使用 `docs-linhay/scripts/gh-issue-comment-file.sh` 或 `gh issue comment/close --body-file`，避免 shell 解释评论内容。
-9. 如果上一轮关闭后又出现新的 open issue，先以最新 `origin/main` 为基线新建下一轮 issue worktree；上一轮整理 / 关闭 issue 的提交不应留在主仓未提交状态里。
-10. 多个 issue 分支都追加同一天 memory 时，后合并的分支可能只在 `docs-linhay/memory/YYYY-MM-DD.md` 冲突；解决时保留每个 issue 的独立段落，再完成 merge commit，不把它改写成单个混合段落。
+1. 一个 issue 对应一个 Space、明确文件面和验收边界；只读调研/审查可并行，写入统一由主控在 main 串行完成。
+2. 开工核对当前分支、HEAD、staged/unstaged/untracked 差异，保留其他任务 WIP；不使用 stash、reset 或整目录覆盖。
+3. 主控核对真实 diff、测试和错误语义，串行运行 focused/full 与适用 docs/local 门禁；只提交本 issue 的精确文件面。
+4. 用户授权推送/关闭 issue 时，先推送 main 并核对精确 SHA 的 CI，再关闭本轮已验证的 issue；未完成或新出现的 issue 保留。
+5. 复杂 Markdown 评论通过 `--body-file` 发送。收口保存初始、增量和最终 open 快照，更新 Space/memory，归档提交自身也须验证。
+6. 当前阶段未完成就继续修复；不把 subagent 的完成声明或历史绿色结果当作当前验收。
 
 ## 停止条件
 

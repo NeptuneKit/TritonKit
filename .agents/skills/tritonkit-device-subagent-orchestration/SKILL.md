@@ -82,7 +82,7 @@ Keep raw real-device logs, screenshots, serials, UDIDs, HDC targets, accounts, a
 
 1. Check `git status --short --branch` before spawning.
 2. Confirm the active `space` and source plan before assigning subagents.
-3. If multi-day execution starts, create the track worktree under `../TritonKit-worktrees/<space-key>/`.
+3. Keep all implementation on the current `main`; do not create branches or worktrees. Read-only preparation may run concurrently; the lead serializes writes, tests and commits.
 4. Confirm no uncommitted user work will be overwritten.
 5. Confirm relevant `.codex/agents/*.toml` configs use the required local access for host tools:
 

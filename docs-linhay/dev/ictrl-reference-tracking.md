@@ -49,7 +49,7 @@ iCTRL 以长期运行的 XCUITest Runner 提供 agent 可发现的 HTTP JSON-RPC
 
 ## 当前采用授权（2026-10-16 更新）
 
-用户要求“后期评估可以纳入的改动可以直接按照这个流程直接进入开发”。因此后续可纳入项直接走：当前源码差距评估与BDD → 独立space/worktree及开发会话 → 主控复核/联合验证 → 必要本地提交与main合并。此条替代前述历史研究中的“不自动采用”权限说明，不把历史未实施状态改写成已交付。
+用户要求“后期评估可以纳入的改动可以直接按照这个流程直接进入开发”。因此后续可纳入项直接走：当前源码差距评估与BDD → 独立space与开发文件面 → 当前main串行实现、测试与资料回写 → 主控复核和必要本地提交。此条替代前述历史研究中的“不自动采用”权限说明，不把历史未实施状态改写成已交付。
 
 [SP-193采用边界](../spaces/SP-193-ictrl-reference-tracking/README.md)为流程事实源，[统一采用登记](../spaces/SP-207-reference-adoption-pipeline/plans/adoption-state.json)对任务与会话去重，[流程授权记录](../spaces/SP-193-ictrl-reference-tracking/plans/20261016-adoption-workflow.md)记录本次变更。自动任务沿用原计划；新批次建立/复用主控，不把不相关批次强塞入已完成会话。推送/发布、依赖变更和设备等边界不因采用授权自动开放。
 

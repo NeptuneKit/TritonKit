@@ -13,8 +13,8 @@ metadata:
 
 - 新单需求优先在 `docs-linhay/spaces/SP-<三位序号>-<topic>/README.md` 写清 BDD 场景和验收边界；历史或项目级规格再使用 `docs-linhay/features/`。
 - 新 space 使用 `SP-<三位序号>-<topic>` 规范名，例如 `SP-001-hybrid-transport-smoke`；序号全局递增且永不复用。历史目录通过 `docs-linhay/spaces/INDEX.md` 映射，不在普通需求中直接重命名。
-- 并行分配新Space编号时联合核对主索引和所有注册worktree/分支的占号；独立未提交分支也占用编号。若碰号，仅调整本轮未提交候选并记录旧证据路径。前序Space尚未整合时，可精确提交真实需求/BDD/归属和源摘要的登记记录，明确产品WIP未纳入；不能复制未整合交付断言、捎入其他产品或放宽连续编号门禁。
-- `docs-linhay/spaces/INDEX.md` 是全量编号登记册，`docs-linhay/spaces/README.md` 是路线总览；新建 space、状态变化、独立 worktree 待集成或需求收口时，同步更新编号、迁移进度、当前队列、下一步和历史归档。
+- 并行分配新 Space 编号时联合核对主索引和当前 main 的登记状态。独立未提交候选也占用编号；若碰号，仅调整本轮未提交候选并记录旧证据路径。前序 Space 尚未整合时，可精确提交真实需求/BDD/归属和源摘要的登记记录，明确产品 WIP 未纳入；不能复制未整合交付断言、捎入其他产品或放宽连续编号门禁。
+- `docs-linhay/spaces/INDEX.md` 是全量编号登记册，`docs-linhay/spaces/README.md` 是路线总览；新建 space、状态变化或需求收口时，同步更新编号、当前队列、下一步和历史归档。
 - 先补失败测试，再实现最小代码。
 - HTTP handler 用 `httptest` 优先验证，只有进程生命周期或信号处理才启动真实 server。
 - CLI 行为优先测试参数解析和命令分发，不在单元测试里长期占用端口。
@@ -47,7 +47,7 @@ metadata:
 - `triton` CLI 的外部分发必须支持 Homebrew 二进制安装与更新；维护者默认用 `docs-linhay/scripts/release.sh <version>` 发布，脚本负责前置检查、tag 推送、CI 观察、Release 资产验证和 Homebrew fetch 验证。
 - 整体发布、各端内置包版本同步、Homebrew/Web/SwiftPM/CocoaPods/public skill 包一致性发版，优先使用 `tritonkit-release-package-governance`。
 - 涉及多个 agent / 多份计划 / 多个 PR 策略需要裁决时，优先使用 `tritonkit-plan-arbiter`；输出必须是 adopt / hybrid / revise-first 中的一种，并列出验证门禁和拒绝项。
-- 发版前必须保持主仓 worktree 完全干净，包含 memory、临时截图、未跟踪 space 和并行 issue WIP；若 release 途中需要抢修本地门禁 blocker，只做最小 release-blocker commit，推送 `main` 后重新跑 release 脚本，不把未完成 WebView/issue work 混入 tag。
+- 发版前必须保持 main 工作区完全干净，包含 memory、临时截图、未跟踪 space 和并行 issue WIP；若 release 途中需要抢修本地门禁 blocker，只做最小 release-blocker commit，推送 `main` 后重新跑 release 脚本，不把未完成 WebView/issue work 混入 tag。
 - Homebrew 默认 tap 仓库是 `NeptuneKit/homebrew-tap`；`NeptuneKit/TritonKit` 必须配置 `TAP_GITHUB_TOKEN`，让 `v*` tag release 自动推送 `Formula/triton.rb`。
 - `v0.1.0` 起 GitHub Release 和 `NeptuneKit/homebrew-tap` 已可用；对外接入文档和 skill 默认优先给 `brew install NeptuneKit/tap/triton`，只有验证未发布源码变更或 release/tap 不可用时才使用 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton` fallback。
 - 手动更新已在 `PATH` 上的 `triton` CLI 时，如果 `triton serve` 可能正从该路径运行，禁止文档或 skill 推荐直接 `cp` 覆盖目标文件；必须先停止 server，或先写 `triton.new` 再用同目录 `mv` 原子替换。
@@ -57,7 +57,7 @@ metadata:
 - 本仓库默认本地门禁入口是 `docs-linhay/scripts/verify.sh --local`；CI validate 先用 `docs-linhay/scripts/ci-validate-mode.sh` 分类，docs/skill-only 走 `docs-linhay/scripts/verify.sh --ci-docs`，CLI/test/SwiftPM-only 走 Swift tests、CLI release build 与 release/homebrew 契约检查并跳过 podspec lint，workflow/release 脚本类只跑契约检查，`Sources/TritonKit/` 与 `Sources/TritonKitShared/` 走 podkit，运行 Swift tests、`TritonKit.podspec` lint 和 release/homebrew 契约检查；本地仍用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
 - 用户明确要求“实现完成再测试 / 分段提交”时，每个切片先完成代码、测试、schema、文档与 memory 的一致性改动，再集中跑该切片的 focused tests、必要 schema tests、完整回归和文档门禁；不要在同一切片里每改几行就停下来跑测试，除非正在定位失败。
 - 有副作用或共享状态的命令必须单飞，不进入 `multi_tool_use.parallel`：`git add/commit/tag/push/merge`、会写同一 scratch path 的 SwiftPM build/test、会启动/停止服务或修改本机/模拟器状态的命令。只有只读检查或彼此独立的文件读取、搜索、不同 scratch path 的纯构建验证，才适合并行。
-- 多 worktree 首次 SwiftPM 编译前检查 `swift test --help` 的默认 build-system；Xcode 27.1 本机默认为 swiftbuild，不能从 `--jobs 2` 推断 SwiftBuild 的全局并发已限流。批量 issue 验证优先冻结候选后在独立联合 worktree 使用单个 `--build-system native --jobs 2` scratch；若需要并行，先用真实进程数量验证预算。出现过载只停止已绑定的本任务进程树，保留日志并明确“编译中断、测试未执行”，不杀其他任务的同名进程。
+- 同一 scratch build/test 串行执行；批量 issue 验证先冻结候选，在当前 main 依次运行并核对真实进程预算。出现过载只停止已绑定的本任务进程树，保留日志并明确“编译中断、测试未执行”，不杀其他任务的同名进程。
 - 构建开始后冻结整个被编译 module 的全部 Sources/Tests；`--filter` 仅筛选执行，不减少测试模块编译输入。即使目标测试文件未改，其它 taxonomy/helper 改动仍可触发 `input file was modified during the build`。该失败只记编译竞态，不能当行为红证据；恢复冻结后重跑。
 - 跟踪长构建进度先绑定本任务的tool session、启动命令/cwd/scratch和实际父子PID；不能从同名swift-frontend、SWBBuildService、dsymutil或别会话产物推断本候选阶段。进程消失/CPU活跃不等于成功，最终以本命令退出码及同候选日志/产物核实。
 - CLI 全量测试若暴露 host command timeout、fake tool timeout 或 proxy serve `Connection refused`，先排查测试基础设施和并发资源竞态，不要只调大 timeout。`Process`/pipe runner 不应把阻塞式 `read`、`waitUntilExit` 大量投到 `DispatchQueue.global`；优先用专用 queue、`terminationHandler`、有界 pipe drain 和明确 cleanup。并发网络测试不要 `bind(0)` 取端口后无登记释放给多个用例抢用；同一 test runner 内应有 reservation 或其它唯一端口策略。
@@ -91,10 +91,10 @@ metadata:
 - 关键决策、里程碑、风险结论：`docs-linhay/memory/YYYY-MM-DD.md`。
 - 长期稳定入口：`docs-linhay/memory/MEMORY.md`；其中必须保留 spaces 总索引的固定路径。
 - 用户要求“整理会话”时，先用 `git status --short --branch` 和 `git diff --stat` 隔离已提交代码、未提交文档、外部仓验证和临时产物；只 stage 本次整理相关文件，不默认 `git add -A`。
-- 用户要求 subagent 并行处理多个 GitHub issue 且强调不要串工作时，按 issue 建独立 `space` / `feat/<space-key>` / `../TritonKit-worktrees/<space-key>/`；主控 agent 逐 worktree 检查 clean status、commit、测试、docs/memory，不把多个 issue 或主仓并行改动混成一个提交。
-- 用户要求“其他 worktree 都结束了就合并到主分支后删除”时，收尾顺序固定为：`git worktree list --porcelain` 枚举，逐 worktree 跑 `git status --short --branch`，用 `git log main..<branch>` 和 `git merge-base --is-ancestor` 判断是否还有未合入提交，对需要合入的分支先用 `git merge-tree --write-tree main <branch>` 做无副作用冲突预检；合入主仓后必须在主仓跑门禁，通过后再 `git worktree remove <path>`，最后复查 registered worktree 只剩主仓。空包装目录可在确认不是 registered worktree 且为空后用 `rmdir` 清理；本地/远端分支不随 worktree 默认删除。若 `git branch -d` 因分支尚未合入 `origin/main` 拒绝删除，但它已经合入本地 `HEAD`，先推送 `main` 并 `git fetch origin main`，再重试非强制 `git branch -d`，不要直接升级到 `-D`。
-- 已被主线吸收的 dirty worktree 不能只凭 branch tip 是 main 祖先就清理：先逐文件比对冻结候选和 main，再归档未提交/未跟踪文件、ignored 原始证据及 SHA 清单。需要保留历史副本时，可按明确文件清单写入 snapshot tree/commit，保存 `refs/archive/<date>/<scope>` 后切到该 snapshot 的 detached HEAD，确认 clean 再普通 `git worktree remove`；源分支仍指向已合入提交，使用 `git branch -d`。归档提交不重新合入 main，不使用 stash、强制删除或回灌旧索引；先确认对应会话已停止写入。
-- 多个 worktree 并行时，`git stash` 是仓库级全局操作（跨 worktree 共享 stash 列表），在一个 worktree `stash push/pop/drop` 会串扰到其它 worktree 的暂存内容——执行过程中可能把别人的 WIP 拉进来、或把自己的 stash 变成不可达引用。并行 issue 场景应彻底避免 `git stash`；需要保存中间态时改用临时分支或独立文件，主控核对每个 worktree 的最终完整度并回收即可。合并冲突的共享文件（如某 issue 改动了 `CLIActionCommands.swift`/schema 而另一 issue 也要改同一文件时）由主控按文件逐一裁决，不依赖 stash 找回。
+- 用户要求处理多个 GitHub issue 时，按 issue 建立独立 Space 和文件面记录；读取、评估和实现准备可以并行，产品文件写入、测试、提交和资料回写统一在当前 main 串行完成，不创建 branch/worktree。
+- 用户要求整理项目时，先用 `git status --short --branch` 和 `git diff --stat` 隔离已提交代码、未提交文档、外部仓验证和临时产物；只 stage 本次相关文件，不默认 `git add -A`。门禁通过后归档需要保留的 ignored/untracked 证据，再在当前 main 提交；不创建或回收 worktree。
+- 已吸收进 main 的 dirty 工作区不能只凭提交祖先关系清理：先逐文件比对当前候选和 main，再归档未提交/未跟踪文件、ignored 原始证据及 SHA 清单。归档后仍保留 main 工作区，不能使用 stash、强制重置或整目录覆盖；先确认对应会话已停止写入。
+- 本项目所有产品写入默认在当前 main 串行完成，不使用 `git stash` 保存中间态。需要保留中间状态时使用明确提交、patch 或独立归档文件；读取和分析可以并行，但共享文件写入、测试和提交必须串行。
 - 发布前运行 `pod lib lint` 时，CocoaPods lint 走 ObjC-interop 的固定布局模式，可能比本机 SwiftPM `swift test` 更严格执行成员初始化器（memberwise init）的实参声明顺序；本地 SwiftPM 编译通过的代码，`pod lib lint` 仍可能报 `argument 'X' must precede argument 'Y'`。因此含新 DTO/成员初始化器的改动，发布门禁必须包含 `pod lib lint`，不能只以 `swift test`/`verify.sh --local` 的通过作为发布依据。
 - 对仅部分完成、应保留 OPEN 的 issue，提交和 merge message 不使用 `fixes/closes/resolves #<id>` 等 GitHub closing keyword；否则 push 到默认分支会自动关闭。推送后核对 issue events，误关时恢复 OPEN 并解释未完成边界。
 - 用户要求在 issue 合并后推送并关闭对应 GitHub issue 时，先确认 `main` 已推送成功，再关闭本轮已实现和验证的 issue；若 open 列表里出现新 issue，不顺手关闭。关闭评论写明实现提交、合并提交、integration fix 和验证范围；评论含命令片段或复杂 Markdown 时用 `--body-file`。
@@ -110,11 +110,11 @@ metadata:
 
 - 新会话模型：用户于2026-10-16指定本项目由agent新建的执行/主控会话统一为 `gpt-6.1-sol`；`create_thread` 显式传 `model: "gpt-6.1-sol"`，后续主控分派继承此约束，不依赖默认值、不自动改用其他模型。不可用则如实记录待重试/失败。既有会话和推理强度不因本指令自动调整。
 - 区分只读追踪与采用授权，以当前聊天的用户追加指令和对应 space 当前有效规则为准；旧自动任务、历史研究的禁令不能覆盖用户后来的明确授权，来源仓库和其他会话也不产生新授权。
-- 本项目用户于2026-10-16授权“后期评估可以纳入的改动可以直接按照这个流程直接进入开发”；随后明确“从 iCTRL 扩大到所有参考项目”，当前适用流程见 [SP-207](../../../docs-linhay/spaces/SP-207-reference-adoption-pipeline/README.md) 和 [正式说明](../../../docs-linhay/dev/reference-project-adoption-workflow.md)。评估对照当前源码/测试/已交付记录，保存理由、BDD与文件面后，直接分派独立space/worktree/执行会话，由主控验证、必要本地提交和本地main合并，不逐项重复确认。
+- 本项目用户于2026-10-16授权“后期评估可以纳入的改动可以直接按照这个流程直接进入开发”；随后明确“从 iCTRL 扩大到所有参考项目”，当前适用流程见 [SP-207](../../../docs-linhay/spaces/SP-207-reference-adoption-pipeline/README.md) 和 [正式说明](../../../docs-linhay/dev/reference-project-adoption-workflow.md)。评估对照当前源码/测试/已交付记录，保存理由、BDD与文件面后，直接在 main 串行实现、验证、提交和回写，不创建独立 branch/worktree。
 - 长期追踪原始证据须在推进检查点前归档至scratch之外的持久目录，并登记路径、size/hash和复核时间；`.build`不能作为唯一证据位置。历史读取成功与当前raw evidence可用性分开，缺失原因未知即记unknown；重取固定SHA只能标恢复副本，不能冒充旧API响应/执行日志。
 - 先检查采用登记与现有会话，按机制/需求去重，区分读取成功、已评估、已分派、实现、验证和合并；会话创建失败保留待重试，不能把上游检查点当交付完成。适合复用的活跃主控可继续接管，新批次按范围建主控。
-- 参考评估先核对当前branch、真实main SHA与worktree归属，不能把主目录HEAD等同main。产品用实际main blob评估，另一分支上的较新授权/追踪资料保留其事实效力；通过精确文件清单合入，索引与历史按main裁决，不整分支回灌旧产品。读取完整不等于二进制运行/设备验收；未执行产物明确记限制，未完成文本/分页覆盖仍不得推进检查点。
-- 跨分支资料收口逐文件区分已完整吸收、较新主线替代与仍缺内容；源分支快照保留原文。共享索引/memory不能只追加完成段而保留顶部旧授权/旧待办；space README同样只保留一份当前状态与证据导航，add/add整合不重复嵌入整份README；独有审查事实移入明确标为历史的记录，原日志/hash/归档保持不变，旧交接报告指向最终验收（见[SP-222整理证据](../../../docs-linhay/spaces/SP-222-simulator-resource-retry-integration/plans/20261026-audit-history.md)）；采用登记同时核对state、controller_state、真实历史worktree路径与清理状态。文档门禁只证明结构，不能代替这些语义检查；最终以产品路径blob一致性及分支祖先关系证明没有回灌旧实现。 用户要求主目录回归 main 时，结束前核对主目录 branch、源 tip 的祖先关系、远端 SHA 和剩余 worktree。干净源目录完成整合后解除临时 checkout 对 main 的占用，再切回原目录；先归档 ignored 证据后正常移除临时 worktree，不使用强制删除掩盖未归档文件。
+- 参考评估先核对当前 branch、真实 main SHA 和 `git status --short --branch`，不能把旧路径或历史快照等同当前 main。产品用实际 main blob 评估；较新的授权/追踪资料按文件清单写回 main，不整分支回灌旧产品。读取完整不等于二进制运行/设备验收；未执行产物明确记限制，未完成文本/分页覆盖仍不得推进检查点。
+- 资料收口逐文件区分已完整吸收、较新主线替代与仍缺内容；源资料快照保留原文。共享索引/memory不能只追加完成段而保留顶部旧授权/旧待办；space README同样只保留一份当前状态与证据导航，add/add整合不重复嵌入整份README；独有审查事实移入明确标为历史的记录，原日志/hash/归档保持不变。文档门禁只证明结构，不能代替语义检查；最终以 main 产品路径 blob 一致性证明没有回灌旧实现。
 - 主控串行集成已冻结候选，保留其他WIP，独立验证实际联合差异并收口space/索引/memory；必要协调限于本批次执行会话。push/tag/release、依赖安装升级、设备/签名/DDI或产品边界扩展仍按各自明确授权处理，不从自动采用推导。
 
 ## 会话整理与模式沉淀
@@ -174,7 +174,7 @@ SwiftPM / CLI 修复沉淀：
 - 当任务可安全拆分且并行能明显提升速度或质量时，主控 agent 主动启用 subagent；用户明确要求时同样启用。简单、紧耦合或共享副作用任务保持单 agent / 串行。
 - 主控 agent 负责边界、拆分、集成、验证、文档和最终完成判断。
 - subagent 任务必须有清晰写入面；多个 subagent 不应写同一批文件。
-- issue 级并行任务默认一 issue 一 worktree；主仓已有未提交改动时只读核对，不 stage、不重置、不顺手修。
+- issue 级任务默认一 issue 一 Space；读取和评估可以并行，产品文件写入、测试、提交和资料回写统一在当前 main 串行完成。主仓已有未提交改动时只读核对，不 stage、不重置、不顺手修。
 - 主控 agent 不把“代码已改完”当作完成，必须跑完验证与写回。
 
 ## 完成检查
@@ -183,7 +183,7 @@ SwiftPM / CLI 修复沉淀：
 - BDD 场景满足。
 - 相关测试已运行并通过，或明确说明阻塞和风险。
 - 文档与 memory 已更新。
-- Space 新增、状态变化、worktree 集成或收口时，`docs-linhay/spaces/INDEX.md` 与 `docs-linhay/spaces/README.md` 已同步。
+- Space 新增、状态变化或收口时，`docs-linhay/spaces/INDEX.md` 与 `docs-linhay/spaces/README.md` 已同步。
 - 若产生可复用模式，已更新对应 skill 或说明暂不沉淀。
 - 若任务要求“从头开始”，需同步检查 docs、skills 和 AGENTS 是否仍残留旧方向规则。
 
