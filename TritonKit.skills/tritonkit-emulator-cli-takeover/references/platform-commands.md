@@ -137,3 +137,9 @@ Source iOS screenshot fallback sessions are scoped to upstream URL, CLI path and
 
 
 Harmony normalized `observe tree` preserves nonempty `text`/`originalText` content exactly, including whitespace-only values and leading/trailing whitespace. Empty/missing/non-string text keeps the existing absent-value and originalText fallback semantics; identifiers and type metadata are still trimmed. Use the exact value for find/wait readback. This parser guarantee does not establish IME delivery, focus, clear, or business success; transport receipts require an independent postcondition.
+
+## Opt-in verified Harmony text input
+
+Inspect the installed `act.type` schema first. Where `--verify` is advertised, use `triton act type --platform harmony --device <target> --verify --selector id:<stable-id> --text <text> --expect-value <complete-value> --timeout 10 --json` for a unique editable native field. This path observes focus, optionally focuses once, submits text once, and compares the complete raw field value within a bounded deadline. It does not clear the field or infer the expected value.
+
+Read `submission`, `focus` and `verification` separately. A matching postcondition is not proof of causation or broader business success. Ambiguous, disabled, secure/masked, missing-value or unknown-focus fields fail closed. An unknown submission may already have changed the App: do not retry or switch input backends automatically. Inspect the field read-only before deciding any subsequent action. The result redacts text, expected value, selector and process errors. Legacy input without `--verify` remains submission-only.
