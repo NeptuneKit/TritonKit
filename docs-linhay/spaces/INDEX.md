@@ -310,7 +310,7 @@
 
 | `SP-239-issue-230-ios-runner-geometry` | [`SP-239-issue-230-ios-runner-geometry`](./SP-239-issue-230-ios-runner-geometry/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-240-issue-214-deriveddata-ownership` | [`SP-240-issue-214-deriveddata-ownership`](./SP-240-issue-214-deriveddata-ownership/README.md) | PR #235已合并，历史候选待关联 | PR #235合并5d0bba7b；两处删除前约1.95 GiB，部分内容重复；#214保持OPEN，两处现存缓存已按后续授权删除；物理回收量未知；历史调用候选已归档，原18.66 GB路径映射仍缺；详见SP-240溯源记录 |
+| `SP-240-issue-214-deriveddata-ownership` | [`SP-240-issue-214-deriveddata-ownership`](./SP-240-issue-214-deriveddata-ownership/README.md) | not planned收口候选 | 通用自动删除已取消；当前仅保留inspect/preview与confirm fail-closed；原18.66 GB现场映射仍未知；收口证据见SP-240 plans/20261110-not-planned-closeout.md |
 
 | `SP-241-open-issues-validation` | [`SP-241-open-issues-validation`](./SP-241-open-issues-validation/README.md) | 已合并归档，12关/1留 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 

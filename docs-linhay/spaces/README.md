@@ -408,7 +408,7 @@
 - [SP-237-issue-222-device-hub-followup](./SP-237-issue-222-device-hub-followup/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
 - [SP-238-issue-221-searchbar-input-focus](./SP-238-issue-221-searchbar-input-focus/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
 - [SP-239-issue-230-ios-runner-geometry](./SP-239-issue-230-ios-runner-geometry/README.md)：已合并，issue已关闭；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
-- [SP-240-issue-214-deriveddata-ownership](./SP-240-issue-214-deriveddata-ownership/README.md)：PR #235已合并，历史候选待关联；两处删除前约1.95 GiB，部分内容重复；#214保留OPEN，历史调用候选已归档，原容量映射仍缺；见该space溯源记录，两处现存缓存已按后续授权删除；物理回收量未知。
+- [SP-240-issue-214-deriveddata-ownership](./SP-240-issue-214-deriveddata-ownership/README.md)：not planned收口候选；通用自动删除已取消，当前仅保留inspect/preview与confirm fail-closed；原18.66 GB现场映射仍未知；见SP-240 plans/20261110-not-planned-closeout.md。
 - [SP-241-open-issues-validation](./SP-241-open-issues-validation/README.md)：已合并归档，12关/1留；见SP-241合并归档报告，已随v0.2.35发布，验收见SP-242。
 
 - [SP-242-release-v0-2-35](./SP-242-release-v0-2-35/README.md)：v0.2.35已发布；双架构/Homebrew通过，默认实时流Resize未知、工作台通过；#214 OPEN，主目录WIP未变。
