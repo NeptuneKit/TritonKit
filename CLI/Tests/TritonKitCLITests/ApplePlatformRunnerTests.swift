@@ -114,7 +114,101 @@ final class ApplePlatformRunnerTests: XCTestCase {
             })
             XCTAssertTrue(receipt.ok)
             XCTAssertEqual(receipt.actionsExecuted, true)
+            XCTAssertEqual(receipt.actionID, "nonce-123")
+            XCTAssertNotNil(receipt.admissionID)
+            XCTAssertEqual(receipt.contextDigest?.count, 64)
+            XCTAssertEqual(receipt.delivery, "delivered")
+            XCTAssertEqual(receipt.originalStatus, "executed")
+            XCTAssertEqual(receipt.terminalStatus, "executed")
+            let metadata = try XCTUnwrap(applePlatformRunnerActionEvidenceMetadata(receipt, evidenceRefs: ["run/receipt.json"]))
+            XCTAssertEqual(metadata.actionID, "nonce-123")
+            XCTAssertEqual(metadata.delivery, "delivered")
+            XCTAssertEqual(metadata.postcondition, "verified")
+            XCTAssertEqual(metadata.evidenceRefs, ["run/receipt.json"])
             XCTAssertEqual(invocations, 2)
+        }
+    }
+    func testRunnerReceiptWritesTypedEvidenceRunEvents() throws {
+        try withWorkspace { request, root in
+            var receipt = try executeApplePlatformRunner(request, targetInventory: { self.inventory }, runner: { command in
+                if command.executable == "xcodebuild" {
+                    try FileManager.default.createDirectory(atPath: request.resultBundle!, withIntermediateDirectories: false)
+                } else {
+                    let path = command.arguments[8]
+                    try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: false)
+                    let manifest: [[String: Any]] = [["testIdentifier": "RemoteTests/testRemoteSelect()", "testIdentifierURL": "test://com.apple.xcode/Probe/ControlTests/RemoteTests/testRemoteSelect", "attachments": [["deviceId": self.udid, "suggestedHumanReadableName": "triton-platform-result.json", "exportedFileName": "result.json"]]]]
+                    try JSONSerialization.data(withJSONObject: manifest).write(to: URL(fileURLWithPath: path + "/manifest.json"))
+                    let response: [String: Any] = ["version": 1, "platform": "tvos", "action": "remote-select", "device": self.udid, "nonce": "nonce-123", "ok": true, "eventDelivered": true, "postconditionVerified": true]
+                    try JSONSerialization.data(withJSONObject: response).write(to: URL(fileURLWithPath: path + "/result.json"))
+                }
+                return self.process()
+            })
+            let evidence = try ApplePlatformRunnerEvidenceSession(directory: root + "/evidence", request: request)
+            evidence.finish(receipt: &receipt)
+            XCTAssertEqual(receipt.evidencePersistence, "written")
+            let events = try TKEvidenceRunLogParser().parse(Data(contentsOf: evidence.writer.eventsURL))
+            XCTAssertEqual(events.status, .completed)
+            XCTAssertEqual(events.events.last?.kind, .runCompleted)
+            XCTAssertEqual(events.events.compactMap(\.actionContext).last?.actionID, "nonce-123")
+            XCTAssertEqual(events.events.compactMap(\.actionContext).last?.evidenceRefs, ["run/action-receipt.json"])
+        }
+    }
+
+    func testLeaseGateRunsBeforeRunnerAndBindsLeaseIntoContext() throws {
+        try withWorkspace { request, _ in
+            let leasedRequest = try makeApplePlatformRunnerRequest(
+                platform: request.platform,
+                action: request.action,
+                device: request.device,
+                xctestrun: request.xctestrun,
+                testIdentifier: request.testIdentifier,
+                resultBundle: request.resultBundle,
+                nonce: request.nonce,
+                timeout: request.timeout,
+                executeRunner: true,
+                confirm: true,
+                auditRecord: request.auditRecord,
+                crownDelta: request.crownDelta,
+                leaseID: "lease-1"
+            )
+            var gateCalled = false
+            let receipt = try executeApplePlatformRunner(leasedRequest, targetInventory: { self.inventory }, runner: { _ in
+                XCTAssertTrue(gateCalled)
+                return self.process()
+            }, leaseGate: {
+                gateCalled = true
+            })
+            XCTAssertTrue(gateCalled)
+            XCTAssertEqual(receipt.actionID, leasedRequest.nonce)
+            XCTAssertNotNil(receipt.contextDigest)
+        }
+    }
+
+    func testLeaseGateRejectionPreventsRunnerAndAdmissionConsumption() throws {
+        try withWorkspace { request, _ in
+            var runnerCalled = false
+            let receipt = try executeApplePlatformRunner(request, targetInventory: { self.inventory }, runner: { _ in
+                runnerCalled = true
+                return self.process()
+            }, leaseGate: {
+                throw HostApplePlatformControlError(code: "target_lease_conflict", message: "held", hint: "release lease")
+            })
+            XCTAssertFalse(runnerCalled)
+            XCTAssertEqual(receipt.failureCode, "target_lease_conflict")
+            XCTAssertEqual(receipt.actionsExecuted, false)
+        }
+    }
+    func testLateRunnerResultFromOlderGenerationFailsClosed() throws {
+        try withWorkspace { request, _ in
+            let generations = TKActionGenerationStore()
+            let receipt = try executeApplePlatformRunner(request, targetInventory: { self.inventory }, runner: { _ in
+                _ = generations.begin(target: request.device, actionID: "new-generation")
+                return self.process()
+            }, generationStore: generations)
+            XCTAssertEqual(receipt.failureCode, "runner_generation_stale")
+            XCTAssertEqual(receipt.outcome, .unknown)
+            XCTAssertNil(receipt.actionsExecuted)
+            XCTAssertEqual(receipt.delivery, "unknown")
         }
     }
     func testRejectsExistingResultAndSymlinkWithoutExecution() throws {
@@ -137,6 +231,10 @@ final class ApplePlatformRunnerTests: XCTestCase {
             XCTAssertEqual(receipt.outcome, .timedOut)
             XCTAssertEqual(receipt.failureCode, "runner_timed_out")
             XCTAssertNil(receipt.actionsExecuted)
+            XCTAssertEqual(receipt.actionID, "nonce-123")
+            XCTAssertNotNil(receipt.admissionID)
+            XCTAssertEqual(receipt.delivery, "unknown")
+            XCTAssertEqual(receipt.originalStatus, "timed_out")
         }
     }
     func testBoundedNativeProcessPersistsBothLogsOnFailure() throws {

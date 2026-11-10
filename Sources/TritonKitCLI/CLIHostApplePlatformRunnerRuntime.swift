@@ -27,6 +27,7 @@ struct HostApplePlatformRunnerRequest: Equatable {
     let confirm: Bool
     let auditRecord: String
     let crownDelta: Double?
+    let leaseID: String?
 }
 
 struct HostApplePlatformRunnerReceipt: Encodable, Equatable {
@@ -43,7 +44,14 @@ struct HostApplePlatformRunnerReceipt: Encodable, Equatable {
     let verification: String
     let failureCode: String?
     var auditPath: String? = nil
-    enum CodingKeys: String, CodingKey { case ok, action, platform, control, outcome, executable, actionsExecuted, targetBinding, nonce, sourceCommand, verification, failureCode, auditPath }
+    var actionID: String? = nil
+    var admissionID: String? = nil
+    var contextDigest: String? = nil
+    var delivery: String? = nil
+    var originalStatus: String? = nil
+    var terminalStatus: String? = nil
+    var evidencePersistence: String? = nil
+    enum CodingKeys: String, CodingKey { case ok, action, platform, control, outcome, executable, actionsExecuted, targetBinding, nonce, sourceCommand, verification, failureCode, auditPath, actionID, admissionID, contextDigest, delivery, originalStatus, terminalStatus, evidencePersistence }
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(ok, forKey: .ok); try c.encode(action, forKey: .action)
@@ -54,7 +62,28 @@ struct HostApplePlatformRunnerReceipt: Encodable, Equatable {
         try c.encodeIfPresent(sourceCommand, forKey: .sourceCommand)
         try c.encode(verification, forKey: .verification)
         try c.encodeIfPresent(failureCode, forKey: .failureCode); try c.encodeIfPresent(auditPath, forKey: .auditPath)
-    }
+        try c.encodeIfPresent(actionID, forKey: .actionID); try c.encodeIfPresent(admissionID, forKey: .admissionID)
+        try c.encodeIfPresent(contextDigest, forKey: .contextDigest); try c.encodeIfPresent(delivery, forKey: .delivery)
+        try c.encodeIfPresent(originalStatus, forKey: .originalStatus); try c.encodeIfPresent(terminalStatus, forKey: .terminalStatus)
+        try c.encodeIfPresent(evidencePersistence, forKey: .evidencePersistence)    }
+}
+func applePlatformRunnerActionEvidenceMetadata(
+    _ receipt: HostApplePlatformRunnerReceipt,
+    evidenceRefs: [String] = []
+) -> TKActionEvidenceMetadata? {
+    guard let actionID = receipt.actionID else { return nil }
+    return TKActionEvidenceMetadata(
+        actionID: actionID,
+        admissionID: receipt.admissionID,
+        contextDigest: receipt.contextDigest,
+        delivery: receipt.delivery,
+        outcome: receipt.outcome.rawValue,
+        executed: receipt.actionsExecuted,
+        originalStatus: receipt.originalStatus,
+        terminalStatus: receipt.terminalStatus,
+        postcondition: receipt.ok ? "verified" : "unverified",
+        evidenceRefs: evidenceRefs
+    )
 }
 
 
@@ -93,7 +122,8 @@ func makeApplePlatformRunnerRequest(
     executeRunner: Bool,
     confirm: Bool,
     auditRecord: String,
-    crownDelta: Double? = nil
+    crownDelta: Double? = nil,
+    leaseID: String? = nil
 ) throws -> HostApplePlatformRunnerRequest {
     guard isApplePlatformRunnerAction(platform: platform, action: action) else {
         throw HostApplePlatformControlError(code: "unsupported_runner_action", message: "This platform control has no executable XCTest runner contract.", hint: "Use a supported watchOS Crown/Action or tvOS remote action, or keep the request fixture-only.")
@@ -123,7 +153,7 @@ func makeApplePlatformRunnerRequest(
         throw HostApplePlatformControlError(code: "runner_result_bundle_required", message: "Execution requires an absolute result bundle path.", hint: "Pass a fresh private --result-bundle path.")
     }
     _ = try makeApplePlatformControlPlan(platform: platform, action: action, crownDelta: crownDelta)
-    return HostApplePlatformRunnerRequest(platform: platform, action: action, device: device, xctestrun: xctestrun, testIdentifier: testIdentifier, resultBundle: resultBundle, nonce: nonce, timeout: timeout, executeRunner: executeRunner, confirm: confirm, auditRecord: auditRecord, crownDelta: crownDelta)
+    return HostApplePlatformRunnerRequest(platform: platform, action: action, device: device, xctestrun: xctestrun, testIdentifier: testIdentifier, resultBundle: resultBundle, nonce: nonce, timeout: timeout, executeRunner: executeRunner, confirm: confirm, auditRecord: auditRecord, crownDelta: crownDelta, leaseID: leaseID)
 }
 
 func makeApplePlatformRunnerCommand(_ request: HostApplePlatformRunnerRequest, preparedPath: String? = nil) throws -> TKHostCommand {
@@ -181,26 +211,99 @@ func verifyApplePlatformRunnerResult(
     return HostApplePlatformRunnerReceipt(ok: true, platform: platform, control: action, outcome: .executed, executable: true, actionsExecuted: true, targetBinding: "exact-simulator-udid-bound", nonce: nonce, sourceCommand: nil, verification: "strict-runner-result-target-action-nonce-postcondition", failureCode: nil)
 }
 
+private func makeApplePlatformRunnerActionContext(_ request: HostApplePlatformRunnerRequest) throws -> (TKActionContext, String) {
+    let arguments: [String: TKJSONValue] = [
+        "action": .string(request.action.rawValue),
+        "confirm": .bool(request.confirm),
+        "crownDelta": request.crownDelta.map(TKJSONValue.double) ?? .null,
+        "device": .string(request.device),
+        "executeRunner": .bool(request.executeRunner),
+        "resultBundle": request.resultBundle.map(TKJSONValue.string) ?? .null,
+        "testIdentifier": .string(request.testIdentifier),
+        "timeout": .double(request.timeout),
+        "xctestrun": .string(request.xctestrun),
+        "platform": .string(request.platform.rawValue),
+        "nonce": .string(request.nonce)
+    ]
+    let digest = try TKActionArgumentsDigest.make(arguments: arguments, redactionProfile: "private-paths")
+    let context = TKActionContext(
+        actionID: request.nonce,
+        target: TKNormalizeTargetLeaseKey(request.device),
+        targetIdentity: request.device,
+        operation: "device.platform-control",
+        provider: "xcodebuild.xctest",
+        argsDigest: digest.digest,
+        argsDigestAlgorithm: digest.algorithm,
+        argsCanonicalizationVersion: digest.canonicalizationVersion,
+        argsRedactionProfile: digest.redactionProfile,
+        leaseID: request.leaseID,
+        leaseOwner: nil,
+        leaseExpiresAt: nil,
+        policyDecision: .allow,
+        createdAt: ISO8601DateFormatter().string(from: Date())
+    )
+
+    try context.validate()
+    return (context, try context.contextDigest())
+}
+
 func executeApplePlatformRunner(
     _ request: HostApplePlatformRunnerRequest,
     targetInventory: () throws -> Data = { try runHostCommand(TKSimctlCommand.listAvailableDevices()).stdoutData },
-    runner: ((TKHostCommand) throws -> HostProcessResult)? = nil
+    runner: ((TKHostCommand) throws -> HostProcessResult)? = nil,
+    admissionStore: TKActionAdmissionStore = TKActionAdmissionStore(),
+    now: @escaping () -> Date = Date.init,
+    leaseGate: (() throws -> Void)? = nil,
+    generationStore: TKActionGenerationStore = TKActionGenerationStore()
 ) throws -> HostApplePlatformRunnerReceipt {
+    let (actionContext, actionContextDigest) = try makeApplePlatformRunnerActionContext(request)
+    let generationToken = generationStore.begin(target: actionContext.target, actionID: actionContext.actionID)
+    var consumedAdmissionID: String?
     var started = false
     var bound = false
     var inputReturned = false
     var audit: String?
     var receipt: HostApplePlatformRunnerReceipt
+    func attachActionMetadata(_ value: inout HostApplePlatformRunnerReceipt) {
+        value.auditPath = audit
+        value.actionID = actionContext.actionID
+        value.admissionID = consumedAdmissionID
+        value.contextDigest = actionContextDigest
+        value.delivery = value.actionsExecuted == true ? "delivered" : (value.outcome == .notStarted ? "not_started" : "unknown")
+        value.originalStatus = value.outcome.rawValue
+        value.terminalStatus = value.outcome.rawValue
+    }
     do {
         let workspace = try prepareApplePlatformRunnerWorkspace(request)
         audit = workspace
         try writeApplePlatformRunnerAudit(["phase": "intent", "version": 1, "device": request.device, "platform": request.platform.rawValue, "action": request.action.rawValue, "nonce": request.nonce, "auditRecord": request.auditRecord, "testIdentifier": request.testIdentifier, "xctestrun": request.xctestrun, "resultBundle": request.resultBundle as Any? ?? NSNull(), "timeoutSeconds": request.timeout, "executeRunner": request.executeRunner, "confirm": request.confirm, "timestamp": ISO8601DateFormatter().string(from: Date()), "crownDelta": request.crownDelta as Any? ?? NSNull()], to: workspace + "/intent.json")
         try validateApplePlatformRunnerTarget(try targetInventory(), platform: request.platform, device: request.device)
+        try leaseGate?()
         bound = true
+        let admissionTTL = min(max(Int(request.timeout.rounded(.up)), TKActionAdmissionStore.minTTLSeconds), TKActionAdmissionStore.maxTTLSeconds)
+        let issued = try admissionStore.issue(
+            actionID: actionContext.actionID,
+            contextDigest: actionContextDigest,
+            target: actionContext.target,
+            leaseID: actionContext.leaseID,
+            now: now(),
+            ttlSeconds: admissionTTL
+        )
+        _ = try admissionStore.consume(
+            admissionID: issued.admissionID,
+            contextDigest: actionContextDigest,
+            target: actionContext.target,
+            leaseID: actionContext.leaseID,
+            now: now()
+        )
+        consumedAdmissionID = issued.admissionID
         let command = try makeApplePlatformRunnerCommand(request, preparedPath: workspace + "/request.xctestrun")
         started = true
         let result = try runner?(command) ?? runApplePlatformRunnerProcess(command, logPrefix: workspace + "/xcodebuild")
         inputReturned = true
+        guard generationStore.isCurrent(generationToken) else {
+            throw runnerError("runner_generation_stale", "The runner result belongs to an older action generation; delivery is unknown and the action will not be replayed.")
+        }
         guard result.exitCode == 0 else { throw runnerError("runner_process_failed", "XCTest exited unsuccessfully; input delivery is unknown.") }
         try validateApplePlatformResultTree(request.resultBundle!)
         let exportPath = workspace + "/attachments"
@@ -211,6 +314,9 @@ func executeApplePlatformRunner(
         let manifest = try readApplePlatformRunnerFile(exportPath + "/manifest.json", limit: 1_048_576)
         let name = try applePlatformResultAttachmentName(manifest, request: request)
         let data = try readApplePlatformRunnerFile(exportPath + "/" + name, limit: 65536)
+        guard generationStore.isCurrent(generationToken) else {
+            throw runnerError("runner_generation_stale", "The runner result became stale before receipt verification; delivery is unknown and no replay is allowed.")
+        }
         receipt = try verifyApplePlatformRunnerResult(data, platform: request.platform, action: request.action, device: request.device, nonce: request.nonce, crownDelta: request.crownDelta)
         receipt.sourceCommand = result.sourceCommand
     } catch {
@@ -226,11 +332,12 @@ func executeApplePlatformRunner(
         } else if code == "runner_process_failed" { outcome = .failed }
         receipt = HostApplePlatformRunnerReceipt(ok: false, platform: request.platform, control: request.action, outcome: outcome, executable: true, actionsExecuted: started ? nil : false, targetBinding: bound ? "exact-simulator-udid-bound" : "unverified", nonce: request.nonce, sourceCommand: nil, verification: started ? "Input delivery unknown; no automatic retry." : "Runner was not invoked.", failureCode: code)
     }
-    receipt.auditPath = audit
+    attachActionMetadata(&receipt)
     if let audit {
         do { try writeApplePlatformRunnerAuditData(JSONEncoder().encode(receipt), to: audit + "/completion.json") }
         catch {
             receipt = HostApplePlatformRunnerReceipt(ok: false, platform: request.platform, control: request.action, outcome: started ? .unknown : .notStarted, executable: true, actionsExecuted: started ? nil : false, targetBinding: bound ? "exact-simulator-udid-bound" : "unverified", nonce: request.nonce, sourceCommand: nil, verification: "Completion audit could not be persisted; never retry automatically.", failureCode: "runner_audit_failed", auditPath: audit)
+            attachActionMetadata(&receipt)
         }
     }
     return receipt

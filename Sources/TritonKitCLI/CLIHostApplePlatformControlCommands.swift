@@ -15,19 +15,28 @@ struct DevicePlatformControl: AsyncParsableCommand {
     @Option(name: .customLong("audit-record"), help: "Opaque audit record for explicit runner execution") var auditRecord: String?
     @Flag(name: .customLong("execute-runner"), help: "Allow one explicit XCTest runner invocation") var executeRunner = false
     @Flag(help: "Confirm the explicit runner input may be delivered") var confirm = false
+    @Option(name: .customLong("lease"), help: "Optional target lease token; when supplied, the server atomically authorizes this mutating runner") var leaseID: String?
+    @Option(help: "Server host for the target lease check") var host: String = "127.0.0.1"
+    @Option(help: "Server port for the target lease check") var port: Int = 19421
+    @Option(name: .customLong("evidence-dir"), help: "Optional .tritonevidence directory for the explicit runner action and receipt") var evidenceDir: String?
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "text|json") var format: ClientOutputFormat = .json
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            let runnerRequested = executeRunner || confirm || device != nil || xctestrun != nil || testIdentifier != nil || resultBundle != nil || auditRecord != nil
+            let runnerRequested = executeRunner || confirm || device != nil || xctestrun != nil || testIdentifier != nil || resultBundle != nil || auditRecord != nil || evidenceDir != nil || leaseID != nil
             if runnerRequested {
                 guard let device, let xctestrun, let testIdentifier, let auditRecord else {
                     throw HostApplePlatformControlError(code: "runner_options_incomplete", message: "Explicit runner execution requires --device, --xctestrun, --test-identifier, --result-bundle, and --audit-record.", hint: "Omit runner options for fixture-only planning, or provide the complete audited runner request.")
                 }
-                let request = try makeApplePlatformRunnerRequest(platform: platform, action: action, device: device, xctestrun: xctestrun, testIdentifier: testIdentifier, resultBundle: resultBundle, nonce: UUID().uuidString, timeout: timeout, executeRunner: executeRunner, confirm: confirm, auditRecord: auditRecord, crownDelta: delta)
-                let receipt = try executeApplePlatformRunner(request)
+                let request = try makeApplePlatformRunnerRequest(platform: platform, action: action, device: device, xctestrun: xctestrun, testIdentifier: testIdentifier, resultBundle: resultBundle, nonce: UUID().uuidString, timeout: timeout, executeRunner: executeRunner, confirm: confirm, auditRecord: auditRecord, crownDelta: delta, leaseID: leaseID)
+                if let leaseID {
+                    try await enforceTargetLease(host: host, port: port, target: request.device, leaseID: leaseID)
+                }
+                let evidence = try evidenceDir.map { try ApplePlatformRunnerEvidenceSession(directory: $0, request: request) }
+                var receipt = try executeApplePlatformRunner(request)
+                evidence?.finish(receipt: &receipt)
                 switch outputFormat {
                 case .json: print(try encodeJSON(receipt))
                 case .text: print("\(receipt.platform.rawValue)\t\(receipt.control.rawValue)\t\(receipt.outcome.rawValue)\t\(receipt.verification)")

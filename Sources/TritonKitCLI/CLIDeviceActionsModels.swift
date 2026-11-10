@@ -51,4 +51,6 @@ enum DeviceActionError: Error, Equatable {
     case invalidSelector
     case invalidButton
     case invalidTextFile
+    case generationStale
+    case invalidResult
 }

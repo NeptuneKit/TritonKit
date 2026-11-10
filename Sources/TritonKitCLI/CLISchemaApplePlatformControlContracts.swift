@@ -20,7 +20,14 @@ func hostApplePlatformControlOutputContract() -> TKCommandOutputContract {
         ("nonce", "String?", false, "Opaque runner correlation nonce"),
         ("sourceCommand", "String?", false, "Redacted xcodebuild command for an explicit runner request"),
         ("failureCode", "String?", false, "Stable runner failure or unknown outcome code"),
-        ("auditPath", "String?", false, "Private owned runner directory containing intent, request, bounded logs and completion receipt")
+        ("auditPath", "String?", false, "Private owned runner directory containing intent, request, bounded logs and completion receipt"),
+        ("actionID", "String?", false, "ActionContext correlation identity"),
+        ("admissionID", "String?", false, "One-time provider admission identity"),
+        ("contextDigest", "String?", false, "Canonical ActionContext digest"),
+        ("delivery", "String?", false, "not_started, delivered or unknown"),
+        ("originalStatus", "String?", false, "Original provider outcome before terminal control status"),
+        ("terminalStatus", "String?", false, "Terminal action status"),
+        ("evidencePersistence", "String?", false, "written or failed when --evidence-dir is used")
     ]))
 }
 
@@ -49,6 +56,7 @@ let applePlatformRunnerFailureCodes: [String] = [
     "runner_inventory_failed",
     "runner_inventory_timed_out",
     "runner_launch_failed",
+    "runner_generation_stale",
     "runner_log_failed",
     "runner_log_incomplete",
     "runner_options_incomplete",
