@@ -343,7 +343,7 @@
 
 | `SP-256-issue-245-compact-schema` | [`SP-256-issue-245-compact-schema`](./SP-256-issue-245-compact-schema/README.md) | 已发布 | #245 compact resolved leaf schema；PR #253 与最终联合门禁通过，随 v0.2.39 发布，资产/安装通过，三端预览与清理通过 |
 
-| `SP-257-issue-246-harmony-verified-input` | [`SP-257-issue-246-harmony-verified-input`](./SP-257-issue-246-harmony-verified-input/README.md) | 本轮排除；本地候选与证据保留 | #246：自有HVD出现IME许可交互，正向输入未验收；不把人工步骤交给用户；20本地测试及真实负例不代替完整验收 |
+| `SP-257-issue-246-harmony-verified-input` | [`SP-257-issue-246-harmony-verified-input`](./SP-257-issue-246-harmony-verified-input/README.md) | 已集成候选，issue保持OPEN | #246：selector-bound verified input 已合入本轮候选；20项 focused tests 通过；真实 Harmony IME 正向输入受系统许可阻断，未宣称业务验收 |
 
 | `SP-258-issue-247-schema-effects` | [`SP-258-issue-247-schema-effects`](./SP-258-issue-247-schema-effects/README.md) | 已发布 | #247：PR #259 合入 main，定向/组合与精确 CI 通过；随 v0.2.39 发布，资产/安装通过，三端预览与清理通过，原验收边界保留 |
 

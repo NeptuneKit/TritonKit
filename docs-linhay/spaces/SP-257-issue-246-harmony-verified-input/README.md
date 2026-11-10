@@ -1,6 +1,6 @@
 # SP-257-issue-246-harmony-verified-input
 
-状态：候选保留，本轮合并/发布排除。关联GitHub #246，影响CLI Harmony host act.type与只读回读；默认transport-only路径兼容。
+状态：候选已集成到本轮发布候选；真实 Harmony IME 正向输入仍受系统许可阻断，issue 保持 OPEN。关联GitHub #246，影响CLI Harmony host act.type与只读回读；默认transport-only路径兼容。
 
 ## BDD与验收
 

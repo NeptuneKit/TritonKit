@@ -433,7 +433,7 @@
 
 - [SP-256-issue-245-compact-schema](./SP-256-issue-245-compact-schema/README.md)：#245 opt-in叶子schema，CLI只读契约；已合并 PR #253；最终联合门禁通过，随 v0.2.39 发布，资产/安装通过，三端预览与清理通过。
 
-- 2026-11-02 [SP-257-issue-246-harmony-verified-input](./SP-257-issue-246-harmony-verified-input/README.md)：本轮排除；本地候选与证据保留；自有HVD出现IME许可交互，正向输入未验收；不把人工步骤交给用户；20本地测试及真实负例不代替完整验收。
+- 2026-11-10 [SP-257-issue-246-harmony-verified-input](./SP-257-issue-246-harmony-verified-input/README.md)：verified input 候选已集成到发布候选；20项 focused tests 通过；真实 Harmony IME 正向输入仍受系统许可阻断，issue 保持 OPEN。
 
 - 2026-11-02 [SP-258-issue-247-schema-effects](./SP-258-issue-247-schema-effects/README.md)：已合并 PR #259；定向/组合与精确 CI 通过，随 v0.2.39 发布，资产/安装通过，三端预览与清理通过。
 
