@@ -132,7 +132,7 @@ struct WorkspaceVisualFeedbackTests {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
         let payload = TKWorkspaceHTTPRunRequest(runsDir: directory.path, runID: "run-visual-feedback", target: "sim:TEST", platform: "ios", scope: "simulator",
-                                                app: "com.example.test", goal: "Continue", actionPolicy: "explore", llmProvider: "mock", vlmProvider: "mock",
+                                                app: "com.example.test", goal: "Continue", actionPolicy: "explore", enableLLM: true, llmProvider: "mock", enableVLM: true, vlmProvider: "mock",
                                                 observeLive: true, businessReadyText: "Dashboard", businessReadyLiveWait: true,
                                                 executeActions: true, visualSettle: try VisualSettleConfiguration())
         let response = try await handleWorkspaceHTTPRunAsync(body: JSONEncoder().encode(payload), observeProvider: observation,
@@ -155,7 +155,7 @@ struct WorkspaceVisualFeedbackTests {
     }
 
     private func baseRequest(directory: String, config: VisualSettleConfiguration?, steps: Int = 1, runID: String? = "run-visual-feedback") -> TKWorkspaceRunRequest {
-        TKWorkspaceRunRequest(runsDirectory: directory, runID: runID, target: "sim:TEST", platform: "ios", scope: "simulator", app: "com.example.test", goal: "Continue", actionPolicy: "explore", llmProvider: "mock", vlmProvider: "mock", maxSteps: steps, observeLive: true, businessReadyText: "Dashboard", businessReadyLiveWait: true, executeActions: true, visualSettle: config)
+        TKWorkspaceRunRequest(runsDirectory: directory, runID: runID, target: "sim:TEST", platform: "ios", scope: "simulator", app: "com.example.test", goal: "Continue", actionPolicy: "explore", enableLLM: true, llmProvider: "mock", enableVLM: true, vlmProvider: "mock", maxSteps: steps, observeLive: true, businessReadyText: "Dashboard", businessReadyLiveWait: true, executeActions: true, visualSettle: config)
     }
 
     private func feedback(_ state: VisualSettleState, configuration: VisualSettleConfiguration) -> VisualSettleOutput {

@@ -241,4 +241,3 @@ done
 echo "release complete: ${tag}"
 echo "GitHub Release: https://github.com/${repo}/releases/tag/${tag}"
 echo "Homebrew: brew install ${brew_tap}/triton"
-echo "x86_64 assets are published by the backfill job when the Intel runner finishes."

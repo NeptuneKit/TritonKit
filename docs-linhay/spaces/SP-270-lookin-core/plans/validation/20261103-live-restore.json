@@ -1,0 +1,10 @@
+{
+  "action": "node.patch",
+  "applied": [
+    "layer.cornerRadius"
+  ],
+  "oid": 12,
+  "ok": true,
+  "skipped": [],
+  "success": true
+}

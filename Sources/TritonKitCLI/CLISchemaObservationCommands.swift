@@ -931,8 +931,8 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 #"triton wait --predicate "text.exists(\"console\") && !text.exists(\"点我登录\")" --timeout 15 --json"#,
             ],
             successShape: "{ ok, matched, condition, query?, predicate?, elapsedMs, pollCount, timedOut, targetConnectionState, hierarchyCacheState, lastObservedNodeCount?, lastObservedTextSample, match? } or HostIOSWaitOutput or HostAndroidWaitOutput or HostHarmonyWaitOutput",
-            failureShape: "Timeout: { ok:false, matched:false, timedOut:true, condition, elapsedMs, pollCount, match?, sourceCommands? }; Harmony host timeout may also include transientFailureCount and lastTransientError; validation/request/unsupported-condition failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
-            outputSemantics: "Use wait before assert or after action commands. Timeout returns a structured wait result instead of an untyped error. With --platform ios, wait polls the same Simulator host AX source as observe tree and does not require an embedded runtime. Harmony host wait supports text/exists/gone through layout dump; --idle, --hierarchy-change, and --predicate are rejected with unsupported_capability. Harmony layout dump/recv timeouts are bounded by the remaining wait budget, retried as transient polls, and retained in lastTransientError.",
+            failureShape: "Timeout: { ok:false, matched:false, timedOut:true, condition, elapsedMs, pollCount, match?, sourceCommands? }; Harmony condition timeout may also include transientFailureCount and lastTransientError; discovery timeout uses error.code=harmony_discovery_timeout; validation/request/unsupported-condition failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
+            outputSemantics: "Use wait before assert or after action commands. Timeout returns a structured wait result instead of an untyped error. With --platform ios, wait polls the same Simulator host AX source as observe tree and does not require an embedded runtime. Harmony host wait supports text/exists/gone through layout dump; --idle, --hierarchy-change, and --predicate are rejected with unsupported_capability. Harmony --timeout covers target discovery (including the plain-list fallback) and layout polling under one deadline, plus bounded host-process cleanup. Discovery exhaustion returns harmony_discovery_timeout without a fabricated target; condition exhaustion retains the structured wait result and elapsedMs includes discovery. Harmony layout dump/recv timeouts are bounded by the remaining wait budget, retried as transient polls, and retained in lastTransientError.",
             nextCommands: [
                 "triton status --json",
                 "triton verify text-exists <text> --json",
@@ -940,7 +940,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton act find <text> --all --json",
             ],
             outputContracts: [waitResultOutputContract(), hostIOSWaitOutputContract(), hostAndroidWaitOutputContract(), hostHarmonyWaitOutputContract()],
-            failureCodes: ["timeout", "validation_failed", "unsupported_capability", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"] + schemaIOSHostAXFailureCodes,
+            failureCodes: ["timeout", "validation_failed", "unsupported_capability", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed", "target_offline", "harmony_hdc_not_found", "host_action_failed", "harmony_discovery_timeout", "host_command_timeout", "harmony_layout_path_not_found", "harmony_layout_failed", "harmony_artifact_recv_failed"] + schemaIOSHostAXFailureCodes,
             providedCapabilities: ["wait", "ios-simulator-host-wait", "android-wait-text", "harmony-wait-text"]
         ),
         TKCommandSchema(

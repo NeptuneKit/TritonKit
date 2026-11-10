@@ -22,10 +22,10 @@ struct WorkspaceRunTests {
         #expect(run.kind == "triton.workspace.run")
         #expect(run.runID == "run-workspace-001")
         #expect(run.status == "paused")
-        #expect(run.ai.llmEnabled)
-        #expect(run.ai.vlmEnabled)
+        #expect(!run.ai.llmEnabled)
+        #expect(!run.ai.vlmEnabled)
         #expect(run.ai.providersReady == false)
-        #expect(run.nextActions.contains { $0.code == "configure_ai_provider" })
+        #expect(run.nextActions.contains { $0.code == "external_agent_inference" })
         #expect(run.runner?.actionPolicy == "explore")
         #expect(run.runner?.maxSteps == 20)
         #expect(run.runner?.allowedActions == ["tap", "swipe", "type", "wait", "verify", "stop"])
@@ -79,8 +79,8 @@ struct WorkspaceRunTests {
         #expect(inspected.run.status == "paused")
         #expect(inspected.summary.status == .paused)
         #expect(inspected.summary.eventCount == 7)
-        #expect(inspected.latestBootstrap?.phase == "provider_missing")
-        #expect(inspected.latestPause?.phase == "provider_missing")
+        #expect(inspected.latestBootstrap?.phase == "inference_disabled")
+        #expect(inspected.latestPause?.phase == "inference_disabled")
         #expect(inspected.atlas.screenCount == 1)
         #expect(inspected.atlas.stateCount == 1)
         #expect(inspected.atlas.transitionCount == 0)
@@ -513,7 +513,9 @@ struct WorkspaceRunTests {
             app: "com.example.demo",
             goal: "Open login screen",
             actionPolicy: "explore",
+            enableLLM: true,
             llmProvider: "mock",
+            enableVLM: true,
             vlmProvider: "mock",
             observationFixture: fixture.path,
             businessReadyText: "Continue"
@@ -612,6 +614,8 @@ struct WorkspaceRunTests {
             app: "com.example.demo",
             goal: "Explore login",
             actionPolicy: "explore",
+            enableLLM: true,
+            enableVLM: true,
             vlmProvider: "mock"
         ))
 
@@ -654,7 +658,9 @@ struct WorkspaceRunTests {
             app: "com.example.demo",
             goal: "Explore login",
             actionPolicy: "explore",
+            enableLLM: true,
             llmProvider: "mock",
+            enableVLM: true,
             vlmProvider: "mock"
         ))
 
@@ -721,9 +727,11 @@ struct WorkspaceRunTests {
                 app: "com.example.demo",
                 goal: "Explore login",
                 actionPolicy: "explore",
+                enableLLM: true,
                 llmProvider: "openai-compatible",
                 llmBaseURL: "http://127.0.0.1:8000/v1",
                 llmModel: "local-workspace-model",
+                enableVLM: true,
                 vlmProvider: "mock",
                 observationFixture: fixture.path
             ),
@@ -774,7 +782,9 @@ struct WorkspaceRunTests {
                 app: "com.example.demo",
                 goal: "Explore login",
                 actionPolicy: "explore",
+                enableLLM: true,
                 llmProvider: "mock",
+                enableVLM: true,
                 vlmProvider: "openai-compatible",
                 vlmBaseURL: "http://127.0.0.1:8000/v1",
                 vlmModel: "local-vlm-model",
@@ -830,7 +840,9 @@ struct WorkspaceRunTests {
                 app: "com.example.demo",
                 goal: "Explore login",
                 actionPolicy: "explore",
+                enableLLM: true,
                 llmProvider: "mock",
+                enableVLM: true,
                 vlmProvider: "mlx-swift-lm",
                 vlmModelPath: modelPath.path,
                 vlmHelper: helperPath,
@@ -883,7 +895,9 @@ struct WorkspaceRunTests {
             app: "com.example.demo",
             goal: "Explore login",
             actionPolicy: "explore",
+            enableLLM: true,
             llmProvider: "mock",
+            enableVLM: true,
             vlmProvider: "openai-compatible",
             vlmBaseURL: "https://example.com/v1",
             vlmModel: "remote-vlm-model"
@@ -916,7 +930,9 @@ struct WorkspaceRunTests {
             app: "com.example.demo",
             goal: "HTTP VLM run",
             actionPolicy: nil,
+            enableLLM: true,
             llmProvider: "mock",
+            enableVLM: true,
             vlmProvider: "openai-compatible",
             vlmBaseURL: "http://127.0.0.1:8000/v1",
             vlmModel: "local-vlm-model"
@@ -951,7 +967,9 @@ struct WorkspaceRunTests {
             app: "com.example.demo",
             goal: "HTTP MLX VLM run",
             actionPolicy: nil,
+            enableLLM: true,
             llmProvider: "mock",
+            enableVLM: true,
             vlmProvider: "mlx-swift-lm",
             vlmModelPath: modelPath,
             vlmHelper: helperPath,
@@ -1115,7 +1133,9 @@ struct WorkspaceRunTests {
             goal: "Reject disallowed tap",
             actionPolicy: "explore",
             dryModelFixture: true,
+            enableLLM: true,
             llmProvider: "mock",
+            enableVLM: true,
             vlmProvider: "mock",
             allowedActions: ["wait"],
             stopConditions: ["policy_rejected"]
@@ -1179,7 +1199,9 @@ struct WorkspaceRunTests {
             app: "com.example.demo",
             goal: "Reject mock provider tap",
             actionPolicy: "explore",
+            enableLLM: true,
             llmProvider: "mock",
+            enableVLM: true,
             vlmProvider: "mock",
             allowedActions: ["wait"],
             stopConditions: ["policy_rejected"]
@@ -1304,7 +1326,9 @@ struct WorkspaceRunTests {
                 app: "com.example.demo",
                 goal: "Export VLM grounded action flow",
                 actionPolicy: "explore",
+                enableLLM: true,
                 llmProvider: "mock",
+                enableVLM: true,
                 vlmProvider: "mock",
                 observationFixture: fixture.path,
                 executeActions: true
@@ -1407,7 +1431,9 @@ struct WorkspaceRunTests {
             "--runs-dir", root.path,
             "--run-id", "run-workspace-cli",
             "--observation-fixture", fixture.path,
+            "--enable-llm",
             "--llm-provider", "mock",
+            "--enable-vlm",
             "--vlm-provider", "mock",
             "--max-steps", "5",
             "--allowed-action", "tap",
@@ -1482,7 +1508,9 @@ struct WorkspaceRunTests {
             app: "com.example.demo",
             goal: "HTTP run",
             actionPolicy: nil,
+            enableLLM: true,
             llmProvider: "mock",
+            enableVLM: true,
             vlmProvider: "mock",
             maxSteps: 4,
             allowedActions: ["tap"],
@@ -1603,7 +1631,9 @@ struct WorkspaceRunTests {
                 app: "com.example.demo",
                 goal: "Reach dashboard through intermediate screen",
                 actionPolicy: "explore",
+                enableLLM: true,
                 llmProvider: "mock",
+                enableVLM: true,
                 vlmProvider: "mock",
                 maxSteps: 2,
                 observeLive: true,

@@ -189,6 +189,9 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
     }
 
     public static func recoveryCategories(forFailureCode failureCode: String) -> [String] {
+        if ["runtime_disabled", "unsupported_platform", "details_partial", "details_failed", "capability_disabled"].contains(failureCode) {
+            return ["diagnose", "plan"]
+        }
         if let categories = emulatorResourceRecoveryCategories(forFailureCode: failureCode) { return categories }
         // Highlight recovery observes an existing operation/session before replanning.
         // It never suggests installing a provider, forcing restore, or replaying apply.
@@ -447,7 +450,9 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
     public let requiresServer: Bool
     public let requiresTarget: Bool
     public let requiresConfirmation: Bool
+    /// Unknown is conservative; none is reserved for an explicitly audited no-effect operation.
     public let sideEffect: String
+    public let sideEffectCases: [TKCommandSideEffectCase]
     /// Overrides for an option whose semantics differ from the root command.
     public let optionOverrides: [TKCommandSchemaOption]
     public let requiredOptions: [String]
@@ -475,6 +480,7 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
         case requiresTarget
         case requiresConfirmation
         case sideEffect
+        case sideEffectCases
         case optionOverrides
         case requiredOptions
         case oneOfRequiredOptions
@@ -499,7 +505,8 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
         requiresServer: Bool = false,
         requiresTarget: Bool = false,
         requiresConfirmation: Bool = false,
-        sideEffect: String = "none",
+        sideEffect: String = "unknown",
+        sideEffectCases: [TKCommandSideEffectCase] = [],
         optionOverrides: [TKCommandSchemaOption] = [],
         requiredOptions: [String] = [],
         oneOfRequiredOptions: [[String]] = [],
@@ -523,6 +530,7 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
         self.requiresTarget = requiresTarget
         self.requiresConfirmation = requiresConfirmation
         self.sideEffect = sideEffect
+        self.sideEffectCases = sideEffectCases
         self.optionOverrides = optionOverrides
         self.requiredOptions = requiredOptions
         self.oneOfRequiredOptions = oneOfRequiredOptions
@@ -551,7 +559,8 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
             requiresServer: try container.decodeIfPresent(Bool.self, forKey: .requiresServer) ?? false,
             requiresTarget: try container.decodeIfPresent(Bool.self, forKey: .requiresTarget) ?? false,
             requiresConfirmation: try container.decodeIfPresent(Bool.self, forKey: .requiresConfirmation) ?? false,
-            sideEffect: try container.decodeIfPresent(String.self, forKey: .sideEffect) ?? "none",
+            sideEffect: try container.decodeIfPresent(String.self, forKey: .sideEffect) ?? "unknown",
+            sideEffectCases: try container.decodeIfPresent([TKCommandSideEffectCase].self, forKey: .sideEffectCases) ?? [],
             optionOverrides: try container.decodeIfPresent([TKCommandSchemaOption].self, forKey: .optionOverrides) ?? [],
             requiredOptions: try container.decodeIfPresent([String].self, forKey: .requiredOptions) ?? [],
             oneOfRequiredOptions: try container.decodeIfPresent([[String]].self, forKey: .oneOfRequiredOptions) ?? [],

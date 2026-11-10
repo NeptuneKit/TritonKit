@@ -10,7 +10,7 @@
 
 - Given 使用者打开 `README.md`
 - When 选择 iOS embedded runtime 接入路径
-- Then 能看到 SwiftPM 与 CocoaPods 方式
+- Then 能看到 SwiftPM（iOS 16+）方式
 - And 能看到 SwiftPM 无 Debug-only dependency switch 的限制
 - And 能看到独立 `TritonKitDebugBootstrap.swift` 文件级 `#if DEBUG` 示例
 - And 能看到 AppDelegate / SwiftUI 入口只保留 Debug 调用点

@@ -296,7 +296,7 @@ func runWorkspaceRunAsync(
     let runner = try workspaceRunnerConfig(for: resolvedRequest)
     let providerPreflight = try workspaceProviderPreflight(resolvedRequest)
     let modelLoopMode = workspaceModelLoopMode(for: resolvedRequest)
-    let modelLoopEnabled = resolvedRequest.dryModelFixture || providerPreflight.providersReady
+    let modelLoopEnabled = resolvedRequest.dryModelFixture || (resolvedRequest.enableLLM && providerPreflight.providersReady)
     let appReady = workspaceAppReadyEvidence(
         lifecycle: appLifecycle,
         observation: observationSeed,
@@ -330,7 +330,7 @@ func runWorkspaceRunAsync(
         )
     }
     let modelDecision = modelLoopEnabled
-        ? try await modelDecisionProvider(workspaceModelDecisionRequest(
+        ? try await workspaceInferenceDecision(dryFixture: resolvedRequest.dryModelFixture, provider: modelDecisionProvider, request: workspaceModelDecisionRequest(
             for: resolvedRequest,
             observation: observationSeed,
             runner: runner,
@@ -477,7 +477,7 @@ private func runWorkspaceRun(
     let target = workspaceRunTarget(for: request, targetResolution: targetResolution)
     let runner = try workspaceRunnerConfig(for: request)
     let providerPreflight = try workspaceProviderPreflight(request)
-    let modelLoopEnabled = request.dryModelFixture || providerPreflight.providersReady
+    let modelLoopEnabled = request.dryModelFixture || (request.enableLLM && providerPreflight.providersReady)
     let modelLoopMode = workspaceModelLoopMode(for: request)
     let modelDecisionRequest = workspaceModelDecisionRequest(
         for: request,
@@ -525,8 +525,8 @@ private func runWorkspaceRun(
         target: target,
         app: request.app,
         ai: TKWorkspaceRunAI(
-            llmEnabled: true,
-            vlmEnabled: true,
+            llmEnabled: request.enableLLM,
+            vlmEnabled: request.enableVLM,
             actionPolicy: request.actionPolicy,
             providersReady: providerPreflight.providersReady,
             providerStatus: providerPreflight.providerStatus,
@@ -771,7 +771,7 @@ private func workspaceShouldExecuteCandidateAction(
     }
     let runner = try workspaceRunnerConfig(for: request)
     let providerPreflight = try workspaceProviderPreflight(request)
-    let modelLoopEnabled = request.dryModelFixture || providerPreflight.providersReady
+    let modelLoopEnabled = request.dryModelFixture || (request.enableLLM && providerPreflight.providersReady)
     return modelLoopEnabled && workspacePolicyAllowsAction(actionCandidate.action, runner: runner)
 }
 
@@ -1276,6 +1276,8 @@ private func workspaceYAMLList(_ values: [String]) -> String {
 }
 
 func workspaceBootstrapState(for ai: TKWorkspaceRunAI) -> String {
+    if ai.providerStatus == "disabled" { return "inference_disabled" }
+    if ai.providerStatus == "fixture" { return "synthetic_fixture" }
     if ai.providerStatus == "ready" {
         return "provider_ready"
     }

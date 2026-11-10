@@ -55,15 +55,10 @@ grep -q 'classify-validate:' "${ci_workflow}" || fail "ci workflow must classify
 grep -q 'Validate docs and skills' "${ci_workflow}" || fail "ci workflow must keep an in-classifier docs/skill-only validate path"
 grep -q 'Validate short-path contracts' "${ci_workflow}" || fail "ci workflow must keep an in-classifier contract-only validate path"
 grep -q 'validate-swift:' "${ci_workflow}" || fail "ci workflow must split Swift tests into an independent validate job"
-grep -q 'validate-podspec-kit:' "${ci_workflow}" || fail "ci workflow must split TritonKit podspec lint into an independent validate job"
 grep -q 'validate-contracts:' "${ci_workflow}" || fail "ci workflow must split release/homebrew contract checks into an independent validate job"
 grep -q 'name: Validate' "${ci_workflow}" || fail "ci workflow must keep a stable Validate aggregator job"
 grep -q "mode == 'swift'" "${ci_workflow}" || fail "ci workflow must support a swift-only validate mode"
 grep -q "mode == 'contracts'" "${ci_workflow}" || fail "ci workflow must support a contract-only validate mode"
-grep -q "mode == 'podkit'" "${ci_workflow}" || fail "ci workflow must support a TritonKit-only podspec validate mode"
-if grep -q 'TritonKitShared[.]podspec' "${ci_workflow}"; then
-  fail "ci workflow must not validate or require a public TritonKitShared podspec"
-fi
 grep -q 'actions/cache@v5' "${ci_workflow}" || fail "ci workflow must cache SwiftPM dependencies/build products with the Node 24 cache action"
 if grep -Eq 'actions/(cache|upload-artifact|download-artifact)@v4' "${ci_workflow}" "${release_workflow}"; then
   fail "release workflows must not use Node 20 cache/artifact actions"
@@ -72,18 +67,18 @@ grep -q 'verify-spm-dependency-boundary[.]sh' "${ci_workflow}" || fail "ci workf
 grep -q 'swift build --package-path CLI --scratch-path [.]build/cli -c release --product triton' "${ci_workflow}" \
   || fail "ci workflow must build the CLI from CLI/Package.swift"
 web_build_count="$(grep -Fc 'npm --prefix Web run build' "${ci_workflow}" || true)"
-if (( web_build_count < 2 )); then
-  fail "ci workflow must build Web/dist before both arm64 and x86_64 CLI artifacts"
+if (( web_build_count < 1 )); then
+  fail "ci workflow must build Web/dist before the arm64 CLI artifact"
 fi
 node_setup_count="$(grep -Fc 'actions/setup-node@v6' "${ci_workflow}" || true)"
-if (( node_setup_count < 2 )); then
-  fail "ci workflow must pin Node before building bundled Web assets on both CLI release jobs"
+if (( node_setup_count < 1 )); then
+  fail "ci workflow must pin Node before building bundled Web assets on the arm64 CLI release job"
 fi
 grep -Fq 'cache-dependency-path: Web/package-lock.json' "${ci_workflow}" \
   || fail "ci workflow must cache npm dependencies using Web/package-lock.json"
 web_copy_count="$(grep -Fc 'cp -R "Web/dist/." "${package_dir}/web/"' "${ci_workflow}" || true)"
-if (( web_copy_count < 2 )); then
-  fail "ci workflow must copy Web/dist into both CLI artifact web directories"
+if (( web_copy_count < 1 )); then
+  fail "ci workflow must copy Web/dist into the arm64 CLI artifact web directory"
 fi
 grep -Fq 'triton web starts the bundled Web Device Hub from ./web.' "${ci_workflow}" \
   || fail "CLI package README must explain bundled Web startup through triton web"
@@ -95,8 +90,6 @@ if grep -Eq 'tar -tf .*\| grep -E?q' "${ci_workflow}"; then
 fi
 grep -Fq 'triton-macos-arm64/web/index[.]html' "${ci_workflow}" \
   || fail "ci workflow must validate the arm64 CLI tarball contains bundled Web assets"
-grep -Fq 'triton-macos-x86_64/web/index[.]html' "${ci_workflow}" \
-  || fail "ci workflow must validate the x86_64 CLI tarball contains bundled Web assets"
 grep -Fq 'pkgshare.install web_dir => "web"' "${root}/.github/homebrew/triton.rb.template" \
   || fail "Homebrew formula must install bundled Web assets into pkgshare/web"
 grep -Fq 'triton web --print-command --json' "${root}/.github/homebrew/triton.rb.template" \
@@ -137,8 +130,6 @@ grep -q 'tritonkit-skills[.]tar[.]gz' "${ci_workflow}" || fail "ci workflow must
 grep -q 'TritonKit[.]skills/[$][{]skill_name[}]/SKILL[.]md' "${ci_workflow}" || fail "ci workflow must validate skills under the TritonKit.skills bundle directory"
 grep -q 'build-cli-arm64:' "${ci_workflow}" || fail "ci workflow must build arm64 CLI as an independent release gate"
 grep -q 'needs: build-cli-arm64' "${ci_workflow}" || fail "release asset packaging must depend on arm64 only"
-grep -q 'publish-x86-release-asset:' "${ci_workflow}" || fail "ci workflow must backfill the x86_64 release asset"
-grep -q 'Update Homebrew tap [(]x86_64 backfill[)]' "${ci_workflow}" || fail "ci workflow must update the tap again after x86_64 backfill"
 grep -q 'sha256sum [*][.]tar[.]gz' "${ci_workflow}" || fail "ci workflow checksums should cover tar.gz release assets"
 if grep -q 'ditto .*zip' "${ci_workflow}" || grep -q 'zip -qr' "${ci_workflow}"; then
   fail "ci workflow must not generate zip release assets"
@@ -157,24 +148,10 @@ grep -q 'TAP_GITHUB_TOKEN is required' "${tap_workflow}" || fail "tap workflow m
 grep -q '^name: Release$' "${release_workflow}" || fail "release workflow must exist"
 grep -q 'tags:' "${release_workflow}" || fail "release workflow must run on version tags"
 grep -q 'Build CLI [(]arm64[)]' "${release_workflow}" || fail "release workflow must build arm64 CLI"
-grep -q 'Build CLI [(]x86_64[)]' "${release_workflow}" || fail "release workflow must build x86_64 CLI"
-if grep -q 'macos-15-intel' "${release_workflow}"; then
-  fail "release workflow must not wait for the slow Intel runner; cross-compile x86_64 on the arm64 runner"
-fi
-grep -Fq -- '--triple x86_64-apple-macosx14.0' "${release_workflow}" \
-  || fail "release workflow must cross-compile x86_64 through SwiftPM --triple"
 grep -Fq 'actions/cache@v5' "${release_workflow}" \
   || fail "release workflow must cache SwiftPM dependencies and build outputs with the Node 24 cache action"
 grep -Fq 'release-cli-arm64' "${release_workflow}" \
   || fail "release workflow must keep a dedicated arm64 CLI cache key"
-grep -Fq 'release-cli-x86_64' "${release_workflow}" \
-  || fail "release workflow must keep a dedicated x86_64 CLI cache key"
-grep -Fq '.build/cli-x86/x86_64-apple-macosx/release/triton' "${release_workflow}" \
-  || fail "release workflow must package the x86_64 cross-compiled binary"
-grep -Fq 'Mach-O 64-bit executable x86_64' "${release_workflow}" \
-  || fail "release workflow must verify the x86_64 binary architecture before upload"
-grep -A12 'publish-x86-release-asset:' "${release_workflow}" | grep -Fq 'actions/checkout@v5' \
-  || fail "release workflow must checkout before gh release download in the x86_64 publish job"
 grep -Fq 'is_release_tag: ${{ steps.validate-scope.outputs.is_release_tag }}' "${ci_workflow}" \
   || fail "ci workflow must expose release tag detection from classify-validate"
 # CI is validation-only. The Release workflow exclusively owns publication,
@@ -184,11 +161,8 @@ ruby -ryaml - "${ci_workflow}" <<'RUBY' || fail "CI release jobs must remain dis
 jobs = YAML.load_file(ARGV.fetch(0)).fetch("jobs")
 legacy_release_jobs = %w[
   build-cli-arm64
-  build-cli-x86_64
   package-release-assets
-  publish-x86-release-asset
   update-homebrew-tap
-  update-homebrew-tap-x86
 ]
 legacy_release_jobs.each do |job_name|
   job = jobs.fetch(job_name)
@@ -200,16 +174,13 @@ RUBY
 grep -Fq 'completed successfully before arm64 release assets were created' "${release_script}" \
   || fail "release script must fail if a tag run succeeds without creating release assets"
 
-# The unsigned Runner source must be present in both architecture archives and
-# validated after extraction; a source checkout is not a packaged runtime fallback.
 runner_package_script="${root}/docs-linhay/scripts/package-ios-runner-resources.py"
 runner_verify_script="${root}/docs-linhay/scripts/verify-ios-runner-package.py"
 test -x "${runner_package_script}" || fail "missing iOS Runner packager"
 test -x "${runner_verify_script}" || fail "missing iOS Runner package verifier"
 runner_copy_count="$(grep -Fc 'docs-linhay/scripts/package-ios-runner-resources.py' "${release_workflow}" || true)"
-(( runner_copy_count >= 4 )) || fail "both release architectures must stamp and package iOS Runner resources"
+(( runner_copy_count >= 2 )) || fail "arm64 release must stamp and package iOS Runner resources"
 grep -Fq -- '--archive dist/triton-macos-arm64.tar.gz' "${release_workflow}" || fail "arm64 release asset must verify Runner integrity"
-grep -Fq -- '--archive triton-macos-x86_64.tar.gz' "${release_workflow}" || fail "x86_64 release asset must verify Runner integrity"
 grep -Fq 'pkgshare.install runner_dir => "ios-runner"' "${root}/.github/homebrew/triton.rb.template" || fail "Homebrew must install the Runner project"
 grep -Fq 'RUNNER_MANIFEST.json' "${root}/.github/homebrew/triton.rb.template" || fail "Homebrew test must verify the Runner manifest exists"
 grep -Fq 'Validate bundled iOS Runner package' "${ci_workflow}" || fail "CI must validate offline Runner packaging contracts"

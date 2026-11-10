@@ -1,7 +1,5 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 extension TritonKitRequestHandler {
     func handleWebView(_ message: TKMessage) async -> TKMessage? {
@@ -38,7 +36,7 @@ extension TritonKitRequestHandler {
             } catch let error as TKWebViewSelectionError {
                 return webViewErrorMessage(id: message.id, type: .webViewSnapshot, action: "webview.snapshot", code: error.detail.code, message: error.detail.message, hint: error.detail.hint, candidates: error.detail.candidates)
             } catch {
-                return webViewErrorMessage(id: message.id, type: .webViewSnapshot, action: "webview.snapshot", code: .javascriptError, message: "\(error)", hint: "Check the embedded SDK version separately from the CLI version and inspect the JavaScript error. Script syntax errors require a compatible embedded SDK; reducing snapshot includes or node limits cannot fix them.")
+                return webViewErrorMessage(id: message.id, type: .webViewSnapshot, action: "webview.snapshot", code: .javascriptError, message: "\(error)", hint: "Run `triton runtime manifest --json` and compare the embedded sdkVersion with the CLI/release. Rebuild the app with a current TritonKit SDK before retrying. Script syntax errors require a compatible embedded SDK; reducing snapshot includes or node limits cannot fix them.")
             }
             #else
             return webViewErrorMessage(id: message.id, type: .webViewSnapshot, action: "webview.snapshot", code: .webViewProviderUnavailable, message: "WebView snapshot provider is not registered.", hint: "Register an opt-in WebView provider before requesting DOM, text, forms, or links.")

@@ -30,6 +30,8 @@ func testCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--allow-remote-vlm", type: "Bool", defaultValue: "false", description: "Allow remote VLM provider calls for VLM-assisted steps"),
                 TKCommandSchemaOption(name: "--vlm-base-url", type: "String", description: "OpenAI-compatible VLM base URL for VLM-assisted steps"),
                 TKCommandSchemaOption(name: "--vlm-model", type: "String", description: "OpenAI-compatible VLM model for VLM-assisted steps"),
+                TKCommandSchemaOption(name: "--vlm-model-path", type: "Path", description: "Local MLX VLM model path for VLM-assisted steps"),
+                TKCommandSchemaOption(name: "--vlm-allow-model-download", type: "Bool", defaultValue: "false", description: "Explicit opt-in to local VLM model download; never enabled by discovery"),
                 TKCommandSchemaOption(name: "--vlm-api-key-env", type: "String", description: "Environment variable containing VLM API key"),
                 TKCommandSchemaOption(name: "--from-session", type: "Path", description: "Required for create; input .tritonevidence directory or manifest.json path"),
                 TKCommandSchemaOption(name: "--output", type: "Path", description: "Required for create/import; output .tritontest.yaml file and import refuses overwrite"),
@@ -259,7 +261,7 @@ func testCommandSchemas() -> [TKCommandSchema] {
                     requiresTarget: true,
                     sideEffect: "runtime-execution-evidence-write",
                     requiredOptions: ["<path.tritontest.yaml>", "--evidence-dir"],
-                    optionalOptions: ["--target", "--host", "--port", "--allow-vlm", "--allow-remote-vlm", "--vlm-base-url", "--vlm-model", "--vlm-api-key-env", "--format", "--json"],
+                    optionalOptions: ["--target", "--host", "--port", "--allow-vlm", "--allow-remote-vlm", "--vlm-base-url", "--vlm-model", "--vlm-model-path", "--vlm-allow-model-download", "--vlm-api-key-env", "--format", "--json"],
                     nextCommands: [
                         "triton evidence summary <dir> --json",
                     ],

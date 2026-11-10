@@ -1,8 +1,6 @@
 #if canImport(UIKit)
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 enum TKHighlightRequestContext {
     @TaskLocal static var generation: UInt64?

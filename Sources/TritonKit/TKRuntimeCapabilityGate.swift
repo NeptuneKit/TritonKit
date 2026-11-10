@@ -1,19 +1,26 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 enum TKRuntimeCapabilityGate {
     static func disabledResponse(for message: TKMessage, configuration: TritonKit.Configuration) -> TKMessage? {
-        guard let capability = capability(for: message),
-              !configuration.isRuntimeCapabilityEnabled(capability) else {
-            return nil
+        guard let primary = capability(for: message) else { return nil }
+        var required = [primary]
+        if message.type == .hierarchyDetails,
+           let payload = message.payload,
+           let request = try? JSONDecoder().decode(TKHierarchyDetailsRequest.self, from: payload),
+           request.screenshots != .none {
+            required.append(.screenshot)
         }
+        guard let capability = required.first(where: { !configuration.isRuntimeCapabilityEnabled($0) }) else { return nil }
 
         let action = actionName(for: message)
         let error = runtimeCapabilityDisabledError(capability: capability, action: action)
 
         switch message.type {
+        case .hierarchyDetails:
+            let response = TKHierarchyDetailsResponse(ok: false,
+                error: .init(code: error.code, message: error.message), outcome: "not_started")
+            return TKMessage(id: message.id, type: message.type, payload: try? JSONEncoder().encode(response))
         case .highlightApply:
             let failure = TKHighlightError(code: "highlight_unsupported", message: "The optional highlight feature is disabled; other runtime features remain available.")
             let response = TKHighlightReceipt(ok: false, runtimeInstanceID: "unavailable", reason: "unsupported", error: failure, errors: [failure])

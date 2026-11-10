@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "TritonKit",
+    "description": "通过 TritonKit CLI 发现本机目标、读取界面、执行显式动作并验证结果。需要 DSH 完全访问权限。"
+  }
+}

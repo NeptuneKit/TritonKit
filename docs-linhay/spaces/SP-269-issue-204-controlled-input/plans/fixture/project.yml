@@ -1,0 +1,64 @@
+name: ControlledInputAcceptanceHost
+options:
+  bundleIdPrefix: com.neptunekit.acceptance
+  deploymentTarget:
+    iOS: "17.0"
+packages:
+  TritonKit:
+    path: ${TRITONKIT_REPO}
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    CODE_SIGNING_ALLOWED: NO
+    ENABLE_TESTABILITY: YES
+targets:
+  ControlledInputAcceptanceHost:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+      - path: Resources/Fixture
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: TritonKit
+        product: TritonKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.neptunekit.acceptance.webview204
+        GENERATE_INFOPLIST_FILE: YES
+    info:
+      path: Generated/Host-Info.plist
+      properties:
+        CFBundleDisplayName: Controlled Input Acceptance
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations: {}
+  ControlledInputAcceptanceTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: ControlledInputAcceptanceHost
+      - package: TritonKit
+        product: TritonKit
+      - package: TritonKit
+        product: TritonKitShared
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/ControlledInputAcceptanceHost.app/ControlledInputAcceptanceHost"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+schemes:
+  ControlledInputAcceptanceHost:
+    build:
+      targets:
+        ControlledInputAcceptanceHost: all
+        ControlledInputAcceptanceTests: [test]
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - name: ControlledInputAcceptanceTests
+          parallelizable: false

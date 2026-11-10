@@ -1,7 +1,5 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 /// Page opt-in marker required before Triton DOM form control (focus, type,
 /// set-text) may touch a page. The page opts in by exposing
@@ -369,14 +367,16 @@ func runtimeWebViewFormReadbackScript(verificationToken: String) throws -> Strin
     """
 }
 
-func webViewFocusedTextInsertionScript(text: String) throws -> String {
+func webViewFocusedTextInsertionScript(text: String, verificationToken: String? = nil) throws -> String {
     let textData = try JSONEncoder().encode(text)
     guard let textLiteral = String(data: textData, encoding: .utf8) else {
         throw NSError(domain: "TritonKit.WebViewInput", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode text"])
     }
+    let tokenLiteral = String(data: try JSONEncoder().encode(verificationToken), encoding: .utf8)!
     return """
     (function() {
       var text = \(textLiteral);
+      var verificationToken = \(tokenLiteral);
       var element = document.activeElement;
       if (!element) {
         return JSON.stringify({ ok: false, message: "No active DOM element" });
@@ -417,11 +417,22 @@ func webViewFocusedTextInsertionScript(text: String) throws -> String {
       }
       try {
         if (supportsValue) {
+          if (element.disabled || element.readOnly) {
+            return JSON.stringify({ ok: false, message: "The field is disabled or read-only.", error: { code: "webview_element_not_interactable", message: "The field is disabled or read-only." } });
+          }
+          var realm = element.ownerDocument && element.ownerDocument.defaultView || window;
+          var constructor = tag === "textarea" ? realm.HTMLTextAreaElement : realm.HTMLInputElement;
+          var descriptor = constructor && Object.getOwnPropertyDescriptor(constructor.prototype, "value");
+          if (!descriptor || typeof descriptor.set !== "function") {
+            return JSON.stringify({ ok: false, message: "A native value setter is unavailable for this field.", error: { code: "webview_element_not_interactable", message: "A native value setter is unavailable for this field." } });
+          }
           var oldValue = String(element.value || "");
           var start = typeof element.selectionStart === "number" ? element.selectionStart : oldValue.length;
           var end = typeof element.selectionEnd === "number" ? element.selectionEnd : start;
           var nextValue = oldValue.slice(0, start) + text + oldValue.slice(end);
-          element.value = nextValue;
+          // Bypass a framework's own value tracker so its input handler can
+          // observe the change. Do not inspect or mutate framework internals.
+          descriptor.set.call(element, nextValue);
           var cursor = start + text.length;
           if (typeof element.setSelectionRange === "function") {
             element.setSelectionRange(cursor, cursor);
@@ -432,7 +443,20 @@ func webViewFocusedTextInsertionScript(text: String) throws -> String {
             element.dispatchEvent(new Event("input", { bubbles: true }));
           }
           element.dispatchEvent(new Event("change", { bubbles: true }));
-          return JSON.stringify({ ok: true, tagName: tag, insertedLength: text.length });
+          function readback() {
+            var matched = String(element.value || "") === nextValue && element.isConnected !== false;
+            var result = { ok: matched, tagName: tag, insertedLength: matched ? text.length : 0, valueMatched: matched };
+            if (!matched) {
+              result.error = { code: "webview_element_not_interactable", message: "The field rejected or reverted the requested value.", hint: "Inspect the settled form state before retrying; do not automatically replay an attempted write." };
+            }
+            return JSON.stringify(result);
+          }
+          var result = readback();
+          if (verificationToken && JSON.parse(result).ok) {
+            Object.defineProperty(window, verificationToken, { configurable: true, value: readback });
+            window.setTimeout(function() { delete window[verificationToken]; }, 2000);
+          }
+          return result;
         }
         if (document.execCommand && document.execCommand("insertText", false, text)) {
           return JSON.stringify({ ok: true, tagName: tag || "contenteditable", insertedLength: text.length });
@@ -443,7 +467,8 @@ func webViewFocusedTextInsertionScript(text: String) throws -> String {
       } catch (error) {
         return JSON.stringify({
           ok: false,
-          message: String(error && error.message ? error.message : error),
+          message: "Focused WebView DOM input could not be completed.",
+          error: { code: "javascript_error", message: "Focused WebView DOM input could not be completed." },
           tagName: tag || null
         });
       }
@@ -547,6 +572,8 @@ struct WebViewFocusedTextInsertionPayload: Decodable, Equatable {
     let tagName: String?
     let insertedLength: Int?
     let deletedLength: Int?
+    let valueMatched: Bool?
+    let error: TKWebViewError?
 }
 
 func decodeWebViewFocusedTextInsertionPayload(_ json: String) throws -> WebViewFocusedTextInsertionPayload {

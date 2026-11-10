@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "Entry module"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "SP257 offline native input probe"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "SP257 Verified Input Probe"
+    }
+  ]
+}

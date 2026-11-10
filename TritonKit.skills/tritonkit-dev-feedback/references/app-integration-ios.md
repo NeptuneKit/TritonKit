@@ -12,22 +12,7 @@ https://github.com/NeptuneKit/TritonKit.git
 
 Add only the `TritonKit` product to the iOS app target. Do not ask app teams to select or import internal TritonKit targets directly.
 
-TritonKit defines `TRITONKIT_RUNTIME_ENABLED` only for Debug package builds and keeps Release runtime no-op. SwiftPM/Xcode package products do not have a CocoaPods-style Debug-only product dependency switch. If production Release must not link TritonKit at all, use a separate Debug-only app target or scheme and attach the product only there.
-
-CocoaPods development setup:
-
-```ruby
-target 'YourApp' do
-  use_frameworks!
-
-  pod 'TritonKit',
-      :git => 'https://github.com/NeptuneKit/TritonKit.git',
-      :branch => 'main',
-      :configurations => ['Debug']
-end
-```
-
-Add only `TritonKit`. The podspec defines the Debug runtime macro for the pod target; do not ask users to add custom app-target `OTHER_SWIFT_FLAGS`.
+TritonKit defines `TRITONKIT_RUNTIME_ENABLED` only for Debug package builds and keeps Release runtime no-op. SwiftPM/Xcode package products do not provide a configuration-scoped dependency switch. If production Release must not link TritonKit at all, use a separate Debug-only app target or scheme and attach the product only there.
 
 ## Debug bootstrap
 

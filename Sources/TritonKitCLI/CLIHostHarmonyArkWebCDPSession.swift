@@ -19,7 +19,12 @@ extension URLSessionWebSocketTask: HarmonyArkWebCDPTransport {
 
     func receiveMessage() async throws -> Data {
         switch try await receive() {
-        case .data(let data): return data
+        case .data(_):
+            // ArkWeb CDP speaks JSON over text frames. Treat a binary response
+            // as a protocol failure instead of attempting to decode it as a
+            // page result; this keeps transport/protocol diagnostics distinct
+            // from Runtime.evaluate exceptionDetails.
+            throw HarmonyArkWebBridgeCallError.protocolError("CDP response must use a text WebSocket frame.")
         case .string(let text): return Data(text.utf8)
         @unknown default: return Data()
         }

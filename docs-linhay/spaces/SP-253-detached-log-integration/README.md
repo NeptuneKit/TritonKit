@@ -1,13 +1,11 @@
-# SP-253 — Detached 日志安全主控
+# SP-253-detached-log-integration
 
-状态：已完成独立审查、实际main合并56ef7719及合后完整CLI/local，证据归档、SP252工作区/分支和执行聊天关闭。仅接管[SP-252](../SP-252-detached-log-exclusive-create/README.md)；当前长期主控聊天01a18a91-f44e-7fd0-8e4b-c891b44377e0承担整合，独立subagent审查，执行聊天`01a18fb4-0f41-73e2-a0b7-741aa13b2bc5`以显式gpt-6.1-sol创建成功。
+状态：编号登记，产品及验收不在本远端候选。
 
-## BDD 与验收
+## 边界与来源
 
-核对真实main与来源许可、红绿测试、叶子路径竞争拒绝/0600/close-on-exec、stderr失败与launch失败FD释放。先冻结候选再运行完整CLI及适用本地/文档门禁；检查main干净与merge-tree后本地合并，合后串行复验。静态/fixture不替代设备或多进程攻击实测，报告未执行边界。
+detached日志采用整合由独立参考流程维护；本地参考main cbaf0641已包含其成果，当前发布基线9b3dd908尚未整合。此处仅保存全局占号与需求摘要，不复制未整合产品的完成声明。原权威space和原始证据保留在主目录同名路径。
 
-证据保存在../TritonKit-worktrees/archives/reference-monitor/20261031与SP252专项归档，归档hash确认后正常清理分支/worktree并归档执行聊天。不push/tag/release，不清理本批以外工作区。
+## BDD与验收
 
-## 验收结果
-
-[独立审查](plans/20261031-independent-review.md)、[最终主线验收与清理](plans/20261031-main-closeout.md)。当前长期主控继续保留，不另建或归档本聊天。
+Given全局编号已被独立参考流程占用，When新增issue候选建立space，Then保留该编号且不重复分配，不把其代码或未提交文档混入候选。此登记不证明该产品已发布；后续整合由相应主控核对实际diff与验收。

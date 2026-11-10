@@ -28,7 +28,8 @@ struct TritonKitEntry {
         let newPath = ([currentPath] + extraPaths).joined(separator: ":")
         setenv("PATH", newPath, 1)
 
-        if let retiredRoot = retiredRootInvocation() {
+        let arguments = Array(CommandLine.arguments.dropFirst())
+        if let retiredRoot = retiredRootInvocation(), !parserRequestsJSON(arguments) {
             writeStandardError(
                 """
                 Error: Unknown subcommand '\(retiredRoot)'
@@ -44,7 +45,7 @@ struct TritonKitEntry {
             printChineseHelp()
             return
         }
-        await TritonKitCLI.main()
+        await runCLIWithParserFailures(arguments)
     }
 
     private static let retiredRootCommandNames: Set<String> = [
@@ -75,7 +76,7 @@ struct TritonKitEntry {
         return nil
     }
 
-    private static func retiredRootHint(_ root: String) -> String {
+    static func retiredRootHint(_ root: String) -> String {
         let actionRoots: Set<String> = ["find", "tap", "type", "paste", "clear", "swipe", "press", "focus", "set-text", "select-segment", "set-switch", "input"]
         if actionRoots.contains(root) {
             return "Hint: use `triton act \(root) ...` for workflow UI actions, for example `triton act \(root) --json`."

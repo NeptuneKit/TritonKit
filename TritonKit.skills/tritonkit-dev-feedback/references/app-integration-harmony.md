@@ -64,5 +64,5 @@ If an HDC fport already exists, reuse its confirmed runtime URL for the readonly
 - Released CLI: `brew install NeptuneKit/tap/triton`
 - Local unreleased CLI fallback: `swift build --package-path CLI --scratch-path .build/cli -c release --product triton`
 - Manual local CLI updates must use a temporary file plus `mv`, or stop `triton serve` first.
-- Homebrew installs only the macOS CLI. iOS uses SwiftPM/CocoaPods; Harmony embedded SDK uses the Harmony package/source path.
+- Homebrew installs only the macOS CLI. iOS uses SwiftPM (iOS 16+); Harmony embedded SDK uses the Harmony package/source path.
 - GitHub Release assets include macOS arm64/x86_64 CLI tarballs, checksum manifest, and project skill packages.

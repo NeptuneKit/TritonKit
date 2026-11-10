@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "TritonKit",
+    "description": "Discover local app targets, inspect UI, perform explicit actions and verify results through the TritonKit CLI. Requires DSH Full access."
+  }
+}

@@ -1,7 +1,5 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 extension TritonKitRequestHandler {
     func handleObservation(_ message: TKMessage) async -> TKMessage? {
@@ -83,10 +81,11 @@ extension TritonKitRequestHandler {
 
         case .hierarchy:
             let uploader = kit?.uploader
-            let collected = await TKHierarchyBuilder.buildHierarchyWithBudget(includeScreenshots: uploader != nil)
+            let canCaptureScreenshots = uploader != nil && (kit?.configuration.features.contains(.screenshot) ?? false)
+            let collected = await TKHierarchyBuilder.buildHierarchyWithBudget(includeScreenshots: canCaptureScreenshots)
             var items = collected.nodes
             if let uploader {
-                items = await uploadHierarchyScreenshots(items, uploader: uploader)
+                items = await uploadHierarchyScreenshots(items) { try await uploader.upload($0) }
             }
             let appInfo = TKAppInfo()
             #if canImport(UIKit)
@@ -181,20 +180,25 @@ extension TritonKitRequestHandler {
         }
     }
 
-    private func uploadHierarchyScreenshots(
+    func uploadHierarchyScreenshots(
         _ items: [TKDisplayItem],
-        uploader: TritonKitDataUploader
+        upload: (Data) async throws -> String
     ) async -> [TKDisplayItem] {
         var result: [TKDisplayItem] = []
         result.reserveCapacity(items.count)
         for var item in items {
-            item.subitems = await uploadHierarchyScreenshots(item.subitems, uploader: uploader)
-            if let screenshot = item.groupScreenshot ?? item.soloScreenshot,
-               let ref = try? await uploader.upload(screenshot) {
-                item.screenshotRef = ref
+            item.subitems = await uploadHierarchyScreenshots(item.subitems, upload: upload)
+            if let screenshot = item.groupScreenshot, let ref = try? await upload(screenshot) {
+                item.groupScreenshotRef = ref
+                item.groupScreenshot = nil
             }
-            item.groupScreenshot = nil
-            item.soloScreenshot = nil
+            if let screenshot = item.soloScreenshot, let ref = try? await upload(screenshot) {
+                item.soloScreenshotRef = ref
+                item.soloScreenshot = nil
+            }
+            // Keep failed bytes available to the receiver instead of silently
+            // reporting a successful hierarchy with the captured image removed.
+            item.screenshotRef = item.groupScreenshotRef ?? item.soloScreenshotRef ?? item.screenshotRef
             result.append(item)
         }
         return result

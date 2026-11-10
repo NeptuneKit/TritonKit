@@ -2,6 +2,8 @@
 
 当前状态：已通过 [PR #240](https://github.com/NeptuneKit/TritonKit/pull/240) 合入远端 main，merge `88cdbba25f91c5047abcd40c62db79a888fda970`；精确候选 CI 通过，合并后 CI 全部必要检查通过。分支 `feat/SP-249-issue-237-webview-snapshot`，同名 worktree；原始实现分支与本地证据保留。
 
+2026-11-09 的新评论仍使用嵌入 SDK `0.2.29` 的原私有 App；当前 main 的独立 JavaScriptCore 快照执行回归在 `ca91c2da` 上通过。该现场与当前 SDK 不匹配，保持为未验证边界；详见 [2026-11-10 复核](plans/20261110-private-app-followup.md)。
+
 ## BDD 与边界
 
 - Given 当前源码生成的 snapshot，When JavaScriptCore/WKWebView 执行默认 includes 或 forms-only，Then 脚本可解析并输出有界可解码结果。

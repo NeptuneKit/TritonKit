@@ -1,5 +1,23 @@
 import TritonKitShared
 
+func hostDeviceStopOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(selector: "host.device-stop", format: "json", kind: "host-action", model: "HostDeviceStopOutput", fields: schemaContractFields([
+        ("ok", "Bool", true, "Whether the stop command sequence completed; target absence/offline still needs a separate check"),
+        ("action", "String", true, "device.stop"),
+        ("platform", "String", true, "android or harmony"),
+        ("target", "String?", false, "Resolved Android emulator target id; omitted for Harmony HVD stop"),
+        ("adb", "String?", false, "Android ADB executable; omitted for Harmony"),
+        ("hvd", "String?", false, "Harmony HVD name; omitted for Android"),
+        ("deployedPath", "String?", false, "Harmony deployed emulator path; omitted for Android"),
+        ("emulator", "String?", false, "Harmony Emulator executable; omitted for Android"),
+        ("launchdLabel", "String?", false, "Harmony launchd job label; omitted for Android or --skip-launchd"),
+        ("launchdDomain", "String?", false, "Harmony launchd domain; omitted for Android or --skip-launchd"),
+        ("sourceCommands", "[String]", true, "Host command ledger; may include skipped bootout when the launchd job was absent"),
+        ("warnings", "[String]", true, "Stop warnings, including an absent Harmony launchd job"),
+        ("note", "String", true, "Completion note and independent target-state verification reminder"),
+    ]))
+}
+
 func deviceEnvironmentOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(selector: "device.environment", format: "json", kind: "host-action", model: "DeviceEnvironmentOutput", fields: schemaContractFields([
         ("ok", "Bool", true, "Whether the host environment operation completed"),

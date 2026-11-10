@@ -200,7 +200,7 @@ struct Wait: AsyncParsableCommand {
     @Flag(name: .customLong("hierarchy-change"), help: "Wait until the hierarchy snapshot changes") var hierarchyChange = false
     @Option(name: .customLong("since"), help: "Hierarchy change baseline; currently supports latest") var since: String = "latest"
     @Option(name: .customLong("predicate"), help: "Safe predicate using text.exists/gone with &&, ||, !") var predicate: String?
-    @Option(name: .customLong("role"), help: "Optional AX role filter for --text or --exists") var role: String?
+    @Option(name: .customLong("role"), help: "Optional role filter for text/exists/gone; Harmony uses case-insensitive native ArkUI type") var role: String?
     @Option(name: [.long, .customLong("device")], help: "Target id from `triton list`; --device is an alias") var target: String = TKLocalTargetID
     @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
@@ -385,15 +385,28 @@ struct Wait: AsyncParsableCommand {
                         outputFormat: outputFormat
                     )
                 }
+                do {
+                    _ = try normalizedHarmonyWaitRole(role)
+                } catch {
+                    try failHostValidation(
+                        code: "validation_failed",
+                        message: "Harmony --role must contain a non-whitespace native ArkUI type.",
+                        hint: "Use --role Button or --role Text, or omit --role for text-only matching.",
+                        outputFormat: outputFormat
+                    )
+                }
                 let query = text ?? gone ?? exists ?? ""
-                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+                let startedAt = Date()
+                let selected = try resolveHarmonyTarget(target: target, hdc: hdc, deadline: startedAt.addingTimeInterval(timeout))
                 let response = try await waitForHarmonyText(
                     selected: selected,
                     hdc: hdc,
                     text: query,
+                    role: role,
                     timeout: timeout,
                     interval: interval,
-                    gone: gone != nil
+                    gone: gone != nil,
+                    startedAt: startedAt
                 )
                 switch outputFormat {
                 case .json:
@@ -422,8 +435,7 @@ struct Wait: AsyncParsableCommand {
                 throw ExitCode.failure
             }
         } catch {
-            if error is ExitCode { throw error }
-            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+            try failWaitCommand(error, platform: platform, hdc: hdc, outputFormat: outputFormat, host: host, port: port)
         }
     }
 
@@ -610,7 +622,11 @@ struct TypeText: AsyncParsableCommand {
     @Flag(name: .customLong("secure"), help: "Redact inserted text details in command output") var secure = false
     @Flag(name: .customLong("exact"), help: "Use direct UIKeyInput insertion without keyboard autocorrect") var exact = false
     @Flag(name: .customLong("webview"), help: "Type into an opt-in WebView DOM form target instead of the native responder") var webview = false
-    @Option(help: "Stable WebView form identity from the snapshot forms list (#id, [name=...], form-N); only used with --webview") var selector: String?
+    @Option(help: "Stable WebView form identity from the snapshot forms list (#id, [name=...], form-N); --webview uses DOM identity; --verify uses Harmony id:<stable-id>") var selector: String?
+
+    @Flag(help: "Verify native Harmony input against a unique id selector and exact full value") var verify = false
+    @Option(help: "Expected full native field value; requires --verify") var expectValue: String?
+    @Option(help: "Total verified-input deadline in seconds, greater than zero and at most 60") var timeout: Double?
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
@@ -624,6 +640,24 @@ struct TypeText: AsyncParsableCommand {
                 throw RuntimeError("Provide exactly one text value: <text> or --text")
             }
             let value = textArgument ?? text ?? ""
+            if verify || expectValue != nil || timeout != nil {
+                var response: HarmonyVerifiedInputResult
+                if !verify || platform != .harmony || webview || oid != nil || exact || secure ||
+                    selector?.hasPrefix("id:") != true || (selector?.count ?? 0) <= 3 || expectValue == nil ||
+                    !(timeout ?? 10).isFinite || (timeout ?? 10) <= 0 || (timeout ?? 10) > 60 || value.contains("\0") {
+                    response = HarmonyVerifiedInputResult()
+                    response.code = secure ? "harmony_input_secure_unsupported" : "harmony_input_invalid_options"
+                } else {
+                    response = executeHarmonyVerifiedInput(target: target, hdc: hdc, selector: selector!, text: value, expected: expectValue!, timeout: timeout ?? 10)
+                }
+                switch outputFormat {
+                case .json: print(try encodeJSON(response))
+                case .text: print("type: \(response.code) submission=\(response.submission) focus=\(response.focus) verification=\(response.verification)")
+                }
+                if !response.ok { throw ExitCode.failure }
+                return
+            }
+
             if webview {
                 guard platform == nil else {
                     try failHostValidation(

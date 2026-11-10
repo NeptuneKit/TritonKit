@@ -4,7 +4,7 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-10-30（SP251整合skills与v0.2.38发布准备）
-> 覆盖范围：251/251 个已存在 space
+> 覆盖范围：277/277 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -19,8 +19,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 251/251 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 251/251 | 每条记录链接到现有 space README |
+| 编号登记 | 277/277 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 277/277 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -220,7 +220,7 @@
 
 | `SP-191-default-xcode-deriveddata` | [`SP-191-default-xcode-deriveddata`](./SP-191-default-xcode-deriveddata/README.md) | 已发布 | 默认使用 Xcode 全局 DerivedData；`v0.2.26` 已发布，CLI/root tests、schema smoke、docs 门禁与远端 CI 通过；`--derived-data-path` 仅显式隔离/恢复，可能造成高磁盘占用 |
 | `SP-192-ictrl-adoption-feasibility` | [`SP-192-ictrl-adoption-feasibility`](./SP-192-ictrl-adoption-feasibility/README.md) | 已合入本地 main | 五机制已接CLI/HTTP/runtime；CLI1250、root274、Web12及真实只读AX/alias/OCR/settle通过；iOS115、Android52与完整APK通过，本地门禁复跑通过；源码已合入本地main，worktree已清理 |
-| `SP-193-ictrl-reference-tracking` | [`SP-193-ictrl-reference-tracking`](./SP-193-ictrl-reference-tracking/README.md) | 长期追踪已启用 | 正式参考档案、基线与每日10:00自动化已于10月30日迁入新主控；有价值变化通知；采用按SP-207独立立项并验证合并 |
+| `SP-193-ictrl-reference-tracking` | [`SP-193-ictrl-reference-tracking`](./SP-193-ictrl-reference-tracking/README.md) | 长期追踪已启用 | 正式参考档案、基线与本聊天每日 10:00 自动化已登记；有价值变化通知；采用按SP-207独立立项并验证合并 |
 | `SP-194-reference-project-updates` | [`SP-194-reference-project-updates`](./SP-194-reference-project-updates/README.md) | 已归档 | 23主要仓库+9候选，上游版本/增量/限制与借鉴建议已汇总；docs门禁与来源校验通过 |
 
 | `SP-195-ios-runner-product` | [`SP-195-ios-runner-product`](./SP-195-ios-runner-product/README.md) | 已引入本地main | Runner统一CLI/HTTP/随包；CLI1297+36、完整门禁与真机/Simulator通过；主仓门禁exit0；参考文档与产品分别提交，未push/release；已完成worktree收口见SP195计划；本地完成分支已清理/归档 |
@@ -248,7 +248,7 @@
 
 | `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30已发布 | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
 
-| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 11月2日33仓24完整/9 partial，4仓更新；17条旧采用已合main，SP254/255已离线验收合main，证据持久归档 |
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月28日33仓日检24完整/9 partial，3仓更新无新采用；16条已合main，11个执行/主控会话已归档 |
 
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 
@@ -300,7 +300,7 @@
 
 | `SP-234-issue-225-ios-runner-transport` | [`SP-234-issue-225-ios-runner-transport`](./SP-234-issue-225-ios-runner-transport/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-235-issue-224-simulator-resize-query` | [`SP-235-issue-224-simulator-resize-query`](./SP-235-issue-224-simulator-resize-query/README.md) | 后续处理中，未完成 | v0.2.35后仍有Resize失败；本轮定位iPad1001并补unsupportedDevice，按用户要求仅验收27.1，iPad默认捕获/输入仍受限；显式单LCD截图已验证；PR #236已合main（27c7a875），#224仍OPEN |
+| `SP-235-issue-224-simulator-resize-query` | [`SP-235-issue-224-simulator-resize-query`](./SP-235-issue-224-simulator-resize-query/README.md) | 部分验收，仍OPEN | v0.2.38 iPhone主屏预览已实测；iPad默认capture/input仍unsupported，显式still不替代完整恢复 |
 
 | `SP-236-issue-223-bar-button-activation` | [`SP-236-issue-223-bar-button-activation`](./SP-236-issue-223-bar-button-activation/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
@@ -310,7 +310,7 @@
 
 | `SP-239-issue-230-ios-runner-geometry` | [`SP-239-issue-230-ios-runner-geometry`](./SP-239-issue-230-ios-runner-geometry/README.md) | 已合并，issue已关闭 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
-| `SP-240-issue-214-deriveddata-ownership` | [`SP-240-issue-214-deriveddata-ownership`](./SP-240-issue-214-deriveddata-ownership/README.md) | PR #235已合并，历史候选待关联 | PR #235合并5d0bba7b；两处删除前约1.95 GiB，部分内容重复；#214保持OPEN，两处现存缓存已按后续授权删除；物理回收量未知；历史调用候选已归档，原18.66 GB路径映射仍缺；详见SP-240溯源记录 |
+| `SP-240-issue-214-deriveddata-ownership` | [`SP-240-issue-214-deriveddata-ownership`](./SP-240-issue-214-deriveddata-ownership/README.md) | not planned收口候选 | 通用自动删除已取消；当前仅保留inspect/preview与confirm fail-closed；原18.66 GB现场映射仍未知；收口证据见SP-240 plans/20261110-not-planned-closeout.md |
 
 | `SP-241-open-issues-validation` | [`SP-241-open-issues-validation`](./SP-241-open-issues-validation/README.md) | 已合并归档，12关/1留 | 2026-10-28 issue批次；PR #233已合远端main；当前处置/复验计划见SP-241合并归档报告；已随v0.2.35发布，验收见SP-242 |
 
@@ -333,9 +333,54 @@
 
 | `SP-251-release-v0-2-38` | [`SP-251-release-v0-2-38`](./SP-251-release-v0-2-38/README.md) | 已随v0.2.38发布 | 双边main整合、skills更新；双架构/Homebrew/两处skills/三端公开包通过，自有资源清理 |
 
-| `SP-252-detached-log-exclusive-create` | [`SP-252-detached-log-exclusive-create`](./SP-252-detached-log-exclusive-create/README.md) | 已验收合本地main | 56ef7719；CLI162+1665/local通过，已归档清理关闭 |
-| `SP-253-detached-log-integration` | [`SP-253-detached-log-integration`](./SP-253-detached-log-integration/README.md) | 已验收合本地main | 独立审查、合后门禁及证据/工作区/会话闭环完成 |
+| `SP-252-detached-log-exclusive-create` | [`SP-252-detached-log-exclusive-create`](./SP-252-detached-log-exclusive-create/README.md) | 独立参考流程占号 | 仅需求登记；该产品未纳入本远端候选 |
 
-| `SP-254-simulator-dtuhid-transport` | [`SP-254-simulator-dtuhid-transport`](./SP-254-simulator-dtuhid-transport/README.md) | 已验收合本地main | 5e1c0b74；Xcode27.1/iOS27.0真实输入/Resize通过，专用模拟器已删除 |
+| `SP-253-detached-log-integration` | [`SP-253-detached-log-integration`](./SP-253-detached-log-integration/README.md) | 独立参考流程占号 | 仅需求登记；该产品未纳入本远端候选 |
 
-| `SP-255-dtuhid-integration` | [`SP-255-dtuhid-integration`](./SP-255-dtuhid-integration/README.md) | 已验收合本地main | 5e1c0b74；Xcode27.1/iOS27.0真实输入/Resize通过，专用模拟器已删除 |
+| `SP-254-simulator-dtuhid-transport` | [`SP-254-simulator-dtuhid-transport`](./SP-254-simulator-dtuhid-transport/README.md) | 独立参考流程占号 | 仅需求登记；该产品未纳入本远端候选 |
+
+| `SP-255-dtuhid-integration` | [`SP-255-dtuhid-integration`](./SP-255-dtuhid-integration/README.md) | 独立参考流程占号 | 仅需求登记；该产品未纳入本远端候选 |
+
+| `SP-256-issue-245-compact-schema` | [`SP-256-issue-245-compact-schema`](./SP-256-issue-245-compact-schema/README.md) | 已发布 | #245 compact resolved leaf schema；PR #253 与最终联合门禁通过，随 v0.2.39 发布，资产/安装通过，三端预览与清理通过 |
+
+| `SP-257-issue-246-harmony-verified-input` | [`SP-257-issue-246-harmony-verified-input`](./SP-257-issue-246-harmony-verified-input/README.md) | 已集成候选，issue保持OPEN | #246：selector-bound verified input 已合入本轮候选；20项 focused tests 通过；真实 Harmony IME 正向输入受系统许可阻断，未宣称业务验收 |
+
+| `SP-258-issue-247-schema-effects` | [`SP-258-issue-247-schema-effects`](./SP-258-issue-247-schema-effects/README.md) | 已发布 | #247：PR #259 合入 main，定向/组合与精确 CI 通过；随 v0.2.39 发布，资产/安装通过，三端预览与清理通过，原验收边界保留 |
+
+| `SP-259-issue-248-xcode-diagnostics` | [`SP-259-issue-248-xcode-diagnostics`](./SP-259-issue-248-xcode-diagnostics/README.md) | 已发布 | #248：PR #260 合入 main，定向/组合与精确 CI 通过；随 v0.2.39 发布，资产/安装通过，三端预览与清理通过，原验收边界保留 |
+
+| `SP-260-issue-249-skill-wait-syntax` | [`SP-260-issue-249-skill-wait-syntax`](./SP-260-issue-249-skill-wait-syntax/README.md) | 已发布 | #249：PR #256 合入 main，定向/组合与精确 CI 通过；随 v0.2.39 发布，资产/安装通过，三端预览与清理通过，原验收边界保留 |
+
+| `SP-261-issue-250-leaf-option-parity` | [`SP-261-issue-250-leaf-option-parity`](./SP-261-issue-250-leaf-option-parity/README.md) | 已发布 | #250：PR #255 合入 main，定向/组合与精确 CI 通过；随 v0.2.39 发布，资产/安装通过，三端预览与清理通过，原验收边界保留 |
+
+| `SP-262-issue-251-json-parser-errors` | [`SP-262-issue-251-json-parser-errors`](./SP-262-issue-251-json-parser-errors/README.md) | 已发布 | #251：PR #257 合入 main，定向/组合与精确 CI 通过；随 v0.2.39 发布，资产/安装通过，三端预览与清理通过，原验收边界保留 |
+
+| `SP-263-issue-252-harmony-wait-errors` | [`SP-263-issue-252-harmony-wait-errors`](./SP-263-issue-252-harmony-wait-errors/README.md) | 已发布 | #252：PR #258 合入 main，定向/组合与精确 CI 通过；随 v0.2.39 发布，资产/安装通过，三端预览与清理通过，原验收边界保留 |
+
+| `SP-264-release-v0-2-39` | [`SP-264-release-v0-2-39`](./SP-264-release-v0-2-39/README.md) | 已发布，验收完成 | 十二项修复随v0.2.39发布，main/tag/Release CI与公开包/安装通过；正式三端预览与清理通过 |
+
+| `SP-265-issue-118-skill-budget` | [`SP-265-issue-118-skill-budget`](./SP-265-issue-118-skill-budget/README.md) | 已发布 | PR #263 已合入main；预算/打包/安装与精确CI通过，v0.2.39已发布且安装通过 |
+
+| `SP-266-issue-147-wait-deadline` | [`SP-266-issue-147-wait-deadline`](./SP-266-issue-147-wait-deadline/README.md) | 已发布 | PR #265 已合入main；18定向/5实际CLI与精确CI通过，v0.2.39已发布且安装通过 |
+
+| `SP-267-issue-5-wait-role` | [`SP-267-issue-5-wait-role`](./SP-267-issue-5-wait-role/README.md) | 已发布 | PR #266 已合入main；24组合/18实际CLI/6真实Harmony与精确CI通过，v0.2.39已发布且安装通过 |
+
+| `SP-268-issue-139-host-plan` | [`SP-268-issue-139-host-plan`](./SP-268-issue-139-host-plan/README.md) | 已发布 | PR #264 已合入main；8定向/4实际CLI与精确CI通过，v0.2.39已发布且安装通过 |
+
+| `SP-269-issue-204-controlled-input` | [`SP-269-issue-204-controlled-input`](./SP-269-issue-204-controlled-input/README.md) | 已发布 | #204受控textarea/ambiguity：PR #268 合入 main026d329e；9单测/7真实无opt-in/完整门禁及标准Pod/精确CI通过，随v0.2.39发布，安装通过 |
+
+| `SP-270-lookin-core` | [`SP-270-lookin-core`](./SP-270-lookin-core/README.md) | 已集成/待发布 | #273已随候选集成；当前仅支持SwiftPM/iOS16+，CocoaPods门禁已退休 |
+
+| `SP-271-issue-139-runtime-diagnostics` | [`SP-271-issue-139-runtime-diagnostics`](./SP-271-issue-139-runtime-diagnostics/README.md) | 执行 | closed #139新反馈：direct runtime endpoint及恢复上下文，隔离HTTP fixture独立验证 |
+
+| `SP-272-release-v0-2-40` | [`SP-272-release-v0-2-40`](./SP-272-release-v0-2-40/README.md) | 准备 | SP271 direct-runtime诊断修复的新patch，完整preflight/CI/资产安装验收后发布 |
+
+| `SP-273-issue-274-explicit-inference` | [`SP-273-issue-274-explicit-inference`](./SP-273-issue-274-explicit-inference/README.md) | 候选验证 | #274默认关闭/显式推理及有界失败；完整CLI与独立审阅通过，待精确CI/统一040发布 |
+| `SP-274-issue-277-resize-host-input` | [`SP-274-issue-277-resize-host-input`](./SP-274-issue-277-resize-host-input/README.md) | 执行 | #277精确unsupportedDevice拒绝允许独立Host HID/屏幕守卫继续；CLI测试通过，真实Simulator运行验收范围外 |
+| `SP-275-release-v0-2-41` | [`SP-275-release-v0-2-41`](./SP-275-release-v0-2-41/README.md) | 已发布 | #277合并后的Host输入门控修复；v0.2.41资产、Homebrew、skills、packaged Web与安装验收通过，真实设备/私有App边界保留 |
+
+| `SP-276-issue-246-whitespace-readback` | [`SP-276-issue-246-whitespace-readback`](./SP-276-issue-246-whitespace-readback/README.md) | 已发布 | #246独立读取切片经PR280/v0.2.42发布，双架构/安装fixture通过；人工IME仍未验证 |
+
+| `SP-277-release-v0-2-42` | [`SP-277-release-v0-2-42`](./SP-277-release-v0-2-42/README.md) | 已发布 | v0.2.42精确CI/preflight/双架构/安装与只读浏览器验收通过，人工现场边界保留 |
+
+| `SP-278-dsh-plugin` | [`SP-278-dsh-plugin`](./SP-278-dsh-plugin/README.md) | 已合并推送／0.1.1生效 | 实现7bc7fac4、修复4dd8f334、merge f4efd202已推远端main，Node32/完整文档契约/两条CI通过；主目录WIP和15条无关提交保留，GUI/真实动作未验 |

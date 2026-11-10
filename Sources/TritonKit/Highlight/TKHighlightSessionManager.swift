@@ -2,9 +2,7 @@
 import UIKit
 import Darwin
 import CryptoKit
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 /// App-owned state, deliberately independent from any connection or request handler lifetime.
 @MainActor

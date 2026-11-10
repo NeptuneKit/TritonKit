@@ -458,8 +458,8 @@ function hierarchyNodeVisualSources(node) {
   const legacy = legacySliceVisualSource(node);
   if (!legacy) return explicit;
   const alreadyRepresented = explicit.some((source) =>
-    source?.kind === "subtreeSnapshot" &&
-    (normalizeOptionalString(source.dataRef) === legacy.dataRef || normalizeOptionalString(source.dataUrl) === legacy.dataUrl)
+    source?.kind === legacy.kind &&
+    ((legacy.dataRef && normalizeOptionalString(source.dataRef) === legacy.dataRef) || (legacy.dataUrl && normalizeOptionalString(source.dataUrl) === legacy.dataUrl))
   );
   return alreadyRepresented ? explicit : [...explicit, legacy];
 }
@@ -472,12 +472,14 @@ function legacySliceVisualSource(node) {
   const rect = node.frame && typeof node.frame === "object"
     ? node.frame
     : { x: 0, y: 0, width: 1, height: 1 };
+  const isSolo = ["solo-screenshot-ref", "solo-screenshot-inline"].includes(node.slice.mode);
+  const isGroup = ["group-screenshot-ref", "group-screenshot-inline"].includes(node.slice.mode);
   return {
-    kind: "subtreeSnapshot",
+    kind: isSolo ? "layerOwnContents" : "subtreeSnapshot",
     dataRef: dataRef || undefined,
     dataUrl: dataUrl || undefined,
     rect,
-    capturedBy: node.slice.source === "triton-runtime-data-ref" ? "UIView.render" : "unknown",
+    ...(isSolo ? {} : { capturedBy: isGroup ? "CALayer.render" : node.slice.source === "triton-runtime-data-ref" ? "UIView.render" : "unknown" }),
   };
 }
 

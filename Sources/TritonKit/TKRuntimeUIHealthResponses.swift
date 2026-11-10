@@ -1,7 +1,5 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 func runtimeUIHealthErrorResponse(_ message: TKMessage, code: String, health: TKRuntimeUIHealthSnapshot) -> TKMessage {
     let timedOut = code == "runtime_ui_timeout"
@@ -15,6 +13,9 @@ func runtimeUIHealthErrorResponse(_ message: TKMessage, code: String, health: TK
     let outcome = timedOut ? "unknown" : "not_started"
     let payload: Data?
     switch message.type {
+    case .hierarchyDetails:
+        payload = try? JSONEncoder().encode(TKHierarchyDetailsResponse(ok: false,
+            error: .init(code: code, message: description), outcome: outcome, uiHealth: health))
     case .selectionStatus, .selectionClear, .selectionCapabilities:
         // Admission runs off MainActor and must not inspect the selected view or
         // reuse caller-supplied runtime identity when the provider never replied.

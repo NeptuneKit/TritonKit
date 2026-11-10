@@ -1,6 +1,31 @@
 {
 "schemaVersion": 1,
 "validatedSubcommandGroups": ["act", "debug", "highlight"],
+  "validatedCommandArguments": {
+    "wait": {
+      "options": {
+        "--host": 1,
+        "--port": 1,
+        "--target": 1,
+        "--device": 1,
+        "--platform": 1,
+        "--adb": 1,
+        "--hdc": 1,
+        "--text": 1,
+        "--gone": 1,
+        "--exists": 1,
+        "--role": 1,
+        "--idle": 0,
+        "--hierarchy-change": 0,
+        "--since": 1,
+        "--predicate": 1,
+        "--timeout": 1,
+        "--interval": 1,
+        "--format": 1,
+        "--json": 0
+      }
+    }
+  },
 "commands": {
   "act": ["clear", "find", "focus", "input", "paste", "press", "select-segment", "set-switch", "set-text", "swipe", "tap", "type"],
   "action": ["parse"],
@@ -9,7 +34,7 @@
   "camera": [],
   "capabilities": [],
   "coverage": ["report"],
-  "debug": ["attrs", "ax", "geometry", "hierarchy", "hit", "ledger", "node", "nodes", "object", "patch-node", "runtime", "snapshot", "state", "ui-health"],
+  "debug": ["attrs", "ax", "details", "geometry", "hierarchy", "hit", "ledger", "node", "nodes", "object", "patch-node", "runtime", "snapshot", "state", "ui-health"],
   "device": ["alias", "bridge", "clipboard", "containers", "crashes", "current", "diagnose", "doctor", "double-tap", "files", "fold", "foreground", "list", "location", "logs", "mirror", "mountpoint", "orientation", "pair", "platform-control", "platforms", "proxy", "press", "recording", "resolve", "resource", "runner", "runtime-url", "screenshot", "start", "stop", "swipe", "tap", "type", "unpair", "use", "wait-ready"],
   "doctor": [],
   "evidence": ["capture", "ingest", "inspect", "project-screens", "project-workspace", "redact", "summary"],

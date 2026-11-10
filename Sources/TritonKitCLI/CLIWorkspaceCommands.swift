@@ -71,6 +71,9 @@ struct Workspace: AsyncParsableCommand {
         var businessReadyInterval: Double = 0.5
         @Option(help: "Path to adb executable for Android app launch")
         var adb = "adb"
+        @Flag(name: .customLong("enable-llm"), help: "Explicitly enable LLM inference for this run; provider configuration alone does not enable inference.")
+        var enableLLM = false
+
         @Option(name: .customLong("llm-provider"), help: "LLM provider preflight id, for example mock")
         var llmProvider: String?
         @Option(name: .customLong("llm-base-url"), help: "OpenAI-compatible LLM /v1 base URL for workspace model decisions")
@@ -81,6 +84,9 @@ struct Workspace: AsyncParsableCommand {
         var llmAPIKeyEnv: String?
         @Flag(name: .customLong("allow-remote-llm"), help: "Allow non-localhost workspace LLM provider requests")
         var allowRemoteLLM = false
+        @Flag(name: .customLong("enable-vlm"), help: "Explicitly enable VLM inference for this run; provider configuration alone does not enable inference.")
+        var enableVLM = false
+
         @Option(name: .customLong("vlm-provider"), help: "VLM provider preflight id, for example mock")
         var vlmProvider: String?
         @Option(name: .customLong("vlm-base-url"), help: "OpenAI-compatible VLM /v1 base URL for workspace visual decisions")
@@ -148,11 +154,13 @@ struct Workspace: AsyncParsableCommand {
                     ability: ability,
                     adb: adb,
                     dryModelFixture: dryModelFixture,
+                    enableLLM: enableLLM,
                     llmProvider: llmProvider,
                     llmBaseURL: llmBaseURL,
                     llmModel: llmModel,
                     llmAPIKeyEnv: llmAPIKeyEnv,
                     allowRemoteLLM: allowRemoteLLM,
+                    enableVLM: enableVLM,
                     vlmProvider: vlmProvider,
                     vlmBaseURL: vlmBaseURL,
                     vlmModel: vlmModel,

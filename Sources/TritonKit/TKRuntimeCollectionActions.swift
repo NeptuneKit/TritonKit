@@ -1,7 +1,5 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 func collectionCellHostHIDRetryCommand(for request: TKInputRequest, matchedOID: UInt?) -> String? {
     guard let matchedOID else { return nil }

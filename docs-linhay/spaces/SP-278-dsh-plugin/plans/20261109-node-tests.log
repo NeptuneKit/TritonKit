@@ -1,0 +1,37 @@
+✔ bundle exports include all runtime, metadata and original icon resources (5.149458ms)
+✔ tool contract size stays bounded without injecting a separate system prompt (0.956917ms)
+✔ configuration defaults, environment, explicit precedence and invalid values (0.86225ms)
+✔ strict tool backends can use null for known optional fields only (1.301209ms)
+✔ schema selector is one literal argument; unknown keys fail (0.123166ms)
+✔ observation is bounded, target-explicit and never outline or output (0.9305ms)
+✔ actions bind exact target and flags; text stays literal (0.252708ms)
+✔ verification uses end-of-options to preserve text beginning with dash (0.050375ms)
+✔ four tools register, preserve raw payload and dispose (1.058833ms)
+✔ all tools fail closed outside Full access without spawning (0.321958ms)
+✔ nonzero exit, ok:false and partial payloads are not successful (0.401791ms)
+✔ stderr error envelope is retained without double wrapping (0.135292ms)
+✔ invalid JSON and truncated output stay explicit failures (0.185417ms)
+✔ cancellation and unload terminate owned calls (2.779209ms)
+✔ unload cancels running and queued calls, without starting queued commands (0.228667ms)
+✔ schema without ok is successful and suggested commands are only returned (0.16ms)
+✔ timeout cancels the owned command and never retries (11.71825ms)
+✔ missing executable and spawn failures are reported without retries (0.317375ms)
+✔ permission downgrade during async executable resolution prevents spawn (0.082167ms)
+✔ pre-cancelled calls and calls without an agent never spawn (0.10975ms)
+✔ dynamic target defaults cannot be used for actions or assertions (0.151166ms)
+✔ oid is a bounded UInt string and not accepted with a host adapter (0.197292ms)
+✔ range quiescence, not direct outcome, owns the shared queue (0.594333ms)
+✔ unconfirmed cleanup blocks subsequent dispatch and is retried during unload (0.154791ms)
+✔ queued cancellation returns before the running command exits and never spawns (0.268709ms)
+✔ timeout and provider rejection preserve already collected CLI error payload (11.304209ms)
+✔ provider rejection retains the CLI payload and confirms process cleanup (0.136333ms)
+✔ missing session and permission changes during directory preparation fail closed (0.086084ms)
+✔ tool schemas have bounded output and no arbitrary argv surface (0.061208ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 113.5545

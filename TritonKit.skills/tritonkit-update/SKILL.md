@@ -98,14 +98,8 @@ The Python dry-run validates the archive and installed/legacy baselines without 
 
 SwiftPM users update the package dependency to the release tag, for example `v0.1.24`. `Package.swift` itself does not contain a TritonKit version field.
 
-CocoaPods users should update pod repo metadata and install the matching pod version:
+iOS app integrations use SwiftPM and require iOS 16 or newer; CocoaPods is not a supported distribution path.
 
-```sh
-pod repo update
-pod install
-```
-
-The app Podfile should depend on `TritonKit` only, with Debug-only configuration. Do not ask users to add any sibling TritonKit pod.
 
 ## Report Back
 

@@ -1,0 +1,1787 @@
+{
+  "binary": "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+  "binarySHA256": "2085a605c68562f14c326aa99ad05fc88be639f09e3e75d41c6ba80ca5de5dba",
+  "baseline": false,
+  "httpRequested": true,
+  "cases": [
+    {
+      "name": "defaults",
+      "transport": "cli",
+      "mode": "success",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-defaults/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "enableLLM": false,
+        "enableVLM": false
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-defaults/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json"
+      ],
+      "exitCode": 0,
+      "response": {
+        "ai": {
+          "actionPolicy": "explore",
+          "llmEnabled": false,
+          "llmProviderStatus": "disabled",
+          "providerStatus": "disabled",
+          "providersReady": false,
+          "vlmEnabled": false,
+          "vlmProviderStatus": "disabled"
+        },
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "kind": "triton.workspace.run",
+        "nextActions": [
+          {
+            "code": "external_agent_inference",
+            "message": "Inference is disabled; use observations with the outer agent, or explicitly opt in with --enable-llm / --enable-vlm (HTTP enableLLM / enableVLM)."
+          }
+        ],
+        "paths": {
+          "events": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-defaults/runs/fixture/events.jsonl",
+          "report": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-defaults/runs/fixture/report.json",
+          "runDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-defaults/runs/fixture"
+        },
+        "runId": "fixture",
+        "runner": {
+          "actionPolicy": "explore",
+          "allowedActions": [
+            "tap",
+            "swipe",
+            "type",
+            "wait",
+            "verify",
+            "stop"
+          ],
+          "maxSteps": 1,
+          "stopConditions": [
+            "max_steps_reached",
+            "provider_missing",
+            "unsupported_capability",
+            "policy_rejected",
+            "model_unparseable"
+          ]
+        },
+        "schemaVersion": 1,
+        "status": "paused",
+        "target": {
+          "capabilities": [
+            "screenshot",
+            "hierarchy",
+            "input"
+          ],
+          "id": "fixture-no-device",
+          "platform": "unknown",
+          "scope": "current"
+        }
+      },
+      "elapsedSeconds": 0.13908708401140757,
+      "requests": [],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "workspaceContract": true,
+        "llmEnabled": true,
+        "vlmEnabled": true,
+        "noErrorExit": true
+      },
+      "ok": true
+    },
+    {
+      "name": "configured-disabled",
+      "transport": "cli",
+      "mode": "success",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-configured-disabled/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "llmProvider": "openai-compatible",
+        "llmBaseURL": "http://127.0.0.1:51522/v1",
+        "llmModel": "fixture",
+        "llmAPIKeyEnv": "SP273_API_KEY",
+        "vlmProvider": "mock",
+        "enableLLM": false,
+        "enableVLM": false
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-configured-disabled/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--llm-provider",
+        "openai-compatible",
+        "--llm-base-url",
+        "http://127.0.0.1:51522/v1",
+        "--llm-model",
+        "fixture",
+        "--llm-api-key-env",
+        "SP273_API_KEY",
+        "--vlm-provider",
+        "mock"
+      ],
+      "exitCode": 0,
+      "response": {
+        "ai": {
+          "actionPolicy": "explore",
+          "llmEnabled": false,
+          "llmProvider": "openai-compatible",
+          "llmProviderStatus": "disabled",
+          "providerStatus": "disabled",
+          "providersReady": false,
+          "vlmEnabled": false,
+          "vlmProvider": "mock",
+          "vlmProviderStatus": "disabled"
+        },
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "kind": "triton.workspace.run",
+        "nextActions": [
+          {
+            "code": "external_agent_inference",
+            "message": "Inference is disabled; use observations with the outer agent, or explicitly opt in with --enable-llm / --enable-vlm (HTTP enableLLM / enableVLM)."
+          }
+        ],
+        "paths": {
+          "events": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-configured-disabled/runs/fixture/events.jsonl",
+          "report": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-configured-disabled/runs/fixture/report.json",
+          "runDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-configured-disabled/runs/fixture"
+        },
+        "runId": "fixture",
+        "runner": {
+          "actionPolicy": "explore",
+          "allowedActions": [
+            "tap",
+            "swipe",
+            "type",
+            "wait",
+            "verify",
+            "stop"
+          ],
+          "maxSteps": 1,
+          "stopConditions": [
+            "max_steps_reached",
+            "provider_missing",
+            "unsupported_capability",
+            "policy_rejected",
+            "model_unparseable"
+          ]
+        },
+        "schemaVersion": 1,
+        "status": "paused",
+        "target": {
+          "capabilities": [
+            "screenshot",
+            "hierarchy",
+            "input"
+          ],
+          "id": "fixture-no-device",
+          "platform": "unknown",
+          "scope": "current"
+        }
+      },
+      "elapsedSeconds": 0.103187083004741,
+      "requests": [],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "workspaceContract": true,
+        "llmEnabled": true,
+        "vlmEnabled": true,
+        "noErrorExit": true
+      },
+      "ok": true
+    },
+    {
+      "name": "enabled-llm",
+      "transport": "cli",
+      "mode": "success",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-llm/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "llmProvider": "openai-compatible",
+        "llmBaseURL": "http://127.0.0.1:51522/v1",
+        "llmModel": "fixture",
+        "llmAPIKeyEnv": "SP273_API_KEY",
+        "vlmProvider": "mock",
+        "enableLLM": true,
+        "enableVLM": false
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-llm/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--llm-provider",
+        "openai-compatible",
+        "--llm-base-url",
+        "http://127.0.0.1:51522/v1",
+        "--llm-model",
+        "fixture",
+        "--llm-api-key-env",
+        "SP273_API_KEY",
+        "--vlm-provider",
+        "mock",
+        "--enable-llm"
+      ],
+      "exitCode": 0,
+      "response": {
+        "ai": {
+          "actionPolicy": "explore",
+          "llmEnabled": true,
+          "llmProvider": "openai-compatible",
+          "llmProviderStatus": "ready",
+          "providerStatus": "ready",
+          "providersReady": true,
+          "vlmEnabled": false,
+          "vlmProvider": "mock",
+          "vlmProviderStatus": "disabled"
+        },
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "kind": "triton.workspace.run",
+        "nextActions": [],
+        "paths": {
+          "events": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-llm/runs/fixture/events.jsonl",
+          "report": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-llm/runs/fixture/report.json",
+          "runDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-llm/runs/fixture"
+        },
+        "runId": "fixture",
+        "runner": {
+          "actionPolicy": "explore",
+          "allowedActions": [
+            "tap",
+            "swipe",
+            "type",
+            "wait",
+            "verify",
+            "stop"
+          ],
+          "maxSteps": 1,
+          "stopConditions": [
+            "max_steps_reached",
+            "provider_missing",
+            "unsupported_capability",
+            "policy_rejected",
+            "model_unparseable"
+          ]
+        },
+        "schemaVersion": 1,
+        "status": "stopped",
+        "target": {
+          "capabilities": [
+            "screenshot",
+            "hierarchy",
+            "input"
+          ],
+          "id": "fixture-no-device",
+          "platform": "unknown",
+          "scope": "current"
+        }
+      },
+      "elapsedSeconds": 0.24172562500461936,
+      "requests": [
+        {
+          "path": "/v1/chat/completions",
+          "model": "fixture",
+          "mode": "success",
+          "at": 144260.967953583,
+          "authorizationPresent": true
+        }
+      ],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "workspaceContract": true,
+        "llmEnabled": true,
+        "vlmEnabled": true,
+        "noErrorExit": true
+      },
+      "ok": true
+    },
+    {
+      "name": "enabled-both",
+      "transport": "cli",
+      "mode": "success",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-both/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "llmProvider": "openai-compatible",
+        "llmBaseURL": "http://127.0.0.1:51522/v1",
+        "llmModel": "fixture",
+        "llmAPIKeyEnv": "SP273_API_KEY",
+        "vlmProvider": "mock",
+        "enableLLM": true,
+        "enableVLM": true
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-both/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--llm-provider",
+        "openai-compatible",
+        "--llm-base-url",
+        "http://127.0.0.1:51522/v1",
+        "--llm-model",
+        "fixture",
+        "--llm-api-key-env",
+        "SP273_API_KEY",
+        "--vlm-provider",
+        "mock",
+        "--enable-llm",
+        "--enable-vlm"
+      ],
+      "exitCode": 0,
+      "response": {
+        "ai": {
+          "actionPolicy": "explore",
+          "llmEnabled": true,
+          "llmProvider": "openai-compatible",
+          "llmProviderStatus": "ready",
+          "providerStatus": "ready",
+          "providersReady": true,
+          "vlmEnabled": true,
+          "vlmProvider": "mock",
+          "vlmProviderStatus": "ready"
+        },
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "kind": "triton.workspace.run",
+        "nextActions": [],
+        "paths": {
+          "events": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-both/runs/fixture/events.jsonl",
+          "report": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-both/runs/fixture/report.json",
+          "runDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-both/runs/fixture"
+        },
+        "runId": "fixture",
+        "runner": {
+          "actionPolicy": "explore",
+          "allowedActions": [
+            "tap",
+            "swipe",
+            "type",
+            "wait",
+            "verify",
+            "stop"
+          ],
+          "maxSteps": 1,
+          "stopConditions": [
+            "max_steps_reached",
+            "provider_missing",
+            "unsupported_capability",
+            "policy_rejected",
+            "model_unparseable"
+          ]
+        },
+        "schemaVersion": 1,
+        "status": "stopped",
+        "target": {
+          "capabilities": [
+            "screenshot",
+            "hierarchy",
+            "input"
+          ],
+          "id": "fixture-no-device",
+          "platform": "unknown",
+          "scope": "current"
+        }
+      },
+      "elapsedSeconds": 0.18641583298449405,
+      "requests": [
+        {
+          "path": "/v1/chat/completions",
+          "model": "fixture",
+          "mode": "success",
+          "at": 144261.135382541,
+          "authorizationPresent": true
+        }
+      ],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "workspaceContract": true,
+        "llmEnabled": true,
+        "vlmEnabled": true,
+        "noErrorExit": true
+      },
+      "ok": true
+    },
+    {
+      "name": "enabled-vlm-mock",
+      "transport": "cli",
+      "mode": "success",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-vlm-mock/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "enableLLM": false,
+        "enableVLM": true
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-vlm-mock/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--enable-vlm"
+      ],
+      "exitCode": 0,
+      "response": {
+        "ai": {
+          "actionPolicy": "explore",
+          "llmEnabled": false,
+          "llmProviderStatus": "disabled",
+          "providerStatus": "missing",
+          "providersReady": false,
+          "vlmEnabled": true,
+          "vlmProviderStatus": "missing"
+        },
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "kind": "triton.workspace.run",
+        "nextActions": [
+          {
+            "code": "configure_ai_provider",
+            "message": "Explicitly enabled inference requires a configured local or approved provider before autonomous actions."
+          }
+        ],
+        "paths": {
+          "events": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-vlm-mock/runs/fixture/events.jsonl",
+          "report": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-vlm-mock/runs/fixture/report.json",
+          "runDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-enabled-vlm-mock/runs/fixture"
+        },
+        "runId": "fixture",
+        "runner": {
+          "actionPolicy": "explore",
+          "allowedActions": [
+            "tap",
+            "swipe",
+            "type",
+            "wait",
+            "verify",
+            "stop"
+          ],
+          "maxSteps": 1,
+          "stopConditions": [
+            "max_steps_reached",
+            "provider_missing",
+            "unsupported_capability",
+            "policy_rejected",
+            "model_unparseable"
+          ]
+        },
+        "schemaVersion": 1,
+        "status": "paused",
+        "target": {
+          "capabilities": [
+            "screenshot",
+            "hierarchy",
+            "input"
+          ],
+          "id": "fixture-no-device",
+          "platform": "unknown",
+          "scope": "current"
+        }
+      },
+      "elapsedSeconds": 0.14473179201013409,
+      "requests": [],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "workspaceContract": true,
+        "llmEnabled": true,
+        "vlmEnabled": true,
+        "noErrorExit": true
+      },
+      "ok": true
+    },
+    {
+      "name": "unauthorized",
+      "transport": "cli",
+      "mode": "unauthorized",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-unauthorized/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "llmProvider": "openai-compatible",
+        "llmBaseURL": "http://127.0.0.1:51522/v1",
+        "llmModel": "fixture",
+        "llmAPIKeyEnv": "SP273_API_KEY",
+        "vlmProvider": "mock",
+        "enableLLM": true,
+        "enableVLM": false
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-unauthorized/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--llm-provider",
+        "openai-compatible",
+        "--llm-base-url",
+        "http://127.0.0.1:51522/v1",
+        "--llm-model",
+        "fixture",
+        "--llm-api-key-env",
+        "SP273_API_KEY",
+        "--vlm-provider",
+        "mock",
+        "--enable-llm"
+      ],
+      "exitCode": 1,
+      "response": {
+        "error": {
+          "code": "workspace_failed",
+          "hint": "Run `triton workspace run --help` for supported arguments.",
+          "message": "OpenAI-compatible workspace LLM returned HTTP 401: {\"error\":{\"message\":\"fixture unauthorized\",\"type\":\"authentication_error\"}}"
+        },
+        "ok": false
+      },
+      "elapsedSeconds": 0.13152658301987685,
+      "requests": [
+        {
+          "path": "/v1/chat/completions",
+          "model": "fixture",
+          "mode": "unauthorized",
+          "at": 144261.458943791,
+          "authorizationPresent": true
+        }
+      ],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "typedWorkspaceProviderFailure": true,
+        "failureTransportStatus": true,
+        "notSuccessfulRun": true
+      },
+      "ok": true
+    },
+    {
+      "name": "disconnect",
+      "transport": "cli",
+      "mode": "disconnect",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-disconnect/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "llmProvider": "openai-compatible",
+        "llmBaseURL": "http://127.0.0.1:51522/v1",
+        "llmModel": "fixture",
+        "llmAPIKeyEnv": "SP273_API_KEY",
+        "vlmProvider": "mock",
+        "enableLLM": true,
+        "enableVLM": false
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-disconnect/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--llm-provider",
+        "openai-compatible",
+        "--llm-base-url",
+        "http://127.0.0.1:51522/v1",
+        "--llm-model",
+        "fixture",
+        "--llm-api-key-env",
+        "SP273_API_KEY",
+        "--vlm-provider",
+        "mock",
+        "--enable-llm"
+      ],
+      "exitCode": 1,
+      "response": {
+        "error": {
+          "code": "workspace_failed",
+          "hint": "Run `triton workspace run --help` for supported arguments.",
+          "message": "OpenAI-compatible workspace LLM request failed: Error Domain=NSURLErrorDomain Code=-1005 \"The network connection was lost.\" UserInfo={_kCFStreamErrorCodeKey=-4, NSUnderlyingError=0x7af08709f0 {Error Domain=kCFErrorDomainCFNetwork Code=-1005 \"(null)\" UserInfo={NSErrorPeerAddressKey=<CFData 0x7af1030cd0 [0x1f85caf70]>{length = 16, capacity = 16, bytes = 0x1002c9427f0000010000000000000000}, _kCFStreamErrorCodeKey=-4, _kCFStreamErrorDomainKey=4}}, _NSURLErrorFailingURLSessionTaskErrorKey=LocalDataTask <555D1BF9-29D6-45D2-9D0B-65C76FED5F09>.<1>, _NSURLErrorRelatedURLSessionTaskErrorKey=(\n    \"LocalDataTask <555D1BF9-29D6-45D2-9D0B-65C76FED5F09>.<1>\"\n), NSLocalizedDescription=The network connection was lost., NSErrorFailingURLStringKey=http://127.0.0.1:51522/v1/chat/completions, NSErrorFailingURLKey=http://127.0.0.1:51522/v1/chat/completions, _kCFStreamErrorDomainKey=4}"
+        },
+        "ok": false
+      },
+      "elapsedSeconds": 0.12404070899356157,
+      "requests": [
+        {
+          "path": "/v1/chat/completions",
+          "model": "fixture",
+          "mode": "disconnect",
+          "at": 144261.591976125,
+          "authorizationPresent": true
+        }
+      ],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "typedWorkspaceProviderFailure": true,
+        "failureTransportStatus": true,
+        "notSuccessfulRun": true
+      },
+      "ok": true
+    },
+    {
+      "name": "slow-drip",
+      "transport": "cli",
+      "mode": "slow",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-slow-drip/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "llmProvider": "openai-compatible",
+        "llmBaseURL": "http://127.0.0.1:51522/v1",
+        "llmModel": "fixture",
+        "llmAPIKeyEnv": "SP273_API_KEY",
+        "vlmProvider": "mock",
+        "enableLLM": true,
+        "enableVLM": false
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/cli-slow-drip/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--llm-provider",
+        "openai-compatible",
+        "--llm-base-url",
+        "http://127.0.0.1:51522/v1",
+        "--llm-model",
+        "fixture",
+        "--llm-api-key-env",
+        "SP273_API_KEY",
+        "--vlm-provider",
+        "mock",
+        "--enable-llm"
+      ],
+      "exitCode": 1,
+      "response": {
+        "error": {
+          "code": "workspace_failed",
+          "hint": "Run `triton workspace run --help` for supported arguments.",
+          "message": "OpenAI-compatible workspace LLM request failed: Error Domain=NSURLErrorDomain Code=-1001 \"(null)\""
+        },
+        "ok": false
+      },
+      "elapsedSeconds": 30.183437665982638,
+      "requests": [
+        {
+          "path": "/v1/chat/completions",
+          "model": "fixture",
+          "mode": "slow",
+          "at": 144261.795615458,
+          "authorizationPresent": true
+        }
+      ],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "typedWorkspaceProviderFailure": true,
+        "failureTransportStatus": true,
+        "notSuccessfulRun": true,
+        "exercisedProductionBudget": true
+      },
+      "ok": true
+    },
+    {
+      "name": "defaults",
+      "transport": "http",
+      "mode": "success",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-defaults/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "enableLLM": false,
+        "enableVLM": false
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-defaults/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json"
+      ],
+      "httpStatus": 200,
+      "response": {
+        "ai": {
+          "actionPolicy": "explore",
+          "llmEnabled": false,
+          "llmProviderStatus": "disabled",
+          "providerStatus": "disabled",
+          "providersReady": false,
+          "vlmEnabled": false,
+          "vlmProviderStatus": "disabled"
+        },
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "kind": "triton.workspace.run",
+        "nextActions": [
+          {
+            "code": "external_agent_inference",
+            "message": "Inference is disabled; use observations with the outer agent, or explicitly opt in with --enable-llm / --enable-vlm (HTTP enableLLM / enableVLM)."
+          }
+        ],
+        "paths": {
+          "events": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-defaults/runs/run_1793683154_BFF83797/events.jsonl",
+          "report": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-defaults/runs/run_1793683154_BFF83797/report.json",
+          "runDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-defaults/runs/run_1793683154_BFF83797"
+        },
+        "runId": "run_1793683154_BFF83797",
+        "runner": {
+          "actionPolicy": "explore",
+          "allowedActions": [
+            "tap",
+            "swipe",
+            "type",
+            "wait",
+            "verify",
+            "stop"
+          ],
+          "maxSteps": 1,
+          "stopConditions": [
+            "max_steps_reached",
+            "provider_missing",
+            "unsupported_capability",
+            "policy_rejected",
+            "model_unparseable"
+          ]
+        },
+        "schemaVersion": 1,
+        "status": "paused",
+        "target": {
+          "capabilities": [
+            "screenshot",
+            "hierarchy",
+            "input"
+          ],
+          "id": "fixture-no-device",
+          "platform": "unknown",
+          "scope": "current"
+        }
+      },
+      "elapsedSeconds": 0.09544108298723586,
+      "requests": [],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "workspaceContract": true,
+        "llmEnabled": true,
+        "vlmEnabled": true,
+        "noErrorExit": true
+      },
+      "ok": true
+    },
+    {
+      "name": "configured-disabled",
+      "transport": "http",
+      "mode": "success",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-configured-disabled/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "llmProvider": "openai-compatible",
+        "llmBaseURL": "http://127.0.0.1:51522/v1",
+        "llmModel": "fixture",
+        "llmAPIKeyEnv": "SP273_API_KEY",
+        "vlmProvider": "mock",
+        "enableLLM": false,
+        "enableVLM": false
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-configured-disabled/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--llm-provider",
+        "openai-compatible",
+        "--llm-base-url",
+        "http://127.0.0.1:51522/v1",
+        "--llm-model",
+        "fixture",
+        "--llm-api-key-env",
+        "SP273_API_KEY",
+        "--vlm-provider",
+        "mock"
+      ],
+      "httpStatus": 200,
+      "response": {
+        "ai": {
+          "actionPolicy": "explore",
+          "llmEnabled": false,
+          "llmProvider": "openai-compatible",
+          "llmProviderStatus": "disabled",
+          "providerStatus": "disabled",
+          "providersReady": false,
+          "vlmEnabled": false,
+          "vlmProvider": "mock",
+          "vlmProviderStatus": "disabled"
+        },
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "kind": "triton.workspace.run",
+        "nextActions": [
+          {
+            "code": "external_agent_inference",
+            "message": "Inference is disabled; use observations with the outer agent, or explicitly opt in with --enable-llm / --enable-vlm (HTTP enableLLM / enableVLM)."
+          }
+        ],
+        "paths": {
+          "events": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-configured-disabled/runs/run_1793683154_FBE6E31E/events.jsonl",
+          "report": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-configured-disabled/runs/run_1793683154_FBE6E31E/report.json",
+          "runDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-configured-disabled/runs/run_1793683154_FBE6E31E"
+        },
+        "runId": "run_1793683154_FBE6E31E",
+        "runner": {
+          "actionPolicy": "explore",
+          "allowedActions": [
+            "tap",
+            "swipe",
+            "type",
+            "wait",
+            "verify",
+            "stop"
+          ],
+          "maxSteps": 1,
+          "stopConditions": [
+            "max_steps_reached",
+            "provider_missing",
+            "unsupported_capability",
+            "policy_rejected",
+            "model_unparseable"
+          ]
+        },
+        "schemaVersion": 1,
+        "status": "paused",
+        "target": {
+          "capabilities": [
+            "screenshot",
+            "hierarchy",
+            "input"
+          ],
+          "id": "fixture-no-device",
+          "platform": "unknown",
+          "scope": "current"
+        }
+      },
+      "elapsedSeconds": 0.015402749995701015,
+      "requests": [],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "workspaceContract": true,
+        "llmEnabled": true,
+        "vlmEnabled": true,
+        "noErrorExit": true
+      },
+      "ok": true
+    },
+    {
+      "name": "enabled-llm",
+      "transport": "http",
+      "mode": "success",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-llm/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "llmProvider": "openai-compatible",
+        "llmBaseURL": "http://127.0.0.1:51522/v1",
+        "llmModel": "fixture",
+        "llmAPIKeyEnv": "SP273_API_KEY",
+        "vlmProvider": "mock",
+        "enableLLM": true,
+        "enableVLM": false
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-llm/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--llm-provider",
+        "openai-compatible",
+        "--llm-base-url",
+        "http://127.0.0.1:51522/v1",
+        "--llm-model",
+        "fixture",
+        "--llm-api-key-env",
+        "SP273_API_KEY",
+        "--vlm-provider",
+        "mock",
+        "--enable-llm"
+      ],
+      "httpStatus": 200,
+      "response": {
+        "ai": {
+          "actionPolicy": "explore",
+          "llmEnabled": true,
+          "llmProvider": "openai-compatible",
+          "llmProviderStatus": "ready",
+          "providerStatus": "ready",
+          "providersReady": true,
+          "vlmEnabled": false,
+          "vlmProvider": "mock",
+          "vlmProviderStatus": "disabled"
+        },
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "kind": "triton.workspace.run",
+        "nextActions": [],
+        "paths": {
+          "events": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-llm/runs/run_1793683154_CB40A464/events.jsonl",
+          "report": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-llm/runs/run_1793683154_CB40A464/report.json",
+          "runDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-llm/runs/run_1793683154_CB40A464"
+        },
+        "runId": "run_1793683154_CB40A464",
+        "runner": {
+          "actionPolicy": "explore",
+          "allowedActions": [
+            "tap",
+            "swipe",
+            "type",
+            "wait",
+            "verify",
+            "stop"
+          ],
+          "maxSteps": 1,
+          "stopConditions": [
+            "max_steps_reached",
+            "provider_missing",
+            "unsupported_capability",
+            "policy_rejected",
+            "model_unparseable"
+          ]
+        },
+        "schemaVersion": 1,
+        "status": "stopped",
+        "target": {
+          "capabilities": [
+            "screenshot",
+            "hierarchy",
+            "input"
+          ],
+          "id": "fixture-no-device",
+          "platform": "unknown",
+          "scope": "current"
+        }
+      },
+      "elapsedSeconds": 0.1600286659959238,
+      "requests": [
+        {
+          "path": "/v1/chat/completions",
+          "model": "fixture",
+          "mode": "success",
+          "at": 144292.021103166,
+          "authorizationPresent": true
+        }
+      ],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "workspaceContract": true,
+        "llmEnabled": true,
+        "vlmEnabled": true,
+        "noErrorExit": true
+      },
+      "ok": true
+    },
+    {
+      "name": "enabled-both",
+      "transport": "http",
+      "mode": "success",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-both/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "llmProvider": "openai-compatible",
+        "llmBaseURL": "http://127.0.0.1:51522/v1",
+        "llmModel": "fixture",
+        "llmAPIKeyEnv": "SP273_API_KEY",
+        "vlmProvider": "mock",
+        "enableLLM": true,
+        "enableVLM": true
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-both/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--llm-provider",
+        "openai-compatible",
+        "--llm-base-url",
+        "http://127.0.0.1:51522/v1",
+        "--llm-model",
+        "fixture",
+        "--llm-api-key-env",
+        "SP273_API_KEY",
+        "--vlm-provider",
+        "mock",
+        "--enable-llm",
+        "--enable-vlm"
+      ],
+      "httpStatus": 200,
+      "response": {
+        "ai": {
+          "actionPolicy": "explore",
+          "llmEnabled": true,
+          "llmProvider": "openai-compatible",
+          "llmProviderStatus": "ready",
+          "providerStatus": "ready",
+          "providersReady": true,
+          "vlmEnabled": true,
+          "vlmProvider": "mock",
+          "vlmProviderStatus": "ready"
+        },
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "kind": "triton.workspace.run",
+        "nextActions": [],
+        "paths": {
+          "events": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-both/runs/run_1793683154_1F8C11B8/events.jsonl",
+          "report": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-both/runs/run_1793683154_1F8C11B8/report.json",
+          "runDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-both/runs/run_1793683154_1F8C11B8"
+        },
+        "runId": "run_1793683154_1F8C11B8",
+        "runner": {
+          "actionPolicy": "explore",
+          "allowedActions": [
+            "tap",
+            "swipe",
+            "type",
+            "wait",
+            "verify",
+            "stop"
+          ],
+          "maxSteps": 1,
+          "stopConditions": [
+            "max_steps_reached",
+            "provider_missing",
+            "unsupported_capability",
+            "policy_rejected",
+            "model_unparseable"
+          ]
+        },
+        "schemaVersion": 1,
+        "status": "stopped",
+        "target": {
+          "capabilities": [
+            "screenshot",
+            "hierarchy",
+            "input"
+          ],
+          "id": "fixture-no-device",
+          "platform": "unknown",
+          "scope": "current"
+        }
+      },
+      "elapsedSeconds": 0.03428979200543836,
+      "requests": [
+        {
+          "path": "/v1/chat/completions",
+          "model": "fixture",
+          "mode": "success",
+          "at": 144292.084942666,
+          "authorizationPresent": true
+        }
+      ],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "workspaceContract": true,
+        "llmEnabled": true,
+        "vlmEnabled": true,
+        "noErrorExit": true
+      },
+      "ok": true
+    },
+    {
+      "name": "enabled-vlm-mock",
+      "transport": "http",
+      "mode": "success",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-vlm-mock/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "enableLLM": false,
+        "enableVLM": true
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-vlm-mock/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--enable-vlm"
+      ],
+      "httpStatus": 200,
+      "response": {
+        "ai": {
+          "actionPolicy": "explore",
+          "llmEnabled": false,
+          "llmProviderStatus": "disabled",
+          "providerStatus": "missing",
+          "providersReady": false,
+          "vlmEnabled": true,
+          "vlmProviderStatus": "missing"
+        },
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "kind": "triton.workspace.run",
+        "nextActions": [
+          {
+            "code": "configure_ai_provider",
+            "message": "Explicitly enabled inference requires a configured local or approved provider before autonomous actions."
+          }
+        ],
+        "paths": {
+          "events": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-vlm-mock/runs/run_1793683154_7BC9B265/events.jsonl",
+          "report": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-vlm-mock/runs/run_1793683154_7BC9B265/report.json",
+          "runDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-enabled-vlm-mock/runs/run_1793683154_7BC9B265"
+        },
+        "runId": "run_1793683154_7BC9B265",
+        "runner": {
+          "actionPolicy": "explore",
+          "allowedActions": [
+            "tap",
+            "swipe",
+            "type",
+            "wait",
+            "verify",
+            "stop"
+          ],
+          "maxSteps": 1,
+          "stopConditions": [
+            "max_steps_reached",
+            "provider_missing",
+            "unsupported_capability",
+            "policy_rejected",
+            "model_unparseable"
+          ]
+        },
+        "schemaVersion": 1,
+        "status": "paused",
+        "target": {
+          "capabilities": [
+            "screenshot",
+            "hierarchy",
+            "input"
+          ],
+          "id": "fixture-no-device",
+          "platform": "unknown",
+          "scope": "current"
+        }
+      },
+      "elapsedSeconds": 0.027021749992854893,
+      "requests": [],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "workspaceContract": true,
+        "llmEnabled": true,
+        "vlmEnabled": true,
+        "noErrorExit": true
+      },
+      "ok": true
+    },
+    {
+      "name": "unauthorized",
+      "transport": "http",
+      "mode": "unauthorized",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-unauthorized/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "llmProvider": "openai-compatible",
+        "llmBaseURL": "http://127.0.0.1:51522/v1",
+        "llmModel": "fixture",
+        "llmAPIKeyEnv": "SP273_API_KEY",
+        "vlmProvider": "mock",
+        "enableLLM": true,
+        "enableVLM": false
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-unauthorized/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--llm-provider",
+        "openai-compatible",
+        "--llm-base-url",
+        "http://127.0.0.1:51522/v1",
+        "--llm-model",
+        "fixture",
+        "--llm-api-key-env",
+        "SP273_API_KEY",
+        "--vlm-provider",
+        "mock",
+        "--enable-llm"
+      ],
+      "httpStatus": 409,
+      "response": {
+        "error": {
+          "code": "workspace_failed",
+          "endpoint": "/workspace/run",
+          "hint": "Run `triton schema --command workspace --json` to inspect workspace contracts.",
+          "message": "OpenAI-compatible workspace LLM returned HTTP 401: {\"error\":{\"message\":\"fixture unauthorized\",\"type\":\"authentication_error\"}}"
+        },
+        "ok": false
+      },
+      "elapsedSeconds": 0.0044137079967185855,
+      "requests": [
+        {
+          "path": "/v1/chat/completions",
+          "model": "fixture",
+          "mode": "unauthorized",
+          "at": 144292.158744416,
+          "authorizationPresent": true
+        }
+      ],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "typedWorkspaceProviderFailure": true,
+        "failureTransportStatus": true,
+        "notSuccessfulRun": true
+      },
+      "ok": true
+    },
+    {
+      "name": "disconnect",
+      "transport": "http",
+      "mode": "disconnect",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-disconnect/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "llmProvider": "openai-compatible",
+        "llmBaseURL": "http://127.0.0.1:51522/v1",
+        "llmModel": "fixture",
+        "llmAPIKeyEnv": "SP273_API_KEY",
+        "vlmProvider": "mock",
+        "enableLLM": true,
+        "enableVLM": false
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-disconnect/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--llm-provider",
+        "openai-compatible",
+        "--llm-base-url",
+        "http://127.0.0.1:51522/v1",
+        "--llm-model",
+        "fixture",
+        "--llm-api-key-env",
+        "SP273_API_KEY",
+        "--vlm-provider",
+        "mock",
+        "--enable-llm"
+      ],
+      "httpStatus": 409,
+      "response": {
+        "error": {
+          "code": "workspace_failed",
+          "endpoint": "/workspace/run",
+          "hint": "Run `triton schema --command workspace --json` to inspect workspace contracts.",
+          "message": "OpenAI-compatible workspace LLM request failed: Error Domain=NSURLErrorDomain Code=-1005 \"The network connection was lost.\" UserInfo={_kCFStreamErrorCodeKey=-4, NSUnderlyingError=0x7b98c5c9f0 {Error Domain=kCFErrorDomainCFNetwork Code=-1005 \"(null)\" UserInfo={NSErrorPeerAddressKey=<CFData 0x7b99414fa0 [0x1f85caf70]>{length = 16, capacity = 16, bytes = 0x1002c9427f0000010000000000000000}, _kCFStreamErrorCodeKey=-4, _kCFStreamErrorDomainKey=4}}, _NSURLErrorFailingURLSessionTaskErrorKey=LocalDataTask <1AD39498-4D29-49B4-B403-A0D8E4287AB5>.<4>, _NSURLErrorRelatedURLSessionTaskErrorKey=(\n    \"LocalDataTask <1AD39498-4D29-49B4-B403-A0D8E4287AB5>.<4>\"\n), NSLocalizedDescription=The network connection was lost., NSErrorFailingURLStringKey=http://127.0.0.1:51522/v1/chat/completions, NSErrorFailingURLKey=http://127.0.0.1:51522/v1/chat/completions, _kCFStreamErrorDomainKey=4}"
+        },
+        "ok": false
+      },
+      "elapsedSeconds": 0.003966374992160127,
+      "requests": [
+        {
+          "path": "/v1/chat/completions",
+          "model": "fixture",
+          "mode": "disconnect",
+          "at": 144292.16448875,
+          "authorizationPresent": true
+        }
+      ],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "typedWorkspaceProviderFailure": true,
+        "failureTransportStatus": true,
+        "notSuccessfulRun": true
+      },
+      "ok": true
+    },
+    {
+      "name": "slow-drip",
+      "transport": "http",
+      "mode": "slow",
+      "request": {
+        "app": "com.example.sp273.fixture",
+        "goal": "Inspect Begin",
+        "target": "fixture-no-device",
+        "appMode": "dry",
+        "runsDir": "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-slow-drip/runs",
+        "runID": "fixture",
+        "maxSteps": 1,
+        "observeLive": false,
+        "executeActions": false,
+        "resolveTarget": false,
+        "llmProvider": "openai-compatible",
+        "llmBaseURL": "http://127.0.0.1:51522/v1",
+        "llmModel": "fixture",
+        "llmAPIKeyEnv": "SP273_API_KEY",
+        "vlmProvider": "mock",
+        "enableLLM": true,
+        "enableVLM": false
+      },
+      "argv": [
+        "<worktrees>/archives/SP273/process-fixture/candidate-binary/triton",
+        "workspace",
+        "run",
+        "--app",
+        "com.example.sp273.fixture",
+        "--goal",
+        "Inspect Begin",
+        "--target",
+        "fixture-no-device",
+        "--app-mode",
+        "dry",
+        "--runs-dir",
+        "<worktrees>/archives/SP273/process-fixture/candidate-040-v3/http-slow-drip/runs",
+        "--run-id",
+        "fixture",
+        "--max-steps",
+        "1",
+        "--json",
+        "--llm-provider",
+        "openai-compatible",
+        "--llm-base-url",
+        "http://127.0.0.1:51522/v1",
+        "--llm-model",
+        "fixture",
+        "--llm-api-key-env",
+        "SP273_API_KEY",
+        "--vlm-provider",
+        "mock",
+        "--enable-llm"
+      ],
+      "httpStatus": 409,
+      "response": {
+        "error": {
+          "code": "workspace_failed",
+          "endpoint": "/workspace/run",
+          "hint": "Run `triton schema --command workspace --json` to inspect workspace contracts.",
+          "message": "OpenAI-compatible workspace LLM request failed: Error Domain=NSURLErrorDomain Code=-1001 \"(null)\""
+        },
+        "ok": false
+      },
+      "elapsedSeconds": 30.04545337500167,
+      "requests": [
+        {
+          "path": "/v1/chat/completions",
+          "model": "fixture",
+          "mode": "slow",
+          "at": 144292.17170375,
+          "authorizationPresent": true
+        }
+      ],
+      "checks": {
+        "validJSON": true,
+        "within45Seconds": true,
+        "noLocalModelHelper": true,
+        "onlyBlockedServeDiscovery": true,
+        "requestCount": true,
+        "onlyConfiguredEndpoint": true,
+        "typedWorkspaceProviderFailure": true,
+        "failureTransportStatus": true,
+        "notSuccessfulRun": true,
+        "exercisedProductionBudget": true
+      },
+      "ok": true
+    }
+  ],
+  "limits": [
+    "Markers cover only configured executable/PATH entrypoints, not every host process.",
+    "Dry workspace fixture: no device action, live observation, model download, or business acceptance.",
+    "Fake OpenAI is loopback only; no actual model or remote API is called."
+  ],
+  "cleanup": {
+    "serveExited": true,
+    "fakeServerStopped": true
+  },
+  "version": "0.1.0-dev",
+  "serve": {
+    "pid": 40049,
+    "port": 51537
+  },
+  "helperMarker": "serve\tadb\tdevices -l\nserve\thdc\tlist targets -v\n",
+  "ok": true
+}

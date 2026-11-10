@@ -453,27 +453,7 @@ func makeOpenAICompatibleRequestBody(model: String, target: String, imageBase64:
 }
 
 func postVLMJSON(url: URL, body: Data, headers: [String: String]) throws -> Data {
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.httpBody = body
-    request.timeoutInterval = 30
-    for (key, value) in headers {
-        request.setValue(value, forHTTPHeaderField: key)
-    }
-
-    let semaphore = DispatchSemaphore(value: 0)
-    var result: Result<(Data, URLResponse), Error>?
-    URLSession.shared.dataTask(with: request) { data, response, error in
-        if let error {
-            result = .failure(error)
-        } else {
-            result = .success((data ?? Data(), response ?? URLResponse()))
-        }
-        semaphore.signal()
-    }.resume()
-    semaphore.wait()
-
-    let (data, response) = try result?.get() ?? (Data(), URLResponse())
+    let (data, response) = try postAIJSON(url: url, body: body, headers: headers)
     if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
         let body = String(data: data, encoding: .utf8) ?? ""
         throw TKVLMGroundingFailure(

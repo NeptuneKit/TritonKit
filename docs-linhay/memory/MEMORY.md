@@ -1,12 +1,12 @@
 # TritonKit Project Memory
 
-- 2026-11-02：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261102-reference-update-report.md)33仓24完整/9 partial、4仓更新；Loupe现代HID由SP254/255离线验收合main c4a14e52，合后CLI/local通过，共18项已合main；真实兼容未验，UI附件清理另记。
+- 2026-11-09：[SP-278 DSH插件](../spaces/SP-278-dsh-plugin/README.md)0.1.1已通过实现7bc7fac4/修复4dd8f334/merge f4efd202推送远端main；Node32、完整文档契约与两条精确CI通过，当前profile applied且新目标guard生效。原主目录WIP/15条无关提交保持，不强行同步其main；真实设备动作/GUI展示未验。经验见[集成契约](../dev/dsh-plugin-integration.md)。
 
-- 2026-11-01：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261101-reference-update-report.md)33仓24完整/9 partial、2仓更新保留观察，无新采用；17条交付均在main，昨日884+84份证据完整。review绑定与跨状态中断恢复已补现有采用流程。
+- 2026-11-09：[v0.2.42发布验收](../spaces/SP-277-release-v0-2-42/plans/20261109-release.md)完成，发布commit e821b7b4；SP276的Harmony空白读取修复已合入并发布，精确CI/标准Pod/双架构/安装CLI与skills/只读浏览器通过，IME及原私有现场未验证边界保留。
 
-- 2026-10-31：[参考日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261031-reference-update-report.md)33仓24完整/9 partial、五仓变化；SP252/253日志安全修复已验收合main56ef7719，合后CLI162+1665/local通过并清理关闭。昨日raw证据缺失原因未知，今日证据已存scratch外；当前17条采用在main。
+- 2026-11-03：[SP-270 Lookin核心内置](../spaces/SP-270-lookin-core/README.md)独立候选完成，沿用检查器，补完整层树/节点详情/solo-group/只读3D；root/CLI/Web与真实iOS/HTTP/浏览器、本地门禁通过。标准Pod因Xcode27.1拒绝iOS13未过，iOS15兼容lint通过。未提交、合并或发布；[证据及边界](../spaces/SP-270-lookin-core/plans/20261103-validation.md)。
 
-- 2026-10-30：[参考追踪接管](../spaces/SP-207-reference-adoption-pipeline/plans/20261030-controller-takeover.md)完成，原每日10:00任务迁入新主控并重读确认；33仓补查24完整/9 partial、5仓变化无新采用。16条交付均在main，旧许可/来源缺口保留。
+- 2026-11-02：[SP-264交付发布](../spaces/SP-264-release-v0-2-39/README.md)十二项修复已随v0.2.39发布，发布提交/tag `026d329e`；main/tag/Release CI/标准Pod、双架构/checksum/Web/skills、Homebrew与两root skills安装、安装版23项只读smoke通过，正式三端预览和自有清理通过。release.sh观察超时保留，远端随后成功，未重tag。brew cleanup误删共享旧serve所用0.2.38文件后已按旧公开包恢复42文件，未动共享进程/新symlink；升级保护规则写回release skill。#246人工IME正向验收排除、#214暂缓、#224 iPad与原私有现场未验证边界保留。
 
 - 2026-10-30：[v0.2.38发布验收](../spaces/SP-251-release-v0-2-38/plans/20261030-release.md)完成：tag74680bbd，main/tag/Release全绿；CLI1823（3条件跳过）/root411/Web159及build/local通过，iOS真实native1项补验。双架构、Runner、Web、skills/checksum、Homebrew升级与两处skills逐文件校验通过；三端公开包完整图像/隐藏重连通过，Android/Harmony最后订阅退出后采集负窗口通过。仅清理自有实例和服务，原23路径WIP保留。CocoaPods仅标准lint未trunk；原私有App/完整Wails边界及开放issue不变。
 
@@ -113,4 +113,10 @@
 
 - 2026-10-30：[SP-247](../spaces/SP-247-rhine-page-preferences/README.md) 四页Rhine设计偏好已接回主目录；142项测试/两构建与浏览器布局、动态、删除焦点通过。保留固定0.11.3；#14/#117反馈已回读，真实设备未复测，本地提交收口，未推送发布。
 
-- 2026-10-30：[SP248 / #238](../spaces/SP-248-issue-238-arkweb-transport/plans/20261030-merged-validation.md) 与 [SP249 / #237](../spaces/SP-249-issue-237-webview-snapshot/plans/20261030-merged-validation.md) 已经 PR #239 / #240 合入远端 main；精确候选 CI 通过，组合 root 404 项 / 64 suites、CLI Release 和标准 CocoaPods lint 通过。已随[v0.2.37](../spaces/SP-250-release-v0-2-37/plans/20261030-release.md)发布：真实ArkWeb自有probe、iOS App-host 3测试与17字段往返、完整local/CI、双架构制品及Homebrew安装验证通过；原私有App未验，两个issue保持OPEN，#224实时流黑图保留。主目录其他提交与 WIP 保留，自动任务持续执行开发到 CI 通过后合并 main，不重复等待授权。
+- 2026-10-30：[SP248 / #238](../spaces/SP-248-issue-238-arkweb-transport/plans/20261030-merged-validation.md) 与 [SP249 / #237](../spaces/SP-249-issue-237-webview-snapshot/plans/20261030-merged-validation.md) 已经 PR #239 / #240 合入远端 main；精确候选 CI 通过，组合 root 404 项 / 64 suites、CLI Release 和标准 CocoaPods lint 通过。已随[v0.2.37](../spaces/SP-250-release-v0-2-37/plans/20261030-release.md)发布：真实ArkWeb自有probe、iOS App-host 3测试与17字段往返、完整local/CI、双架构制品及Homebrew安装验证通过；原私有App未验，两个issue保持OPEN；#224在0.2.37的流黑图是历史边界，0.2.38 iPhone主屏预览已通过，iPad默认截图/输入仍受限。主目录其他提交与 WIP 保留，自动任务持续执行开发到 CI 通过后合并 main，不重复等待授权。
+
+- 2026-10-30巡查：[#224证据接替](../spaces/SP-235-issue-224-simulator-resize-query/plans/20261030-release038-followup.md)复用SP251真实公开包验收；主屏流修复已随0.2.38发布，不重复设备测试或发版。iPad Resize unsupported及原私有App未知保留，issue继续OPEN。
+
+- SP-273默认关闭workspace LLM/VLM并补在线/helper有界失败；实现/完整CLI/独立审阅通过，整合发布待完成，详见[SP-273](../spaces/SP-273-issue-274-explicit-inference/README.md)。
+
+- 2026-11-10 #237 增量复核：新评论来自仍嵌入 SDK 0.2.29 的原私有 App，不能归因当前 main；`ca91c2da` 上 `TKRuntimeWebViewSnapshotExecutionTests` 默认与 forms-only 执行通过。当前主线机制保持通过，私有 App 现场仍范围外未验证，issue 不关闭。详见 [SP-249 复核](../spaces/SP-249-issue-237-webview-snapshot/plans/20261110-private-app-followup.md)。

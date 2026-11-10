@@ -1,0 +1,110 @@
+{
+  "version": "0.2.38",
+  "binarySha256": "403375531681d36c3de2a24563278553db47b94c3a37e0564dc2587df50fc24d",
+  "skillSha256": "2f91e5c58c3bed55ff044a1e929e6ccc61c150c5bade976eaa4e865a3340e2b7",
+  "note": "Exact official example tokenized with shlex; only placeholders/selector alias substituted. timeout=0 added to stop before device resolution. This proves argument acceptance, not wait runtime.",
+  "probes": [
+    {
+      "argv": [
+        "wait",
+        "--text",
+        "成功",
+        "--platform",
+        "ios",
+        "--device",
+        "__sp260_no_device__",
+        "--json",
+        "--timeout",
+        "0"
+      ],
+      "exitCode": 1,
+      "stdout": "{\n  \"error\" : {\n    \"code\" : \"validation_failed\",\n    \"hint\" : \"Run `triton schema --command act tap --json` to inspect required fields\",\n    \"message\" : \"--timeout must be greater than 0\"\n  },\n  \"ok\" : false\n}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "wait",
+        "--text",
+        "成功",
+        "--platform",
+        "ios",
+        "--target",
+        "__sp260_no_device__",
+        "--json",
+        "--timeout",
+        "0"
+      ],
+      "exitCode": 1,
+      "stdout": "{\n  \"error\" : {\n    \"code\" : \"validation_failed\",\n    \"hint\" : \"Run `triton schema --command act tap --json` to inspect required fields\",\n    \"message\" : \"--timeout must be greater than 0\"\n  },\n  \"ok\" : false\n}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "wait",
+        "--text",
+        "成功",
+        "--platform",
+        "android",
+        "--device",
+        "__sp260_no_device__",
+        "--json",
+        "--timeout",
+        "0"
+      ],
+      "exitCode": 1,
+      "stdout": "{\n  \"error\" : {\n    \"code\" : \"validation_failed\",\n    \"hint\" : \"Run `triton schema --command act tap --json` to inspect required fields\",\n    \"message\" : \"--timeout must be greater than 0\"\n  },\n  \"ok\" : false\n}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "wait",
+        "--text",
+        "成功",
+        "--platform",
+        "android",
+        "--target",
+        "__sp260_no_device__",
+        "--json",
+        "--timeout",
+        "0"
+      ],
+      "exitCode": 1,
+      "stdout": "{\n  \"error\" : {\n    \"code\" : \"validation_failed\",\n    \"hint\" : \"Run `triton schema --command act tap --json` to inspect required fields\",\n    \"message\" : \"--timeout must be greater than 0\"\n  },\n  \"ok\" : false\n}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "wait",
+        "--text",
+        "成功",
+        "--platform",
+        "harmony",
+        "--device",
+        "__sp260_no_device__",
+        "--json",
+        "--timeout",
+        "0"
+      ],
+      "exitCode": 1,
+      "stdout": "{\n  \"error\" : {\n    \"code\" : \"validation_failed\",\n    \"hint\" : \"Run `triton schema --command act tap --json` to inspect required fields\",\n    \"message\" : \"--timeout must be greater than 0\"\n  },\n  \"ok\" : false\n}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "wait",
+        "--text",
+        "成功",
+        "--platform",
+        "harmony",
+        "--target",
+        "__sp260_no_device__",
+        "--json",
+        "--timeout",
+        "0"
+      ],
+      "exitCode": 1,
+      "stdout": "{\n  \"error\" : {\n    \"code\" : \"validation_failed\",\n    \"hint\" : \"Run `triton schema --command act tap --json` to inspect required fields\",\n    \"message\" : \"--timeout must be greater than 0\"\n  },\n  \"ok\" : false\n}\n",
+      "stderr": ""
+    }
+  ]
+}

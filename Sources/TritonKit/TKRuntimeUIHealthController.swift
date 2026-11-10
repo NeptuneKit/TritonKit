@@ -1,7 +1,5 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 /// Admission and diagnostics never execute on MainActor. A deadline releases only the
 /// caller's continuation: the original operation owns admission until it really completes.

@@ -1,7 +1,5 @@
 import Foundation
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 /// Only SDK-owned inspector windows opt out of business observation and actions.
 /// Unknown high-level windows still participate in foreground safety checks.

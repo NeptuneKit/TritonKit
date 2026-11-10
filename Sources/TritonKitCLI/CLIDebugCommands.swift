@@ -15,6 +15,7 @@ struct Debug: AsyncParsableCommand {
             State.self,
             Snapshot.self,
             Hierarchy.self,
+            HierarchyDetails.self,
             Nodes.self,
             Node.self,
             PatchNode.self,

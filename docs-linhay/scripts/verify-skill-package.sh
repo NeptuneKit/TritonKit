@@ -4,7 +4,7 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
   -s "${root}/docs-linhay/scripts/tests" \
-  -p test_install_public_skills.py
+  -p 'test_*public_skill*.py'
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "${tmp_dir}"' EXIT
 
@@ -29,23 +29,11 @@ for skill_name in tritonkit-dev-feedback tritonkit-emulator-cli-takeover tritonk
   grep -q '^  version: 9.8.7-dev+abcdef0$' "${tmp_dir}/${skill_name}.skill.md"
 done
 
-dev_feedback_lines="$(wc -l < "${tmp_dir}/tritonkit-dev-feedback.skill.md")"
-if [ "${dev_feedback_lines}" -gt 150 ]; then
-  echo "tritonkit-dev-feedback/SKILL.md should stay routed and under 150 lines, got ${dev_feedback_lines}" >&2
-  exit 1
-fi
-
-for reference in \
-  issue-filing \
-  evidence-ios-runtime \
-  evidence-host-devices \
-  schema-contract-feedback \
-  app-integration-ios \
-  app-integration-harmony
-do
-  grep -q "^TritonKit[.]skills/tritonkit-dev-feedback/references/${reference}[.]md$" "${tmp_dir}/contents.txt"
-  grep -q "references/${reference}.md" "${tmp_dir}/tritonkit-dev-feedback.skill.md"
-done
+# Validate the extracted, version-stamped entry and every directly routed reference.
+# The same gate runs before package creation; this also checks the archive itself.
+tar -xzf "${package}" -C "${tmp_dir}"
+python3 "${root}/docs-linhay/scripts/verify-public-skill-layout.py" \
+  --skill-root "${tmp_dir}/TritonKit.skills"
 
 tar -xOf "${package}" TritonKit.skills/tritonkit-dev-feedback/references/issue-filing.md > "${tmp_dir}/issue-filing.md"
 grep -q '^## Public issue preflight$' "${tmp_dir}/issue-filing.md"
@@ -101,7 +89,7 @@ mkdir -p "${install_dir}/tritonkit-dev-feedback" \
   "${install_dir}/tritonkit-emulator-cli-takeover" \
   "${install_dir}/tritonkit-real-project-regression" \
   "${install_dir}/tritonkit-update"
-"${root}/docs-linhay/scripts/install-public-skills.sh" "${install_dir}" --from-tar "${package}" >/tmp/tritonkit-install-skills.log
+"${root}/docs-linhay/scripts/install-public-skills.sh" "${install_dir}" --from-tar "${package}" >"${tmp_dir}/install-skills.log"
 test -d "${install_dir}/TritonKit.skills"
 test -f "${install_dir}/TritonKit.skills/tritonkit-dev-feedback/SKILL.md"
 test ! -e "${install_dir}/tritonkit-dev-feedback"
@@ -111,7 +99,7 @@ test ! -e "${install_dir}/tritonkit-update"
 
 source_install_dir="${tmp_dir}/agent-skills-source"
 mkdir -p "${source_install_dir}/tritonkit-dev-feedback"
-"${root}/docs-linhay/scripts/install-public-skills.sh" "${source_install_dir}" >/tmp/tritonkit-install-source-skills.log
+"${root}/docs-linhay/scripts/install-public-skills.sh" "${source_install_dir}" >"${tmp_dir}/install-source-skills.log"
 test -d "${source_install_dir}/TritonKit.skills"
 test -f "${source_install_dir}/TritonKit.skills/tritonkit-real-project-regression/SKILL.md"
 test -f "${source_install_dir}/TritonKit.skills/tritonkit-update/SKILL.md"

@@ -1,0 +1,54 @@
+{
+  "binary": "/opt/homebrew/Cellar/triton/0.2.38/bin/triton",
+  "sha256": "403375531681d36c3de2a24563278553db47b94c3a37e0564dc2587df50fc24d",
+  "version": {
+    "defaultHost": "127.0.0.1",
+    "defaultPort": 19421,
+    "language": "en",
+    "ok": true,
+    "schemaVersion": 1,
+    "supportedLanguages": [
+      "en",
+      "zh"
+    ],
+    "version": "0.2.38"
+  },
+  "probes": [
+    {
+      "label": "invalid-positional",
+      "argv": [
+        "wait",
+        "text",
+        "__audit__",
+        "--platform",
+        "harmony",
+        "--device",
+        "__sp260_no_device__",
+        "--timeout",
+        "0",
+        "--json"
+      ],
+      "exitCode": 64,
+      "stdout": "",
+      "stderr": "Error: 2 unexpected arguments: 'text', '__audit__'\nUsage: triton wait <options>\n  See 'triton wait --help' for more information.\n"
+    },
+    {
+      "label": "valid-option-pre-device-guard",
+      "argv": [
+        "wait",
+        "--text",
+        "__audit__",
+        "--platform",
+        "harmony",
+        "--device",
+        "__sp260_no_device__",
+        "--timeout",
+        "0",
+        "--json"
+      ],
+      "exitCode": 1,
+      "stdout": "{\n  \"error\" : {\n    \"code\" : \"validation_failed\",\n    \"hint\" : \"Run `triton schema --command act tap --json` to inspect required fields\",\n    \"message\" : \"--timeout must be greater than 0\"\n  },\n  \"ok\" : false\n}\n",
+      "stderr": ""
+    }
+  ]
+}

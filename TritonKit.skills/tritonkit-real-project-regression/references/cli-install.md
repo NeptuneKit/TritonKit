@@ -24,6 +24,6 @@ mv ~/.local/bin/triton.new ~/.local/bin/triton
 triton version --json
 ```
 
-Homebrew installs only the macOS CLI. The app-side embedded runtime still comes from SwiftPM or CocoaPods and must remain DEBUG-only.
+Homebrew installs only the macOS CLI. The app-side embedded runtime comes from SwiftPM for iOS 16+ and must remain DEBUG-only.
 
 Release assets live in `NeptuneKit/TritonKit` GitHub Releases and include arm64/x86_64 CLI archives plus `tritonkit_checksums.txt`. The Homebrew tap is updated from those release assets after `v*` tag releases. If the release or tap is unavailable in a test environment, do not fail the regression setup on Homebrew; use the local release CLI and file a TritonKit issue with the missing distribution evidence.

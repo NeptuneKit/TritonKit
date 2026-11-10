@@ -2,7 +2,7 @@
 
 ## 决策
 
-`triton update` 是 CLI 自更新入口，面向 agent 和人类用户提供同一套机器可读计划。它不改变 release 发布流程，也不自动修改业务 App 的 SwiftPM / CocoaPods 依赖。
+`triton update` 是 CLI 自更新入口，面向 agent 和人类用户提供同一套机器可读计划。它不改变 release 发布流程，也不自动修改业务 App 的 SwiftPM 依赖。
 
 ## 命令契约
 

@@ -48,7 +48,7 @@
 
 ## 边界
 
-- Homebrew 安装只覆盖 macOS `triton` CLI，不安装 iOS embedded runtime；iOS runtime 仍通过 SwiftPM / CocoaPods 接入。
+- Homebrew 安装只覆盖 macOS `triton` CLI，不安装 iOS embedded runtime；iOS 16+ runtime 通过 SwiftPM 接入。
 - 首个 release / tap 未发布前，对外接入文档和 skill 必须把本地 release CLI fallback 放在 Homebrew 之前。
 - 本地 fallback 或手动 release asset 更新现有 CLI 路径时，若 `triton serve` 可能仍在运行，必须使用临时文件加 `mv` 的原子替换方式，或先停止服务。
 - tap 仓库默认按 `NeptuneKit/homebrew-tap` 处理，可在 workflow dispatch 时通过输入覆盖。

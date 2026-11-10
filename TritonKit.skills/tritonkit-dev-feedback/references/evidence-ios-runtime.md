@@ -114,3 +114,12 @@ Project discovery defaults to eight recursive levels and excludes generated depe
 For temporary Xcode dependency diagnosis, `xcode settings/build/test/run` accepts repeatable `--build-setting KEY=VALUE`. Preserve the resulting `sourceCommand` as evidence that argument boundaries were retained; values are intentionally auditable, so do not use this option for secrets.
 
 If fallback is required, include the missing schema/capability evidence and the fallback command. State whether build/install/launch completed and whether runtime status/wait/assert/screenshot/evidence proved app readiness.
+
+## Embedded attributes and activation boundaries
+
+- `debug attrs --oid` 支持 UIView/CALayer oid；UILabel 的有效字体/颜色与 UTF-16 run 有界输出，正文预览和 run 都要检查截断字段。
+- collection cell 激活尊重 allowsSelection/delegate，success 只证明公开 callback，必须验证业务后置条件。`act tap --duration` 不支持长按，提前 typed unsupported；embedded longPress 和非滚动手势也不伪造成功，使用 App 显式注册的 semantic DEBUG action 或检查实际 provider 能力。
+
+## Embedded navigation button activation
+
+Public UIControl target/action and accessibilityActivate remain supported. If a navigation/toolbar view cannot activate through either path, embedded tap returns `unsupported_capability` with `bar-button-action-unsupported`; it never guesses a UIBarButtonItem association from matching titles or retries behind a sheet. Expose a customView control/accessibility action, or use fresh coordinates with an explicit Simulator target and host HID. Physical devices require an already-ready allowlisted Runner or manual interaction; verify the business result separately.

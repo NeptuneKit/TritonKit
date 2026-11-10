@@ -1,18 +1,11 @@
-# SP-255-dtuhid-integration — DTUHID 集成验收
+# SP-255-dtuhid-integration
 
-状态：已评估，待分派。影响CLI host隔离helper；不修改embedded/Web/真机。
+状态：编号登记，产品及验收不在本远端候选。
 
-来源：[Loupe固定增量](https://github.com/heoblitz/Loupe/commit/180c60584867500b93b43ca6c8b556995bf8be7b)，MIT全文已核；涉及协议来源另核许可/通知。main44e81f5d仅legacy client。
+## 边界与来源
+
+DTUHID采用整合由独立参考流程维护；本地参考main cbaf0641已包含其成果，当前发布基线9b3dd908尚未整合。此处仅保存全局占号与需求摘要，不复制未整合产品的完成声明。原权威space和原始证据保留在主目录同名路径。
 
 ## BDD与验收
 
-- 服务可用且无事件barrier应答后才同连接发送typed down/move/up，完成barrier有界；consumed不是业务成功。
-- 只有明确unsupported可走legacy；连接/未知lookup/超时/发送失败不fallback、不重放输入；错误单JSON。
-- 坐标、目标、display、Resize拒绝沿用原策略；partial/cancel副作用保持unknown，不扩大secondary/真机。
-- 离线失败测试→最小实现→focused/完整CLI→主控diff复核及合后门禁；真实设备未授权、未执行，不能据fixture声称实际兼容。
-
-执行：SP-254-simulator-dtuhid-transport；主控：SP-255-dtuhid-integration，复用当前长期聊天。证据归plans；主控负责本地合并、证据归档、清理及执行聊天关闭，不push/tag/release。
-
-## 2026-11-02 主线验收
-
-已合main c4a14e52；真实验证发现active误判并以5e1c0b74修复。Xcode27.1/iOS27.0/iPhone17的Release tap/swipe、无事件barrier、Resize拒绝/恢复通过；专用设备已删除，既有设备未变。完整CLI162+1680通过，应用附件清理受工具归属/primary限制阻塞，见[清理结果](../SP-255-dtuhid-integration/plans/20261102-app-attachment-cleanup.md)。见[真实验收](../SP-255-dtuhid-integration/plans/20261102-live-validation.md)与[离线历史收口](../SP-255-dtuhid-integration/plans/20261102-main-closeout.md)。
+Given全局编号已被独立参考流程占用，When新增issue候选建立space，Then保留该编号且不重复分配，不把其代码或未提交文档混入候选。此登记不证明该产品已发布；后续整合由相应主控核对实际diff与验收。

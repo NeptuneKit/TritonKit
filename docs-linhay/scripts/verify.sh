@@ -14,7 +14,7 @@ Usage:
 Modes:
   --local        Developer gate: Swift tests, release CLI build, CLI smoke,
                  optional Xcode simulator build, docs check, diff check.
-  --ci-validate  CI gate: Swift tests, CocoaPods specs, Homebrew template,
+  --ci-validate  CI gate: Swift tests, SwiftPM boundary, Homebrew template,
                  version stamping scripts, release automation contract.
   --ci-docs      Fast CI gate for docs/skill-only changes: docs structure,
                  diff check, skill/release contract, and CI scope classifier.
@@ -30,12 +30,6 @@ run_step() {
 
 swift_tests() {
   env TRITON_HOST=127.0.0.1 TRITON_PORT=19421 swift test --no-parallel --disable-sandbox
-}
-
-ensure_cocoapods() {
-  if ! command -v pod >/dev/null 2>&1; then
-    sudo gem install cocoapods --no-document
-  fi
 }
 
 release_cli_smoke() {
@@ -159,8 +153,6 @@ case "$mode" in
     run_step "iOS DEBUG isolation" "$root/docs-linhay/scripts/verify-ios-debug-isolation.sh"
     run_step "Swift tests" swift_tests
     run_step "Release CLI build" swift build --package-path "$root/CLI" --scratch-path "$root/.build/cli" -c release --product triton
-    run_step "Install CocoaPods if needed" ensure_cocoapods
-    run_step "Validate TritonKit podspec" pod lib lint TritonKit.podspec --allow-warnings --skip-tests
     run_step "Validate Homebrew formula template" "$root/docs-linhay/scripts/verify-homebrew-formula.sh"
     run_step "Validate version stamping scripts" "$root/docs-linhay/scripts/verify-version-stamping.sh"
     run_step "Validate skill package script" "$root/docs-linhay/scripts/verify-skill-package.sh"

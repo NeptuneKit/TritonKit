@@ -19,7 +19,7 @@ Issue #8 收尾时，代码和本地验证已经完成，但交付闭环仍卡�
 
 - Given 开发者 push 到 `main`
 - When GitHub CI 被触发
-- Then 必须运行 Swift 测试、CocoaPods spec、Homebrew formula template 和版本脚本校验
+- Then 必须运行 Swift 测试、SwiftPM iOS 16、Homebrew formula template 和版本脚本校验
 - And 不应阻塞等待 arm64/x86_64 CLI artifact 与 release asset 打包
 
 ### 场景二：release tag 仍产出发布物

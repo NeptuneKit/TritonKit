@@ -43,6 +43,13 @@ struct SimulatorResizeUnsupportedDeviceTests {
         #expect(schema.outputContracts.first { $0.selector == "host.device-doctor" }?.fields.contains { $0.name == "simulatorDiagnostics.resize.hint" } == true)
     }
 
+    @Test func explicitUnsupportedCapabilityAllowsHostInputGuard() {
+        #expect(iosSimulatorResizeAllowsHostInput(.unknown(.unsupportedDevice)))
+        #expect(iosSimulatorResizeAllowsHostInput(.inactive))
+        #expect(!iosSimulatorResizeAllowsHostInput(.unknown(.queryFailed)))
+        #expect(!iosSimulatorResizeAllowsHostInput(.active(.init(displayUniqueID: "11111111-2222-3333-4444-555555555555", width: 560, height: 874))))
+    }
+
     @Test func unrelatedMalformedOrConflictingCapabilityErrorsStayUnknown() throws {
         let mutations: [(inout [String: Any]) -> Void] = [
             { $0["domain"] = "other" }, { $0["code"] = true }, { $0["code"] = 1002 },
@@ -64,7 +71,7 @@ struct SimulatorResizeUnsupportedDeviceTests {
         #expect(reason(classifyIOSSimulatorResize(data: try document(), target: target, exitCode: 0)) != "unsupportedDevice")
     }
 
-    @Test func productionProbeRequiresCompleteReceiptAndKeepsTouchBlocked() throws {
+    @Test func productionProbeRequiresCompleteReceiptAndKeepsIndependentGuards() throws {
         var issued: TKHostCommand?
         let artifacts: (String) throws -> (json: String, log: String) = { _ in ("/missing-resize-fixture/response.json", "/missing-resize-fixture/log") }
         let runner: (TKHostCommand) throws -> HostProcessResult = { command in
@@ -76,8 +83,13 @@ struct SimulatorResizeUnsupportedDeviceTests {
             try document { root in var info = root["info"] as! [String: Any]; info["arguments"] = issued!.arguments; root["info"] = info }
         })
         #expect(reason(state) == "unsupportedDevice")
-        #expect(throws: IOSSimulatorResizeError.stateUnknown(.unsupportedDevice)) {
+        do {
             _ = try nativeHIDGuardSnapshot(target: target, environment: [:], resizeProbe: { _, _ in state })
+            Issue.record("The independent DTUHID/screen guards must still run after the Resize capability gate.")
+        } catch let error as NativeHIDControlError {
+            #expect(error.code == "ios_host_hid_attachment_unknown")
+        } catch {
+            Issue.record("Unexpected independent host guard error: \(error)")
         }
         var captures = 0
         #expect(throws: IOSSimulatorResizeCaptureError.stateUnknown(.unsupportedDevice)) {

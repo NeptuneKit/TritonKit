@@ -2,7 +2,7 @@
 
 ## 背景
 
-当前仓库已完成 DEBUG-only runtime、SwiftPM/CocoaPods 接入、CI/release 产物、iOS 接入 README、Objective-C 残留清理和 Swift runtime 死代码清理。下一阶段将从 TritonKit 自身验证切到真实业务 App 回归与实际需求发现。
+当前仓库已完成 DEBUG-only runtime、SwiftPM 接入、CI/release 产物、iOS 接入 README、Objective-C 残留清理和 Swift runtime 死代码清理。下一阶段将从 TritonKit 自身验证切到真实业务 App 回归与实际需求发现。
 
 ## 固化入口
 

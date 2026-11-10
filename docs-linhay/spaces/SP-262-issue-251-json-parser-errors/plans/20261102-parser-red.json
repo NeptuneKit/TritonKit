@@ -1,0 +1,51 @@
+{
+  "phase": "RED before production changes",
+  "binaryVersion": "{\n  \"defaultHost\" : \"127.0.0.1\",\n  \"defaultPort\" : 19421,\n  \"language\" : \"en\",\n  \"ok\" : true,\n  \"schemaVersion\" : 1,\n  \"supportedLanguages\" : [\n    \"en\",\n    \"zh\"\n  ],\n  \"version\" : \"0.2.38\"\n}\n",
+  "binarySHA256": "403375531681d36c3de2a24563278553db47b94c3a37e0564dc2587df50fc24d",
+  "cases": [
+    {
+      "argv": [
+        "sim",
+        "boot",
+        "--json"
+      ],
+      "exitCode": 64,
+      "stdout": "",
+      "stderr": "Error: Missing expected argument '<udid>'\nHelp:  <udid>  Simulator UDID\nUsage: triton sim boot <udid> [--wait] [--jsonl] [--timeout <timeout>] [--interval <interval>] [--json] [--format <format>]\n  See 'triton sim boot --help' for more information.\n",
+      "expectedJSON": true,
+      "actualJSON": false
+    },
+    {
+      "argv": [
+        "wait",
+        "text",
+        "__audit__",
+        "--platform",
+        "harmony",
+        "--target",
+        "__audit_no_device__",
+        "--timeout",
+        "0.01",
+        "--json"
+      ],
+      "exitCode": 64,
+      "stdout": "",
+      "stderr": "Error: 2 unexpected arguments: 'text', '__audit__'\nUsage: triton wait <options>\n  See 'triton wait --help' for more information.\n",
+      "expectedJSON": true,
+      "actualJSON": false
+    },
+    {
+      "argv": [
+        "status",
+        "--port",
+        "secret-port-251",
+        "--json"
+      ],
+      "exitCode": 64,
+      "stdout": "",
+      "stderr": "Error: The value 'secret-port-251' is invalid for '--port <port>'\nHelp:  --port <port>  Server port\nUsage: triton status [--host <host>] [--port <port>] [--format <format>] [--json] [--language <language>]\n  See 'triton status --help' for more information.\n",
+      "expectedJSON": true,
+      "actualJSON": false
+    }
+  ]
+}

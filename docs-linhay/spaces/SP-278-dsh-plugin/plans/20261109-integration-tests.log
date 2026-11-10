@@ -1,0 +1,40 @@
+✔ actual npm archive includes exactly the runtime and display resources (296.493958ms)
+✔ bundle exports include all runtime, metadata and original icon resources (4.701125ms)
+✔ tool contract size stays bounded without injecting a separate system prompt (0.864166ms)
+✔ configuration defaults, environment, explicit precedence and invalid values (1.018625ms)
+✔ strict tool backends can use null for known optional fields only (0.741792ms)
+✔ schema selector is one literal argument; unknown keys fail (1.744042ms)
+✔ observation is bounded, target-explicit and never outline or output (0.238792ms)
+✔ actions bind exact target and flags; text stays literal (0.243208ms)
+✔ verification uses end-of-options to preserve text beginning with dash (0.049167ms)
+✔ four tools register, preserve raw payload and dispose (0.967667ms)
+✔ all tools fail closed outside Full access without spawning (0.255791ms)
+✔ nonzero exit, ok:false and partial payloads are not successful (0.631041ms)
+✔ stderr error envelope is retained without double wrapping (0.324792ms)
+✔ invalid JSON and truncated output stay explicit failures (0.5285ms)
+✔ cancellation and unload terminate owned calls (3.297792ms)
+✔ unload cancels running and queued calls, without starting queued commands (0.305ms)
+✔ schema without ok is successful and suggested commands are only returned (0.199125ms)
+✔ timeout cancels the owned command and never retries (12.047334ms)
+✔ missing executable and spawn failures are reported without retries (0.378833ms)
+✔ permission downgrade during async executable resolution prevents spawn (0.210375ms)
+✔ pre-cancelled calls and calls without an agent never spawn (0.129792ms)
+✔ dynamic target defaults cannot be used for actions or assertions (0.192083ms)
+✔ plain CLI aliases and raw IDs are rejected before process lookup (0.503125ms)
+✔ namespaced discovery IDs survive argv mapping without alias normalization (0.077167ms)
+✔ oid is a bounded UInt string and not accepted with a host adapter (0.217834ms)
+✔ range quiescence, not direct outcome, owns the shared queue (0.892625ms)
+✔ unconfirmed cleanup blocks subsequent dispatch and is retried during unload (0.191958ms)
+✔ queued cancellation returns before the running command exits and never spawns (0.311125ms)
+✔ timeout and provider rejection preserve already collected CLI error payload (11.045375ms)
+✔ provider rejection retains the CLI payload and confirms process cleanup (0.169084ms)
+✔ missing session and permission changes during directory preparation fail closed (0.090167ms)
+✔ tool schemas have bounded output and no arbitrary argv surface (0.06175ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 369.259916

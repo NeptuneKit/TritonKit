@@ -1,9 +1,7 @@
 import Foundation
 import Testing
 @testable import TritonKit
-#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
-#endif
 
 @Suite(.serialized) struct TKSelectionAvailabilityTests {
     @Test func pickerConfigurationDefaultsAndEnvironment() {

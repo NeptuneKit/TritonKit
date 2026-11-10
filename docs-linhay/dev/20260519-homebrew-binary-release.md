@@ -4,11 +4,10 @@
 
 TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
 
-1. CI 只在 `v*` tag 或手动 `workflow_dispatch` 时进入发布物链路；普通 `main` push / PR 只跑 validate。`v*` tag 的 validate 固定走 contracts 快检，完整 Swift/CocoaPods 远端验证留给 main/PR，本地发布前仍由 `release.sh` 运行 preflight。
-2. 发布物链路在 macOS arm64 runner 上构建 arm64 release `triton`，并在 arm64 runner 上通过 SwiftPM `--triple x86_64-apple-macosx14.0` 交叉编译 x86_64 release `triton`；arm64 完成后即可发布 Release / Homebrew，x86_64 作为后补资产上传。
+1. CI 只在 `v*` tag 或手动 `workflow_dispatch` 时进入发布物链路；普通 `main` push / PR 只跑 validate。`v*` tag 的 validate 固定走 contracts 快检，完整 SwiftPM iOS 16 验证留给 main/PR，本地发布前仍由 `release.sh` 运行 preflight。
+2. 发布物链路在 macOS arm64 runner 上构建 arm64 release `triton`；当前发布面只支持 macOS arm64，x86_64 不再构建、上传或作为 Homebrew 分支。
 3. 每个架构产出一个压缩包：
    - `triton-macos-arm64.tar.gz`
-   - `triton-macos-x86_64.tar.gz`
 4. CI 从触发上下文解析版本号：
    - `v*` tag：去掉前缀 `v` 后作为正式版本。
    - 非 tag：使用 `0.1.0-dev+<short-sha>`。
@@ -16,8 +15,8 @@ TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
 6. skill 打包前写入 `SKILL.md` front matter 的 `metadata.version` 字段。
 7. arm64 汇总 job 生成首版 `tritonkit_checksums.txt`，并上传合并后的 `tritonkit-skills.tar.gz` skill 包，包含 `tritonkit-dev-feedback`、`tritonkit-real-project-regression`、`tritonkit-emulator-cli-takeover` 与 `tritonkit-update`。
 8. `v*` tag 发布时先上传 arm64 CLI、skill 包和首版 checksum 到 GitHub Release。
-9. arm64 发布完成后调用 tap 更新 workflow，将 `.github/homebrew/triton.rb.template` 渲染到 `NeptuneKit/homebrew-tap` 的 `Formula/triton.rb`；x86_64 构建完成后补传 x86 包、合并 checksum，并再次更新 tap。
-10. Release workflow 的 arm64 与 x86_64 build job 分别使用 `release-cli-arm64` 与 `release-cli-x86_64` SwiftPM cache key；x86_64 产物上传前必须通过 `file` 校验为 `Mach-O 64-bit executable x86_64`。
+9. arm64 发布完成后调用 tap 更新 workflow，将 `.github/homebrew/triton.rb.template` 渲染到 `NeptuneKit/homebrew-tap` 的 `Formula/triton.rb`。
+10. Release workflow 只保留 arm64 build job，并使用 `release-cli-arm64` SwiftPM cache key。
 
 `workflow_dispatch` 只作为发布物集合的云端演练入口：它会生成双架构 CLI、合并 skill 包和 checksum，并上传 workflow artifact；但不会渲染 Homebrew formula。Homebrew formula 只允许在真实 `v*` tag 上用 `GITHUB_REF_NAME` 渲染，避免把 `0.1.0-dev+<short-sha>` 这种 dev 版本拼成无效 tag。
 
@@ -77,10 +76,9 @@ brew update
 brew upgrade triton
 ```
 
-公式按架构分流；刚发布且 x86_64 后补尚未完成时，formula 可以只有 arm64 分支，后补完成后会再次写入 Intel 分支：
+公式只保留 arm64 分支：
 
 - Apple Silicon 下载 `triton-macos-arm64.tar.gz`
-- Intel Mac 下载 `triton-macos-x86_64.tar.gz`
 
 Formula 的 `install` 逻辑必须同时兼容两种 Homebrew staging 布局：
 
@@ -91,7 +89,7 @@ Formula 的 `install` 逻辑必须同时兼容两种 Homebrew staging 布局：
 
 Formula 的 `test` 逻辑必须解析 `triton version --json`，不要用紧凑 JSON 字符串匹配。CLI 的 JSON 输出允许 pretty-print 空格和换行。
 
-安装后只提供 `triton` CLI。iOS runtime 的 SwiftPM / CocoaPods 接入方式不变。
+安装后只提供 `triton` CLI。iOS runtime 的 SwiftPM 接入方式不变。
 
 ## Secrets
 
@@ -117,7 +115,7 @@ docs-linhay/scripts/release.sh 0.1.1
 4. 创建 annotated tag 并推送。
 5. 观察 tag 触发的 GitHub Actions run，直到 arm64 Release 资产和 Homebrew tap 可用。
 6. 下载 release checksum，重新渲染并语法检查 Homebrew formula。
-7. 执行 `brew fetch --formula NeptuneKit/tap/triton` 验证 Homebrew 可获取；x86_64 后补 job 继续在独立 Release workflow 中运行并刷新 Release / tap。
+7. 执行 `brew fetch --formula NeptuneKit/tap/triton` 验证 Homebrew 可获取。
 
 实现注意：发布脚本查找 tag 对应的 GitHub Actions run 时，必须从 `gh run list --json headBranch,url` 返回的 URL 字符串解析 run id。不要使用 `databaseId` 配合 `gh --template` 输出，因为 GitHub CLI 模板可能把大整数转成科学计数法，导致后续 `gh run view` 404。
 
@@ -127,8 +125,8 @@ docs-linhay/scripts/release.sh 0.1.1
 
 `release.sh` 若在 GitHub Actions 完成后仍报 “arm64 release assets were not created”，先按 observation race 处理，不要立刻重发 tag。人工完成判定需要同时满足：
 
-1. `gh release view v<version>` 可看到 `triton-macos-arm64.tar.gz`、`triton-macos-x86_64.tar.gz`、`tritonkit-skills.tar.gz` 和 `tritonkit_checksums.txt`。
-2. Release workflow 的 contracts、arm64、x86_64、package、tap update jobs 均为 success。
+1. `gh release view v<version>` 可看到 `triton-macos-arm64.tar.gz`、`tritonkit-skills.tar.gz` 和 `tritonkit_checksums.txt`。
+2. Release workflow 的 contracts、arm64、package、tap update jobs 均为 success。
 3. 下载全部 release assets 后 `shasum -a 256 -c tritonkit_checksums.txt` 通过。
 4. 远端 `NeptuneKit/homebrew-tap` 的 `Formula/triton.rb` 已指向该版本和对应 checksum。
 5. `brew update && brew upgrade NeptuneKit/tap/triton && brew test NeptuneKit/tap/triton` 通过。

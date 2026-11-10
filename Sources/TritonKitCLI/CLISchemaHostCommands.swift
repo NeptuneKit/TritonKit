@@ -296,6 +296,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 deviceRecordingOutputContract(),
                 deviceEnvironmentOutputContract(),
                 deviceActionOutputContract(),
+                hostDeviceStopOutputContract(),
                 runtimeManifestOutputContract(),
             ],
             failureCodes: Array(Set(emulatorResourceFailureCodes + applePlatformRunnerFailureCodes + iosRunnerFailureCodes + [
@@ -527,7 +528,13 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "stop",
-                    summary: "Stop a selected Android or Harmony emulator"
+                    summary: "Stop a selected Android or Harmony emulator; --device selects Android, Harmony requires --hvd and --path; iOS is unsupported",
+                    requiresConfirmation: true,
+                    optionOverrides: [
+                        TKCommandSchemaOption(name: "--emulator", type: "Path", defaultValue: "/Applications/DevEco-Studio.app/Contents/tools/emulator/Emulator", description: "Harmony Emulator executable; unused for Android stop"),
+                    ],
+                    optionalOptions: ["--platform", "--device", "--adb", "--hvd", "--path", "--emulator", "--launchd-label", "--launchd-domain", "--skip-launchd", "--confirm", "--json", "--format"],
+                    outputSelectors: ["host.device-stop"]
                 ),
             ],
             providedCapabilities: iosRunnerCapabilityNames + ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "device-environment", "device-recording", "device-diagnostics", "device-crashes", "device-mirror", "device-actions", "ios-device", "ios-simulator-screenshot", "ios-host-ax", "ios-host-hid", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "harmony-device", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
@@ -670,6 +677,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--env", type: "KEY=VALUE", description: "Repeatable App process console launch environment; values use SIMCTL_CHILD_* and are redacted from sourceCommand"),
                 TKCommandSchemaOption(name: "--arg", type: "String", description: "Repeatable App process console launch argument"),
                 TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "300", description: "Host command timeout in seconds"),
+                TKCommandSchemaOption(name: "--interval", type: "Double", defaultValue: "1", description: "Polling interval in seconds for sim boot --wait"),
                 TKCommandSchemaOption(name: "--no-archive", type: "Bool", defaultValue: "false", description: "Leave simulator diagnostics uncompressed"),
                 TKCommandSchemaOption(name: "--all-logs", type: "Bool", defaultValue: "false", description: "Include all simulator logs"),
                 TKCommandSchemaOption(name: "--data-container", type: "Bool", defaultValue: "false", description: "Include booted simulator data containers in diagnostics"),
@@ -696,6 +704,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             argumentForms: [
                 TKCommandArgumentForm(name: "<name>", type: "String", required: true, description: "Simulator name for sim create"),
+                TKCommandArgumentForm(name: "<udid>", type: "String", description: "Explicit Simulator UDID for sim boot"),
             ],
             examples: [
                 "triton sim list --json",
@@ -728,7 +737,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } (Resize Mode routes still images to the bound display; main-framebuffer video/stream and host touch reject active or unknown state) or { ok, action:tap|swipe, source:host-hid, strategy, sourceCommands[], verification } or { ok, action:sim.record, artifacts[], requestedDurationSeconds, actualDurationSeconds, minimumAcceptedDurationSeconds, containerDurationSeconds, videoTrackDurationSeconds[], durationValidation } or { ok, action:sim.logs, artifact, sourceType:unified-log, sourcesCaptured:[unified-log] } or { ok, action:sim.app-console, bundleID, artifact, artifactBytes, observedBytes, artifactTruncated, maximumBytes, requestedDurationSeconds, elapsedDurationSeconds, captureEndedBy, sourcesCaptured:[process-stdout,process-stderr], streamLayout:merged-pty } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? }; sim.type is failure-only and returns unsupported_host_input after ASCII validation. JSONL { ok, action, state, ready, attempt, elapsedMs }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
-            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot --primary-framebuffer explicitly captures only one fresh target-bound LCD when Resize is inactive or exactly unsupportedDevice; its optional primaryFramebuffer evidence preserves unknown and grants no input/stream permission. Extra displays, other unknown states, malformed inventories and existing output files fail closed. Default screenshot behavior is unchanged. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim tap and sim swipe are explicit host HID recovery paths for embedded iOS input failures and report adapter/target evidence; tap --x/--y and swipe --start/--end coordinates are expressed in simulator points and the point-space dimensions are inferred from simulator layout metadata, swipe optionally accepts paired --width/--height to normalize source-image coordinates; host acknowledgement does not claim embedded business selection or settled pager state. sim record validates actual encoded video sample duration rather than the MOV container timeline and rejects materially truncated evidence. sim logs captures unified-log only and does not cover App stdout/stderr. It writes incrementally to an exclusive owner-only artifact, with --max-bytes default 10485760. Nonzero/signal exit, timeout, incomplete output, write failure or byte-limit preserves the artifact and returns one ok:false, partial:true envelope with path, retained/observed bytes, truncation, limit and termination provenance; never inline native log bodies or report partial capture as success. sim app-console terminates and relaunches the selected App through console-pty, writes a duration/byte-bounded sensitive artifact, and never inlines console content in JSON. sim type is a reserved, failure-only host input entry and returns unsupported_host_input because the current public simctl io contract exposes no stable keyboard type primitive. sim pasteboard set only stages clipboard contents; it does not paste into a focused field or prove that an App accepted or saved the value. Use embedded semantic input, an app-owned debug hook, or an explicitly verified external keyboard/paste adapter, then verify focus/value through host AX or observe and the App postcondition.",
+            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot --primary-framebuffer explicitly captures only one fresh target-bound LCD when Resize is inactive or exactly unsupportedDevice; its optional primaryFramebuffer evidence preserves unknown and grants no input/stream permission. In the exact unsupportedDevice case, inactive non-primary virtual displays may remain in the inventory; active/primary/unknown or malformed display states and existing output files fail closed. Default screenshot behavior is unchanged. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim tap and sim swipe are explicit host HID recovery paths for embedded iOS input failures and report adapter/target evidence; tap --x/--y and swipe --start/--end coordinates are expressed in simulator points and the point-space dimensions are inferred from simulator layout metadata, swipe optionally accepts paired --width/--height to normalize source-image coordinates; host acknowledgement does not claim embedded business selection or settled pager state. sim record validates actual encoded video sample duration rather than the MOV container timeline and rejects materially truncated evidence. sim logs captures unified-log only and does not cover App stdout/stderr. It writes incrementally to an exclusive owner-only artifact, with --max-bytes default 10485760. Nonzero/signal exit, timeout, incomplete output, write failure or byte-limit preserves the artifact and returns one ok:false, partial:true envelope with path, retained/observed bytes, truncation, limit and termination provenance; never inline native log bodies or report partial capture as success. sim app-console terminates and relaunches the selected App through console-pty, writes a duration/byte-bounded sensitive artifact, and never inlines console content in JSON. sim type is a reserved, failure-only host input entry and returns unsupported_host_input because the current public simctl io contract exposes no stable keyboard type primitive. sim pasteboard set only stages clipboard contents; it does not paste into a focused field or prove that an App accepted or saved the value. Use embedded semantic input, an app-owned debug hook, or an explicitly verified external keyboard/paste adapter, then verify focus/value through host AX or observe and the App postcondition.",
             artifacts: ["simulator-screenshot", "simulator-video", "simulator-logs", "simulator-app-process-console", "simulator-diagnostics"],
             nextCommands: [
                 "triton sim use <udid> --json",
@@ -853,7 +862,12 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "boot",
                     summary: "Boot a simulator",
-                    optionalOptions: ["--wait", "--jsonl", "--format", "--json"],
+                    optionOverrides: [
+                        TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "60", description: "Timeout in seconds when sim boot --wait is set"),
+                        TKCommandSchemaOption(name: "--interval", type: "Double", defaultValue: "1", description: "Polling interval in seconds when sim boot --wait is set"),
+                    ],
+                    requiredOptions: ["<udid>"],
+                    optionalOptions: ["--wait", "--timeout", "--interval", "--jsonl", "--format", "--json"],
                     outputSelectors: ["host.simulator-action"]
                 ),
                 TKCommandSubcommandSchema(
@@ -1059,7 +1073,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     outputSelectors: ["host.simulator-media-seed"],
                     failureCodes: ["media_seed_manifest_invalid", "host_command_failed", "host_command_timeout", "simulator_not_found", "validation_failed"]
                 ),
-            ],
+            ].map { schemaWithAuditedOperationEffect($0, root: "sim") },
             providedCapabilities: ["host-simulator", "ios-simulator-host-swipe", "ios-simulator-host-type", "ios-host-ax", "sim-video", "sim-logs", "sim-app-process-console", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "device-proxy-ios", "network-capture-export"]
         ),
         TKCommandSchema(
@@ -1369,7 +1383,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     outputSelectors: ["host.app-action"],
                     failureCodes: ["missing_preferences", "plist_not_found", "preference_key_not_found", "preferences_relaunch_failed", "host_action_failed", "validation_failed"]
                 ),
-            ],
+            ].map { schemaWithAuditedOperationEffect($0, root: "app") },
             providedCapabilities: ["host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "ios-real-app", "ios-real-app-pull", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-install", "harmony-app-open-url", "harmony-app-info"]
         ),
     ]

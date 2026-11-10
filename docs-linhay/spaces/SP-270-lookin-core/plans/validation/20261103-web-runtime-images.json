@@ -1,0 +1,263 @@
+{
+  "nodes": 8,
+  "images": [
+    {
+      "node": "ios:runtime:3",
+      "kind": "layerOwnContents",
+      "width": 345,
+      "height": 751,
+      "center": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "corner": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "node": "ios:runtime:3",
+      "kind": "subtreeSnapshot",
+      "width": 345,
+      "height": 751,
+      "center": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "corner": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "node": "ios:runtime:5",
+      "kind": "layerOwnContents",
+      "width": 345,
+      "height": 751,
+      "center": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "corner": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "node": "ios:runtime:5",
+      "kind": "subtreeSnapshot",
+      "width": 345,
+      "height": 751,
+      "center": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "corner": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "node": "ios:runtime:7",
+      "kind": "layerOwnContents",
+      "width": 345,
+      "height": 751,
+      "center": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "corner": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "node": "ios:runtime:7",
+      "kind": "subtreeSnapshot",
+      "width": 345,
+      "height": 751,
+      "center": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "corner": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "node": "ios:runtime:10",
+      "kind": "layerOwnContents",
+      "width": 900,
+      "height": 120,
+      "center": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "corner": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "node": "ios:runtime:10",
+      "kind": "subtreeSnapshot",
+      "width": 900,
+      "height": 120,
+      "center": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "corner": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "node": "ios:runtime:12",
+      "kind": "layerOwnContents",
+      "width": 509,
+      "height": 509,
+      "center": [
+        255,
+        0,
+        0,
+        255
+      ],
+      "corner": [
+        255,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "node": "ios:runtime:12",
+      "kind": "subtreeSnapshot",
+      "width": 509,
+      "height": 509,
+      "center": [
+        24,
+        0,
+        231,
+        255
+      ],
+      "corner": [
+        0,
+        0,
+        255,
+        255
+      ]
+    },
+    {
+      "node": "ios:runtime:13",
+      "kind": "layerOwnContents",
+      "width": 360,
+      "height": 360,
+      "center": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "corner": [
+        0,
+        0,
+        255,
+        255
+      ]
+    },
+    {
+      "node": "ios:runtime:13",
+      "kind": "subtreeSnapshot",
+      "width": 360,
+      "height": 360,
+      "center": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "corner": [
+        0,
+        0,
+        255,
+        255
+      ]
+    }
+  ],
+  "displayed": [
+    {
+      "complete": true,
+      "width": 345,
+      "height": 751
+    },
+    {
+      "complete": true,
+      "width": 345,
+      "height": 751
+    },
+    {
+      "complete": true,
+      "width": 345,
+      "height": 751
+    },
+    {
+      "complete": true,
+      "width": 900,
+      "height": 120
+    },
+    {
+      "complete": true,
+      "width": 509,
+      "height": 509
+    },
+    {
+      "complete": true,
+      "width": 360,
+      "height": 360
+    },
+    {
+      "complete": true,
+      "width": 509,
+      "height": 509
+    },
+    {
+      "complete": true,
+      "width": 509,
+      "height": 509
+    }
+  ]
+}

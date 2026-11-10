@@ -1,0 +1,36 @@
+.rhine-layer-viewer { min-width: 0; }
+.rhine-layer-controls { flex-wrap: wrap; align-items: end; }
+.rhine-layer-controls > :first-child { width: 140px; max-width: 100%; }
+.rhine-layer-viewport {
+  position: relative; width: 100%; height: clamp(280px, 42dvh, 440px); min-width: 0;
+  overflow: hidden; perspective: 1200px; touch-action: none;
+  background: var(--rhine-bg); border: 1px solid var(--rhine-line); border-radius: var(--rhine-radius-control);
+  cursor: grab;
+}
+.rhine-layer-viewport:active { cursor: grabbing; }
+.rhine-layer-viewport:focus-visible { outline: 2px solid var(--rhine-green); outline-offset: 2px; }
+.rhine-layer-stack { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; pointer-events: none; }
+.rhine-layer-plane {
+  position: absolute; padding: 0; margin: 0; background: transparent; border: 1px solid var(--rhine-muted);
+  color: var(--rhine-ink); cursor: pointer; pointer-events: auto;
+  transform-style: preserve-3d; backface-visibility: visible;
+}
+.rhine-layer-plane[data-material="outline"] { border-style: dashed; }
+.rhine-layer-plane[aria-pressed="true"], .rhine-layer-plane:focus-visible {
+  outline: 3px solid var(--rhine-green); outline-offset: 2px;
+}
+.rhine-layer-plane:hover { outline: 2px solid var(--rhine-signal); }
+.rhine-layer-plane img { display: block; width: 100%; height: 100%; pointer-events: none; user-select: none; }
+.rhine-layer-outline-name {
+  position: absolute; left: 0; top: 0; max-width: 100%; overflow: hidden;
+  white-space: nowrap; text-overflow: ellipsis; font-family: var(--rhine-mono); font-size: var(--rhine-text-code);
+  background: var(--rhine-bg); color: var(--rhine-muted); pointer-events: none;
+}
+/* No inertia or autoplay: reduced-motion users retain direct manipulation. */
+@media (prefers-reduced-motion: reduce) { .rhine-layer-stack, .rhine-layer-plane { transition: none; animation: none; } }
+.rhine-theme[data-rhine-motion="reduced"] .rhine-layer-stack,
+.rhine-theme[data-rhine-motion="reduced"] .rhine-layer-plane { transition: none; animation: none; }
+.rhine-node-image-evidence { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: var(--rhine-space-3); min-width: 0; }
+.rhine-node-image-evidence figure { min-width: 0; margin: 0; }
+.rhine-node-image-evidence figcaption { margin-block-end: var(--rhine-space-2); }
+.rhine-node-image-evidence img { display: block; max-width: 100%; max-height: 260px; object-fit: contain; border: 1px solid var(--rhine-line); }

@@ -58,6 +58,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "capability-matrix",
         "cli-update-plan",
         "command-schema-list",
+        "resolved-leaf-schema",
         "diagnostic-checks",
         "envelope",
         "evidence-manifest",
@@ -83,6 +84,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "input-batch-summary",
         "input-result",
         "node-attributes",
+        "node-details",
         "node-object",
         "node-resolution",
         "observe-surface",
@@ -394,6 +396,8 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "prepare-target", "observe"]
     case "device_locked", "device_not_trusted", "ddi_missing", "android_debugging_disabled", "harmony_target_unauthorized", "harmony_debugging_disabled":
         return ["diagnose", "prepare-target"]
+    case "runtime_disabled", "unsupported_platform", "details_partial", "details_failed", "capability_disabled":
+        return ["diagnose", "plan"]
     case "debug_runtime_disabled":
         return ["diagnose", "prepare-target", "observe"]
     case "android_bridge_not_installed", "android_bridge_runner_not_configured":
@@ -406,7 +410,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "project"]
     case "swift_macro_plugin_malformed_response":
         return ["diagnose", "project", "archive"]
-    case "validation_error", "validation_failed", "unknown_command_schema", "unknown_step", "duplicate_step_id", "session_not_recording", "contract_quality_review_required", "redaction_review_required", "source_identity_mismatch", "truncated_source_contract", "unmapped_contract_feature", "compiled_digest_mismatch":
+    case "validation_error", "validation_failed", "unknown_command_schema", "compact_schema_requires_leaf", "compact_schema_requires_json", "compact_schema_incomplete", "unknown_step", "duplicate_step_id", "session_not_recording", "contract_quality_review_required", "redaction_review_required", "source_identity_mismatch", "truncated_source_contract", "unmapped_contract_feature", "compiled_digest_mismatch":
         return ["diagnose", "plan", "discover", "observe", "archive"]
     case "web_port_in_use":
         return ["diagnose", "plan"]

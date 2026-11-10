@@ -34,6 +34,6 @@ iOS 业务 App 通过 SwiftPM 添加 `TritonKit` library product 时，不应解
 - `swift build -c release --target TritonKit`
 
 
-## CocoaPods 单模块提取边界（2026-10-14）
+## 历史 CocoaPods 单模块提取边界（已退休，2026-10-14）
 
-SP-196提取WebView脚本时新增文件曾无条件import TritonKitShared：SwiftPM Debug/Release均通过，但真实Pod lint编译失败。Podspec把SDK/shared源码编入同一TritonKit模块；新增/提取SDK文件应沿用`#if !TRITONKIT_COCOAPODS_SINGLE_POD`条件import，不能把SwiftPM通过当作CocoaPods验证。e16b1dae修复后当前工具链兼容lint及main标准Podspec通过，详见[发布验收](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-release.md)。最低部署版本不因本机Xcode限制而提高。
+SP-196提取WebView脚本时新增文件曾无条件import TritonKitShared：SwiftPM Debug/Release均通过，但历史 Pod lint 曾编译失败。该兼容边界已随 CocoaPods 支持退休；当前新增 SDK 文件仅需通过 SwiftPM iOS 16+ 构建，详见[发布验收](../spaces/SP-196-upstream-optimization-delivery/plans/20261014-release.md)。最低部署版本不因本机Xcode限制而提高。

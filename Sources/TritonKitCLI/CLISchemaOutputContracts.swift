@@ -37,6 +37,14 @@ func schemaCommandsOutputContract() -> TKCommandOutputContract {
         fields: schemaContractFields([
             ("schemaVersion", "Int", true, "CLI schema contract version"),
             ("commands", "[TKCommandSchema]", true, "Machine-readable command contracts"),
+            ("commands[].subcommands[].sideEffect", "String", true, "Potential operational effects; unknown when undeclared, none only when explicitly audited"),
+            ("commands[].subcommands[].sideEffectCases", "[TKCommandSideEffectCase]", true, "Scoped conditional refinements; all parsed predicates must be known and match; otherwise retain base effects and confirmation"),
+            ("commands[].subcommands[].sideEffectCases[].sourceCommand", "String", true, "Canonical schema command scope; predicates use positional tokens after this command"),
+            ("commands[].subcommands[].sideEffectCases[].argumentPrefix", "[String]", true, "Required positional prefix excluding flags and their values"),
+            ("commands[].subcommands[].sideEffectCases[].argumentCount", "Int?", false, "Exact positional token count when required to distinguish query from mutation"),
+            ("commands[].subcommands[].sideEffectCases[].optionValues", "[String:String]", true, "All predicates match known parsed values including known defaults; missing or unknown values never match"),
+            ("commands[].subcommands[].sideEffectCases[].sideEffect", "String", true, "Effect of the audited matching mode, not execution permission or success evidence"),
+            ("commands[].subcommands[].sideEffectCases[].requiresConfirmation", "Bool?", false, "Override only for this audited mode; absent inherits base requirement"),
             ("commands[].surfaceLayer", "String", true, "P23 product surface layer: workflow, diagnostic, host-adapter, agent-support, or raw-engine"),
             ("commands[].deprecatedForMainPath", "Bool", true, "Whether this command remains executable but should not be used as the main workflow entry"),
             ("commands[].replacementCommand", "String?", false, "Preferred workflow command when deprecatedForMainPath is true and a replacement exists"),
@@ -45,6 +53,30 @@ func schemaCommandsOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
+func compactSchemaOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(selector: "schema.compact", format: "json", kind: "resolved-leaf-schema", model: "CLICompactSchemaResponse", fields: schemaContractFields([
+        ("projectionVersion", "Int", true, "Compact projection contract version"),
+        ("schemaVersion", "Int", true, "Source schema contract version"),
+        ("cliVersion", "String", true, "Running CLI build version"),
+        ("fingerprint", "String", true, "SHA256 of sorted-key JSON projection excluding fingerprint"),
+        ("command", "String", true, "Canonical dot-separated leaf command"),
+        ("options", "[TKCommandSchemaOption]", true, "Resolved effective options, including supported aliases and overrides"),
+        ("argumentForms", "[TKCommandArgumentForm]", true, "Resolved positional argument definitions"),
+        ("requiredOptions", "[String]", true, "Unconditionally required references"),
+        ("oneOfRequiredOptions", "[[String]]", true, "Original leaf legacy encoding; use selectorConstraints for unambiguous scoped alternatives"),
+        ("oneOfRequiredOptionSets", "[[String]]", true, "Original leaf alternative sets; ancestor sets remain separately scoped in selectorConstraints"),
+        ("selectorConstraints", "[CLICompactSelectorConstraint]", true, "Independent constraints per source: exactlyOneOf selects one reference; exactlyOneOptionSet selects one complete option set"),
+        ("outputContracts", "[TKCommandOutputContract]", true, "Contracts selected by the leaf"),
+        ("outputSemantics", "String?", false, "Inherited root semantics preserved verbatim, including safety and verification boundaries"),
+        ("sideEffect", "String", true, "Potential effects across ancestry; unknown when undeclared, none only for an explicitly audited no-effect leaf"),
+        ("sideEffectCases", "[TKCommandSideEffectCase]", true, "Scoped conditional effects; all parsed predicates must be known and match, otherwise retain the conservative base effect and confirmation"),
+        ("safetyPolicy", "String", true, "Conservative inheritance and no automatic replay of unknown outcomes"),
+        ("failureCodes", "[String]", true, "Inherited and leaf failure codes"),
+        ("recoveryCommands", "[TKCommandRecoveryCommand]", true, "Inherited and leaf recovery guidance"),
+        ("fullSchemaCommand", "[String]", true, "Read-only discovery argv for the full schema"),
+    ]))
+}
+
 func updatePlanOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "update.plan",

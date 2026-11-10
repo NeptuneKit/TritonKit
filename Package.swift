@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "TritonKit",
-    platforms: [.iOS(.v13), .macOS(.v14)],
+    platforms: [.iOS(.v16), .macOS(.v14)],
     products: [
         .library(name: "TritonKitShared", targets: ["TritonKitShared"]),
         .library(name: "TritonKit", targets: ["TritonKit"]),

@@ -446,9 +446,11 @@ func waitForHarmonyText(
     selected: TKHarmonyTarget,
     hdc: String,
     text: String,
+    role: String? = nil,
     timeout: Double,
     interval: Double,
     gone: Bool = false,
+    startedAt: Date? = nil,
     captureLayout: (
         _ selected: TKHarmonyTarget,
         _ hdc: String,
@@ -458,7 +460,8 @@ func waitForHarmonyText(
         try dumpHarmonyLayout(selected: selected, hdc: hdc, output: output, timeout: timeout)
     }
 ) async throws -> HostHarmonyWaitOutput {
-    let startedAt = Date()
+    let normalizedRole = try normalizedHarmonyWaitRole(role)
+    let startedAt = startedAt ?? Date()
     let deadline = startedAt.addingTimeInterval(timeout)
     var pollCount = 0
     var lastMatch: TKHarmonyLayoutTextMatch?
@@ -495,7 +498,7 @@ func waitForHarmonyText(
         do {
             let layout = try captureLayout(selected, hdc, nil, min(5, remaining))
             sourceCommands.append(contentsOf: layout.sourceCommands)
-            lastMatch = try TKHarmonyLayoutParser.firstTextMatch(in: layout.data, text: text)
+            lastMatch = try harmonyWaitTextMatch(in: layout.data, text: text, role: normalizedRole)
             capturedLayout = true
         } catch let error as HostCommandRunError {
             guard case .timeout(let command, _, _, _) = error else {

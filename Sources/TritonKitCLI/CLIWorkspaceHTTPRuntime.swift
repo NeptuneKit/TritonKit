@@ -16,11 +16,13 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let bundle: String?
     let ability: String?
     let adb: String?
+    let enableLLM: Bool?
     let llmProvider: String?
     let llmBaseURL: String?
     let llmModel: String?
     let llmAPIKeyEnv: String?
     let allowRemoteLLM: Bool?
+    let enableVLM: Bool?
     let vlmProvider: String?
     let vlmBaseURL: String?
     let vlmModel: String?
@@ -67,11 +69,13 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         bundle: String? = nil,
         ability: String? = nil,
         adb: String? = nil,
+        enableLLM: Bool? = nil,
         llmProvider: String? = nil,
         llmBaseURL: String? = nil,
         llmModel: String? = nil,
         llmAPIKeyEnv: String? = nil,
         allowRemoteLLM: Bool? = nil,
+        enableVLM: Bool? = nil,
         vlmProvider: String? = nil,
         vlmBaseURL: String? = nil,
         vlmModel: String? = nil,
@@ -117,11 +121,13 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         self.bundle = bundle
         self.ability = ability
         self.adb = adb
+        self.enableLLM = enableLLM
         self.llmProvider = llmProvider
         self.llmBaseURL = llmBaseURL
         self.llmModel = llmModel
         self.llmAPIKeyEnv = llmAPIKeyEnv
         self.allowRemoteLLM = allowRemoteLLM
+        self.enableVLM = enableVLM
         self.vlmProvider = vlmProvider
         self.vlmBaseURL = vlmBaseURL
         self.vlmModel = vlmModel
@@ -169,11 +175,13 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case bundle
         case ability
         case adb
+        case enableLLM
         case llmProvider
         case llmBaseURL
         case llmModel
         case llmAPIKeyEnv
         case allowRemoteLLM
+        case enableVLM
         case vlmProvider
         case vlmBaseURL
         case vlmModel
@@ -267,11 +275,13 @@ func workspaceRunRequest(from request: TKWorkspaceHTTPRunRequest) -> TKWorkspace
         ability: request.ability,
         adb: request.adb ?? "adb",
         dryModelFixture: request.dryModelFixture ?? false,
+        enableLLM: request.enableLLM ?? false,
         llmProvider: request.llmProvider,
         llmBaseURL: request.llmBaseURL,
         llmModel: request.llmModel,
         llmAPIKeyEnv: request.llmAPIKeyEnv,
         allowRemoteLLM: request.allowRemoteLLM ?? false,
+        enableVLM: request.enableVLM ?? false,
         vlmProvider: request.vlmProvider,
         vlmBaseURL: request.vlmBaseURL,
         vlmModel: request.vlmModel,

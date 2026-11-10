@@ -2,7 +2,7 @@
 
 ## 背景
 
-TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtime 不应在 Release 构建中实际连接、采集或响应控制。该约束由 SwiftPM package target 与 CocoaPods pod target 的 Debug-only compile flag `TRITONKIT_RUNTIME_ENABLED` 表达，不跟 iOS/macOS、UIKit 是否可导入等端类型绑定。同时，业务 App 侧接入文件必须显式使用 `#if DEBUG`，不能只依赖包内部 Release no-op。
+TritonKit 作为 SwiftPM 依赖提供给 iOS 16+ 业务 App 时，embedded runtime 不应在 Release 构建中实际连接、采集或响应控制。该约束由 SwiftPM package target 的 Debug-only compile flag `TRITONKIT_RUNTIME_ENABLED` 表达。同时，业务 App 侧接入文件必须显式使用 `#if DEBUG`，不能只依赖包内部 Release no-op。
 
 ## 验收场景
 
@@ -44,11 +44,11 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 - When 用户要求 Debug-only 接入
 - Then 文档必须说明 SwiftPM 支持 configuration-scoped build settings / compile conditions
 - And TritonKit package 内部使用 `TRITONKIT_RUNTIME_ENABLED` 在 Debug package build 启用 runtime
-- And 文档必须说明 SwiftPM / Xcode package product dependency 没有 CocoaPods-style `:configurations => ['Debug']`
+- And 文档必须说明 SwiftPM package product 可能仍附着在 target，但 App 侧源码必须显式 `#if DEBUG`
 - And 默认推荐 package Debug compile flag + 源码级 `#if DEBUG` bootstrap + Release no-op runtime
 - And 若 Release target 必须完全不链接 TritonKit，则推荐独立 Debug-only app target / scheme
 
-### 场景 6：CocoaPods pod target 自动获得 Debug runtime 宏
+### 历史场景 6：CocoaPods pod target 自动获得 Debug runtime 宏（已退休）
 
 - Given App 通过 CocoaPods 引入 `pod 'TritonKit', :configurations => ['Debug']`
 - When CocoaPods 生成 TritonKit pod target 的 Debug 配置
@@ -58,12 +58,12 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 
 ## 实现约定
 
-1. 在 `Package.swift` 的 `TritonKit` target 通过 `.define("TRITONKIT_RUNTIME_ENABLED", .when(configuration: .debug))` 定义 SwiftPM Debug runtime 启用边界；在 `TritonKit.podspec` 通过 `pod_target_xcconfig` 的 `OTHER_SWIFT_FLAGS[config=Debug]` 定义 CocoaPods pod target Debug runtime 启用边界；`TritonKit.isRuntimeEnabled` 只读取该宏，不直接绑定裸 `#if DEBUG`。
+1. 在 `Package.swift` 的 `TritonKit` target 通过 `.define("TRITONKIT_RUNTIME_ENABLED", .when(configuration: .debug))` 定义 SwiftPM Debug runtime 启用边界；`TritonKit.isRuntimeEnabled` 只读取该宏，不直接绑定裸 `#if DEBUG`。
 2. Release 下保留 public API，避免业务 App 仅因依赖存在而编译失败。
 3. Release 下 runtime 行为采用 no-op 或明确错误：`connect` / `send` / reconnect / ping no-op，hierarchy 返回空数组，data upload 抛出 `TritonKitRuntimeError.disabledOutsideDebug`，request handler 返回 disabled 错误。
 4. SDK 默认 endpoint 不浏览 Bonjour；显式发现仍须受 `TRITONKIT_RUNTIME_ENABLED` 保护，Release 在构造 browser/调用注入 resolver 前返回 runtimeDisabled。默认参数求值也必须纳入此验证，不能只验证 `start` 函数体。
 5. `canImport(UIKit)` 仍只用于保护 UIKit 符号可编译性，不用于决定 runtime 是否启用。
-6. 业务 App 示例必须推荐独立 `TritonKitDebugBootstrap.swift`，整个文件用 `#if DEBUG` 包住，并优先调用 `TritonKit.shared.start()` / `start { config in ... }` facade；CocoaPods 示例必须使用 `:configurations => ['Debug']`。
+6. 业务 App 示例必须推荐独立 `TritonKitDebugBootstrap.swift`，整个文件用 `#if DEBUG` 包住，并优先调用 `TritonKit.shared.start()` / `start { config in ... }` facade；iOS 示例统一使用 SwiftPM，最低系统为 iOS 16。
 7. 面向团队 App 的默认模板优先提供 `startIfEnabled()`：通过 `--triton-enabled`、`TRITON_ENABLED=1` 或 Debug-only user default 显式启用，避免普通 Debug 包默认暴露 runtime。
 8. SwiftPM 示例必须明确不能提供配置级 dependency gating；若需要 Release 不链接 TritonKit，使用独立 Debug-only app target / scheme。
 
@@ -73,5 +73,5 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 - `swift test -c release` 覆盖 Release package 分支，确认 `TRITONKIT_RUNTIME_ENABLED` 不生效且 `TritonKit.isRuntimeEnabled == false`。Release request handler 的早退使用通用 `TKErrorPayload`（`type=.ping`、message 为 runtime disabled outside DEBUG），不可按 Debug 的 input/semantic/WebView 专属 `capability_disabled` payload 解码；需分别验证两条分支。
 - `swift build -c release --target TritonKit` 确认 Package Manager 的 Release library target 可编译。
 - `swift build --package-path CLI --scratch-path .build/cli -c release --product triton` 确认 CLI release 产物不受影响。
-- `docs-linhay/scripts/verify-ios-debug-isolation.sh` 校验 `Examples/TritonKitDemo` 的 app-side 接入示例采用文件级 `#if DEBUG`，并确认 SwiftPM / CocoaPods 的 `TRITONKIT_RUNTIME_ENABLED` Release no-op 防线存在。
-- 文档、skill 与 `Examples/TritonKitDemo` 自检确认所有 app-side 接入示例都采用文件级 `#if DEBUG`、CocoaPods Debug-only 配置、推荐显式 opt-in 开关，并明确 SwiftPM 的 Debug-only target / source-level fallback 策略。
+- `docs-linhay/scripts/verify-ios-debug-isolation.sh` 校验 `Examples/TritonKitDemo` 的 app-side 接入示例采用文件级 `#if DEBUG`，并确认 SwiftPM 的 `TRITONKIT_RUNTIME_ENABLED` Release no-op 防线存在。
+- 文档、skill 与 `Examples/TritonKitDemo` 自检确认所有 app-side 接入示例都采用文件级 `#if DEBUG`、SwiftPM Debug-only 配置、推荐显式 opt-in 开关，并明确 SwiftPM 的 Debug-only target / source-level fallback 策略。

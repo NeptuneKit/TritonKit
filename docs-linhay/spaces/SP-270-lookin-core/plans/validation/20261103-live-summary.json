@@ -1,0 +1,23 @@
+{
+  "targetBundle": "dev.tritonkit.sp270.fixture",
+  "transport": "real CLI -> localhost HTTP 19422 -> WebSocket -> UIKit",
+  "validDetails": true,
+  "soloPixel": [
+    255,
+    0,
+    0,
+    255
+  ],
+  "groupPixel": [
+    0,
+    0,
+    255,
+    255
+  ],
+  "partialExit": 1,
+  "invalidExit": 64,
+  "bareLayerPatchApplied": [
+    "layer.cornerRadius"
+  ],
+  "patchRestored": true
+}

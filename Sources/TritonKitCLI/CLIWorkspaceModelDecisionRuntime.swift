@@ -140,10 +140,20 @@ func workspaceModelDecisionRequest(
     )
 }
 
+// Dry fixtures are synthetic even when online/helper configuration was supplied.
+func workspaceInferenceDecision(
+    dryFixture: Bool,
+    provider: TKWorkspaceModelDecisionProvider,
+    request: TKWorkspaceModelDecisionRequest
+) async throws -> TKWorkspaceModelDecision {
+    if dryFixture { return workspaceDefaultModelDecision(request) }
+    return try await provider(request)
+}
+
 func workspaceDefaultModelDecisionProvider(
     _ request: TKWorkspaceModelDecisionRequest
 ) async throws -> TKWorkspaceModelDecision {
-    if normalizedWorkspaceModelProvider(request.llmProvider) == "openai-compatible" {
+    if request.mode != "dry-fixture", normalizedWorkspaceModelProvider(request.llmProvider) == "openai-compatible" {
         return try await workspaceOpenAICompatibleModelDecisionProvider(request)
     }
     return workspaceDefaultModelDecision(request)
@@ -156,7 +166,7 @@ func workspaceDefaultModelDecision(_ request: TKWorkspaceModelDecisionRequest) -
         confidence: 0.5,
         summary: "Workspace provider selected a single tap candidate.",
         expected: "\(candidate.query) advances the initial screen.",
-        usedVLM: true,
+        usedVLM: false,
         requestContext: workspaceDefaultModelDecisionRequestContext(request),
         bootstrapResponseText: "\(request.mode) bootstrap response: \(candidate.action) \(candidate.query)",
         decisionResponseText: "\(request.mode) decision response: \(candidate.action) \(candidate.query)"
@@ -417,27 +427,7 @@ private func workspaceModelDecisionAPIKey(from apiKeyEnv: String?) throws -> Str
 }
 
 private func postWorkspaceModelDecisionJSON(url: URL, body: Data, headers: [String: String]) throws -> Data {
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.httpBody = body
-    request.timeoutInterval = 30
-    for (key, value) in headers {
-        request.setValue(value, forHTTPHeaderField: key)
-    }
-
-    let semaphore = DispatchSemaphore(value: 0)
-    var result: Result<(Data, URLResponse), Error>?
-    URLSession.shared.dataTask(with: request) { data, response, error in
-        if let error {
-            result = .failure(error)
-        } else {
-            result = .success((data ?? Data(), response ?? URLResponse()))
-        }
-        semaphore.signal()
-    }.resume()
-    semaphore.wait()
-
-    let (data, response) = try result?.get() ?? (Data(), URLResponse())
+    let (data, response) = try postAIJSON(url: url, body: body, headers: headers)
     if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
         let body = String(data: data, encoding: .utf8) ?? ""
         throw TKWorkspaceModelDecisionFailure(

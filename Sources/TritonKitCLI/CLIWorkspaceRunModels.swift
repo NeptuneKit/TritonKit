@@ -18,11 +18,13 @@ struct TKWorkspaceRunRequest {
     let ability: String?
     let adb: String
     let dryModelFixture: Bool
+    let enableLLM: Bool
     let llmProvider: String?
     let llmBaseURL: String?
     let llmModel: String?
     let llmAPIKeyEnv: String?
     let allowRemoteLLM: Bool
+    let enableVLM: Bool
     let vlmProvider: String?
     let vlmBaseURL: String?
     let vlmModel: String?
@@ -69,11 +71,13 @@ struct TKWorkspaceRunRequest {
         ability: String? = nil,
         adb: String = "adb",
         dryModelFixture: Bool = false,
+        enableLLM: Bool = false,
         llmProvider: String? = nil,
         llmBaseURL: String? = nil,
         llmModel: String? = nil,
         llmAPIKeyEnv: String? = nil,
         allowRemoteLLM: Bool = false,
+        enableVLM: Bool = false,
         vlmProvider: String? = nil,
         vlmBaseURL: String? = nil,
         vlmModel: String? = nil,
@@ -119,11 +123,13 @@ struct TKWorkspaceRunRequest {
         self.ability = ability
         self.adb = adb
         self.dryModelFixture = dryModelFixture
+        self.enableLLM = enableLLM
         self.llmProvider = llmProvider
         self.llmBaseURL = llmBaseURL
         self.llmModel = llmModel
         self.llmAPIKeyEnv = llmAPIKeyEnv
         self.allowRemoteLLM = allowRemoteLLM
+        self.enableVLM = enableVLM
         self.vlmProvider = vlmProvider
         self.vlmBaseURL = vlmBaseURL
         self.vlmModel = vlmModel
@@ -176,11 +182,13 @@ struct TKWorkspaceRunRequest {
             ability: ability,
             adb: adb,
             dryModelFixture: dryModelFixture,
+            enableLLM: enableLLM,
             llmProvider: llmProvider,
             llmBaseURL: llmBaseURL,
             llmModel: llmModel,
             llmAPIKeyEnv: llmAPIKeyEnv,
             allowRemoteLLM: allowRemoteLLM,
+            enableVLM: enableVLM,
             vlmProvider: vlmProvider,
             vlmBaseURL: vlmBaseURL,
             vlmModel: vlmModel,

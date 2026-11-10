@@ -51,7 +51,9 @@ is_contract_only_path() {
   local path="$1"
 
   case "$path" in
-    .github/workflows/*)
+    .github/workflows/*|DSH/*)
+      # DSH has its own dependency-free Node contract workflow; it does not
+      # change the Swift/Pod products. Mixed paths still raise the scope below.
       return 0
       ;;
     docs-linhay/scripts/ci-validate-mode.sh|\
@@ -81,25 +83,6 @@ docs-linhay/scripts/release.sh)
   esac
 }
 
-is_podkit_path() {
-  local path="$1"
-
-  case "$path" in
-    TritonKit.podspec)
-      return 0
-      ;;
-    Sources/TritonKit/*)
-      return 0
-      ;;
-    Sources/TritonKitShared/*)
-      return 0
-      ;;
-    *)
-      return 1
-      ;;
-  esac
-}
-
 raise_mode() {
   local next="$1"
 
@@ -108,11 +91,6 @@ raise_mode() {
       ;;
     *:full)
       mode="full"
-      ;;
-    podkit:*)
-      ;;
-    *:podkit)
-      mode="podkit"
       ;;
     swift:contracts|contracts:swift)
       mode="swift"
@@ -148,11 +126,6 @@ classify_paths() {
 
     if is_swift_only_path "$path"; then
       raise_mode "swift"
-      continue
-    fi
-
-    if is_podkit_path "$path"; then
-      raise_mode "podkit"
       continue
     fi
 
