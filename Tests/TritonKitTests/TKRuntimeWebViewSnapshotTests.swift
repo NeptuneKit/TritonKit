@@ -2,6 +2,9 @@ import Foundation
 import Testing
 import TritonKitShared
 @testable import TritonKit
+#if canImport(JavaScriptCore)
+import JavaScriptCore
+#endif
 
 @Suite
 struct TKRuntimeWebViewSnapshotTests {
@@ -70,6 +73,30 @@ struct TKRuntimeWebViewSnapshotTests {
         #expect(script.contains("document.getElementsByTagName(\"label\")"))
         #expect(script.contains("getAttribute(\"for\") === element.id"))
         #expect(!script.contains("querySelector('label[for=\"'"))
+    }
+
+    @Test("WebView snapshot script parses in JavaScriptCore for default and forms-only includes")
+    func snapshotScriptParsesInJavaScriptCore() throws {
+#if canImport(JavaScriptCore)
+        let context = try #require(JSContext())
+        for include in [["metadata", "dom", "text", "forms"], ["forms"]] {
+            let script = try runtimeWebViewSnapshotScript(
+                include: include,
+                maxDOMNodes: 20,
+                maxTextBytes: 1024
+            )
+            let encoded = try JSONEncoder().encode(script)
+            let literal = try #require(String(data: encoded, encoding: .utf8))
+            context.exception = nil
+            let result = context.evaluateScript("new Function(\(literal)); true;")
+            #expect(context.exception == nil)
+            #expect(result?.toBool() == true)
+        }
+#else
+        // JavaScriptCore is unavailable on non-Apple hosts; the iOS/WKWebView
+        // build and simulator fixture provide the corresponding parse gate.
+        #expect(Bool(true))
+#endif
     }
 
     @Test("WebView snapshot script bounds forms and links")
