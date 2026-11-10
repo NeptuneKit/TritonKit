@@ -13,6 +13,7 @@ struct ApplePlatformControlTests {
         let control = try #require(device.subcommands.first { $0.name == "platform-control" })
         #expect(control.requiredOptions == ["--platform", "--action"])
         #expect(control.optionalOptions.contains("--delta"))
+        #expect(control.optionalOptions.contains("--evidence-dir"))
         #expect(control.outputSelectors == ["host.apple-platform-control"])
         #expect(control.failureCodes.contains("runner_target_family_mismatch"))
         #expect(control.failureCodes.contains("runner_timed_out"))

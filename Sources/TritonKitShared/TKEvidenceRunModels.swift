@@ -95,6 +95,43 @@ public struct TKEvidenceRunCredential: Codable, Equatable, Sendable {
     }
 }
 
+public struct TKActionEvidenceMetadata: Codable, Equatable, Sendable {
+    public let actionID: String
+    public let admissionID: String?
+    public let contextDigest: String?
+    public let delivery: String?
+    public let outcome: String?
+    public let executed: Bool?
+    public let originalStatus: String?
+    public let terminalStatus: String?
+    public let postcondition: String?
+    public let evidenceRefs: [String]
+
+    public init(
+        actionID: String,
+        admissionID: String? = nil,
+        contextDigest: String? = nil,
+        delivery: String? = nil,
+        outcome: String? = nil,
+        executed: Bool? = nil,
+        originalStatus: String? = nil,
+        terminalStatus: String? = nil,
+        postcondition: String? = nil,
+        evidenceRefs: [String] = []
+    ) {
+        self.actionID = actionID
+        self.admissionID = admissionID
+        self.contextDigest = contextDigest
+        self.delivery = delivery
+        self.outcome = outcome
+        self.executed = executed
+        self.originalStatus = originalStatus
+        self.terminalStatus = terminalStatus
+        self.postcondition = postcondition
+        self.evidenceRefs = evidenceRefs
+    }
+}
+
 public struct TKEvidenceRunEvent: Codable, Equatable, Sendable {
     public let schemaVersion: Int
     public let runID: String
@@ -130,6 +167,7 @@ public struct TKEvidenceRunEvent: Codable, Equatable, Sendable {
     public let frictionCount: Int?
     public let wouldRealUserSucceed: Bool?
     public let stepCount: Int?
+    public let actionContext: TKActionEvidenceMetadata?
 
     public init(
         schemaVersion: Int = 1,
@@ -165,7 +203,8 @@ public struct TKEvidenceRunEvent: Codable, Equatable, Sendable {
         summary: String? = nil,
         frictionCount: Int? = nil,
         wouldRealUserSucceed: Bool? = nil,
-        stepCount: Int? = nil
+        stepCount: Int? = nil,
+        actionContext: TKActionEvidenceMetadata? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.runID = runID
@@ -201,6 +240,7 @@ public struct TKEvidenceRunEvent: Codable, Equatable, Sendable {
         self.frictionCount = frictionCount
         self.wouldRealUserSucceed = wouldRealUserSucceed
         self.stepCount = stepCount
+        self.actionContext = actionContext
     }
 
     enum CodingKeys: String, CodingKey {
@@ -238,6 +278,7 @@ public struct TKEvidenceRunEvent: Codable, Equatable, Sendable {
         case frictionCount
         case wouldRealUserSucceed
         case stepCount
+        case actionContext
     }
 }
 

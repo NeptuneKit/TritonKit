@@ -104,7 +104,35 @@ struct TKEvidenceRunModelsTests {
         #expect(decoded.last?.verdict == .success)
     }
 
-    @Test("parser tolerates partial tail and summarizes completed run")
+    @Test("action context metadata round trips through evidence run events")
+    func actionContextMetadataRoundTrip() throws {
+        let metadata = TKActionEvidenceMetadata(
+            actionID: "action-1",
+            admissionID: "admission-1",
+            contextDigest: String(repeating: "a", count: 64),
+            delivery: "unknown",
+            outcome: "timed_out",
+            executed: nil,
+            originalStatus: "timed_out",
+            terminalStatus: "timed_out",
+            postcondition: "unverified",
+            evidenceRefs: ["run/receipt.json"]
+        )
+        let event = TKEvidenceRunEvent(
+            runID: "run-1",
+            timestamp: "2026-11-10T14:00:00Z",
+            kind: .toolResult,
+            step: 1,
+            tool: "device.platform-control",
+            status: "timed_out",
+            actionContext: metadata
+        )
+
+        let decoded = try JSONDecoder().decode(TKEvidenceRunEvent.self, from: JSONEncoder().encode(event))
+        #expect(decoded.actionContext == metadata)
+        #expect(decoded.actionContext?.evidenceRefs == ["run/receipt.json"])
+    }
+
     func parseJSONLToleratesPartialTail() throws {
         let jsonl = """
         {"schemaVersion":1,"runId":"run-1","ts":"2026-05-21T10:12:13.000Z","kind":"run_started","caseName":"login-smoke"}
