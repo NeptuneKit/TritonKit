@@ -391,4 +391,4 @@
 
 | `SP-281-action-context-expansion` | [`SP-281-action-context-expansion`](./SP-281-action-context-expansion/README.md) | 后续路线已冻结 | P0 shared coordinator/receipt → P1 device.action evidence/uncertain → P2 剩余 mutating surfaces；approval/HTTP/session resume/真实设备另立 scope |
 
-| `SP-282-release-v0-2-44` | [`SP-282-release-v0-2-44`](./SP-282-release-v0-2-44/README.md) | 准备发布 | main 串行整理与发布；ActionContext 事实投影/策略/文本绑定修复，arm64 CLI/Web/Runner/skills/SwiftPM 联合验收 |
+| `SP-282-release-v0-2-44` | [`SP-282-release-v0-2-44`](./SP-282-release-v0-2-44/README.md) | 已发布 | v0.2.44/4d32a545；main/tag CI、Release、公开 checksum/Runner/skills、Homebrew 与 packaged Web 通过；真实动作边界保留 |

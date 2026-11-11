@@ -2,9 +2,9 @@
 
 ## 范围与状态
 
-2026-11-11 用户授权整理、沉淀、提交及发版。当前在 main 串行准备 v0.2.44，不创建分支或 worktree。前一公开版本为 v0.2.43。
+2026-11-11 用户授权整理、沉淀、提交及发版，已在 main 串行完成 v0.2.44 发布，未创建分支或 worktree。发布候选 `4d32a545` 的 main/tag CI 与 Release 全部成功；公开资产、Homebrew 和仓库外 packaged Web 验收通过。前一公开版本为 v0.2.43。
 
-发布范围：已合入的 DTUHID modern transport、host 日志独占创建、ActionContext/admission 接线，以及 main 开发治理。发布前审计发现 device.action 失败投影、coordinator policy/TTL、uncertain 不变量与 type 文本绑定缺口，必须修复后再发布。
+发布范围：已合入的 DTUHID modern transport、host 日志独占创建、ActionContext/admission 接线，以及 main 开发治理。发布前审计发现 device.action 失败投影、coordinator policy/TTL、uncertain 不变量与 type 文本绑定缺口，已补 red/green 并修复；完整 CLI 另发现 Harmony verified schema 缺口，也已修复并回归。
 
 ## BDD 与门禁
 
@@ -20,4 +20,4 @@
 
 共享 TKActionReceipt 目前是合同及 fixture，生产路径复用 coordinator.admit，尚未完成全部 receipt 投影迁移。generation/admission 默认 store 属单次执行范围，不宣称跨 CLI 进程排他或远端审批。真实设备、guest 触摸及业务后置条件未在本轮验收。
 
-发布结果、精确 SHA、CI URL、资产与安装验证写入本目录 plans，当前状态为准备中。
+发布结果、精确 SHA、CI URL、资产与安装验证见[发布验收](./plans/20261111-release.md)，red/green 和本地门禁见[发布前验收](./plans/20261111-preflight.md)。原始截图/日志只保存在私有仓外证据目录。
