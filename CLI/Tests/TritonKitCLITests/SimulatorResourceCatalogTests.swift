@@ -3,6 +3,30 @@ import Testing
 
 @Suite
 struct SimulatorResourceCatalogTests {
+    @Test("Diagnostic dependencies do not expand the profile mutation set")
+    func diagnosticDependenciesRemainReadOnly() throws {
+        let expected = [
+            "mdm": ["com.apple.remotemanagementd", "com.apple.RemoteManagementAgent"],
+            "app-clips": ["com.apple.ClipServices.clipserviced"],
+            "accessibility-assets": ["com.apple.accessibility.axassetsd"],
+        ]
+        for (id, labels) in expected {
+            let feature = try #require(SimulatorResourceCatalog.resolveFeatures([id]).first)
+            #expect(feature.labels == labels)
+            #expect(!feature.managedByProfiles)
+            let diagnosticLabels = Set(labels)
+            #expect(diagnosticLabels.isDisjoint(with: SimulatorResourceCatalog.managedLabels))
+            let delta = SimulatorResourceCatalog.delta(current: diagnosticLabels, desired: diagnosticLabels)
+            #expect(delta.disable.isEmpty && delta.enable.isEmpty)
+            #expect(throws: SimulatorResourceCatalogError.unknownLabel(labels[0])) {
+                try SimulatorResourceCatalog.desired(keep: [labels[0]])
+            }
+        }
+        #expect(SimulatorResourceCatalog.slimmableLabels.count == 168)
+        #expect(SimulatorResourceCatalog.managedLabels.count == 171)
+        #expect(try SimulatorResourceCatalog.desired() == SimulatorResourceCatalog.slimmableLabels)
+    }
+
     @Test("Pinned upstream catalog includes every category, feature and managed service")
     func completeCatalog() {
         #expect(SimulatorResourceCatalog.sourceCommit == "6518ba7eab1123d7e1d7797b0e05f51043b42a5b")
@@ -10,11 +34,15 @@ struct SimulatorResourceCatalogTests {
             "widgets", "siri", "search", "icloud", "store", "pim", "web", "family",
             "health", "photos", "apps", "messaging", "connectivity", "telemetry", "other",
         ])
-        #expect(SimulatorResourceCatalog.features.count == 25)
+        #expect(SimulatorResourceCatalog.features.count == 28)
         #expect(SimulatorResourceCatalog.slimmableLabels.count == 168)
         #expect(SimulatorResourceCatalog.managedLabels.count == 171)
         for feature in SimulatorResourceCatalog.features {
-            #expect(Set(feature.labels).isSubset(of: SimulatorResourceCatalog.managedLabels))
+            if feature.managedByProfiles {
+                #expect(Set(feature.labels).isSubset(of: SimulatorResourceCatalog.managedLabels))
+            } else {
+                #expect(Set(feature.labels).isDisjoint(with: SimulatorResourceCatalog.managedLabels))
+            }
         }
     }
 

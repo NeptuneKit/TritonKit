@@ -42,6 +42,8 @@ struct SimulatorResourceServiceFeature: Codable, Equatable, Sendable {
     let id: String
     let name: String
     let labels: [String]
+    /// False for dependencies that can be inspected but are outside profile mutations.
+    var managedByProfiles = true
 }
 
 enum SimulatorResourceCatalogError: Error, Equatable {
@@ -339,6 +341,11 @@ enum SimulatorResourceCatalog {
         .init(id: "game-center", name: "Game Center", labels: ["com.apple.gamed"]),
         .init(id: "find-my", name: "Find My", labels: ["com.apple.findmy.findmylocated"]),
         .init(id: "screen-time", name: "Screen Time", labels: ["com.apple.ScreenTimeAgent"]),
+        // Read-only dependency additions from simslim 7e374b3839d49608a681d1f8b9ca0dd83d35189e.
+        // Keep these separate from categories: profiles must not gain new mutations.
+        .init(id: "mdm", name: "MDM / remote management", labels: ["com.apple.remotemanagementd", "com.apple.RemoteManagementAgent"], managedByProfiles: false),
+        .init(id: "app-clips", name: "App Clips", labels: ["com.apple.ClipServices.clipserviced"], managedByProfiles: false),
+        .init(id: "accessibility-assets", name: "Accessibility assets", labels: ["com.apple.accessibility.axassetsd"], managedByProfiles: false),
     ]
 
     static let slimmableLabels = Set(categories.flatMap(\.labels))

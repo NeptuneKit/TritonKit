@@ -2,6 +2,24 @@ import XCTest
 @testable import TritonKitCLI
 
 final class SimulatorResourceInspectionTests: XCTestCase {
+    func testDiagnosticOnlyFeaturesReportOverridesWithoutChangingManagedStatus() throws {
+        var reads = 0
+        let inspector = SimulatorResourceInspection(read: { _ in
+            reads += 1
+            return .init(overrides: ["com.apple.remotemanagementd": true,
+                                     "com.apple.ClipServices.clipserviced": false])
+        })
+        let report = try inspector.doctor(udid: "fixture", requires: ["mdm", "app-clips", "accessibility-assets"])
+        XCTAssertEqual(reads, 1)
+        XCTAssertEqual(report["ok"] as? Bool, false)
+        XCTAssertEqual(report["verificationBoundary"] as? String, "service-overrides-only")
+        let features = try XCTUnwrap(report["features"] as? [[String: Any]])
+        XCTAssertEqual(features[0]["disabledLabels"] as? [String], ["com.apple.remotemanagementd"])
+        XCTAssertEqual(features[1]["ok"] as? Bool, true)
+        XCTAssertEqual(features[2]["ok"] as? Bool, true)
+        XCTAssertEqual(try inspector.status(udid: "fixture")["managedDisabled"] as? Int, 0)
+    }
+
     func testStatusDoesNotCountUnmanagedServicesOrEnabledOverrides() throws {
         let inspector = SimulatorResourceInspection(read: { _ in
             .init(overrides: ["com.apple.apsd": true, "com.apple.storekitd": false, "custom.service": true])

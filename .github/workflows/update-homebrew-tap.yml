@@ -32,20 +32,17 @@ jobs:
       - name: Checkout TritonKit
         uses: actions/checkout@v5
 
-      - name: Download release checksums
+      - name: Verify public arm64 release assets
         env:
-          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
         shell: bash
         run: |
           set -euo pipefail
 
-          mkdir -p dist
-          gh release download "${VERSION}" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --pattern tritonkit_checksums.txt \
-            --dir dist \
-            --clobber
+          python3 docs-linhay/scripts/verify-public-release-assets.py \
+            --repository "${GITHUB_REPOSITORY}" \
+            --tag "${VERSION}" \
+            --output-checksums dist/tritonkit_checksums.txt
 
       - name: Render formula
         env:

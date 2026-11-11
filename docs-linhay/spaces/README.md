@@ -1,3 +1,5 @@
+2026-11-11：[SP-283](./SP-283-homebrew-public-assets/README.md)发布前公开资产门禁与[SP-284](./SP-284-simulator-diagnostic-dependencies/README.md)只读服务依赖诊断已在main验收，13离线、完整CLI167+1854、root/local通过；未push/tag/release或操作设备。
+
 2026-11-11：[SP-282-release-v0-2-44](./SP-282-release-v0-2-44/README.md)已发布：候选 4d32a545 的 main/tag CI 与 Release 成功，arm64 CLI/Web/Runner/skills、公开 checksum、Homebrew 和仓外 packaged Web 通过；[发布验收](./SP-282-release-v0-2-44/plans/20261111-release.md)。
 
 - 当前开发方式：所有产品实现、测试、提交和资料回写在 `main` 串行完成；Space 只承载需求、BDD、计划、证据和历史归档。读取/评估可并行，产品文件写入和共享副作用不并行；不新建 branch/worktree。
@@ -486,3 +488,6 @@
 ## 2026-11-06 v0.2.41 发布准备
 
 - [SP-275-release-v0-2-41](./SP-275-release-v0-2-41/README.md)：#277 已合并 main；v0.2.41 已发布，双架构资产/checksum、Homebrew、skills、安装版与仓库外 packaged Web 验收通过，真实设备/私有 App 边界保留。
+
+| 本地验收通过 | [SP-283-homebrew-public-assets](./SP-283-homebrew-public-assets/README.md) | 公开稳定tag与匿名arm64字节在tap写入前校验；13离线/发布契约通过，未发布 |
+| 本地验收通过 | [SP-284-simulator-diagnostic-dependencies](./SP-284-simulator-diagnostic-dependencies/README.md) | 3组只读features/doctor，未扩张managed/profile；CLI/root/local通过，设备未验 |

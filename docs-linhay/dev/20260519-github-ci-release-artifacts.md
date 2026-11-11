@@ -1,5 +1,7 @@
 # GitHub CI Release Artifacts
 
+2026-11-11 当前契约：发行仅 macOS arm64，iOS 通过 SwiftPM（iOS 16+），x86_64 与 CocoaPods 已退休；下文带日期的旧发布记录保留历史。Homebrew 更新前由 `verify-public-release-assets.py` 匿名验证精确公开稳定 tag、checksum 与 arm64 字节大小/SHA，成功后仅传递已验证 arm64 checksum；draft/prerelease、404、超时、截断或歧义 manifest 均在 tap 写入前失败。离线测试见 [SP-283](../spaces/SP-283-homebrew-public-assets/README.md)，本轮没有执行真实发布或安装。
+
 ## 背景
 
 TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要拿到 `triton` CLI，也要拿到项目级 skill 包，尤其是开发阶段反馈工作流 `tritonkit-dev-feedback`。
@@ -9,9 +11,9 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 新增 `.github/workflows/ci.yml` 与独立 `.github/workflows/release.yml`：
 
 1. `push` 到 `main`、`pull_request` 到 `main`、手动 `workflow_dispatch` 时运行 validate。
-2. 普通 `main` push / PR 只阻塞 validate，不等待双架构 CLI artifact 与 release asset 打包。
+2. 普通 `main` push / PR 只阻塞 validate，不等待 arm64 CLI artifact 与 release asset 打包。
 3. `v*` tag 触发独立 `Release` workflow 构建 CLI、skill bundle、checksum 和 release assets；`CI` workflow 中的 `v*` tag validate mode 固定为 `contracts`，只做发布脚本、Homebrew、版本 stamping、CI 分类和 release asset 契约快检，避免重复等待 main/PR 已覆盖的 Swift tests 与 SwiftPM iOS 16 build。
-4. tag `v*` 推送时，arm64 CLI 产物完成后先创建或复用 GitHub Release，并上传 arm64 CLI、skill 包与 checksum；x86_64 CLI 产物在 arm64 macOS runner 上交叉编译后由后补 job 上传到同一个 Release。
+4. tag `v*` 推送时，arm64 CLI 产物完成后创建或复用 GitHub Release，并上传 arm64 CLI、skill 包与 checksum；不再构建 x86_64。
 5. validate 先调用 `docs-linhay/scripts/ci-validate-mode.sh` 分类变更范围：
    - docs/skill-only：运行 `docs-linhay/scripts/verify.sh --ci-docs`，覆盖文档结构、diff whitespace、版本脚本和 release/skill packaging 契约。
    - swift-only：只跑 Swift tests、CLI release build 与 release/homebrew contract checks，跳过 SwiftPM iOS 16 build；适用于 `Sources/TritonKitCLI/`、`CLI/Package.swift`、`CLI/Package.resolved`、`Tests/`、`Package.swift`、`Package.resolved`。
@@ -33,7 +35,7 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 12. 打包 skill：
    - `tritonkit-skills.tar.gz`，顶层包含 `TritonKit.skills/`，其内包含 `tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover`、`tritonkit-real-project-regression` 与 `tritonkit-update`
 13. 所有包先作为 workflow artifact 上传；tag 发布时 arm64 包与 skill 包先作为 GitHub Release asset 上传，x86_64 包成功后再补传。
-14. arm64 发布完成后触发 Homebrew tap 更新 workflow；x86_64 后补完成后再次触发 tap 更新，让 Intel formula 分支拿到 checksum。
+14. arm64 发布完成后触发 Homebrew tap 更新 workflow；公开资产验证通过后才渲染并写入 formula，不存在 Intel 后补步骤。
 15. 整体发布必须同步 `Web/package.json` 与 `Web/package-lock.json` 到 release tag；iOS embedded SDK 通过 SwiftPM Git tag 分发，最低支持 iOS 16。
 16. Release workflow 的 arm64 与 x86_64 build job 使用 `actions/cache@v4` 缓存 SwiftPM dependency/build 输出；cache key 分别包含 `release-cli-arm64` 与 `release-cli-x86_64`，避免为了 Intel 产物回退到慢 Intel runner。
 

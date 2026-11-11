@@ -3,8 +3,8 @@
 
 2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-11-10（SP-281 ActionContext 后续扩展路线）
-> 覆盖范围：282/282 个已存在 space
+> 最近同步：2026-11-11（SP-283/284参考采用验收）
+> 覆盖范围：284/284 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -19,8 +19,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 282/282 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 282/282 | 每条记录链接到现有 space README |
+| 编号登记 | 284/284 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 284/284 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -392,3 +392,7 @@
 | `SP-281-action-context-expansion` | [`SP-281-action-context-expansion`](./SP-281-action-context-expansion/README.md) | 后续路线已冻结 | P0 shared coordinator/receipt → P1 device.action evidence/uncertain → P2 剩余 mutating surfaces；approval/HTTP/session resume/真实设备另立 scope |
 
 | `SP-282-release-v0-2-44` | [`SP-282-release-v0-2-44`](./SP-282-release-v0-2-44/README.md) | 已发布 | v0.2.44/4d32a545；main/tag CI、Release、公开 checksum/Runner/skills、Homebrew 与 packaged Web 通过；真实动作边界保留 |
+
+| `SP-283-homebrew-public-assets` | [`SP-283-homebrew-public-assets`](./SP-283-homebrew-public-assets/README.md) | 本地验收通过 | tap写入前匿名严格TLS/稳定tag/大小SHA校验；13离线与发布契约通过，未发布 |
+
+| `SP-284-simulator-diagnostic-dependencies` | [`SP-284-simulator-diagnostic-dependencies`](./SP-284-simulator-diagnostic-dependencies/README.md) | 本地验收通过 | 3组只读依赖，managed/profile不扩张；CLI167+1854/root/local通过，未操作设备 |

@@ -145,6 +145,15 @@ if grep -q 'tar -czf .*tritonkit-dev-feedback[.]tar[.]gz' "${ci_workflow}" \
 fi
 grep -q 'workflow_dispatch:' "${tap_workflow}" || fail "tap workflow must support manual reruns"
 grep -q 'TAP_GITHUB_TOKEN is required' "${tap_workflow}" || fail "tap workflow must fail clearly when the secret is missing"
+python3 "${root}/docs-linhay/scripts/test-public-release-assets.py"
+ruby -ryaml - "${tap_workflow}" <<'RUBY' || fail "public asset verification must precede tap writes"
+steps = YAML.load_file(ARGV.fetch(0)).fetch("jobs").fetch("update-tap").fetch("steps")
+gate = steps.index { |s| s.fetch("run", "").include?("verify-public-release-assets.py") }
+render = steps.index { |s| s.fetch("run", "").include?("render-homebrew-formula.sh") }
+write = steps.index { |s| s.fetch("run", "").include?("git push") }
+abort "missing or reordered public asset gate" unless gate && render && write && gate < render && render < write
+abort "gate must fail closed" if steps[gate]["continue-on-error"] || steps[gate].key?("if") || steps[gate].fetch("env", {}).key?("GH_TOKEN")
+RUBY
 grep -q '^name: Release$' "${release_workflow}" || fail "release workflow must exist"
 grep -q 'tags:' "${release_workflow}" || fail "release workflow must run on version tags"
 grep -q 'Build CLI [(]arm64[)]' "${release_workflow}" || fail "release workflow must build arm64 CLI"
