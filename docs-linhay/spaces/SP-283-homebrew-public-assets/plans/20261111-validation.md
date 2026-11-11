@@ -7,3 +7,5 @@
 - verify-release-automation-final.log：完整发布契约通过，含真实 workflow gate → render → push 顺序和无条件 fail-closed 检查。
 - 未执行真实 GitHub 下载、tap 写入、push/tag/release、安装或上游代码。离线测试不证明远端可用性。
 - docs/local 门禁与提交事实由 SP-207 日报收口统一登记。
+
+本地提交 `14574a7b26e2f69187d0ad21959cfcf3164f182d`；提交后完整CLI167+1854、适用local再次通过，证据postcommit-full-cli.log / postcommit-local.log。未git merge、push/tag/release；main中的同文件源码与已测候选一致。

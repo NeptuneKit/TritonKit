@@ -1,0 +1,60 @@
+{
+  "repository": "heoblitz/Loupe",
+  "base_sha": "180c60584867500b93b43ca6c8b556995bf8be7b",
+  "head_sha": "1b6c7f0fa5f5ed2bd7885d404f85bcebd5ff0d93",
+  "actual_main": "607410fb3d44bfe02274c13822170c3015c63a99",
+  "decision": "adopt",
+  "reason": "完整2提交增量的public-release与匿名下载SHA校验前置可补Triton tap发布窗口：当前workflow仅认证下载checksum即push formula，既有draft Release及资产404/字节不匹配未在push前拒绝；只采用发布前公开资产完整性门禁，不复制上游bottle/injector或放宽Simulator通用重试。",
+  "complete_review": true,
+  "errors": [],
+  "commit_count": 2,
+  "changed_paths": 10,
+  "text_versions": 18,
+  "license": {
+    "spdx": "NOASSERTION",
+    "sha256": "0d7ebd755456885dba28523a5c468e59d06a26c8df2b896938632c9322c9e7e3",
+    "path": "LICENSE",
+    "html_url": "https://github.com/heoblitz/Loupe/blob/1b6c7f0fa5f5ed2bd7885d404f85bcebd5ff0d93/LICENSE"
+  },
+  "license_manual_identification": "MIT full text; API NOASSERTION retained",
+  "local_evidence": [
+    {
+      "path": ".github/workflows/update-homebrew-tap.yml",
+      "sha256": "69052ea79140a3888bb603adece87cfe246a0894d19bc832c45bf7d0ba7624ef"
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "sha256": "80d1bc731578883026b4b43e2d7157620d11a81365783f3f71619c671a298513"
+    },
+    {
+      "path": "docs-linhay/scripts/release.sh",
+      "sha256": "e5af3c5a3cf78ad9a67988263b3f5803f8e8f8e6e9320ea1a9ba091ae9ef3bf3"
+    },
+    {
+      "path": "docs-linhay/scripts/verify-release-automation.sh",
+      "sha256": "08dcbcdaa909b9654a0845907a769241acb016e94668bca5855e73593b78de1c"
+    }
+  ],
+  "source_custody": "current fixed-SHA collection, not recovered old raw response",
+  "candidate": {
+    "requirement_key": "homebrew-public-assets-before-tap-publication",
+    "impact": "release workflow and local fixture tests only",
+    "bdd": [
+      "Given draft or mismatched release tag, when tap publication starts, then refuse before tap git write",
+      "Given public release but anonymous arm64 URL 404 or checksum mismatch, then fail before formula update/push",
+      "Given exact public tag and anonymous arm64 archive hash equals manifest, then render and update tap",
+      "Given download/metadata timeout or partial file, then retain failure and do not advertise formula"
+    ],
+    "files": [
+      ".github/workflows/update-homebrew-tap.yml",
+      "docs-linhay/scripts/verify-release-automation.sh",
+      "new narrowly scoped public-release verification helper and fixture tests"
+    ],
+    "non_goals": [
+      "No release/tag/push execution during implementation",
+      "No remote tap source change or bottle migration",
+      "No blanket inventory timeout retry",
+      "No x86_64 reintroduction"
+    ]
+  }
+}

@@ -4,8 +4,8 @@
 
 - 状态：已完成静态研究并登记为正式参考项目，未形成产品采用任务。
 - 来源：<https://github.com/DIYgod/pinky>
-- 本地归档：[`docs-linhay/references/pinky`](../../references/pinky/)
-- 固定版本：`v2026.1109.16` / `209aa9e4b2ff1fd81edec3c393a64b21b79162fb`
+- 历史本地归档（2026-11-11当前路径不存在，原因unknown；不代表当前clone可用）：[`docs-linhay/references/pinky`](../../references/pinky/)
+- 历史研究固定版本：`v2026.1109.16` / `209aa9e4b2ff1fd81edec3c393a64b21b79162fb`
 - 许可证：Apache-2.0；许可证 SHA-256 为 `c95bae1d1ce0235ecccd3560b772ec1efb97f348a79f0fbe0a634f0c2ccefe2c`。
 - 影响层：参考资料、长期登记和调研文档；不修改 CLI/HTTP/SDK 产品代码。
 
@@ -16,6 +16,8 @@
 - Given 指定的 GitHub 项目，When clone 完成，Then 保留完整 Git 历史、远端 URL、固定提交和 release tag。
 - Given 项目需要列入参考资料，When 登记和报告写回，Then SP-207 reference-state、SP-207 入口、本 space、调研报告和当日 memory 可互相追溯。
 - Given 研究没有执行第三方代码，When 输出结论，Then 区分源码观察、上游文档自述和本地未验证边界。
+
+2026-11-11接管已补齐SP207正式清单遗漏：当前34仓（25参考+9候选）。官方新HEAD3248613b/v2026.1111.16，321提交大增量保持partial，未建立成功检查点；SP280/281已有承接不重排。见[当日参考报告](../SP-207-reference-adoption-pipeline/plans/20261111-reference-update-report.md)。
 
 ## 交付物
 

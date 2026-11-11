@@ -7,9 +7,9 @@
     "evaluate_current_code",
     "create_execution_and_controller_threads",
     "coordinate_scoped_execution_threads",
-    "isolated_development_and_verification",
     "necessary_local_commits",
-    "verified_local_main_merge"
+    "serial_development_and_verification_on_current_main",
+    "verified_local_main_commit"
   ],
   "not_implied": [
     "push",
@@ -630,6 +630,72 @@
       "live_device_cleanup": "owned_simulator_deleted_existing_inventory_unchanged",
       "verification_note": "Xcode27.1/iOS27.0/iPhone17 Release tap/swipe, no-event barrier, Resize refusal/restoration passed. CLI162+1680; other runtimes/displays not claimed; no push.",
       "managed_attachment_evidence": "docs-linhay/spaces/SP-255-dtuhid-integration/plans/20261102-app-attachment-cleanup.md"
+    },
+    {
+      "key": "heoblitz/Loupe:homebrew-public-assets-before-tap-publication",
+      "repository": "heoblitz/Loupe",
+      "mechanism": "homebrew-public-assets-before-tap-publication",
+      "requirement_key": "homebrew-public-assets-before-tap-publication",
+      "source_revision": "1b6c7f0fa5f5ed2bd7885d404f85bcebd5ff0d93",
+      "decision": "adopt",
+      "space": "SP-283-homebrew-public-assets",
+      "assessment": "20261111-heoblitz__Loupe-review.json",
+      "state": "local_merged",
+      "integration_method": "direct_main_commit_user_20261111_rule_no_git_merge",
+      "execution_thread_id": "01a19a4a-50e2-7731-b8fa-880efb954eb5",
+      "controller_thread_id": "01a19a4a-50e2-7731-b8fa-880efb954eb5",
+      "controller_space": "SP-207-reference-adoption-pipeline",
+      "host_id": "local",
+      "branch": "main",
+      "worktree_status": "no_new_worktree_created",
+      "implementation_sha": "14574a7b26e2f69187d0ad21959cfcf3164f182d",
+      "local_merge_sha": "14574a7b26e2f69187d0ad21959cfcf3164f182d",
+      "controller_state": "accepted_direct_main_commit_postcommit_verified",
+      "stages": {
+        "read": "complete",
+        "evaluation": "adopt",
+        "dispatch": "current_controller_serial_implementation",
+        "implementation": "complete",
+        "verification": "postcommit_cli_and_local_passed",
+        "integration": "committed_on_main",
+        "cleanup": "logs_archived_no_temporary_branch_worktree_or_child_chat"
+      },
+      "state_evidence": "docs-linhay/spaces/SP-283-homebrew-public-assets/plans/20261111-validation.md",
+      "last_verified_on": "2026-11-11",
+      "verification_note": "13 release fixtures; CLI XCTest167/SwiftTesting1854 and applicable local passed, postcommit repeated. Existing SP281 WIP present in test environment, not owned or committed. No real devices, remote downloads/publication, dependency installation, push/tag/release."
+    },
+    {
+      "key": "MobAI-App/simslim:simulator-resource-readonly-feature-dependencies",
+      "repository": "MobAI-App/simslim",
+      "mechanism": "simulator-resource-readonly-feature-dependencies",
+      "requirement_key": "simulator-resource-readonly-feature-dependencies",
+      "source_revision": "7e374b3839d49608a681d1f8b9ca0dd83d35189e",
+      "decision": "adopt",
+      "space": "SP-284-simulator-diagnostic-dependencies",
+      "assessment": "20261111-MobAI-App__simslim-review.json",
+      "state": "local_merged",
+      "integration_method": "direct_main_commit_user_20261111_rule_no_git_merge",
+      "execution_thread_id": "01a19a4a-50e2-7731-b8fa-880efb954eb5",
+      "controller_thread_id": "01a19a4a-50e2-7731-b8fa-880efb954eb5",
+      "controller_space": "SP-207-reference-adoption-pipeline",
+      "host_id": "local",
+      "branch": "main",
+      "worktree_status": "no_new_worktree_created",
+      "implementation_sha": "14574a7b26e2f69187d0ad21959cfcf3164f182d",
+      "local_merge_sha": "14574a7b26e2f69187d0ad21959cfcf3164f182d",
+      "controller_state": "accepted_direct_main_commit_postcommit_verified",
+      "stages": {
+        "read": "complete",
+        "evaluation": "adopt",
+        "dispatch": "current_controller_serial_implementation",
+        "implementation": "complete",
+        "verification": "postcommit_cli_and_local_passed",
+        "integration": "committed_on_main",
+        "cleanup": "logs_archived_no_temporary_branch_worktree_or_child_chat"
+      },
+      "state_evidence": "docs-linhay/spaces/SP-284-simulator-diagnostic-dependencies/plans/20261111-validation.md",
+      "last_verified_on": "2026-11-11",
+      "verification_note": "13 release fixtures; CLI XCTest167/SwiftTesting1854 and applicable local passed, postcommit repeated. Existing SP281 WIP present in test environment, not owned or committed. No real devices, remote downloads/publication, dependency installation, push/tag/release."
     }
   ],
   "new_thread_policy": {
@@ -640,8 +706,8 @@
     "existing_threads_changed": false,
     "reasoning_effort": "unchanged"
   },
-  "last_updated_on": "2026-11-02",
-  "last_update_note": "SP254/255 live DTUHID accepted at5e1c0b74; CLI/local/docs passed, dedicated simulator removed; app attachment cleanup blocked by other-task/primary tool constraints",
+  "last_updated_on": "2026-11-11",
+  "last_update_note": "20 accepted tasks on main: 18 historical ancestors + SP283/284 direct-main commit14574a7b, postcommit CLI/local passed; 2 leads remain assessment only. No new child chats/worktrees; historical raw custody missing is not implementation rollback.",
   "session_closeout": {
     "verified_main": "c4a14e5282479b3fa10da0b1bbb3f720e1393d2d",
     "verified_on": "2026-11-02",
@@ -664,15 +730,32 @@
     "long_running_controller": "kept_open"
   },
   "monitor_controller": {
-    "previous_thread_id": "01a139bf-ab78-7783-b37a-ed336be2ef38",
-    "thread_id": "01a18a91-f44e-7fd0-8e4b-c891b44377e0",
+    "previous_thread_id": "01a18a91-f44e-7fd0-8e4b-c891b44377e0",
+    "thread_id": "01a19a4a-50e2-7731-b8fa-880efb954eb5",
     "host_id": "local",
-    "takeover_on": "2026-10-30",
+    "binding_verified_on": "2026-11-11",
     "automation_id": "ictrl",
     "automation_binding_verified": true,
-    "evidence": "20261030-reference-update-report.md"
+    "evidence": "20261111-reference-update-report.md",
+    "note": "Automation was already bound to this controller at entry; updated prompt and reread, no duplicate automation."
   },
-  "last_verified_on": "2026-11-02",
-  "last_verified_main": "5e1c0b74feca26bc8b04d94c47a66cdc15823b2b",
-  "latest_monitor_summary": "20261102-reference-update-report.md"
+  "last_verified_on": "2026-11-11",
+  "last_verified_main": "14574a7b26e2f69187d0ad21959cfcf3164f182d",
+  "latest_monitor_summary": "20261111-reference-update-report.md",
+  "assessment_backlog": [
+    {
+      "key": "tddworks/baguette:optional_exact_same_target_set_text_readback",
+      "decision": "revise_first",
+      "state": "assessment_pending",
+      "assessment": "20261111-tddworks__baguette-review.json",
+      "reason": "Existing submission success is not a proven contract defect; freeze explicit opt-in, secure/target identity and no-replay design before adopting. No implementation started."
+    },
+    {
+      "key": "jfarcand/mirroir-mcp:bounded_local_port_probe",
+      "decision": "revise_first",
+      "state": "assessment_pending",
+      "assessment": "20261111-jfarcand__mirroir-mcp-review.json",
+      "reason": "Fixed-main blocking connect is a static lead; hang not reproduced. No adopted task or fabricated runtime proof."
+    }
+  ]
 }

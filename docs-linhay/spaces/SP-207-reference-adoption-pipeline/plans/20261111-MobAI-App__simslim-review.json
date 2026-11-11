@@ -1,0 +1,87 @@
+{
+  "repository": "MobAI-App/simslim",
+  "base_sha": "d594c230fe9ed5080189b0ce76afabda6104bae0",
+  "head_sha": "7e374b3839d49608a681d1f8b9ca0dd83d35189e",
+  "actual_main": "607410fb3d44bfe02274c13822170c3015c63a99",
+  "decision": "adopt",
+  "complete_review": true,
+  "errors": [],
+  "commit_count": 3,
+  "parent_edges": 3,
+  "tree_count": 4,
+  "changed_paths": 14,
+  "text_versions": 26,
+  "excluded_paths": [],
+  "license": {
+    "spdx": "MIT",
+    "sha256": "8b65667572b02a584c03c2977372eeb5fe8de0e228211b6f83033c458cc10b4e",
+    "path": "LICENSE",
+    "html_url": "https://github.com/MobAI-App/simslim/blob/7e374b3839d49608a681d1f8b9ca0dd83d35189e/LICENSE"
+  },
+  "local_evidence": [
+    {
+      "path": "Sources/TritonKitCLI/CLISimulatorResourceCatalog.swift",
+      "sha256": "1bf60e90019ed8908022b5e626e850ba218cf59b056170c08ef258c6ced0100a"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLISimulatorResourceCommands.swift",
+      "sha256": "0705af65611702f04357debde8efe824e5bf218e089326c30065347bc352e961"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLISimulatorResourceInspection.swift",
+      "sha256": "ae2e8d8812315855ffbe826a4d57f39f3a40ff81e591212e8fcfe69fd3aba3ea"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLISimulatorResourceOfflineStore.swift",
+      "sha256": "aa0d0a4d5b1f3e9259f2c7fe1e7242f6a311360d174b72394cab90c6c606fb34"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLISimulatorResourceRuntime.swift",
+      "sha256": "15436c131834e0ea933002f59b206a43c1de5597c1a29967ead73bf721b804df"
+    },
+    {
+      "path": "Sources/TritonKitShared/TKSimulatorResourceModels.swift",
+      "sha256": "9a9930c7b1f556791a4906b9359a822bc48cee16e0b922b2441fa9925d24c16d"
+    }
+  ],
+  "runtime_executed": false,
+  "source_custody": "Current fixed-SHA collection; not restoration of prior missing archive.",
+  "reason": "可采用窄范围只读服务依赖诊断：当前features不认识mdm/app-clips/accessibility-assets，导致doctor无法查询这些已有平台服务的override依赖。只加诊断映射及服务副作用解释，不新增默认禁用服务/分类或全设备preboot watch。",
+  "adoption_candidate": {
+    "requirement_key": "simulator-resource-readonly-feature-dependencies",
+    "scope": "Read-only features/doctor mapping, independent of slimmableLabels/managedLabels",
+    "features": {
+      "mdm": [
+        "com.apple.remotemanagementd",
+        "com.apple.RemoteManagementAgent"
+      ],
+      "app-clips": [
+        "com.apple.ClipServices.clipserviced"
+      ],
+      "accessibility-assets": [
+        "com.apple.accessibility.axassetsd"
+      ]
+    },
+    "bdd": [
+      "Given new feature names, when features/doctor resolves them, then return known service dependency labels instead of unknownFeature.",
+      "Given matching overrides, when doctor reports disabled dependencies, then explain impact without enabling/disabling services.",
+      "Given existing ci/stock profile, when diagnostic feature list expands, then desired managed mutation labels remain identical."
+    ],
+    "files": [
+      "Sources/TritonKitCLI/CLISimulatorResourceCatalog.swift",
+      "CLI/Tests/TritonKitCLITests/SimulatorResourceCatalogTests.swift",
+      "CLI/Tests/TritonKitCLITests/SimulatorResourceInspectionTests.swift"
+    ],
+    "tests": [
+      "Feature resolution mapping and unknown-feature fail-closed",
+      "Doctor fixture enabled/disabled dependency cases",
+      "Regression equality of managedLabels/slimmableLabels and ci desired set"
+    ],
+    "excluded": [
+      "Adding upstream new mdm category/default disables",
+      "Preboot watch writes across all shutdown devices",
+      "Copying upstream memory estimates as local measurements"
+    ],
+    "license_basis": "MIT fixed SHA full text confirmed"
+  }
+}

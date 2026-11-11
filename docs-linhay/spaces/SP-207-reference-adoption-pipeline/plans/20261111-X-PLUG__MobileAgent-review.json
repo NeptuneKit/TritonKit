@@ -1,0 +1,80 @@
+{
+  "repository": "X-PLUG/MobileAgent",
+  "base_sha": "81fa28b564ef7a695521500bc15a0e1324b2b394",
+  "head_sha": "c4cd0a8f9ddedad24dd8a3daf3a56ca69343849f",
+  "actual_main": "607410fb3d44bfe02274c13822170c3015c63a99",
+  "decision": "observe",
+  "reason": "JSON优先解析的机制当前AgentCPM-GUI解析器已经具备；本次GUI-Owl tool_call容错与重新调用模型机制属于当前未支持的MobileAgent格式/动作执行循环，无法从现有本地失败证明需要新增。保持观察，不把merge第二parent历史差异重复作为本次新增。",
+  "complete_review": true,
+  "errors": [],
+  "checked_at": "2026-11-11T09:55:09.996104+00:00",
+  "review_stage": "read_and_assessed_only",
+  "checkpoint_mutated": false,
+  "classification": "research_candidate",
+  "counts": {
+    "commits": 5,
+    "commit_pages": 1,
+    "parent_edges": 7,
+    "complete_trees": 7,
+    "parent_delta_unique_paths": 16,
+    "base_head_unique_paths": 8,
+    "unique_text_blob_versions": 28,
+    "text_bytes": 418127,
+    "excluded_paths": 0,
+    "release_pages": 1
+  },
+  "base_head_paths": [
+    "Mobile-Agent-E/MobileAgentE/agents.py",
+    "Mobile-Agent-E/tests/test_agents_json.py",
+    "Mobile-Agent-v3.5/README.md",
+    "Mobile-Agent-v3.5/README_zh.md",
+    "Mobile-Agent-v3.5/mobile_use/run_gui_owl_1_5_for_mobile.py",
+    "Mobile-Agent-v3.5/mobile_use/test_parse_action.py",
+    "README.md",
+    "UI-S1/README.md"
+  ],
+  "merge_parent_only_paths_identical_at_base_and_head": [
+    "Mobile-Agent-E/MobileAgentE/api.py",
+    "Mobile-Agent-E/README.md",
+    "Mobile-Agent-E/inference_agent_E.py",
+    "Mobile-Agent-E/tests/test_api.py",
+    "Mobile-Agent-v3.5/android_world_v3.5/android_world/agents/gui_owl.py",
+    "Mobile-Agent-v3.5/android_world_v3.5/android_world/agents/gui_owl_test.py",
+    "Mobile-Agent-v3.5/android_world_v3.5/android_world/env/actuation.py",
+    "Mobile-Agent-v3.5/android_world_v3.5/android_world/env/actuation_test.py"
+  ],
+  "license": {
+    "spdx": "MIT",
+    "sha256": "961819a89dacd1f4f161e1d2ebf616b538bf095a2eecfa3ef40b7ccec633fac4",
+    "path": "LICENSE",
+    "html_url": "https://github.com/X-PLUG/MobileAgent/blob/c4cd0a8f9ddedad24dd8a3daf3a56ca69343849f/LICENSE"
+  },
+  "license_changed": false,
+  "latest_release_tag": null,
+  "release_pagination_complete": true,
+  "commit_pagination_reached_successful_base": true,
+  "parent_trees_nontruncated": true,
+  "all_safe_increment_text_read": true,
+  "binary_or_identity_material_fetched": false,
+  "runtime_executed": false,
+  "tests_executed": false,
+  "test_evidence": "upstream and fixed-main test source inspected only; no pass claim",
+  "adoption_candidates": [],
+  "local_gap_reproduced": false,
+  "implementation_dispatched": false,
+  "evidence": [
+    "review-baseline-evidence.json",
+    "review-manifest.json",
+    "review-base-head-diff.txt",
+    "review-local-main-manifest.json",
+    "review-local-search.jsonl",
+    "LICENSE.full",
+    "review.md"
+  ],
+  "boundaries": [
+    "No upstream code execution/dependencies/devices/paid API calls",
+    "No git mutation or product/main writes",
+    "Source collection is current fixed-SHA evidence, not restoration of unavailable historical archives",
+    "No historical full audit, runtime benchmark, cloud deployment, or real-device validation"
+  ]
+}

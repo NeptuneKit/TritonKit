@@ -1,0 +1,50 @@
+{
+  "repository": "EvanBacon/serve-sim",
+  "base_sha": "ede4c21ee3021a36fbee1fec106b388a50a5ce4e",
+  "head_sha": "5f6dee52834351ae2d765dfda02e540248a9b663",
+  "actual_main": "607410fb3d44bfe02274c13822170c3015c63a99",
+  "decision": "observe",
+  "reason": "22提交安全文本已采齐但26,922行增量尚未完成全部语义审读。已审Home超时/输入ACK/键盘释放及异步宿主查询机制，Triton现有helper有失败拒绝且无相同SpringBoard direct actor路径；AX refs/录制索引/rolling buffer/UI scrub/摄像头需继续逐项评估，不能据采集完整标读取成功或新增采用。",
+  "complete_review": false,
+  "errors": [
+    "semantic_review_incomplete_26922_diff_lines_22_commits"
+  ],
+  "commit_count": 22,
+  "changed_paths": 140,
+  "text_versions": 284,
+  "text_collection_complete": true,
+  "excluded_paths": [],
+  "license": {
+    "spdx": "Apache-2.0",
+    "sha256": "9024cdf56dfe7e66523698a9f63d3a0061eb15f43bd5ea8e3833a56017ae37fd",
+    "path": "LICENSE",
+    "html_url": "https://github.com/EvanBacon/serve-sim/blob/5f6dee52834351ae2d765dfda02e540248a9b663/LICENSE"
+  },
+  "local_evidence": [
+    {
+      "path": "Sources/TritonKitCLI/CLIHostNativeHIDRuntime.swift",
+      "sha256": "040a8496301428f336530869a80e3cf6944fbc9441ad49a08d1beead87e056d5"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIHostNativeDigitizer.swift",
+      "sha256": "8eba13430acfa18d935902ec21bee2a9d957020b3771d98f44749cdecc0fa38a"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIHostDTUHIDTransport.swift",
+      "sha256": "fca6e110edbb424f8d60610820cf416de3db717878586b71db1fdd0b0371cc61"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIActionCommands.swift",
+      "sha256": "71e3579fe3aa7984af87e00e04d04594924ef031f13e408b10abb4700b25fa80"
+    }
+  ],
+  "source_custody": "current fixed-SHA collection; historical raw not restored",
+  "remaining_review": [
+    "AX refs, lifecycle and changes-after-settle full implementation/tests",
+    "Recording frame/event index, offline frame/diff/changes API and reader tests",
+    "Optional rolling frame buffer budget, per-subscriber lifecycle, UI scrub and hooks",
+    "Synthetic camera movie recording/swizzling and helper/device-set propagation",
+    "Remaining full diff coverage beyond inspected safety subsets"
+  ],
+  "runtime_executed": false
+}

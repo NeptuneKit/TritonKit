@@ -248,7 +248,7 @@
 
 | `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30已发布 | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
 
-| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 10月28日33仓日检24完整/9 partial，3仓更新无新采用；16条已合main，11个执行/主控会话已归档 |
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 11月11日34仓21完整/13 partial；SP283/284提交14574a7b并复验，历史455原始证据缺失原因unknown |
 
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 
@@ -393,6 +393,6 @@
 
 | `SP-282-release-v0-2-44` | [`SP-282-release-v0-2-44`](./SP-282-release-v0-2-44/README.md) | 已发布 | v0.2.44/4d32a545；main/tag CI、Release、公开 checksum/Runner/skills、Homebrew 与 packaged Web 通过；真实动作边界保留 |
 
-| `SP-283-homebrew-public-assets` | [`SP-283-homebrew-public-assets`](./SP-283-homebrew-public-assets/README.md) | 本地验收通过 | tap写入前匿名严格TLS/稳定tag/大小SHA校验；13离线与发布契约通过，未发布 |
+| `SP-283-homebrew-public-assets` | [`SP-283-homebrew-public-assets`](./SP-283-homebrew-public-assets/README.md) | main已提交 | tap写入前匿名严格TLS/稳定tag/大小SHA校验；14574a7b；13离线与发布契约通过，未发布 |
 
-| `SP-284-simulator-diagnostic-dependencies` | [`SP-284-simulator-diagnostic-dependencies`](./SP-284-simulator-diagnostic-dependencies/README.md) | 本地验收通过 | 3组只读依赖，managed/profile不扩张；CLI167+1854/root/local通过，未操作设备 |
+| `SP-284-simulator-diagnostic-dependencies` | [`SP-284-simulator-diagnostic-dependencies`](./SP-284-simulator-diagnostic-dependencies/README.md) | main已提交 | 3组只读依赖，managed/profile不扩张；14574a7b；提交后CLI167+1854/root/local通过，未操作设备 |

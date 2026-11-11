@@ -10,3 +10,5 @@
 - 独立只读复核 labels 固定来源一致，categories/desired/delta 不变，managed171/slimmable168未扩张。doctor保持 service-overrides-only；false/缺 override 仅表示未发现禁用，不证明服务存在或业务成功。
 - 内部 Codable 类型当前仅被编码，无旧 JSON 解码消费者；本次未承诺持久 DTO 的缺字段解码兼容。
 - 未执行真实 Simulator、设备写入、上游代码、推送或发布。docs/local 与提交事实在 SP-207 日报统一收口。
+
+本地提交 `14574a7b26e2f69187d0ad21959cfcf3164f182d`；提交后完整CLI167+1854、适用local再次通过，证据postcommit-full-cli.log / postcommit-local.log。未git merge、push/tag/release；main中的同文件源码与已测候选一致。

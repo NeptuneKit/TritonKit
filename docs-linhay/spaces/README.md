@@ -74,7 +74,7 @@
 | 已合本地main | [SP-221-simulator-resource-read-retry](./SP-221-simulator-resource-read-retry/README.md) | 同目标print-disabled明确launchd暂态有限只读重试 | a0eebff0；focused37/fullCLI/root/local/docs通过，mutation不重放 |
 | 已验收合本地main | [SP-222-simulator-resource-retry-integration](./SP-222-simulator-resource-retry-integration/README.md) | SP-221有限主控，真实runner失败路径与预算 | 独立报告95a1dc8f与actualmain合后门禁通过，未发布 |
 | v0.2.30已发布 | [SP-208-update-version-alignment](./SP-208-update-version-alignment/README.md) | 修复更新误报、安装版本核验与skills对齐 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
-| 持续追踪与采用 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 33仓统一追踪与采用流程已合入main | 10月28日33仓日检24完整/9 partial，3仓更新无新采用；16条已合main，11个执行/主控会话已归档 |
+| 持续追踪与采用 | [SP-207-reference-adoption-pipeline](./SP-207-reference-adoption-pipeline/README.md) | 34仓统一追踪（25参考+9候选） | 11月11日21完整/13 partial；SP283/284提交14574a7b及提交后门禁通过，历史455证据缺失原因unknown |
 | v0.2.30已发布 | [SP-206-ictrl-security-integration](./SP-206-ictrl-security-integration/README.md) | 负责 SP-203～205 交付审查、集成与联合验证 | 057d1012补齐收口历史；worktree/分支已清理，已随v0.2.30发布，用户原机另验 |
 | v0.2.30已发布 | [SP-203-ictrl-discovery-hardening](./SP-203-ictrl-discovery-hardening/README.md) | 发现与连接安全，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，已随v0.2.30发布，用户原机另验；worktree/分支已清理 |
 | v0.2.30已发布 | [SP-204-ictrl-log-privacy](./SP-204-ictrl-log-privacy/README.md) | 日志脱敏与降噪，按 SP-202 评估实施 | SP-206冻结候选联合门禁通过；已本地合并，已随v0.2.30发布，用户原机另验；worktree/分支已清理 |
@@ -489,5 +489,5 @@
 
 - [SP-275-release-v0-2-41](./SP-275-release-v0-2-41/README.md)：#277 已合并 main；v0.2.41 已发布，双架构资产/checksum、Homebrew、skills、安装版与仓库外 packaged Web 验收通过，真实设备/私有 App 边界保留。
 
-| 本地验收通过 | [SP-283-homebrew-public-assets](./SP-283-homebrew-public-assets/README.md) | 公开稳定tag与匿名arm64字节在tap写入前校验；13离线/发布契约通过，未发布 |
-| 本地验收通过 | [SP-284-simulator-diagnostic-dependencies](./SP-284-simulator-diagnostic-dependencies/README.md) | 3组只读features/doctor，未扩张managed/profile；CLI/root/local通过，设备未验 |
+| main已提交 | [SP-283-homebrew-public-assets](./SP-283-homebrew-public-assets/README.md) | 14574a7b；公开稳定tag与匿名arm64字节在tap写入前校验；13离线/发布契约通过，未发布 |
+| main已提交 | [SP-284-simulator-diagnostic-dependencies](./SP-284-simulator-diagnostic-dependencies/README.md) | 14574a7b；3组只读features/doctor，未扩张managed/profile；CLI/root/local通过，设备未验 |

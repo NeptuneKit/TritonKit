@@ -1,0 +1,44 @@
+{
+  "repository": "dongxinsuperman/ai-phone",
+  "base_sha": "d339057bc64aa85002570765e2a20d45e0391bae",
+  "head_sha": "a96cb091903922f4f002f48c38cdfb1146653f93",
+  "actual_main": "607410fb3d44bfe02274c13822170c3015c63a99",
+  "decision": "observe",
+  "reason": "两项增量仅Web布局与远端受管VM按需启动库；Triton已有可调且持久化的分栏，当前Web只读产品边界不采纳远端生命周期写控制面。启动回执与精确实例/host就绪绑定作为参考，现有SP281动作上下文不重复排期。",
+  "complete_review": true,
+  "errors": [],
+  "runtime_executed": false,
+  "coverage": {
+    "repository": "dongxinsuperman/ai-phone",
+    "base_sha": "d339057bc64aa85002570765e2a20d45e0391bae",
+    "head_sha": "a96cb091903922f4f002f48c38cdfb1146653f93",
+    "compare_pages": 1,
+    "commits": 2,
+    "trees": 3,
+    "parent_edges": 2,
+    "paths": [
+      "docs/vm-lifecycle-contract.md",
+      "web/src/lib/deviceLibrary.js",
+      "web/src/lib/workbenchLayout.js",
+      "web/src/pages/DeviceGrid.vue",
+      "web/src/pages/DeviceLibrary.vue",
+      "web/src/pages/DeviceWork.vue",
+      "web/src/router.js",
+      "web/tests/device-library.test.mjs",
+      "web/tests/workbench-layout.test.mjs"
+    ],
+    "blobs": 13,
+    "excluded_paths": []
+  },
+  "license": {
+    "spdx": "MIT",
+    "sha256": "b825925aa35feb626875db9db2afc4f71e8cf0abeb1f1bcecfa23efa307a17ce",
+    "path": "LICENSE",
+    "html_url": "https://github.com/dongxinsuperman/ai-phone/blob/a96cb091903922f4f002f48c38cdfb1146653f93/LICENSE"
+  },
+  "candidate_bdd": null,
+  "candidate_file_scope": [],
+  "checkpoint_eligible": true,
+  "review_scope": "All nine changed paths and thirteen text versions inspected; no changed binary/identity exclusions.",
+  "release_increment": "v0.8.0 unchanged; complete release body read from releases-1.json"
+}

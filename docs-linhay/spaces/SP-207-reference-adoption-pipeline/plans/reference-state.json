@@ -7,9 +7,10 @@
   "local_time": "10:00",
   "source_inventory": [
     "docs-linhay/dev/20261014-reference-project-updates.md",
-    "docs-linhay/dev/mobile-mcp-reference.md"
+    "docs-linhay/dev/mobile-mcp-reference.md",
+    "docs-linhay/spaces/SP-279-pinky-reference/README.md"
   ],
-  "coverage_note": "24/33 complete, 9 partial on 20261102; partial checkpoints preserved; iCTRL independent SP193.",
+  "coverage_note": "21/34 complete, 13 partial on 20261111; 25 formal references + 9 research candidates. Pinky registration omission recovered, not historical full-check success. Historical raw missing separately recorded; partial checkpoints unchanged; iCTRL independent SP193.",
   "repositories": [
     {
       "repository": "tddworks/baguette",
@@ -32,41 +33,28 @@
           "binary_source_provenance",
           "incremental_review_incomplete"
         ],
-        "observed_at": "2026-11-02T02:07:15.276322+00:00",
-        "head_sha": "94b78d3603acf661e1f593aff7891c3bd7a86c44",
+        "observed_at": "2026-11-11T09:47:11.388996+00:00",
+        "head_sha": "593a1b4ae699e87bbab444d0d821e45a74b4bc79",
         "details": [
-          "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
-          "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: docs/features/companion-screens/DiPlay.apk",
-          "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: docs/features/companion-screens/identity/offline-mfi/certificate.p7b",
-          "commit patch omitted 1347994f7fb8140652e9794a84c2872fc8fd47ed: docs/features/companion-screens/identity/offline-mfi/identity.pk8",
-          "commit patch omitted ec5a3defe15f6199aa6b0e3ce2092d02f2a00d88: docs/features/chrome-bezel/assets/crown-device-hub-vs-model.png",
-          "commit patch omitted ec5a3defe15f6199aa6b0e3ce2092d02f2a00d88: docs/features/chrome-bezel/assets/device-hub-watch4-1x.png",
-          "commit patch omitted ec5a3defe15f6199aa6b0e3ce2092d02f2a00d88: docs/features/chrome-bezel/assets/watch-device-hub-vs-baguette.png",
-          "commit patch omitted 2c864abda1a7b391a4cabf9a616d450385c8c542: docs/features/companion-screens/DiPlay.apk",
-          "commit patch omitted 2c864abda1a7b391a4cabf9a616d450385c8c542: docs/features/companion-screens/identity/offline-mfi/certificate.p7b",
-          "commit patch omitted 2c864abda1a7b391a4cabf9a616d450385c8c542: docs/features/companion-screens/identity/offline-mfi/identity.pk8",
-          "commit patch omitted d98c6cc76422486f91dc9ac19e527b9adde8f70a: Sources/Baguette/Resources/HingeControl/HingeControl",
-          "commit patch omitted 0e2af73dd8b1ccbdaccf59bb21444b49247aebfa: Sources/Baguette/Resources/HingeControl/HingeControl",
-          "commit patch omitted 7790384c5e020d94ac288f0d695d48dbcbc5b4e4: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
-          "commit patch omitted 7b0e8aab104321be00f15d2d7bde539798a6316e: Sources/Baguette/Resources/HingeControl/HingeControl",
-          "commit patch omitted 14b39834fef663c2eca868db98422e4eaa8e2bb3: Sources/Baguette/Resources/HingeControl/HingeControl",
-          "commit patch omitted 8a65e97f7e6c8976d95b42a82bf6fcd1af74b01b: Sources/Baguette/Resources/DefaultsLookups/DefaultsLookups.dylib",
-          "binary source provenance incomplete; sensitive/binary retrieval filter corrected; content removed"
+          "changed_VirtualCamera.dylib_binary_not_requested_provenance_unverified",
+          "historical_binary_identity_and_hosted_source_gaps_not_closed",
+          "full_safe_text_retrieved_but_all_27384_parent_diff_lines_not_semantically_reviewed",
+          "historical_partial_gaps_not_recovered_by_new_delta_review"
         ],
-        "summary": "20261102-reference-update-report.md"
+        "summary": "20261111-reference-update-report.md"
       },
       "last_notified_observation": {
-        "head_sha": "201de19842d4d6964f1e37989d69fcda24d5eefc",
-        "release_tag": "v0.2.11",
+        "head_sha": "593a1b4ae699e87bbab444d0d821e45a74b4bc79",
+        "release_tag": "v0.2.14",
         "license_sha256": "0509ebb2d8d399fb183d1973d3f6ad585e209ca4c2c42a90f3c22c0f32c1ab3e",
         "fault_classes": [
           "binary_source_provenance",
           "incremental_review_incomplete"
         ],
-        "fingerprint": "57fd9831deae3c8d7a9229a7c8770cd7d9e97d117fe5a503824051ac0ba9efb6",
         "coverage": "upstream_read_incomplete",
-        "reported_on": "20261028",
-        "summary": "20261028-reference-update-report.md"
+        "fingerprint": "c099b377ded864a563a308692255faa85b1f60e206fb5ac62f1b156d2e5b2f96",
+        "reported_on": "20261111",
+        "summary": "20261111-reference-update-report.md"
       }
     },
     {
@@ -102,16 +90,29 @@
         "observation": "20261102-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
-      "last_error": null,
+      "last_error": {
+        "kind": "upstream_read_incomplete",
+        "fault_classes": [
+          "incremental_review_incomplete"
+        ],
+        "observed_at": "2026-11-11T09:47:11.389279+00:00",
+        "head_sha": "5f6dee52834351ae2d765dfda02e540248a9b663",
+        "details": [
+          "semantic_review_incomplete_26922_diff_lines_22_commits"
+        ],
+        "summary": "20261111-reference-update-report.md"
+      },
       "last_notified_observation": {
-        "head_sha": "0193e65c481fc9b64a62427f32fcf143dbc3d2c0",
+        "head_sha": "5f6dee52834351ae2d765dfda02e540248a9b663",
         "release_tag": null,
         "license_sha256": "9024cdf56dfe7e66523698a9f63d3a0061eb15f43bd5ea8e3833a56017ae37fd",
-        "coverage": "complete",
-        "fault_classes": [],
-        "fingerprint": "d55456c41a80b90e4c715a5a58fcfcf4f2699a9109b940ed38f0b0fc12fc016f",
-        "reported_on": "20261024",
-        "summary": "20261024-reference-update-report.md"
+        "fault_classes": [
+          "incremental_review_incomplete"
+        ],
+        "coverage": "upstream_read_incomplete",
+        "fingerprint": "fff5d5084f8eb7463d59d32a08d6082a09c3e740fed67cd0df67898c8364ddba",
+        "reported_on": "20261111",
+        "summary": "20261111-reference-update-report.md"
       }
     },
     {
@@ -129,138 +130,16 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:15.278831+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:15.278831+00:00",
+        "checked_at": "2026-11-11T09:47:11.389338+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:11.389338+00:00",
         "head_sha": "c02295edfd2f442249b869096dda3dc7bfcd308d",
         "default_branch": "main",
         "release_tag": "v0.16.0",
         "latest_release": {
-          "url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/419104775",
-          "assets_url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/419104775/assets",
-          "upload_url": "https://uploads.github.com/repos/lycorp-jp/sim-use/releases/419104775/assets{?name,label}",
-          "html_url": "https://github.com/lycorp-jp/sim-use/releases/tag/v0.16.0",
-          "id": 419104775,
-          "author": {
-            "login": "onevcat",
-            "id": 1019875,
-            "node_id": "MDQ6VXNlcjEwMTk4NzU=",
-            "avatar_url": "https://avatars.githubusercontent.com/u/1019875?v=4",
-            "gravatar_id": "",
-            "url": "https://api.github.com/users/onevcat",
-            "html_url": "https://github.com/onevcat",
-            "followers_url": "https://api.github.com/users/onevcat/followers",
-            "following_url": "https://api.github.com/users/onevcat/following{/other_user}",
-            "gists_url": "https://api.github.com/users/onevcat/gists{/gist_id}",
-            "starred_url": "https://api.github.com/users/onevcat/starred{/owner}{/repo}",
-            "subscriptions_url": "https://api.github.com/users/onevcat/subscriptions",
-            "organizations_url": "https://api.github.com/users/onevcat/orgs",
-            "repos_url": "https://api.github.com/users/onevcat/repos",
-            "events_url": "https://api.github.com/users/onevcat/events{/privacy}",
-            "received_events_url": "https://api.github.com/users/onevcat/received_events",
-            "type": "User",
-            "user_view_type": "public",
-            "site_admin": false
-          },
-          "node_id": "RE_kwDOTFpbmc4Y-wgH",
           "tag_name": "v0.16.0",
-          "target_commitish": "main",
-          "name": "v0.16.0",
-          "draft": false,
-          "immutable": false,
-          "prerelease": false,
-          "created_at": "2026-10-21T03:08:19Z",
-          "updated_at": "2026-10-21T03:11:08Z",
           "published_at": "2026-10-21T03:11:08Z",
-          "assets": [
-            {
-              "url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/assets/661202310",
-              "id": 661202310,
-              "node_id": "RA_kwDOTFpbmc4naSWG",
-              "name": "sim-use-v0.16.0.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "onevcat",
-                "id": 1019875,
-                "node_id": "MDQ6VXNlcjEwMTk4NzU=",
-                "avatar_url": "https://avatars.githubusercontent.com/u/1019875?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/onevcat",
-                "html_url": "https://github.com/onevcat",
-                "followers_url": "https://api.github.com/users/onevcat/followers",
-                "following_url": "https://api.github.com/users/onevcat/following{/other_user}",
-                "gists_url": "https://api.github.com/users/onevcat/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/onevcat/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/onevcat/subscriptions",
-                "organizations_url": "https://api.github.com/users/onevcat/orgs",
-                "repos_url": "https://api.github.com/users/onevcat/repos",
-                "events_url": "https://api.github.com/users/onevcat/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/onevcat/received_events",
-                "type": "User",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/x-gtar",
-              "state": "uploaded",
-              "size": 11828674,
-              "digest": "sha256:1cab866e83cde89bcac5bcd77554a5c687c8b85a27ec1c5e8222ef826411e906",
-              "download_count": 902,
-              "created_at": "2026-10-21T03:11:06Z",
-              "updated_at": "2026-10-21T03:11:07Z",
-              "browser_download_url": "https://github.com/lycorp-jp/sim-use/releases/download/v0.16.0/sim-use-v0.16.0.tar.gz"
-            },
-            {
-              "url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/assets/661202302",
-              "id": 661202302,
-              "node_id": "RA_kwDOTFpbmc4naSV-",
-              "name": "sim-use-v0.16.0.tar.gz.sha256",
-              "label": "",
-              "uploader": {
-                "login": "onevcat",
-                "id": 1019875,
-                "node_id": "MDQ6VXNlcjEwMTk4NzU=",
-                "avatar_url": "https://avatars.githubusercontent.com/u/1019875?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/onevcat",
-                "html_url": "https://github.com/onevcat",
-                "followers_url": "https://api.github.com/users/onevcat/followers",
-                "following_url": "https://api.github.com/users/onevcat/following{/other_user}",
-                "gists_url": "https://api.github.com/users/onevcat/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/onevcat/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/onevcat/subscriptions",
-                "organizations_url": "https://api.github.com/users/onevcat/orgs",
-                "repos_url": "https://api.github.com/users/onevcat/repos",
-                "events_url": "https://api.github.com/users/onevcat/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/onevcat/received_events",
-                "type": "User",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/octet-stream",
-              "state": "uploaded",
-              "size": 89,
-              "digest": "sha256:cb1e3e069fbd63f3484c55ea5245123b53c297fa16bec72e7b82cb3b62c67665",
-              "download_count": 49,
-              "created_at": "2026-10-21T03:11:06Z",
-              "updated_at": "2026-10-21T03:11:06Z",
-              "browser_download_url": "https://github.com/lycorp-jp/sim-use/releases/download/v0.16.0/sim-use-v0.16.0.tar.gz.sha256"
-            }
-          ],
-          "tarball_url": "https://api.github.com/repos/lycorp-jp/sim-use/tarball/v0.16.0",
-          "zipball_url": "https://api.github.com/repos/lycorp-jp/sim-use/zipball/v0.16.0",
-          "body": "Control the iPhone Duo's inner and cover displays and apps in Xcode Resize Mode, with new fold and rotation commands. iOS coordinates now match the `ui` outline by default; scripts that use device-native portrait coordinates must add `--coordinate-space native`. Unicode paste works again with Simulator.app and Device Hub, with safeguards against duplicate or misplaced input.\n\n### Added\n\n- iOS: interact with apps on the iPhone Duo's inner display or in Xcode Resize Mode. Touches, UI queries and screenshots follow the app's display, including after rotation; the bundled skill now requires sim-use 0.16.0. (#157, #158, #164, #165, #170)\n- `sim-use ios fold closed|open|half|<degrees>` folds or unfolds an iPhone Duo simulator. Run it without an argument to read the current posture; `open` and `closed` confirm that the expected display becomes active. (#157, #165)\n- `sim-use ios rotate <orientation>` rotates a simulator and reports whether the app accepted the change. Fold and rotation commands clear old `@N` references so they cannot target the previous layout. (#157, #165)\n- iOS: record and stream the app's display on an unfolded iPhone Duo or in Resize Mode with `record-video` and `stream-video --format h264|bgra`. Capture stays on its starting display and warns if the app moves or resizes; older screenshot-based stream formats still require the main display. (#164, #165)\n- iOS: the `ui` outline groups vertical navigation and tab bars into `Leading` or `Trailing` regions on iPhone Duo apps built with the iOS 27.1 SDK, making controls easier to find. (#163, #169, #171)\n\n### Changed\n\n- **Breaking — iOS coordinates now use the same space as the `ui` outline.** Taps, swipes, touches, multi-touch, gesture geometry, menu-paste targets and batch steps follow this default. Add `--coordinate-space native` if your scripts use device-native portrait points; the flag is not valid with selectors, aliases or directional gesture presets. (#161, #163)\n- iOS: touch commands and menu-based paste now work in Xcode Resize Mode instead of refusing to run. The outline identifies the resized display, and commands return to the main display when the session ends. (#143, #158, #164, #165 — thanks @iXerol!)\n- iOS: `ui`, `ios fold` and `ios rotate` call the iPhone Duo's screens `inner display` and `cover display`, rather than showing system names. Raw display names in JSON are unchanged. (#170)\n- iOS: when screen probes cannot confirm orientation, commands use the rotation reported by the simulator instead of guessing or showing an unnecessary warning. (#158)\n- iOS: `ui --point` now checks the app's current layout before identifying a control. The first query after Resize Mode starts describes the app rather than the home screen, at the cost of an extra UI read. (#158)\n\n### Fixed\n\n- iOS: Unicode `paste` works again with Simulator.app and Device Hub in either keyboard mode, preserving the caret and selection. `--replace` waits for Select All before pasting; shared clipboard sync can still affect the Mac and other devices. (#172)\n- iOS: menu-based paste no longer retries after a potentially delivered action or taps unrelated app controls. Replacement requires a confirmed selection or an empty field, and localized Paste and Select All menus are recognized, including Russian and Portuguese. (#172)\n- iOS: a failed batch no longer automatically repeats completed steps, which could paste text twice. Check the completed steps before retrying a failed batch yourself. (#172)\n- iOS: batch paste steps now use the same clipboard checks and safe replacement as standalone paste, including `--via-menu`. Text starting with `-` is preserved, and a step cannot change the batch's target device. (#172)\n- iOS: typing and keyboard commands keep working after folding or rotating an iPhone Duo with Device Hub closed. Touches on the inner display or in Resize Mode also work without opening Device Hub first. (#165)\n- iOS: pinch and rotate gestures in `ios batch` now perform the requested two-finger gesture and honor its settings, rather than sending a single-finger swipe. (#161, #163)\n- Physical iOS: `ui` and `tap` briefly retry when an app's UI is not ready just after launch, instead of immediately suggesting that the device is locked or the app lacks development permissions. (#110, #156 — thanks @mvanhorn!)\n- iOS: the outline recognizes iPhone Duo side bars beside narrow cards or small content elements, rather than mixing navigation controls into the content. (#171)\n- iOS: content that extends beyond its pane no longer hides an iPhone Duo side bar from the outline or gets grouped into that bar. (#169)\n- iOS: a failed `ui` read now explains that the app's UI could not be read and gives recovery advice, including how to restart the simulator's accessibility service when it stops responding. (#168)\n- iOS: `stream-video --format bgra` produces correctly sized pixel frames on displays such as the iPhone Duo cover, including with `--scale`, so raw-video players can decode them. (#164, #165)\n- Viewer: errors and recovery hints are no longer lost when a command exits immediately. (#165)\n",
-          "reactions": {
-            "url": "https://api.github.com/repos/lycorp-jp/sim-use/releases/419104775/reactions",
-            "total_count": 2,
-            "+1": 0,
-            "-1": 0,
-            "laugh": 0,
-            "hooray": 0,
-            "confused": 0,
-            "heart": 2,
-            "rocket": 0,
-            "eyes": 0
-          },
-          "mentions_count": 2
+          "html_url": "https://github.com/lycorp-jp/sim-use/releases/tag/v0.16.0",
+          "prerelease": false
         },
         "license_spdx": "NOASSERTION",
         "license_sha256": "8c0fe2892344358b49aa07d9a184bd8d0891832baf642f19161f271acc075d32",
@@ -270,9 +149,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/lycorp-jp/sim-use/blob/c02295edfd2f442249b869096dda3dc7bfcd308d/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official metadata/all non-draft release pages including prerelease/fixed full license; all commit files, reconstructed omitted parent-child text, mechanism review against actualmain; runtime not executed."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_notified_observation": {
         "head_sha": "c02295edfd2f442249b869096dda3dc7bfcd308d",
@@ -301,126 +180,16 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:15.280395+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:15.280395+00:00",
-        "head_sha": "d594c230fe9ed5080189b0ce76afabda6104bae0",
+        "checked_at": "2026-11-11T09:47:11.392315+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:11.392315+00:00",
+        "head_sha": "7e374b3839d49608a681d1f8b9ca0dd83d35189e",
         "default_branch": "main",
-        "release_tag": "v0.13.0",
+        "release_tag": "v0.14.0",
         "latest_release": {
-          "url": "https://api.github.com/repos/MobAI-App/simslim/releases/424461821",
-          "assets_url": "https://api.github.com/repos/MobAI-App/simslim/releases/424461821/assets",
-          "upload_url": "https://uploads.github.com/repos/MobAI-App/simslim/releases/424461821/assets{?name,label}",
-          "html_url": "https://github.com/MobAI-App/simslim/releases/tag/v0.13.0",
-          "id": 424461821,
-          "author": {
-            "login": "github-actions[bot]",
-            "id": 41898282,
-            "node_id": "MDM6Qm90NDE4OTgyODI=",
-            "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-            "gravatar_id": "",
-            "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-            "html_url": "https://github.com/apps/github-actions",
-            "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-            "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-            "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-            "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-            "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-            "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-            "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-            "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-            "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-            "type": "Bot",
-            "user_view_type": "public",
-            "site_admin": false
-          },
-          "node_id": "RE_kwDOTePLYM4ZTMX9",
-          "tag_name": "v0.13.0",
-          "target_commitish": "main",
-          "name": "v0.13.0",
-          "draft": false,
-          "immutable": false,
-          "prerelease": false,
-          "created_at": "2026-10-26T15:59:20Z",
-          "updated_at": "2026-10-26T16:01:11Z",
-          "published_at": "2026-10-26T16:01:11Z",
-          "assets": [
-            {
-              "url": "https://api.github.com/repos/MobAI-App/simslim/releases/assets/678671800",
-              "id": 678671800,
-              "node_id": "RA_kwDOTePLYM4oc7W4",
-              "name": "simslim-0.13.0.arm64_sonoma.bottle.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/gzip",
-              "state": "uploaded",
-              "size": 2335665,
-              "digest": "sha256:f57b67347a9e5d33f1810d67b966c39204d05c7d08082e2eb85ef79a4a016e65",
-              "download_count": 1862,
-              "created_at": "2026-10-26T16:01:07Z",
-              "updated_at": "2026-10-26T16:01:07Z",
-              "browser_download_url": "https://github.com/MobAI-App/simslim/releases/download/v0.13.0/simslim-0.13.0.arm64_sonoma.bottle.tar.gz"
-            },
-            {
-              "url": "https://api.github.com/repos/MobAI-App/simslim/releases/assets/678671803",
-              "id": 678671803,
-              "node_id": "RA_kwDOTePLYM4oc7W7",
-              "name": "simslim-v0.13.0-macos-arm64.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/gzip",
-              "state": "uploaded",
-              "size": 4126700,
-              "digest": "sha256:76807efb5beb57b73b40959eea04defe21fc18265811a495db1509b5e7be07c1",
-              "download_count": 1339,
-              "created_at": "2026-10-26T16:01:07Z",
-              "updated_at": "2026-10-26T16:01:10Z",
-              "browser_download_url": "https://github.com/MobAI-App/simslim/releases/download/v0.13.0/simslim-v0.13.0-macos-arm64.tar.gz"
-            }
-          ],
-          "tarball_url": "https://api.github.com/repos/MobAI-App/simslim/tarball/v0.13.0",
-          "zipball_url": "https://api.github.com/repos/MobAI-App/simslim/zipball/v0.13.0",
-          "body": "## What's Changed\n* feat: enable and disable a simulator's services without a reboot by @LinFeiLong in https://github.com/MobAI-App/simslim/pull/62\n* feat: doctor check for Files and document picker Recents by @jeltehomminga in https://github.com/MobAI-App/simslim/pull/63\n* fix: preserve installed bundles during disk cleanup by @sunjinshuai in https://github.com/MobAI-App/simslim/pull/64\n\n## New Contributors\n* @LinFeiLong made their first contribution in https://github.com/MobAI-App/simslim/pull/62\n* @jeltehomminga made their first contribution in https://github.com/MobAI-App/simslim/pull/63\n* @sunjinshuai made their first contribution in https://github.com/MobAI-App/simslim/pull/64\n\n**Full Changelog**: https://github.com/MobAI-App/simslim/compare/v0.12.2...v0.13.0",
-          "mentions_count": 3
+          "tag_name": "v0.14.0",
+          "published_at": "2026-11-04T11:26:16Z",
+          "html_url": "https://github.com/MobAI-App/simslim/releases/tag/v0.14.0",
+          "prerelease": false
         },
         "license_spdx": "MIT",
         "license_sha256": "8b65667572b02a584c03c2977372eeb5fe8de0e228211b6f83033c458cc10b4e",
@@ -428,22 +197,22 @@
           "spdx": "MIT",
           "sha256": "8b65667572b02a584c03c2977372eeb5fe8de0e228211b6f83033c458cc10b4e",
           "path": "LICENSE",
-          "html_url": "https://github.com/MobAI-App/simslim/blob/d594c230fe9ed5080189b0ce76afabda6104bae0/LICENSE"
+          "html_url": "https://github.com/MobAI-App/simslim/blob/7e374b3839d49608a681d1f8b9ca0dd83d35189e/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null,
       "last_notified_observation": {
-        "head_sha": "d594c230fe9ed5080189b0ce76afabda6104bae0",
-        "release_tag": "v0.13.0",
+        "head_sha": "7e374b3839d49608a681d1f8b9ca0dd83d35189e",
+        "release_tag": "v0.14.0",
         "license_sha256": "8b65667572b02a584c03c2977372eeb5fe8de0e228211b6f83033c458cc10b4e",
         "fault_classes": [],
-        "fingerprint": "473966c49e840eddbef341e85b53141d175ba5692cbc5efcf6649499c4427740",
         "coverage": "complete",
-        "reported_on": "20261027",
-        "summary": "20261027-reference-update-report.md"
+        "fingerprint": "df2dae18b936c78f59c2ea2af1ea2bbdb9a4b40a700e0b77bd257885e016cc11",
+        "reported_on": "20261111",
+        "summary": "20261111-reference-update-report.md"
       }
     },
     {
@@ -461,198 +230,16 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:15.281113+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:15.281113+00:00",
+        "checked_at": "2026-11-11T09:47:15.442998+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:15.442998+00:00",
         "head_sha": "e50f07f1f4480cb14d57f192df7bf598ca26e708",
         "default_branch": "dev",
         "release_tag": "v0.2.0",
         "latest_release": {
-          "url": "https://api.github.com/repos/Mastersam07/OpenDeviceHub/releases/397851591",
-          "assets_url": "https://api.github.com/repos/Mastersam07/OpenDeviceHub/releases/397851591/assets",
-          "upload_url": "https://uploads.github.com/repos/Mastersam07/OpenDeviceHub/releases/397851591/assets{?name,label}",
-          "html_url": "https://github.com/Mastersam07/OpenDeviceHub/releases/tag/v0.2.0",
-          "id": 397851591,
-          "author": {
-            "login": "github-actions[bot]",
-            "id": 41898282,
-            "node_id": "MDM6Qm90NDE4OTgyODI=",
-            "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-            "gravatar_id": "",
-            "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-            "html_url": "https://github.com/apps/github-actions",
-            "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-            "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-            "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-            "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-            "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-            "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-            "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-            "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-            "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-            "type": "Bot",
-            "user_view_type": "public",
-            "site_admin": false
-          },
-          "node_id": "RE_kwDOUjOvDs4XtrvH",
           "tag_name": "v0.2.0",
-          "target_commitish": "dev",
-          "name": "0.2.0",
-          "draft": false,
-          "immutable": false,
-          "prerelease": false,
-          "created_at": "2026-09-27T23:10:17Z",
-          "updated_at": "2026-09-27T23:14:49Z",
           "published_at": "2026-09-27T23:14:49Z",
-          "assets": [
-            {
-              "url": "https://api.github.com/repos/Mastersam07/OpenDeviceHub/releases/assets/593973255",
-              "id": 593973255,
-              "node_id": "RA_kwDOUjOvDs4jZ1AH",
-              "name": "appcast.xml",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/xml",
-              "state": "uploaded",
-              "size": 3023,
-              "digest": "sha256:484453ce17e01562500d0f37c262d87abc309f2fe02ee68821f72a204361154f",
-              "download_count": 2,
-              "created_at": "2026-09-27T23:14:47Z",
-              "updated_at": "2026-09-27T23:14:48Z",
-              "browser_download_url": "https://github.com/Mastersam07/OpenDeviceHub/releases/download/v0.2.0/appcast.xml"
-            },
-            {
-              "url": "https://api.github.com/repos/Mastersam07/OpenDeviceHub/releases/assets/593973251",
-              "id": 593973251,
-              "node_id": "RA_kwDOUjOvDs4jZ1AD",
-              "name": "OpenDeviceHub-0.2.0.dmg",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/x-apple-diskimage",
-              "state": "uploaded",
-              "size": 3868299,
-              "digest": "sha256:56d66270a7b18727dc8b13dbdb55c9772d79124461ec7d439370650094bc4b63",
-              "download_count": 56,
-              "created_at": "2026-09-27T23:14:47Z",
-              "updated_at": "2026-09-27T23:14:48Z",
-              "browser_download_url": "https://github.com/Mastersam07/OpenDeviceHub/releases/download/v0.2.0/OpenDeviceHub-0.2.0.dmg"
-            },
-            {
-              "url": "https://api.github.com/repos/Mastersam07/OpenDeviceHub/releases/assets/593973257",
-              "id": 593973257,
-              "node_id": "RA_kwDOUjOvDs4jZ1AJ",
-              "name": "OpenDeviceHub.dmg",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/x-apple-diskimage",
-              "state": "uploaded",
-              "size": 3868299,
-              "digest": "sha256:56d66270a7b18727dc8b13dbdb55c9772d79124461ec7d439370650094bc4b63",
-              "download_count": 157,
-              "created_at": "2026-09-27T23:14:47Z",
-              "updated_at": "2026-09-27T23:14:48Z",
-              "browser_download_url": "https://github.com/Mastersam07/OpenDeviceHub/releases/download/v0.2.0/OpenDeviceHub.dmg"
-            },
-            {
-              "url": "https://api.github.com/repos/Mastersam07/OpenDeviceHub/releases/assets/593973261",
-              "id": 593973261,
-              "node_id": "RA_kwDOUjOvDs4jZ1AN",
-              "name": "SHA256SUMS",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/octet-stream",
-              "state": "uploaded",
-              "size": 174,
-              "digest": "sha256:6b6b4d9c29393c768032475252d1995396e51676586e7c273d1f4f48956d6f87",
-              "download_count": 26,
-              "created_at": "2026-09-27T23:14:47Z",
-              "updated_at": "2026-09-27T23:14:48Z",
-              "browser_download_url": "https://github.com/Mastersam07/OpenDeviceHub/releases/download/v0.2.0/SHA256SUMS"
-            }
-          ],
-          "tarball_url": "https://api.github.com/repos/Mastersam07/OpenDeviceHub/tarball/v0.2.0",
-          "zipball_url": "https://api.github.com/repos/Mastersam07/OpenDeviceHub/zipball/v0.2.0",
-          "body": "- The camera control works on every iPhone that has one, not only the iPhone Duo, and Device,\n  Camera Control presses it. The item appears only for devices with the button. The simulator has\n  no camera, so the device takes a screenshot.\n- Choosing cover, half open or fully open on the iPhone Duo folds it smoothly to that angle instead\n  of jumping, unless Reduce Motion is on. The device stays inside the window in every pose,\n  standing ones included.\n- The iPhone Duo's window moves to the screen the device is using sooner after a fold.\n- Recording the iPhone Duo records the screen it is using, follows it through a fold, and keeps the\n  picture the right way up.\n- A window opens the way its device is already turned, instead of assuming it is upright.\n- Restarting a device no longer leaves its window half connected. The iPhone Duo's fold buttons,\n  cover screen and touches come back with the fold it was showing, and the clipboard sync picks up\n  again.\n- Device, Shut Down shuts a simulator down from the menu.\n- Every menu action acts on the simulator in front, not on every open one, and ticks such as Stay\n  On Top, Slow Animations and Connect Hardware Keyboard show that simulator's own setting.\n- Favorite locations: save named coordinates in Settings and choose them from Features, Location.\n- Screenshots and recordings each have their own folder in Settings, starting from the folder you\n  had already chosen, and Save Screen can put the picture on the clipboard instead of in a file.\n- Clipboard sync can be turned on or off in Settings as well as from the Edit menu, and the two stay\n  in step.\n- The screen shown while a device is shut down or starting stays inside its rounded corners.\n- The Settings window can be resized, and scrolls.\n- The disk image opens as an installer window: drag the app onto Applications. The mounted disk\n  shows the app's icon.\n\nShut Down, favorite locations and the capture and clipboard settings were contributed by\n@stephen-zeng.\n\n## Requirements\n\nmacOS 14 or later, Apple silicon, and Xcode 26 or 27 with at least one iOS simulator runtime.\n\nApple silicon only, and not by preference: the simulator frameworks this app loads from Xcode ship\nas `arm64e` with no Intel slice, so an Intel build would launch and then fail at the first framework\nload.\n\n## Known gaps\n\nThese are the ones worth knowing before you install it:\n\n- **The windows are invisible to accessibility**: VoiceOver, window managers and scripting tools see\n  the app and its menus but not its windows.\n- **A device taller than your display** keeps its bottom edge off screen, where the pointer cannot\n  reach it. Use Fit.\n- **The compact layout below 340 points wide** is written and unit tested but has never been used by\n  hand.\n- **Other Apple platforms**: tvOS, watchOS and visionOS simulators are not supported.\n\n## Verifying the download\n\nThe app is signed with a Developer ID certificate, notarized by Apple and stapled, so it launches\nwithout a Gatekeeper warning. `SHA256SUMS` is attached; to check the DMG against it:\n\n```sh\nshasum -a 256 -c SHA256SUMS\n```\n\n## Credits\n\nBuilt after studying two MIT licensed projects, and better for both:\n[Siniulator](https://github.com/kmagiera/Siniulator) by Krzysztof Magiera, and\n[idb / FBSimulatorControl](https://github.com/facebook/idb) by Meta. What was adapted from each, down\nto the individual constants, is listed in\n[THIRD_PARTY_NOTICES.md](https://github.com/Mastersam07/OpenDeviceHub/blob/dev/THIRD_PARTY_NOTICES.md).\n\n## Tell me what breaks\n\nIf something does not work, please [open an issue](https://github.com/Mastersam07/OpenDeviceHub/issues/new/choose):\n`odhub doctor` prints almost everything the bug form asks for.\n",
-          "mentions_count": 1
+          "html_url": "https://github.com/Mastersam07/OpenDeviceHub/releases/tag/v0.2.0",
+          "prerelease": false
         },
         "license_spdx": "MIT",
         "license_sha256": "327d9a7d16c78d62abbdbbcd9a48c3334b6d8a0e3e4da11ac5be3a40645a7584",
@@ -662,9 +249,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/Mastersam07/OpenDeviceHub/blob/e50f07f1f4480cb14d57f192df7bf598ca26e708/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null
     },
@@ -683,12 +270,17 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:19.570855+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:19.570855+00:00",
+        "checked_at": "2026-11-11T09:47:15.594176+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:15.594176+00:00",
         "head_sha": "3779e12aa00c08bb34805fef8ffe375838cbe815",
         "default_branch": "main",
         "release_tag": null,
-        "latest_release": {},
+        "latest_release": {
+          "tag_name": null,
+          "published_at": null,
+          "html_url": null,
+          "prerelease": null
+        },
         "license_spdx": "MIT",
         "license_sha256": "4410cda18cd6959d53106c0ed799b3bc483993f5e44f4457a6d9baa1b1f43dfe",
         "license": {
@@ -697,9 +289,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/JaviSoto/device-hub-ios/blob/3779e12aa00c08bb34805fef8ffe375838cbe815/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official metadata/all non-draft release pages including prerelease/fixed full license; all commit files, reconstructed omitted parent-child text, mechanism review against actualmain; runtime not executed."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_notified_observation": {
         "head_sha": "3779e12aa00c08bb34805fef8ffe375838cbe815",
@@ -728,89 +320,16 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:19.604161+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:19.604161+00:00",
-        "head_sha": "180c60584867500b93b43ca6c8b556995bf8be7b",
+        "checked_at": "2026-11-11T09:47:16.256141+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:16.256141+00:00",
+        "head_sha": "1b6c7f0fa5f5ed2bd7885d404f85bcebd5ff0d93",
         "default_branch": "main",
-        "release_tag": "v0.5.1",
+        "release_tag": "v0.6.0",
         "latest_release": {
-          "url": "https://api.github.com/repos/heoblitz/Loupe/releases/412454803",
-          "assets_url": "https://api.github.com/repos/heoblitz/Loupe/releases/412454803/assets",
-          "upload_url": "https://uploads.github.com/repos/heoblitz/Loupe/releases/412454803/assets{?name,label}",
-          "html_url": "https://github.com/heoblitz/Loupe/releases/tag/v0.5.1",
-          "id": 412454803,
-          "author": {
-            "login": "heoblitz",
-            "id": 25315898,
-            "node_id": "MDQ6VXNlcjI1MzE1ODk4",
-            "avatar_url": "https://avatars.githubusercontent.com/u/25315898?v=4",
-            "gravatar_id": "",
-            "url": "https://api.github.com/users/heoblitz",
-            "html_url": "https://github.com/heoblitz",
-            "followers_url": "https://api.github.com/users/heoblitz/followers",
-            "following_url": "https://api.github.com/users/heoblitz/following{/other_user}",
-            "gists_url": "https://api.github.com/users/heoblitz/gists{/gist_id}",
-            "starred_url": "https://api.github.com/users/heoblitz/starred{/owner}{/repo}",
-            "subscriptions_url": "https://api.github.com/users/heoblitz/subscriptions",
-            "organizations_url": "https://api.github.com/users/heoblitz/orgs",
-            "repos_url": "https://api.github.com/users/heoblitz/repos",
-            "events_url": "https://api.github.com/users/heoblitz/events{/privacy}",
-            "received_events_url": "https://api.github.com/users/heoblitz/received_events",
-            "type": "User",
-            "user_view_type": "public",
-            "site_admin": false
-          },
-          "node_id": "RE_kwDOSgBin84YlY-T",
-          "tag_name": "v0.5.1",
-          "target_commitish": "main",
-          "name": "Loupe v0.5.1",
-          "draft": false,
-          "immutable": false,
-          "prerelease": false,
-          "created_at": "2026-10-14T07:41:11Z",
-          "updated_at": "2026-10-14T08:42:28Z",
-          "published_at": "2026-10-14T08:42:28Z",
-          "assets": [
-            {
-              "url": "https://api.github.com/repos/heoblitz/Loupe/releases/assets/639701275",
-              "id": 639701275,
-              "node_id": "RA_kwDOSgBin84mIREb",
-              "name": "loupe-0.5.1.arm64_sequoia.bottle.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/x-gtar",
-              "state": "uploaded",
-              "size": 4629164,
-              "digest": "sha256:aa996b660ac956ed6d5ec7b46f4a974f827484e155c6083e4de505cbd5722a82",
-              "download_count": 115,
-              "created_at": "2026-10-14T08:10:15Z",
-              "updated_at": "2026-10-14T08:10:16Z",
-              "browser_download_url": "https://github.com/heoblitz/Loupe/releases/download/v0.5.1/loupe-0.5.1.arm64_sequoia.bottle.tar.gz"
-            }
-          ],
-          "tarball_url": "https://api.github.com/repos/heoblitz/Loupe/tarball/v0.5.1",
-          "zipball_url": "https://api.github.com/repos/heoblitz/Loupe/zipball/v0.5.1",
-          "body": "- Fix SimulatorKit discovery for Xcode 27's `Contents/SharedFrameworks` layout while retaining the previous framework location.\n- Fall back after missing or unloadable bundles and report attempted paths with load errors.\n\nIncludes a prebuilt Homebrew bottle for Apple Silicon Macs.\n"
+          "tag_name": "v0.6.0",
+          "published_at": "2026-11-06T02:41:46Z",
+          "html_url": "https://github.com/heoblitz/Loupe/releases/tag/v0.6.0",
+          "prerelease": false
         },
         "license_spdx": "NOASSERTION",
         "license_sha256": "0d7ebd755456885dba28523a5c468e59d06a26c8df2b896938632c9322c9e7e3",
@@ -818,20 +337,22 @@
           "spdx": "NOASSERTION",
           "sha256": "0d7ebd755456885dba28523a5c468e59d06a26c8df2b896938632c9322c9e7e3",
           "path": "LICENSE",
-          "html_url": "https://github.com/heoblitz/Loupe/blob/180c60584867500b93b43ca6c8b556995bf8be7b/LICENSE"
+          "html_url": "https://github.com/heoblitz/Loupe/blob/1b6c7f0fa5f5ed2bd7885d404f85bcebd5ff0d93/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null,
       "last_notified_observation": {
-        "head_sha": "180c60584867500b93b43ca6c8b556995bf8be7b",
-        "release_tag": "v0.5.1",
-        "reported_on": "20261102",
-        "summary": "20261102-reference-update-report.md",
+        "head_sha": "1b6c7f0fa5f5ed2bd7885d404f85bcebd5ff0d93",
+        "release_tag": "v0.6.0",
+        "license_sha256": "0d7ebd755456885dba28523a5c468e59d06a26c8df2b896938632c9322c9e7e3",
+        "fault_classes": [],
         "coverage": "complete",
-        "decision": "adopted_offline_local_merged"
+        "fingerprint": "fce2d388698fd6b2b07d2d1203421f05bef8e5857afc66e61e8adfd6591c0df0",
+        "reported_on": "20261111",
+        "summary": "20261111-reference-update-report.md"
       }
     },
     {
@@ -981,16 +502,40 @@
         "observation": "20261102-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
-      "last_error": null,
+      "last_error": {
+        "kind": "upstream_read_incomplete",
+        "fault_classes": [
+          "incremental_review_incomplete"
+        ],
+        "observed_at": "2026-11-11T09:47:16.662366+00:00",
+        "head_sha": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+        "details": [
+          {
+            "code": "incremental_review_incomplete",
+            "detail": "52 commits / 53 parent edges from 20261102 checkpoint. Only 4 parent edges fully collected, 6 of 54 required trees acquired. No commit is certified as all-files semantically reviewed. 14 selected HEAD source/test files reviewed; remaining 338 acquired text versions are collection evidence only, and additional uncollected versions remain unknown."
+          },
+          {
+            "code": "historical_raw_evidence_unavailable",
+            "detail": "Prior 20261103 uncommitted archive is absent; cause unknown. Current files are fresh fixed-SHA retrieval copies, not original historical responses."
+          },
+          {
+            "code": "collector_intentionally_stopped_partial",
+            "detail": "Broad all-version text collection stopped after partial fifth edge to finish bounded protocol/security/local-availability review; review-collect.log preserves KeyboardInterrupt. Not classified as upstream no-change or complete."
+          }
+        ],
+        "summary": "20261111-reference-update-report.md"
+      },
       "last_notified_observation": {
-        "head_sha": "317dc15fa21b63cf3e6b997784bd1c4ce6607392",
-        "release_tag": "runner-v0.4.0",
+        "head_sha": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+        "release_tag": "v0.45.0",
         "license_sha256": "52327c57e955a3e63f872960938e814acc19eb1b77c501999f5fd1e543b21346",
-        "fault_classes": [],
-        "fingerprint": "ae7a9f746329070a4e784e55cd43cb9d160ce9c99cf23c2d5768aa2611c34c9c",
-        "coverage": "complete",
-        "reported_on": "20261028",
-        "summary": "20261028-reference-update-report.md"
+        "fault_classes": [
+          "incremental_review_incomplete"
+        ],
+        "coverage": "upstream_read_incomplete",
+        "fingerprint": "3527b5d0c0584daae60563687ebc896084ab40719f5da95137de05fbc79cabef",
+        "reported_on": "20261111",
+        "summary": "20261111-reference-update-report.md"
       }
     },
     {
@@ -1212,7 +757,31 @@
         "observation": "20261102-observations.json",
         "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
       },
-      "last_error": null
+      "last_error": {
+        "kind": "upstream_read_incomplete",
+        "fault_classes": [
+          "incremental_review_incomplete"
+        ],
+        "observed_at": "2026-11-11T09:47:19.314153+00:00",
+        "head_sha": "acbe8fb01f6669e40a9d781e1849d5f935dcac48",
+        "details": [
+          "large_increment_text_and_semantic_review_incomplete",
+          "conservative_path_screening_exclusions_require_review"
+        ],
+        "summary": "20261111-reference-update-report.md"
+      },
+      "last_notified_observation": {
+        "head_sha": "acbe8fb01f6669e40a9d781e1849d5f935dcac48",
+        "release_tag": "v0.42.0",
+        "license_sha256": "73312c21c21d7ab7fa66c300993f3dd0dcbd53cfa62dded2fa7e6d4adf69c552",
+        "fault_classes": [
+          "incremental_review_incomplete"
+        ],
+        "coverage": "upstream_read_incomplete",
+        "fingerprint": "4bec166b178164237b2fbdca10fa0f79b47f7d8190a5135249db473bd62bf949",
+        "reported_on": "20261111",
+        "summary": "20261111-reference-update-report.md"
+      }
     },
     {
       "repository": "ProxymanApp/atlantis",
@@ -1229,64 +798,16 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:21.205511+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:21.205511+00:00",
+        "checked_at": "2026-11-11T09:47:19.480175+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:19.480175+00:00",
         "head_sha": "cc059013de8778072b4fea6453b45e964e4202fe",
         "default_branch": "main",
         "release_tag": "2.0.0",
         "latest_release": {
-          "url": "https://api.github.com/repos/ProxymanApp/atlantis/releases/412553840",
-          "assets_url": "https://api.github.com/repos/ProxymanApp/atlantis/releases/412553840/assets",
-          "upload_url": "https://uploads.github.com/repos/ProxymanApp/atlantis/releases/412553840/assets{?name,label}",
-          "html_url": "https://github.com/ProxymanApp/atlantis/releases/tag/2.0.0",
-          "id": 412553840,
-          "author": {
-            "login": "NghiaTranUIT",
-            "id": 5878421,
-            "node_id": "MDQ6VXNlcjU4Nzg0MjE=",
-            "avatar_url": "https://avatars.githubusercontent.com/u/5878421?v=4",
-            "gravatar_id": "",
-            "url": "https://api.github.com/users/NghiaTranUIT",
-            "html_url": "https://github.com/NghiaTranUIT",
-            "followers_url": "https://api.github.com/users/NghiaTranUIT/followers",
-            "following_url": "https://api.github.com/users/NghiaTranUIT/following{/other_user}",
-            "gists_url": "https://api.github.com/users/NghiaTranUIT/gists{/gist_id}",
-            "starred_url": "https://api.github.com/users/NghiaTranUIT/starred{/owner}{/repo}",
-            "subscriptions_url": "https://api.github.com/users/NghiaTranUIT/subscriptions",
-            "organizations_url": "https://api.github.com/users/NghiaTranUIT/orgs",
-            "repos_url": "https://api.github.com/users/NghiaTranUIT/repos",
-            "events_url": "https://api.github.com/users/NghiaTranUIT/events{/privacy}",
-            "received_events_url": "https://api.github.com/users/NghiaTranUIT/received_events",
-            "type": "User",
-            "user_view_type": "public",
-            "site_admin": false
-          },
-          "node_id": "RE_kwDOEkFaEM4YlxJw",
           "tag_name": "2.0.0",
-          "target_commitish": "main",
-          "name": "Atlantis 2.0.0: Support APIs for iOS 26 and iOS 27",
-          "draft": false,
-          "immutable": false,
-          "prerelease": false,
-          "created_at": "2026-10-14T09:41:58Z",
-          "updated_at": "2026-10-14T09:43:13Z",
           "published_at": "2026-10-14T09:43:13Z",
-          "assets": [],
-          "tarball_url": "https://api.github.com/repos/ProxymanApp/atlantis/tarball/2.0.0",
-          "zipball_url": "https://api.github.com/repos/ProxymanApp/atlantis/zipball/2.0.0",
-          "body": "- Atlantis can works with new iOS 26, and iOS 27 APIs",
-          "reactions": {
-            "url": "https://api.github.com/repos/ProxymanApp/atlantis/releases/412553840/reactions",
-            "total_count": 3,
-            "+1": 1,
-            "-1": 0,
-            "laugh": 0,
-            "hooray": 1,
-            "confused": 0,
-            "heart": 1,
-            "rocket": 0,
-            "eyes": 0
-          }
+          "html_url": "https://github.com/ProxymanApp/atlantis/releases/tag/2.0.0",
+          "prerelease": false
         },
         "license_spdx": "Apache-2.0",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -1296,9 +817,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/ProxymanApp/atlantis/blob/cc059013de8778072b4fea6453b45e964e4202fe/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -1347,317 +868,16 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:24.002218+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:24.002218+00:00",
+        "checked_at": "2026-11-11T09:47:21.286521+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:21.286521+00:00",
         "head_sha": "2998ac77ebbca59544e88a27f34bfb830db9d924",
         "default_branch": "main",
         "release_tag": "v2.7.1",
         "latest_release": {
-          "url": "https://api.github.com/repos/getsentry/MobileBuildMCP/releases/395025855",
-          "assets_url": "https://api.github.com/repos/getsentry/MobileBuildMCP/releases/395025855/assets",
-          "upload_url": "https://uploads.github.com/repos/getsentry/MobileBuildMCP/releases/395025855/assets{?name,label}",
-          "html_url": "https://github.com/getsentry/MobileBuildMCP/releases/tag/v2.7.1",
-          "id": 395025855,
-          "author": {
-            "login": "github-actions[bot]",
-            "id": 41898282,
-            "node_id": "MDM6Qm90NDE4OTgyODI=",
-            "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-            "gravatar_id": "",
-            "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-            "html_url": "https://github.com/apps/github-actions",
-            "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-            "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-            "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-            "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-            "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-            "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-            "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-            "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-            "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-            "type": "Bot",
-            "user_view_type": "public",
-            "site_admin": false
-          },
-          "node_id": "RE_kwDOOFv4Ac4Xi52_",
           "tag_name": "v2.7.1",
-          "target_commitish": "main",
-          "name": "Release v2.7.1",
-          "draft": false,
-          "immutable": false,
-          "prerelease": false,
-          "created_at": "2026-09-23T20:15:07Z",
-          "updated_at": "2026-09-23T20:22:14Z",
           "published_at": "2026-09-23T20:18:31Z",
-          "assets": [
-            {
-              "url": "https://api.github.com/repos/getsentry/MobileBuildMCP/releases/assets/584522841",
-              "id": 584522841,
-              "node_id": "RA_kwDOOFv4Ac4i1xxZ",
-              "name": "mobilebuildmcp-2.7.1-darwin-arm64.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/x-gtar",
-              "state": "uploaded",
-              "size": 59166493,
-              "digest": "sha256:75bb08fbb27306ccab6c52b435d16a39fef01921b49d021142a4bdaa93dbe82b",
-              "download_count": 2159,
-              "created_at": "2026-09-23T20:22:11Z",
-              "updated_at": "2026-09-23T20:22:13Z",
-              "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1-darwin-arm64.tar.gz"
-            },
-            {
-              "url": "https://api.github.com/repos/getsentry/MobileBuildMCP/releases/assets/584522840",
-              "id": 584522840,
-              "node_id": "RA_kwDOOFv4Ac4i1xxY",
-              "name": "mobilebuildmcp-2.7.1-darwin-arm64.tar.gz.sha256",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/octet-stream",
-              "state": "uploaded",
-              "size": 65,
-              "digest": "sha256:593690de90c1c2c1db0628f114011bb3cb61c029c7bb21b977d8ac74455513b0",
-              "download_count": 50,
-              "created_at": "2026-09-23T20:22:11Z",
-              "updated_at": "2026-09-23T20:22:11Z",
-              "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1-darwin-arm64.tar.gz.sha256"
-            },
-            {
-              "url": "https://api.github.com/repos/getsentry/MobileBuildMCP/releases/assets/584522843",
-              "id": 584522843,
-              "node_id": "RA_kwDOOFv4Ac4i1xxb",
-              "name": "mobilebuildmcp-2.7.1-darwin-universal.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/x-gtar",
-              "state": "uploaded",
-              "size": 99572666,
-              "digest": "sha256:c8cccaf4537390d5f526f3f0ebd8fe4b27bdd1a31a54365695d1d73909ebbb7d",
-              "download_count": 124,
-              "created_at": "2026-09-23T20:22:11Z",
-              "updated_at": "2026-09-23T20:22:13Z",
-              "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1-darwin-universal.tar.gz"
-            },
-            {
-              "url": "https://api.github.com/repos/getsentry/MobileBuildMCP/releases/assets/584522848",
-              "id": 584522848,
-              "node_id": "RA_kwDOOFv4Ac4i1xxg",
-              "name": "mobilebuildmcp-2.7.1-darwin-universal.tar.gz.sha256",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/octet-stream",
-              "state": "uploaded",
-              "size": 65,
-              "digest": "sha256:e17282dd2b904db7b3327231fe3b369b665fa3d5d4b7bf69a4ae49410fe0f24f",
-              "download_count": 5,
-              "created_at": "2026-09-23T20:22:12Z",
-              "updated_at": "2026-09-23T20:22:12Z",
-              "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1-darwin-universal.tar.gz.sha256"
-            },
-            {
-              "url": "https://api.github.com/repos/getsentry/MobileBuildMCP/releases/assets/584522838",
-              "id": 584522838,
-              "node_id": "RA_kwDOOFv4Ac4i1xxW",
-              "name": "mobilebuildmcp-2.7.1-darwin-x64.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/x-gtar",
-              "state": "uploaded",
-              "size": 60399043,
-              "digest": "sha256:73a57ce96c78887feadbcf0818e7fd6177e6c161462617bfac3e63a0c287ddf3",
-              "download_count": 167,
-              "created_at": "2026-09-23T20:22:11Z",
-              "updated_at": "2026-09-23T20:22:13Z",
-              "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1-darwin-x64.tar.gz"
-            },
-            {
-              "url": "https://api.github.com/repos/getsentry/MobileBuildMCP/releases/assets/584522842",
-              "id": 584522842,
-              "node_id": "RA_kwDOOFv4Ac4i1xxa",
-              "name": "mobilebuildmcp-2.7.1-darwin-x64.tar.gz.sha256",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/octet-stream",
-              "state": "uploaded",
-              "size": 65,
-              "digest": "sha256:30a24b4e2c43b5884fae178aadd02ff41aa2a09a0d1d8bb1b3d482cee65531ef",
-              "download_count": 9,
-              "created_at": "2026-09-23T20:22:11Z",
-              "updated_at": "2026-09-23T20:22:11Z",
-              "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1-darwin-x64.tar.gz.sha256"
-            },
-            {
-              "url": "https://api.github.com/repos/getsentry/MobileBuildMCP/releases/assets/584518429",
-              "id": 584518429,
-              "node_id": "RA_kwDOOFv4Ac4i1wsd",
-              "name": "mobilebuildmcp-2.7.1.tgz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/octet-stream",
-              "state": "uploaded",
-              "size": 9615980,
-              "digest": "sha256:caf15f8e7e7f5775efbcdd7f788bc129439f2921ba57a6ee010b204761a4f7e8",
-              "download_count": 129,
-              "created_at": "2026-09-23T20:18:32Z",
-              "updated_at": "2026-09-23T20:18:33Z",
-              "browser_download_url": "https://github.com/getsentry/MobileBuildMCP/releases/download/v2.7.1/mobilebuildmcp-2.7.1.tgz"
-            }
-          ],
-          "tarball_url": "https://api.github.com/repos/getsentry/MobileBuildMCP/tarball/v2.7.1",
-          "zipball_url": "https://api.github.com/repos/getsentry/MobileBuildMCP/zipball/v2.7.1",
-          "body": "## Release v2.7.1\n\n### Changed\n\n- Renamed the project from XcodeBuildMCP to MobileBuildMCP. The npm package, CLI binaries (`mobilebuildmcp`, `mobilebuildmcp-doctor`), Homebrew formula, `MOBILEBUILDMCP_*` environment variables, `mobilebuildmcp://` resource URIs, `mobilebuildmcp.output.*` structured output schema IDs, the `.mobilebuildmcp/config.yaml` project config directory, and the `~/Library/Developer/MobileBuildMCP` state directory all use the new name. The `xcodebuildmcp.com` domain is retired: structured output schema `$id` URLs now use `https://raw.githubusercontent.com/getsentry/MobileBuildMCP/main/schemas/structured-output/`, documentation links point at the docs sources in the `getsentry/xcodebuildmcp.com` repository, and the MCP registry name is `io.github.getsentry/mobilebuildmcp`.\n- Dictionary-shaped MCP inputs now use client-compatible wire representations ([#491](https://github.com/getsentry/XcodeBuildMCP/issues/491)). The `env` and `testRunnerEnv` inputs on build, launch, test, and session-default tools are arrays of `{ \"key\": \"...\", \"value\": \"...\" }` entries, while `xcode_ide_call_tool.arguments` is a JSON object string. MobileBuildMCP converts these values to their existing internal objects only after MCP input validation.\n\n### Option A — Homebrew (no Node.js required)\n\nInstall:\n```bash\nbrew tap getsentry/xcodebuildmcp\nbrew install mobilebuildmcp\n```\n\nMCP config:\n```json\n\"MobileBuildMCP\": {\n  \"command\": \"mobilebuildmcp\",\n  \"args\": [\"mcp\"]\n}\n```\n\n### Option B — npm / npx (Node.js 18+)\n\nInstall:\n```bash\nnpm install -g mobilebuildmcp@latest\n```\n\nMCP config:\n```json\n\"MobileBuildMCP\": {\n  \"command\": \"npx\",\n  \"args\": [\"-y\", \"mobilebuildmcp@latest\", \"mcp\"]\n}\n```\n\n📦 **NPM Package**: https://www.npmjs.com/package/mobilebuildmcp/v/2.7.1\n",
-          "reactions": {
-            "url": "https://api.github.com/repos/getsentry/MobileBuildMCP/releases/395025855/reactions",
-            "total_count": 2,
-            "+1": 0,
-            "-1": 0,
-            "laugh": 0,
-            "hooray": 0,
-            "confused": 0,
-            "heart": 0,
-            "rocket": 2,
-            "eyes": 0
-          }
+          "html_url": "https://github.com/getsentry/MobileBuildMCP/releases/tag/v2.7.1",
+          "prerelease": false
         },
         "license_spdx": "NOASSERTION",
         "license_sha256": "fef28fc4165c72b1f0e4ce94654ba44ad7ff7d5d2538b3d01e66e9cc5be3c4f6",
@@ -1667,9 +887,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/getsentry/MobileBuildMCP/blob/2998ac77ebbca59544e88a27f34bfb830db9d924/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -1698,89 +918,16 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:24.487849+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:24.487849+00:00",
+        "checked_at": "2026-11-11T09:47:23.778109+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:23.778109+00:00",
         "head_sha": "3f58c077ded131cca71d75efb05c5d325f0ed18f",
         "default_branch": "main",
         "release_tag": "v0.8.4",
         "latest_release": {
-          "url": "https://api.github.com/repos/awizemann/harness/releases/381534477",
-          "assets_url": "https://api.github.com/repos/awizemann/harness/releases/381534477/assets",
-          "upload_url": "https://uploads.github.com/repos/awizemann/harness/releases/381534477/assets{?name,label}",
-          "html_url": "https://github.com/awizemann/harness/releases/tag/v0.8.4",
-          "id": 381534477,
-          "author": {
-            "login": "awizemann",
-            "id": 319078,
-            "node_id": "MDQ6VXNlcjMxOTA3OA==",
-            "avatar_url": "https://avatars.githubusercontent.com/u/319078?v=4",
-            "gravatar_id": "",
-            "url": "https://api.github.com/users/awizemann",
-            "html_url": "https://github.com/awizemann",
-            "followers_url": "https://api.github.com/users/awizemann/followers",
-            "following_url": "https://api.github.com/users/awizemann/following{/other_user}",
-            "gists_url": "https://api.github.com/users/awizemann/gists{/gist_id}",
-            "starred_url": "https://api.github.com/users/awizemann/starred{/owner}{/repo}",
-            "subscriptions_url": "https://api.github.com/users/awizemann/subscriptions",
-            "organizations_url": "https://api.github.com/users/awizemann/orgs",
-            "repos_url": "https://api.github.com/users/awizemann/repos",
-            "events_url": "https://api.github.com/users/awizemann/events{/privacy}",
-            "received_events_url": "https://api.github.com/users/awizemann/received_events",
-            "type": "User",
-            "user_view_type": "public",
-            "site_admin": false
-          },
-          "node_id": "RE_kwDOSTbCLc4WvcEN",
           "tag_name": "v0.8.4",
-          "target_commitish": "main",
-          "name": "Harness v0.8.4",
-          "draft": false,
-          "immutable": false,
-          "prerelease": false,
-          "created_at": "2026-09-02T19:54:05Z",
-          "updated_at": "2026-09-02T19:54:12Z",
           "published_at": "2026-09-02T19:54:12Z",
-          "assets": [
-            {
-              "url": "https://api.github.com/repos/awizemann/harness/releases/assets/541679414",
-              "id": 541679414,
-              "node_id": "RA_kwDOSTbCLc4gSV82",
-              "name": "Harness-v0.8.4-Universal.zip",
-              "label": "",
-              "uploader": {
-                "login": "awizemann",
-                "id": 319078,
-                "node_id": "MDQ6VXNlcjMxOTA3OA==",
-                "avatar_url": "https://avatars.githubusercontent.com/u/319078?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/awizemann",
-                "html_url": "https://github.com/awizemann",
-                "followers_url": "https://api.github.com/users/awizemann/followers",
-                "following_url": "https://api.github.com/users/awizemann/following{/other_user}",
-                "gists_url": "https://api.github.com/users/awizemann/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/awizemann/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/awizemann/subscriptions",
-                "organizations_url": "https://api.github.com/users/awizemann/orgs",
-                "repos_url": "https://api.github.com/users/awizemann/repos",
-                "events_url": "https://api.github.com/users/awizemann/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/awizemann/received_events",
-                "type": "User",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/zip",
-              "state": "uploaded",
-              "size": 14287432,
-              "digest": "sha256:6d7feb1c828effa65297d542bff24ffeb506c064e0e61dd50fc6127bf6c97cf2",
-              "download_count": 53,
-              "created_at": "2026-09-02T19:54:11Z",
-              "updated_at": "2026-09-02T19:54:12Z",
-              "browser_download_url": "https://github.com/awizemann/harness/releases/download/v0.8.4/Harness-v0.8.4-Universal.zip"
-            }
-          ],
-          "tarball_url": "https://api.github.com/repos/awizemann/harness/tarball/v0.8.4",
-          "zipball_url": "https://api.github.com/repos/awizemann/harness/zipball/v0.8.4",
-          "body": "# Harness 0.8.4 — set_value, and type() stops lying about no-ops\n\nA focused point release for one severe finding (WB-27 / W36): `act{type}` could not fill an `<input type=\"datetime-local\">` behind a controlled React `onChange` — the field cleared and the create was silently dropped, while REST and Playwright both worked. Two failure modes hid behind it: reading `selectionStart` on a date/number/datetime-local input *throws* (aborting the whole insert), and a controlled component reverts any value not set the framework's way. Tool-surface change is additive.\n\n## Highlights\n\n### New `set_value(id, value)` web act\n\nAddresses a Set-of-Mark id (the same parked registry `scroll_into_view` uses), focuses the element, drives the value through the native prototype setter — the React-value-tracker-correct path — dispatches `input` + `change`, blurs to commit, then **reads the value back** and reports whether it stuck. `<select>` matches by option value or visible label.\n\nIt's a distinct tool rather than a `value` argument on `type` because the contracts differ — keystroke-and-caret versus whole-value-and-verified — and a distinct tool advertises and refuses web-only cleanly. Wired end to end: the act vocabulary, `act_ui` schema, decoder, supervisor dispatch, settle profile, logging, replay, and previews. macOS/iOS refuse it explicitly for now — an AX value-set needs per-role verification, and a value-set that silently no-ops while reporting success is exactly the dishonesty this release is about.\n\n### `type()` stops reporting no-ops as success\n\nThe typing JS now guards the `selectionStart` read and reports `{ had, changed }`: a no-op (no field focused, or a controlled/readonly field ignoring the insert) sets an honest driver detail pointing at `set_value`, instead of a clean \"typed\" over an unchanged screen. The mechanism is unchanged; it just stops lying. Best-effort by construction — a component that reverts on a *later* render still reads as changed here, which is why `set_value` exists. The JS returns only booleans, so the shared `fill_credential` path leaks no value.\n\n### Verification\n\n- **Suite 520 → 530 green.** New `WebValueEntryTests` runs the shipped JS against live-WKWebView fixtures: a controlled input that reverts a naive assignment but commits `set_value`'s, a datetime-local, a select by value and by label, the non-settable and stale paths, and the type no-op flag.\n- **Live smoke** gains a set-value leg: the datetime persists through the controlled `onChange`, the select lands by label, and typing into a keystroke-ignoring field warns. Both smokes pass.\n"
+          "html_url": "https://github.com/awizemann/harness/releases/tag/v0.8.4",
+          "prerelease": false
         },
         "license_spdx": "MIT",
         "license_sha256": "e92a5a769096faed8e22dea8d940ce64a6a00638f0f0a4f74a056eb61c52549c",
@@ -1790,9 +937,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/awizemann/harness/blob/3f58c077ded131cca71d75efb05c5d325f0ed18f/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -1820,52 +967,16 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:26.830275+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:26.830275+00:00",
-        "head_sha": "d339057bc64aa85002570765e2a20d45e0391bae",
+        "checked_at": "2026-11-11T09:47:24.340281+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:24.340281+00:00",
+        "head_sha": "a96cb091903922f4f002f48c38cdfb1146653f93",
         "default_branch": "main",
         "release_tag": "v0.8.0",
         "latest_release": {
-          "url": "https://api.github.com/repos/dongxinsuperman/ai-phone/releases/411568527",
-          "assets_url": "https://api.github.com/repos/dongxinsuperman/ai-phone/releases/411568527/assets",
-          "upload_url": "https://uploads.github.com/repos/dongxinsuperman/ai-phone/releases/411568527/assets{?name,label}",
-          "html_url": "https://github.com/dongxinsuperman/ai-phone/releases/tag/v0.8.0",
-          "id": 411568527,
-          "author": {
-            "login": "dongxinsuperman",
-            "id": 50133667,
-            "node_id": "MDQ6VXNlcjUwMTMzNjY3",
-            "avatar_url": "https://avatars.githubusercontent.com/u/50133667?v=4",
-            "gravatar_id": "",
-            "url": "https://api.github.com/users/dongxinsuperman",
-            "html_url": "https://github.com/dongxinsuperman",
-            "followers_url": "https://api.github.com/users/dongxinsuperman/followers",
-            "following_url": "https://api.github.com/users/dongxinsuperman/following{/other_user}",
-            "gists_url": "https://api.github.com/users/dongxinsuperman/gists{/gist_id}",
-            "starred_url": "https://api.github.com/users/dongxinsuperman/starred{/owner}{/repo}",
-            "subscriptions_url": "https://api.github.com/users/dongxinsuperman/subscriptions",
-            "organizations_url": "https://api.github.com/users/dongxinsuperman/orgs",
-            "repos_url": "https://api.github.com/users/dongxinsuperman/repos",
-            "events_url": "https://api.github.com/users/dongxinsuperman/events{/privacy}",
-            "received_events_url": "https://api.github.com/users/dongxinsuperman/received_events",
-            "type": "User",
-            "user_view_type": "public",
-            "site_admin": false
-          },
-          "node_id": "RE_kwDOSO9Fbs4YiAmP",
           "tag_name": "v0.8.0",
-          "target_commitish": "main",
-          "name": "v0.8.0 — JEV 多模态决策，三端手机点击加速",
-          "draft": false,
-          "immutable": false,
-          "prerelease": false,
-          "created_at": "2026-10-13T10:48:18Z",
-          "updated_at": "2026-10-13T10:48:23Z",
           "published_at": "2026-10-13T10:48:23Z",
-          "assets": [],
-          "tarball_url": "https://api.github.com/repos/dongxinsuperman/ai-phone/tarball/v0.8.0",
-          "zipball_url": "https://api.github.com/repos/dongxinsuperman/ai-phone/zipball/v0.8.0",
-          "body": "## JEV 多模态决策，进入手机点击加速的新阶段\n\nAI Phone v0.8.0 将 JEV 接入 V3 缓存回放：把已有动作目标转换为当前画面中的编号候选，由多模态 Decisions 模型选择目标，再映射到设备坐标执行。Android、iOS、HarmonyOS 共用这条定位流程，并按平台使用各自的设备适配。\n\n### 本次更新\n\n- **JEV 普通点击定位**：截图与 UI 树生成候选编号，模型选择编号，程序计算并执行点击；输入、滚动、拖动等动作继续使用原 V3 定位，失败进入现有救援。\n- **三端快速设备通道**：Android 使用 UiAutomator2 原生 JPEG、坐标点击与实时尺寸读取；HarmonyOS 使用原生截图及 UITest；iOS 使用 WDA 按需截图与点击适配。启动检查失败时保留原通道兜底。\n- **统一开关**：`AI_PHONE_JEV_ENABLED` 控制 JEV 及其配套快速通道、稳定检测，默认关闭。另提供渠道、密钥及可选模型配置，请参阅 ENV 示例与轨迹缓存使用文档。\n- **加载等待与截图复用**：JEV 可在明确加载迹象下请求有界等待；稳定图直接用于定位。等待刷新后定位仍失败时，救援承接最新定位图，避免根据旧画面决策。\n- **定位证据**：日志展示实际编号标注模型输入图、所选编号、坐标和分段耗时；JEV 分支不重复上传画框前原图。\n- **混合动作分流修复**：在加载原始缓存 Action 时确定定位路线，避免输入框检查生成的临时点击请求被 JEV 接管。\n- **V3 回放节奏**：取消逐动作 after 留证截图，动作后观察调整为 200ms，最终断言前等待 2 秒。这部分为当前 V3 公共行为，不仅在 JEV 开启时生效。\n- **文档与展示**：README 新增 JEV 原理图、真机连续执行动图和本地性能分段说明，前后端版本统一为 0.8.0。\n\n### 性能与适用范围\n\n已有 Android 实验中，候选标注与编码约 15–50ms，非模型点击链路中位耗时约 620ms；特定样本包含模型往返的一次点击达到约 0.99 秒。完整流程耗时仍由模型往返、页面加载、缓存动作与救援共同决定，这些样本不是每次请求的速度保证。\n\nJEV 当前承接 V3 回放中的普通 Click，不替代任务规划或最终业务断言。模型选错、目标未出现等情况仍可能发生，现有救援及原链路继续保留。\n\n### 配置\n\n```dotenv\nAI_PHONE_JEV_ENABLED=true\nAI_PHONE_JEV_PROVIDER=openrouter\nAI_PHONE_JEV_API_KEY=<your-provider-key>\nAI_PHONE_JEV_MODEL=\n```\n\n`PROVIDER` 支持 `openrouter` / `openai`，模型留空使用对应渠道默认值。Android Agent 在 backend 目录安装可选依赖：`pip install -e '.[jev]'`。请求地址按渠道选择，超时为内部设置，无需填写额外 ENV。\n\n### 验证\n\n已完成 JEV、混合动作分流、三端关闭分支、截图与稳定通道、救援截图交接等回归测试，并通过 Web 构建。包含三端设备实验记录；最新关闭分支的 iOS 真机验证因设备锁屏未完成，不计为通过。\n\n无新增数据库迁移。更新后需重启 Server 与 Agent，使新版配置和执行代码生效。\n"
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/releases/tag/v0.8.0",
+          "prerelease": false
         },
         "license_spdx": "MIT",
         "license_sha256": "b825925aa35feb626875db9db2afc4f71e8cf0abeb1f1bcecfa23efa307a17ce",
@@ -1873,22 +984,22 @@
           "spdx": "MIT",
           "sha256": "b825925aa35feb626875db9db2afc4f71e8cf0abeb1f1bcecfa23efa307a17ce",
           "path": "LICENSE",
-          "html_url": "https://github.com/dongxinsuperman/ai-phone/blob/d339057bc64aa85002570765e2a20d45e0391bae/LICENSE"
+          "html_url": "https://github.com/dongxinsuperman/ai-phone/blob/a96cb091903922f4f002f48c38cdfb1146653f93/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null,
       "last_notified_observation": {
-        "head_sha": "d339057bc64aa85002570765e2a20d45e0391bae",
+        "head_sha": "a96cb091903922f4f002f48c38cdfb1146653f93",
         "release_tag": "v0.8.0",
         "license_sha256": "b825925aa35feb626875db9db2afc4f71e8cf0abeb1f1bcecfa23efa307a17ce",
-        "coverage": "complete",
         "fault_classes": [],
-        "fingerprint": "7cf933da3ed0d0ec313059db8ea80b4de95a43c8f8012ffc3274978874706443",
-        "reported_on": "2026-10-20",
-        "summary": "20261020-reference-update-report.md"
+        "coverage": "complete",
+        "fingerprint": "64473ccf91e96e2373e909f7ca651d8f42a49590fad39cd4702ab3b793f79fb0",
+        "reported_on": "20261111",
+        "summary": "20261111-reference-update-report.md"
       }
     },
     {
@@ -1928,14 +1039,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-02T02:07:26.943207+00:00",
+        "observed_at": "2026-11-11T09:47:24.814695+00:00",
         "head_sha": "eef71926e613c3242643923bb21c92beab439990",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261102-reference-update-report.md"
+        "summary": "20261111-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "eef71926e613c3242643923bb21c92beab439990",
@@ -1994,36 +1105,30 @@
           "incremental_review_incomplete",
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-02T02:07:28.116352+00:00",
-        "head_sha": "a50ee179e5c01a1f25f15cef951a78eddab5fa3e",
+        "observed_at": "2026-11-11T09:47:26.463143+00:00",
+        "head_sha": "dcf5f2ab9fdd181a3bbe770410f4ad19dc36fed9",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license_full_text_unavailable_http404",
-          "binary_pyc_semantics_unreviewed_4_paths",
-          "historical_hosted_source_gap_preserved",
-          "incremental_review_incomplete",
-          "extensionless_VERSION_content_not_requested",
-          "no_extension_VERSION_content_not_requested",
-          "license_full_text_unavailable: existing official 404 retained",
-          "prior_large_increment_generated_hosted_and_binary_provenance_not_closed",
-          "4_changed_pyc_paths_not_requested_semantic_gap_retained",
-          "license: gh: Not Found (HTTP 404)",
-          "4_changed_pyc_paths_not_requested"
+          "four_changed_pyc_paths_not_requested_semantic_gap",
+          "historical_hosted_and_binary_provenance_gap_not_closed",
+          "full_safe_text_retrieved_but_all_23600_parent_diff_lines_not_semantically_reviewed",
+          "historical_partial_gaps_not_recovered_by_new_delta_review"
         ],
-        "summary": "20261102-reference-update-report.md"
+        "summary": "20261111-reference-update-report.md"
       },
       "last_notified_observation": {
-        "head_sha": "8ecfb9f8b1591ac35ad3a3576e9d1df016dd2c33",
-        "release_tag": "v0.1.195",
+        "head_sha": "dcf5f2ab9fdd181a3bbe770410f4ad19dc36fed9",
+        "release_tag": "v0.1.234",
         "license_sha256": null,
         "fault_classes": [
           "incremental_review_incomplete",
           "license_full_text_unavailable"
         ],
-        "fingerprint": "522959fd3657fb24c8c2ae6d4802412f679d56df36e6b2134e2127eb780cb03a",
         "coverage": "upstream_read_incomplete",
-        "reported_on": "20261028",
-        "summary": "20261028-reference-update-report.md"
+        "fingerprint": "9d54d6207871a994954993463fc6bd274650b3a0085bfad0f820c46e170f368f",
+        "reported_on": "20261111",
+        "summary": "20261111-reference-update-report.md"
       },
       "checkpoint_integrity": "Historical SHA/tag retained; license text unverified. Not a current complete success checkpoint."
     },
@@ -2064,14 +1169,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-02T02:07:29.271590+00:00",
+        "observed_at": "2026-11-11T09:47:28.088068+00:00",
         "head_sha": "b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261102-reference-update-report.md"
+        "summary": "20261111-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e",
@@ -2102,233 +1207,16 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:29.494040+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:29.494040+00:00",
+        "checked_at": "2026-11-11T09:47:28.464466+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:28.464466+00:00",
         "head_sha": "fcb36e395bd4ae20448f2535382baecba9396fd9",
         "default_branch": "main",
         "release_tag": "v0.2.0",
         "latest_release": {
-          "url": "https://api.github.com/repos/RevylAI/greenlight/releases/361352048",
-          "assets_url": "https://api.github.com/repos/RevylAI/greenlight/releases/361352048/assets",
-          "upload_url": "https://uploads.github.com/repos/RevylAI/greenlight/releases/361352048/assets{?name,label}",
-          "html_url": "https://github.com/RevylAI/greenlight/releases/tag/v0.2.0",
-          "id": 361352048,
-          "author": {
-            "login": "github-actions[bot]",
-            "id": 41898282,
-            "node_id": "MDM6Qm90NDE4OTgyODI=",
-            "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-            "gravatar_id": "",
-            "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-            "html_url": "https://github.com/apps/github-actions",
-            "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-            "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-            "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-            "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-            "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-            "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-            "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-            "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-            "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-            "type": "Bot",
-            "user_view_type": "public",
-            "site_admin": false
-          },
-          "node_id": "RE_kwDOROP68s4Victw",
           "tag_name": "v0.2.0",
-          "target_commitish": "main",
-          "name": "v0.2.0",
-          "draft": false,
-          "immutable": false,
-          "prerelease": false,
-          "created_at": "2026-07-28T20:16:02Z",
-          "updated_at": "2026-07-28T20:17:16Z",
           "published_at": "2026-07-28T20:17:16Z",
-          "assets": [
-            {
-              "url": "https://api.github.com/repos/RevylAI/greenlight/releases/assets/493152276",
-              "id": 493152276,
-              "node_id": "RA_kwDOROP68s4dZOgU",
-              "name": "checksums.txt",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "text/plain; charset=utf-8",
-              "state": "uploaded",
-              "size": 410,
-              "digest": "sha256:5f7d55cb10ed76364aa56af328e2bf3c5f2ba2db268745f03e35859e0404bb18",
-              "download_count": 3447,
-              "created_at": "2026-07-28T20:17:15Z",
-              "updated_at": "2026-07-28T20:17:15Z",
-              "browser_download_url": "https://github.com/RevylAI/greenlight/releases/download/v0.2.0/checksums.txt"
-            },
-            {
-              "url": "https://api.github.com/repos/RevylAI/greenlight/releases/assets/493152237",
-              "id": 493152237,
-              "node_id": "RA_kwDOROP68s4dZOft",
-              "name": "greenlight_0.2.0_darwin_amd64.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/gzip",
-              "state": "uploaded",
-              "size": 4242851,
-              "digest": "sha256:f609cd2b8b810131d46ac231b6b7d124e9f22ab3ca13c646370c5d334ee36920",
-              "download_count": 45,
-              "created_at": "2026-07-28T20:17:14Z",
-              "updated_at": "2026-07-28T20:17:15Z",
-              "browser_download_url": "https://github.com/RevylAI/greenlight/releases/download/v0.2.0/greenlight_0.2.0_darwin_amd64.tar.gz"
-            },
-            {
-              "url": "https://api.github.com/repos/RevylAI/greenlight/releases/assets/493152234",
-              "id": 493152234,
-              "node_id": "RA_kwDOROP68s4dZOfq",
-              "name": "greenlight_0.2.0_darwin_arm64.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/gzip",
-              "state": "uploaded",
-              "size": 3970711,
-              "digest": "sha256:4ccba1ab1608f80f9a89e7a7d092937116a63273ac9be9310ec95b696de43b5b",
-              "download_count": 3899,
-              "created_at": "2026-07-28T20:17:14Z",
-              "updated_at": "2026-07-28T20:17:15Z",
-              "browser_download_url": "https://github.com/RevylAI/greenlight/releases/download/v0.2.0/greenlight_0.2.0_darwin_arm64.tar.gz"
-            },
-            {
-              "url": "https://api.github.com/repos/RevylAI/greenlight/releases/assets/493152233",
-              "id": 493152233,
-              "node_id": "RA_kwDOROP68s4dZOfp",
-              "name": "greenlight_0.2.0_linux_amd64.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/gzip",
-              "state": "uploaded",
-              "size": 4165609,
-              "digest": "sha256:1e075a588a3b7968de903e53d904cabc983904dadb76906cb5aa149acf07dfff",
-              "download_count": 1490,
-              "created_at": "2026-07-28T20:17:14Z",
-              "updated_at": "2026-07-28T20:17:15Z",
-              "browser_download_url": "https://github.com/RevylAI/greenlight/releases/download/v0.2.0/greenlight_0.2.0_linux_amd64.tar.gz"
-            },
-            {
-              "url": "https://api.github.com/repos/RevylAI/greenlight/releases/assets/493152231",
-              "id": 493152231,
-              "node_id": "RA_kwDOROP68s4dZOfn",
-              "name": "greenlight_0.2.0_linux_arm64.tar.gz",
-              "label": "",
-              "uploader": {
-                "login": "github-actions[bot]",
-                "id": 41898282,
-                "node_id": "MDM6Qm90NDE4OTgyODI=",
-                "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/github-actions%5Bbot%5D",
-                "html_url": "https://github.com/apps/github-actions",
-                "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
-                "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
-                "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
-                "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
-                "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
-                "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
-                "type": "Bot",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/gzip",
-              "state": "uploaded",
-              "size": 3816440,
-              "digest": "sha256:66a2a1b8066bf468d4e352fa97492022d3596d69f45d6aa0b84c26aedb332d80",
-              "download_count": 14,
-              "created_at": "2026-07-28T20:17:14Z",
-              "updated_at": "2026-07-28T20:17:15Z",
-              "browser_download_url": "https://github.com/RevylAI/greenlight/releases/download/v0.2.0/greenlight_0.2.0_linux_arm64.tar.gz"
-            }
-          ],
-          "tarball_url": "https://api.github.com/repos/RevylAI/greenlight/tarball/v0.2.0",
-          "zipball_url": "https://api.github.com/repos/RevylAI/greenlight/zipball/v0.2.0",
-          "body": "## Changelog\n* 766cae07a8a7952941cb36e84656a9a40bb806c2 Add .greenlight.yml config for the code scan\n* 5e1099aa1fb7349b3bfac4b03cb34f44f787f3f5 Add Codex-native Greenlight skill package\n* 903e0393d5eb1935cd8428fa9824ecc73557c383 Add GoReleaser release pipeline + Homebrew tap automation\n* ab0e5c318151b801fed6baa871c3d1cebf6416d7 Add HIGH severity tier, honest 3-state verdict, and --exit-code\n* afbc262dd844c9c3a6d46e168b69382a3874427c Add SARIF 2.1.0 output (--format sarif) for codescan + preflight\n* 3bfafe5a475d3edadbb7ffa9614ee8e8912c1282 Add UIWebView-removed CRITICAL + encryption export-compliance check\n* 809813a3d40ecad61e4d13f66a007cd9dc2aa050 Add `greenlight verify`: runtime flow validation via Revyl CLI\n* 20a7f1da7d45cd833eb3261d134fb9ae7553e2b3 Add preflight tests for HIGH counting, dedup, and --exit-code\n* 14fd1734e36cc38662fd3cf6a185002bddb993bd Add runtime-tier --artifact upload and --open live session\n* 2cac3722ae2cd00cd7978754c5b8ed831df26fa6 Address Copilot 3rd pass: finalized-report verdict + input validation\n* 440c0e1e100eef7cf22716d10217cc20a344acad Address Copilot 4th pass: clean JSON output + smaller robustness fixes\n* e6a4b652bfb18fb797fca20aa705a2d5a5c7c4f7 Address Copilot 5th pass: redact secrets, gate onboarding, fix comment\n* 934565eeac82ff3995cf34234f5d40d5f8dd906c Address Copilot 6th pass: dry-run secret redaction + smaller fixes\n* 59df00ca3fd3a7c7f00bd3437e6b0aecc850fbf0 Address Copilot re-review: clearer errors + accurate README\n* d71b693b460d9af76716fea347a6d71e431c4493 Address PR review (Copilot + code review): correctness + robustness\n* 07320cb849bcb5b19a98811d26f6d394fd661beb Address code review: don't go silent when icons are in Assets.car\n* c39436b1c48e7dff8a563bc0363984fea59c63f4 Address code review: fix inline-ignore over-suppression\n* 2a4f72fae95c5879774696ba9b95a22ab509ca03 Address code review: narrow ipv4 and platform-reference ignore patterns\n* 20ca2e48507b975662e2bc893dad72955e0753b1 Address code review: tighten UIWebView pattern, fix Expo-config detection\n* b0290fcd7bc6ef3a511cea623d27a4eb10014bcb CI: gofmt gate, race detector, macOS matrix\n* 921c0dfff03327cddb4667ab023c7ae0c4f38baa Fail --exit-code on an incomplete scan (code review)\n* 6f5ae815eb96af39396f40394d2f3ba95a928daf Fix UIWebView CRITICAL firing on string/comment text (code review)\n* ed56c8b2ca839d855545b680c4158ef6ef3280c5 Fix scanner false positives/negatives + harden temp creds\n* 7fcf71dd449c2300c0cdbe26d3960f63ebb50450 Fix swapped plugin.json and marketplace.json manifests (#16)\n* de2a85d12c029e009423d52f2661b21bcc702c2e Format entire repo with gofmt\n* e668ec3a6babe569873fd24d731e56d7b7b47aa8 Keep the static scanner separate: drop the auto upsell from preflight\n* 327f381e94448a7c07b31662d73816f294ce718e Merge pull request #1 from olsenbudanur/fix/reduce-false-positives\n* 07c4d0a284aff2b2b1e191238e0069c96774c88d Merge pull request #2 from daeshawnballard/codex/add-codex-native-skill\n* f61861c0595e20320444036b68b94542243a2ce0 Merge pull request #5 from ethanzhoucool/feat/revyl-runtime-verify\n* de1caabee76ce6bfa7c6a6e5985c09e520b3b0f8 Merge remote-tracking branch 'revyl/feat/config-file' into integration/merge-all\n* 6f914f231333c3a1c3e99d1e0c739d82ab3c97fc Merge remote-tracking branch 'revyl/feat/coverage-rule-pack' into integration/merge-all\n* 7522c763fe0cc499a1b5d17b54c82d3550342cca Merge remote-tracking branch 'revyl/feat/goreleaser' into integration/merge-all\n* 339b0f85482de1c0a81a6c4524983e314efedd70 Merge remote-tracking branch 'revyl/feat/ipa-binary-plist' into integration/merge-all\n* 2c25db981a873132c28a891feab5a4ccc63ba21b Merge remote-tracking branch 'revyl/feat/sarif-output' into integration/merge-all\n* 5d65eb9eeff577eea71666fc09d20a30619b4984 Merge remote-tracking branch 'revyl/fix/tier1-qol' into integration/merge-all\n* f112d33570010dafdfb0ab22dfae8ecb5d27d4a2 Parse IPA plists for real (binary + XML) instead of string-matching\n* 55b185c809dc24cbc820510c27fec4953788ddfd Point static users to --verify; say \"cloud device\", not \"real device\"\n* d833730c8277b26a6ab2528af6c1dff0f9a373a0 Polish: unify --version wording, document ignore-directive matching\n* f1a9dfa9663de4d786f61c79db2c9156bb32d6a2 QOL: build-info version fallback, UTF-8 length checks, inline ignore\n* d4001713a4452b1526119511526ed323b1507321 Reduce false positives in codescan and privacy scanner\n* 4f3a1b7a1a7c9cda84e330509953aff137129735 Tag greenlight signup CTA link with UTM params (#13)\n* db0ec50f0f8bdefc8d3d4e525cb935f2ef9014c5 chore(release): prep v0.2.0, the first release with Google Play support (#25)\n* 775bcbc9184d719c16f8844cd41a4e83a7c8e164 codescan: cut false positives in the §2.1 and §5.1.1 rules\n* 8cf34221865dc7aac015ddad457a374f47aa9c36 feat(codescan): detect crypto apps and flag Guideline 3.1.5(b) obligations (#14)\n* 7223ea2c4a150ac233b303e6363e61ed61ce763e feat(playscan): scan Android projects against Google Play policies (#17)\n* d0b675fda01c2a4d83819b705b3b227313bc64ac fix(playscan): close Android scanning gaps from review, and tag Revyl links for attribution (#21)\n* ec41b7c5a73db835bf42610a10503032f263efdc fix(playscan): close the Android scanning gaps from review (#22)\n* 80a57026010af7af050e81026297c3e182326575 fix(playscan): correct the foregroundServiceType resource ID (#19)\n* 4d41b5e13d0ab9fe909bcd3bc3707f351a4b6318 fix(playscan): drop redundant clause from the Play Billing fix line (#18)\n* 5af7309d551c27d7cf749b62d06478fb9767d38d fix(playscan): match Android XR by namespace instead of invented feature names (#24)\n* f0eb89380242b06a197cb0604e03a3942c06300f preflight --verify: chain static checks into Revyl runtime validation\n* 12dbf463d56fc82f2eeec18da7495dad5bfb41fc verify: Revyl sign-up funnel when the user has no account\n* c5b4b4d27405e95c9ff4d6b125fd4a1b7e5c3e3d verify: associate the test with its app id (fix builds never installing)\n* 5c42005cdfc33ed875d31e6ac5b833aefcdfa2be verify: don't report a setup/launch failure as a broken flow\n* fbe2b73be6a397980083a7d455ac92c3e2074db0 verify: parse real Revyl report schema for failure evidence\n* 3f4f3c69a916e7be9f617248a544c95c33b870cc verify: poll until the report settles; count steps from the step array\n* 0d32fc7e26758e0a4ce530f4f7fdf26b5b25e96f verify: unique test name per build (fix silent cross-app rebinding)\n\n"
+          "html_url": "https://github.com/RevylAI/greenlight/releases/tag/v0.2.0",
+          "prerelease": false
         },
         "license_spdx": "MIT",
         "license_sha256": "960890e59731cd6468788d6045407429c1c6ff1e1508d1c8bd77dd0b1a5807ca",
@@ -2338,9 +1226,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/RevylAI/greenlight/blob/fcb36e395bd4ae20448f2535382baecba9396fd9/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -2390,14 +1278,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-02T02:07:30.801829+00:00",
+        "observed_at": "2026-11-11T09:47:28.713741+00:00",
         "head_sha": "efc1dae5da089ec08108a39f1ead39324c11b410",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261102-reference-update-report.md"
+        "summary": "20261111-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "efc1dae5da089ec08108a39f1ead39324c11b410",
@@ -2450,14 +1338,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-02T02:07:31.226889+00:00",
+        "observed_at": "2026-11-11T09:47:32.300202+00:00",
         "head_sha": "ba1250c72f56a08f3718aefc82dc911c1b3a2f23",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261102-reference-update-report.md"
+        "summary": "20261111-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "ba1250c72f56a08f3718aefc82dc911c1b3a2f23",
@@ -2510,14 +1398,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-02T02:07:33.040487+00:00",
+        "observed_at": "2026-11-11T09:47:32.542710+00:00",
         "head_sha": "2758e8a88f4efb3a251b675e0984c091bf8abeb8",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261102-reference-update-report.md"
+        "summary": "20261111-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "2758e8a88f4efb3a251b675e0984c091bf8abeb8",
@@ -2570,14 +1458,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-02T02:07:34.267326+00:00",
+        "observed_at": "2026-11-11T09:47:32.697861+00:00",
         "head_sha": "8b4e5cea045dcff5c30aa723b923e514d2cdc07a",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261102-reference-update-report.md"
+        "summary": "20261111-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "8b4e5cea045dcff5c30aa723b923e514d2cdc07a",
@@ -2608,12 +1496,17 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:34.510516+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:34.510516+00:00",
+        "checked_at": "2026-11-11T09:47:33.040982+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:33.040982+00:00",
         "head_sha": "3d8902e011981b93cb0ebfafba1794eab93b053e",
         "default_branch": "main",
         "release_tag": null,
-        "latest_release": {},
+        "latest_release": {
+          "tag_name": null,
+          "published_at": null,
+          "html_url": null,
+          "prerelease": null
+        },
         "license_spdx": "MIT",
         "license_sha256": "0b62f99f70ef4368aa74efec94d64c4dca5f31d7f5eb8261f4166160fe1ee93d",
         "license": {
@@ -2622,9 +1515,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/RevylAI/CogniSim/blob/3d8902e011981b93cb0ebfafba1794eab93b053e/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -2653,65 +1546,16 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:34.596634+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:34.596634+00:00",
+        "checked_at": "2026-11-11T09:47:36.370763+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:36.370763+00:00",
         "head_sha": "95e30fdcc8151092678387c5262bce790a0d9530",
         "default_branch": "Develop",
         "release_tag": "1.0.7",
         "latest_release": {
-          "url": "https://api.github.com/repos/hughkli/Lookin/releases/144548101",
-          "assets_url": "https://api.github.com/repos/hughkli/Lookin/releases/144548101/assets",
-          "upload_url": "https://uploads.github.com/repos/hughkli/Lookin/releases/144548101/assets{?name,label}",
-          "html_url": "https://github.com/hughkli/Lookin/releases/tag/1.0.7",
-          "id": 144548101,
-          "author": {
-            "login": "hughkli",
-            "id": 15059475,
-            "node_id": "MDQ6VXNlcjE1MDU5NDc1",
-            "avatar_url": "https://avatars.githubusercontent.com/u/15059475?v=4",
-            "gravatar_id": "",
-            "url": "https://api.github.com/users/hughkli",
-            "html_url": "https://github.com/hughkli",
-            "followers_url": "https://api.github.com/users/hughkli/followers",
-            "following_url": "https://api.github.com/users/hughkli/following{/other_user}",
-            "gists_url": "https://api.github.com/users/hughkli/gists{/gist_id}",
-            "starred_url": "https://api.github.com/users/hughkli/starred{/owner}{/repo}",
-            "subscriptions_url": "https://api.github.com/users/hughkli/subscriptions",
-            "organizations_url": "https://api.github.com/users/hughkli/orgs",
-            "repos_url": "https://api.github.com/users/hughkli/repos",
-            "events_url": "https://api.github.com/users/hughkli/events{/privacy}",
-            "received_events_url": "https://api.github.com/users/hughkli/received_events",
-            "type": "User",
-            "user_view_type": "public",
-            "site_admin": false
-          },
-          "node_id": "RE_kwDOHHA4IM4InaEF",
           "tag_name": "1.0.7",
-          "target_commitish": "Release_1.0.7",
-          "name": "update to 1.0.7",
-          "draft": false,
-          "immutable": false,
-          "prerelease": false,
-          "created_at": "2024-03-03T17:25:47Z",
-          "updated_at": "2024-03-03T17:49:34Z",
           "published_at": "2024-03-03T17:49:34Z",
-          "assets": [],
-          "tarball_url": "https://api.github.com/repos/hughkli/Lookin/tarball/1.0.7",
-          "zipball_url": "https://api.github.com/repos/hughkli/Lookin/zipball/1.0.7",
-          "body": "[功能] 新增“快速模式”，可将原先 10 秒的刷新耗时降低到 3 秒以内，相关说明：https://qxh1ndiez2w.feishu.cn/wiki/BPihwfigUigWLQk1Epmc5SFenEe\r\n[功能] 图层右键菜单中增加“刷新”按钮，可单独刷新某一个或某几个图层，从而避免缓慢的全局刷新（需将 LookinServer 配合更新至 1.2.7 或更高版本）\r\n[鸣谢] 本次新功能由 @starFelix  提出想法，并通过 Github PR 贡献了核心代码。\r\n\r\n-------\r\n\r\n[Feature] Introducing \"Fast Mode\" to reduce the refresh time from the previous 10 seconds to within 3 seconds. Details: https://qxh1ndiez2w.feishu.cn/wiki/BPihwfigUigWLQk1Epmc5SFenEe\r\n[Feature] Added a \"Refresh\" button in the right-click menu of layers, allowing users to individually refresh one or multiple layers to avoid slow global refresh (requires updating LookinServer to version 1.2.7 or higher).\r\n[Acknowledgment] These new features were designed by @starFelix  and contributed the core code through the Github PR.",
-          "reactions": {
-            "url": "https://api.github.com/repos/hughkli/Lookin/releases/144548101/reactions",
-            "total_count": 3,
-            "+1": 0,
-            "-1": 0,
-            "laugh": 0,
-            "hooray": 3,
-            "confused": 0,
-            "heart": 0,
-            "rocket": 0,
-            "eyes": 0
-          },
-          "mentions_count": 1
+          "html_url": "https://github.com/hughkli/Lookin/releases/tag/1.0.7",
+          "prerelease": false
         },
         "license_spdx": "GPL-3.0",
         "license_sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
@@ -2721,9 +1565,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/hughkli/Lookin/blob/95e30fdcc8151092678387c5262bce790a0d9530/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null
     },
@@ -2742,12 +1586,17 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:34.989887+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:34.989887+00:00",
+        "checked_at": "2026-11-11T09:47:36.399848+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:36.399848+00:00",
         "head_sha": "8974f95b0685f139a6257f82d6b13895db3356cf",
         "default_branch": "main",
         "release_tag": null,
-        "latest_release": {},
+        "latest_release": {
+          "tag_name": null,
+          "published_at": null,
+          "html_url": null,
+          "prerelease": null
+        },
         "license_spdx": "MIT",
         "license_sha256": "93b43d692b033b76129504448695bfe76ef22d18b11e51352bfab4b5622e5aaa",
         "license": {
@@ -2756,9 +1605,9 @@
           "path": "LICENSE.txt",
           "html_url": "https://github.com/OSU-NLP-Group/UGround/blob/8974f95b0685f139a6257f82d6b13895db3356cf/LICENSE.txt"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null
     },
@@ -2777,12 +1626,17 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:36.888141+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:36.888141+00:00",
+        "checked_at": "2026-11-11T09:47:36.562595+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:36.562595+00:00",
         "head_sha": "582f3a7ea5d285ee8ed9e2e84048d1ab01453c49",
         "default_branch": "main",
         "release_tag": null,
-        "latest_release": {},
+        "latest_release": {
+          "tag_name": null,
+          "published_at": null,
+          "html_url": null,
+          "prerelease": null
+        },
         "license_spdx": "Apache-2.0",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
         "license": {
@@ -2791,9 +1645,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/bytedance/UI-TARS/blob/582f3a7ea5d285ee8ed9e2e84048d1ab01453c49/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null
     },
@@ -2812,12 +1666,17 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:38.062281+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:38.062281+00:00",
+        "checked_at": "2026-11-11T09:47:37.217777+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:37.217777+00:00",
         "head_sha": "2168ae21b1bed1cdb88736d422934825795a9fd7",
         "default_branch": "main",
         "release_tag": null,
-        "latest_release": {},
+        "latest_release": {
+          "tag_name": null,
+          "published_at": null,
+          "html_url": null,
+          "prerelease": null
+        },
         "license_spdx": "Apache-2.0",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
         "license": {
@@ -2826,9 +1685,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/OpenBMB/AgentCPM-GUI/blob/2168ae21b1bed1cdb88736d422934825795a9fd7/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null
     },
@@ -2847,25 +1706,40 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:38.443842+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:38.443842+00:00",
-        "head_sha": "81fa28b564ef7a695521500bc15a0e1324b2b394",
+        "checked_at": "2026-11-11T09:47:40.319139+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:40.319139+00:00",
+        "head_sha": "c4cd0a8f9ddedad24dd8a3daf3a56ca69343849f",
         "default_branch": "main",
         "release_tag": null,
-        "latest_release": {},
+        "latest_release": {
+          "tag_name": null,
+          "published_at": null,
+          "html_url": null,
+          "prerelease": null
+        },
         "license_spdx": "MIT",
         "license_sha256": "961819a89dacd1f4f161e1d2ebf616b538bf095a2eecfa3ef40b7ccec633fac4",
         "license": {
           "spdx": "MIT",
           "sha256": "961819a89dacd1f4f161e1d2ebf616b538bf095a2eecfa3ef40b7ccec633fac4",
           "path": "LICENSE",
-          "html_url": "https://github.com/X-PLUG/MobileAgent/blob/81fa28b564ef7a695521500bc15a0e1324b2b394/LICENSE"
+          "html_url": "https://github.com/X-PLUG/MobileAgent/blob/c4cd0a8f9ddedad24dd8a3daf3a56ca69343849f/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
-      "last_error": null
+      "last_error": null,
+      "last_notified_observation": {
+        "head_sha": "c4cd0a8f9ddedad24dd8a3daf3a56ca69343849f",
+        "release_tag": null,
+        "license_sha256": "961819a89dacd1f4f161e1d2ebf616b538bf095a2eecfa3ef40b7ccec633fac4",
+        "fault_classes": [],
+        "coverage": "complete",
+        "fingerprint": "0ecbc7a64a3bac87ec0717991ed3b2c64ceb14f7da0e9d87b852b971d3107adf",
+        "reported_on": "20261111",
+        "summary": "20261111-reference-update-report.md"
+      }
     },
     {
       "repository": "njucckevin/SeeClick",
@@ -2882,12 +1756,17 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:38.865000+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:38.865000+00:00",
+        "checked_at": "2026-11-11T09:47:40.402277+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:40.402277+00:00",
         "head_sha": "0ef37ac4d7aaf37ba7b990e3e3c3ca77e1fb8f93",
         "default_branch": "main",
         "release_tag": null,
-        "latest_release": {},
+        "latest_release": {
+          "tag_name": null,
+          "published_at": null,
+          "html_url": null,
+          "prerelease": null
+        },
         "license_spdx": "Apache-2.0",
         "license_sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
         "license": {
@@ -2896,9 +1775,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/njucckevin/SeeClick/blob/0ef37ac4d7aaf37ba7b990e3e3c3ca77e1fb8f93/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null
     },
@@ -2917,12 +1796,17 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:38.952985+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:38.952985+00:00",
+        "checked_at": "2026-11-11T09:47:40.413913+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:40.413913+00:00",
         "head_sha": "55ddaf5edc6f6c25673aed343907d5b9dca66f84",
         "default_branch": "main",
         "release_tag": null,
-        "latest_release": {},
+        "latest_release": {
+          "tag_name": null,
+          "published_at": null,
+          "html_url": null,
+          "prerelease": null
+        },
         "license_spdx": "Apache-2.0",
         "license_sha256": "b09fcaf4fbc265223c2479c410beef2b98c5e687c78ecedf3452aa12ffc465f1",
         "license": {
@@ -2931,9 +1815,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/google-research/android_world/blob/55ddaf5edc6f6c25673aed343907d5b9dca66f84/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -2962,137 +1846,16 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:40.608193+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:40.608193+00:00",
-        "head_sha": "5ca5313b4c6516bb66ff2537cdeb8edc01d61228",
+        "checked_at": "2026-11-11T09:47:41.223565+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:41.223565+00:00",
+        "head_sha": "aaa248d7fd4ca4924444dc027af9c7a62a9be348",
         "default_branch": "main",
-        "release_tag": "cli-2.12.0",
+        "release_tag": "cli-2.12.1",
         "latest_release": {
-          "url": "https://api.github.com/repos/mobile-dev-inc/Maestro/releases/424188255",
-          "assets_url": "https://api.github.com/repos/mobile-dev-inc/Maestro/releases/424188255/assets",
-          "upload_url": "https://uploads.github.com/repos/mobile-dev-inc/Maestro/releases/424188255/assets{?name,label}",
-          "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.12.0",
-          "id": 424188255,
-          "author": {
-            "login": "service-account-mobile-dev",
-            "id": 126488330,
-            "node_id": "U_kgDOB4oPCg",
-            "avatar_url": "https://avatars.githubusercontent.com/u/126488330?v=4",
-            "gravatar_id": "",
-            "url": "https://api.github.com/users/service-account-mobile-dev",
-            "html_url": "https://github.com/service-account-mobile-dev",
-            "followers_url": "https://api.github.com/users/service-account-mobile-dev/followers",
-            "following_url": "https://api.github.com/users/service-account-mobile-dev/following{/other_user}",
-            "gists_url": "https://api.github.com/users/service-account-mobile-dev/gists{/gist_id}",
-            "starred_url": "https://api.github.com/users/service-account-mobile-dev/starred{/owner}{/repo}",
-            "subscriptions_url": "https://api.github.com/users/service-account-mobile-dev/subscriptions",
-            "organizations_url": "https://api.github.com/users/service-account-mobile-dev/orgs",
-            "repos_url": "https://api.github.com/users/service-account-mobile-dev/repos",
-            "events_url": "https://api.github.com/users/service-account-mobile-dev/events{/privacy}",
-            "received_events_url": "https://api.github.com/users/service-account-mobile-dev/received_events",
-            "type": "User",
-            "user_view_type": "public",
-            "site_admin": false
-          },
-          "node_id": "RE_kwDOHGW01M4ZSJlf",
-          "tag_name": "cli-2.12.0",
-          "target_commitish": "main",
-          "name": "CLI 2.12.0",
-          "draft": false,
-          "immutable": false,
-          "prerelease": false,
-          "created_at": "2026-10-26T11:47:27Z",
-          "updated_at": "2026-10-26T11:52:22Z",
-          "published_at": "2026-10-26T11:52:10Z",
-          "assets": [
-            {
-              "url": "https://api.github.com/repos/mobile-dev-inc/Maestro/releases/assets/678015760",
-              "id": 678015760,
-              "node_id": "RA_kwDOHGW01M4oabMQ",
-              "name": "checksums_sha256.txt",
-              "label": "",
-              "uploader": {
-                "login": "service-account-mobile-dev",
-                "id": 126488330,
-                "node_id": "U_kgDOB4oPCg",
-                "avatar_url": "https://avatars.githubusercontent.com/u/126488330?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/service-account-mobile-dev",
-                "html_url": "https://github.com/service-account-mobile-dev",
-                "followers_url": "https://api.github.com/users/service-account-mobile-dev/followers",
-                "following_url": "https://api.github.com/users/service-account-mobile-dev/following{/other_user}",
-                "gists_url": "https://api.github.com/users/service-account-mobile-dev/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/service-account-mobile-dev/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/service-account-mobile-dev/subscriptions",
-                "organizations_url": "https://api.github.com/users/service-account-mobile-dev/orgs",
-                "repos_url": "https://api.github.com/users/service-account-mobile-dev/repos",
-                "events_url": "https://api.github.com/users/service-account-mobile-dev/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/service-account-mobile-dev/received_events",
-                "type": "User",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "text/plain",
-              "state": "uploaded",
-              "size": 78,
-              "digest": "sha256:690af621922b0aefdfc8d0c8145618679ea0ce061dcc0ef6d50affd0a7f4d986",
-              "download_count": 1492,
-              "created_at": "2026-10-26T11:52:11Z",
-              "updated_at": "2026-10-26T11:52:11Z",
-              "browser_download_url": "https://github.com/mobile-dev-inc/Maestro/releases/download/cli-2.12.0/checksums_sha256.txt"
-            },
-            {
-              "url": "https://api.github.com/repos/mobile-dev-inc/Maestro/releases/assets/678015800",
-              "id": 678015800,
-              "node_id": "RA_kwDOHGW01M4oabM4",
-              "name": "maestro.zip",
-              "label": "",
-              "uploader": {
-                "login": "service-account-mobile-dev",
-                "id": 126488330,
-                "node_id": "U_kgDOB4oPCg",
-                "avatar_url": "https://avatars.githubusercontent.com/u/126488330?v=4",
-                "gravatar_id": "",
-                "url": "https://api.github.com/users/service-account-mobile-dev",
-                "html_url": "https://github.com/service-account-mobile-dev",
-                "followers_url": "https://api.github.com/users/service-account-mobile-dev/followers",
-                "following_url": "https://api.github.com/users/service-account-mobile-dev/following{/other_user}",
-                "gists_url": "https://api.github.com/users/service-account-mobile-dev/gists{/gist_id}",
-                "starred_url": "https://api.github.com/users/service-account-mobile-dev/starred{/owner}{/repo}",
-                "subscriptions_url": "https://api.github.com/users/service-account-mobile-dev/subscriptions",
-                "organizations_url": "https://api.github.com/users/service-account-mobile-dev/orgs",
-                "repos_url": "https://api.github.com/users/service-account-mobile-dev/repos",
-                "events_url": "https://api.github.com/users/service-account-mobile-dev/events{/privacy}",
-                "received_events_url": "https://api.github.com/users/service-account-mobile-dev/received_events",
-                "type": "User",
-                "user_view_type": "public",
-                "site_admin": false
-              },
-              "content_type": "application/zip",
-              "state": "uploaded",
-              "size": 349408958,
-              "digest": "sha256:a6044a84542f522f434c5dc3d609e60c7446d423f3ed1b2ae513f5c48663ec5e",
-              "download_count": 78123,
-              "created_at": "2026-10-26T11:52:11Z",
-              "updated_at": "2026-10-26T11:52:22Z",
-              "browser_download_url": "https://github.com/mobile-dev-inc/Maestro/releases/download/cli-2.12.0/maestro.zip"
-            }
-          ],
-          "tarball_url": "https://api.github.com/repos/mobile-dev-inc/Maestro/tarball/cli-2.12.0",
-          "zipball_url": "https://api.github.com/repos/mobile-dev-inc/Maestro/zipball/cli-2.12.0",
-          "body": "[See changelog in the CHANGELOG.md file][link]\n\n[link]: https://github.com/mobile-dev-inc/maestro/blob/main/CHANGELOG.md#2120",
-          "reactions": {
-            "url": "https://api.github.com/repos/mobile-dev-inc/Maestro/releases/424188255/reactions",
-            "total_count": 1,
-            "+1": 1,
-            "-1": 0,
-            "laugh": 0,
-            "hooray": 0,
-            "confused": 0,
-            "heart": 0,
-            "rocket": 0,
-            "eyes": 0
-          }
+          "tag_name": "cli-2.12.1",
+          "published_at": "2026-11-02T08:05:48Z",
+          "html_url": "https://github.com/mobile-dev-inc/Maestro/releases/tag/cli-2.12.1",
+          "prerelease": false
         },
         "license_spdx": "Apache-2.0",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -3100,22 +1863,22 @@
           "spdx": "Apache-2.0",
           "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
           "path": "LICENSE",
-          "html_url": "https://github.com/mobile-dev-inc/Maestro/blob/5ca5313b4c6516bb66ff2537cdeb8edc01d61228/LICENSE"
+          "html_url": "https://github.com/mobile-dev-inc/Maestro/blob/aaa248d7fd4ca4924444dc027af9c7a62a9be348/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null,
       "last_notified_observation": {
-        "head_sha": "0df4cf3c8cad946e0494f462c6ce4987145cd36f",
-        "release_tag": "cli-2.12.0",
+        "head_sha": "aaa248d7fd4ca4924444dc027af9c7a62a9be348",
+        "release_tag": "cli-2.12.1",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
         "fault_classes": [],
-        "fingerprint": "4d72671daec9f116d3ba56c0adbfe6073a1946e85bd4afda1b0f914a81d40fbf",
         "coverage": "complete",
-        "reported_on": "20261027",
-        "summary": "20261027-reference-update-report.md"
+        "fingerprint": "511419224925d0f0edf8243be76249b23edfcb674cd6bd7683a7b30b96856f23",
+        "reported_on": "20261111",
+        "summary": "20261111-reference-update-report.md"
       }
     },
     {
@@ -3166,12 +1929,12 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-02T02:07:41.786344+00:00",
+        "observed_at": "2026-11-11T09:47:44.124747+00:00",
         "head_sha": "24e036604b9e2b28e14c3f55e75a686be1a8bd8a",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)"
         ],
-        "summary": "20261102-reference-update-report.md"
+        "summary": "20261111-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "24e036604b9e2b28e14c3f55e75a686be1a8bd8a",
@@ -3199,52 +1962,16 @@
         "coverage": "historical_reference_snapshot"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:42.081159+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:42.081159+00:00",
-        "head_sha": "1851dfaca835d644adb409acad8b173120804bbc",
+        "checked_at": "2026-11-11T09:47:44.172539+00:00",
+        "last_successful_check_at": "2026-11-11T09:47:44.172539+00:00",
+        "head_sha": "3b51952bcd83955f3a743f731f5a9beaebecdab7",
         "default_branch": "main",
-        "release_tag": "1.0.15",
+        "release_tag": "1.0.16",
         "latest_release": {
-          "url": "https://api.github.com/repos/mobile-next/mobile-mcp/releases/429234383",
-          "assets_url": "https://api.github.com/repos/mobile-next/mobile-mcp/releases/429234383/assets",
-          "upload_url": "https://uploads.github.com/repos/mobile-next/mobile-mcp/releases/429234383/assets{?name,label}",
-          "html_url": "https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.15",
-          "id": 429234383,
-          "author": {
-            "login": "gmegidish",
-            "id": 2457607,
-            "node_id": "MDQ6VXNlcjI0NTc2MDc=",
-            "avatar_url": "https://avatars.githubusercontent.com/u/2457607?v=4",
-            "gravatar_id": "",
-            "url": "https://api.github.com/users/gmegidish",
-            "html_url": "https://github.com/gmegidish",
-            "followers_url": "https://api.github.com/users/gmegidish/followers",
-            "following_url": "https://api.github.com/users/gmegidish/following{/other_user}",
-            "gists_url": "https://api.github.com/users/gmegidish/gists{/gist_id}",
-            "starred_url": "https://api.github.com/users/gmegidish/starred{/owner}{/repo}",
-            "subscriptions_url": "https://api.github.com/users/gmegidish/subscriptions",
-            "organizations_url": "https://api.github.com/users/gmegidish/orgs",
-            "repos_url": "https://api.github.com/users/gmegidish/repos",
-            "events_url": "https://api.github.com/users/gmegidish/events{/privacy}",
-            "received_events_url": "https://api.github.com/users/gmegidish/received_events",
-            "type": "User",
-            "user_view_type": "public",
-            "site_admin": false
-          },
-          "node_id": "RE_kwDOOQVw5c4ZlZjP",
-          "tag_name": "1.0.15",
-          "target_commitish": "main",
-          "name": "Version 1.0.15",
-          "draft": false,
-          "immutable": false,
-          "prerelease": false,
-          "created_at": "2026-10-30T15:59:06Z",
-          "updated_at": "2026-10-30T16:15:44Z",
-          "published_at": "2026-10-30T16:10:58Z",
-          "assets": [],
-          "tarball_url": "https://api.github.com/repos/mobile-next/mobile-mcp/tarball/1.0.15",
-          "zipball_url": "https://api.github.com/repos/mobile-next/mobile-mcp/zipball/1.0.15",
-          "body": "* Feat: `mobile_clear_app_data` clears an app's data on Android and iOS Simulator ([#524](https://github.com/mobile-next/mobile-mcp/pull/524))\r\n* Fix: `mobile_save_screenshot` and `mobile_get_device_logs` replace the output file by rename, so a hard link at `saveTo` is never written through ([#533](https://github.com/mobile-next/mobile-mcp/pull/533)), thanks to [@Daniel-GrunbergerCA](https://github.com/Daniel-GrunbergerCA)\r\n* Chore: Upgrade `@modelcontextprotocol/node` to 2.1.2 ([#539](https://github.com/mobile-next/mobile-mcp/pull/539))\r\n"
+          "tag_name": "1.0.16",
+          "published_at": "2026-11-02T16:03:37Z",
+          "html_url": "https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.16",
+          "prerelease": false
         },
         "license_spdx": "Apache-2.0",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
@@ -3252,39 +1979,90 @@
           "spdx": "Apache-2.0",
           "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
           "path": "LICENSE",
-          "html_url": "https://github.com/mobile-next/mobile-mcp/blob/1851dfaca835d644adb409acad8b173120804bbc/LICENSE"
+          "html_url": "https://github.com/mobile-next/mobile-mcp/blob/3b51952bcd83955f3a743f731f5a9beaebecdab7/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261111-reference-update-report.md",
+        "observation": "20261111-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
       },
       "last_error": null,
       "last_notified_observation": {
-        "head_sha": "1025dd070fc934986dec9ea25458b0ab03bc54c7",
-        "release_tag": "1.0.15",
+        "head_sha": "3b51952bcd83955f3a743f731f5a9beaebecdab7",
+        "release_tag": "1.0.16",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
         "fault_classes": [],
-        "fingerprint": "a3773d260dc8654e9d1b04155b6262285810bfecba504542595126dc11684527",
         "coverage": "complete",
-        "reported_on": "20261031",
-        "summary": "20261031-reference-update-report.md"
+        "fingerprint": "e41238ddc4f05f64bfec3d716bac0c33b8f0dc5d139dc6f616bb580665f1f72c",
+        "reported_on": "20261111",
+        "summary": "20261111-reference-update-report.md"
+      }
+    },
+    {
+      "repository": "DIYgod/pinky",
+      "url": "https://github.com/DIYgod/pinky",
+      "classification": "registered_reference",
+      "aliases": [],
+      "registration_source": "docs-linhay/spaces/SP-279-pinky-reference/README.md",
+      "imported_observation": {
+        "observed_on": "2026-11-09",
+        "head_sha": "209aa9e4b2ff1fd81edec3c393a64b21b79162fb",
+        "release_tag": "v2026.1109.16",
+        "license_spdx": "Apache-2.0",
+        "default_branch": "main",
+        "source": "docs-linhay/spaces/SP-279-pinky-reference/plans/20261110-pinky-formal-research-report.md",
+        "coverage": "historical_static_research_not_full_incremental_checkpoint"
+      },
+      "checkpoint": null,
+      "last_error": {
+        "kind": "upstream_read_incomplete",
+        "fault_classes": [
+          "incremental_review_incomplete"
+        ],
+        "observed_at": "2026-11-11T10:02:10.206634+00:00",
+        "head_sha": "3248613b11cb77b263f2a4282209ef9ab79254e7",
+        "details": [
+          "large_increment_parent_tree_and_full_text_review_incomplete",
+          "compare_files_capped_at_300_not_used_as_full_file_inventory",
+          "collector_stopped_by_controller_after_206_trees_for_bounded_review",
+          "historical_clone_currently_unavailable_reason_unknown",
+          "large_increment_parent_tree_and_full_text_review_incomplete",
+          "compare_files_capped_at_300_not_used_as_full_file_inventory",
+          "collector_stopped_by_controller_after_206_trees_for_bounded_review",
+          "historical_clone_currently_unavailable_reason_unknown"
+        ],
+        "summary": "20261111-reference-update-report.md"
+      },
+      "last_notified_observation": {
+        "head_sha": "3248613b11cb77b263f2a4282209ef9ab79254e7",
+        "release_tag": "v2026.1111.16",
+        "license_sha256": "c95bae1d1ce0235ecccd3560b772ec1efb97f348a79f0fbe0a634f0c2ccefe2c",
+        "fault_classes": [
+          "incremental_review_incomplete"
+        ],
+        "coverage": "upstream_read_incomplete",
+        "fingerprint": "e9d2957a11f24f06ced3ae07a0527b65c3e33994147621512e05aea61689ad95",
+        "reported_on": "20261111",
+        "summary": "20261111-reference-update-report.md"
       }
     }
   ],
-  "latest_summary": "20261102-reference-update-report.md",
-  "latest_observation": "20261102-observations.json",
+  "latest_summary": "20261111-reference-update-report.md",
+  "latest_observation": "20261111-observations.json",
   "latest_transport_event": {
     "observed_on": "2026-10-23",
     "first_attempt_failed_repositories": 13,
     "bounded_secure_retry_recovered": 13,
     "summary": "20261023-read-failures.json"
   },
-  "latest_full_inventory_observation": "20261102-observations.json",
+  "latest_full_inventory_observation": "20261111-observations.json",
   "raw_evidence_status": {
-    "current": "available",
-    "archive_root": "../TritonKit-worktrees/archives/reference-monitor/20261102",
+    "current": "fresh_20261111_collection_verified_history_missing",
+    "archive_root": "../TritonKit-archives/reference-monitor/20261111",
+    "manifest": "20261111-evidence-manifest.json",
     "historical_20261030": "missing",
-    "details": "20261031-evidence-custody.json",
-    "historical_missing_notice_on": "2026-10-31"
+    "historical_20261102": "455_missing_reason_unknown",
+    "historical_20261103_uncommitted": "not_available_not_recreated",
+    "details": "20261111-evidence-custody.json",
+    "historical_missing_notice_on": "2026-11-11"
   }
 }

@@ -1,0 +1,292 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-11-11T10:30:54.244006+00:00",
+  "source_manifest": "20261111-evidence-manifest.json",
+  "implementation_sha": "14574a7b26e2f69187d0ad21959cfcf3164f182d",
+  "file_count": 55,
+  "files": [
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/.agents/skills/tritonkit-ops-governance/SKILL.md",
+      "bytes": 37681,
+      "sha256": "1e6ff4b095e9921221e7f35ad21a12ff19fad5d24cad5af12df73e71ed1e3843"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/dev/reference-project-adoption-workflow.md",
+      "bytes": 19626,
+      "sha256": "c8bf84590c08a20d48e29a845c094939231851156231d9b28077fc8092b84679"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/memory/2026-11-11.md",
+      "bytes": 5333,
+      "sha256": "d741d4cd177f4c4ee2954209fb599471c48b7620e769de77d44320eb7e1c19df"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/memory/EXPERIENCE.md",
+      "bytes": 18063,
+      "sha256": "12719fabecb2d0c5311128569bf7e59f09df2efc62ee3a428be2e71ba2f82883"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/memory/MEMORY.md",
+      "bytes": 22751,
+      "sha256": "98b2e89e674c3923ed2ef54a9d2525a675bab26cab64748e4d55fe7c5d8653bf"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/INDEX.md",
+      "bytes": 72675,
+      "sha256": "79cf20800e8ceced26e05d3f332108b253e86d235dbf8e656efddaf2d4a0b02d"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/README.md",
+      "bytes": 84687,
+      "sha256": "c30857969cca6e2a536d7ff596d007e593d75e56eb9a8d44508b64469275e2f6"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-193-ictrl-reference-tracking/README.md",
+      "bytes": 10079,
+      "sha256": "8da9963e832a6861ac8ec97787bfe37a6b6deead95599df14670047f2cf9b5e2"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-193-ictrl-reference-tracking/plans/20261111-check-summary.json",
+      "bytes": 9897,
+      "sha256": "53069aba22aceef6cb49e99ef70a8a35b14bf76edffed8a2ce56045154924c2c"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-193-ictrl-reference-tracking/plans/upstream-state.json",
+      "bytes": 1271,
+      "sha256": "63ca533c56782569df6113eb5951a7baa519985fab5f44f5ad94e274e7709f5d"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/README.md",
+      "bytes": 16490,
+      "sha256": "22ec6d0725616da5616770c063a5bcaca8ba15e975eeff5faae0547643074162"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-DIYgod__pinky-review.json",
+      "bytes": 3067,
+      "sha256": "09c57babe2ce665bbf1b767114e2d2ccc491b864c689591a8e902534b72a18a2"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-DIYgod__pinky-review.md",
+      "bytes": 2236,
+      "sha256": "668bd0fdaed7b6191c6d6586f5ba67e48613680e93521ca75382f2f2db29ecdf"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-EvanBacon__serve-sim-review.json",
+      "bytes": 2334,
+      "sha256": "7570ea75a45fe07a13be081168e00a4b1f325b0ea0143b91f4e507cfaac6f669"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-EvanBacon__serve-sim-review.md",
+      "bytes": 2510,
+      "sha256": "4fcac28e8238fe434e7b832ee161f6e21f0be33dc91e5356bf263d6ca96a245f"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-MobAI-App__simslim-review.json",
+      "bytes": 3778,
+      "sha256": "8e600e4a088aa42f545617467bbc22b52b962b88295da3e8e19cdcdc601050fc"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-MobAI-App__simslim-review.md",
+      "bytes": 2787,
+      "sha256": "b726567d0dd59931c71bd9213411acd99ce19dcc928e8b3abccac0dcbc1749f6"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-RevylAI__revyl-cli-review.json",
+      "bytes": 11271,
+      "sha256": "68a5b810a6bc62879935e160b054790d1cf52d149fff9009e4c0afe4299fc3cf"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-RevylAI__revyl-cli-review.md",
+      "bytes": 2066,
+      "sha256": "bbdd2892c5e2d6e6fdedd30a647ffe033702ad01a85241b3ca00d617232f594b"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-RockxyApp__Rockxy-review.json",
+      "bytes": 4263,
+      "sha256": "7f32769cdf0c58a7e7bba7c0239b1f8ea1eac12d296c8413615d198d70c67d6f"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-RockxyApp__Rockxy-review.md",
+      "bytes": 2101,
+      "sha256": "d5d600fc6cf6cea7bda51932cf5557b0103124c3219b9afb33adf479d3546d62"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-X-PLUG__MobileAgent-review.json",
+      "bytes": 3299,
+      "sha256": "0eb04df1410ee14e1c8292c11429953871ddd684abcf7a8b1d2dea8adb94a587"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-X-PLUG__MobileAgent-review.md",
+      "bytes": 6151,
+      "sha256": "5d4bdc995a4d540b399e325c8187913169067d2fbd410312efa17654075c11f1"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-checkpoint-publication.json",
+      "bytes": 1605,
+      "sha256": "51004f24cc7fe5e5c60dbb6ec557d667a7344750cb197bc017f08189d05691d0"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-dongxinsuperman__ai-phone-review.json",
+      "bytes": 1848,
+      "sha256": "f75e7419c39caf6140af93eb6ca39aef09278df92de703a74b1aa7e5728faa4e"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-dongxinsuperman__ai-phone-review.md",
+      "bytes": 2212,
+      "sha256": "f5378e8c4a1ffcaa355a3fc2b37f6ce070ac97d8d8ad064987c33a430c2878cd"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-evidence-custody.json",
+      "bytes": 145519,
+      "sha256": "9fac15c717e7a1d04d052b35eed28d3192ae24761f108feb87f7dfdd00377799"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-evidence-manifest.json",
+      "bytes": 1389482,
+      "sha256": "9a14d94972c2e5ba0565218a0523e1afb2c4772b1a6aacf7d7a947d078835780"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-heoblitz__Loupe-review.json",
+      "bytes": 2796,
+      "sha256": "fc93d7f137705d47b25fad22f0f3b00133e93d761a36bea1c082198df340f1d9"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-heoblitz__Loupe-review.md",
+      "bytes": 2634,
+      "sha256": "2d72e2e7b145f15fa0286f757b0b06d91fa868b1a46aebf16ca06b3b7659a4a6"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-jfarcand__mirroir-mcp-review.json",
+      "bytes": 14073,
+      "sha256": "b58d8fb4e269b6854449f916c313fd11a25aa016ceefd7b8a199bf0e71dca7b1"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-jfarcand__mirroir-mcp-review.md",
+      "bytes": 9099,
+      "sha256": "de847de78082006cfc7ab73444380efaa04b1d499108ba0d8b74329d450149c4"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-mobile-dev-inc__Maestro-review.json",
+      "bytes": 3131,
+      "sha256": "339b71529d21ffa83104fe30b0a2399dc96220abf8b8353e1a9921cb46b7e52c"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-mobile-dev-inc__Maestro-review.md",
+      "bytes": 4821,
+      "sha256": "557861fcdfe2934df422810abf72d43be183ef845af0b9263daf13b6ea311a48"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-mobile-next__mobile-mcp-review.json",
+      "bytes": 1956,
+      "sha256": "96173fb35c92b965871ac898c48b435194697f24d54f58c95f8d371a183c34d8"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-mobile-next__mobile-mcp-review.md",
+      "bytes": 1899,
+      "sha256": "74df667c542386ecbaad7dcc52228e7f2d5d4e7b0883315ac940b1292133f30f"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-observations.json",
+      "bytes": 284465,
+      "sha256": "0be09d023d4be2620d7388bf41990e92121c2a0163093272ad898ecb066187b2"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-reference-update-report.md",
+      "bytes": 13893,
+      "sha256": "f6ad3aa2fb5ff530d6e48964f5cc18b073f0c416258de2cf6849dfe9c3ec7b03"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-tddworks__baguette-review.json",
+      "bytes": 10264,
+      "sha256": "cf195dde741b23e4cbdfb8eab9a4ec9d39ba25ba12a37a7d37f2a328ce262571"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261111-tddworks__baguette-review.md",
+      "bytes": 2332,
+      "sha256": "6b7199ad9f4ff91355429ccb699e94699d2e78e9a085cca19212180a285c57ad"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/adoption-state.json",
+      "bytes": 46947,
+      "sha256": "b7fd6649ecf69f1191301dec1a3be297487509df60cc905c7a7d662021fe1a7e"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/reference-state.json",
+      "bytes": 101817,
+      "sha256": "69a4fda64419f9077bc9a063428c5db311874672bd52f56d9d01296f61e593b1"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-279-pinky-reference/README.md",
+      "bytes": 3190,
+      "sha256": "7eaf5cab637897dd1f9a172b884d2802bd84bc4d7ee72a04a5a057f00749e9f5"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-283-homebrew-public-assets/README.md",
+      "bytes": 1843,
+      "sha256": "35f9b28b59439d2f040c6c4dce9751ce1ea3ba799ec526b020e118973af00d19"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-283-homebrew-public-assets/plans/20261111-validation.md",
+      "bytes": 1165,
+      "sha256": "c87af4215b9a122649f1cfe26b5f55a8fdd4e3084314691e7f9781b0fc8f3b7b"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-284-simulator-diagnostic-dependencies/README.md",
+      "bytes": 1499,
+      "sha256": "b11b15ecc4cdf6e7bf13ea247a52cef4fdae2f6ea873e399fa705faea189861b"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/formal-closeout/docs-linhay/spaces/SP-284-simulator-diagnostic-dependencies/plans/20261111-validation.md",
+      "bytes": 1621,
+      "sha256": "b6dc7584864c4796fbc132e7c45dcac10c4e2cdb13fdfb5a117acd66007919e8"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/final-docs-gate.log",
+      "bytes": 1890,
+      "sha256": "20fc4a060802b765b81ee2df3804ce393cc99599cccac005f46f7989e3b1a149"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/closeout-docs-gate.log",
+      "bytes": 1890,
+      "sha256": "38998e7ad545e0041217415f6d4cabb59d8cb640832cf933dff3239a03acd81f"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/closeout-check-docs.log",
+      "bytes": 213,
+      "sha256": "21780d126f8ba0ce6101c8c4b99b35d858e5aeabac0b3393fdd9c59875e191e0"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/publication-result.json",
+      "bytes": 1605,
+      "sha256": "51004f24cc7fe5e5c60dbb6ec557d667a7344750cb197bc017f08189d05691d0"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/heoblitz__Loupe/final-acceptance.txt",
+      "bytes": 1501,
+      "sha256": "f372107be5b44fbaa8b14586f60aac79e67abaf519f82ed35f04b3335467dc57"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/publish.py",
+      "bytes": 1799,
+      "sha256": "a8f9d48fd462c693aef3d048e5db380f73d68df118bc088162a1d36bc91c4cc2"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/tracking-staged-files.json",
+      "bytes": 4157,
+      "sha256": "64c0292af5dc52f2256eae14dc7d9649217c48fc5aff6948521023dc7682c94a"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261111/tracking-shared-only.patch",
+      "bytes": 9479,
+      "sha256": "da35d4c2acab6663681664d076026b9a79a0414f3da342125d40cb83344517e2"
+    }
+  ],
+  "cleanup": {
+    "new_worktrees": 0,
+    "new_branches": 0,
+    "new_child_chats": 0,
+    "temporary_pycache_removed": true,
+    "other_task_WIP": "preserved_not_staged",
+    "current_controller": "kept_open"
+  }
+}

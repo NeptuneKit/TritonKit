@@ -1,5 +1,7 @@
 # TritonKit Project Memory
 
+- 2026-11-11参考接管：[SP207日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261111-reference-update-report.md)34仓21完整/13 partial（补SP279正式Pinky漏登）；SP283/284直接main提交14574a7b及提交后CLI/local通过。历史455份raw当前缺失原因unknown，新证据独立TritonKit-archives根；ictrl保持当前聊天每日10:00。未设备/推送/发布。
+
 - 2026-11-09：[SP-278 DSH插件](../spaces/SP-278-dsh-plugin/README.md)0.1.1已通过实现7bc7fac4/修复4dd8f334/merge f4efd202推送远端main；Node32、完整文档契约与两条精确CI通过，当前profile applied且新目标guard生效。原主目录WIP/15条无关提交保持，不强行同步其main；真实设备动作/GUI展示未验。经验见[集成契约](../dev/dsh-plugin-integration.md)。
 
 - 2026-11-09：[v0.2.42发布验收](../spaces/SP-277-release-v0-2-42/plans/20261109-release.md)完成，发布commit e821b7b4；SP276的Harmony空白读取修复已合入并发布，精确CI/标准Pod/双架构/安装CLI与skills/只读浏览器通过，IME及原私有现场未验证边界保留。

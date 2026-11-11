@@ -1,6 +1,6 @@
 # 参考项目追踪与自动采用流程
 
-当前授权：2026-10-16 用户要求后续评估可纳入项直接进入开发，随后将范围从 iCTRL 扩大到所有参考项目。流程事实源为 [SP-207](../spaces/SP-207-reference-adoption-pipeline/README.md)，覆盖当前已登记24个参考仓库与9个研究候选，以及后续正式登记项目；具体仓库、别名与历史基线见 [参考登记](../spaces/SP-207-reference-adoption-pipeline/plans/reference-state.json)。候选不等于已采用。
+当前授权：2026-10-16 用户要求后续评估可纳入项直接进入开发，随后将范围从 iCTRL 扩大到所有参考项目。流程事实源为 [SP-207](../spaces/SP-207-reference-adoption-pipeline/README.md)，覆盖当前已登记25个参考仓库与9个研究候选（SP279正式参考Pinky于11月11日补齐SP207漏登），以及后续正式登记项目；具体仓库、别名与历史基线见 [参考登记](../spaces/SP-207-reference-adoption-pipeline/plans/reference-state.json)。候选不等于已采用。
 
 ## 默认执行
 
@@ -27,13 +27,15 @@
 
 自动流程只做 main 本地开发、提交、资料收口及已交付会话归档；push、tag、release、依赖安装、第三方代码、设备动作、签名和 DDI 仍需单独明确授权。状态通知必须区分“实现完成”“验收通过”“已提交”“已收口”，不能把其中一个阶段冒充全部完成。
 
-每日任务复用id `ictrl`，名称“参考项目更新与采用推进”，保持ACTIVE与北京时间10:00，2026-10-30起绑定接管聊天`01a18a91-f44e-7fd0-8e4b-c891b44377e0`；不新增重叠任务。现有iCTRL检查点仍由SP-193管理，其他仓库从SP-194/SP-199历史快照开始，首次完整读取后才建立对应成功点。历史配置轮次未重新查询全体仓库；2026-10-30接管后的33仓补查见[日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261030-reference-update-report.md)。
+每日任务复用id `ictrl`，名称“参考项目更新与采用推进”，保持ACTIVE与北京时间10:00。当前绑定接管聊天`01a19a4a-50e2-7731-b8fa-880efb954eb5`，2026-11-11重读配置确认；`01a18a91-f44e-7fd0-8e4b-c891b44377e0`为前任，不新建重叠任务。当前prompt已同步main串行开发、arm64-only和SwiftPM-only规则，旧批次branch/worktree步骤只保留历史。现有iCTRL检查点仍由SP-193管理，其他仓库从SP-194/SP-199历史快照开始，首次完整读取后才建立对应成功点。
 
 2026-10-27闭环已执行：[33仓日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261027-reference-update-report.md)24完整/9 partial，6仓更新；SP-225/226 Files Recents只读诊断完成开发、独立验收、main合并607cdf1c、合后完整CLI与docs、53份证据归档以及两个会话关闭。当前16条采用均已合main；首次既有夹具失败原因未知并保留证据，多点HID和软件键盘真实兼容前置继续观察。详见[收口](../spaces/SP-226-files-recents-integration/plans/20261027-main-closeout.md)。
 
 2026-10-30用户要求新聊天接管：原`ictrl`已迁入`01a18a91-f44e-7fd0-8e4b-c891b44377e0`，原聊天`01a139bf-ab78-7783-b37a-ed336be2ef38`保留历史；每日北京时间10:00与完整任务prompt不变。配置已重读确认，见[接管记录](../spaces/SP-207-reference-adoption-pipeline/plans/20261030-controller-takeover.md)。
 
 2026-10-31 [SP252/253](../spaces/SP-253-detached-log-integration/plans/20261031-main-closeout.md)按既有授权完成detached日志安全修复、独立验收、合main56ef7719、合后CLI162+1665与适用local及清理/执行聊天归档。当前17条采用均在main。首次静态审查发现测试flags/FIFO前置不足，补强后重跑旧逻辑red；真实复现是竞争者叶子被替换，不是链接目标写穿。
+
+当前交付与读取：见[2026-11-11日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261111-reference-update-report.md)。34仓21完整/13 partial，既有18条均可达main；SP283/284实现14574a7b与提交后验证分开登记。历史原始证据455份当前缺失，unknown原因，不能沿用旧available断言。
 
 ## 新会话模型
 
@@ -45,7 +47,7 @@
 - [采用登记](../spaces/SP-207-reference-adoption-pipeline/plans/adoption-state.json)与读取状态分开，按仓库+机制以及跨仓库本地需求去重；先核对SP-192/196/200及各space当前实现，不能把旧差距重复排期。
 - 开始对照前同时核对 `git branch --show-current`、`git rev-parse main` 和 `git status --short --branch`。当前产品评估固定绑定实际 `main` blob；资料、索引和历史按 main 裁决，不整分支回灌旧产品。
 - 会话创建成功才记录真实ID，部分失败先补缺项；建立实现/主控空间时串行登记编号。执行会话停止写入后冻结候选，不整目录复制其门禁上下文；测试绑定联合候选，主控复核后才能合并。
-- 长期原始证据不能仅保存在`.build`/scratch；检查点提交前写入仓外`TritonKit-worktrees/archives/reference-monitor/YYYYMMDD/`等明确持久归档，并在正式plans登记路径、size/hash与复核时间。历史读取成功和当前raw evidence可用性分别记录；缺失先记unknown原因，固定SHA重取标恢复副本，不伪造旧API响应或日志。见[10月31日保管缺口](../spaces/SP-207-reference-adoption-pipeline/plans/20261031-evidence-custody.md)。
+- 长期原始证据不能仅保存在`.build`/scratch，也不能挂在会整体清理的worktree根下。当前使用仓外`TritonKit-archives/reference-monitor/YYYYMMDD/`，检查点提交前验证实际文件size/hash，并在正式plans登记manifest和复核时间。`TritonKit-worktrees/archives/`为历史位置，不再作为新归档目标。目录存在、metadata数量或历史hash通过都不等于当前可恢复；清理前核对实际载荷与恢复方式。历史读取成功和当前raw evidence可用性分别记录；缺失先记unknown原因，固定SHA重取标恢复副本，不伪造旧API响应或日志。见[11月11日保管复核](../spaces/SP-207-reference-adoption-pipeline/plans/20261111-evidence-custody.json)和[10月31日保管缺口](../spaces/SP-207-reference-adoption-pipeline/plans/20261031-evidence-custody.md)。
 - 恢复旧partial时逐项核对本轮许可证/文本/来源证据，仅清除已闭合缺口；不能把`prior.complete`作为永远拒绝恢复的条件。复用日检脚本前排除硬编码历史版本、日期、待办数量与旧main断言，先保存候选摘要再提交检查点，实际通知与成功点分别记录。 汇总器必须强校验review的repository、base/head与actual main，不能以当前main作为缺字段默认值。跨SP193/SP207检查点分别原子写入前保存带before/after的持久publication记录；中断后仅接受精确before或after并先验manifest，再补写未完成项，不能为重跑回退成功点。
 - 通知去重另存 `last_notified_observation`（HEAD/tag/许可hash/覆盖状态指纹），不推进未完成仓库的成功点。相同未完成增量或模型校验故障不重复通知；覆盖恢复或故障变化再报告。采用登记的 `last_dispatch_failure_notice` 同样不代表会话创建成功。
 - 上游取证在请求 contents/blob 前检查路径用途和文本白名单；二进制、身份目录、密钥和证书只记录路径/来源缺口，不自动获取内容。仅靠扩展名黑名单会漏掉无扩展名二进制和身份材料。过滤失误须停止相应读取、移除意外内容、禁用原脚本并复核残留；不得因此把未审来源标为完整。许可证按固定 SHA 全文与 hash 核对，API NOASSERTION和人工识别分别保留，不沿用历史误记。
@@ -67,7 +69,7 @@
 - [SP-193 iCTRL专项](../spaces/SP-193-ictrl-reference-tracking/README.md)：保留原成功检查点、报告与更严格的完整性规则，采用入口统一到本流程。
 - [SP-206主控](../spaces/SP-206-ictrl-security-integration/README.md)：当前首批三个切片的验证与本地合并，不代表这次扩大流程已经执行所有参考更新或产生新产品交付。
 
-## 当前交付状态（2026-10-26）
+## 历史交付状态（2026-10-26）
 
 用户要求继续后，[补查](../spaces/SP-207-reference-adoption-pipeline/plans/20261026-partial-recovery.md)闭合sim-use/device-hub-ios两仓文本缺口，当前合并视图24完整/9 partial（仅2仓重查，31仓沿用日检）。原函数自有probe复现退出后继承pipe超预算等待；SP-223/SP-224已创建显式gpt-6.1-sol执行/主控会话，已验收合本地main9fbda1d5，独立/合后完整CLI与适用local通过，源worktree/branch已清理。既有14条采用记录不改。
 

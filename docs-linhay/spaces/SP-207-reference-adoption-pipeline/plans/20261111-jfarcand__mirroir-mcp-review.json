@@ -1,0 +1,232 @@
+{
+  "repository": "jfarcand/mirroir-mcp",
+  "base_sha": "1166ac1517263d773703c08ceae762a20432d3a2",
+  "head_sha": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+  "actual_main": "607410fb3d44bfe02274c13822170c3015c63a99",
+  "decision": "revise-first",
+  "complete_review": false,
+  "reason": "固定 52 提交 inventory 已齐；关键协议/安全/本机可用性路径已读，完整增量正文和每 parent 树尚未覆盖，保持 partial。旧端口探测仅 revise-first 线索，不新建采用。",
+  "counts": {
+    "commits_inventory": 52,
+    "parent_edges_total": 53,
+    "parent_edges_collected_complete": 4,
+    "trees_full": 6,
+    "text_blob_versions_collected_verified": 352,
+    "required_unique_trees": 54,
+    "required_unique_trees_missing": 48,
+    "parent_edges_not_fully_collected": 49,
+    "commits_with_all_files_semantically_reviewed": 0,
+    "upstream_head_files_semantically_reviewed_full": 14,
+    "text_blob_versions_not_semantically_reviewed": 338,
+    "upstream_tests_executed": 0,
+    "local_tests_executed": 0
+  },
+  "errors": [
+    {
+      "code": "incremental_review_incomplete",
+      "detail": "52 commits / 53 parent edges from 20261102 checkpoint. Only 4 parent edges fully collected, 6 of 54 required trees acquired. No commit is certified as all-files semantically reviewed. 14 selected HEAD source/test files reviewed; remaining 338 acquired text versions are collection evidence only, and additional uncollected versions remain unknown."
+    },
+    {
+      "code": "historical_raw_evidence_unavailable",
+      "detail": "Prior 20261103 uncommitted archive is absent; cause unknown. Current files are fresh fixed-SHA retrieval copies, not original historical responses."
+    },
+    {
+      "code": "collector_intentionally_stopped_partial",
+      "detail": "Broad all-version text collection stopped after partial fifth edge to finish bounded protocol/security/local-availability review; review-collect.log preserves KeyboardInterrupt. Not classified as upstream no-change or complete."
+    }
+  ],
+  "provenance": "2026-11-11 fresh strict-TLS fixed-SHA retrieval copies; historical 2026-11-03 archive unavailable; no restored historical response claim",
+  "reviewed_at": "2026-11-11T09:56:49.655611+00:00",
+  "status": "partial",
+  "checkpoint_may_advance": false,
+  "license": {
+    "spdx": "Apache-2.0",
+    "full_text": "LICENSE.full",
+    "bytes": 10771,
+    "sha256": "52327c57e955a3e63f872960938e814acc19eb1b77c501999f5fd1e543b21346",
+    "changed_from_recorded_baseline": false
+  },
+  "sources_reviewed": [
+    {
+      "path": "Sources/mirroir-mcp/MCPHTTPEndpoint.swift",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "119df4c2b5a74059a7f91c81000e34d8e4221776",
+      "sha256": "d367c21215937e6249a614a71942769ea7198abf3a619f591750480190c3bf55",
+      "evidence": "review-source/119df4c2b5a74059a7f91c81000e34d8e4221776/Sources/mirroir-mcp/MCPHTTPEndpoint.swift",
+      "review": "full source text semantically read; not executed"
+    },
+    {
+      "path": "Sources/mirroir-mcp/NetworkHTTPServer.swift",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "7a62fb15d592c1ef4cc5cf0686a7e4018308f29b",
+      "sha256": "bb5a513b8331d83a5658a30a0a92b9acfda098dc60f3264a985925e28f75e2ae",
+      "evidence": "review-source/7a62fb15d592c1ef4cc5cf0686a7e4018308f29b/Sources/mirroir-mcp/NetworkHTTPServer.swift",
+      "review": "full source text semantically read; not executed"
+    },
+    {
+      "path": "Sources/mirroir-mcp/HTTPMessage.swift",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "20fcfd435046b2f74d7f171fc0637cd2483b763a",
+      "sha256": "b19a4cc0161f02ef0788942496e2940a14e2873ba92010120cfea7994c96d47d",
+      "evidence": "review-source/20fcfd435046b2f74d7f171fc0637cd2483b763a/Sources/mirroir-mcp/HTTPMessage.swift",
+      "review": "full source text semantically read; not executed"
+    },
+    {
+      "path": "Sources/mirroir-mcp/ScreenCapture.swift",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "6f7e17e58a66208bea55616f337d78527d6ef64d",
+      "sha256": "9afbb9a16826f7527af4da20ee459b9ad861a891e235126d93e569ea46055713",
+      "evidence": "review-source/6f7e17e58a66208bea55616f337d78527d6ef64d/Sources/mirroir-mcp/ScreenCapture.swift",
+      "review": "full source text semantically read; not executed"
+    },
+    {
+      "path": "Sources/mirroir-mcp/ScreenCaptureKitShot.swift",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "d7a323c158bc488d633a19cb94523b60d7b54d9f",
+      "sha256": "9892ae2fbe8a9b613dabdc33135e32ed9a1f273897a3e8bef1f10504280e55ed",
+      "evidence": "review-source/d7a323c158bc488d633a19cb94523b60d7b54d9f/Sources/mirroir-mcp/ScreenCaptureKitShot.swift",
+      "review": "full source text semantically read; not executed"
+    },
+    {
+      "path": "Tests/MCPServerTests/MCPHTTPEndpointTests.swift",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "e5d8fed1a206b2370f7b810801dfc86d85617074",
+      "sha256": "684e65589c2af71ffcfee8c89c7d358257dfa8475f9da5134ad7407a1ac235fa",
+      "evidence": "review-source/e5d8fed1a206b2370f7b810801dfc86d85617074/Tests/MCPServerTests/MCPHTTPEndpointTests.swift",
+      "review": "full source text semantically read; not executed"
+    },
+    {
+      "path": "Tests/MCPServerTests/NetworkHTTPServerTests.swift",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "0cf989fc85c9182b94c864a67a32f568f31849ef",
+      "sha256": "2de278fe85e4f9e5d6fb4d383f3632eef35f87a068f37696c5e5d196941eb993",
+      "evidence": "review-source/0cf989fc85c9182b94c864a67a32f568f31849ef/Tests/MCPServerTests/NetworkHTTPServerTests.swift",
+      "review": "full source text semantically read; not executed"
+    },
+    {
+      "path": "Tests/MCPServerTests/ScreenCaptureKitShotTests.swift",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "66895048880b1aa7b59286aaaec1e0920c21f4e0",
+      "sha256": "ddd97e290aa4b60b623ee247a6ef7e0f0a5c1c51fae316fcbd564ba9b75b46e8",
+      "evidence": "review-source/66895048880b1aa7b59286aaaec1e0920c21f4e0/Tests/MCPServerTests/ScreenCaptureKitShotTests.swift",
+      "review": "full source text semantically read; not executed"
+    },
+    {
+      "path": "runner/src/target/process_port.rs",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "a18cf2a23945568ad108d0c88e7cccc5cb016581",
+      "sha256": "ea4fdc22fc3ede208dba9ba53d15d34bdc033527dbe82ee3cf1a0acd3d1311c7",
+      "evidence": "review-source/a18cf2a23945568ad108d0c88e7cccc5cb016581/runner/src/target/process_port.rs",
+      "review": "full source text semantically read; not executed"
+    },
+    {
+      "path": "Sources/mirroir-mcp/ServeAppBundle.swift",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "b9624e7b384d955603b1db0bd68532c0cd2b773c",
+      "sha256": "38384b230c114b76b418a5968fd4c96815d67d980fc7c9ea65c49334e0661212",
+      "evidence": "review-source/b9624e7b384d955603b1db0bd68532c0cd2b773c/Sources/mirroir-mcp/ServeAppBundle.swift",
+      "review": "full source text semantically read; not executed"
+    },
+    {
+      "path": "Sources/mirroir-mcp/ServeToken.swift",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "b9c5dc18d27af6f0fe22f51bdad291b2046e9c40",
+      "sha256": "2a3eb70dad83d8f0a8cf39976825bc0b74e7715574a87bfae43f395db429421c",
+      "evidence": "review-source/b9c5dc18d27af6f0fe22f51bdad291b2046e9c40/Sources/mirroir-mcp/ServeToken.swift",
+      "review": "full source text semantically read; not executed"
+    },
+    {
+      "path": "Sources/mirroir-mcp/ServeCommand.swift",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "b00bca813f89282fdf373b6e66c845b708be8b5b",
+      "sha256": "4946531b3a39d846c95765e23dfc6e00e5fac4f7361d4d7257b0fcb965a5766c",
+      "evidence": "review-source/b00bca813f89282fdf373b6e66c845b708be8b5b/Sources/mirroir-mcp/ServeCommand.swift",
+      "review": "full source text semantically read; not executed"
+    },
+    {
+      "path": "Sources/mirroir-mcp/SessionBlock.swift",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "81be96b137f0d6bd05a830207e22af3a2a0030a2",
+      "sha256": "ce51efbb9b6a5519ea6b35ec27522ef283d72493a9f69c74716383bc1f45feb8",
+      "evidence": "review-source/81be96b137f0d6bd05a830207e22af3a2a0030a2/Sources/mirroir-mcp/SessionBlock.swift",
+      "review": "full source text semantically read; not executed"
+    },
+    {
+      "path": "Sources/mirroir-mcp/AgentNotes.swift",
+      "revision": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+      "blob": "bdd4c564637c4beaf97584b6652787fcffd5cd27",
+      "sha256": "a60275c820808e6149b5e1c863aa4267ccb5fdef82712d8c084b912817384a9c",
+      "evidence": "review-source/bdd4c564637c4beaf97584b6652787fcffd5cd27/Sources/mirroir-mcp/AgentNotes.swift",
+      "review": "full source text semantically read; not executed"
+    }
+  ],
+  "local_main_evidence": "review-local-main-manifest.json",
+  "local_test_review_scope": "WebCommandTests.swift lines 371-432 only; tests exercise injected Bool DTO states, not this socket deadline. TestImportTests.swift archived as comparison context, not fully semantically reviewed.",
+  "mechanisms": [
+    {
+      "mechanism": "local_web_port_probe_total_deadline_unknown",
+      "decision": "revise-first",
+      "actual_gap": "Fixed main CLIWebRuntime.swift:225 calls synchronous isTCPPortListening; :599-628 uses blocking connect and folds getaddrinfo/socket/connect failures into false. Later HTTP request timeout at :644 does not bound the earlier connect. This is static evidence, no new live hang reproduction.",
+      "upstream_source": "runner/src/target/process_port.rs",
+      "benefit": "Bound CLI status/start latency and avoid reporting unavailable/unknown as safely free.",
+      "bdd": [
+        "Given an address whose connect remains pending, when status probes it, then all addresses share one monotonic deadline, returning a distinguishable unknown/error rather than free.",
+        "Given IPv6 is pending and IPv4 is listening, when probe runs, then a live address can be found within the total budget and descriptors/tasks are cancelled/closed.",
+        "Given timeout/DNS/resource error, when start checks availability, then it fails closed with one stable JSON envelope and does not launch a child.",
+        "Given genuinely refused local endpoints, when checked, then existing idle/start behavior remains compatible."
+      ],
+      "file_surface": [
+        "Sources/TritonKitCLI/CLIWebRuntime.swift (WebCommandError, WebStatusResponse and probe runtime)",
+        "CLI/Tests/TritonKitCLITests/WebCommandTests.swift",
+        "Sources/TritonKitCLI/CLISchemaWebCommands.swift (confirm actual schema owner before implementation)",
+        "README.md and public docs/skills if failure contract changes"
+      ],
+      "go_no_go": "Parent must first settle public Bool compatibility/unknown contract and controlled deterministic deadline tests against actual main. No adopt registration, no claim bind-without-listen necessarily hangs."
+    },
+    {
+      "mechanism": "http_auth_framing_resource_budget_abandoned",
+      "decision": "observe",
+      "reason": "Upstream loopback-only /mcp, mandatory bearer token, deny Origin by default, auth before body, duplicate security-header rejection, 16 connections, absolute 30s read deadline, body/header/nesting bounds, serial tool dispatch and abandoned-before-dispatch are concrete patterns. Full comparison against current Triton HTTP auth/queue internals is not complete; no demonstrated new current-main gap, no new MCP/SSE/public HTTP product scope authorized."
+    },
+    {
+      "mechanism": "capture_completion_budget_and_foreground_truth",
+      "decision": "observe",
+      "reason": "Upstream SCK completion latch and dropped-handler detection bound failure; brief failures retry three times. Known target window never activated on fallback and covered region not relabeled target. Useful evidence-integrity pattern; no current Triton screenshot-provider gap proven here, no Mirroring/SCK device testing performed."
+    },
+    {
+      "mechanism": "agent_notes_bounded_untrusted_memory",
+      "decision": "observe",
+      "reason": "One topic file, 500-character note, 50 entries, explicit replacement; source comments mark prior notes as observations rather than user instruction. No demonstrated missing Triton public contract or adoption need."
+    },
+    {
+      "mechanism": "signed_serve_bundle_and_real_iphone_mirroring",
+      "decision": "out_of_scope",
+      "reason": "Signing/TCC named app and real iPhone Mirroring are not auto-adopted; no signing or real-device actions authorized or executed."
+    },
+    {
+      "mechanism": "maestro_import_run_steps_game_and_input_changes",
+      "decision": "unreviewed",
+      "reason": "Commit inventory records these titles but complete relevant full increments are not reviewed; no adoption inference from titles. Current Triton compiled test import comparison does not establish Maestro importer need."
+    }
+  ],
+  "validation": {
+    "performed": [
+      "Fixed main blob snapshots and SHA256 manifest",
+      "352 acquired text blob versions checked against Git blob SHA1 and decoded UTF-8",
+      "6 recursive tree responses have truncated=false",
+      "Full Apache-2.0 license bytes SHA256",
+      "52 commit inventory reaches exact base on first 100-entry page"
+    ],
+    "not_executed": [
+      "upstream code or dependencies",
+      "Swift/Rust test execution",
+      "live socket deadline reproduction",
+      "ScreenCaptureKit/Mirroring/TCC/signing/device actions",
+      "docs gates (archive-only artifacts; parent owns repository aggregation)"
+    ]
+  },
+  "governance": {
+    "experience_checked": true,
+    "conclusion": "Existing governance already requires partial != complete and fresh copies != historical originals; no new rule proposed. Parent owns SP207/memory/checkpoint writeback."
+  }
+}

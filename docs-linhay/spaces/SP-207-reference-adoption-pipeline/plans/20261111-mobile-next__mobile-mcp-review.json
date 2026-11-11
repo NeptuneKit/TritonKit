@@ -1,0 +1,46 @@
+{
+  "repository": "mobile-next/mobile-mcp",
+  "base_sha": "1851dfaca835d644adb409acad8b173120804bbc",
+  "head_sha": "3b51952bcd83955f3a743f731f5a9beaebecdab7",
+  "actual_main": "607410fb3d44bfe02274c13822170c3015c63a99",
+  "decision": "observe",
+  "complete_review": true,
+  "errors": [],
+  "commit_count": 5,
+  "parent_edges": 5,
+  "tree_count": 6,
+  "changed_paths": 8,
+  "text_versions": 17,
+  "excluded_paths": [],
+  "license": {
+    "spdx": "Apache-2.0",
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "path": "LICENSE",
+    "html_url": "https://github.com/mobile-next/mobile-mcp/blob/3b51952bcd83955f3a743f731f5a9beaebecdab7/LICENSE"
+  },
+  "local_evidence": [
+    {
+      "path": "Sources/TritonKitCLI/CLIInspectionCommands.swift",
+      "sha256": "8a7cc035fe3f777dcc0b7562bbd48c405d8aaf3573a017b0eca4fdf9880b85a7"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIObservationRuntime.swift",
+      "sha256": "e04a9edf0ed4cf14006d3a9463340a8e5bcb02279b6c8b84d7feb09d8bbd9294"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIRegressionRuntime.swift",
+      "sha256": "91256e566159dd8e8352652ceaefdfe6b4a2e82d6ed7b7812ed8fc745e99462b"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIHostRuntime.swift",
+      "sha256": "f7fccb5baaee03ebeed9bb33ff3f208e3001a35067229dba07d743aee7899285"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIHostNativeHIDRuntime.swift",
+      "sha256": "040a8496301428f336530869a80e3cf6944fbc9441ad49a08d1beead87e056d5"
+    }
+  ],
+  "runtime_executed": false,
+  "source_custody": "Current fixed-SHA collection; not restoration of prior missing archive.",
+  "reason": "raw hierarchy/Android JSON字符串修复与telemetry配额没有对应Triton缺陷；新增横屏截图tap提示用尺寸交换推定方向，Triton已有raw framebuffer语义及HID严格portrait守卫，不复制猜测方向；传递mobilecli性能与平台修复未经本地验证，保留观察。"
+}

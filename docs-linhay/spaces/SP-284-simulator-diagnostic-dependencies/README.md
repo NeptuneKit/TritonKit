@@ -15,4 +15,4 @@
 
 ## 验收
 
-在当前 main 串行完成，先失败测试；证据见 `plans/20261111-validation.md`。未执行真实 Simulator、设备操作或上游代码。SP-281 WIP 保持原样，测试结果绑定实际候选文件。
+已在当前main串行提交14574a7b并通过提交后完整CLI/local；先失败测试，证据见 `plans/20261111-validation.md`。未执行真实 Simulator、设备操作或上游代码。SP-281 WIP 保持原样，测试结果绑定实际候选文件。

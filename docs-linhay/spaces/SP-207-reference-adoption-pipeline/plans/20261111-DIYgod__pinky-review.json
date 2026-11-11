@@ -1,0 +1,65 @@
+{
+  "repository": "DIYgod/pinky",
+  "base_sha": "209aa9e4b2ff1fd81edec3c393a64b21b79162fb",
+  "head_sha": "3248613b11cb77b263f2a4282209ef9ab79254e7",
+  "actual_main": "607410fb3d44bfe02274c13822170c3015c63a99",
+  "classification_recommendation": "registered_reference",
+  "registration_source": "docs-linhay/spaces/SP-279-pinky-reference/README.md",
+  "decision": "registered_reference_initial_partial",
+  "reason": "SP279正式登记遗漏补查；历史固定研究为基线，无成功增量检查点。321新增commit/56release，完整metadata成功，大增量未审闭合。SP280/281已承接ActionContext，不据旧研究重建采用。",
+  "complete_review": false,
+  "errors": [
+    "large_increment_parent_tree_and_full_text_review_incomplete",
+    "compare_files_capped_at_300_not_used_as_full_file_inventory",
+    "collector_stopped_by_controller_after_206_trees_for_bounded_review",
+    "historical_clone_currently_unavailable_reason_unknown"
+  ],
+  "coverage": {
+    "compare_pages": 4,
+    "commits": 321,
+    "total_commits": 321,
+    "compare_commit_pagination_complete": true,
+    "compare_files_count": 300,
+    "compare_files_cap_reached": true,
+    "downloaded_trees": 206,
+    "downloaded_nontruncated_trees": 206,
+    "downloaded_full_blobs": 0,
+    "downloaded_safe_texts": 0,
+    "all_parent_differences_complete": false,
+    "incremental_semantic_review_complete": false,
+    "release_pages": 2,
+    "release_count": 105,
+    "release_increment_count": 56,
+    "release_pagination_complete": true,
+    "release_notes_scope": "56 incremental release bodies archived; selected safety/state releases semantically inspected, full body coverage not claimed",
+    "runtime_executed": false
+  },
+  "baseline_kind": "SP279_historical_static_research_observation_not_successful_full_incremental_checkpoint",
+  "baseline_release": "v2026.1109.16",
+  "checkpoint": null,
+  "license": {
+    "spdx": "Apache-2.0",
+    "path": "LICENSE",
+    "sha256": "c95bae1d1ce0235ecccd3560b772ec1efb97f348a79f0fbe0a634f0c2ccefe2c"
+  },
+  "current_clone_available": false,
+  "clone_loss_reason": "unknown",
+  "dedup": [
+    "SP280 action admission",
+    "SP281 action receipt/evidence expansion"
+  ],
+  "candidate_bdd": null,
+  "candidate_file_scope": [],
+  "implementation_started": false,
+  "runtime_executed": false,
+  "source_links": [
+    "https://github.com/DIYgod/pinky",
+    "https://github.com/DIYgod/pinky/compare/209aa9e4b2ff1fd81edec3c393a64b21b79162fb...3248613b11cb77b263f2a4282209ef9ab79254e7",
+    "https://github.com/DIYgod/pinky/releases/tag/v2026.1111.16"
+  ],
+  "findings": [
+    "新提交包含45s工具预算/timeout分型、conversation隔离、resume grace、MCP schema、输入回读及Simulator/Emulator能力；完整源码差异未闭合，均为待审线索，不声称新缺陷或可立即采用。",
+    "现有SP280/281已承接ActionContext相关机制；SP279旧报告建议不能冒充当前主线缺口。",
+    "大量真机/WDA/DDI/签名/独立Android与iPhone原型和UI变化仍受本地平台与授权边界限制。"
+  ]
+}
