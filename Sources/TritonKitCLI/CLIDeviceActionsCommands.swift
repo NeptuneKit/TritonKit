@@ -67,8 +67,13 @@ private extension DeviceActionCommonOptions {
     }
 }
 
-func makeDeviceActionContext(_ payload: DeviceActionPayload, selected: HostDeviceTarget, leaseID: String?) throws -> (TKActionContext, String) {
+func makeDeviceActionContext(_ payload: DeviceActionPayload, selected: HostDeviceTarget, leaseID: String?, frozenText: String? = nil, inputDigestKey: Data? = nil) throws -> (TKActionContext, String) {
     let geometry: TKJSONValue = payload.geometry.map { .object(["width": .double($0.width), "height": .double($0.height), "orientation": .string($0.orientation)]) } ?? .null
+    let text = try frozenText ?? payload.textFile.map { try String(contentsOfFile: $0, encoding: .utf8) }
+    let textDigest = try text.map {
+        try TKActionArgumentsDigest.make(arguments: ["text": .string($0)], algorithm: .hmacSHA256,
+            key: inputDigestKey ?? Data(UUID().uuidString.utf8), redactionProfile: "private-input")
+    }
     let arguments: [String: TKJSONValue] = [
         "action": .string(payload.action.rawValue),
         "device": .string(selected.id),
@@ -85,7 +90,7 @@ func makeDeviceActionContext(_ payload: DeviceActionPayload, selected: HostDevic
         "bundleID": payload.bundleID.map(TKJSONValue.string) ?? .null,
         "identifier": payload.identifier.map(TKJSONValue.string) ?? .null,
         "label": payload.label.map(TKJSONValue.string) ?? .null,
-        "textFile": payload.textFile == nil ? .null : .string("<private>")
+        "inputDigest": textDigest.map { .string($0.digest) } ?? .null
     ]
     let digest = try TKActionArgumentsDigest.make(arguments: arguments, redactionProfile: "private-paths-and-input")
     let context = TKActionContext(
@@ -117,18 +122,32 @@ func decorateDeviceActionResult(
     guard generationStore.isCurrent(generationToken) else {
         throw DeviceActionError.generationStale
     }
-    guard var object = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+    guard let decoded = try? JSONSerialization.jsonObject(with: data),
+          var object = decoded as? [String: Any], let ok = object["ok"] as? Bool else {
         throw DeviceActionError.invalidResult
     }
+    let nested = object["result"] as? [String: Any]
+    let provider = nested ?? object
+    let hasError = object["error"] != nil && !(object["error"] is NSNull)
+    let succeeded = ok && !hasError
+    let verified = succeeded && provider["postconditionVerified"] as? Bool == true
+    let flatHostSuccess = succeeded && object["result"] == nil && context.provider != "ios"
+    let executed = provider["executed"] as? Bool
+    let submitted = provider["submitted"] as? Bool == true
+    let confirmed = succeeded && (verified || executed == true || flatHostSuccess)
+    let delivery = confirmed ? "delivered" : (succeeded && submitted ? "submitted" : "unknown")
+    let outcome = confirmed ? "settled" : (succeeded && submitted ? "pending" : "uncertain")
+    let originalStatus = provider["outcome"] as? String ?? provider["status"] as? String
+        ?? (succeeded ? (submitted ? "submitted" : "unknown") : "failed")
     object["actionID"] = context.actionID
     object["admissionID"] = admissionID
     object["contextDigest"] = contextDigest
-    object["delivery"] = "delivered"
-    object["outcome"] = "settled"
-    object["executed"] = true
-    object["originalStatus"] = "settled"
-    object["terminalStatus"] = "settled"
-    object["postcondition"] = object["postconditionVerified"] as? Bool == true ? "verified" : "unverified"
+    object["delivery"] = delivery
+    object["outcome"] = outcome
+    object["executed"] = confirmed ? true : NSNull()
+    object["originalStatus"] = originalStatus
+    object["terminalStatus"] = outcome
+    object["postcondition"] = verified ? "verified" : "unverified"
     return try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
 }
 
@@ -147,7 +166,8 @@ func executeDeviceAction(
         if let leaseGate { try await leaseGate() }
         else { try await enforceTargetLease(host: common.host, port: common.port, target: selected.target, leaseID: leaseID) }
     }
-    let (context, contextDigest) = try makeDeviceActionContext(payload, selected: selected, leaseID: common.leaseID)
+    let frozenText = try payload.textFile.map { try String(contentsOfFile: $0, encoding: .utf8) }
+    let (context, contextDigest) = try makeDeviceActionContext(payload, selected: selected, leaseID: common.leaseID, frozenText: frozenText)
     let coordinator = TKActionAdmissionCoordinator(admissions: admissionStore, generations: generationStore)
     let handle = try coordinator.admit(context: context)
     if selected.platform == "android" {
@@ -159,7 +179,7 @@ func executeDeviceAction(
         case .swipe: command = TKAndroidADBCommand.swipeCoordinate(serial: selected.target, startX: Int(payload.x!.rounded()), startY: Int(payload.y!.rounded()), endX: Int(payload.endX!.rounded()), endY: Int(payload.endY!.rounded()), durationMs: Int((payload.duration! * 1000).rounded()), executable: common.adb)
         case .press: command = TKAndroidADBCommand.keyEvent(serial: selected.target, keyCode: androidKeyEventName(for: payload.button!), executable: common.adb)
         case .type:
-            let text = try String(contentsOf: URL(fileURLWithPath: payload.textFile!), encoding: .utf8)
+            let text = frozenText!
             command = TKAndroidADBCommand.inputText(serial: selected.target, text: text, executable: common.adb)
         }
         let first = try hostRunner?(command) ?? runHostCommand(command)
@@ -175,7 +195,7 @@ func executeDeviceAction(
         case .swipe: command = TKHarmonyHDCCommand.swipeCoordinate(target: selected.target, startX: Int(payload.x!.rounded()), startY: Int(payload.y!.rounded()), endX: Int(payload.endX!.rounded()), endY: Int(payload.endY!.rounded()), velocity: harmonySwipeVelocity(startX: payload.x!, startY: payload.y!, endX: payload.endX!, endY: payload.endY!, duration: payload.duration), executable: common.hdc)
         case .press: command = TKHarmonyHDCCommand.keyEvent(target: selected.target, key: harmonyKeyEventName(for: payload.button!), executable: common.hdc)
         case .type:
-            let text = try String(contentsOf: URL(fileURLWithPath: payload.textFile!), encoding: .utf8)
+            let text = frozenText!
             command = TKHarmonyHDCCommand.inputText(target: selected.target, text: text, executable: common.hdc)
         }
         let first = try hostRunner?(command) ?? runHostCommand(command)
@@ -188,7 +208,7 @@ func executeDeviceAction(
     var body: [String: Any] = ["app": "target", "expectedBundle": bundle, "operation": operation]
     if let id = payload.observationID { body["observationID"] = id }; if let geometry = payload.geometry { body["geometry"] = ["width": geometry.width, "height": geometry.height, "orientation": geometry.orientation] }
     if let x = payload.x { body["x"] = x }; if let y = payload.y { body["y"] = y }; if let endX = payload.endX { body["endX"] = endX }; if let endY = payload.endY { body["endY"] = endY }; if let duration = payload.duration { body["duration"] = duration }; if let button = payload.button { body["button"] = button }
-    if payload.action == .type { body["text"] = try String(contentsOf: URL(fileURLWithPath: payload.textFile!), encoding: .utf8) }
+    if payload.action == .type { body["text"] = frozenText! }
     if let identifier = payload.identifier { body["selector"] = ["kind": "identifier", "value": identifier] } else if let label = payload.label { body["selector"] = ["kind": "label", "value": label] }
     let request: [String: Any] = ["device": selected.scope == "simulator" ? "sim:\(selected.rawTarget)" : selected.id, "sessionRoot": sessionRoot, "timeout": 60, "route": "/crossApp", "body": body, "requestID": payload.requestID]
     let data = try JSONSerialization.data(withJSONObject: request, options: [.sortedKeys])
@@ -196,7 +216,14 @@ func executeDeviceAction(
     return try decorateDeviceActionResult(result, context: context, contextDigest: contextDigest, admissionID: handle.admission.admissionID, generationStore: generationStore, generationToken: handle.generation)
 }
 private func printDeviceActionResult(_ payload: DeviceActionPayload, common: DeviceActionCommonOptions) async throws {
-    do { print(String(decoding: try await executeDeviceAction(payload, common: common), as: UTF8.self)) }
+    do {
+        let output = try await executeDeviceAction(payload, common: common)
+        print(String(decoding: output, as: UTF8.self))
+        if let object = try JSONSerialization.jsonObject(with: output) as? [String: Any], object["ok"] as? Bool == false {
+            throw ExitCode.failure
+        }
+    }
+    catch let error as ExitCode { throw error }
     catch let error as DeviceActionError {
         let code: String
         switch error {

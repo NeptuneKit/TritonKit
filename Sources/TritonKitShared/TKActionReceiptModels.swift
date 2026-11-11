@@ -106,7 +106,7 @@ public struct TKActionReceipt: Codable, Equatable, Sendable {
             throw TKActionReceiptValidationError.invalidIdentity
         }
         if outcome == .uncertain {
-            guard delivery == .unknown || executed == nil else {
+            guard delivery == .unknown && executed == nil else {
                 throw TKActionReceiptValidationError.uncertainMustRemainUnknown
             }
         }
@@ -139,6 +139,7 @@ public struct TKActionAdmissionHandle: Codable, Equatable, Sendable {
 public enum TKActionAdmissionCoordinatorError: Error, Equatable, Sendable {
     case invalidContext(TKActionContextValidationError)
     case staleGeneration
+    case policyNotAllowed(TKActionPolicyDecision)
     case admission(TKActionAdmissionError)
 }
 
@@ -164,11 +165,17 @@ public final class TKActionAdmissionCoordinator: @unchecked Sendable {
         } catch {
             throw TKActionAdmissionCoordinatorError.invalidContext(.actionIDRequired)
         }
+        guard context.policyDecision == .allow else {
+            throw TKActionAdmissionCoordinatorError.policyNotAllowed(context.policyDecision)
+        }
+        let ttl = ttlSeconds ?? TKActionAdmissionStore.defaultTTLSeconds
+        guard (TKActionAdmissionStore.minTTLSeconds...TKActionAdmissionStore.maxTTLSeconds).contains(ttl) else {
+            throw TKActionAdmissionCoordinatorError.admission(.invalidTTL)
+        }
         let digest: String
         do { digest = try context.contextDigest() } catch {
             throw TKActionAdmissionCoordinatorError.invalidContext(.argsDigestRequired)
         }
-        let generation = generations.begin(target: context.target, actionID: context.actionID)
         do {
             let issued = try admissions.issue(
                 actionID: context.actionID,
@@ -185,6 +192,7 @@ public final class TKActionAdmissionCoordinator: @unchecked Sendable {
                 leaseID: context.leaseID,
                 now: now()
             )
+            let generation = generations.begin(target: context.target, actionID: context.actionID)
             return TKActionAdmissionHandle(
                 context: context,
                 contextDigest: digest,

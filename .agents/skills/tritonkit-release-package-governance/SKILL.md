@@ -40,7 +40,7 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 6. Run release preflight with Xcode simulator checks disabled only when the local environment does not need that coverage: `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local`.
 7. Update `docs-linhay/dev/` and `docs-linhay/memory/YYYY-MM-DD.md` for release contract changes.
 8. Commit and push `main`, then wait for the exact candidate SHA’s complete main CI before publishing through `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/release.sh v<version> --yes`. `release.sh` does not enforce the main CI gate; tag contracts do not replace it. If using `--skip-local-verify` after an already completed local gate, record the tested SHA and prove unchanged native paths; rerun every affected Web/docs gate on the final candidate.
-9. After release, verify GitHub Release assets, GitHub Actions success including x86_64 backfill, Homebrew upgrade, `triton version --json`, packaged `triton web --print-command --json`, and a real `triton web` HTTP smoke.
+9. After release, verify GitHub Release assets, GitHub Actions success under the current arm64-only workflow, Homebrew upgrade, `triton version --json`, packaged `triton web --print-command --json`, and a real `triton web` HTTP smoke.
    - If the release changes Web input routing, the smoke must POST the same complete gesture DTO used by the Web client. Coordinate taps include `x`, `y`, `width`, and `height`; an intentionally incomplete probe may return a contract error but is not success evidence.
    - Run the installed packaged binary from outside the repository on an isolated port first. When handing the canonical Web port back to another task, resolve and replace only that listener; preserve the shared `triton serve`, Simulator/Emulator, and App processes unless their owner explicitly authorizes a restart.
    - Follow the current space contract: for readonly Web, require `readonly=true`, HTML/JS/CSS success, complete gesture DTO rejection with `405/web_host_input_readonly`, and a real browser with zero console errors. Only an explicitly authorized write-capable product surface requires machine-readable input success and visible gesture status; do not restore a retired write bridge to satisfy historical smoke instructions. A homepage HTTP 200 alone is insufficient.
@@ -66,12 +66,9 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 
 ## CI / Release Performance Contract
 
-- `CI` handles validation only. `v*` tag validation must stay on the contracts fast path and must not wait for Swift tests.
-- Release asset builds live in the independent `Release` workflow. Do not restore release builds as active jobs in the `CI` workflow.
-- arm64 release assets are the Apple Silicon publish gate: arm64 CLI, public skill bundle, checksum manifest, GitHub Release, and Homebrew tap must become available before waiting on x86_64.
-- x86_64 CLI is a backfill asset. Build it on the arm64 macOS runner with `swift build --package-path CLI --scratch-path .build/cli-x86 -c release --product triton --triple x86_64-apple-macosx14.0`, then verify `file` reports `Mach-O 64-bit executable x86_64` before upload.
-- Release SwiftPM cache keys are architecture-specific: keep separate `release-cli-arm64` and `release-cli-x86_64` cache keys so dependency/build cache does not force the release path back onto the Intel runner.
-- `publish-x86-release-asset` must checkout the repository before calling `gh release download`; the GitHub CLI requires git repository context for release lookup.
+- Current workflow is macOS arm64-only (user decision 2026-11-10). The release contains arm64 CLI, bundled Web/Runner, public skills and checksum; SwiftPM consumers resolve the same tag. x86_64 backfill is retired.
+- `CI` handles validation; `Release` owns artifact builds. Verify the exact main SHA's full CI before publishing the tag.
+- arm64 cache uses `release-cli-arm64`; do not introduce an Intel runner or require removed jobs to satisfy historical instructions.
 - Keep `tritonkit-dev-feedback/SKILL.md` as a routing entry: at most 8192 UTF-8 bytes, 150 lines, and 600 characters per line. Measure bytes, not line count alone; move specialized material to existing directly linked references and read only matched routes. `verify-public-skill-layout.py` checks mandatory routes, containment and duplicated long paragraphs before packaging and again on the extracted version-stamped archive through `verify-skill-package.sh`. Do not bypass a budget failure by flattening references into the entry.
 - Public skill packaging must fail before tarball creation when a Markdown command uses a root absent from the checked CLI command snapshot. Keep `act` and `debug` subcommands strict so retired action/inspection roots cannot silently re-enter release documentation.
 

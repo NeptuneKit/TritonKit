@@ -76,4 +76,26 @@ struct TKActionReceiptModelsTests {
         #expect(handle.context.leaseID == nil)
         #expect(try coordinator.receipt(handle, delivery: .delivered, outcome: .settled, executed: true).leaseID == nil)
     }
+    @Test("rejected policy and invalid TTL preserve the current generation")
+    func rejectedAdmissionDoesNotInvalidateCurrent() throws {
+        let coordinator = TKActionAdmissionCoordinator(now: { self.now })
+        let original = try coordinator.admit(context: context())
+        for policy in [TKActionPolicyDecision.deny, .approvalRequired, .unsupported, .unavailable] {
+            var candidate = try context()
+            candidate.policyDecision = policy
+            #expect(throws: Error.self) { _ = try coordinator.admit(context: candidate) }
+            #expect(coordinator.isCurrent(original))
+        }
+        #expect(throws: Error.self) { _ = try coordinator.admit(context: context(), ttlSeconds: 0) }
+        #expect(coordinator.isCurrent(original))
+    }
+
+    @Test("uncertain cannot claim execution or confirmed delivery")
+    func uncertainMatrix() {
+        for (delivery, executed) in [(TKActionDelivery.unknown, Optional(true)), (.delivered, nil)] {
+            let receipt = TKActionReceipt(actionID: "a", operation: "tap", target: "t", delivery: delivery, outcome: .uncertain, executed: executed)
+            #expect(throws: TKActionReceiptValidationError.self) { try receipt.validate() }
+        }
+    }
+
 }

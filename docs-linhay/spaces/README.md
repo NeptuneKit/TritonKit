@@ -1,3 +1,5 @@
+2026-11-11：[SP-282-release-v0-2-44](./SP-282-release-v0-2-44/README.md)在 main 准备 v0.2.44；发布前修复动作结果、策略与输入绑定缺口，所有阶段分别验收。
+
 - 当前开发方式：所有产品实现、测试、提交和资料回写在 `main` 串行完成；Space 只承载需求、BDD、计划、证据和历史归档。读取/评估可并行，产品文件写入和共享副作用不并行；不新建 branch/worktree。
 
 2026-11-10：[SP-281 ActionContext 后续扩展路线](./SP-281-action-context-expansion/README.md)已冻结：P0 shared coordinator/receipt、P1 device.action evidence/uncertain、P2 剩余 mutating surfaces；approval/HTTP/session resume/真实设备另立 scope。

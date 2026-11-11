@@ -15,7 +15,7 @@ import TritonKitShared
         #expect(response.sideEffect == "text-input")
         let root = try #require(commandSchemas().first { $0.name == "act" })
         #expect(response.outputSemantics == root.outputSemantics)
-        #expect(Set(response.outputContracts.map(\.selector)) == Set(["input.result", "host.android-text-input", "host.harmony-text-input", "webview.form-input"]))
+        #expect(Set(response.outputContracts.map(\.selector)) == Set(["input.result", "host.android-text-input", "host.harmony-text-input", "host.harmony-verified-text-input", "webview.form-input"]))
         #expect(!response.options.contains { $0.name == "--start-x" })
     }
 

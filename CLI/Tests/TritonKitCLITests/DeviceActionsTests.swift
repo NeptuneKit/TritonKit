@@ -120,4 +120,46 @@ struct DeviceActionsTests {
         let value = try makeDeviceActionPayload(action: .type, device: "emulator:x", platform: "android", requestID: "t", textFile: url.path, identifier: nil, label: nil)
         #expect(value.textFile == url.path)
     }
+    @Test("iOS provider failures and submitted-only results are never promoted to execution")
+    func iosProviderFactsRemainUncertain() async throws {
+        let parsed = try TritonKitCLI.parseAsRoot(["device", "press", "--device", "sim:fixture", "--platform", "ios", "--button", "home", "--bundle-id", "test.fixture", "--session-root", "/private/fixture"])
+        let press = try #require(parsed as? DevicePress)
+        let target = HostDeviceTarget(platform: "ios", id: "sim:fixture", target: "fixture", state: "ready", ready: true, source: "fixture", name: nil, runtime: nil, transport: "fixture", scope: "simulator")
+        for envelope: [String: Any] in [
+            ["ok": false, "result": NSNull(), "error": ["code": "ios_runner_transport_unknown", "message": "timeout"]],
+            ["ok": true, "result": ["submitted": true, "postconditionVerified": false], "error": NSNull()]
+        ] {
+            let output = try await executeDeviceAction(press.payload(), common: press.common, targetResolver: { _ in target }, iosRunner: { _ in try JSONSerialization.data(withJSONObject: envelope) })
+            let json = try #require(JSONSerialization.jsonObject(with: output) as? [String: Any])
+            #expect(json["ok"] as? Bool == envelope["ok"] as? Bool)
+            #expect(json["executed"] is NSNull)
+            #expect(json["outcome"] as? String != "settled")
+            #expect(json["delivery"] as? String != "delivered")
+        }
+    }
+
+    @Test("type input is frozen before admission and reused after provider dispatch")
+    func typeInputIsFrozen() async throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try Data("original".utf8).write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let parsed = try TritonKitCLI.parseAsRoot(["device", "type", "--device", "android:fixture", "--platform", "android", "--text-file", file.path])
+        let type = try #require(parsed as? DeviceType)
+        let target = HostDeviceTarget(platform: "android", id: "android:fixture", target: "fixture", state: "ready", ready: true, source: "fixture", name: nil, runtime: nil, transport: "adb", scope: "emulator")
+        var captured: String = ""
+        _ = try await executeDeviceAction(type.payload(), common: type.common, targetResolver: { _ in target }, hostRunner: { command in
+            captured = command.arguments.joined(separator: " ")
+            try Data("changed".utf8).write(to: file)
+            return HostProcessResult(stdoutData: Data(), stderrData: Data(), exitCode: 0, sourceCommand: "fixture", stdoutTruncated: false, stderrTruncated: false, stdoutLogPath: nil, stderrLogPath: nil, stdoutBytes: 0, stderrBytes: 0)
+        })
+        #expect(captured.contains("original"))
+        let (first, _) = try makeDeviceActionContext(type.payload(), selected: target, leaseID: nil, inputDigestKey: Data("fixed-fixture-key".utf8))
+        try Data("other".utf8).write(to: file)
+        let (second, _) = try makeDeviceActionContext(type.payload(), selected: target, leaseID: nil, inputDigestKey: Data("fixed-fixture-key".utf8))
+        #expect(first.argsDigest != second.argsDigest)
+        let (same, _) = try makeDeviceActionContext(type.payload(), selected: target, leaseID: nil, inputDigestKey: Data("fixed-fixture-key".utf8))
+        #expect(same.argsDigest == second.argsDigest)
+        #expect(!String(decoding: try first.canonicalData(), as: UTF8.self).contains("changed"))
+    }
+
 }
