@@ -4,8 +4,8 @@
 
 - 用户于2026-10-16要求“后期评估可以纳入的改动可以直接按照这个流程直接进入开发”，随后明确“从 iCTRL 扩大到所有参考项目”。本页是当前流程事实源，替代各历史研究中逐项等待采用授权的说明。
 - 范围：全部已登记参考仓库，及登记为研究线索的候选；候选身份不等于已经采用。当前登记由 SP-194 的23主要仓库+9候选、SP-199 的 Mobile MCP 及 SP-279 正式参考 Pinky 组成，合计34个去重仓库（25参考+9研究候选）；Pinky的SP-207漏登在2026-11-11补齐。
-- 影响层：参考资料、自动任务、开发分派和治理规则；日检资料与产品采用分阶段记录；11月11日新增发布workflow门禁和CLI只读服务诊断，未执行设备或远端写入。
-- 状态：持续追踪与采用。既有18条合并均可达当前main；SP254已由5e1c0b74完成限定Xcode27.1/iOS27.0真实DTUHID验收，替代旧离线-only断言。新SP283/284直接main提交14574a7b并完成提交后CLI/local复验，累计20条已交付main；提交后复验与采用登记按[11月11日报](./plans/20261111-reference-update-report.md)收口，未push/tag/release。
+- 影响层：参考资料、自动任务、开发分派和治理规则；日检资料与产品采用分阶段记录；11月11日新增发布workflow门禁和CLI只读服务诊断，11月12日新增shared Android尺寸解析修复，未执行设备或远端写入。
+- 状态：持续追踪与采用。既有18条合并均可达当前main；SP254已由5e1c0b74完成限定Xcode27.1/iOS27.0真实DTUHID验收，替代旧离线-only断言。新SP283/284直接main提交14574a7b并完成提交后CLI/local复验，11月12日SP285直接main提交c4c5f014并通过提交后完整CLI/local，累计21条已交付main；采用登记按[11月12日报](./plans/20261112-reference-update-report.md)收口，未push/tag/release。
 - 正式说明：[参考项目追踪与采用](../../dev/reference-project-adoption-workflow.md)。
 - 仓库与读取状态：[reference-state.json](./plans/reference-state.json)；任务去重与授权：[adoption-state.json](./plans/adoption-state.json)。上游读取状态与采用交付状态分开。
 - 前次检查（历史）：2026-10-26，22完整/11 partial，simslim/Revyl两仓HEAD变化，Release/许可不变；[日报](./plans/20261026-reference-update-report.md)。用户要求继续后，两仓文本缺口已闭合并独立推进，当前合并视图24完整/9 partial，见[补查记录](./plans/20261026-partial-recovery.md)；本次仅重新查询2仓，其他31仓沿用日检。新SP-223/224已验收合本地main9fbda1d5；独立与合后完整CLI XCTest91/SwiftTesting1527、fakeCLI4场景和适用local通过，源worktree/branch已归档清理。新[SP-221](../SP-221-simulator-resource-read-retry/README.md)经[SP-222](../SP-222-simulator-resource-retry-integration/README.md)验收，候选eb9539f4合本地main `a0eebff0`；focused37、独立与合后完整CLI、root、适用local/docs均通过。显式gpt-6.1-sol真实执行/主控会话创建成功。旧13条采用保持，11旧源码/许可缺口不推进；未push/tag/release或执行设备恢复验证。
@@ -13,11 +13,11 @@
 
 - 2026-10-27主控接管自己开启会话的完整交付与关闭责任：15条合并提交再次确认在main，9个真实执行/主控会话已归档；本长期追踪聊天保留，见[关闭记录](./plans/20261027-session-closeout.md)。
 
-- 最近检查：2026-11-11，34仓21完整/13 partial；原33仓对11月2日有11仓变化，Pinky另对SP279历史研究基线有变化。新[观察](./plans/20261111-observations.json)与[日报](./plans/20261111-reference-update-report.md)区分完整、采集和语义审读。
+- 最近检查：2026-11-12，34仓22完整/12 partial，5仓相对11月11日变化；serve-sim补齐成功点以来旧22+新7提交，独立恢复检查点。新[观察](./plans/20261112-observations.json)与[日报](./plans/20261112-reference-update-report.md)区分完整、采集和语义审读。
 
 - 2026-10-30接管：原主控因compact连接失败中断，用户指定当前聊天接手。原`ictrl`已重绑`01a18a91-f44e-7fd0-8e4b-c891b44377e0`，仍ACTIVE、每天北京时间10:00；重读配置确认，原prompt保持，未新建重复任务。16条采用再次通过当前main祖先校验，不重开已交付项，见[接管记录](./plans/20261030-controller-takeover.md)。
 
-- 当前保管故障：11月2日manifest的455份原始证据现全部缺失，原因unknown；历史成功检查点保留，当前可用性另记。新证据使用独立TritonKit-archives根，详见[保管复核](./plans/20261111-evidence-custody.json)。
+- 当前保管故障：11月2日manifest的455份原始证据现全部缺失，原因unknown；历史成功检查点保留，当前可用性另记。新证据使用独立TritonKit-archives根；11月12日复验昨日5252文件hash全部有效，旧455缺失不变，详见[保管复核](./plans/20261112-evidence-custody.json)。
 - 当前主控：01a19a4a-50e2-7731-b8fa-880efb954eb5；原ictrl ACTIVE/每日10:00重读确认，prompt已同步main串行、arm64/SwiftPM及34仓清单。
 
 ## 执行流程

@@ -1,4 +1,4 @@
-2026-11-12：[SP-285-android-wm-size-selection](./SP-285-android-wm-size-selection/README.md)修正Android只读尺寸解析，Override优先且拒绝诊断/异常/重复尺寸；离线与完整CLI通过，main提交收口中，未执行真实设备。
+2026-11-12：[SP-285-android-wm-size-selection](./SP-285-android-wm-size-selection/README.md)修正Android只读尺寸解析，Override优先且拒绝诊断/异常/重复尺寸；c4c5f014已提交，提交后完整CLI与适用local通过，未执行真实设备或发布。
 
 2026-11-11：[SP-283](./SP-283-homebrew-public-assets/README.md)发布前公开资产门禁与[SP-284](./SP-284-simulator-diagnostic-dependencies/README.md)只读服务依赖诊断已在main验收，13离线、完整CLI167+1854、root/local通过；未push/tag/release或操作设备。
 

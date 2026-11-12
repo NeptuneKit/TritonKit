@@ -397,4 +397,4 @@
 
 | `SP-284-simulator-diagnostic-dependencies` | [`SP-284-simulator-diagnostic-dependencies`](./SP-284-simulator-diagnostic-dependencies/README.md) | main已提交 | 3组只读依赖，managed/profile不扩张；14574a7b；提交后CLI167+1854/root/local通过，未操作设备 |
 
-| `SP-285-android-wm-size-selection` | [`SP-285-android-wm-size-selection`](./SP-285-android-wm-size-selection/README.md) | 实现已验证，main提交中 | 标准标签/Override优先/异常拒绝；离线解析33、CLI1861通过，真实Android未执行 |
+| `SP-285-android-wm-size-selection` | [`SP-285-android-wm-size-selection`](./SP-285-android-wm-size-selection/README.md) | main已提交并验收 | 标准标签/Override优先/异常拒绝；c4c5f014；focused33、提交后CLI167+1861/local通过，真实Android未执行 |

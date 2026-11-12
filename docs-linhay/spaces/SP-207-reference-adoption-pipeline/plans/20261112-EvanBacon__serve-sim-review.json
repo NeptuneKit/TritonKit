@@ -1,0 +1,233 @@
+{
+  "repository": "EvanBacon/serve-sim",
+  "base_sha": "ede4c21ee3021a36fbee1fec106b388a50a5ce4e",
+  "previous_observed_head": "5f6dee52834351ae2d765dfda02e540248a9b663",
+  "head_sha": "cea9a7df9b73fb04f4f257640d10c7af3770950f",
+  "actual_main": "0ec972e6151eb27372b3bdf5aa940940c56c30b0",
+  "decision": "observe",
+  "reason": "已完成成功checkpoint起旧22提交语义恢复与今日7提交补审，所有changed hunks和相关完整核心/测试已闭合。可迁移安全要求主要已覆盖；其余为尚无本地当前承诺回归的能力候选、Node/Web专用优化或已撤回/既有观察机制，无新增可直接分派采用项。",
+  "complete_review": true,
+  "historical_partial_recovered": true,
+  "retired_errors": [
+    {
+      "error": "semantic_review_incomplete_26922_diff_lines_22_commits",
+      "source": "20261111 review.json",
+      "closure": "本日core/recording/camera-ui/native-followup四份报告及review-coverage逐项覆盖292 changes；截断输出已分块补读。历史文件保持冻结，不回写过去成功。"
+    }
+  ],
+  "errors": [],
+  "remaining_review": [],
+  "coverage": {
+    "commit_count": 29,
+    "historical_commits": 22,
+    "new_commits": 7,
+    "parent_change_records": 292,
+    "unique_changed_paths": 173,
+    "text_version_occurrences": 389,
+    "unique_text_blobs": 359,
+    "collected_diff_lines": {
+      "historical": 26922,
+      "today": 10229
+    },
+    "all_parent_trees_complete": true,
+    "all_text_hashes_reverified": true,
+    "all_changed_hunks_semantically_reviewed": true,
+    "read_scope_note": "全增量审阅=全部变化hunks+相关完整核心/测试。不是359个历史大文件全文逐字阅读；精确全文清单和共享文件范围在各子报告。",
+    "excluded_paths": []
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "path": "LICENSE",
+    "sha256": "9024cdf56dfe7e66523698a9f63d3a0061eb15f43bd5ea8e3833a56017ae37fd",
+    "full_text_read": true,
+    "html_url": "https://github.com/EvanBacon/serve-sim/blob/cea9a7df9b73fb04f4f257640d10c7af3770950f/LICENSE",
+    "reuse_boundary": "本次只评估，不复制上游源码；将来若复制需保留许可证与适用归属/NOTICE并标修改。"
+  },
+  "release": null,
+  "release_review": {
+    "pages": 1,
+    "pagination_complete": true,
+    "raw_page_empty": true,
+    "notes": "官方无非draft Release，不能从commit标题推断已发布。"
+  },
+  "mechanisms": [
+    {
+      "mechanism": "AX stable refs / changes-after-settle / optimized discovery",
+      "decision": "observe",
+      "reason": "本地有 fresh host AX 查询与 wait/query 选择，但没有同样的跨快照短ref协议。上游反例显示可编辑值、ID复用与相同树无法证明记录身份；frame counter稳定亦不是目标身份或业务成功。优化discovery软叶/跳格预算可能漏元素；settle超时不取消挂起read。尚无本地当前承诺回归，需先定义有代际/新鲜度的引用契约。",
+      "benefit": "未来减少 agent 重读整树的token与定位成本；性能数字均为上游自述未本地验证。",
+      "bdd_if_adopt": [
+        "Given ref绑定目标/会话/快照代际，When 目标、页面、几何或语义身份改变 Then stale/unknown且不派发",
+        "Given 重复标签、value-only编辑行、复用ID或屏幕替换 When再定位 Then 不把坐标匹配当身份验证",
+        "Given AX读取挂起或预算耗尽 Then deadline有界且结果partial/unknown，不报告settled完整",
+        "Given tap已派发而后续验证超时 Then 保留executed/unknown且不自动重放"
+      ],
+      "candidate_files": [
+        "new iOS host AX ref runtime alongside existing CLIIOSHostWaitRuntime.swift",
+        "Sources/TritonKitCLI/CLIIOSHostWaitRuntime.swift",
+        "Sources/TritonKitCLI/CLIActionCommands.swift",
+        "new target/session/snapshot-bound ref models and fixture tests"
+      ],
+      "dispatch_ready": false
+    },
+    {
+      "mechanism": "HID delivery ACK / Device Hub shadow / no replay",
+      "decision": "covered",
+      "reason": "当前main内置DTUHID及legacy guard对unknown拒绝，错误/派发/业务确认分离且禁止自动重放，已覆盖本地同类安全要求。上游首次shadow探测unknown仍放行，4s ACK超时仍exit0，旧server/addon兼容把undefined作为成功，不能作为更强保证。并非宣称Triton实现了上游所有按钮/WS协议。"
+    },
+    {
+      "mechanism": "SpringBoard Home timeout / toolbar routing",
+      "decision": "observe",
+      "reason": "上游专用direct actor/toolbar路径；本地没有同样持久Node入口。弃置不可取消direct调用后仍fallback，完成不等于业务成功；home flick需chrome/orientation/shadow确认。不能引入在派发unknown后重放策略。"
+    },
+    {
+      "mechanism": "Unicode pasteboard copy and readback",
+      "decision": "covered_with_observation",
+      "reason": "main device clipboard已有64KiB、退出/截断拒绝、前后读取与verified分离，明确staging不是输入或App接受。上游256KiB devicectl逐字节读回及Cmd+V为额外实现选择；本地使用Swift String相等，不声称逐字节等价。没有当前本地故障证据，不自动切换devicectl或增加浏览器paste控制面。"
+    },
+    {
+      "mechanism": "hardware keyboard toggle / key sequencing",
+      "decision": "observe",
+      "reason": "上游为持久Node会话追踪modifier与拆连接的软件键盘策略；本地没有相同handle/session丢失回归。保存boot mtime状态和AX键盘外观是启发式，不能升级为权威键盘身份/状态。"
+    },
+    {
+      "mechanism": "Metro reload / app relaunch",
+      "decision": "observe",
+      "reason": "Triton现有app生命周期不承诺Metro发现/广播。上游多peer广播仅靠/json/list与role ios猜测陈旧socket，明确可能影响未出现在inspector的iOS真机；不把此广播用于目标隔离。"
+    },
+    {
+      "mechanism": "persistent Node control process",
+      "decision": "observe",
+      "reason": "完整四核心/bin/build与53个测试源及fixtures已读；two-phase accepted/go防重复、私有socket/worker隔离可参考，但实际收益针对Node bundle编译，未证实Swift CLI存在相同瓶颈。环境标记不是内核sandbox鉴权，mtime不是制品身份；不引入常驻进程/全环境转发。"
+    },
+    {
+      "mechanism": "async inventory/memory probes / MJPEG watchdog / SSE host forwarding",
+      "decision": "observe",
+      "reason": "修复上游Node event-loop与双连接/远端viewer特定问题。固定loopback目标与转发认证上下文、可见img首帧按stream key计数值得参考；Triton无同样远端shell/SSE控制产品面，不新增该范围。"
+    },
+    {
+      "source_report": "recording-review.json",
+      "mechanism": "indexed recording + offline frame/diff/changes",
+      "classification": "observe_candidate",
+      "local_gap": "fixed main validates sim.record sample duration and device recording session identity, but those inspected contracts do not emit sample/event sidecars or offline sample/diff inspection; no matching mechanism found by targeted git grep",
+      "benefit": "agent can locate before/after frames in existing recordings without a viewer or continuous collection",
+      "source_boundary": "index changed means surface identity/seed or captured sequence, not semantic UI success; event-near-frame is correlation, not causation; constant wall-minus-uptime join can drift after wall clock change",
+      "bdd": [
+        "Given a finished local recording, when inspecting an exact sample then return actual decoded PTS, dimension, artifact SHA and preserve source identity; stale sidecar/PTS mismatch must fail",
+        "Given a truncated/malformed/duplicate footer or mismatched declared counts then completeness is partial/error, never footer-present alone",
+        "Given two frames with mismatched geometry then fail explicitly; pixel threshold/maxDelta are reported and never prove action success"
+      ],
+      "candidate_files": [
+        "Sources/TritonKitCLI/CLIHostSimulatorRecordingRuntime.swift",
+        "Sources/TritonKitCLI/CLIDeviceRecordingCommands.swift",
+        "new offline recording inspection runtime/models and fixture tests"
+      ],
+      "dispatch_ready": false,
+      "dispatch_reason": "Keep as candidate: source review complete, but a concrete local diagnostic requirement and final CLI contract/identity-budget design should be selected before broad new recording/index commands. No existing main bug demonstrated."
+    },
+    {
+      "source_report": "recording-review.json",
+      "mechanism": "optional rolling recent frames",
+      "classification": "observe",
+      "reason": "adds continuous collection surface and memory/privacy lifecycle; not a concrete current main defect. Upstream defaults off and isolates sampler, but maxBytes is not a strict bound for the newest oversize frame and newest stale sample is retained indefinitely; stop discards inflight result and unsubscribes",
+      "bdd_if_future_adopt": [
+        "Disabled means no native reads/timer/subscription",
+        "Byte/time/count budgets are strict including one oversized frame; expired latest frame carries stale/unknown",
+        "Stop/restart invalidates old inflight capture; each view binds target/session/geometry"
+      ]
+    },
+    {
+      "source_report": "camera-ui-review.json",
+      "mechanism": "synthetic-camera-unique-id",
+      "decision": "covered",
+      "reason": "固定 main 的 TritonSimCameraHook.m 已按 front/back uniqueID 返回对应 fake device，未知 ID 交回原实现；无需重复采用。"
+    },
+    {
+      "source_report": "camera-ui-review.json",
+      "mechanism": "synthetic-camera-movie-file-output-and-explicit-graph",
+      "decision": "observe",
+      "reason": "本地只有 sample-buffer/preview 注入与配置测试；MovieFileOutput、显式 connection、movie 生命周期所有权及非空 format 兼容为真实能力差距，但仍缺本地真实 Simulator/app 验收，不把上游测试或脆弱 caller-address swizzle 直接视为已可采用。",
+      "benefit": "未来覆盖 expo-camera/VisionCamera 的录制与 remount 场景，避免记录状态和输出文件成功语义不一致。",
+      "bdd": [
+        "Given opt-in bundle with supported fake session and MovieFileOutput, when start then stop, then return exactly one completion and a playable video-only file with accurate duration/size.",
+        "Given existing destination or stopped session, when record requested, then fail explicitly without replacing/writing a file.",
+        "Given writer failure or output removal/session release, then bounded completion preserves success/error distinction and releases owned objects.",
+        "Given an output moved to another session, when the old session tears down, then it cannot stop the new owner recording.",
+        "Given unsupported native graph or codec, then report unsupported/unknown and do not imply native AVFoundation feature parity."
+      ],
+      "potential_files": [
+        "Sources/TritonKitCLI/Resources/sim-camera/TritonSimCameraHook.m",
+        "Sources/TritonKitCLI/CLICameraCommands.swift",
+        "CLI/Tests/TritonKitCLITests/CameraCommandTests.swift",
+        "new dedicated native Simulator camera acceptance fixture under a scoped implementation space"
+      ],
+      "required_evidence": "真实 Simulator 原生测试 app 的录制内容/文件/回调/析构证据；当前未执行。"
+    },
+    {
+      "source_report": "camera-ui-review.json",
+      "mechanism": "device-set-namespace-propagation",
+      "decision": "observe",
+      "reason": "上游实现从 flag/env 到 simctl/native/helper/state/permissions 的贯通 namespace。本地仅 clone 目的地 device-set，没有公开 active device-set selector；缺口是可选能力，不是当前默认集承诺的已证明错误。",
+      "bdd": [
+        "Given a validated custom set, all list/selection/action/native/helper/state operations must stay in that namespace and never silently fall back to default.",
+        "Given malformed/missing set or a UDID absent from selected set, fail before helper/device mutation.",
+        "Given aliases to the same canonical set, reuse only matching state; never expose private host set paths to public DTO."
+      ],
+      "potential_files": [
+        "Sources/TritonKitCLI/CLIHostSimulatorMaintenanceCommands.swift",
+        "Sources/TritonKitCLI/CLIHostAppContainerBindingRuntime.swift",
+        "shared simulator target/selector/native adapter and related fixture tests"
+      ],
+      "required_evidence": "先定义 CLI/schema/plan/identity namespace 契约，未来实现单独切片；真实 custom-set 操作未执行。"
+    },
+    {
+      "source_report": "camera-ui-review.json",
+      "mechanism": "scrub-timeline-ui",
+      "decision": "observe",
+      "reason": "11/11 新增被 4d9498f 在今日 head 删除：3 个源文件和 3 个测试文件；use-screen-recording index/onSaved 接线回退。作为历史撤回记录，不排采用。"
+    },
+    {
+      "source_report": "camera-ui-review.json",
+      "mechanism": "device-chrome-rotation-recording-toast",
+      "decision": "observe",
+      "reason": "正式 Web/Wails 展示和本机 Finder 操作未纳入当前本地 CLI camera 需求。旋转时禁输入、reduced motion 和 poster 超时等约束可参考；不新增正式 Web 控制面。"
+    },
+    {
+      "source_report": "camera-ui-review.json",
+      "mechanism": "control-process-tests",
+      "decision": "observe",
+      "reason": "独立审读上游完整测试及 fixtures，覆盖边界列在 md；没有运行上游测试，也未独立审核父任务已读四个 core 模块，不据此声称实现正确或本地采用。"
+    },
+    {
+      "mechanism": "hardened helper / Duo guest hinge",
+      "decision": "observe",
+      "source_report": "native-followup-review.json",
+      "reason": "Duo hinge与20261017已登记观察项去重；本地iOS fold明确unsupported。上游stale angle/无限重试与缓存身份不足不可照搬，重签/签名动作不由采用授权推导。"
+    }
+  ],
+  "evidence_reports": [
+    "core-review.json",
+    "recording-review.json",
+    "camera-ui-review.json",
+    "native-followup-review.json",
+    "review-coverage.json",
+    "local-main-review.json"
+  ],
+  "deduplication": {
+    "SP283": "已核对固定main已交付Homebrew公开资产门禁，不重复排期",
+    "SP284": "已核对固定main已交付Simulator诊断依赖，不重复排期",
+    "DTUHID": "当前main已合安全契约，不重复采用",
+    "Duo_hinge": "20261017已有observe，同一需求补来源"
+  },
+  "limitations": [
+    "未运行上游代码、测试、依赖、Simulator/设备、签名、真实下载产物或发布；源码中的测试存在不等于测试通过。",
+    "29提交结构/语义审阅完成不等于任何候选实现、验证或合并完成；本任务没有产品更改或分派。",
+    "评估绑定任务指定main 0ec972e6；期间主控后续提交不被悄悄纳入本次源码断言。",
+    "性能、延迟、真机/Simulator兼容性数字均未本地验证。",
+    "固定11/11 source仍为11/11重新采集副本，未声称恢复更早被移除的历史raw。"
+  ],
+  "runtime_executed": false,
+  "implementation_started": false,
+  "checkpoint_mutated": false,
+  "source_custody": "本日只写review证据；11/11冻结archive及本日metadata/result未修改。"
+}

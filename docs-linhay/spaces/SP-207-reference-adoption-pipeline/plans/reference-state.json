@@ -10,7 +10,7 @@
     "docs-linhay/dev/mobile-mcp-reference.md",
     "docs-linhay/spaces/SP-279-pinky-reference/README.md"
   ],
-  "coverage_note": "21/34 complete, 13 partial on 20261111; 25 formal references + 9 research candidates. Pinky registration omission recovered, not historical full-check success. Historical raw missing separately recorded; partial checkpoints unchanged; iCTRL independent SP193.",
+  "coverage_note": "22/34 complete, 12 partial on 20261112; 25 formal references + 9 research candidates; five changed. Partial checkpoints preserved; iCTRL independent SP193.",
   "repositories": [
     {
       "repository": "tddworks/baguette",
@@ -33,7 +33,7 @@
           "binary_source_provenance",
           "incremental_review_incomplete"
         ],
-        "observed_at": "2026-11-11T09:47:11.388996+00:00",
+        "observed_at": "2026-11-12T02:09:32.265120+00:00",
         "head_sha": "593a1b4ae699e87bbab444d0d821e45a74b4bc79",
         "details": [
           "changed_VirtualCamera.dylib_binary_not_requested_provenance_unverified",
@@ -41,7 +41,7 @@
           "full_safe_text_retrieved_but_all_27384_parent_diff_lines_not_semantically_reviewed",
           "historical_partial_gaps_not_recovered_by_new_delta_review"
         ],
-        "summary": "20261111-reference-update-report.md"
+        "summary": "20261112-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "593a1b4ae699e87bbab444d0d821e45a74b4bc79",
@@ -72,47 +72,39 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-02T02:07:15.277766+00:00",
-        "last_successful_check_at": "2026-11-02T02:07:15.277766+00:00",
-        "head_sha": "ede4c21ee3021a36fbee1fec106b388a50a5ce4e",
+        "checked_at": "2026-11-12T02:09:32.266161+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:32.266161+00:00",
+        "head_sha": "cea9a7df9b73fb04f4f257640d10c7af3770950f",
         "default_branch": "main",
         "release_tag": null,
-        "latest_release": {},
+        "latest_release": {
+          "tag_name": null,
+          "published_at": null,
+          "html_url": null,
+          "prerelease": null
+        },
         "license_spdx": "Apache-2.0",
         "license_sha256": "9024cdf56dfe7e66523698a9f63d3a0061eb15f43bd5ea8e3833a56017ae37fd",
         "license": {
           "spdx": "Apache-2.0",
           "sha256": "9024cdf56dfe7e66523698a9f63d3a0061eb15f43bd5ea8e3833a56017ae37fd",
           "path": "LICENSE",
-          "html_url": "https://github.com/EvanBacon/serve-sim/blob/ede4c21ee3021a36fbee1fec106b388a50a5ce4e/LICENSE"
+          "html_url": "https://github.com/EvanBacon/serve-sim/blob/cea9a7df9b73fb04f4f257640d10c7af3770950f/LICENSE"
         },
-        "summary": "20261102-reference-update-report.md",
-        "observation": "20261102-observations.json",
-        "coverage": "Official identity/all releases/fixed license/applicable full increment read; not runtime/history-wide audit."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
-      "last_error": {
-        "kind": "upstream_read_incomplete",
-        "fault_classes": [
-          "incremental_review_incomplete"
-        ],
-        "observed_at": "2026-11-11T09:47:11.389279+00:00",
-        "head_sha": "5f6dee52834351ae2d765dfda02e540248a9b663",
-        "details": [
-          "semantic_review_incomplete_26922_diff_lines_22_commits"
-        ],
-        "summary": "20261111-reference-update-report.md"
-      },
+      "last_error": null,
       "last_notified_observation": {
-        "head_sha": "5f6dee52834351ae2d765dfda02e540248a9b663",
+        "head_sha": "cea9a7df9b73fb04f4f257640d10c7af3770950f",
         "release_tag": null,
         "license_sha256": "9024cdf56dfe7e66523698a9f63d3a0061eb15f43bd5ea8e3833a56017ae37fd",
-        "fault_classes": [
-          "incremental_review_incomplete"
-        ],
-        "coverage": "upstream_read_incomplete",
-        "fingerprint": "fff5d5084f8eb7463d59d32a08d6082a09c3e740fed67cd0df67898c8364ddba",
-        "reported_on": "20261111",
-        "summary": "20261111-reference-update-report.md"
+        "fault_classes": [],
+        "coverage": "complete",
+        "fingerprint": "708522db588c48a7cf6c3cbcd0e596cd18642842011ad5f9b61d622652dfd467",
+        "reported_on": "20261112",
+        "summary": "20261112-reference-update-report.md"
       }
     },
     {
@@ -130,8 +122,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:11.389338+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:11.389338+00:00",
+        "checked_at": "2026-11-12T02:09:32.267516+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:32.267516+00:00",
         "head_sha": "c02295edfd2f442249b869096dda3dc7bfcd308d",
         "default_branch": "main",
         "release_tag": "v0.16.0",
@@ -149,9 +141,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/lycorp-jp/sim-use/blob/c02295edfd2f442249b869096dda3dc7bfcd308d/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_notified_observation": {
         "head_sha": "c02295edfd2f442249b869096dda3dc7bfcd308d",
@@ -180,8 +172,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:11.392315+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:11.392315+00:00",
+        "checked_at": "2026-11-12T02:09:32.268171+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:32.268171+00:00",
         "head_sha": "7e374b3839d49608a681d1f8b9ca0dd83d35189e",
         "default_branch": "main",
         "release_tag": "v0.14.0",
@@ -199,9 +191,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/MobAI-App/simslim/blob/7e374b3839d49608a681d1f8b9ca0dd83d35189e/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -230,8 +222,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:15.442998+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:15.442998+00:00",
+        "checked_at": "2026-11-12T02:09:36.119242+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:36.119242+00:00",
         "head_sha": "e50f07f1f4480cb14d57f192df7bf598ca26e708",
         "default_branch": "dev",
         "release_tag": "v0.2.0",
@@ -249,9 +241,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/Mastersam07/OpenDeviceHub/blob/e50f07f1f4480cb14d57f192df7bf598ca26e708/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null
     },
@@ -270,8 +262,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:15.594176+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:15.594176+00:00",
+        "checked_at": "2026-11-12T02:09:36.660850+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:36.660850+00:00",
         "head_sha": "3779e12aa00c08bb34805fef8ffe375838cbe815",
         "default_branch": "main",
         "release_tag": null,
@@ -289,9 +281,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/JaviSoto/device-hub-ios/blob/3779e12aa00c08bb34805fef8ffe375838cbe815/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_notified_observation": {
         "head_sha": "3779e12aa00c08bb34805fef8ffe375838cbe815",
@@ -320,8 +312,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:16.256141+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:16.256141+00:00",
+        "checked_at": "2026-11-12T02:09:37.040417+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:37.040417+00:00",
         "head_sha": "1b6c7f0fa5f5ed2bd7885d404f85bcebd5ff0d93",
         "default_branch": "main",
         "release_tag": "v0.6.0",
@@ -339,9 +331,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/heoblitz/Loupe/blob/1b6c7f0fa5f5ed2bd7885d404f85bcebd5ff0d93/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -507,35 +499,28 @@
         "fault_classes": [
           "incremental_review_incomplete"
         ],
-        "observed_at": "2026-11-11T09:47:16.662366+00:00",
-        "head_sha": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+        "observed_at": "2026-11-12T02:09:37.422788+00:00",
+        "head_sha": "982c8718d2abbad9c3921749525a0c74832635e3",
         "details": [
           {
             "code": "incremental_review_incomplete",
-            "detail": "52 commits / 53 parent edges from 20261102 checkpoint. Only 4 parent edges fully collected, 6 of 54 required trees acquired. No commit is certified as all-files semantically reviewed. 14 selected HEAD source/test files reviewed; remaining 338 acquired text versions are collection evidence only, and additional uncollected versions remain unknown."
+            "detail": "Base remains 20261102 1166ac1. New 3-commit slice reviewed but prior 52-commit slice retains 49/53 incompletely collected parent edges and 338 collected text versions not semantically reviewed per frozen 20261111 report; no checkpoint advance."
           },
-          {
-            "code": "historical_raw_evidence_unavailable",
-            "detail": "Prior 20261103 uncommitted archive is absent; cause unknown. Current files are fresh fixed-SHA retrieval copies, not original historical responses."
-          },
-          {
-            "code": "collector_intentionally_stopped_partial",
-            "detail": "Broad all-version text collection stopped after partial fifth edge to finish bounded protocol/security/local-availability review; review-collect.log preserves KeyboardInterrupt. Not classified as upstream no-change or complete."
-          }
+          "historical_partial_gaps_not_recovered_by_new_delta_review"
         ],
-        "summary": "20261111-reference-update-report.md"
+        "summary": "20261112-reference-update-report.md"
       },
       "last_notified_observation": {
-        "head_sha": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
-        "release_tag": "v0.45.0",
+        "head_sha": "982c8718d2abbad9c3921749525a0c74832635e3",
+        "release_tag": "v0.46.1",
         "license_sha256": "52327c57e955a3e63f872960938e814acc19eb1b77c501999f5fd1e543b21346",
         "fault_classes": [
           "incremental_review_incomplete"
         ],
         "coverage": "upstream_read_incomplete",
-        "fingerprint": "3527b5d0c0584daae60563687ebc896084ab40719f5da95137de05fbc79cabef",
-        "reported_on": "20261111",
-        "summary": "20261111-reference-update-report.md"
+        "fingerprint": "61a3fae7244b588d5a71d2247dc299a1a2932f17a9010efb6f5b1b05fd86d079",
+        "reported_on": "20261112",
+        "summary": "20261112-reference-update-report.md"
       }
     },
     {
@@ -762,13 +747,13 @@
         "fault_classes": [
           "incremental_review_incomplete"
         ],
-        "observed_at": "2026-11-11T09:47:19.314153+00:00",
+        "observed_at": "2026-11-12T02:09:40.720097+00:00",
         "head_sha": "acbe8fb01f6669e40a9d781e1849d5f935dcac48",
         "details": [
           "large_increment_text_and_semantic_review_incomplete",
           "conservative_path_screening_exclusions_require_review"
         ],
-        "summary": "20261111-reference-update-report.md"
+        "summary": "20261112-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "acbe8fb01f6669e40a9d781e1849d5f935dcac48",
@@ -798,8 +783,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:19.480175+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:19.480175+00:00",
+        "checked_at": "2026-11-12T02:09:40.852405+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:40.852405+00:00",
         "head_sha": "cc059013de8778072b4fea6453b45e964e4202fe",
         "default_branch": "main",
         "release_tag": "2.0.0",
@@ -817,9 +802,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/ProxymanApp/atlantis/blob/cc059013de8778072b4fea6453b45e964e4202fe/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -868,8 +853,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:21.286521+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:21.286521+00:00",
+        "checked_at": "2026-11-12T02:09:42.507906+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:42.507906+00:00",
         "head_sha": "2998ac77ebbca59544e88a27f34bfb830db9d924",
         "default_branch": "main",
         "release_tag": "v2.7.1",
@@ -887,9 +872,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/getsentry/MobileBuildMCP/blob/2998ac77ebbca59544e88a27f34bfb830db9d924/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -918,8 +903,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:23.778109+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:23.778109+00:00",
+        "checked_at": "2026-11-12T02:09:45.718760+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:45.718760+00:00",
         "head_sha": "3f58c077ded131cca71d75efb05c5d325f0ed18f",
         "default_branch": "main",
         "release_tag": "v0.8.4",
@@ -937,9 +922,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/awizemann/harness/blob/3f58c077ded131cca71d75efb05c5d325f0ed18f/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -967,8 +952,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:24.340281+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:24.340281+00:00",
+        "checked_at": "2026-11-12T02:09:46.931199+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:46.931199+00:00",
         "head_sha": "a96cb091903922f4f002f48c38cdfb1146653f93",
         "default_branch": "main",
         "release_tag": "v0.8.0",
@@ -986,9 +971,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/dongxinsuperman/ai-phone/blob/a96cb091903922f4f002f48c38cdfb1146653f93/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -1039,14 +1024,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-11T09:47:24.814695+00:00",
+        "observed_at": "2026-11-12T02:09:46.942441+00:00",
         "head_sha": "eef71926e613c3242643923bb21c92beab439990",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261111-reference-update-report.md"
+        "summary": "20261112-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "eef71926e613c3242643923bb21c92beab439990",
@@ -1105,20 +1090,20 @@
           "incremental_review_incomplete",
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-11T09:47:26.463143+00:00",
-        "head_sha": "dcf5f2ab9fdd181a3bbe770410f4ad19dc36fed9",
+        "observed_at": "2026-11-12T02:09:48.714620+00:00",
+        "head_sha": "dd8c128d8043ca09961fb6e59d0a0cfe95d923ed",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license_full_text_unavailable_http404",
-          "four_changed_pyc_paths_not_requested_semantic_gap",
+          "four_changed_pyc_paths_excluded_not_requested_semantic_gap",
+          "historical_83_commits_full_semantic_review_not_completed",
           "historical_hosted_and_binary_provenance_gap_not_closed",
-          "full_safe_text_retrieved_but_all_23600_parent_diff_lines_not_semantically_reviewed",
           "historical_partial_gaps_not_recovered_by_new_delta_review"
         ],
-        "summary": "20261111-reference-update-report.md"
+        "summary": "20261112-reference-update-report.md"
       },
       "last_notified_observation": {
-        "head_sha": "dcf5f2ab9fdd181a3bbe770410f4ad19dc36fed9",
+        "head_sha": "dd8c128d8043ca09961fb6e59d0a0cfe95d923ed",
         "release_tag": "v0.1.234",
         "license_sha256": null,
         "fault_classes": [
@@ -1126,9 +1111,9 @@
           "license_full_text_unavailable"
         ],
         "coverage": "upstream_read_incomplete",
-        "fingerprint": "9d54d6207871a994954993463fc6bd274650b3a0085bfad0f820c46e170f368f",
-        "reported_on": "20261111",
-        "summary": "20261111-reference-update-report.md"
+        "fingerprint": "07529fc088f6966be62b8c412597f9cad0e54d86485cfe185a193311166aa3f0",
+        "reported_on": "20261112",
+        "summary": "20261112-reference-update-report.md"
       },
       "checkpoint_integrity": "Historical SHA/tag retained; license text unverified. Not a current complete success checkpoint."
     },
@@ -1169,14 +1154,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-11T09:47:28.088068+00:00",
+        "observed_at": "2026-11-12T02:09:51.010309+00:00",
         "head_sha": "b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261111-reference-update-report.md"
+        "summary": "20261112-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "b3edc443dbfbd8fe84b0fb0bc7c3190cb233c41e",
@@ -1207,8 +1192,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:28.464466+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:28.464466+00:00",
+        "checked_at": "2026-11-12T02:09:51.052302+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:51.052302+00:00",
         "head_sha": "fcb36e395bd4ae20448f2535382baecba9396fd9",
         "default_branch": "main",
         "release_tag": "v0.2.0",
@@ -1226,9 +1211,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/RevylAI/greenlight/blob/fcb36e395bd4ae20448f2535382baecba9396fd9/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -1278,14 +1263,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-11T09:47:28.713741+00:00",
+        "observed_at": "2026-11-12T02:09:51.274324+00:00",
         "head_sha": "efc1dae5da089ec08108a39f1ead39324c11b410",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261111-reference-update-report.md"
+        "summary": "20261112-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "efc1dae5da089ec08108a39f1ead39324c11b410",
@@ -1338,14 +1323,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-11T09:47:32.300202+00:00",
+        "observed_at": "2026-11-12T02:09:54.784393+00:00",
         "head_sha": "ba1250c72f56a08f3718aefc82dc911c1b3a2f23",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261111-reference-update-report.md"
+        "summary": "20261112-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "ba1250c72f56a08f3718aefc82dc911c1b3a2f23",
@@ -1398,14 +1383,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-11T09:47:32.542710+00:00",
+        "observed_at": "2026-11-12T02:09:55.026845+00:00",
         "head_sha": "2758e8a88f4efb3a251b675e0984c091bf8abeb8",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261111-reference-update-report.md"
+        "summary": "20261112-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "2758e8a88f4efb3a251b675e0984c091bf8abeb8",
@@ -1458,14 +1443,14 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-11T09:47:32.697861+00:00",
+        "observed_at": "2026-11-12T02:09:55.375561+00:00",
         "head_sha": "8b4e5cea045dcff5c30aa723b923e514d2cdc07a",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)",
           "license: gh: Not Found (HTTP 404)",
           "previous_partial_source_evidence_retained_not_recovered"
         ],
-        "summary": "20261111-reference-update-report.md"
+        "summary": "20261112-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "8b4e5cea045dcff5c30aa723b923e514d2cdc07a",
@@ -1496,8 +1481,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:33.040982+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:33.040982+00:00",
+        "checked_at": "2026-11-12T02:09:55.667635+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:55.667635+00:00",
         "head_sha": "3d8902e011981b93cb0ebfafba1794eab93b053e",
         "default_branch": "main",
         "release_tag": null,
@@ -1515,9 +1500,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/RevylAI/CogniSim/blob/3d8902e011981b93cb0ebfafba1794eab93b053e/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -1546,8 +1531,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:36.370763+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:36.370763+00:00",
+        "checked_at": "2026-11-12T02:09:58.621642+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:58.621642+00:00",
         "head_sha": "95e30fdcc8151092678387c5262bce790a0d9530",
         "default_branch": "Develop",
         "release_tag": "1.0.7",
@@ -1565,9 +1550,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/hughkli/Lookin/blob/95e30fdcc8151092678387c5262bce790a0d9530/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null
     },
@@ -1586,8 +1571,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:36.399848+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:36.399848+00:00",
+        "checked_at": "2026-11-12T02:09:58.846142+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:58.846142+00:00",
         "head_sha": "8974f95b0685f139a6257f82d6b13895db3356cf",
         "default_branch": "main",
         "release_tag": null,
@@ -1605,9 +1590,9 @@
           "path": "LICENSE.txt",
           "html_url": "https://github.com/OSU-NLP-Group/UGround/blob/8974f95b0685f139a6257f82d6b13895db3356cf/LICENSE.txt"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null
     },
@@ -1626,8 +1611,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:36.562595+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:36.562595+00:00",
+        "checked_at": "2026-11-12T02:09:59.154305+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:59.154305+00:00",
         "head_sha": "582f3a7ea5d285ee8ed9e2e84048d1ab01453c49",
         "default_branch": "main",
         "release_tag": null,
@@ -1645,9 +1630,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/bytedance/UI-TARS/blob/582f3a7ea5d285ee8ed9e2e84048d1ab01453c49/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null
     },
@@ -1666,8 +1651,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:37.217777+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:37.217777+00:00",
+        "checked_at": "2026-11-12T02:09:59.565561+00:00",
+        "last_successful_check_at": "2026-11-12T02:09:59.565561+00:00",
         "head_sha": "2168ae21b1bed1cdb88736d422934825795a9fd7",
         "default_branch": "main",
         "release_tag": null,
@@ -1685,9 +1670,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/OpenBMB/AgentCPM-GUI/blob/2168ae21b1bed1cdb88736d422934825795a9fd7/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null
     },
@@ -1706,8 +1691,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:40.319139+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:40.319139+00:00",
+        "checked_at": "2026-11-12T02:10:02.995322+00:00",
+        "last_successful_check_at": "2026-11-12T02:10:02.995322+00:00",
         "head_sha": "c4cd0a8f9ddedad24dd8a3daf3a56ca69343849f",
         "default_branch": "main",
         "release_tag": null,
@@ -1725,9 +1710,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/X-PLUG/MobileAgent/blob/c4cd0a8f9ddedad24dd8a3daf3a56ca69343849f/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -1756,8 +1741,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:40.402277+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:40.402277+00:00",
+        "checked_at": "2026-11-12T02:10:03.922697+00:00",
+        "last_successful_check_at": "2026-11-12T02:10:03.922697+00:00",
         "head_sha": "0ef37ac4d7aaf37ba7b990e3e3c3ca77e1fb8f93",
         "default_branch": "main",
         "release_tag": null,
@@ -1775,9 +1760,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/njucckevin/SeeClick/blob/0ef37ac4d7aaf37ba7b990e3e3c3ca77e1fb8f93/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null
     },
@@ -1796,8 +1781,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:40.413913+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:40.413913+00:00",
+        "checked_at": "2026-11-12T02:10:04.984522+00:00",
+        "last_successful_check_at": "2026-11-12T02:10:04.984522+00:00",
         "head_sha": "55ddaf5edc6f6c25673aed343907d5b9dca66f84",
         "default_branch": "main",
         "release_tag": null,
@@ -1815,9 +1800,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/google-research/android_world/blob/55ddaf5edc6f6c25673aed343907d5b9dca66f84/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -1846,8 +1831,8 @@
         "coverage": "historical_observation_not_full_incremental_checkpoint"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:41.223565+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:41.223565+00:00",
+        "checked_at": "2026-11-12T02:10:05.063690+00:00",
+        "last_successful_check_at": "2026-11-12T02:10:05.063690+00:00",
         "head_sha": "aaa248d7fd4ca4924444dc027af9c7a62a9be348",
         "default_branch": "main",
         "release_tag": "cli-2.12.1",
@@ -1865,9 +1850,9 @@
           "path": "LICENSE",
           "html_url": "https://github.com/mobile-dev-inc/Maestro/blob/aaa248d7fd4ca4924444dc027af9c7a62a9be348/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null,
       "last_notified_observation": {
@@ -1929,12 +1914,12 @@
         "fault_classes": [
           "license_full_text_unavailable"
         ],
-        "observed_at": "2026-11-11T09:47:44.124747+00:00",
+        "observed_at": "2026-11-12T02:10:06.761241+00:00",
         "head_sha": "24e036604b9e2b28e14c3f55e75a686be1a8bd8a",
         "details": [
           "license_full_text_unavailable: gh: Not Found (HTTP 404)"
         ],
-        "summary": "20261111-reference-update-report.md"
+        "summary": "20261112-reference-update-report.md"
       },
       "last_notified_observation": {
         "head_sha": "24e036604b9e2b28e14c3f55e75a686be1a8bd8a",
@@ -1962,15 +1947,15 @@
         "coverage": "historical_reference_snapshot"
       },
       "checkpoint": {
-        "checked_at": "2026-11-11T09:47:44.172539+00:00",
-        "last_successful_check_at": "2026-11-11T09:47:44.172539+00:00",
-        "head_sha": "3b51952bcd83955f3a743f731f5a9beaebecdab7",
+        "checked_at": "2026-11-12T02:10:08.863144+00:00",
+        "last_successful_check_at": "2026-11-12T02:10:08.863144+00:00",
+        "head_sha": "ad3b42336d89717313af45176c48538bea6ec363",
         "default_branch": "main",
-        "release_tag": "1.0.16",
+        "release_tag": "1.0.17",
         "latest_release": {
-          "tag_name": "1.0.16",
-          "published_at": "2026-11-02T16:03:37Z",
-          "html_url": "https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.16",
+          "tag_name": "1.0.17",
+          "published_at": "2026-11-11T14:44:51Z",
+          "html_url": "https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.17",
           "prerelease": false
         },
         "license_spdx": "Apache-2.0",
@@ -1979,22 +1964,22 @@
           "spdx": "Apache-2.0",
           "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
           "path": "LICENSE",
-          "html_url": "https://github.com/mobile-next/mobile-mcp/blob/3b51952bcd83955f3a743f731f5a9beaebecdab7/LICENSE"
+          "html_url": "https://github.com/mobile-next/mobile-mcp/blob/ad3b42336d89717313af45176c48538bea6ec363/LICENSE"
         },
-        "summary": "20261111-reference-update-report.md",
-        "observation": "20261111-observations.json",
-        "coverage": "Official identity/all releases/fixed license and applicable increment; unchanged sources reuse historical review with unavailable historical raw custody recorded separately."
+        "summary": "20261112-reference-update-report.md",
+        "observation": "20261112-observations.json",
+        "coverage": "Official identity/all releases/fixed license and applicable full increment; unchanged source review reused, 20261111 custody reverified; older missing custody separately retained."
       },
       "last_error": null,
       "last_notified_observation": {
-        "head_sha": "3b51952bcd83955f3a743f731f5a9beaebecdab7",
-        "release_tag": "1.0.16",
+        "head_sha": "ad3b42336d89717313af45176c48538bea6ec363",
+        "release_tag": "1.0.17",
         "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
         "fault_classes": [],
         "coverage": "complete",
-        "fingerprint": "e41238ddc4f05f64bfec3d716bac0c33b8f0dc5d139dc6f616bb580665f1f72c",
-        "reported_on": "20261111",
-        "summary": "20261111-reference-update-report.md"
+        "fingerprint": "f0622d7af39fbb6a917510f6a2c664c30fff697a598e74ce7c3cb852088125df",
+        "reported_on": "20261112",
+        "summary": "20261112-reference-update-report.md"
       }
     },
     {
@@ -2018,51 +2003,48 @@
         "fault_classes": [
           "incremental_review_incomplete"
         ],
-        "observed_at": "2026-11-11T10:02:10.206634+00:00",
-        "head_sha": "3248613b11cb77b263f2a4282209ef9ab79254e7",
+        "observed_at": "2026-11-12T02:10:08.931644+00:00",
+        "head_sha": "9c350457c4014ccd987e443a8a03bd74806f8c44",
         "details": [
-          "large_increment_parent_tree_and_full_text_review_incomplete",
-          "compare_files_capped_at_300_not_used_as_full_file_inventory",
-          "collector_stopped_by_controller_after_206_trees_for_bounded_review",
-          "historical_clone_currently_unavailable_reason_unknown",
-          "large_increment_parent_tree_and_full_text_review_incomplete",
-          "compare_files_capped_at_300_not_used_as_full_file_inventory",
-          "collector_stopped_by_controller_after_206_trees_for_bounded_review",
-          "historical_clone_currently_unavailable_reason_unknown"
+          "historical_321_commit_increment_not_fully_reviewed",
+          "new_33_commit_increment_only_15_selected_paths_reviewed",
+          "new_increment_not_all_parent_trees_reconstructed",
+          "historical_source_clone_unavailable_reason_unknown",
+          "historical_partial_gaps_not_recovered_by_new_delta_review"
         ],
-        "summary": "20261111-reference-update-report.md"
+        "summary": "20261112-reference-update-report.md"
       },
       "last_notified_observation": {
-        "head_sha": "3248613b11cb77b263f2a4282209ef9ab79254e7",
-        "release_tag": "v2026.1111.16",
+        "head_sha": "9c350457c4014ccd987e443a8a03bd74806f8c44",
+        "release_tag": "v2026.1112.2",
         "license_sha256": "c95bae1d1ce0235ecccd3560b772ec1efb97f348a79f0fbe0a634f0c2ccefe2c",
         "fault_classes": [
           "incremental_review_incomplete"
         ],
         "coverage": "upstream_read_incomplete",
-        "fingerprint": "e9d2957a11f24f06ced3ae07a0527b65c3e33994147621512e05aea61689ad95",
-        "reported_on": "20261111",
-        "summary": "20261111-reference-update-report.md"
+        "fingerprint": "70847516c74711a0544b4a2549491b763f29bdeafa0ceae7c2a8be67be8cc59c",
+        "reported_on": "20261112",
+        "summary": "20261112-reference-update-report.md"
       }
     }
   ],
-  "latest_summary": "20261111-reference-update-report.md",
-  "latest_observation": "20261111-observations.json",
+  "latest_summary": "20261112-reference-update-report.md",
+  "latest_observation": "20261112-observations.json",
   "latest_transport_event": {
     "observed_on": "2026-10-23",
     "first_attempt_failed_repositories": 13,
     "bounded_secure_retry_recovered": 13,
     "summary": "20261023-read-failures.json"
   },
-  "latest_full_inventory_observation": "20261111-observations.json",
+  "latest_full_inventory_observation": "20261112-observations.json",
   "raw_evidence_status": {
-    "current": "fresh_20261111_collection_verified_history_missing",
-    "archive_root": "../TritonKit-archives/reference-monitor/20261111",
-    "manifest": "20261111-evidence-manifest.json",
+    "current": "fresh_20261112_verified_and_20261111_5252_files_reverified",
+    "archive_root": "../TritonKit-archives/reference-monitor/20261112",
+    "manifest": "20261112-evidence-manifest.json",
     "historical_20261030": "missing",
     "historical_20261102": "455_missing_reason_unknown",
     "historical_20261103_uncommitted": "not_available_not_recreated",
-    "details": "20261111-evidence-custody.json",
+    "details": "20261112-evidence-custody.json",
     "historical_missing_notice_on": "2026-11-11"
   }
 }

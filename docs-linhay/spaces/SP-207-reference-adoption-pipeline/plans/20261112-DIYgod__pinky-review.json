@@ -1,0 +1,85 @@
+{
+  "repository": "DIYgod/pinky",
+  "classification": "registered_reference",
+  "base_sha": "209aa9e4b2ff1fd81edec3c393a64b21b79162fb",
+  "base_kind": "SP279_historical_static_research_import",
+  "checkpoint": null,
+  "new_delta_base_sha": "3248613b11cb77b263f2a4282209ef9ab79254e7",
+  "head_sha": "9c350457c4014ccd987e443a8a03bd74806f8c44",
+  "actual_main": "0ec972e6151eb27372b3bdf5aa940940c56c30b0",
+  "decision": "partial_observe",
+  "reason": "新增33提交仅重点安全审阅，保留此前321提交完整父边/文本缺口；已有SP280/281承接ActionContext，未发现有充分本地反例的新独立采用项。",
+  "complete_review": false,
+  "errors": [
+    "historical_321_commit_increment_not_fully_reviewed",
+    "new_33_commit_increment_only_15_selected_paths_reviewed",
+    "new_increment_not_all_parent_trees_reconstructed",
+    "historical_source_clone_unavailable_reason_unknown"
+  ],
+  "coverage": {
+    "new_compare_pages": 1,
+    "new_commits": 33,
+    "new_net_paths": 167,
+    "new_release_count": 5,
+    "base_head_recursive_trees": 2,
+    "selected_paths": 15,
+    "selected_full_blob_versions": 27,
+    "selected_blob_sha_verified": true,
+    "all_parent_trees_complete": false,
+    "all_increment_texts_reviewed": false,
+    "historical_321_commits_gap_remains": true,
+    "historical_tree_count": 206,
+    "runtime_executed": false
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "sha256": "c95bae1d1ce0235ecccd3560b772ec1efb97f348a79f0fbe0a634f0c2ccefe2c",
+    "path": "LICENSE",
+    "html_url": "https://github.com/DIYgod/pinky/blob/9c350457c4014ccd987e443a8a03bd74806f8c44/LICENSE"
+  },
+  "checkpoint_eligible": false,
+  "findings": [
+    {
+      "mechanism": "pilot task deadline",
+      "evidence": "internal/pilot/pilot.go sends model request with remaining task budget and rechecks limit after usage before action; tests cover late response and expiry during notification.",
+      "decision": "observe",
+      "boundary": "上游内置model-agent运行器，本地无已验证同源路径或复现，不把模型超时自动当设备取消。"
+    },
+    {
+      "mechanism": "Android input-note isolation",
+      "evidence": "Key clears prior note, Type enter preserves unread/hidden note; gateway reads key/type note, background-display helper checks capability and reports dropped key.",
+      "decision": "observe",
+      "boundary": "Xiaomi physical background-display/Companion路径不在当前本机模拟器默认范围；no-replay和unknown保留，不直接采用fallback。"
+    },
+    {
+      "mechanism": "own approval UI protection",
+      "evidence": "policy pinkyScreens blocks app.pinky.companion(.dev) and profile clone, even AllowBlocked; tests allow Home escape and reject near-name broad matching.",
+      "decision": "observe",
+      "boundary": "Triton没有同结构on-phone审批控制UI；SP280/281 admission既有，不能从此引入新审批UI。"
+    },
+    {
+      "mechanism": "phone_logs kind normalization",
+      "evidence": "logs.go accepts canonical LogsKindLines plus log/lines; regression tests include spaced/mixed-case Logs.",
+      "decision": "observe",
+      "boundary": "Triton非同phone_logs schema，未证实同缺陷。"
+    },
+    {
+      "mechanism": "MyGo 0.9.0 secure AX",
+      "evidence": "release v2026.1111.19 claims PIN/API key fields hidden from AX; go.mod updates dependency to MyGo0.9.0.",
+      "decision": "observe",
+      "boundary": "依赖内部修复源码未取；不凭release证明安全。Triton不使用MyGo，不安装升级。"
+    }
+  ],
+  "dedup": [
+    "SP279正式研究与已登记来源保持",
+    "SP280主线admission合同",
+    "SP281当前未提交receipt/evidence WIP不重排"
+  ],
+  "candidate_bdd": null,
+  "candidate_file_scope": [],
+  "runtime_executed": false,
+  "source_links": [
+    "https://github.com/DIYgod/pinky/compare/3248613b11cb77b263f2a4282209ef9ab79254e7...9c350457c4014ccd987e443a8a03bd74806f8c44",
+    "https://github.com/DIYgod/pinky/releases/tag/v2026.1112.2"
+  ]
+}

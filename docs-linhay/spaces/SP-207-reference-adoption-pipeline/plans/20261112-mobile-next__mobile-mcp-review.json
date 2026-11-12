@@ -1,0 +1,159 @@
+{
+  "repository": "mobile-next/mobile-mcp",
+  "base_sha": "3b51952bcd83955f3a743f731f5a9beaebecdab7",
+  "head_sha": "ad3b42336d89717313af45176c48538bea6ec363",
+  "actual_main": "0ec972e6151eb27372b3bdf5aa940940c56c30b0",
+  "decision": "adopt",
+  "reason": "仅推荐独立修复现有 Android wm size parser 的 Override 优先级与来源标签校验；实际本地消费者为只读 geometry/预览尺寸，不声称点击错位。横屏旋转与 System UI 过滤、真机注入仍观察；不复制 FSL 实现、不升级依赖。",
+  "complete_review": true,
+  "errors": [],
+  "commit_count": 3,
+  "parent_edges": 3,
+  "tree_count": 4,
+  "changed_paths": 3,
+  "text_versions": 7,
+  "excluded_paths": [],
+  "license": {
+    "spdx": "Apache-2.0",
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "path": "LICENSE",
+    "html_url": "https://github.com/mobile-next/mobile-mcp/blob/ad3b42336d89717313af45176c48538bea6ec363/LICENSE"
+  },
+  "release_tag": "1.0.17",
+  "local_evidence": [
+    {
+      "path": "Web/package-lock.json",
+      "sha256": "5f12258cf6c9d36d38be6ae956a52eb8993ccf0bb5f215bc009180803f40b507"
+    },
+    {
+      "path": "Web/package.json",
+      "sha256": "24f82d9038c003c2cfa64d4542069de51eb00edb65d16367fdb3bc8eb13c8d58"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIObservationRuntime.swift",
+      "sha256": "e04a9edf0ed4cf14006d3a9463340a8e5bcb02279b6c8b84d7feb09d8bbd9294"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIAndroidHarmonyFramebufferService.swift",
+      "sha256": "f1838d0dc471a511cf83e34a1179322aab2fb9ed0a4b2b9b49794e964249f03e"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIAndroidActionRuntime.swift",
+      "sha256": "f6772313587948cd9f96f490aabf3398d4258f688f6a5ff2f0607c23f778cc79"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIServeCommand.swift",
+      "sha256": "e1f1a55db4f97b4d56e0efda4598e8a17793ff5bad9d7cb355e07933fdb1c67b"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLISimulatorResourceCatalog.swift",
+      "sha256": "e08b244e3e771be699adbe0b75aeebaeec2ce4a7997023027bfa0791c49cefe4"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIWebDevicePage.swift",
+      "sha256": "5620a6f5e70c445368cab68b095372be93e6c148ada8c721f005492f6afef4c9"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIHostRuntime.swift",
+      "sha256": "f7fccb5baaee03ebeed9bb33ff3f208e3001a35067229dba07d743aee7899285"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIAndroidHierarchyRuntime.swift",
+      "sha256": "d418e170a0136e6b411fb2f29efd74cc69b0a9df5a018408f463bfacdb0cb825"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIHostNativeHIDRuntime.swift",
+      "sha256": "040a8496301428f336530869a80e3cf6944fbc9441ad49a08d1beead87e056d5"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIWebDeviceRuntime.swift",
+      "sha256": "9396a756f337ae9e776575926dd36ca26a59fba06305bb2ebcd5e72525b16a3b"
+    },
+    {
+      "path": "Sources/TritonKitShared/TKAndroidADBSupport.swift",
+      "sha256": "4c61b52fa492e40f3c0d4ca66d9284fb0cf37e984d4612c941686edbfd7e10a4"
+    },
+    {
+      "path": "CLI/Tests/TritonKitCLITests/SingleDeviceWebPageTests.swift",
+      "sha256": "26d83ffdee184976d000dae4e443dd2e80ba1b0b667e0fb64b2abaf40a6d802b"
+    },
+    {
+      "path": "Web/src/components/StreamPanel.tsx",
+      "sha256": "97bc82dfbfdc0ab9e079280066feffde7e02f4aa1cd2978455cae96935cc859f"
+    }
+  ],
+  "runtime_executed": false,
+  "upstream_code_executed": false,
+  "coverage": {
+    "commit_pages": 1,
+    "base_reached": true,
+    "every_parent_tree_diff_complete": true,
+    "trees_truncated": false,
+    "safe_increment_read": true,
+    "release_notes_full": true,
+    "license_full": true,
+    "transitive_dependency_review": "Only linked PR descriptions/file lists and Android #545/#556 relevant fixed source; not full mobilecli history or binary verification."
+  },
+  "mechanisms": [
+    {
+      "id": "android-wm-size-override-priority",
+      "decision": "adopt",
+      "local_gap": "TKAndroidWMSizeParser.parse returns first regex WxH from any line. Physical size:1080x2400 then Override size:720x1600 yields physical; geometry preview displays wrong effective dimensions. Existing test only puts Override first.",
+      "file_surface": [
+        "Sources/TritonKitShared/TKAndroidADBSupport.swift",
+        "CLI/Tests/TritonKitCLITests/SingleDeviceWebPageTests.swift"
+      ],
+      "bdd": [
+        "Given Physical size then Override size, parsing returns Override regardless of order and CRLF.",
+        "Given unrelated log WxH before the labeled size, only recognized size records are used.",
+        "Given missing/malformed/zero/negative/overflow explicit override, return unavailable/error rather than fabricate effective physical size.",
+        "Given physical only, retain valid positive natural dimensions."
+      ],
+      "acceptance": "Add focused parser red then minimal independent implementation; existing command remains adb -s serial shell wm size; no new device calls/UI actions. Run focused then impacted CLI tests; real rotation/device verification not executed.",
+      "license_boundary": "mobilecli fixed source FSL-1.1-ALv2; independent correction to existing Triton parser, no copied implementation/tests.",
+      "consumers": [
+        "Sources/TritonKitCLI/CLIWebDeviceRuntime.swift:593 parser; :350 webHostDeviceGeometry android branch",
+        "Sources/TritonKitCLI/CLIServeCommand.swift:445 GET /web/geometry",
+        "Sources/TritonKitCLI/CLIWebDevicePage.swift:833 refreshGeometry; :855 previewMeta size pill"
+      ],
+      "contract_recommendation": "Whitespace/CRLF normalization; exact Physical size:/Override size: labels, positive integer WxH only. Override wins regardless of order. Any malformed recognized size or duplicate same-kind labeled record (including equal values) returns nil.",
+      "aosp_source": {
+        "commit": "167b01edf8258a5846838a13b4051b2233bc82af",
+        "url": "https://android.googlesource.com/platform/frameworks/base/+/167b01edf8258a5846838a13b4051b2233bc82af/services/core/java/com/android/server/wm/WindowManagerShellCommand.java",
+        "sha256": "a41668947347d3036fa7351d74aa0125454ceebc718ebd83483245fc60d2c0ab",
+        "lines": "161-170"
+      },
+      "implementation_space": "SP-285 (parent-owned, review does not assert delivery)"
+    },
+    {
+      "id": "android-current-rotation",
+      "decision": "observe",
+      "reason": "Read-only DTO reports natural-size-derived orientation; actual consumer only preview size pill. No proven action coordinate mapping defect. Screenshot metadata and StreamPanel use image dimensions; no new control surface."
+    },
+    {
+      "id": "android-system-ui-filter",
+      "decision": "observe",
+      "reason": "Upstream filters only beside app roots when System UI not active; Triton currently fresh UIAutomator dump, no proven consecutive-dump stable-hash timeout mechanism. Blind filtering loses lock screen/shade evidence."
+    },
+    {
+      "id": "ios-debug-proxy-injection-recovery",
+      "decision": "observe",
+      "reason": "Separate mobilecli FSL code, real-device agent injection outside this adoption scope; reported speed not locally verified; PR reports repeated daemon restart unknown/errors and untested true idle exit."
+    },
+    {
+      "id": "dependency-audit-bumps",
+      "decision": "observe",
+      "reason": "Full lock diff contains typescript-eslint/brace-expansion, mobilewright/mobilecli and ws version changes. These exact packages absent in saved actual main Web lock; no dependency install/update authorized."
+    },
+    {
+      "id": "landscape-tap-hint-454",
+      "decision": "already_reviewed",
+      "reason": "Release repeats previous checkpoint implementation; no source delta in this range; prior raw-framebuffer/HID portrait guard conclusion remains."
+    }
+  ],
+  "dedup": [
+    "SP283 public-asset gate delivered, no repeat",
+    "SP284 simslim diagnostics delivered, no repeat"
+  ],
+  "final_candidate_review": "final-review.txt"
+}

@@ -99,3 +99,7 @@ SP-203～205、[SP-210](../spaces/SP-210-simulator-ax-geometry/README.md)、[SP-
 - [全量日检](../spaces/SP-207-reference-adoption-pipeline/plans/20261021-reference-update-report.md)完成33仓官方只读查询：23完整、10 partial；Baguette、sim-use、device-hub-ios、Revyl CLI相对昨日有变化。iCTRL仍由SP-193独立维护且无变化。
 - sim-use `42aa9a2` 将Xcode 27 Resize Mode的`Resizable` display身份、前台应用路由和动作边界写实；SP-214提供未知拓扑拒绝底座，SP-219补齐已确认 display identity 的录制路由，候选 `51cd20dd` 已由 SP-220 审查并合入 `f9399e5e`。AX/HID/真实 Simulator transport 仍保持边界。
 - 会话创建仍必须显式`gpt-6.1-sol`；SP-219/SP-220 的桌面接口校验失败保留为事实，未记录虚假thread，当前主控按授权完成了离线验证与本地合并。
+
+## 2026-11-12 main串行采用核对
+
+34仓日检中新增SP285：以mobile-mcp变化为线索，先追实际消费者和AOSP固定输出合同，再用失败测试证明本地有效尺寸选择缺陷；main c4c5f014仅提交精确文件/共享文档段落。提交后完整CLI与适用local通过，原SP281/SP279 WIP保留。读取完整性和采用状态分开，Baguette/Mirroir候选保持revise-first，不因已分派审查自动升级采用。见[当日日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261112-reference-update-report.md)。

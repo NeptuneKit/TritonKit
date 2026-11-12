@@ -1,0 +1,127 @@
+{
+  "checked_at": "2026-11-12T02:12:17.925498+00:00",
+  "actual_main": "0ec972e6151eb27372b3bdf5aa940940c56c30b0",
+  "manifests": [
+    {
+      "manifest": "20261111-evidence-manifest.json",
+      "counts": {
+        "valid": 5197,
+        "missing": 0,
+        "mismatch": 0
+      },
+      "failures": []
+    },
+    {
+      "manifest": "20261111-closeout-evidence.json",
+      "counts": {
+        "valid": 55,
+        "missing": 0,
+        "mismatch": 0
+      },
+      "failures": []
+    }
+  ],
+  "adoption_ancestry": [
+    {
+      "key": "OpenMinis/iCTRL:discovery-trust-boundary",
+      "sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
+      "on_main": true
+    },
+    {
+      "key": "OpenMinis/iCTRL:response-log-privacy",
+      "sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
+      "on_main": true
+    },
+    {
+      "key": "OpenMinis/iCTRL:runner-service-authentication",
+      "sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
+      "on_main": true
+    },
+    {
+      "key": "dongxinsuperman/ai-phone:simulator-ax-trusted-geometry",
+      "sha": "7a8e9f56",
+      "on_main": true
+    },
+    {
+      "key": "mobile-next/mobile-mcp:android-focused-activity-identity",
+      "sha": "7a8e9f56",
+      "on_main": true
+    },
+    {
+      "key": "mobile-next/mobile-mcp:android-adb-legacy-text-escaping",
+      "sha": "7a8e9f56",
+      "on_main": true
+    },
+    {
+      "key": "lycorp-jp/sim-use:simulator-display-topology-safety",
+      "sha": "0d35e95e",
+      "on_main": true
+    },
+    {
+      "key": "lycorp-jp/sim-use:simulator-display-topology-controller",
+      "sha": "b782c192",
+      "on_main": true
+    },
+    {
+      "key": "dongxinsuperman/ai-phone:harmony-forward-ownership-cleanup",
+      "sha": "34f713c7",
+      "on_main": true
+    },
+    {
+      "key": "dongxinsuperman/ai-phone:harmony-forward-ownership-controller",
+      "sha": "36145c62",
+      "on_main": true
+    },
+    {
+      "key": "TritonKit:simulator-device-hub-native-input",
+      "sha": "c2f4bdd1",
+      "on_main": true
+    },
+    {
+      "key": "lycorp-jp/sim-use:simulator-resizable-display-routing",
+      "sha": "f9399e5e",
+      "on_main": true
+    },
+    {
+      "key": "lycorp-jp/sim-use:simulator-resizable-display-controller",
+      "sha": "f9399e5e",
+      "on_main": true
+    },
+    {
+      "key": "MobAI-App/simslim:simulator-resource-read-transient-retry",
+      "sha": "a0eebff06564dcf68ccf728efc97ec2d4f3d9292",
+      "on_main": true
+    },
+    {
+      "key": "TritonKit:host-process-post-exit-drain-deadline",
+      "sha": "9fbda1d5df52bc8e5d814d65fa5992552a32f86b",
+      "on_main": true
+    },
+    {
+      "key": "MobAI-App/simslim:files-recents-service-diagnostic",
+      "sha": "607cdf1c025547ce8b5be21eaa00548e25400bb4",
+      "on_main": true
+    },
+    {
+      "key": "mobile-next/mobile-mcp:detached-log-exclusive-create",
+      "sha": "56ef7719266d90f79548b649054710058266f78f",
+      "on_main": true
+    },
+    {
+      "key": "heoblitz/Loupe:simulator-dtuhid-transport",
+      "sha": "c4a14e5282479b3fa10da0b1bbb3f720e1393d2d",
+      "on_main": true
+    },
+    {
+      "key": "heoblitz/Loupe:homebrew-public-assets-before-tap-publication",
+      "sha": "14574a7b26e2f69187d0ad21959cfcf3164f182d",
+      "on_main": true
+    },
+    {
+      "key": "MobAI-App/simslim:simulator-resource-readonly-feature-dependencies",
+      "sha": "14574a7b26e2f69187d0ad21959cfcf3164f182d",
+      "on_main": true
+    }
+  ],
+  "historical_20261102_root_exists": false
+}

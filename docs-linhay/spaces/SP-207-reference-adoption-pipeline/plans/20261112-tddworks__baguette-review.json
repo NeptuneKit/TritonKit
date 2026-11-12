@@ -1,0 +1,81 @@
+{
+  "repository": "tddworks/baguette",
+  "base_sha": "8930ac601e38e04540cb3cad9547347c160882e4",
+  "base_kind": "imported_20261014_observation_not_full_checkpoint",
+  "checkpoint": null,
+  "head_sha": "593a1b4ae699e87bbab444d0d821e45a74b4bc79",
+  "actual_main": "0ec972e6151eb27372b3bdf5aa940940c56c30b0",
+  "previous_observed_sha": "593a1b4ae699e87bbab444d0d821e45a74b4bc79",
+  "source_review_window_base": "94b78d3603acf661e1f593aff7891c3bd7a86c44",
+  "source_review_window_head": "593a1b4ae699e87bbab444d0d821e45a74b4bc79",
+  "new_upstream_commits": 0,
+  "decision": "revise_first",
+  "reason": "native semantic set-text无精确同对象回读事实成立，但既有成功仅是动作/提交成功，已有独立verify、WebView回读和Harmony opt-in verify；没有已复现本地缺陷或足够证据证明应立即扩展native契约。先冻结窄化后置条件需求和反例，不能由candidate直接adopt。",
+  "complete_review": false,
+  "candidate_assessment_complete": true,
+  "errors": [
+    "changed_VirtualCamera.dylib_binary_not_requested_provenance_unverified",
+    "historical_binary_identity_and_hosted_source_gaps_not_closed",
+    "full_safe_text_retrieved_but_all_27384_parent_diff_lines_not_semantically_reviewed",
+    "historical_partial_gaps_not_recovered_by_new_delta_review"
+  ],
+  "checkpoint_eligible": false,
+  "candidate_key": "tddworks/baguette:optional_exact_same_target_set_text_readback",
+  "recommended_candidate_state": "revise_first",
+  "license": {
+    "spdx": "Apache-2.0",
+    "sha256": "0509ebb2d8d399fb183d1973d3f6ad585e209ca4c2c42a90f3c22c0f32c1ab3e",
+    "path": "LICENSE",
+    "html_url": "https://github.com/tddworks/baguette/blob/593a1b4ae699e87bbab444d0d821e45a74b4bc79/LICENSE"
+  },
+  "existing_verification": [
+    {
+      "surface": "native semantic set-text",
+      "fact": "TKSemanticActionRequest/Response没有verify/expectedValue/postcondition；performSemanticAction先clear再resolve+insertText，insertText后通知并返回ok，不读取最终文本。不能称精确已验证。"
+    },
+    {
+      "surface": "independent verify/assert/wait",
+      "fact": "TKUIAssertRequest支持text-exists/not-exists、role/count/within；可证明可见文本条件，但非同UI对象精确value原子验证，不能冒充候选完全已覆盖。"
+    },
+    {
+      "surface": "WebView SP196",
+      "fact": "已有同DOM对象即时及50ms窗口回读、框架事件、secure边界；不移植为native自动回读。"
+    },
+    {
+      "surface": "Harmony type --verify",
+      "fact": "已有完整原始value、唯一stable-id、focus、secure拒绝、bounded deadline、一次提交与unknown禁止重试；此平台能力不代表native set-text已有同功能。"
+    }
+  ],
+  "scope_judgment": "native现有set-text的显式可选后置条件属于现有CLI/HTTP/embedded范围，但必要性未闭合；不能拓宽为所有UIKeyInput自动读回、跨平台自动fallback或业务成功。",
+  "revised_contract": [
+    "先证明native用户场景无法通过现有独立verify充分区分吞键/改写；缺少此证据保留observe/revise_first。",
+    "验证与submission独立；默认旧调用不改变语义；exact仅代码点/完整value相等，不忽略标点/空白。",
+    "绑定target、runtime generation、具体对象/OID与前台有效性；clear前后重新定位不能悄悄切换对象；身份不足或变化时unknown/stale，不发送后续键。",
+    "secure或masked及任意不可读UIKeyInput明确unsupported/unavailable；禁止长度/圆点计数当精确证明，不把输入/预期/实际文本写进receipt。",
+    "一次clear+insert上限明确；回读仅观察、总deadline有界；timeout/部分提交保留原始delivery/outcome且不paste、不重放。",
+    "精确值相等仅当前字段后置状态，不证明本调用因果或业务成功；延迟渲染另有业务断言。"
+  ],
+  "bdd_before_adoption": [
+    "吞键与自动改写fixture返回submission成功、verification不通过；默认无verify保持兼容。",
+    "相同label新对象替换/跨runtime/OID/前台变化拒绝后续输入，counter证明no replay。",
+    "secure/自定义不可读UIKeyInput不泄漏值且不以长度验真。",
+    "clear或insert部分失败/timeout保留事实；回读不能洗掉unknown。"
+  ],
+  "dedup": [
+    "SP192 alias freshness/settle/UI health已经覆盖，不重排。",
+    "SP196 WebView同DOM回读已有，不作为native新开发。",
+    "SP200 target/requestID/unknown no replay保持。",
+    "SP281 receipt/evidence仍WIP，不当已提交，不把本候选扩成新receipt工程。"
+  ],
+  "file_scope_if_later_adopted": [
+    "Sources/TritonKit/TKRuntimeInputActions.swift",
+    "Sources/TritonKitShared/TKRuntimeLoopModels.swift",
+    "Sources/TritonKitCLI/CLIRuntimeCommands.swift",
+    "Sources/TritonKitCLI/CLIRuntimeRuntime.swift",
+    "matching runtime/shared/CLI contract tests and schema docs"
+  ],
+  "implementation_started": false,
+  "tests_executed": false,
+  "runtime_executed": false,
+  "prior_evidence_hash_verified": "review-prior-custody.json"
+}

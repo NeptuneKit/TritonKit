@@ -21,4 +21,4 @@
 
 在当前main串行TDD实施，保留SP281等WIP。证据写入plans；真实Android/ADB/截图旋转未执行，测试仅离线解析与既有DTO链路。
 
-已完成失败测试→最小实现→独立审查与离线回归；[验收明细](./plans/20261112-validation.md)。main提交与提交后门禁收口中。
+已完成失败测试→最小实现→独立审查与离线回归；[验收明细](./plans/20261112-validation.md)。main已提交 `c4c5f014150f80ce848ee43bd7a2932857fb704b`，提交后完整CLI与适用local均通过；日志已归档，无新会话或worktree待清理，未push/tag/release。

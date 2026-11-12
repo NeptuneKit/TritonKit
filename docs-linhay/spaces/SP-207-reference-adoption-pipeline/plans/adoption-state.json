@@ -696,6 +696,39 @@
       "state_evidence": "docs-linhay/spaces/SP-284-simulator-diagnostic-dependencies/plans/20261111-validation.md",
       "last_verified_on": "2026-11-11",
       "verification_note": "13 release fixtures; CLI XCTest167/SwiftTesting1854 and applicable local passed, postcommit repeated. Existing SP281 WIP present in test environment, not owned or committed. No real devices, remote downloads/publication, dependency installation, push/tag/release."
+    },
+    {
+      "key": "mobile-next/mobile-mcp:android-wm-size-effective-override",
+      "repository": "mobile-next/mobile-mcp",
+      "mechanism": "android-wm-size-effective-override",
+      "requirement_key": "android-wm-size-effective-override",
+      "source_revision": "ad3b42336d89717313af45176c48538bea6ec363",
+      "decision": "adopt",
+      "space": "SP-285-android-wm-size-selection",
+      "assessment": "20261112-mobile-next__mobile-mcp-review.json",
+      "state": "local_merged",
+      "integration_method": "direct_main_commit_user_20261111_rule_no_git_merge",
+      "execution_thread_id": "01a19a4a-50e2-7731-b8fa-880efb954eb5",
+      "controller_thread_id": "01a19a4a-50e2-7731-b8fa-880efb954eb5",
+      "controller_space": "SP-207-reference-adoption-pipeline",
+      "host_id": "local",
+      "branch": "main",
+      "worktree_status": "no_new_worktree_created",
+      "implementation_sha": "c4c5f014150f80ce848ee43bd7a2932857fb704b",
+      "local_merge_sha": "c4c5f014150f80ce848ee43bd7a2932857fb704b",
+      "controller_state": "accepted_direct_main_commit_postcommit_verified",
+      "stages": {
+        "read": "complete_mobile_mcp_not_external_backend_full_review",
+        "evaluation": "adopt_independent_aosp_contract_fix",
+        "dispatch": "current_controller_serial_implementation",
+        "implementation": "complete",
+        "verification": "postcommit_cli_and_local_passed",
+        "integration": "committed_on_main",
+        "cleanup": "logs_archived_no_temporary_branch_worktree_or_child_chat"
+      },
+      "state_evidence": "docs-linhay/spaces/SP-285-android-wm-size-selection/plans/20261112-validation.md",
+      "last_verified_on": "2026-11-12",
+      "verification_note": "Red14issues; focused33; CLI XCTest167+SwiftTesting1861; root XCTest7+SwiftTesting130/313; postcommit full CLI/local passed. Other SP281 WIP in test environment, not committed. No actual Android/rotation/device/signing/third-party execution/push/tag/release."
     }
   ],
   "new_thread_policy": {
@@ -706,8 +739,8 @@
     "existing_threads_changed": false,
     "reasoning_effort": "unchanged"
   },
-  "last_updated_on": "2026-11-11",
-  "last_update_note": "20 accepted tasks on main: 18 historical ancestors + SP283/284 direct-main commit14574a7b, postcommit CLI/local passed; 2 leads remain assessment only. No new child chats/worktrees; historical raw custody missing is not implementation rollback.",
+  "last_updated_on": "2026-11-12",
+  "last_update_note": "21 accepted tasks on main, including SP285 direct commit c4c5f014 with postcommit full CLI/local pass; two revise-first leads remain assessment only. No new child chats/worktrees; previous cleanup boundary retained.",
   "session_closeout": {
     "verified_main": "c4a14e5282479b3fa10da0b1bbb3f720e1393d2d",
     "verified_on": "2026-11-02",
@@ -733,29 +766,31 @@
     "previous_thread_id": "01a18a91-f44e-7fd0-8e4b-c891b44377e0",
     "thread_id": "01a19a4a-50e2-7731-b8fa-880efb954eb5",
     "host_id": "local",
-    "binding_verified_on": "2026-11-11",
+    "binding_verified_on": "2026-11-12",
     "automation_id": "ictrl",
     "automation_binding_verified": true,
-    "evidence": "20261111-reference-update-report.md",
-    "note": "Automation was already bound to this controller at entry; updated prompt and reread, no duplicate automation."
+    "evidence": "20261112-reference-update-report.md",
+    "note": "Existing ACTIVE daily10 automation binding and prompt reread unchanged; no new chats or automation."
   },
-  "last_verified_on": "2026-11-11",
-  "last_verified_main": "14574a7b26e2f69187d0ad21959cfcf3164f182d",
-  "latest_monitor_summary": "20261111-reference-update-report.md",
+  "last_verified_on": "2026-11-12",
+  "last_verified_main": "c4c5f014150f80ce848ee43bd7a2932857fb704b",
+  "latest_monitor_summary": "20261112-reference-update-report.md",
   "assessment_backlog": [
     {
       "key": "tddworks/baguette:optional_exact_same_target_set_text_readback",
       "decision": "revise_first",
       "state": "assessment_pending",
-      "assessment": "20261111-tddworks__baguette-review.json",
-      "reason": "Existing submission success is not a proven contract defect; freeze explicit opt-in, secure/target identity and no-replay design before adopting. No implementation started."
+      "assessment": "20261112-tddworks__baguette-review.json",
+      "reason": "native semantic set-text无精确同对象回读事实成立，但既有成功仅是动作/提交成功，已有独立verify、WebView回读和Harmony opt-in verify；没有已复现本地缺陷或足够证据证明应立即扩展native契约。先冻结窄化后置条件需求和反例，不能由candidate直接adopt。",
+      "last_assessed_on": "2026-11-12"
     },
     {
       "key": "jfarcand/mirroir-mcp:bounded_local_port_probe",
       "decision": "revise_first",
       "state": "assessment_pending",
-      "assessment": "20261111-jfarcand__mirroir-mcp-review.json",
-      "reason": "Fixed-main blocking connect is a static lead; hang not reproduced. No adopted task or fabricated runtime proof."
+      "assessment": "20261112-jfarcand__mirroir-mcp-review.json",
+      "reason": "本机loopback backlog fixture 3次未复现超时；源码没有显式总deadline但未证明当前默认本机路径实际挂起。旧52提交未审完，整体partial。",
+      "last_assessed_on": "2026-11-12"
     }
   ]
 }

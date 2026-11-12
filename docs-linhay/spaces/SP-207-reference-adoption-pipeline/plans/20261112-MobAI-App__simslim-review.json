@@ -1,0 +1,21 @@
+{
+  "repository": "MobAI-App/simslim",
+  "base_sha": "7e374b3839d49608a681d1f8b9ca0dd83d35189e",
+  "head_sha": "7e374b3839d49608a681d1f8b9ca0dd83d35189e",
+  "actual_main": "0ec972e6151eb27372b3bdf5aa940940c56c30b0",
+  "decision": "already_covered",
+  "reason": "SP-284已交付；HEAD/Release/许可固定hash较11/11均无变化，复用完整固定来源审阅，不重排已交付项。",
+  "complete_review": true,
+  "errors": [],
+  "source_review_reused": "../TritonKit-archives/reference-monitor/20261111/MobAI-App__simslim/review.json",
+  "new_commits": 0,
+  "license": {
+    "spdx": "MIT",
+    "sha256": "8b65667572b02a584c03c2977372eeb5fe8de0e228211b6f83033c458cc10b4e",
+    "path": "LICENSE",
+    "html_url": "https://github.com/MobAI-App/simslim/blob/7e374b3839d49608a681d1f8b9ca0dd83d35189e/LICENSE"
+  },
+  "release_tag": "v0.14.0",
+  "runtime_executed": false,
+  "delivered_space": "docs-linhay/spaces/SP-284-simulator-diagnostic-dependencies/README.md"
+}

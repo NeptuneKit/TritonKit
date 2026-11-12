@@ -1,0 +1,61 @@
+{
+  "repository": "RevylAI/revyl-cli",
+  "base_sha": "dcf5f2ab9fdd181a3bbe770410f4ad19dc36fed9",
+  "head_sha": "dd8c128d8043ca09961fb6e59d0a0cfe95d923ed",
+  "actual_main": "0ec972e6151eb27372b3bdf5aa940940c56c30b0",
+  "decision": "partial_observe",
+  "reason": "今日43安全文本路径机制已审阅，未确认独立本地adopt缺口；历史83commit语义/来源、许可404和4个排除pyc缺口仍在。",
+  "complete_review": false,
+  "delta_safe_text_review_complete": true,
+  "delta_all_material_review_complete": false,
+  "full_scope_review_complete": false,
+  "full_scope_base_sha": "a50ee179e5c01a1f25f15cef951a78eddab5fa3e",
+  "prior_incomplete_head": "dcf5f2ab9fdd181a3bbe770410f4ad19dc36fed9",
+  "historical_commit_count": 83,
+  "checkpoint_eligible": false,
+  "errors": [
+    "license_full_text_unavailable_http404",
+    "four_changed_pyc_paths_excluded_not_requested_semantic_gap",
+    "historical_83_commits_full_semantic_review_not_completed",
+    "historical_hosted_and_binary_provenance_gap_not_closed"
+  ],
+  "counts": {
+    "delta_commits": 14,
+    "commit_pages": 1,
+    "parent_edges": 14,
+    "complete_trees": 15,
+    "changed_paths": 47,
+    "safe_text_paths": 43,
+    "excluded_pyc_paths": 4,
+    "safe_text_blob_versions": 118,
+    "safe_text_bytes": 8528368,
+    "parent_text_diff_lines": 2614,
+    "openapi_semantic_changes": 15,
+    "release_pages": 2
+  },
+  "excluded_paths": [
+    "scripts/__pycache__/filter_openapi_for_cli.cpython-314.pyc",
+    "scripts/__pycache__/openapi_compatibility.cpython-314.pyc",
+    "scripts/__pycache__/test_filter_openapi_for_cli.cpython-314.pyc",
+    "scripts/__pycache__/test_openapi_compatibility.cpython-314.pyc"
+  ],
+  "release_tag": "v0.1.234",
+  "release_pagination_complete": true,
+  "license_status": "http404_full_text_unavailable",
+  "adoption_candidates": [],
+  "runtime_executed": false,
+  "tests_executed": false,
+  "checkpoint_mutated": false,
+  "source_custody": "Current fixed-SHA collection, not restoration of historic API evidence",
+  "evidence": [
+    "review.md",
+    "review-manifest.json",
+    "review-parent-audit.json",
+    "review-parent-text-diff.txt",
+    "review-openapi-semantic-diff.json",
+    "review-local-main-manifest.json",
+    "review-local-search.json",
+    "review-release-notes.md"
+  ],
+  "reviewed_at": "2026-11-12T02:18:44.413931+00:00"
+}

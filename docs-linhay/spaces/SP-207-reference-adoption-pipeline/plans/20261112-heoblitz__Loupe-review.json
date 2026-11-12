@@ -1,0 +1,21 @@
+{
+  "repository": "heoblitz/Loupe",
+  "base_sha": "1b6c7f0fa5f5ed2bd7885d404f85bcebd5ff0d93",
+  "head_sha": "1b6c7f0fa5f5ed2bd7885d404f85bcebd5ff0d93",
+  "actual_main": "0ec972e6151eb27372b3bdf5aa940940c56c30b0",
+  "decision": "already_covered",
+  "reason": "SP-283已交付；HEAD/Release/许可固定hash较11/11均无变化，复用完整固定来源审阅，不重排已交付项。",
+  "complete_review": true,
+  "errors": [],
+  "source_review_reused": "../TritonKit-archives/reference-monitor/20261111/heoblitz__Loupe/review.json",
+  "new_commits": 0,
+  "license": {
+    "spdx": "NOASSERTION",
+    "sha256": "0d7ebd755456885dba28523a5c468e59d06a26c8df2b896938632c9322c9e7e3",
+    "path": "LICENSE",
+    "html_url": "https://github.com/heoblitz/Loupe/blob/1b6c7f0fa5f5ed2bd7885d404f85bcebd5ff0d93/LICENSE"
+  },
+  "release_tag": "v0.6.0",
+  "runtime_executed": false,
+  "delivered_space": "docs-linhay/spaces/SP-283-homebrew-public-assets/README.md"
+}

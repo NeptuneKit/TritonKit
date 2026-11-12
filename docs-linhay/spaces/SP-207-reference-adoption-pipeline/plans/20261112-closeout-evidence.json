@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "file_count": 5,
+  "files": [
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261112/closeout-check-docs.log",
+      "bytes": 213,
+      "sha256": "5b2394a8171a0512dc3ccc9bcfbd8e489bbbb1498db9a0bf98fcc7c07d08c664"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261112/closeout-docs.log",
+      "bytes": 1890,
+      "sha256": "822c829b865c8532f99863ce4f1b0e3f8d16c390f816b05c78e612d523c64e40"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261112/final-boundary-audit.json",
+      "bytes": 2598,
+      "sha256": "fb7031d9fdd25638e9cfb01e9d7122561aafe30e1a80885fa50468cf23cc19bf"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261112/publication-result.json",
+      "bytes": 1605,
+      "sha256": "f085c5c8540ac75743b0da1cd7eedae5b4b5a92d88cbaf7c226ef65de21cc931"
+    },
+    {
+      "path": "../TritonKit-archives/reference-monitor/20261112/source-custody-manifest.json",
+      "bytes": 256528,
+      "sha256": "c09de711bda3fffbb8fd159bcbfa3fe8ffed666453acd0d1fc838eeb52c388f6"
+    }
+  ]
+}

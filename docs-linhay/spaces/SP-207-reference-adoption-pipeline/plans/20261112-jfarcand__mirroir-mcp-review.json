@@ -1,0 +1,96 @@
+{
+  "repository": "jfarcand/mirroir-mcp",
+  "base_sha": "1166ac1517263d773703c08ceae762a20432d3a2",
+  "head_sha": "982c8718d2abbad9c3921749525a0c74832635e3",
+  "actual_main": "0ec972e6151eb27372b3bdf5aa940940c56c30b0",
+  "decision": "revise-first",
+  "reason": "本机loopback backlog fixture 3次未复现超时；源码没有显式总deadline但未证明当前默认本机路径实际挂起。旧52提交未审完，整体partial。",
+  "complete_review": false,
+  "checkpoint_may_advance": false,
+  "errors": [
+    {
+      "code": "incremental_review_incomplete",
+      "detail": "Base remains 20261102 1166ac1. New 3-commit slice reviewed but prior 52-commit slice retains 49/53 incompletely collected parent edges and 338 collected text versions not semantically reviewed per frozen 20261111 report; no checkpoint advance."
+    }
+  ],
+  "bounded_local_port_probe": {
+    "decision": "revise-first",
+    "static_fact": "sync getaddrinfo and connect have no explicit monotonic deadline or cancellation; later URLRequest timeout is unrelated",
+    "runtime_fact": "3 owned loopback listen(1) trials completed baseline, pressure probe and refused controls; pressure probes ~0.27-0.39ms; no watchdog fired",
+    "limits": "saturation not proven; local kernel accepted/reset fills. No DNS blocking reproduction or Swift Task cancellation demonstration. No claim bind-not-listening hangs.",
+    "static_sufficient_to_open_hardening_assessment": true,
+    "static_sufficient_to_claim_reproduced_failure": false,
+    "recommendation": "revise-first; absence of an explicit product deadline is a valid static guarantee gap and can justify a narrowly scoped robustness proposal, but no current mandatory latency SLA was established and the owned loopback experiment did not reproduce a hang. Set supported host/resolve/deadline/unknown contract and deterministic injected-clock/socket BDD before converting to adopt.",
+    "bdd": [
+      "Given a resolver/connect provider stays pending, when status/doctor checks it, all phases share one explicit monotonic budget and cancel/close ownership, returning distinguishable unknown/error.",
+      "Given any address listens while another is pending, then result is listening within total budget without per-address budget multiplication.",
+      "Given timeout/cancellation/DNS/socket failure, then start fails closed with a stable single JSON envelope instead of interpreting failure as free.",
+      "Given a refused owned loopback endpoint, retain existing available behavior; test old Bool consumers explicitly."
+    ],
+    "file_surface": [
+      "Sources/TritonKitCLI/CLIWebRuntime.swift",
+      "Sources/TritonKitCLI/CLIWebCommands.swift",
+      "CLI/Tests/TritonKitCLITests/WebCommandTests.swift",
+      "matching web schema/docs after contract decision"
+    ],
+    "reproduction": {
+      "source": "probe-fixture.swift",
+      "driver": "run-probe-fixture.py",
+      "evidence": "probe-fixture-results.json",
+      "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+      "function_source_matches_main": true,
+      "compile_exit": 0,
+      "driver_exit": 0,
+      "watchdog_terminated_count": 0,
+      "probe_elapsed_ms": [
+        0.387041,
+        0.344875,
+        0.271375
+      ]
+    },
+    "not_done": [
+      "DNS configuration or external-host probes",
+      "packet filtering/system TCP settings",
+      "Swift Task cancellation test",
+      "full CLI subprocess/status launch",
+      "production endpoint or device interaction"
+    ]
+  },
+  "main_file_sha256": "0b61d035a76323dd4767a27a8058e753d6b86bc68b80707005d53784340d985b",
+  "reviewed_at": "2026-11-12T02:15:30.330942+00:00",
+  "status": "partial",
+  "previous_observed_head": "5a3f93d86fdd40aad7d1a6267223146e110870dd",
+  "new_increment_complete": true,
+  "new_increment_decision": "observe",
+  "new_increment_reason": "3 new commits / 3 parent edges reviewed: npm wrapper lazy bootstrap sends installer stdout+stderr to stderr; installer CI exercises one MCP stdout response; two version-only changes. Triton does not currently ship this npm launcher. No new adoption. Prior 52-commit gap persists.",
+  "counts": {
+    "commits_since_checkpoint": 55,
+    "parent_edges_since_checkpoint": 56,
+    "new_commits_since_previous_observation": 3,
+    "new_parent_edges_reviewed": 3,
+    "new_unique_changed_paths": 10,
+    "new_text_path_blob_versions_collected": 28,
+    "new_trees_full": 4,
+    "prior_commits_remaining_partial": 52,
+    "local_loopback_trials": 3,
+    "upstream_tests_executed": 0
+  },
+  "new_semantic_read_scope": "Full current contents of all 10 changed paths, full old/new wrapper, all 3 complete per-parent diffs; 26 other path+blob versions acquired, version-only old full texts equivalent after changed lines. No binary fetched or upstream code executed.",
+  "license": {
+    "spdx": "Apache-2.0",
+    "sha256": "52327c57e955a3e63f872960938e814acc19eb1b77c501999f5fd1e543b21346",
+    "changed": false
+  },
+  "release_notes_read": [
+    "v0.46.0",
+    "v0.46.1"
+  ],
+  "prior_review": "../../20261111/jfarcand__mirroir-mcp/review.json",
+  "upstream_origin": "https://github.com/jfarcand/mirroir-mcp/compare/5a3f93d86fdd40aad7d1a6267223146e110870dd...982c8718d2abbad9c3921749525a0c74832635e3",
+  "governance": {
+    "experience_check": "Existing rules already require separate static/reproduction/boundary evidence. No new repo rule; report negative reproduction evidence here and parent writes authoritative records.",
+    "repo_changes": false,
+    "frozen_20261111_modified": false,
+    "docs_gates": "Not run: archive-only review, parent owns shared repository integration."
+  }
+}
