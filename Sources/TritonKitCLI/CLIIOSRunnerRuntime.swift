@@ -220,7 +220,7 @@ final class IOSRunnerService: @unchecked Sendable {
             let encoded = try iosRunnerJSON(body)
             guard encoded.count <= 64 * 1024 else { throw IOSRunnerFailure("ios_runner_body_too_large", "Runner action body exceeds 64 KiB.") }
             let response = dependencies.exchange(session, route, encoded, operation == "receipt" ? UUID().uuidString : requestID, timeout)
-            var envelope = iosRunnerSanitize(response.envelope) as? [String: Any] ?? [:]
+            var envelope = iosRunnerSanitize(response.envelope, isReceipt: operation == "receipt") as? [String: Any] ?? [:]
             if let output = payload["screenshotOutput"] as? String, response.ok {
                 do {
                     let imageResponse: IOSRunnerWireResponse

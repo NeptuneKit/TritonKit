@@ -8,18 +8,6 @@ func compileQualityFindings(caseURL: URL) throws -> [TKTestRecorderQualityFindin
     )
     for row in actionRows {
         let action = stringValue(row.object, "kind") ?? stringValue(row.object, "type") ?? stringValue(row.object, "action") ?? "unknown"
-        let inputText = stringValue(row.object, "text")
-            ?? stringValue(row.object, "value")
-            ?? stringValue(row.object, "input")
-        if let inputText, testRecorderLooksSensitive(inputText) {
-            findings.append(TKTestRecorderQualityFinding(
-                code: "privacy_candidate",
-                path: row.sourcePath,
-                severity: "review",
-                message: "Action input looks like private or user-specific data and should be redacted before replay.",
-                proposalKind: "contract.redaction"
-            ))
-        }
         if let selector = actionSelector(in: row.object), isWeakSelector(selector) {
             findings.append(TKTestRecorderQualityFinding(
                 code: "weak_selector",
@@ -123,20 +111,6 @@ private func actionSelector(in object: [String: Any]) -> String? {
 
 private func fixedWaitDurationMs(in object: [String: Any]) -> Int? {
     intValue(object, keys: ["durationMs", "timeoutMs", "ms"])
-}
-
-func testRecorderLooksSensitive(_ value: String) -> Bool {
-    let lowercased = value.lowercased()
-    if lowercased.contains("password") || lowercased.contains("token") || lowercased.contains("secret") {
-        return true
-    }
-    if value.range(of: #"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}"#, options: [.regularExpression, .caseInsensitive]) != nil {
-        return true
-    }
-    if value.range(of: #"\b\d{11,}\b"#, options: .regularExpression) != nil {
-        return true
-    }
-    return false
 }
 
 private func isWeakSelector(_ selector: String) -> Bool {

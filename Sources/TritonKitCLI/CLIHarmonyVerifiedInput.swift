@@ -2,7 +2,7 @@ import Foundation
 import CoreFoundation
 import TritonKitShared
 
-/// Values and selector strings intentionally never enter this public result.
+/// Observed field values are raw provider data unless the caller requests secure output.
 struct HarmonyVerifiedInputResult: Codable {
     var ok = false
     let action = "type"
@@ -14,13 +14,23 @@ struct HarmonyVerifiedInputResult: Codable {
     var durations: [String: Double] = [:]
     var polls = 0
     var timedOut = false
-    let redacted = true
+    var redacted = false
+    var observedValue: String?
     let note = "Submission receipt and observed full value are separate evidence. Match proves a postcondition, not that this command caused it."
+}
+
+/// Explicit caller output transformation; never controls whether input may run.
+func harmonyVerifiedInputOutput(_ result: HarmonyVerifiedInputResult, secure: Bool) -> HarmonyVerifiedInputResult {
+    var output = result
+    output.redacted = secure
+    if secure { output.observedValue = nil }
+    return output
 }
 
 struct HarmonyInputField {
     let identity: String
-    let text: String
+    let text: String?
+    let canVerifyText: Bool
     let focused: Bool
     let x: Int
     let y: Int
@@ -69,19 +79,12 @@ func harmonyInputField(in data: Data, selector: String) throws -> HarmonyInputFi
     }
     guard let type = a["type"] as? String, ["TextInput", "TextArea"].contains(type),
           boolean("visible") == true, boolean("enabled") == true else { try fail("harmony_input_not_editable") }
-    // Native layouts vary by API level. Password markers, password input types,
-    // and visibly masked values are never eligible for this plaintext workflow.
-    for key in ["password", "isPassword", "secure", "isSecure", "masked"] {
-        if a[key] != nil, boolean(key) != false { try fail("harmony_input_secure_unsupported") }
-    }
-    if type == "TextInput", boolean("password") != false, boolean("isPassword") != false {
-        try fail("harmony_input_secure_unsupported")
-    }
-    if let inputType = a["inputType"] as? String, inputType.lowercased().contains("password") {
-        try fail("harmony_input_secure_unsupported")
-    }
-    guard let text = a["text"] as? String else { try fail("harmony_input_value_unavailable") }
-    if !text.isEmpty, text.allSatisfy({ "•●∙*".contains($0) }) { try fail("harmony_input_secure_unsupported") }
+    // Provider masking is a limitation on verification, not permission to input.
+    // Do not guess privacy from the characters in the observed value.
+    let secureMarkers = ["password", "isPassword", "secure", "isSecure", "masked"]
+    let providerMasksValue = secureMarkers.contains { a[$0] != nil && boolean($0) != false }
+        || (a["inputType"] as? String)?.lowercased().contains("password") == true
+    let text = a["text"] as? String
     guard let focused = boolean("focused") else { try fail("harmony_input_focus_unavailable") }
     guard let rawBounds = a["bounds"] as? String, let bounds = TKHarmonyLayoutParser.bounds(from: rawBounds),
           bounds.width > 0, bounds.height > 0 else { try fail("harmony_input_bounds_unavailable") }
@@ -91,7 +94,7 @@ func harmonyInputField(in data: Data, selector: String) throws -> HarmonyInputFi
     // Stable id is the user-facing identity. Type and provider identity detect
     // replacement when the platform supplies them; no object identity is invented.
     let identity = [id, type, a["accessibilityId"] as? String ?? "", a["hashcode"] as? String ?? ""].joined(separator: "\u{0}")
-    return HarmonyInputField(identity: identity, text: text, focused: focused, x: Int(x), y: Int(y), bounds: bounds)
+    return HarmonyInputField(identity: identity, text: text, canVerifyText: text != nil && !providerMasksValue, focused: focused, x: Int(x), y: Int(y), bounds: bounds)
 }
 
 func runHarmonyVerifiedInput(
@@ -125,6 +128,7 @@ func runHarmonyVerifiedInput(
     do {
         guard timeout.isFinite, timeout > 0, timeout <= 60, !text.contains("\0") else { throw HarmonyInputFailure(code: "harmony_input_invalid_options") }
         var field = try read()
+        result.observedValue = field.text
         let identity = field.identity
         finishPhase()
         phase = "focus"; phaseStart = now()
@@ -160,15 +164,21 @@ func runHarmonyVerifiedInput(
         while now() < deadline {
             field = try read()
             guard field.identity == identity else { throw HarmonyInputFailure(code: "harmony_input_identity_changed") }
+            result.observedValue = field.text
             result.focus = field.focused ? "confirmed" : "not-focused"
-            if field.text.utf8.elementsEqual(expected.utf8) {
+            guard field.canVerifyText, let observed = field.text else {
+                result.verification = "unavailable"
+                result.code = "harmony_input_value_unavailable"
+                break
+            }
+            if observed.utf8.elementsEqual(expected.utf8) {
                 result.ok = true; result.verification = "match"; result.code = "harmony_input_verified"
                 break
             }
             result.verification = "mismatch"
             wait()
         }
-        if !result.ok {
+        if !result.ok && result.verification != "unavailable" {
             result.timedOut = true
             result.code = result.verification == "mismatch" ? "harmony_input_value_mismatch" : "harmony_input_timeout"
         }

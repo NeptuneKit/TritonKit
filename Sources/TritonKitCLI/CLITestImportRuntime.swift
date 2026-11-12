@@ -202,10 +202,8 @@ private func importCompiledTritonTestCase(
             path: "compiled-contract.json.compiler"
         )
     }
-    if let finding = contract.qualityFindings.first {
-        let code = finding.proposalKind == "contract.redaction" || finding.code == "privacy_candidate"
-            ? "redaction_review_required"
-            : "contract_quality_review_required"
+    if let finding = contract.qualityFindings.first(where: { $0.proposalKind != "contract.redaction" && $0.code != "privacy_candidate" }) {
+        let code = "contract_quality_review_required"
         throw testValidationFailure(
             code: code,
             message: "Import requires all compiled-contract quality findings to be resolved before projection.",
@@ -635,20 +633,14 @@ private func importExactAXSelector(
         )
     }
     let text = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !text.isEmpty, text != "<target>", text != "<text>", !importTargetLooksSensitive(text) else {
+    guard !text.isEmpty, text != "<target>", text != "<text>" else {
         throw testValidationFailure(
             code: "unmapped_contract_feature",
-            message: "A compiled action has an empty, sentinel, or sensitive semantic target.",
+            message: "A compiled action has an empty or sentinel semantic target.",
             path: "compiled-contract.json.actions[\(offset)].targetText"
         )
     }
-    return TKTestPlanSelector(text: text, match: "exact", source: "ax")
-}
-
-private func importTargetLooksSensitive(_ value: String) -> Bool {
-    guard !testRecorderLooksSensitive(value) else { return true }
-    let decimalDigits = value.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0) }
-    return decimalDigits.count >= 11
+    return TKTestPlanSelector(text: rawText, match: "exact", source: "ax")
 }
 
 private func importHasMeaningfulText(_ value: String?) -> Bool {

@@ -40,7 +40,7 @@ struct NetworkCaptureIntegrityTests {
         #expect(throws: (any Error).self) { try readValidatedNetworkCapture(sourceURL: source, maximumRecords: 1) }
     }
 
-    @Test("old capture exports strip query and credentials consistently from NDJSON and HAR")
+    @Test("capture exports preserve business queries while removing URL userinfo")
     func redactsOldCaptureOnExport() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -50,13 +50,13 @@ struct NetworkCaptureIntegrityTests {
         let summary = try summarizeNetworkProxyCaptureArtifact(sourceURL: source)
         #expect(summary.requestCount == 1)
         #expect(summary.eventCount == 1)
-        #expect(summary.redaction.contains("url-credentials-query-removed"))
+        #expect(summary.redaction.contains("url-userinfo-removed"))
         for ext in ["har", "ndjson"] {
             let output = root.appendingPathComponent("out.\(ext)")
             _ = try exportNetworkProxyCaptureArtifact(sourceURL: source, outputURL: output)
             let text = try String(contentsOf: output, encoding: .utf8)
-            #expect(!text.contains("secret"))
-            #expect(!text.contains("token="))
+            #expect(text.contains("token=secret"))
+            #expect(text.contains("#secret"))
             #expect(!text.contains("private-user"))
             if ext == "har" {
                 let object = try JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any]
@@ -69,7 +69,7 @@ struct NetworkCaptureIntegrityTests {
         }
     }
 
-    @Test("capture writer strips URL secrets and refuses capacity overflow without modifying capture")
+    @Test("capture writer preserves business parameters and refuses capacity overflow")
     func writerIsBoundedAndRedacted() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -79,7 +79,7 @@ struct NetworkCaptureIntegrityTests {
         try appendNetworkProxyCaptureEvent(raw, captureURL: source)
         let before = try Data(contentsOf: source)
         let text = String(decoding: before, as: UTF8.self)
-        #expect(!text.contains("secret"))
+        #expect(text.contains("token=secret"))
         #expect(!text.contains("private-user"))
         #expect(throws: (any Error).self) { try appendNetworkProxyCaptureEvent(raw, captureURL: source, maximumBytes: before.count) }
         #expect(try Data(contentsOf: source) == before)

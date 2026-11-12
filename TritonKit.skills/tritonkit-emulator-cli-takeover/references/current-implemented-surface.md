@@ -267,6 +267,8 @@ triton device mirror --device <selector> --frames 1 --output /tmp/frame-dir --js
 triton device tap|double-tap|swipe|press|type ... --platform <ios|android|harmony> --device <selector>
 ```
 
+Typed `device tap|double-tap|swipe|press|type` results include `actionReceipt` with target, lease/admission identity, delivery, outcome, execution knowledge and postcondition. `--evidence-dir <fresh-absolute-directory>` exports a typed receipt, standard run events, original provider response/captured host output and a manifest with artifact byte hashes; existing roots and symlink parents are refused before input. Only a valid final manifest commits the snapshot. `manifest.ok` means capture completeness, not action success: inspect run verdict and postcondition separately. If requested evidence fails, the CLI exits nonzero with `evidencePersistence=failed`, preserving provider facts; never retry input merely to repair evidence. Timeout/nonzero/stale generation and nested provider errors remain uncertain. Submitted-only iOS responses are pending, not execution proof. Default admission/generation stores are in-process and not a cross-process lease, global Stop barrier or sandbox.
+
 These commands are local CLI/HTTP contracts. Cloud-device reservation/release and standard MCP server transport remain intentionally outside TritonKit's scope.
 
 

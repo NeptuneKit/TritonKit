@@ -76,13 +76,13 @@ struct TKRuntimeWebViewLegacyInputTests {
         #expect(!result.json.contains("Before"))
     }
 
-    @Test("page exceptions do not leak private field values")
+    @Test("page exceptions preserve their original diagnostic message")
     func exceptionRedaction() throws {
         let context = try makeContext()
         context.evaluateScript("Object.defineProperty(element, 'value', { get: function() { throw new Error('private-secret'); } });")
         let result = try insert(context)
         #expect(!result.payload.ok)
-        #expect(!result.json.contains("private-secret"))
+        #expect(result.json.contains("private-secret"))
     }
 
     @Test("contenteditable retains its execCommand path")

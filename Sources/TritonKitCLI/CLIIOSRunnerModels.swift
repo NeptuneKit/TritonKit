@@ -60,15 +60,27 @@ func iosRunnerKey(_ value: String) -> String {
 func iosRunnerJSON(_ value: Any) throws -> Data {
     try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])
 }
-func iosRunnerSanitize(_ value: Any) -> Any {
-    if let dict = value as? [String: Any] {
-        return dict.reduce(into: [String: Any]()) { output, item in
-            if ["pngBase64", "token", "authorization", "rawTarget", "rawTargetAliases", "team", "sourceCommand", "text"].contains(item.key) { return }
-            output[item.key] = iosRunnerSanitize(item.value)
-        }
+/// Strip only known transport-envelope fields, never recursively filter business payload keys.
+func iosRunnerSanitize(_ value: Any, isReceipt: Bool = false) -> Any {
+    guard var envelope = value as? [String: Any] else { return value }
+    for key in ["token", "authorization", "rawTarget", "rawTargetAliases", "team", "sourceCommand", "pngBase64"] {
+        envelope.removeValue(forKey: key)
     }
-    if let array = value as? [Any] { return array.map(iosRunnerSanitize) }
-    return value
+    if var result = envelope["result"] as? [String: Any] {
+        // The image bytes have a dedicated, explicitly requested artifact path.
+        result.removeValue(forKey: "pngBase64")
+        if isReceipt, result["found"] as? Bool == true, let receipt = result["receipt"] as? [String: Any] {
+            if let response = receipt["response"] {
+                var wrapper = receipt
+                wrapper["response"] = iosRunnerSanitize(response)
+                result["receipt"] = wrapper
+            } else {
+                result["receipt"] = iosRunnerSanitize(receipt)
+            }
+        }
+        envelope["result"] = result
+    }
+    return envelope
 }
 
 func iosRunnerConnection(_ session: IOSRunnerSession) -> IOSRunnerConnection {

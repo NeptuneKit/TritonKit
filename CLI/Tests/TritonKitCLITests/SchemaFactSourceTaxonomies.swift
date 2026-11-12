@@ -347,6 +347,10 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "plan"]
     }
     switch failureCode {
+    case "action_evidence_path_invalid", "action_evidence_root_unavailable", "action_evidence_write_failed", "action_evidence_partial":
+        return ["archive", "diagnose", "plan"]
+    case "device_action_cancelled":
+        return ["diagnose", "observe", "plan"]
     case "selection_missing", "selection_stale", "selection_revision_mismatch", "selection_identity_unverifiable", "selection_unsupported":
         return ["diagnose", "observe", "plan"]
     case "highlight_unsupported", "highlight_busy", "highlight_operation_conflict", "highlight_capacity_exceeded", "highlight_receipt_expired":

@@ -41,14 +41,16 @@ struct TKRuntimeWebViewSnapshotWebKitTests {
             let json = try #require(try await evaluate(script, in: webView) as? String)
             let payload = try decodeRuntimeWebViewSnapshotPayload(json)
             #expect(payload.forms.count == names.count * 2)
-            #expect(!json.contains("synthetic-secret"))
+            #expect(json.contains("synthetic-secret"))
             for (index, field) in payload.forms.enumerated() {
+                #expect(field.value == "synthetic-secret")
                 let selector = try #require(field.selector)
                 let literal = String(decoding: try JSONEncoder().encode(selector), as: UTF8.self)
                 #expect(try await evaluate("document.querySelector(\(literal)) === window.fixtureFields[\(index)]", in: webView) as? Bool == true)
                 let focus = try runtimeWebViewFormFocusScript(selector: selector)
                 let focusJSON = try #require(try await evaluate(focus, in: webView) as? String)
                 #expect(try decodeRuntimeWebViewFormTargetPayload(focusJSON).ok)
+                #expect(try decodeRuntimeWebViewFormTargetPayload(focusJSON).value == "synthetic-secret")
                 #expect(try await evaluate("document.activeElement === window.fixtureFields[\(index)]", in: webView) as? Bool == true)
             }
         }

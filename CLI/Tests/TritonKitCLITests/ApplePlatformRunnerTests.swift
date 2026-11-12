@@ -138,7 +138,7 @@ final class ApplePlatformRunnerTests: XCTestCase {
                     try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: false)
                     let manifest: [[String: Any]] = [["testIdentifier": "RemoteTests/testRemoteSelect()", "testIdentifierURL": "test://com.apple.xcode/Probe/ControlTests/RemoteTests/testRemoteSelect", "attachments": [["deviceId": self.udid, "suggestedHumanReadableName": "triton-platform-result.json", "exportedFileName": "result.json"]]]]
                     try JSONSerialization.data(withJSONObject: manifest).write(to: URL(fileURLWithPath: path + "/manifest.json"))
-                    let response: [String: Any] = ["version": 1, "platform": "tvos", "action": "remote-select", "device": self.udid, "nonce": "nonce-123", "ok": true, "eventDelivered": true, "postconditionVerified": true]
+                    let response: [String: Any] = ["version": 1, "platform": "tvos", "action": "remote-select", "device": self.udid, "nonce": "nonce-123", "ok": true, "eventDelivered": true, "postconditionVerified": true, "business": "original@example.test"]
                     try JSONSerialization.data(withJSONObject: response).write(to: URL(fileURLWithPath: path + "/result.json"))
                 }
                 return self.process()
@@ -146,11 +146,14 @@ final class ApplePlatformRunnerTests: XCTestCase {
             let evidence = try ApplePlatformRunnerEvidenceSession(directory: root + "/evidence", request: request)
             evidence.finish(receipt: &receipt)
             XCTAssertEqual(receipt.evidencePersistence, "written")
-            let events = try TKEvidenceRunLogParser().parse(Data(contentsOf: evidence.writer.eventsURL))
+            let raw = try Data(contentsOf: URL(fileURLWithPath: root + "/evidence/run/provider-response.json"))
+            XCTAssertTrue(String(decoding: raw, as: UTF8.self).contains("original@example.test"))
+            XCTAssertEqual(raw, receipt.providerResponseData)
+            let events = try TKEvidenceRunLogParser().parse(Data(contentsOf: evidence.eventsURL))
             XCTAssertEqual(events.status, .completed)
             XCTAssertEqual(events.events.last?.kind, .runCompleted)
             XCTAssertEqual(events.events.compactMap(\.actionContext).last?.actionID, "nonce-123")
-            XCTAssertEqual(events.events.compactMap(\.actionContext).last?.evidenceRefs, ["run/action-receipt.json"])
+            XCTAssertEqual(events.events.compactMap(\.actionContext).last?.evidenceRefs, ["run/action-receipt.json", "run/provider-response.json"])
         }
     }
 

@@ -11,6 +11,24 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 3. CLI 收到 hierarchy payload 后保存最新快照，AI agent 通过 `GET /hierarchy/latest` 读取完整 JSON。
 4. 不提供 `/ui`、`/events` 或浏览器 SSE 渲染，避免把首期能力分散到人类 Web 展示层。
 
+## 原始数据主旨（SP-286 / 2026-11-12用户裁决）
+
+本层默认提供原始业务数据，不以邮箱、数字量、password/token/secret或payload键名推断敏感性，不丢值/替换或强制业务审批。testrec编译、导入、fixture和replay保留原语义；legacy privacy finding不再否决流程，其它真实技术质量/身份/不支持项仍校验。proxy capture保留业务URL query/fragment和错误；协议认证userinfo单独移除，未采集的header/body不可伪装为完整采集。
+
+WebView表单返回实际可读取value（可为空字符串）、valueLength，默认valueRedaction=none；snapshot的rawText保留正文空白/Unicode，rawTextTruncated表明byte预算造成的prefix，旧text[]仍是normalized摘要；--secure的mutation显式省略value但仍可输入。Harmony将输入提交和明文验证分离，provider掩码/不可读取text返回submitted+verification unavailable，不重试、不假报match。iOS只移除已知transport字段/直接PNG载荷，嵌套业务text/token/authorization等保留。
+
+所有转换必须是上层显式要求，且保留原件与变换元数据；摘要、预算截断和provider缺失字段如实标注。Triton自身会话凭据、文件权限/防覆盖/路径校验、目标绑定、deadline和unknown不重放仍是本层责任。本地raw采集不自动授权公开外发，公开issue与分享另走授权和副本处理。
+
+## Action receipt 与显式动作证据（SP-281）
+
+`device tap/double-tap/swipe/press/type` 和 `device platform-control` 的兼容 JSON 新增 `actionReceipt: TKActionReceipt`。receipt 绑定 action/target/lease/admission/context digest 和进程内 generation，分别表达 delivery、outcome、executed、originalStatus、terminalStatus、postcondition。host 输入命令 exit 0 仅按现有 host 接收合同返回 settled，业务 postcondition 仍 unverified；iOS submitted-only 为 pending/submitted，执行与业务成功保持未知。provider failed、blocked、not_started、timeout 或矛盾 nested error 不提升成功。uncertain、非零返回与第二次 double-tap 失败不自动 replay；先 observe/查询已有 receipt 再制定新动作。
+
+显式 `--evidence-dir <fresh-absolute-path>` 在 provider 输入前排他创建新私有目录；父目录必须存在，已有目录、root/parent symlink 拒绝，不覆盖原 metadata 或日志。输出是 `run/meta.json`、`run/events.jsonl`、`run/action-receipt.json` 和最后发布的 `manifest.json`。manifest 为 receipt/events/meta和原始provider产物记录 exact size/SHA-256；events 回读、解析后才生成摘要，manifest 原子排他发布。没有有效 manifest 的目录是未完成诊断，不能据盘内 receipt 的 written 意图字段判定持久化成功。manifest.ok 只表示证据包完整；run.summary.verdict 才表示动作成功或失败。
+
+标准动作 evidence 在typed shared receipt/events/meta之外，导出provider-response.json与每次host提交实际捕获的stdout/stderr（二进制原件）；manifest为原件记录size/hash，receipt是结构化投影，不替代原件。不再以敏感性为由丢弃provider业务数据；预算造成的未采集/截断不被重建成“完整原始数据”。specialized runner导出原runner诊断response，不擅自遍历复制其它私有audit文件。输出被预算截断或不可获取时记录partial/coverage，已采集prefix不可伪装完整原件；请求的 evidence 未完整时，stdout `evidencePersistence=failed|partial`、CLI 非零，原动作 delivery/outcome/postcondition 保留；不要因为证据失败重发输入。嵌套 provider 响应的原 envelope 留在兼容 stdout，actionReceipt 是独立事实投影。仅 submitted/pending 的既有“已接受”退出语义保持，不能当执行成功。
+
+Lease 为 opt-in server check，错误保留 `target_lease_conflict/currentOwner/leaseReason`；check→provider 不是原子提交。默认 admission/generation 仅单调用或显式共享 store 的进程内范围，不构成跨 CLI 进程幂等、全局 Stop barrier、授权沙箱或目标排他锁。传入 observationID 只做关联，未证明设备当前 UI 未变。P2 action 全量迁移、approval UI、remote admission、session resume 和真实设备仍不在本轮范围。
+
 ## 接口
 
 - `GET /status`：返回 `connected`、`latestHierarchyAvailable` 与 `discovery` 广播快照；`triton status --json` 透传 `wanted/state/serviceType/identityVerified/errorCode/errorDomain`。旧服务缺字段仍兼容。`state` 是 wanted/publishing/advertising/failed/stopped；仅真实发布回调产生 advertising，`identityVerified` 恒 false，不能据此推断身份认证或 LAN 可达。`serve` 默认不广播（包括显式 LAN bind），`--advertise` / `TRITON_ADVERTISE=true|1` 显式开启，`--no-advertise` 覆盖环境；false|0 关闭，其余环境值、非法 host/port 在监听前拒绝。

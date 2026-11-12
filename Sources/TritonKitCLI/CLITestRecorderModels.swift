@@ -278,6 +278,7 @@ struct TKTestRecorderCompiledNetworkRequest: Codable, Equatable {
         case method
         case url
         case statusCode
+        case responseBody
     }
 
     init(from decoder: Decoder) throws {
@@ -288,7 +289,7 @@ struct TKTestRecorderCompiledNetworkRequest: Codable, Equatable {
         self.method = try container.decodeIfPresent(String.self, forKey: .method)
         self.url = try container.decodeIfPresent(String.self, forKey: .url)
         self.statusCode = try container.decodeIfPresent(Int.self, forKey: .statusCode)
-        self.responseBody = nil
+        self.responseBody = try container.decodeIfPresent(String.self, forKey: .responseBody)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -299,6 +300,7 @@ struct TKTestRecorderCompiledNetworkRequest: Codable, Equatable {
         try container.encodeIfPresent(method, forKey: .method)
         try container.encodeIfPresent(url, forKey: .url)
         try container.encodeIfPresent(statusCode, forKey: .statusCode)
+        try container.encodeIfPresent(responseBody, forKey: .responseBody)
     }
 }
 

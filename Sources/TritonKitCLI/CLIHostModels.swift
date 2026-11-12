@@ -1166,6 +1166,7 @@ struct HostActionOutput: Encodable {
     let screenshot: HostSimulatorScreenshotMetadata?
     let suggestedCommands: [String]
     let note: String?
+    let actionReceipt: TKActionReceipt?
 
     init(
         ok: Bool,
@@ -1184,7 +1185,8 @@ struct HostActionOutput: Encodable {
         stderr: String?,
         artifacts: [String],
         screenshot: HostSimulatorScreenshotMetadata? = nil,
-        note: String?
+        note: String?,
+        actionReceipt: TKActionReceipt? = nil
     ) {
         self.ok = ok
         self.action = action
@@ -1209,6 +1211,7 @@ struct HostActionOutput: Encodable {
         self.screenshot = screenshot
         self.suggestedCommands = [hostActionCommandString(self.hostAction.nextAction)]
         self.note = note
+        self.actionReceipt = actionReceipt
     }
 }
 

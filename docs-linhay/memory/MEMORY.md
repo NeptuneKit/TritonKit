@@ -1,5 +1,7 @@
 # TritonKit Project Memory
 
+- 2026-11-12用户主旨：TritonKit提供原始业务数据，不猜敏感内容，不按邮箱/长数字/password/token/secret或payload键名默认删值、替换、审批或阻断。内容策略与显式转换归上层；技术凭据/文件/目标/预算与真实unknown边界保留。agent执行权威为根AGENTS原始数据职责，实施见[SP-286](../spaces/SP-286-raw-business-data/README.md)。本地raw采集不自动授权公开外发。
+
 - 2026-11-12：[SP207日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261112-reference-update-report.md)34仓22完整/12 partial，serve-sim旧增量恢复；SP285有效尺寸修复main c4c5f014及提交后CLI/local通过，21采用已在main。昨日5252证据有效，旧缺失不变；原WIP保留，未设备/推送/发布。
 
 - 2026-11-11参考接管：[SP207日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261111-reference-update-report.md)34仓21完整/13 partial（补SP279正式Pinky漏登）；SP283/284直接main提交14574a7b及提交后CLI/local通过。历史455份raw当前缺失原因unknown，新证据独立TritonKit-archives根；ictrl保持当前聊天每日10:00。未设备/推送/发布。

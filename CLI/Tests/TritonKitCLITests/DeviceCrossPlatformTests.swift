@@ -1237,7 +1237,7 @@ struct DeviceCrossPlatformTests {
         #expect(capture.contains("\"event\":\"proxy.serve.request\""))
         #expect(capture.contains("\"event\":\"proxy.serve.connection-failed\""))
         #expect(capture.contains("\"host\":\"127.0.0.1\""))
-        #expect(capture.contains("\"redaction\":\"headers-names-only,url-credentials-query-removed\""))
+        #expect(capture.contains("\"redaction\":\"headers-names-only,url-userinfo-removed,business-query-preserved\""))
         #expect(!capture.contains("session=secret"))
     }
 
@@ -1740,7 +1740,7 @@ struct DeviceCrossPlatformTests {
         #expect(log["version"] as? String == "1.2")
         #expect(entries.count == 6)
         #expect(firstRequest["method"] as? String == "GET")
-        #expect(firstRequest["url"] as? String == "http://example.test/path")
+        #expect(firstRequest["url"] as? String == events[0].url)
         #expect(firstHeaders.contains { $0["name"] as? String == "Authorization" && $0["value"] as? String == "<redacted>" })
         #expect(secondRequest["method"] as? String == "CONNECT")
         #expect(secondRequest["url"] as? String == "https://secure.example.test:443/")
@@ -2502,7 +2502,7 @@ struct DeviceCrossPlatformTests {
         #expect(log["version"] as? String == "1.2")
         #expect(entries.count == 1)
         #expect(requestPayload["method"] as? String == "GET")
-        #expect(requestPayload["url"] as? String == "http://example.test/session")
+        #expect(requestPayload["url"] as? String == event.url)
     }
 
     @Test("proxy session export returns stable artifact write failure when capture is missing")

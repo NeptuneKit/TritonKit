@@ -67,6 +67,20 @@ docs-linhay/scripts/install-public-skills.sh "$AGENT_SKILLS_DIR" --from-tar trit
 
 Restart the Codex / agent session after installation so the new skills are discovered.
 
+## Raw business data
+
+TritonKit provides original device/application data, not business privacy decisions. It does not infer sensitivity from email addresses, long numbers, password/token/secret strings or payload field names. Recorder compilation/import preserves input and target text; fixtures retain response bodies; network captures retain business URL queries/fragments and provider errors. WebView forms expose readable values. Harmony may submit input even when masked provider data makes full-value verification unavailable; this is not a successful verification.
+
+Content classification, business approval, parameterization and redaction belong to the caller. Explicit `--secure` / `evidence redact` transformations remain separate from original capture. Protocol authentication, file/target safety, bounded capture, no automatic input replay and truthful partial/unknown results remain enforced. Raw local artifacts are not automatically safe or authorized to publish; public sharing is a separate caller decision.
+
+## Action receipts and optional evidence
+
+Typed `device tap/double-tap/swipe/press/type` and explicit `device platform-control` runner results include an additive `actionReceipt`. It separates delivery, outcome, execution knowledge and postcondition verification. A host input acknowledgement does not prove business completion; an iOS submitted-only response remains pending. A timeout, nonzero result, stale generation or contradictory provider response never triggers automatic input replay.
+
+Use `--evidence-dir /absolute/new/action.tritonevidence` to capture a run log, a shared receipt and original provider artifacts. The parent must exist; existing roots and parent/root symlinks are refused before provider input. The bundle contains `run/meta.json`, `run/events.jsonl`, `run/action-receipt.json` and a final manifest with byte sizes and SHA-256 hashes. A valid manifest commits the evidence snapshot; a failed/incomplete directory is only diagnostic. The manifest's `ok` describes evidence completeness; inspect the run verdict and action receipt for the action outcome.
+
+Action evidence retains the provider JSON response and captured host stdout/stderr as separate artifacts, with relative references, byte sizes and SHA-256 hashes. Typed receipts remain a structural projection rather than a copy of every provider field. No content-based filtering or masking is applied to business payloads. If requested evidence cannot be completed, the CLI exits nonzero and reports `evidencePersistence=failed` while preserving what happened to the action. Do not resend input to repair an evidence failure. Optional leases retain their existing HTTP check boundary; admission and generation stores do not provide cross-process authorization, global deduplication or a sandbox. See [the action evidence contract](docs-linhay/dev/ai-cli-readable-control.md) for recovery and scope details.
+
 ## iOS Resident XCTest Runner
 
 `triton device runner` manages a bundled XCTest Runner for an explicit iOS Simulator or paired USB iPhone/iPad. Target apps do not need the embedded TritonKit SDK or source changes. The CLI handles the Runner project, build, session credentials, and native USB transport; running this workflow does not require Appium, WebDriverAgent, Python, or `iproxy`.

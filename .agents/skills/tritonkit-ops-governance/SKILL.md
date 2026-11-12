@@ -9,6 +9,10 @@ metadata:
 
 开工与交付按[经验索引](../../../docs-linhay/memory/EXPERIENCE.md)只读命中主题，未命中再检索；读取、证据、修订与退出遵循[治理闭环](../../../docs-linhay/dev/20260619-agent-workflow-skill-governance.md)。
 
+## 原始业务数据职责
+
+2026-11-12用户裁决：Triton提供原始数据，不按邮箱/长数字/password/token/secret等业务内容自行分类、删值、替换或阻断导入/回放。原始采集和上层显式转换分开；修改实现须验证provider→模型→实际JSON/产物原值保留，不只给DTO加字段。协议凭据/访问权限/文件安全/目标校验/预算/unknown不重放保留；输入提交与读回验证分开，读不到只能报unavailable。公开issue/远端共享仍单独走授权和副本处理，不把本地原始数据默认删减当作外发安全策略。权威入口为AGENTS的原始数据职责与SP-286。
+
 ## CLI / HTTP / Wails 开发回路
 
 - 新单需求优先在 `docs-linhay/spaces/SP-<三位序号>-<topic>/README.md` 写清 BDD 场景和验收边界；历史或项目级规格再使用 `docs-linhay/features/`。

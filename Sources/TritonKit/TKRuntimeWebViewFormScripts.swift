@@ -139,8 +139,9 @@ func runtimeWebViewFormFocusScript(selector: String) throws -> String {
         tagName: String(element.tagName || "").toUpperCase(),
         selector: selector || null,
         nodeID: element.id || null,
+        value: rawValue,
         valueLength: rawValue.length,
-        valueRedaction: "length-only"
+        valueRedaction: "none"
       });
     })()
     """
@@ -255,9 +256,10 @@ func runtimeWebViewFormInputScript(selector: String?, mode: TKWebViewFormInputMo
               selector: selector || null,
               nodeID: element.id || null,
               insertedLength: valueMatched ? text.length : 0,
+              value: currentValue,
               valueLength: currentValue.length,
               valueMatched: valueMatched,
-              valueRedaction: "length-only",
+              valueRedaction: "none",
               eventsDispatched: events
             };
             if (!valueMatched) {
@@ -309,8 +311,9 @@ func runtimeWebViewFormInputScript(selector: String?, mode: TKWebViewFormInputMo
           selector: selector || null,
           nodeID: element.id || null,
           insertedLength: text.length,
+          value: String(element.textContent || ""),
           valueLength: String(element.textContent || "").length,
-          valueRedaction: "length-only",
+          valueRedaction: "none",
           eventsDispatched: events
         });
       } catch (error) {
@@ -319,7 +322,7 @@ func runtimeWebViewFormInputScript(selector: String?, mode: TKWebViewFormInputMo
           selector: selector || null,
           error: {
             code: "javascript_error",
-            message: "The form mutation could not be completed.",
+            message: String(error),
             hint: "Retry with a stable form selector and verify the page has opted into Triton DOM form control."
           }
         });
@@ -336,6 +339,7 @@ struct RuntimeWebViewFormTargetPayload: Decodable, Equatable {
     let selector: String?
     let nodeID: String?
     let insertedLength: Int?
+    let value: String?
     let valueLength: Int?
     let valueMatched: Bool?
     let valueRedaction: String?
@@ -349,7 +353,7 @@ func decodeRuntimeWebViewFormTargetPayload(_ json: String) throws -> RuntimeWebV
 }
 
 
-/// Consume an operation-specific readback capability without exposing values.
+/// Consume an operation-specific readback capability, returning observed data.
 /// It is removed before invoking the closure, so it cannot be reused.
 func runtimeWebViewFormReadbackScript(verificationToken: String) throws -> String {
     let literal = String(data: try JSONEncoder().encode(verificationToken), encoding: .utf8)!
@@ -467,8 +471,8 @@ func webViewFocusedTextInsertionScript(text: String, verificationToken: String? 
       } catch (error) {
         return JSON.stringify({
           ok: false,
-          message: "Focused WebView DOM input could not be completed.",
-          error: { code: "javascript_error", message: "Focused WebView DOM input could not be completed." },
+          message: String(error),
+          error: { code: "javascript_error", message: String(error) },
           tagName: tag || null
         });
       }
@@ -578,4 +582,12 @@ struct WebViewFocusedTextInsertionPayload: Decodable, Equatable {
 
 func decodeWebViewFocusedTextInsertionPayload(_ json: String) throws -> WebViewFocusedTextInsertionPayload {
     try JSONDecoder().decode(WebViewFocusedTextInsertionPayload.self, from: Data(json.utf8))
+}
+
+/// Only an explicit caller output choice may replace provider diagnostics.
+func runtimeWebViewOutputError(_ error: TKWebViewError?, secure: Bool) -> TKWebViewError? {
+    guard secure, let error else { return error }
+    return TKWebViewError(code: error.code,
+        message: "Provider diagnostic omitted by the caller's explicit secure output option.",
+        hint: "Inspect the field state before a new action; no automatic replay.")
 }

@@ -7,6 +7,12 @@ metadata:
 
 # TritonKit Emulator CLI Takeover
 
+## Raw data responsibility
+
+TritonKit provides device operations and original business data. Do not infer sensitivity from email addresses, identifiers, long numbers, password/token/secret words or payload key names. Do not silently remove values, rewrite response fixtures or URL business parameters, or block import/replay on that basis. Content classification, business approvals, redaction and parameterization belong to the caller and require an explicit policy or conversion request. Preserve source artifacts separately from converted copies.
+
+Keep transport authentication credentials and access control, file safety, target/lease/observation binding, byte/deadline limits, and truthful partial/unknown results. A value the provider cannot read is unavailable, not a matched postcondition and not a business prohibition on input. `--secure` and `evidence redact` are caller-selected transformations, not automatic content detection. Local raw capture is separate from public sharing: never publish private artifacts without the user's authorization and the applicable public-feedback preflight.
+
 ## Core Boundary
 
 TritonKit's emulator takeover surface is **local CLI + local simulator/emulator**.
@@ -121,7 +127,7 @@ For iOS Simulator evidence, inspect `manifest.primaryArtifact.fidelity` before v
 - `sim logs --max-bytes <bytes>` defaults to 10485760, writes an owner-only artifact incrementally, and rejects existing output/symlinks. Child failure, timeout, incomplete output or byte-limit returns nonzero and `ok:false, partial:true` with retained artifact bytes/truncation/termination metadata. Preserve the partial file, which may be empty or end mid-record; do not claim a complete capture or replay automatically.
 - Keep logging sources explicit: `sim logs` is unified logging only, while `sim app-console` relaunches one App and writes merged process stdout/stderr to a sensitive bounded artifact. Never infer one source from the other or inline console content into issue/evidence JSON.
 - Multiple local targets must return `ambiguous_target`; do not pick an unsafe default.
-- Logs, screenshots, layout dumps, and data snapshots must be bounded and redacted when persisted into evidence.
+- Logs, screenshots, layout dumps and snapshots are bounded original local evidence. Do not redact or rewrite their business contents by default; only apply a caller-requested transformation to a separate copy. Public sharing remains a separate authorization/preflight.
 - When host layout, embedded runtime, and WebView provider sources coexist, preserve source boundaries, `confidence`, `missingSources`, and `candidateOnly` state.
 
 ## 2026-09 issue 合同补充
@@ -156,7 +162,7 @@ Query the installed schema before selecting these capabilities; preserve unsuppo
 - Resize state must come from a fresh, target-bound selected-Xcode query for each complete action. Active or unknown state rejects host touch and AX activation with the current adapters; never bypass the guard or treat an unsupported query as inactive. A confirmed fresh, target-bound Resizable display supports video routing; unknown state rejects recording. Active screenshots use the current boot's display UUID; unknown state refuses default capture; the explicit primary-LCD still mode below has its own restricted evidence contract. Do not persist that UUID or infer HID support from screenshot capability; recording must independently validate its own display identity.
 - `app prefs get` uses `present` to distinguish missing from `false`, `0`, or empty values. `app prefs import --input <file> --input-format json|plist --key <key> [--key <key> ...]` requires an explicit key allowlist and validates the entire input dictionary before writing; invalid unselected entries also reject the import. Only the bundle's app-data preferences plist is covered, not AppGroup or suite domains.
 - Preferences set/import defaults to no relaunch. Optional `--relaunch` performs terminate then launch after verified disk writing; a relaunch failure can return `ok:false` with `diskWriteVerified:true`. Even a successful launch leaves `runtimeConsumptionVerified:false`: verify the App's business state separately before claiming it consumed the preferences. Import receipts describe keys/types without echoing imported values.
-- Proxy capture export/evidence requires a complete validated capture: empty, malformed, unknown-schema, partial-line, over-limit, or `.incomplete`-marked sources fail closed without publishing a prefix as complete. Inspect counts, redaction, and `truncation`; `not-observed` proves no observed requests and `partial-source` preserves the limitation of mixed legacy placeholder input. URL userinfo/query/fragment removal and names-only headers do not make URL paths or target identities safe for public sharing.
+- Proxy capture export/evidence requires a complete validated capture: empty, malformed, unknown-schema, partial-line, over-limit, or `.incomplete`-marked sources fail closed without publishing a prefix as complete. Inspect counts, redaction, and `truncation`; `not-observed` proves no observed requests and `partial-source` preserves the limitation of mixed legacy placeholder input. URL userinfo removal and names-only headers are protocol/collection boundaries; business queries/fragments are preserved. Raw local capture does not authorize public sharing.
 
 ## Offline Simulator swipe (#215)
 

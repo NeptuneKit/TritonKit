@@ -57,13 +57,13 @@ struct TKRuntimeWebViewSnapshotTests {
         #expect(payload.redaction.secureText == "length-only")
     }
 
-    @Test("WebView snapshot script never exposes raw password values")
-    func snapshotScriptRedactsSecureFields() throws {
+    @Test("WebView snapshot script preserves readable values without content classification")
+    func snapshotScriptPreservesFieldValues() throws {
         let script = try runtimeWebViewSnapshotScript(include: ["metadata", "dom", "text", "forms"], maxDOMNodes: 20, maxTextBytes: 1024)
 
-        #expect(script.contains("length-only"))
+        #expect(script.contains("value: String(rawValue)"))
         #expect(script.contains("valueLength"))
-        #expect(!script.contains(".value,"))
+        #expect(!script.contains("inputType === \"password\""))
     }
 
     @Test("WebView snapshot script resolves labels without selector interpolation")

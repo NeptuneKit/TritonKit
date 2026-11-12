@@ -45,7 +45,15 @@ func deviceActionOutputContract() -> TKCommandOutputContract {
         ("action", "String", true, "tap, double-tap, swipe, press, or type"),
         ("ok", "Bool", true, "Whether the host action command was accepted"),
         ("target", "String", true, "Exact target identity"),
-        ("sourceCommand", "String", true, "Redacted argv-bound host command"),
-        ("postconditionVerified", "Bool", true, "Business postcondition is never inferred from host input"),
+        ("sourceCommand", "String?", false, "Redacted argv-bound host command"),
+        ("postconditionVerified", "Bool?", false, "Business postcondition is never inferred from host input"),
+        ("actionReceipt", "TKActionReceipt", true, "Provider-neutral bound action facts; uncertainty is never promoted to execution"),
+        ("actionReceipt.actionID", "String", true, "Request/action correlation identity"),
+        ("actionReceipt.generation", "UInt64?", false, "In-process generation only; not a cross-process lease"),
+        ("actionReceipt.delivery", "String", true, "not_started, submitted, delivered or unknown"),
+        ("actionReceipt.outcome", "String", true, "settled, pending, blocked or uncertain"),
+        ("actionReceipt.executed", "Bool?", false, "Unknown is null or omitted; never inferred from timeout"),
+        ("actionReceipt.postcondition", "String", true, "Independent verification; host success remains unverified"),
+        ("evidencePersistence", "String", true, "not_requested, written or failed; failure does not erase provider facts"),
     ]))
 }

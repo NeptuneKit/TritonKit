@@ -22,7 +22,8 @@ struct TKRuntimeWebViewControlledInputTests {
         let result = try evaluate(setup: "element.dispatchEvent = function(e) { if (e.type === 'input') { this._value = 'Before'; } return true; };")
         #expect(!result.payload.ok)
         #expect(result.payload.error?.code == .webViewElementNotInteractable)
-        #expect(!result.json.contains("Before"))
+        #expect(result.json.contains("Before"))
+        #expect(result.payload.value == "Before")
         #expect(!result.json.contains("Updated"))
     }
 
@@ -63,11 +64,11 @@ struct TKRuntimeWebViewControlledInputTests {
         #expect(result.value == "Before")
     }
 
-    @Test("page exceptions cannot leak field contents into the result")
+    @Test("page exceptions retain the provider error")
     func exceptionRedaction() throws {
         let result = try evaluate(setup: "Object.defineProperty(element, 'value', { get: function() { throw new Error('private-secret'); } });")
         #expect(!result.payload.ok)
-        #expect(!result.json.contains("private-secret"))
+        #expect(result.json.contains("private-secret"))
     }
 
     @Test("one-shot settled verification catches rollback and releases the capability")
@@ -82,7 +83,7 @@ struct TKRuntimeWebViewControlledInputTests {
         #expect(try decodeRuntimeWebViewFormTargetPayload(checked).ok == false)
         #expect(context.evaluateScript("typeof window['\(token)']")?.toString() == "undefined")
         #expect(!checked.contains("Updated"))
-        #expect(!checked.contains("Before"))
+        #expect(checked.contains("Before"))
     }
 
     private func evaluate(tag: String = "INPUT", setup: String = "", mode: TKWebViewFormInputMode = .setText, text: String = "Updated") throws -> (payload: RuntimeWebViewFormTargetPayload, value: String, json: String) {

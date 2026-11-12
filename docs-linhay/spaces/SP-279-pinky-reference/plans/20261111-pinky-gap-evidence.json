@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "sampleDate": "2026-11-11",
+  "scope": "mechanism-targeted source comparison; not an exhaustive 324-commit review",
+  "triton": {
+    "head": "0ec972e6151eb27372b3bdf5aa940940c56c30b0",
+    "branch": "main",
+    "includesUncommittedSP281": true,
+    "files": {
+      "Sources/TritonKitCLI/CLIDeviceActionsCommands.swift": {
+        "bytes": 6192,
+        "sha256": "2428e50ab3efc1500e41da86b409fcd11c2e80cb8c91f0aba2ee17b2ddd9afdf"
+      },
+      "Sources/TritonKitCLI/CLIDeviceActionExecutionRuntime.swift": {
+        "bytes": 18746,
+        "sha256": "3e40540ffd9a8b5bf5d6524bb4d33c955f5d60caa047683f52b9daff62d604ba"
+      },
+      "Sources/TritonKitCLI/CLIDeviceParityHTTP.swift": {
+        "bytes": 4808,
+        "sha256": "352fd03ab982fe3b2ff9489423305114d754168977b902817561f30f4ee5615f"
+      },
+      "Sources/TritonKitCLI/CLIServeCommand.swift": {
+        "bytes": 51759,
+        "sha256": "e1f1a55db4f97b4d56e0efda4598e8a17793ff5bad9d7cb355e07933fdb1c67b"
+      },
+      "Sources/TritonKitCLI/CLITargetLeaseGate.swift": {
+        "bytes": 944,
+        "sha256": "b58de10865751c58f446fbd78aa2908ba0b2eb7eea132b4baa6df59353284003"
+      },
+      "Sources/TritonKitCLI/CLITargetLeaseStore.swift": {
+        "bytes": 7532,
+        "sha256": "7952a68f9cf600958d040b36f2f63663474d7770e4a9865d092edf1089207ff6"
+      },
+      "Sources/TritonKitShared/TKActionReceiptModels.swift": {
+        "bytes": 9063,
+        "sha256": "e4ae0b42c892934f0fb1aff00e10b62ba925878167ce8b3b47ef987f987d4eed"
+      },
+      "Sources/TritonKitCLI/CLIIOSRunnerRuntime.swift": {
+        "bytes": 22743,
+        "sha256": "87b20f729a0571a6907c30f36b219353bbdb023c5b93302f3a9c56bba916aea1"
+      },
+      "Sources/TritonKitCLI/Resources/ios-runner/RunnerTests/HTTPProtocol.swift": {
+        "bytes": 21331,
+        "sha256": "dfd7b4d905071728f62c916bd63bd8bc8337a2eff4fc64cfe3a65ef71778e71f"
+      },
+      "Sources/TritonKitCLI/CLINodeAliasFreshness.swift": {
+        "bytes": 6317,
+        "sha256": "2c004eae17fed937de55b90d9d4e6b2aeae7d7c84f0ed34f537179cc3bb33c25"
+      },
+      "Sources/TritonKitCLI/CLIWorkspaceActionLoopRuntime.swift": {
+        "bytes": 22560,
+        "sha256": "4cce6948283787682c81e57c92ae722fede45008a7eebcd718055395198be9ce"
+      },
+      "Sources/TritonKitCLI/CLIWorkspaceRuntime.swift": {
+        "bytes": 55505,
+        "sha256": "5ac8c4f931a8dde5199fa5365832861e972a0b358a788be1f0478c919fa0be40"
+      },
+      "Sources/TritonKitCLI/CLIEvidenceReplayRuntime.swift": {
+        "bytes": 31094,
+        "sha256": "d878559fdee64208ebc84ea2d4cebb389b7722e7450d0d56367d7629a93568dd"
+      },
+      "Sources/TritonKitCLI/CLITestRecorderReplayRuntime.swift": {
+        "bytes": 36352,
+        "sha256": "14006544e4c8e63ccdc128ff835f93ca04db8ff719a3992258c9005be3971b81"
+      },
+      "Tools/AndroidBridge/app/src/main/java/jp/lycorp/tritonkit/bridge/service/TritonKitAccessibilityService.kt": {
+        "bytes": 4050,
+        "sha256": "1ccaeb389cac2bec913a8194d3f04476e5d4771013c69e22511aca4f4f156b39"
+      },
+      "Sources/TritonKitCLI/CLIActionEvidenceRuntime.swift": {
+        "bytes": 11953,
+        "sha256": "af01352c27e36e787ef2037a8785ecb0cc69ea9942a05ef049b8243ad92162fc"
+      }
+    }
+  },
+  "pinky": {
+    "source": "https://github.com/DIYgod/pinky",
+    "head": "329f35ac2e240805e265a483fa2d3ff0f84780d3",
+    "tag": "v2026.1111.17",
+    "clean": true,
+    "commitsSinceHistoricalPin": 324,
+    "restoredClone": true,
+    "files": {
+      "README.md": {
+        "bytes": 68878,
+        "sha256": "afcfdc2c37cb26697cdcee8ce9129b3cae97c1d6e9d1b5044ad7f5fe29b294c5"
+      },
+      "LICENSE": {
+        "bytes": 11358,
+        "sha256": "c95bae1d1ce0235ecccd3560b772ec1efb97f348a79f0fbe0a634f0c2ccefe2c"
+      },
+      "internal/gateway/pipeline.go": {
+        "bytes": 93392,
+        "sha256": "ba3d5ac01a536fc8383a30825bc024d336ae0c42afa705a96be8490a5f564f20"
+      },
+      "internal/gateway/gateway.go": {
+        "bytes": 28516,
+        "sha256": "43c0fd184aed08ba09d16cdb68382178c02ad2dbb1cfa3cd2653f106e9c14154"
+      },
+      "internal/approval/approval.go": {
+        "bytes": 13406,
+        "sha256": "829ab1f05313197e9a2d5fd8c7537a6411e4e8afe6bf8280b47ccf595ed88d80"
+      },
+      "internal/gateway/client.go": {
+        "bytes": 26718,
+        "sha256": "94498c260f6f56e57255f5595ca488f7ac62fbffd07c1cd3485579e6d58ae466"
+      },
+      "internal/gateway/resume.go": {
+        "bytes": 8512,
+        "sha256": "341de84cf478412d3fc48b6a4a4a6792701fdc81fa97aff4d1470fca73f95f6f"
+      },
+      "internal/gateway/shared.go": {
+        "bytes": 7182,
+        "sha256": "89fc03e180ecc17a871fdfe72dfa01ae50659b508d54cddd3c35622293ad1a63"
+      },
+      "internal/gateway/budget.go": {
+        "bytes": 3823,
+        "sha256": "c5db99a9ff96b72330b4c9cb93deefa2287778aa49e48ec2c3103043331194d4"
+      },
+      "internal/gateway/save.go": {
+        "bytes": 10490,
+        "sha256": "f5c823c7116810f58092787c83d593a45f339ca5d488f4876465371e96d65f56"
+      },
+      "internal/gateway/record.go": {
+        "bytes": 11297,
+        "sha256": "a13d2d3a3509c4b67ab32e86f68f33c3fed8c6fc80a2c3d426947f2cf7ab5efa"
+      },
+      "internal/gateway/export.go": {
+        "bytes": 16434,
+        "sha256": "5dfd65322a6be3db1763159047c4942c63dab4205333c0a49a3f41a28d16a1c3"
+      },
+      "internal/screen/refs.go": {
+        "bytes": 1348,
+        "sha256": "dd6400a802e54a554511d28a5a830cc2f6c8014bf0647b1530eb7b95dec42c93"
+      },
+      "internal/screen/diff.go": {
+        "bytes": 1871,
+        "sha256": "cea88838eea3e76eaf9ce7579794c991c0927d8862cbe8804ba2781068ab6e5d"
+      },
+      "internal/mcp/tools.go": {
+        "bytes": 50124,
+        "sha256": "2cbde70b0c0d759c4189db1e57f87fccd1ff0a08b8a98e05efd166bde522e338"
+      },
+      "internal/mcp/sessionless.go": {
+        "bytes": 8053,
+        "sha256": "be99610664be35c8da9b94617585fb31504d2e7ad75ef7e25191a53613061207"
+      },
+      "internal/mcp/http.go": {
+        "bytes": 6636,
+        "sha256": "bce5633c977b01e856329ad04119d341387c57f919b069e4c69e2719c7f731d4"
+      },
+      "ui/activity.go": {
+        "bytes": 17583,
+        "sha256": "adaca1a13bed53ce4bd49b00655185018626cb1e075c57116834dbaede8b1e01"
+      }
+    }
+  },
+  "parserProbe": {
+    "argv": [
+      ".build/cli/release/triton",
+      "device",
+      "press",
+      "--device",
+      "android:fixture",
+      "--platform",
+      "android",
+      "--button",
+      "__invalid_no_action__",
+      "--json"
+    ],
+    "exitCode": 64,
+    "output": {
+      "action": "cli.parse",
+      "commandPath": [
+        "triton",
+        "device",
+        "press"
+      ],
+      "error": {
+        "code": "unknown_option",
+        "details": {
+          "argumentNames": [],
+          "count": 1,
+          "kind": "unknown-option",
+          "valuesRedacted": true
+        },
+        "help": {
+          "args": [
+            "device",
+            "press"
+          ],
+          "category": "plan",
+          "command": "help",
+          "finalEvents": [],
+          "readyEvents": [],
+          "requiresLongRunningProcess": false,
+          "terminationSignals": []
+        },
+        "message": "An option is not recognized. Its spelling and value are omitted.",
+        "nextAction": {
+          "args": [
+            "--command",
+            "device press",
+            "--json"
+          ],
+          "category": "diagnose",
+          "command": "schema",
+          "finalEvents": [],
+          "readyEvents": [],
+          "requiresLongRunningProcess": false,
+          "terminationSignals": []
+        },
+        "retryable": false
+      },
+      "ok": false
+    },
+    "binary": {
+      "bytes": 62688184,
+      "sha256": "7ce858ffb85475b49b5f0803b5285956f2edf9d6ad36fbd392be34c09e67e6df"
+    },
+    "providerReachable": false,
+    "reason": "all required arguments set, deliberately invalid button prevents payload creation even if JSON becomes accepted"
+  },
+  "notExecuted": [
+    "Pinky binary",
+    "Pinky go/gradle build or tests",
+    "dependency installation",
+    "HTTP server startup",
+    "device actions",
+    "performance benchmark"
+  ],
+  "checkpointAdvanced": false
+}

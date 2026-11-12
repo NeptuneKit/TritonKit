@@ -104,7 +104,7 @@ struct TKRuntimeWebViewFormInputTests {
         #expect(script.contains("valueRedaction"))
     }
 
-    @Test("form input script dispatches input and change with redacted postcondition")
+    @Test("form input script dispatches input and change with original readback")
     func formInputScriptDispatchesInputAndChange() throws {
         let script = try runtimeWebViewFormInputScript(selector: "#body", mode: .type, text: "Hello body")
 
@@ -115,7 +115,7 @@ struct TKRuntimeWebViewFormInputTests {
         #expect(script.contains("eventsDispatched"))
         #expect(script.contains("insertedLength"))
         #expect(script.contains("valueLength"))
-        #expect(script.contains("length-only"))
+        #expect(script.contains("value: currentValue"))
         #expect(!script.contains("eval("))
     }
 
@@ -191,13 +191,22 @@ struct TKRuntimeWebViewFormInputTests {
         #expect(script.contains("descriptor.set.call(element"))
     }
 
-    @Test("readback rejects controlled rollback without echoing the field value")
+    @Test("readback rejects controlled rollback and preserves original provider data")
     func inputScriptVerifiesReadback() throws {
         let script = try runtimeWebViewFormInputScript(selector: "#title", mode: .setText, text: "private-value")
         #expect(script.contains("valueMatched"))
         #expect(script.contains("webview_element_not_interactable"))
         #expect(script.contains("element.blur()"))
-        #expect(!script.contains("message: String(error"))
+        #expect(script.contains("message: String(error"))
+    }
+
+    @Test("only an explicit secure output choice replaces provider diagnostics")
+    func explicitDiagnosticTransformation() {
+        let error = TKWebViewError(code: .javascriptError, message: "original@example.test token business")
+        #expect(runtimeWebViewOutputError(error, secure: false) == error)
+        #expect(runtimeWebViewOutputError(error, secure: true)?.message.contains("original@example.test") == false)
+        #expect(runtimeWebViewOutputError(error, secure: true)?.code == error.code)
+        #expect(runtimeWebViewOutputError(nil, secure: true) == nil)
     }
 
     private static func fixtureHTML() throws -> String {

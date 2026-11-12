@@ -214,6 +214,10 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
             return ["diagnose", "observe"]
         default: break
         }
+        if ["action_evidence_path_invalid", "action_evidence_root_unavailable", "action_evidence_write_failed", "action_evidence_partial"].contains(failureCode) {
+            return ["archive", "diagnose", "plan"]
+        }
+        if failureCode == "device_action_cancelled" { return ["diagnose", "observe", "plan"] }
         if let categories = residentRunnerRecoveryCategories(forFailureCode: failureCode) { return categories }
         // HID failures can follow partial delivery. Inspect and plan; never
         // suggest automatic input replay, even when transport did not ACK.

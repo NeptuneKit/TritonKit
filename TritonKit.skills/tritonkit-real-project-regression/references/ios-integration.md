@@ -34,10 +34,6 @@ enum TritonKitDebugBootstrap {
             config.endpoint = .environment()
             config.autoReconnect = true
             config.features = [.hierarchy, .accessibility, .input]
-            config.redaction.secureText = .lengthOnly
-            config.redaction.collectClipboard = false
-            config.redaction.collectNetwork = false
-            config.redaction.collectLogs = false
             config.appIdentity = .init(name: "YourApp", tags: ["debug", "opt-in"])
         }
     }
@@ -50,6 +46,8 @@ enum TritonKitDebugBootstrap {
 ```
 
 Enable it from Xcode with launch argument `--triton-enabled`, environment variable `TRITON_ENABLED=1`, or Debug-only user default `TRITON_ENABLED=true`. `config.endpoint = .environment()` reads `TRITON_HOST` / `TRITON_PORT` and falls back to `127.0.0.1:19421`. Use `TritonKit.shared.start { config in config.endpoint = .device("192.168.1.20", port: 19421) }` when a physical device needs to connect to a Mac LAN address.
+
+Raw business data is the default contract. Do not add a redaction policy to an adopting app merely because fields look sensitive. Choose explicit output conversion only when the caller requests it; configuration metadata alone is not evidence that a provider masks values.
 
 ## Real-device runtime readiness before smoke
 
@@ -90,7 +88,6 @@ TritonKit.shared.start { config in
     config.endpoint = .device("192.168.1.20", port: 19421)
     config.autoReconnect = true
     config.features = [.hierarchy, .accessibility, .input]
-    config.redaction.secureText = .lengthOnly
     config.appIdentity = .init(name: "YourApp", tags: ["smoke"])
 }
 #endif

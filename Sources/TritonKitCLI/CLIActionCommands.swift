@@ -642,14 +642,15 @@ struct TypeText: AsyncParsableCommand {
             let value = textArgument ?? text ?? ""
             if verify || expectValue != nil || timeout != nil {
                 var response: HarmonyVerifiedInputResult
-                if !verify || platform != .harmony || webview || oid != nil || exact || secure ||
+                if !verify || platform != .harmony || webview || oid != nil || exact ||
                     selector?.hasPrefix("id:") != true || (selector?.count ?? 0) <= 3 || expectValue == nil ||
                     !(timeout ?? 10).isFinite || (timeout ?? 10) <= 0 || (timeout ?? 10) > 60 || value.contains("\0") {
                     response = HarmonyVerifiedInputResult()
-                    response.code = secure ? "harmony_input_secure_unsupported" : "harmony_input_invalid_options"
+                    response.code = "harmony_input_invalid_options"
                 } else {
                     response = executeHarmonyVerifiedInput(target: target, hdc: hdc, selector: selector!, text: value, expected: expectValue!, timeout: timeout ?? 10)
                 }
+                response = harmonyVerifiedInputOutput(response, secure: secure)
                 switch outputFormat {
                 case .json: print(try encodeJSON(response))
                 case .text: print("type: \(response.code) submission=\(response.submission) focus=\(response.focus) verification=\(response.verification)")

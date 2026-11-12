@@ -17,14 +17,28 @@ struct TKRuntimeWebViewSnapshotExecutionTests {
             try #require(context.exception == nil, "Generated JavaScript failed: \(context.exception?.toString() ?? "unknown")")
             let json = try #require(result?.toString())
             let payload = try decodeRuntimeWebViewSnapshotPayload(json)
+            #expect(payload.rawText == (includes.contains("text") ? "Hell" : nil))
+            #expect(payload.rawTextTruncated == includes.contains("text"))
             #expect(payload.forms.count == 1)
             #expect(payload.forms.first?.selector == "[name=\"email\"]")
             #expect(payload.forms.first?.valueLength == 13)
-            #expect(!json.contains("secret-value!"))
+            #expect(json.contains("secret-value!"))
+            #expect(json.contains("\"value\""))
             #expect(payload.truncation.truncated)
             #expect(payload.dom.count == (includes.contains("dom") ? 1 : 0))
             #expect(payload.text == (includes.contains("text") ? ["Hell"] : []))
         }
+    }
+
+    @Test("raw body text preserves whitespace and unicode separately from summaries")
+    func rawBodyText() throws {
+        let context = try #require(JSContext())
+        context.evaluateScript(Self.fixture)
+        context.evaluateScript("document.body.innerText = '  原始\\n  body  ';")
+        let json = try #require(context.evaluateScript(try runtimeWebViewSnapshotScript(include: ["text"], maxDOMNodes: nil, maxTextBytes: 1024))?.toString())
+        let result = try decodeRuntimeWebViewSnapshotPayload(json)
+        #expect(result.rawText == "  原始\n  body  ")
+        #expect(result.rawTextTruncated == false)
     }
 
     private static let fixture = #"""

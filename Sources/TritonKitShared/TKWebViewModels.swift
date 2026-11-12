@@ -418,6 +418,7 @@ public struct TKWebViewFormFieldSummary: Codable, Equatable {
     public let inputType: String
     public let label: String?
     public let valueRedaction: String?
+    public let value: String?
     public let valueLength: Int?
     public let frame: TKRect?
     /// Stable editable kind: input, textarea, select, or contenteditable.
@@ -441,12 +442,14 @@ public struct TKWebViewFormFieldSummary: Codable, Equatable {
         selector: String? = nil,
         nodeID: String? = nil,
         focused: Bool? = nil,
-        contentEditable: Bool? = nil
+        contentEditable: Bool? = nil,
+        value: String? = nil
     ) {
         self.name = name
         self.inputType = inputType
         self.label = label
         self.valueRedaction = valueRedaction
+        self.value = value
         self.valueLength = valueLength
         self.frame = frame
         self.kind = kind
@@ -499,6 +502,8 @@ public struct TKWebViewSnapshotResponse: Codable, Equatable {
     public let target: String
     public let webView: TKWebViewDescriptor
     public let include: [String]
+    public let rawText: String?
+    public let rawTextTruncated: Bool?
     public let text: [String]
     public let dom: [TKWebViewDOMNodeSummary]
     public let forms: [TKWebViewFormFieldSummary]
@@ -523,7 +528,9 @@ public struct TKWebViewSnapshotResponse: Codable, Equatable {
         skipped: [TKRuntimeSnapshotSkipped] = [],
         warnings: [TKWebViewDiagnosticWarning] = [],
         truncation: TKWebViewSnapshotTruncation = TKWebViewSnapshotTruncation(),
-        redaction: TKWebViewRedaction = TKWebViewRedaction()
+        redaction: TKWebViewRedaction = TKWebViewRedaction(),
+        rawText: String? = nil,
+        rawTextTruncated: Bool? = nil
     ) {
         self.ok = ok
         self.action = action
@@ -532,6 +539,8 @@ public struct TKWebViewSnapshotResponse: Codable, Equatable {
         self.target = target
         self.webView = webView
         self.include = include
+        self.rawText = rawText
+        self.rawTextTruncated = rawTextTruncated
         self.text = text
         self.dom = dom
         self.forms = forms
@@ -786,7 +795,7 @@ public struct TKWebViewFocusResponse: Codable, Equatable {
         elapsedMs: Int,
         sourceCommands: [String] = [],
         note: String? = nil,
-        redaction: TKWebViewRedaction = TKWebViewRedaction(secureText: "length-only")
+        redaction: TKWebViewRedaction = TKWebViewRedaction(secureText: "none")
     ) {
         self.ok = ok
         self.action = action
@@ -847,6 +856,7 @@ public struct TKWebViewFormInputResponse: Codable, Equatable {
     public let mode: String
     public let focused: Bool
     public let insertedLength: Int?
+    public let value: String?
     public let valueLength: Int?
     public let valueRedaction: String?
     public let eventsDispatched: [String]
@@ -877,7 +887,8 @@ public struct TKWebViewFormInputResponse: Codable, Equatable {
         elapsedMs: Int,
         sourceCommands: [String] = [],
         redaction: TKWebViewRedaction = TKWebViewRedaction(),
-        note: String? = nil
+        note: String? = nil,
+        value: String? = nil
     ) {
         self.ok = ok
         self.action = action
@@ -890,6 +901,7 @@ public struct TKWebViewFormInputResponse: Codable, Equatable {
         self.mode = mode
         self.focused = focused
         self.insertedLength = insertedLength
+        self.value = value
         self.valueLength = valueLength
         self.valueRedaction = valueRedaction
         self.eventsDispatched = eventsDispatched

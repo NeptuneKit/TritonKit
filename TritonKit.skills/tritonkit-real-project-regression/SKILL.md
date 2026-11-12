@@ -7,6 +7,12 @@ metadata:
 
 # TritonKit Real Project Regression
 
+## Raw data responsibility
+
+TritonKit provides device operations and original business data. Do not infer sensitivity from email addresses, identifiers, long numbers, password/token/secret words or payload key names. Do not silently remove values, rewrite response fixtures or URL business parameters, or block import/replay on that basis. Content classification, business approvals, redaction and parameterization belong to the caller and require an explicit policy or conversion request. Preserve source artifacts separately from converted copies.
+
+Keep transport authentication credentials and access control, file safety, target/lease/observation binding, byte/deadline limits, and truthful partial/unknown results. A value the provider cannot read is unavailable, not a matched postcondition and not a business prohibition on input. `--secure` and `evidence redact` are caller-selected transformations, not automatic content detection. Local raw capture is separate from public sharing: never publish private artifacts without the user's authorization and the applicable public-feedback preflight.
+
 ## Embedded discovery migration
 
 `triton serve` never advertises implicitly, including with an explicit LAN bind. Use `--advertise` or `TRITON_ADVERTISE=true|1` only when discovery is intended; `--no-advertise` overrides it. `false|0` disables it; other environment values fail before bind. Read `discovery` in `triton status --json` / `GET /status`: wanted is intent, advertising requires a real publication callback, failed includes the NetService error, stopped means withdrawn/disabled. Older servers omit the field. `identityVerified` remains false: publication is neither peer authentication nor proof of LAN reachability.

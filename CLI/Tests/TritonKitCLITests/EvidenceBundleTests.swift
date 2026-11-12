@@ -571,8 +571,8 @@ struct EvidenceBundleTests {
         #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/network/requests.ndjson").path))
         #expect(try summarizeEvidenceBundle(input: root.path).sensitiveArtifactCount == 2)
         let importedCapture = try String(contentsOf: root.appendingPathComponent("artifacts/network/requests.ndjson"), encoding: .utf8)
-        #expect(!importedCapture.contains("proxy-fixture-secret"))
-        #expect(!importedCapture.contains("token="))
+        #expect(importedCapture.contains("proxy-fixture-secret"))
+        #expect(importedCapture.contains("token="))
         #expect(!importedCapture.contains("fixture-user"))
     }
 
@@ -640,8 +640,8 @@ struct EvidenceBundleTests {
             #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/network/session-state.json").path))
             #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/network/requests.ndjson").path))
             let importedCapture = try String(contentsOf: root.appendingPathComponent("artifacts/network/requests.ndjson"), encoding: .utf8)
-            #expect(!importedCapture.contains("proxy-fixture-secret"))
-            #expect(!importedCapture.contains("token="))
+            #expect(importedCapture.contains("proxy-fixture-secret"))
+            #expect(importedCapture.contains("token="))
             #expect(!importedCapture.contains("fixture-user"))
         }
     }

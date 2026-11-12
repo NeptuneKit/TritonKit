@@ -176,7 +176,7 @@ struct IOSRunnerLifecycleTests {
         #expect(harness.calls.last == "/receipt")
         let text = String(decoding: try iosRunnerJSON(response), as: UTF8.self)
         #expect(!text.contains("private-pixels"))
-        #expect(!text.contains("private-token"))
+        #expect(text.contains("private-token")) // Nested result is business payload, not a transport credential.
     }
     @Test func explicitDeviceIsRequired() throws {
         let harness = try IOSRunnerHarness(), service = IOSRunnerService(dependencies: harness.dependencies)

@@ -365,8 +365,8 @@ struct ReplayCommandTests {
         #expect(FileManager.default.fileExists(atPath: output.appendingPathComponent("artifacts/network/session-state.json").path))
         #expect(FileManager.default.fileExists(atPath: output.appendingPathComponent("artifacts/network/requests.ndjson").path))
         let importedCapture = try String(contentsOf: output.appendingPathComponent("artifacts/network/requests.ndjson"), encoding: .utf8)
-        #expect(!importedCapture.contains("proxy-fixture-secret"))
-        #expect(!importedCapture.contains("token="))
+        #expect(importedCapture.contains("proxy-fixture-secret"))
+        #expect(importedCapture.contains("token="))
         #expect(!importedCapture.contains("fixture-user"))
     }
 

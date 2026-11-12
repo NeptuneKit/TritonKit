@@ -966,7 +966,7 @@ struct TestRecorderContractTests {
         #expect(networkMap.rules.count == 1)
         #expect(networkMap.rules[0].strategy == "mock-candidate")
         #expect(networkMap.rules[0].nonBlocking == false)
-        #expect(networkMap.rules[0].redactionRequired == true)
+        #expect(networkMap.rules[0].redactionRequired == false)
         #expect(networkMap.rules[0].match.url == "/api/login")
         #expect(pageMap.kind == "triton.testrec.page-map")
         #expect(pageMap.matchPolicy.scorer == "deterministic-fingerprint-matcher-v1")
@@ -1105,7 +1105,7 @@ struct TestRecorderContractTests {
         #expect(response.warnings.map(\.code).contains("missing_page_events"))
     }
 
-    @Test("compile flags privacy transient network weak selector and fixed wait findings")
+    @Test("compile preserves raw input and retains only technical quality findings")
     func compileFlagsRawStreamQualityFindings() throws {
         let caseURL = try makeTemporaryCaseDirectory()
         defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
@@ -1146,29 +1146,22 @@ struct TestRecorderContractTests {
         #expect(response.networkMapArtifact?.path == "network/map-rules.json")
         #expect(response.proposalArtifact?.path == "compile-proposals.jsonl")
         #expect(response.proposalArtifact?.written == true)
-        #expect(warningCodes.contains("privacy_candidate"))
+        #expect(!warningCodes.contains("privacy_candidate"))
         #expect(warningCodes.contains("transient_network_request"))
         #expect(warningCodes.contains("weak_selector"))
         #expect(warningCodes.contains("fixed_wait"))
-        #expect(findingCodes.contains("privacy_candidate"))
+        #expect(!findingCodes.contains("privacy_candidate"))
         #expect(findingCodes.contains("transient_network_request"))
         #expect(findingCodes.contains("weak_selector"))
         #expect(findingCodes.contains("fixed_wait"))
-        #expect(proposalKinds.contains("contract.redaction"))
-        #expect(decoded.actions[0].inputText == nil)
-        #expect(compiledContent.contains("secret@example.com") == false)
-        #expect(replay.plannedSteps.flatMap(\.argv).contains("secret@example.com") == false)
-        #expect(replay.status == "blocked")
-        #expect(replay.blockers.map(\.code).contains("redaction_review_required"))
-        #expect(simulatedReplay.status == "blocked")
-        #expect(simulatedReplay.blockers.map(\.code).contains("redaction_review_required"))
-        #expect(simulatedReplay.steps.allSatisfy { $0.status == "not-run" })
-        #expect(matrix.status == "blocked")
-        #expect(matrix.blockedCount == 2)
-        #expect(matrix.results.allSatisfy { $0.blockers.map(\.code).contains("redaction_review_required") })
-        #expect(simulatedMatrix.status == "blocked")
-        #expect(simulatedMatrix.blockedCount == 2)
-        #expect(simulatedMatrix.results.allSatisfy { $0.blockers.map(\.code).contains("redaction_review_required") })
+        #expect(!proposalKinds.contains("contract.redaction"))
+        #expect(decoded.actions[0].inputText == "secret@example.com")
+        #expect(compiledContent.contains("secret@example.com") == true)
+        #expect(replay.plannedSteps.flatMap(\.argv).contains("secret@example.com") == true)
+        #expect(!replay.blockers.map(\.code).contains("redaction_review_required"))
+        #expect(!simulatedReplay.blockers.map(\.code).contains("redaction_review_required"))
+        #expect(matrix.results.allSatisfy { !$0.blockers.map(\.code).contains("redaction_review_required") })
+        #expect(simulatedMatrix.results.allSatisfy { !$0.blockers.map(\.code).contains("redaction_review_required") })
         #expect(proposalKinds.contains("contract.network"))
         #expect(proposalKinds.contains("contract.selector"))
         #expect(proposalKinds.contains("contract.wait"))
@@ -1179,7 +1172,7 @@ struct TestRecorderContractTests {
         #expect(networkMap.rules[0].redactionRequired == false)
     }
 
-    @Test("compile writes redacted network fixtures for business requests")
+    @Test("compile writes unmodified network fixtures for business requests")
     func compileWritesRedactedNetworkFixturesForBusinessRequests() throws {
         let caseURL = try makeTemporaryCaseDirectory()
         defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
@@ -1206,18 +1199,18 @@ struct TestRecorderContractTests {
 
         #expect(response.status == "compiled")
         #expect(rule.strategy == "mock-candidate")
-        #expect(rule.redactionRequired == true)
+        #expect(rule.redactionRequired == false)
         #expect(rule.fixturePath == "network/fixtures/n1.json")
         #expect(fixture["id"] == "n1")
         #expect(fixture["method"] == "POST")
         #expect(fixture["url"] == "/api/login")
-        #expect(fixture["body"]?.contains("alice@example.com") == false)
-        #expect(fixture["body"]?.contains("secret-token") == false)
-        #expect(fixture["body"]?.contains("<redacted:email>") == true)
-        #expect(fixture["body"]?.contains("<redacted:token>") == true)
-        #expect(compiledContent.contains("alice@example.com") == false)
-        #expect(compiledContent.contains("secret-token") == false)
-        #expect(compiledContent.contains("responseBody") == false)
+        #expect(fixture["body"]?.contains("alice@example.com") == true)
+        #expect(fixture["body"]?.contains("secret-token") == true)
+        #expect(fixture["body"]?.contains("<redacted:email>") == false)
+        #expect(fixture["body"]?.contains("<redacted:token>") == false)
+        #expect(compiledContent.contains("alice@example.com") == true)
+        #expect(compiledContent.contains("secret-token") == true)
+        #expect(compiledContent.contains("responseBody") == true)
     }
 
     @Test("proposals reads compile proposal JSONL without applying changes")
@@ -1233,8 +1226,8 @@ struct TestRecorderContractTests {
 
         #expect(response.ok == true)
         #expect(response.kind == "triton.testrec.proposals")
-        #expect(response.proposalCount == 5)
-        #expect(response.proposals.map(\.proposalKind).contains("contract.redaction"))
+        #expect(response.proposalCount == 4)
+        #expect(!response.proposals.map(\.proposalKind).contains("contract.redaction"))
         #expect(response.proposals.map(\.proposalKind).contains("contract.network"))
         #expect(response.proposals.map(\.proposalKind).contains("contract.selector"))
         #expect(response.proposals.map(\.proposalKind).contains("contract.wait"))
@@ -1678,7 +1671,7 @@ struct TestRecorderContractTests {
         #expect(response.networkResults.count == 1)
         #expect(response.networkResults[0].status == "simulated-mock-candidate")
         #expect(response.networkResults[0].strategy == "mock-candidate")
-        #expect(response.networkResults[0].redactionRequired == true)
+        #expect(response.networkResults[0].redactionRequired == false)
         #expect(response.networkResults[0].fixturePath == "network/fixtures/n1.json")
         #expect(response.networkResults[0].artifactRefs == ["network/fixtures/n1.json"])
         #expect(response.networkResults[0].evidence.contains("network-map"))
@@ -1716,7 +1709,7 @@ struct TestRecorderContractTests {
             $0.kind == "testrec.page.target-fingerprints" && $0.path == "pages/target-fingerprints.json"
         })
         #expect(manifest.artifacts.contains {
-            $0.kind == "testrec.network.fixture" && $0.path == "network/fixtures/n1.json" && $0.redactionStatus == "redacted"
+            $0.kind == "testrec.network.fixture" && $0.path == "network/fixtures/n1.json" && $0.redactionStatus == "not-required"
         })
         let summary = try summarizeEvidenceBundle(input: evidenceURL.path)
         #expect(summary.ok == true)

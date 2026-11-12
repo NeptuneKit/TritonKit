@@ -1,21 +1,22 @@
-# SP-280 — ActionContext 后续扩展路线
+# SP-281 — ActionContext 后续扩展路线
 
-## 当前状态
+## 当前状态（2026-11-12纠正）
 
-- 状态：路线规划完成，等待按优先级连续推进。
-- 前置批次：[SP-279 ActionContext / Action Admission 全量批次](../SP-280-action-context-admission/README.md)。
-- 目标：把 SP-279 的 runner/device.action 两条试点链路收敛为共享核心，再按边界扩展到其它 mutating surfaces。
+- 已落地：typed device/specialized runner共享回执与证据、parity实际argv parser修复，以及普通app mutation的正常返回投影。
+- **P2未完成**：Simulator HID真实入口未接到该helper，普通host throw路径没有新增receipt，全入口owner/observation/Stop等未统一。撤回之前P0–P2全完成的声明，不缩小原范围换完成。
+- 当前权威：[SP-281 README](../README.md)与[提交收口](./20261112-session-closeout.md)。下方P0–P6是历史路线；业务敏感性识别/默认内容审批不再是用户要求，原始数据主旨以SP-286与根AGENTS为准。
+- [历史测试记录](./20261111-p0-p2-main-validation.md)的绿色结果保留，但不是上列未完成能力的证明。
 
-## 当前事实
+## 原始规划基线（2026-11-10，历史）
 
-SP-279 已完成：
+SP-280 已完成：
 
 - ActionContext、canonical digest、AdmissionStore、generation guard；
 - iOS host runner admission、receipt、evidence writer、lease gate；
 - device.action tap/double-tap/swipe/press/type 的 context/admission/generation/output projection；
 - schema/recovery、root/CLI full tests 和并发 fixture。
 
-仍存在的可执行缺口：
+原始规划时存在的缺口（P0/P1 生产 receipt/evidence 已由 2026-11-11 本轮接线修复，P2–P6 仍未实现）：
 
 1. runner receipt 已有统一 metadata，但 `device.action` 仍主要返回直接 JSON projection；
 2. device.action host command 失败/timeout 的 receipt 持久化和 evidence 关联仍需补齐；

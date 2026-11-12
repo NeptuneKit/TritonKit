@@ -6,23 +6,30 @@ func writeTestRecorderNetworkFixturesIfNeeded(
 ) throws -> [Int: String] {
     let fixtureDirectory = caseURL.appendingPathComponent("network/fixtures", isDirectory: true)
     var paths: [Int: String] = [:]
+    var allocated: Set<String> = []
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
 
     for request in requests {
-        guard let body = request.responseBody, !body.isEmpty else { continue }
-        guard !isTransientNetworkURL(request.url ?? "") else { continue }
+        guard let body = request.responseBody else { continue }
 
         try FileManager.default.createDirectory(at: fixtureDirectory, withIntermediateDirectories: true)
-        let fileName = "\(networkFixtureID(for: request)).json"
+        let base = networkFixtureID(for: request)
+        var fileName = "\(base).json"
+        var collision = 0
+        while allocated.contains(fileName) {
+            collision += 1
+            fileName = "\(base)-\(request.index)-\(collision).json"
+        }
+        allocated.insert(fileName)
         let relativePath = "network/fixtures/\(fileName)"
         let fixtureURL = caseURL.appendingPathComponent(relativePath)
         var fixture: [String: String] = [
             "id": request.id ?? "network-\(request.index)",
             "method": request.method ?? "",
             "url": request.url ?? "",
-            "body": redactTestRecorderNetworkFixtureBody(body),
-            "redaction": "deterministic-sensitive-token-redaction-v1",
+            "body": body,
+            "redaction": "none",
             "sourcePath": request.sourcePath,
         ]
         if let statusCode = request.statusCode {
@@ -44,35 +51,4 @@ private func networkFixtureID(for request: TKTestRecorderCompiledNetworkRequest)
     }
     let value = String(sanitized).trimmingCharacters(in: CharacterSet(charactersIn: "-_"))
     return value.isEmpty ? "network-\(request.index)" : value
-}
-
-private func redactTestRecorderNetworkFixtureBody(_ body: String) -> String {
-    var redacted = body
-    redacted = redacted.replacingTestRecorderRegex(
-        #"(?i)[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}"#,
-        template: "<redacted:email>"
-    )
-    redacted = redacted.replacingTestRecorderRegex(
-        #"(?i)(token=)[^\s&]+"#,
-        template: "$1<redacted:token>"
-    )
-    redacted = redacted.replacingTestRecorderRegex(
-        #"(?i)(\"token\"\s*:\s*\")[^\"]+"#,
-        template: "$1<redacted:token>"
-    )
-    redacted = redacted.replacingTestRecorderRegex(
-        #"(?i)(authorization=Bearer\s+)[^\s&]+"#,
-        template: "$1<redacted:token>"
-    )
-    return redacted
-}
-
-private extension String {
-    func replacingTestRecorderRegex(_ pattern: String, template: String) -> String {
-        guard let regex = try? NSRegularExpression(pattern: pattern) else {
-            return self
-        }
-        let range = NSRange(startIndex..., in: self)
-        return regex.stringByReplacingMatches(in: self, range: range, withTemplate: template)
-    }
 }

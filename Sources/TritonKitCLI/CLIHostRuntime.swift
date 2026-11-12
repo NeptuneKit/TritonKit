@@ -17,7 +17,21 @@ func runSimpleHostCommand(
     interruptAfter: Double? = nil
 ) throws {
     do {
+        let unifiedMutation = isUnifiedHostMutation(action)
+        let handle: TKActionAdmissionHandle?
+        if unifiedMutation {
+            let context = try makeHostActionContext(action: action, target: target, runtimeScope: runtimeScope, command: command)
+            handle = try TKActionAdmissionCoordinator().admit(context: context)
+        } else {
+            handle = nil
+        }
         let result = try runHostCommand(command, interruptAfter: interruptAfter)
+        let actionReceipt: TKActionReceipt?
+        if let handle {
+            actionReceipt = try makeHostActionReceipt(context: handle.context, handle: handle, result: result)
+        } else {
+            actionReceipt = nil
+        }
         let stdout = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
         let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
         let sourceCommand = redactHostActionSourceCommand(result.sourceCommand, selection: selection)
@@ -37,7 +51,8 @@ func runSimpleHostCommand(
             stderr: stderr.isEmpty ? nil : stderr,
             artifacts: artifacts,
             screenshot: action == "sim.screenshot" && artifacts.count == 1 ? (try? makeSimulatorScreenshotMetadata(outputPath: artifacts[0])) : nil,
-            note: note
+            note: note,
+            actionReceipt: actionReceipt
         )
         switch outputFormat {
         case .json:

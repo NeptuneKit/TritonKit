@@ -18,9 +18,12 @@ struct DeviceActionCommonOptions: ParsableArguments {
     @Option(help: "ADB executable") var adb: String = "adb"
     @Option(help: "HDC executable") var hdc: String = "hdc"
     @Option(help: "Private iOS Runner session root") var sessionRoot: String?
+    @Option(name: .customLong("evidence-dir"), help: "Fresh private action evidence directory; existing paths are refused") var evidenceDir: String?
     @Option(name: .customLong("lease"), help: "Optional target lease token") var leaseID: String?
     @Option(help: "Server host for target lease check") var host: String = "127.0.0.1"
     @Option(help: "Server port for target lease check") var port: Int = 19421
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 }
 
 struct DeviceTap: AsyncParsableCommand {
@@ -67,161 +70,18 @@ private extension DeviceActionCommonOptions {
     }
 }
 
-func makeDeviceActionContext(_ payload: DeviceActionPayload, selected: HostDeviceTarget, leaseID: String?, frozenText: String? = nil, inputDigestKey: Data? = nil) throws -> (TKActionContext, String) {
-    let geometry: TKJSONValue = payload.geometry.map { .object(["width": .double($0.width), "height": .double($0.height), "orientation": .string($0.orientation)]) } ?? .null
-    let text = try frozenText ?? payload.textFile.map { try String(contentsOfFile: $0, encoding: .utf8) }
-    let textDigest = try text.map {
-        try TKActionArgumentsDigest.make(arguments: ["text": .string($0)], algorithm: .hmacSHA256,
-            key: inputDigestKey ?? Data(UUID().uuidString.utf8), redactionProfile: "private-input")
+func emitDeviceActionOutput(_ output: Data) throws {
+    let object = try JSONSerialization.jsonObject(with: output) as? [String: Any]
+    print(String(decoding: output, as: UTF8.self))
+    if object?["ok"] as? Bool != true || ["failed", "partial"].contains(object?["evidencePersistence"] as? String ?? "") {
+        throw ExitCode.failure
     }
-    let arguments: [String: TKJSONValue] = [
-        "action": .string(payload.action.rawValue),
-        "device": .string(selected.id),
-        "platform": .string(payload.platform),
-        "requestID": .string(payload.requestID),
-        "observationID": payload.observationID.map(TKJSONValue.string) ?? .null,
-        "geometry": geometry,
-        "x": payload.x.map(TKJSONValue.double) ?? .null,
-        "y": payload.y.map(TKJSONValue.double) ?? .null,
-        "endX": payload.endX.map(TKJSONValue.double) ?? .null,
-        "endY": payload.endY.map(TKJSONValue.double) ?? .null,
-        "duration": payload.duration.map(TKJSONValue.double) ?? .null,
-        "button": payload.button.map(TKJSONValue.string) ?? .null,
-        "bundleID": payload.bundleID.map(TKJSONValue.string) ?? .null,
-        "identifier": payload.identifier.map(TKJSONValue.string) ?? .null,
-        "label": payload.label.map(TKJSONValue.string) ?? .null,
-        "inputDigest": textDigest.map { .string($0.digest) } ?? .null
-    ]
-    let digest = try TKActionArgumentsDigest.make(arguments: arguments, redactionProfile: "private-paths-and-input")
-    let context = TKActionContext(
-        actionID: payload.requestID,
-        target: TKNormalizeTargetLeaseKey(selected.id),
-        targetIdentity: selected.id,
-        operation: "device.\(payload.action.rawValue)",
-        provider: selected.platform,
-        argsDigest: digest.digest,
-        argsDigestAlgorithm: digest.algorithm,
-        argsCanonicalizationVersion: digest.canonicalizationVersion,
-        argsRedactionProfile: digest.redactionProfile,
-        leaseID: leaseID,
-        policyDecision: .allow,
-        createdAt: ISO8601DateFormatter().string(from: Date())
-    )
-    try context.validate()
-    return (context, try context.contextDigest())
 }
 
-func decorateDeviceActionResult(
-    _ data: Data,
-    context: TKActionContext,
-    contextDigest: String,
-    admissionID: String,
-    generationStore: TKActionGenerationStore,
-    generationToken: TKActionGenerationToken
-) throws -> Data {
-    guard generationStore.isCurrent(generationToken) else {
-        throw DeviceActionError.generationStale
-    }
-    guard let decoded = try? JSONSerialization.jsonObject(with: data),
-          var object = decoded as? [String: Any], let ok = object["ok"] as? Bool else {
-        throw DeviceActionError.invalidResult
-    }
-    let nested = object["result"] as? [String: Any]
-    let provider = nested ?? object
-    let hasError = object["error"] != nil && !(object["error"] is NSNull)
-    let succeeded = ok && !hasError
-    let verified = succeeded && provider["postconditionVerified"] as? Bool == true
-    let flatHostSuccess = succeeded && object["result"] == nil && context.provider != "ios"
-    let executed = provider["executed"] as? Bool
-    let submitted = provider["submitted"] as? Bool == true
-    let confirmed = succeeded && (verified || executed == true || flatHostSuccess)
-    let delivery = confirmed ? "delivered" : (succeeded && submitted ? "submitted" : "unknown")
-    let outcome = confirmed ? "settled" : (succeeded && submitted ? "pending" : "uncertain")
-    let originalStatus = provider["outcome"] as? String ?? provider["status"] as? String
-        ?? (succeeded ? (submitted ? "submitted" : "unknown") : "failed")
-    object["actionID"] = context.actionID
-    object["admissionID"] = admissionID
-    object["contextDigest"] = contextDigest
-    object["delivery"] = delivery
-    object["outcome"] = outcome
-    object["executed"] = confirmed ? true : NSNull()
-    object["originalStatus"] = originalStatus
-    object["terminalStatus"] = outcome
-    object["postcondition"] = verified ? "verified" : "unverified"
-    return try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
-}
-
-func executeDeviceAction(
-    _ payload: DeviceActionPayload,
-    common: DeviceActionCommonOptions,
-    admissionStore: TKActionAdmissionStore = TKActionAdmissionStore(),
-    generationStore: TKActionGenerationStore = TKActionGenerationStore(),
-    targetResolver: ((DeviceActionCommonOptions) throws -> HostDeviceTarget)? = nil,
-    hostRunner: ((TKHostCommand) throws -> HostProcessResult)? = nil,
-    iosRunner: ((Data) async throws -> Data)? = nil,
-    leaseGate: (() async throws -> Void)? = nil
-) async throws -> Data {
-    let selected = try targetResolver?(common) ?? resolveHostDeviceSelection(request: .init(device: common.device, platform: HostDevicePlatform(rawValue: common.platform), ready: true), hdc: common.hdc, adb: common.adb).target
-    if let leaseID = common.leaseID {
-        if let leaseGate { try await leaseGate() }
-        else { try await enforceTargetLease(host: common.host, port: common.port, target: selected.target, leaseID: leaseID) }
-    }
-    let frozenText = try payload.textFile.map { try String(contentsOfFile: $0, encoding: .utf8) }
-    let (context, contextDigest) = try makeDeviceActionContext(payload, selected: selected, leaseID: common.leaseID, frozenText: frozenText)
-    let coordinator = TKActionAdmissionCoordinator(admissions: admissionStore, generations: generationStore)
-    let handle = try coordinator.admit(context: context)
-    if selected.platform == "android" {
-        let command: TKHostCommand
-        switch payload.action {
-        case .tap: command = TKAndroidADBCommand.tapCoordinate(serial: selected.target, x: Int(payload.x!.rounded()), y: Int(payload.y!.rounded()), executable: common.adb)
-        case .doubleTap:
-            command = TKAndroidADBCommand.tapCoordinate(serial: selected.target, x: Int(payload.x!.rounded()), y: Int(payload.y!.rounded()), executable: common.adb)
-        case .swipe: command = TKAndroidADBCommand.swipeCoordinate(serial: selected.target, startX: Int(payload.x!.rounded()), startY: Int(payload.y!.rounded()), endX: Int(payload.endX!.rounded()), endY: Int(payload.endY!.rounded()), durationMs: Int((payload.duration! * 1000).rounded()), executable: common.adb)
-        case .press: command = TKAndroidADBCommand.keyEvent(serial: selected.target, keyCode: androidKeyEventName(for: payload.button!), executable: common.adb)
-        case .type:
-            let text = frozenText!
-            command = TKAndroidADBCommand.inputText(serial: selected.target, text: text, executable: common.adb)
-        }
-        let first = try hostRunner?(command) ?? runHostCommand(command)
-        if payload.action == .doubleTap { usleep(80_000); _ = try hostRunner?(command) ?? runHostCommand(command) }
-        let resultData = try JSONSerialization.data(withJSONObject: ["ok": true, "action": "device.\(payload.action.rawValue)", "target": selected.id, "sourceCommand": first.sourceCommand, "postconditionVerified": false], options: [.sortedKeys])
-        return try decorateDeviceActionResult(resultData, context: context, contextDigest: contextDigest, admissionID: handle.admission.admissionID, generationStore: generationStore, generationToken: handle.generation)
-    }
-    if selected.platform == "harmony" {
-        let command: TKHostCommand
-        switch payload.action {
-        case .tap: command = TKHarmonyHDCCommand.tapCoordinate(target: selected.target, x: Int(payload.x!.rounded()), y: Int(payload.y!.rounded()), executable: common.hdc)
-        case .doubleTap: command = TKHarmonyHDCCommand.tapCoordinate(target: selected.target, x: Int(payload.x!.rounded()), y: Int(payload.y!.rounded()), executable: common.hdc)
-        case .swipe: command = TKHarmonyHDCCommand.swipeCoordinate(target: selected.target, startX: Int(payload.x!.rounded()), startY: Int(payload.y!.rounded()), endX: Int(payload.endX!.rounded()), endY: Int(payload.endY!.rounded()), velocity: harmonySwipeVelocity(startX: payload.x!, startY: payload.y!, endX: payload.endX!, endY: payload.endY!, duration: payload.duration), executable: common.hdc)
-        case .press: command = TKHarmonyHDCCommand.keyEvent(target: selected.target, key: harmonyKeyEventName(for: payload.button!), executable: common.hdc)
-        case .type:
-            let text = frozenText!
-            command = TKHarmonyHDCCommand.inputText(target: selected.target, text: text, executable: common.hdc)
-        }
-        let first = try hostRunner?(command) ?? runHostCommand(command)
-        if payload.action == .doubleTap { usleep(80_000); _ = try hostRunner?(command) ?? runHostCommand(command) }
-        let resultData = try JSONSerialization.data(withJSONObject: ["ok": true, "action": "device.\(payload.action.rawValue)", "target": selected.id, "sourceCommand": first.sourceCommand, "postconditionVerified": false], options: [.sortedKeys])
-        return try decorateDeviceActionResult(resultData, context: context, contextDigest: contextDigest, admissionID: handle.admission.admissionID, generationStore: generationStore, generationToken: handle.generation)
-    }
-    guard let bundle = payload.bundleID, let sessionRoot = common.sessionRoot else { throw DeviceActionError.invalidSelector }
-    let operation: String = payload.action == .tap ? "coordinateTap" : payload.action == .doubleTap ? "coordinateDoubleTap" : payload.action == .swipe ? "coordinateSwipe" : payload.action == .press ? "press" : "typeText"
-    var body: [String: Any] = ["app": "target", "expectedBundle": bundle, "operation": operation]
-    if let id = payload.observationID { body["observationID"] = id }; if let geometry = payload.geometry { body["geometry"] = ["width": geometry.width, "height": geometry.height, "orientation": geometry.orientation] }
-    if let x = payload.x { body["x"] = x }; if let y = payload.y { body["y"] = y }; if let endX = payload.endX { body["endX"] = endX }; if let endY = payload.endY { body["endY"] = endY }; if let duration = payload.duration { body["duration"] = duration }; if let button = payload.button { body["button"] = button }
-    if payload.action == .type { body["text"] = frozenText! }
-    if let identifier = payload.identifier { body["selector"] = ["kind": "identifier", "value": identifier] } else if let label = payload.label { body["selector"] = ["kind": "label", "value": label] }
-    let request: [String: Any] = ["device": selected.scope == "simulator" ? "sim:\(selected.rawTarget)" : selected.id, "sessionRoot": sessionRoot, "timeout": 60, "route": "/crossApp", "body": body, "requestID": payload.requestID]
-    let data = try JSONSerialization.data(withJSONObject: request, options: [.sortedKeys])
-    let result = try await (iosRunner?(data) ?? IOSRunnerService().execute(operation: "request", payload: data))
-    return try decorateDeviceActionResult(result, context: context, contextDigest: contextDigest, admissionID: handle.admission.admissionID, generationStore: generationStore, generationToken: handle.generation)
-}
 private func printDeviceActionResult(_ payload: DeviceActionPayload, common: DeviceActionCommonOptions) async throws {
     do {
         let output = try await executeDeviceAction(payload, common: common)
-        print(String(decoding: output, as: UTF8.self))
-        if let object = try JSONSerialization.jsonObject(with: output) as? [String: Any], object["ok"] as? Bool == false {
-            throw ExitCode.failure
-        }
+        try emitDeviceActionOutput(output)
     }
     catch let error as ExitCode { throw error }
     catch let error as DeviceActionError {
@@ -232,6 +92,9 @@ private func printDeviceActionResult(_ payload: DeviceActionPayload, common: Dev
         default: code = "device_action_invalid"
         }
         try failHostValidation(code: code, message: "\(error)", hint: "Refresh target/observation and use a supported platform action.", outputFormat: .json)
+    }
+    catch let error as ActionEvidenceFailure {
+        try failHostValidation(code: error.code, message: "Cannot prepare a fresh private action evidence directory.", hint: "Use a new absolute output path under an existing directory.", outputFormat: .json)
     }
     catch { try failHostCommand(error, outputFormat: .json) }
 }

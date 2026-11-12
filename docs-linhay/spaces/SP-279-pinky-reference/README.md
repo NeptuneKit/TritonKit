@@ -2,9 +2,9 @@
 
 ## 当前状态
 
-- 状态：已完成静态研究并登记为正式参考项目，未形成产品采用任务。
+- 状态：完成当前机制差距审计；已有 SP-280/281 承接，未在本轮新增产品实现。
 - 来源：<https://github.com/DIYgod/pinky>
-- 历史本地归档（2026-11-11当前路径不存在，原因unknown；不代表当前clone可用）：[`docs-linhay/references/pinky`](../../references/pinky/)
+- 当前恢复源码：[`docs-linhay/references/pinky`](../../references/pinky/)，固定 `329f35ac2e240805e265a483fa2d3ff0f84780d3` / `v2026.1111.17`，clean clone。本轮开始时原路径缺失，原因unknown；恢复副本不冒充旧clone或旧执行日志。
 - 历史研究固定版本：`v2026.1109.16` / `209aa9e4b2ff1fd81edec3c393a64b21b79162fb`
 - 许可证：Apache-2.0；许可证 SHA-256 为 `c95bae1d1ce0235ecccd3560b772ec1efb97f348a79f0fbe0a634f0c2ccefe2c`。
 - 影响层：参考资料、长期登记和调研文档；不修改 CLI/HTTP/SDK 产品代码。
@@ -18,6 +18,18 @@
 - Given 研究没有执行第三方代码，When 输出结论，Then 区分源码观察、上游文档自述和本地未验证边界。
 
 2026-11-11接管已补齐SP207正式清单遗漏：当前34仓（25参考+9候选）。官方新HEAD3248613b/v2026.1111.16，321提交大增量保持partial，未建立成功检查点；SP280/281已有承接不重排。见[当日参考报告](../SP-207-reference-adoption-pipeline/plans/20261111-reference-update-report.md)。
+
+## 2026-11-11 当前差距审计
+
+- [差距矩阵与实施优先级](./plans/20261111-tritonkit-pinky-gap-audit.md)：固定最新采样版本，相对历史pin增加324提交；仅面向机制审查，不是增量全覆盖。
+- [源码hash与解析反例](./plans/20261111-pinky-gap-evidence.json)：16份Triton/18份Pinky源码摘要、许可证和binary hash；不推进SP-207检查点。
+- Given当前main+WIP与固定Pinky，Then区分已覆盖、局部接线、真实缺口、范围差异和未验证；Stop/去重/Companion/settle/replay不得仅凭名称作缺失判断。
+- Given设备动作不允许执行，When以非法button运行完整CLI argv parser，Then零provider路径返回unknown_option，定位HTTP adapter追加json与typed parser冲突；未启动真实HTTP server。
+- 本轮未修改产品源码、未运行Pinky/构建/设备/benchmark；原main WIP保留，文档门禁单独验证。
+
+## 2026-11-12 职责越界审计
+
+用户明确：本层不替上层判断业务内容是否敏感。已逐读当前main+WIP中testrec/import、network capture、WebView、Harmony验证输入与iOS sanitizer，见[代码职责审计](./plans/20261112-responsibility-boundary-audit.md)。确认自动猜敏感→丢输入/阻断导入回放，以及fixture/URL默认改写；区分技术凭据/文件安全与显式脱敏，不一刀切删除保护。仅审查/资料写回，未修改产品行为或运行设备/产品测试。
 
 ## 交付物
 

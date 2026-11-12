@@ -121,25 +121,16 @@ struct TestImportTests {
         #expect(try String(contentsOf: output, encoding: .utf8) == sentinel)
     }
 
-    @Test("import allows legacy pending metadata but fails closed on a concrete redaction finding")
-    func importFailsClosedWhenCompiledContractHasRedactionFinding() throws {
+    @Test("legacy privacy hints cannot veto an otherwise valid import")
+    func importIgnoresLegacyPrivacyFinding() throws {
         let caseURL = try makeImportCase(actions: [#"{"id":"a1","kind":"tap","target":{"label":"Go Home"}}"#])
         defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
         try addImportQualityFinding(to: caseURL, proposalKind: "contract.redaction")
-        let output = caseURL.deletingLastPathComponent().appendingPathComponent("redaction.tritontest.yaml")
-
-        let failure = #expect(throws: TKTestValidationFailure.self) {
-            _ = try importTritonTestCase(
-                input: caseURL.path,
-                output: output.path,
-                bundleID: "com.neptunekit.tritonkit.testfixture",
-                devicePlatform: "ios-simulator"
-            )
-        }
-
-        #expect(failure?.detail.code == "redaction_review_required")
-        #expect(failure?.detail.path == "compiled-contract.json.qualityFindings[0]")
-        #expect(!FileManager.default.fileExists(atPath: output.path))
+        let output = caseURL.deletingLastPathComponent().appendingPathComponent("raw.tritontest.yaml")
+        let imported = try importTritonTestCase(input: caseURL.path, output: output.path,
+            bundleID: "com.neptunekit.tritonkit.testfixture", devicePlatform: "ios-simulator")
+        #expect(imported.ok)
+        #expect(imported.importedPlan.steps[1].selector?.text == "Go Home")
     }
 
     @Test("import rejects a compiled contract whose manifest identity changed")
@@ -201,27 +192,18 @@ struct TestImportTests {
         #expect(!FileManager.default.fileExists(atPath: pageMissingOutput.path))
     }
 
-    @Test("import rejects sensitive target text without echoing it or mutating the source package")
-    func importRejectsSensitiveTargetWithoutLeakage() throws {
-        let sensitiveTarget = "4111 1111 1111 1111"
-        let caseURL = try makeImportCase(actions: [#"{"id":"a1","kind":"tap","target":{"label":"4111 1111 1111 1111"}}"#])
+    @Test("import preserves business identifiers without guessing sensitivity", arguments: ["4111 1111 1111 1111", "orders@example.test", "password token secret", "订单号 1234567890123"])
+    func importPreservesTargetText(_ targetText: String) throws {
+        let event = String(decoding: try JSONSerialization.data(withJSONObject: ["id": "a1", "kind": "tap", "target": ["label": targetText]]), as: UTF8.self)
+        let caseURL = try makeImportCase(actions: [event])
         defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
-        let output = caseURL.deletingLastPathComponent().appendingPathComponent("sensitive.tritontest.yaml")
-        let sourceSnapshot = try importPackageSnapshot(caseURL)
-
-        let failure = #expect(throws: TKTestValidationFailure.self) {
-            _ = try importTritonTestCase(
-                input: caseURL.path,
-                output: output.path,
-                bundleID: "com.neptunekit.tritonkit.testfixture",
-                devicePlatform: "ios-simulator"
-            )
-        }
-
-        #expect(failure?.detail.code == "unmapped_contract_feature")
-        #expect(failure?.detail.message.contains(sensitiveTarget) == false)
-        #expect(!FileManager.default.fileExists(atPath: output.path))
-        #expect(try importPackageSnapshot(caseURL) == sourceSnapshot)
+        let output = caseURL.deletingLastPathComponent().appendingPathComponent("raw.tritontest.yaml")
+        let before = try importPackageSnapshot(caseURL)
+        let imported = try importTritonTestCase(input: caseURL.path, output: output.path,
+            bundleID: "com.neptunekit.tritonkit.testfixture", devicePlatform: "ios-simulator")
+        #expect(imported.ok)
+        #expect(imported.importedPlan.steps[1].selector?.text == targetText)
+        #expect(try importPackageSnapshot(caseURL) == before)
     }
 
     @Test("import reports output write failure without creating a plan")

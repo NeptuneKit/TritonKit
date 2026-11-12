@@ -41,7 +41,7 @@ struct DevicePlatformControl: AsyncParsableCommand {
                 case .json: print(try encodeJSON(receipt))
                 case .text: print("\(receipt.platform.rawValue)\t\(receipt.control.rawValue)\t\(receipt.outcome.rawValue)\t\(receipt.verification)")
                 }
-                if !receipt.ok { throw ExitCode.failure }
+                if !receipt.ok || ["failed", "partial"].contains(receipt.evidencePersistence ?? "") { throw ExitCode.failure }
                 return
             }
             let output = try makeApplePlatformControlPlan(platform: platform, action: action, crownDelta: delta)

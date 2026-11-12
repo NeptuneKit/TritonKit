@@ -14,6 +14,8 @@ Add only the `TritonKit` product to the iOS app target. Do not ask app teams to 
 
 TritonKit defines `TRITONKIT_RUNTIME_ENABLED` only for Debug package builds and keeps Release runtime no-op. SwiftPM/Xcode package products do not provide a configuration-scoped dependency switch. If production Release must not link TritonKit at all, use a separate Debug-only app target or scheme and attach the product only there.
 
+Raw business data is the default contract. Do not add a redaction policy to an adopting app merely because fields look sensitive. Choose explicit output conversion only when the caller requests it; configuration metadata alone is not evidence that a provider masks values.
+
 ## Debug bootstrap
 
 Put bootstrap code in a dedicated iOS file and wrap the whole file in `#if DEBUG`. Prefer explicit opt-in so ordinary Debug builds do not expose the runtime.
@@ -38,10 +40,6 @@ enum TritonKitDebugBootstrap {
             config.endpoint = .environment()
             config.autoReconnect = true
             config.features = [.hierarchy, .accessibility, .input]
-            config.redaction.secureText = .lengthOnly
-            config.redaction.collectClipboard = false
-            config.redaction.collectNetwork = false
-            config.redaction.collectLogs = false
             config.appIdentity = .init(name: "YourApp", tags: ["debug", "opt-in"])
         }
     }

@@ -7,6 +7,12 @@ metadata:
 
 # TritonKit Dev Feedback
 
+## Raw data responsibility
+
+TritonKit provides device operations and original business data. Do not infer sensitivity from email addresses, identifiers, long numbers, password/token/secret words or payload key names. Do not silently remove values, rewrite response fixtures or URL business parameters, or block import/replay on that basis. Content classification, business approvals, redaction and parameterization belong to the caller and require an explicit policy or conversion request. Preserve source artifacts separately from converted copies.
+
+Keep transport authentication credentials and access control, file safety, target/lease/observation binding, byte/deadline limits, and truthful partial/unknown results. A value the provider cannot read is unavailable, not a matched postcondition and not a business prohibition on input. `--secure` and `evidence redact` are caller-selected transformations, not automatic content detection. Local raw capture is separate from public sharing: never publish private artifacts without the user's authorization and the applicable public-feedback preflight.
+
 ## Principle
 
 Treat real-task needs, bugs and friction as repository feedback. When GitHub access is available, the agent owns evidence collection and issue filing; do not send the user away to file it. This skill authorizes feedback, not source changes, tool upgrades or operations on unrelated projects. Follow any narrower user boundary.

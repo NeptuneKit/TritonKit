@@ -1,3 +1,7 @@
+2026-11-12：[SP-286-raw-business-data](./SP-286-raw-business-data/README.md)已移除默认内容判断/丢值/阻断，恢复业务原值与raw证据，写入AGENTS/public agent skills；CLI167+1876、root132+313、local/docs通过，进入本地提交收口，未推送/发布。下方职责审计保留为修复前快照。
+
+2026-11-12：[现有代码职责审计](./SP-279-pinky-reference/plans/20261112-responsibility-boundary-audit.md)确认testrec/import自动内容猜测、丢值/阻断及采集默认改写越过用户指定边界；仅审查未改产品行为。此前Pinky式业务隐私/危险操作识别不作为当前默认建设方向，技术安全和上层显式转换单独保留。
+
 2026-11-12：[SP-285-android-wm-size-selection](./SP-285-android-wm-size-selection/README.md)修正Android只读尺寸解析，Override优先且拒绝诊断/异常/重复尺寸；c4c5f014已提交，提交后完整CLI与适用local通过，未执行真实设备或发布。
 
 2026-11-11：[SP-283](./SP-283-homebrew-public-assets/README.md)发布前公开资产门禁与[SP-284](./SP-284-simulator-diagnostic-dependencies/README.md)只读服务依赖诊断已在main验收，13离线、完整CLI167+1854、root/local通过；未push/tag/release或操作设备。
@@ -6,7 +10,9 @@
 
 - 当前开发方式：所有产品实现、测试、提交和资料回写在 `main` 串行完成；Space 只承载需求、BDD、计划、证据和历史归档。读取/评估可并行，产品文件写入和共享副作用不并行；不新建 branch/worktree。
 
-2026-11-10：[SP-281 ActionContext 后续扩展路线](./SP-281-action-context-expansion/README.md)已冻结：P0 shared coordinator/receipt、P1 device.action evidence/uncertain、P2 剩余 mutating surfaces；approval/HTTP/session resume/真实设备另立 scope。
+2026-11-12纠正：[SP-281](./SP-281-action-context-expansion/README.md)仅共享回执/证据、parity parser与app正常投影已落地；Sim HID真实入口、普通host throw回执和全入口owner仍未接通，P2未完成。历史测试绿色不能替代路由证据，撤回前轮全完成声明。
+
+2026-11-11：[SP-279 Pinky 当前机制差距审计](./SP-279-pinky-reference/plans/20261111-tritonkit-pinky-gap-audit.md)已完成：固定 `v2026.1111.17`，确认主要差距是常驻gateway/审批/接管/任务历史/跨入口owner贯通；Triton已有resident iOS去重、Android Bridge、workspace闭环、settle和可执行plan，不能误报为空白。发现HTTP→typed device parser的`--json`接线缺陷，未改实现。
 
 2026-11-10：[SP-280 ActionContext / Action Admission](./SP-280-action-context-admission/README.md)已完成全量批次：runner/evidence/lease/generation、第二类 device.action、schema/recovery 和并发验收通过；root 304 tests / 43 suites、CLI 1685 tests / 179 suites。
 
@@ -492,4 +498,5 @@
 - [SP-275-release-v0-2-41](./SP-275-release-v0-2-41/README.md)：#277 已合并 main；v0.2.41 已发布，双架构资产/checksum、Homebrew、skills、安装版与仓库外 packaged Web 验收通过，真实设备/私有 App 边界保留。
 
 | main已提交 | [SP-283-homebrew-public-assets](./SP-283-homebrew-public-assets/README.md) | 14574a7b；公开稳定tag与匿名arm64字节在tap写入前校验；13离线/发布契约通过，未发布 |
+
 | main已提交 | [SP-284-simulator-diagnostic-dependencies](./SP-284-simulator-diagnostic-dependencies/README.md) | 14574a7b；3组只读features/doctor，未扩张managed/profile；CLI/root/local通过，设备未验 |

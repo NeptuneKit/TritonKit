@@ -27,7 +27,7 @@ func buildActionMap(from contract: TKTestRecorderCompiledContract) -> TKTestReco
         schemaVersion: 1,
         kind: "triton.testrec.action-map",
         rules: contract.actions.map { action in
-            let redactionRequired = action.inputText.map(testRecorderLooksSensitive) ?? false
+            let redactionRequired = false
             let hasTarget = action.targetText?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
             let supported = actionMapSupportedActions.contains(action.action)
             return TKTestRecorderActionMapRule(

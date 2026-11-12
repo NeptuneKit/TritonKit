@@ -5,7 +5,7 @@ Use [the regression workflow](workflow.md) with the installed CLI. Repository-ma
 ## Replay Plan Notes
 
 - `.tritonplan` schema version 1 supports `tap`, `paste`, `type`, `clear`, `wait`, `screenshot`, and `evidence`.
-- Use `${variable}` placeholders for account names, passwords, hosts, or output paths.
-- Use `secure: true` on password-like `paste` or `type` steps; replay summaries must redact values.
+- Use `${variable}` placeholders when the caller chooses parameterization; do not automatically replace business literals.
+- `secure: true` is an explicit caller choice for `paste`/`type` output transformation; never infer it from password-like content.
 - Prefer an `evidence` step at the end of a reused smoke flow so the final state is attachable to issues and regression reports.
 - For stale-list regressions, pair `capture` with `assert text-not-exists <stale text> --within <right-list-bounds>` so the report contains both artifacts and a machine-readable pass/fail result.

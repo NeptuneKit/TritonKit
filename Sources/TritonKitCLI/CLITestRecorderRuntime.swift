@@ -756,7 +756,7 @@ private func readReplayPlannedSteps(from contract: TKTestRecorderCompiledContrac
         if let targetText = action.targetText, !targetText.isEmpty {
             object["target"] = ["label": targetText]
         }
-        if let inputText = action.inputText, !inputText.isEmpty {
+        if let inputText = action.inputText {
             object["text"] = inputText
         }
         let supported = supportedTestRecorderActions.contains(action.action)
@@ -957,8 +957,7 @@ private func compiledActionInputText(action: String, object: [String: Any]) -> S
     guard action == "type" || action == "paste" else {
         return nil
     }
-    let input = replayInputText(from: object)
-    return testRecorderLooksSensitive(input) ? nil : input
+    return ["text", "value", "input"].compactMap { object[$0] as? String }.first
 }
 
 private func readCompiledNetworkRequests(from url: URL) throws -> [TKTestRecorderCompiledNetworkRequest] {
@@ -970,7 +969,7 @@ private func readCompiledNetworkRequests(from url: URL) throws -> [TKTestRecorde
             method: stringValue(row.object, "method"),
             url: stringValue(row.object, "url"),
             statusCode: intValue(row.object, keys: ["statusCode", "status", "code"]),
-            responseBody: stringValue(row.object, "responseBody") ?? stringValue(row.object, "body")
+            responseBody: (row.object["responseBody"] as? String) ?? (row.object["body"] as? String)
         )
     }
 }
@@ -1103,7 +1102,7 @@ private func buildNetworkMap(from contract: TKTestRecorderCompiledContract, fixt
             nonBlocking: transient,
             reason: transient ? "transient-or-analytics-request" : "deterministic-business-request-candidate",
             fixturePath: fixturePaths[request.index],
-            redactionRequired: !transient
+            redactionRequired: false
         )
     }
     return TKTestRecorderNetworkMap(
@@ -1311,7 +1310,7 @@ private func compiledActionTargetText(action: String, object: [String: Any]) -> 
 
 private func replayInputText(from object: [String: Any]) -> String {
     for key in ["text", "value", "input"] {
-        if let value = object[key] as? String, !value.isEmpty {
+        if let value = object[key] as? String {
             return value
         }
     }
@@ -1356,13 +1355,6 @@ private func replayBlockers(compile: TKTestRecorderCompileResponse, plannedSteps
             code: warning.code,
             path: warning.path,
             message: warning.message
-        ))
-    }
-    if let finding = compile.compiledContract?.qualityFindings.first(where: { $0.proposalKind == "contract.redaction" }) {
-        blockers.append(TKTestRecorderReplayBlocker(
-            code: "redaction_review_required",
-            path: finding.path,
-            message: "Replay requires redaction review before executing a contract with privacy findings."
         ))
     }
     for step in plannedSteps where step.status == "unsupported" {

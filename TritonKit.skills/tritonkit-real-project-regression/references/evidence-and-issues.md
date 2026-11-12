@@ -13,6 +13,8 @@ triton evidence summary /tmp/<case>.tritonevidence --json
 triton evidence redact /tmp/<case>.tritonevidence --profile ios-private --output /tmp/<case>-redacted.tritonevidence --json
 ```
 
+For typed `device` inputs and explicit `platform-control`, `--evidence-dir <fresh-absolute-path>` adds a sanitized shared action receipt and run log. The parent must exist; existing roots and parent/root symlinks are rejected. Verify the final manifest, artifact byte hashes, run verdict and `actionReceipt.postcondition` separately. An uncertain/pending action is not business completion. Requested evidence failure exits nonzero but preserves actual delivery: never resend input merely to regenerate a missing bundle. Action evidence retains original provider responses and captured host stdout/stderr as separate size/hash-bound artifacts; do not assume they are suitable for public sharing. Business content transformations require an explicit caller decision, separate from local raw capture.
+
 Inspect `primaryArtifacts[]` before traversing the full artifact set.
 
 Store sensitive outputs in a private user-owned directory during iteration. Copy only redacted durable screenshots/docs into the owning project’s evidence area when worth keeping.

@@ -21,6 +21,7 @@ func hostApplePlatformControlOutputContract() -> TKCommandOutputContract {
         ("sourceCommand", "String?", false, "Redacted xcodebuild command for an explicit runner request"),
         ("failureCode", "String?", false, "Stable runner failure or unknown outcome code"),
         ("auditPath", "String?", false, "Private owned runner directory containing intent, request, bounded logs and completion receipt"),
+        ("actionReceipt", "TKActionReceipt?", false, "Unified provider facts retained alongside legacy runner fields"),
         ("actionID", "String?", false, "ActionContext correlation identity"),
         ("admissionID", "String?", false, "One-time provider admission identity"),
         ("contextDigest", "String?", false, "Canonical ActionContext digest"),

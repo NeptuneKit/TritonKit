@@ -5,7 +5,8 @@ import Foundation
 let networkCaptureMaximumBytes = 64 * 1024 * 1024
 let networkCaptureMaximumLineBytes = 256 * 1024
 let networkCaptureMaximumRecords = 100_000
-let networkCaptureURLRedaction = "headers-names-only,url-credentials-query-removed"
+let legacyNetworkCaptureURLRedaction = "headers-names-only,url-credentials-query-removed"
+let networkCaptureURLRedaction = "headers-names-only,url-userinfo-removed,business-query-preserved"
 
 struct ValidatedNetworkCapture {
     let events: [NetworkProxyServeEvent]
@@ -66,7 +67,7 @@ func readValidatedNetworkCapture(
                 let event = try JSONDecoder().decode(NetworkProxyServeEvent.self, from: line)
                 guard event.surface == "host.device-proxy-serve",
                       ["proxy.serve.ready", "proxy.serve.request", "proxy.serve.connection-failed"].contains(event.event),
-                      event.redaction == "headers-names-only" || event.redaction == networkCaptureURLRedaction else {
+                      ["headers-names-only", legacyNetworkCaptureURLRedaction, networkCaptureURLRedaction].contains(event.redaction) else {
                     throw RuntimeError("network_capture_unknown_record")
                 }
                 if event.event == "proxy.serve.request" {
@@ -115,19 +116,17 @@ func readValidatedNetworkCapture(
             requestCount: requestCount,
             eventCount: events.count,
             failureCount: events.filter { !$0.ok || $0.event == "proxy.serve.connection-failed" }.count,
-            redaction: events.isEmpty ? "default" : networkCaptureURLRedaction,
+            redaction: events.isEmpty ? "default" : Set(events.map(\.redaction)).sorted().joined(separator: ";"),
             truncation: requestCount == 0 ? "not-observed" : (placeholders > 0 ? "partial-source" : "none")
         )
     )
 }
 
 func redactedNetworkCaptureURL(_ raw: String) -> String {
-    guard var components = URLComponents(string: raw) else { return "<redacted-url>" }
+    guard var components = URLComponents(string: raw), components.user != nil || components.password != nil else { return raw }
     components.user = nil
     components.password = nil
-    components.query = nil
-    components.fragment = nil
-    return components.string ?? "<redacted-url>"
+    return components.string ?? raw
 }
 
 func redactedNetworkCaptureEvent(_ event: NetworkProxyServeEvent) throws -> NetworkProxyServeEvent {
@@ -136,9 +135,7 @@ func redactedNetworkCaptureEvent(_ event: NetworkProxyServeEvent) throws -> Netw
     }
     if let url = event.url { object["url"] = redactedNetworkCaptureURL(url) }
     if let path = event.path { object["path"] = redactedNetworkCaptureURL(path) }
-    // Failure text can contain the raw request line. Preserve the event classification.
-    if event.error != nil { object["error"] = "proxy connection failed; inspect local execution diagnostics" }
-    object["redaction"] = networkCaptureURLRedaction
+    object["redaction"] = event.redaction == legacyNetworkCaptureURLRedaction ? legacyNetworkCaptureURLRedaction : networkCaptureURLRedaction
     return try JSONDecoder().decode(NetworkProxyServeEvent.self, from: JSONSerialization.data(withJSONObject: object))
 }
 

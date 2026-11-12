@@ -51,7 +51,9 @@ struct HostApplePlatformRunnerReceipt: Encodable, Equatable {
     var originalStatus: String? = nil
     var terminalStatus: String? = nil
     var evidencePersistence: String? = nil
-    enum CodingKeys: String, CodingKey { case ok, action, platform, control, outcome, executable, actionsExecuted, targetBinding, nonce, sourceCommand, verification, failureCode, auditPath, actionID, admissionID, contextDigest, delivery, originalStatus, terminalStatus, evidencePersistence }
+    var actionReceipt: TKActionReceipt? = nil
+    var providerResponseData: Data? = nil
+    enum CodingKeys: String, CodingKey { case ok, action, platform, control, outcome, executable, actionsExecuted, targetBinding, nonce, sourceCommand, verification, failureCode, auditPath, actionID, admissionID, contextDigest, delivery, originalStatus, terminalStatus, evidencePersistence, actionReceipt }
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(ok, forKey: .ok); try c.encode(action, forKey: .action)
@@ -65,12 +67,15 @@ struct HostApplePlatformRunnerReceipt: Encodable, Equatable {
         try c.encodeIfPresent(actionID, forKey: .actionID); try c.encodeIfPresent(admissionID, forKey: .admissionID)
         try c.encodeIfPresent(contextDigest, forKey: .contextDigest); try c.encodeIfPresent(delivery, forKey: .delivery)
         try c.encodeIfPresent(originalStatus, forKey: .originalStatus); try c.encodeIfPresent(terminalStatus, forKey: .terminalStatus)
-        try c.encodeIfPresent(evidencePersistence, forKey: .evidencePersistence)    }
+        try c.encodeIfPresent(evidencePersistence, forKey: .evidencePersistence)
+        try c.encodeIfPresent(actionReceipt, forKey: .actionReceipt)
+    }
 }
 func applePlatformRunnerActionEvidenceMetadata(
     _ receipt: HostApplePlatformRunnerReceipt,
     evidenceRefs: [String] = []
 ) -> TKActionEvidenceMetadata? {
+    if let shared = receipt.actionReceipt { return shared.evidenceMetadata(refs: evidenceRefs) }
     guard let actionID = receipt.actionID else { return nil }
     return TKActionEvidenceMetadata(
         actionID: actionID,
@@ -211,7 +216,7 @@ func verifyApplePlatformRunnerResult(
     return HostApplePlatformRunnerReceipt(ok: true, platform: platform, control: action, outcome: .executed, executable: true, actionsExecuted: true, targetBinding: "exact-simulator-udid-bound", nonce: nonce, sourceCommand: nil, verification: "strict-runner-result-target-action-nonce-postcondition", failureCode: nil)
 }
 
-private func makeApplePlatformRunnerActionContext(_ request: HostApplePlatformRunnerRequest) throws -> (TKActionContext, String) {
+func makeApplePlatformRunnerActionContext(_ request: HostApplePlatformRunnerRequest) throws -> (TKActionContext, String) {
     let arguments: [String: TKJSONValue] = [
         "action": .string(request.action.rawValue),
         "confirm": .bool(request.confirm),
@@ -258,12 +263,14 @@ func executeApplePlatformRunner(
 ) throws -> HostApplePlatformRunnerReceipt {
     let (actionContext, actionContextDigest) = try makeApplePlatformRunnerActionContext(request)
     let coordinator = TKActionAdmissionCoordinator(admissions: admissionStore, generations: generationStore, now: now)
+    var admissionHandle: TKActionAdmissionHandle?
     var consumedAdmissionID: String?
     var started = false
     var bound = false
     var inputReturned = false
     var audit: String?
     var receipt: HostApplePlatformRunnerReceipt
+    var providerResponseData: Data?
     func attachActionMetadata(_ value: inout HostApplePlatformRunnerReceipt) {
         value.auditPath = audit
         value.actionID = actionContext.actionID
@@ -272,6 +279,14 @@ func executeApplePlatformRunner(
         value.delivery = value.actionsExecuted == true ? "delivered" : (value.outcome == .notStarted ? "not_started" : "unknown")
         value.originalStatus = value.outcome.rawValue
         value.terminalStatus = value.outcome.rawValue
+        let delivery: TKActionDelivery = value.actionsExecuted == true ? .delivered : (value.outcome == .notStarted ? .notStarted : .unknown)
+        let outcome: TKActionOutcome = value.actionsExecuted == true ? .settled : (delivery == .notStarted ? .blocked : .uncertain)
+        let shared = TKActionReceipt(actionID: actionContext.actionID, operation: actionContext.operation, target: actionContext.target,
+            leaseID: request.leaseID, admissionID: consumedAdmissionID, contextDigest: actionContextDigest,
+            generation: admissionHandle?.generation.generation, delivery: delivery, outcome: outcome,
+            executed: value.actionsExecuted, originalStatus: value.outcome.rawValue, terminalStatus: value.outcome.rawValue,
+            postcondition: value.actionsExecuted == true ? .verified : .unverified, failureCode: value.failureCode)
+        value.actionReceipt = shared
     }
     do {
         let workspace = try prepareApplePlatformRunnerWorkspace(request)
@@ -283,6 +298,7 @@ func executeApplePlatformRunner(
         let admissionTTL = min(max(Int(request.timeout.rounded(.up)), TKActionAdmissionStore.minTTLSeconds), TKActionAdmissionStore.maxTTLSeconds)
         let handle = try coordinator.admit(context: actionContext, ttlSeconds: admissionTTL)
         let generationToken = handle.generation
+        admissionHandle = handle
         consumedAdmissionID = handle.admission.admissionID
         let command = try makeApplePlatformRunnerCommand(request, preparedPath: workspace + "/request.xctestrun")
         started = true
@@ -301,6 +317,7 @@ func executeApplePlatformRunner(
         let manifest = try readApplePlatformRunnerFile(exportPath + "/manifest.json", limit: 1_048_576)
         let name = try applePlatformResultAttachmentName(manifest, request: request)
         let data = try readApplePlatformRunnerFile(exportPath + "/" + name, limit: 65536)
+        providerResponseData = data
         guard generationStore.isCurrent(generationToken) else {
             throw runnerError("runner_generation_stale", "The runner result became stale before receipt verification; delivery is unknown and no replay is allowed.")
         }
@@ -323,10 +340,23 @@ func executeApplePlatformRunner(
     if let audit {
         do { try writeApplePlatformRunnerAuditData(JSONEncoder().encode(receipt), to: audit + "/completion.json") }
         catch {
+            let originalReceipt = receipt.actionReceipt
             receipt = HostApplePlatformRunnerReceipt(ok: false, platform: request.platform, control: request.action, outcome: started ? .unknown : .notStarted, executable: true, actionsExecuted: started ? nil : false, targetBinding: bound ? "exact-simulator-udid-bound" : "unverified", nonce: request.nonce, sourceCommand: nil, verification: "Completion audit could not be persisted; never retry automatically.", failureCode: "runner_audit_failed", auditPath: audit)
             attachActionMetadata(&receipt)
+            // Losing the audit cannot undo the input or its verified postcondition.
+            if let original = originalReceipt {
+                receipt.actionReceipt = TKActionReceipt(actionID: original.actionID, operation: original.operation,
+                    target: original.target, leaseID: original.leaseID, admissionID: original.admissionID,
+                    contextDigest: original.contextDigest, generation: original.generation,
+                    delivery: original.delivery, outcome: original.outcome, executed: original.executed,
+                    originalStatus: original.originalStatus, terminalStatus: "runner_audit_failed",
+                    postcondition: original.postcondition, evidencePersistence: .failed, failureCode: "runner_audit_failed")
+            }
+            receipt.originalStatus = originalReceipt?.originalStatus
+            receipt.terminalStatus = "runner_audit_failed"
         }
     }
+    receipt.providerResponseData = providerResponseData
     return receipt
 }
 

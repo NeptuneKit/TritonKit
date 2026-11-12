@@ -26,7 +26,27 @@ struct HarmonyVerifiedInputTests {
         #expect(sends == 1)
         #expect(captures == 3)
         let json = String(decoding: try JSONEncoder().encode(result), as: UTF8.self)
-        #expect(!json.contains(" x "))
+        #expect(json.contains(" x "))
+        #expect(result.observedValue == " x ")
+    }
+
+    @Test("output transformation is explicit and cannot veto submission")
+    func explicitOutputTransformation() throws {
+        let result = runHarmonyVerifiedInput(selector: "id:editor", text: "alice@example.test", expected: "alice@example.test", timeout: 1,
+            capture: { _ in try layout("alice@example.test") }, tap: { _, _, _ in Issue.record("already focused") }, send: { _, _ in })
+        #expect(result.ok && result.observedValue == "alice@example.test")
+        let secured = harmonyVerifiedInputOutput(result, secure: true)
+        #expect(secured.ok && secured.submission == "submitted")
+        #expect(secured.observedValue == nil && secured.redacted)
+        #expect(harmonyVerifiedInputOutput(result, secure: false).observedValue == result.observedValue)
+    }
+
+    @Test("asterisks are ordinary provider text, not inferred privacy")
+    func literalMaskCharacters() throws {
+        var sends = 0
+        let result = runHarmonyVerifiedInput(selector: "id:editor", text: "***", expected: "***", timeout: 1,
+            capture: { _ in try layout("***") }, tap: { _, _, _ in }, send: { _, _ in sends += 1 })
+        #expect(sends == 1 && result.ok && result.observedValue == "***")
     }
 
     @Test func duplicateNeverSends() throws {
@@ -68,7 +88,7 @@ struct HarmonyVerifiedInputTests {
     }
 
     @Test func unsafeAndUnavailableFieldsNeverSend() throws {
-        let cases: [[String: Any]] = [["password": true], ["text": NSNull()], ["focused": NSNull()], ["text": "••••"], ["enabled": false]]
+        let cases: [[String: Any]] = [["focused": NSNull()], ["enabled": false]]
         for extra in cases {
             var sends = 0
             let result = runHarmonyVerifiedInput(selector: "id:editor", text: "a", expected: "a", timeout: 1, capture: { _ in try layout(extra: extra) }, tap: { _, _, _ in Issue.record("unexpected tap") }, send: { _, _ in sends += 1 })
@@ -122,7 +142,8 @@ struct HarmonyVerifiedInputBoundaryTests {
         var bad = attributes; bad["focused"] = 1
         #expect(throws: HarmonyInputFailure.self) { try harmonyInputField(in: data(bad), selector: "id:editor") }
         bad = attributes; bad["type"] = "TextInput"
-        #expect(throws: HarmonyInputFailure.self) { try harmonyInputField(in: data(bad), selector: "id:editor") }
+        let input = try harmonyInputField(in: data(bad), selector: "id:editor")
+        #expect(input.text == "")
     }
     @Test func movingFieldNeverReceivesFocusTap() throws {
         var captures = 0
@@ -216,12 +237,16 @@ struct HarmonyVerifiedInputNativeDumpTests {
         #expect(field.text == "")
         #expect(!field.focused)
         #expect(field.x == 660 && field.y == 960)
-        let password = Data(#"{"attributes":{"id":"editor","key":"editor","type":"TextInput","accessibilityId":"26","hashcode":"33:26","bounds":"[56,768][1264,1013]","text":"","originalText":"","enabled":"true","visible":"true","focused":"false"}}"#.utf8)
+        let password = Data(#"{"attributes":{"id":"editor","type":"TextInput","bounds":"[56,768][1264,1013]","text":"••••","password":"true","enabled":"true","visible":"true","focused":"true"}}"#.utf8)
         var sends = 0
-        let result = runHarmonyVerifiedInput(selector: "id:editor", text: "sample", expected: "sample", timeout: 1, capture: { _ in password }, tap: { _, _, _ in Issue.record("secure field must not tap") }, send: { _, _ in sends += 1 })
-        #expect(result.code == "harmony_input_secure_unsupported")
-        #expect(result.submission == "not-sent")
-        #expect(sends == 0)
+        let result = runHarmonyVerifiedInput(selector: "id:editor", text: "sample", expected: "sample", timeout: 1,
+            capture: { _ in password }, tap: { _, _, _ in Issue.record("already focused") }, send: { _, _ in sends += 1 })
+        #expect(result.code == "harmony_input_value_unavailable")
+        #expect(result.submission == "submitted")
+        #expect(result.verification == "unavailable")
+        #expect(result.observedValue == "••••")
+        #expect(!result.ok && !result.timedOut)
+        #expect(sends == 1)
     }
 }
 

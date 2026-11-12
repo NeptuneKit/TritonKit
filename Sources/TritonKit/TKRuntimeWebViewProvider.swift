@@ -2,6 +2,8 @@ import Foundation
 import TritonKitShared
 
 struct RuntimeWebViewSnapshotPayload: Decodable, Equatable {
+    let rawText: String?
+    let rawTextTruncated: Bool?
     let text: [String]
     let dom: [TKWebViewDOMNodeSummary]
     let forms: [TKWebViewFormFieldSummary]
@@ -45,6 +47,8 @@ func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextB
       var maxNodes = Math.max(0, \#(maxNodesLiteral));
       var maxBytes = Math.max(0, \#(maxBytesLiteral));
       var text = [];
+      var rawText = null;
+      var rawTextTruncated = false;
       var dom = [];
       var forms = [];
       var links = [];
@@ -116,7 +120,21 @@ func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextB
       }
 
       if (include.has("text")) {
-        var bodyText = document.body ? document.body.innerText || document.body.textContent : "";
+        var bodyText = document.body ? (typeof document.body.innerText === "string" ? document.body.innerText : (document.body.textContent || "")) : "";
+        rawText = "";
+        var rawBytes = 0;
+        for (var character of bodyText) {
+          var cp = character.codePointAt(0);
+          var count = cp <= 0x7f ? 1 : cp <= 0x7ff ? 2 : cp <= 0xffff ? 3 : 4;
+          if (rawBytes + count > maxBytes) {
+            rawTextTruncated = true;
+            truncated = true;
+            truncationReason = truncationReason || "maxTextBytes";
+            break;
+          }
+          rawText += character;
+          rawBytes += count;
+        }
         clean(bodyText).split(/\n+/).forEach(appendText);
       }
 
@@ -162,7 +180,8 @@ func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextB
             focused: element === document.activeElement,
             contentEditable: formKind === "contenteditable",
             label: labelFor(element),
-            valueRedaction: "length-only",
+            value: String(rawValue),
+            valueRedaction: "none",
             valueLength: String(rawValue).length,
             frame: frame
           });
@@ -184,6 +203,8 @@ func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextB
       }
 
       return JSON.stringify({
+        rawText: rawText,
+        rawTextTruncated: rawTextTruncated,
         text: include.has("text") ? text : [],
         dom: include.has("dom") ? dom : [],
         forms: include.has("forms") ? forms : [],
@@ -196,7 +217,7 @@ func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextB
           maxBytes: maxBytes,
           returnedBytes: returnedBytes
         },
-        redaction: { secureText: "length-only" }
+        redaction: { secureText: "none" }
       });
     })()
     """#
@@ -404,10 +425,10 @@ func performFocusedWebViewTextInsertionIfAvailable(
         guard payload.ok else {
             return TKInputResult.failure(
                 action: action,
-                message: payload.error?.message ?? payload.message ?? "Focused WebView DOM input failed",
+                message: runtimeWebViewOutputError(payload.error, secure: secure)?.message ?? (secure ? "Provider diagnostic omitted by explicit secure output." : payload.message ?? "Focused WebView DOM input failed"),
                 targetOID: oid(for: responder),
                 targetClassName: className,
-                error: payload.error.map { TKCLIErrorDetail(code: $0.code.rawValue, message: $0.message, hint: $0.hint) },
+                error: runtimeWebViewOutputError(payload.error, secure: secure).map { TKCLIErrorDetail(code: $0.code.rawValue, message: $0.message, hint: $0.hint) },
                 outcome: "unknown"
             )
         }
@@ -594,7 +615,9 @@ func currentWebViewSnapshotResponse(_ request: TKWebViewSnapshotRequest) async t
         links: payload.links,
         skipped: skipped,
         truncation: payload.truncation,
-        redaction: payload.redaction
+        redaction: payload.redaction,
+            rawText: payload.rawText,
+            rawTextTruncated: payload.rawTextTruncated
     )
 }
 
@@ -826,7 +849,7 @@ func currentWebViewFormInputResponse(_ request: TKWebViewFormInputRequest) async
             ))
         }
         let payload = try await evaluateRuntimeWebViewFormInput(selector: request.selector, mode: request.mode, text: request.text, in: pair.webView)
-        let element = makeWebViewFormFieldSummary(from: payload, selector: request.selector)
+        let element = makeWebViewFormFieldSummary(from: payload, selector: request.selector, secure: request.secure)
         let secure = request.secure
         let sourceCommand = request.sourceCommand ?? "triton webViewFormInput request"
         if let error = payload.error {
@@ -842,16 +865,17 @@ func currentWebViewFormInputResponse(_ request: TKWebViewFormInputRequest) async
                 focused: false,
                 insertedLength: payload.insertedLength,
                 valueLength: payload.valueLength,
-                valueRedaction: payload.valueRedaction,
+                valueRedaction: secure ? "length-only" : payload.valueRedaction,
                 eventsDispatched: payload.eventsDispatched ?? [],
                 element: element,
-                error: error,
+                error: runtimeWebViewOutputError(error, secure: secure),
                 elapsedMs: elapsedMilliseconds(since: startedAt),
                 sourceCommands: [sourceCommand],
                 redaction: TKWebViewRedaction(secureText: secure ? "length-only" : nil),
                 note: error.code == .webViewFormInputNotOptedIn
                     ? "Page has not opted into Triton DOM form control; use the host-HID fallback (tap the field, then `triton act type <text> --json`) or add the opt-in marker."
-                    : nil
+                    : nil,
+                value: secure ? nil : payload.value
             )
         }
         return TKWebViewFormInputResponse(
@@ -866,13 +890,14 @@ func currentWebViewFormInputResponse(_ request: TKWebViewFormInputRequest) async
             focused: payload.focused ?? false,
             insertedLength: payload.insertedLength,
             valueLength: payload.valueLength,
-            valueRedaction: payload.valueRedaction,
+            valueRedaction: secure ? "length-only" : payload.valueRedaction,
             eventsDispatched: payload.eventsDispatched ?? [],
             element: element,
             elapsedMs: elapsedMilliseconds(since: startedAt),
             sourceCommands: [sourceCommand],
             redaction: TKWebViewRedaction(secureText: secure ? "length-only" : nil),
-            note: secure ? "Inserted redacted WebView text" : "Inserted WebView text; verify the value postcondition before claiming business completion."
+            note: secure ? "Inserted redacted WebView text" : "Inserted WebView text; verify the value postcondition before claiming business completion.",
+            value: secure ? nil : payload.value
         )
     } catch let error as TKWebViewSelectionError {
         return TKWebViewFormInputResponse(
@@ -907,7 +932,7 @@ func currentWebViewFormInputResponse(_ request: TKWebViewFormInputRequest) async
     }
 }
 
-private func makeWebViewFormFieldSummary(from payload: RuntimeWebViewFormTargetPayload, selector: String?) -> TKWebViewFormFieldSummary? {
+private func makeWebViewFormFieldSummary(from payload: RuntimeWebViewFormTargetPayload, selector: String?, secure: Bool = false) -> TKWebViewFormFieldSummary? {
     guard payload.ok || payload.error != nil, payload.kind != nil || payload.nodeID != nil || payload.valueLength != nil else {
         return nil
     }
@@ -915,14 +940,15 @@ private func makeWebViewFormFieldSummary(from payload: RuntimeWebViewFormTargetP
         name: payload.nodeID,
         inputType: payload.kind ?? "unknown",
         label: nil,
-        valueRedaction: payload.valueRedaction,
+        valueRedaction: secure ? "length-only" : payload.valueRedaction,
         valueLength: payload.valueLength,
         frame: nil,
         kind: payload.kind,
         selector: payload.selector ?? selector,
         nodeID: payload.nodeID,
         focused: payload.focused,
-        contentEditable: payload.kind == "contenteditable"
+        contentEditable: payload.kind == "contenteditable",
+        value: secure ? nil : payload.value
     )
 }
 

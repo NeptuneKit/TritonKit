@@ -29,6 +29,32 @@ struct DeviceActionsTests {
         ])
         #expect(command is DeviceTap)
     }
+    @Test("device action parser accepts parity JSON output flag")
+    func actionParserAcceptsParityJSONFlag() throws {
+        let command = try TritonKitCLI.parseAsRoot([
+            "device", "press",
+            "--device", "android:fixture",
+            "--platform", "android",
+            "--button", "home",
+            "--json"
+        ])
+        let press = try #require(command as? DevicePress)
+        #expect(press.common.json)
+        #expect(press.common.format == .json)
+    }
+
+    @Test("device parity argv reaches the typed action parser")
+    func parityArgumentsReachTypedParser() throws {
+        let body = try JSONSerialization.data(withJSONObject: ["arguments": [
+            "press", "--device", "android:fixture", "--platform", "android", "--button", "home"
+        ]])
+        let arguments = try deviceParityHTTPArguments(body)
+        let command = try TritonKitCLI.parseAsRoot(arguments)
+        let press = try #require(command as? DevicePress)
+        #expect(press.common.json)
+        #expect(press.common.device == "android:fixture")
+    }
+
     @Test("device action projection carries admission and delivery metadata")
     func deviceActionProjectionCarriesMetadata() throws {
         let target = HostDeviceTarget(platform: "android", id: "android:fixture", target: "fixture", state: "ready", ready: true, source: "fixture", name: nil, runtime: nil, transport: "adb", scope: "emulator")

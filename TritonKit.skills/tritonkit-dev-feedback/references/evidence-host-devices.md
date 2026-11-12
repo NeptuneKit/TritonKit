@@ -2,6 +2,10 @@
 
 Use this for host-side iOS Simulator, Android Emulator, HarmonyOS / DevEco Emulator, Web Device Hub, install/launch/readiness/screenshot flows, and cases that do not require an embedded runtime.
 
+## Typed action receipts
+
+For typed `device` input or explicit `platform-control`, preserve `actionReceipt` delivery/outcome/executed/postcondition separately. Use optional `--evidence-dir <new-absolute-directory>` for typed receipt/run and original provider artifacts; existing directories or parent/root symlinks are refused before input. A valid final manifest commits the snapshot; manifest.ok describes capture completeness, while run verdict describes the action. Evidence write failure is a nonzero command with unchanged provider facts: never replay input to repair capture. Default generations/admissions are local to the execution and do not establish global deduplication or a sandbox. Do not include raw provider messages, source commands, private paths or input text in public feedback.
+
 ## Triton-first rule
 
 Before raw `xcrun` / `simctl`, `adb`, `hdc`, DevEco CLI, XcodeBuildMCP, or raw `xcodebuild`, capture Triton evidence:
