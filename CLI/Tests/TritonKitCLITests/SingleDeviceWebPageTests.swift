@@ -608,6 +608,43 @@ struct SingleDeviceWebPageTests {
         #expect(override.height == 1600)
     }
 
+    @Test("Android wm size selects effective override in normal ADB output order")
+    func androidWMSizeSelectsOverrideAfterPhysical() throws {
+        let size = try #require(TKAndroidWMSizeParser.parse("""
+        Physical size: 1080x2400
+        Override size: 720x1600
+        """))
+        let geometry = try webHostGeometryResponse(width: size.width, height: size.height)
+        #expect(geometry.bounds.width == 720)
+        #expect(geometry.bounds.height == 1600)
+    }
+
+    @Test("Android wm size refuses diagnostic dimensions and invalid or conflicting sizes")
+    func androidWMSizeRefusesFalseSuccess() {
+        for output in [
+            "Error: requested 720x1600 size is unavailable",
+            "Physical size: 1080x2400\nOverride size: bad",
+            "Physical size: 1080x2400\nOverride size: 0x1600",
+            "Physical size: 1080x2400\nOverride size: -720x1600",
+            "Physical size: 1080x2400\nOverride size: 999999999999999999999x1600",
+            "Physical size: 1080x2400\nOverride size: 720x1600 trailing-error",
+            "Physical size: 1080x2400\nPhysical size: 720x1600",
+            "Override size: 720x1600\nOverride size: 800x1800",
+            "Physical size: 1080x2400\nPhysical size: 1080x2400",
+            "Override size: 720x1600\nOverride size: 720x1600",
+        ] {
+            #expect(TKAndroidWMSizeParser.parse(output) == nil, "Unexpected success: \(output)")
+        }
+    }
+
+    @Test("Android wm size tolerates whitespace and CRLF with unrelated noise")
+    func androidWMSizeIgnoresNoiseButNotDimensions() throws {
+        let size = try #require(TKAndroidWMSizeParser.parse(
+            "daemon started successfully\r\n  Physical size: 1080 x 2400\r\nOverride size: 720 x 1600\r\n"))
+        #expect(size.width == 720)
+        #expect(size.height == 1600)
+    }
+
     @Test("Harmony DevEco profile geometry parses lcd single size")
     func harmonyDevEcoProfileGeometryParsesLCDSingleSize() throws {
         let profile = """

@@ -39,3 +39,5 @@
 
 | 推理默认启用、在线慢滴或本地helper管道卡住 | 配置不等于enable；CLI/HTTP分别验证默认零调用；inactivity不等于总deadline；先并发drain再等待，直接PID退出与继承FD的EOF分别有界；fixture不证明真实模型内存或未知后代回收 | [MLX规则](../../.agents/skills/tritonkit-local-mlx-vlm-provider/SKILL.md)、[SP-273验收](../spaces/SP-273-issue-274-explicit-inference/README.md) |
 | Lookin 核心、节点截图或3D检查器 | solo/group语义端到端分离；上传失败保留PNG须继续进入scene；能力开关覆盖新入口；裸层delegate不等于backing view；部分属性成功与全部失败区分；macOS跳过UIKit不算像素验收 | [核心契约与验证边界](../dev/20261103-lookin-core-inspection.md)、[SP-270](../spaces/SP-270-lookin-core/README.md) |
+
+| Android `wm size`、多行工具输出或几何解析 | 先查官方标签与Physical/Override优先级；诊断WxH不等于尺寸，显式非法Override不得回退Physical；重复输出不猜显示归属；只读geometry不等于坐标动作/旋转验收 | [Mobile MCP采用检查点](../dev/mobile-mcp-reference.md)、[SP-285](../spaces/SP-285-android-wm-size-selection/README.md) |

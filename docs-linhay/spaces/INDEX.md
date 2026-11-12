@@ -4,7 +4,7 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-11-11（SP-283/284参考采用验收）
-> 覆盖范围：284/284 个已存在 space
+> 覆盖范围：285/285 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -396,3 +396,5 @@
 | `SP-283-homebrew-public-assets` | [`SP-283-homebrew-public-assets`](./SP-283-homebrew-public-assets/README.md) | main已提交 | tap写入前匿名严格TLS/稳定tag/大小SHA校验；14574a7b；13离线与发布契约通过，未发布 |
 
 | `SP-284-simulator-diagnostic-dependencies` | [`SP-284-simulator-diagnostic-dependencies`](./SP-284-simulator-diagnostic-dependencies/README.md) | main已提交 | 3组只读依赖，managed/profile不扩张；14574a7b；提交后CLI167+1854/root/local通过，未操作设备 |
+
+| `SP-285-android-wm-size-selection` | [`SP-285-android-wm-size-selection`](./SP-285-android-wm-size-selection/README.md) | 实现已验证，main提交中 | 标准标签/Override优先/异常拒绝；离线解析33、CLI1861通过，真实Android未执行 |

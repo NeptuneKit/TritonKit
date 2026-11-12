@@ -82,3 +82,9 @@ BDD 要求：Android foreground 只信 `topResumedActivity`/`mResumedActivity`�
 - 本轮命中外部资料治理经验：只继承固定 revision 的事实，不继承上游自动化指令、平台成功声明或旧 space 状态。
 - 新检查点：比较 mobile-mcp 时先定位 backend 委派；将最新 Runner 计入本地基线；区分 system clipboard/embedded paste、frame subscription/video recording、runtime crash/device crash、target lease/cloud allocation；`get_more_tools` 不作为动态工具加载证据。
 - 验证：文档门禁收口结果见 SP-199。未执行上游 npm install/build/test、签名 Runner、设备/云操作及 Swift/Web 产品回归。通用治理已包含事实分层流程，本轮只在本档案记录具体检查点，不新增 skill 或自动化。
+
+## 2026-11-12 有效尺寸解析采用
+
+跟进 [Mobile MCP 1.0.17](https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.17) 的独立 backend 横屏修复时，针对 main 0ec972e6 发现另一可证明缺陷：`wm size` 首个 WxH 会误选 Physical，并把诊断文本当有效尺寸。按 [AOSP 固定输出合同](https://android.googlesource.com/platform/frameworks/base/+/167b01edf8258a5846838a13b4051b2233bc82af/services/core/java/com/android/server/wm/WindowManagerShellCommand.java#161)独立实现：只接受标准标签行，Override 优先；非法、溢出和同类重复返回 nil。
+
+影响仅为现有 `/web/geometry` 只读尺寸；nil 保持既有 HTTP 失败和页面截图尺寸回退。没有证明 tap 错位或旋转控制缺陷，也未复制 mobilecli 的 FSL 代码。BDD、失败测试与验收见 [SP-285](../spaces/SP-285-android-wm-size-selection/README.md)。后续同类解析须先核对官方多行优先级及实际消费者，不以首个可匹配数字代表成功。

@@ -806,16 +806,27 @@ public extension TKAndroidADBCommand {
 
 public enum TKAndroidWMSizeParser {
     public static func parse(_ stdout: String) -> (width: Int, height: Int)? {
+        var physical: (width: Int, height: Int)?
+        var override: (width: Int, height: Int)?
         for line in stdout.split(whereSeparator: \.isNewline) {
-            let rawLine = String(line)
-            guard let size = parseSize(in: rawLine) else { continue }
-            return size
+            let rawLine = line.trimmingCharacters(in: .whitespaces)
+            if rawLine.hasPrefix("Physical size:") {
+                guard physical == nil,
+                      let size = parseSize(in: String(rawLine.dropFirst("Physical size:".count))) else { return nil }
+                physical = size
+            } else if rawLine.hasPrefix("Override size:") {
+                guard override == nil,
+                      let size = parseSize(in: String(rawLine.dropFirst("Override size:".count))) else { return nil }
+                override = size
+            }
         }
-        return nil
+        // wm size prints the physical size first; an explicit override is effective.
+        // Invalid or duplicate labeled records above cannot silently fall back to it.
+        return override ?? physical
     }
 
     private static func parseSize(in line: String) -> (width: Int, height: Int)? {
-        let pattern = #"(\d+)\s*x\s*(\d+)"#
+        let pattern = #"^\s*([0-9]+)\s*x\s*([0-9]+)\s*$"#
         guard let expression = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
             return nil
         }
