@@ -1,0 +1,81 @@
+{
+  "geometry": {
+    "canvas": {
+      "width": 1800,
+      "height": 1560
+    },
+    "nodes": 22,
+    "edges": 26,
+    "brokenImages": 0,
+    "overflow": [],
+    "crossing": [],
+    "externalResources": []
+  },
+  "interaction": {
+    "nodeDetailsChecked": 22,
+    "errors": [],
+    "keyboard": true
+  },
+  "responsive": {
+    "viewport": 900,
+    "canvasWidth": 850,
+    "containerWidth": 850,
+    "bodyOverflow": false
+  },
+  "themeDark": true,
+  "clip": {
+    "x": 50,
+    "y": 100.9921875,
+    "width": 1800,
+    "height": 1560,
+    "scale": 1
+  },
+  "finalCandidate": {
+    "nodeDetailsChecked": 22,
+    "errors": [],
+    "attrsContract": "debug hierarchy/snapshot/details/attrs",
+    "overflow": [],
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+    "htmlSha256": "3393ce5348cf3badb629f2bb23a45b7ff659c3993c2f9540a22a270f271a4361",
+    "captures": [
+      {
+        "theme": "light",
+        "width": 3600,
+        "height": 3120,
+        "bytes": 909359,
+        "sha256": "98c00b3eed31c2ad4e46db130a134e190d5182e64d4ee136c1a70e438bf09196",
+        "path": "docs-linhay/spaces/SP-287-feature-map/screenshots/20261112-features-overview-light-v3.png"
+      },
+      {
+        "theme": "dark",
+        "width": 3600,
+        "height": 3120,
+        "bytes": 958635,
+        "sha256": "77e35b07103e77b2ffc226edae6ae02cdc0b398ae1bccaee06d612565f16d932",
+        "path": "docs-linhay/spaces/SP-287-feature-map/screenshots/20261112-features-overview-dark-v3.png"
+      }
+    ],
+    "toolLimitation": "TaskSpace CDP Browser.getVersion unavailable; browser identity retained from navigator.userAgent. No render or interaction failure."
+  },
+  "exportValidation": {
+    "renderer": "Playwright CLI / owned headless Chrome context",
+    "viewport": {
+      "width": 1900,
+      "height": 1800,
+      "deviceScaleFactor": 2
+    },
+    "canvas": {
+      "width": 1800,
+      "height": 1560,
+      "origin": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "selection": 0,
+    "transitions": "disabled",
+    "status": "pass",
+    "supersedes": "v1 layout draft; v2 raw CDP export clipped after session viewport reset",
+    "visualReview": "passed: both complete v3 PNGs opened and read after final export"
+  }
+}

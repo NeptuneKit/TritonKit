@@ -110,6 +110,14 @@ metadata:
 - 调整 agent-facing CLI 默认输出、参数简写或 command schema 时，同步更新 README、`docs-linhay/dev/ai-cli-readable-control.md`、真实项目回归 skill、开发反馈 skill 与 memory。
 - 调整 iOS / Harmony / CLI 接入使用指南时，同步更新 README、对应 dev 验收文档、`tritonkit-dev-feedback`、`tritonkit-real-project-regression`、必要时 `tritonkit-emulator-cli-takeover` 与 memory；接入口径必须拆分为 iOS embedded runtime、Harmony host-side HDC adapter、Harmony embedded SDK 和 macOS CLI install/run。
 
+## 功能地图、skills 覆盖与静态图导出
+
+- 功能实现、CLI/schema、public skill 文档覆盖、已安装 bundle 与真实平台验收是不同层。核对“skills 是否全有”时按功能族登记实际入口/部分覆盖/未找到，不用关键词命中或 command snapshot 打包通过证明所有流程完整；内部 skill 不代表外部已分发。优先补已有 skill/reference，不按每个命令膨胀 skill 数量。
+- 功能图保留候选日期、HEAD/WIP、provider 前提和源码来源；后续提交不反写历史图为新的发布/现场证明。整理时当前 HEAD 已变化须另记收口基线。
+- 浏览器导出以同一自包含 HTML 为唯一视觉源。独立固定 viewport、deviceScaleFactor、画布范围与未选中态，禁用 transition/animation、等待字体和实际绘制后导出；每次最终复导出都要再实际看图。DOM 矩形完整、0 文本溢出及 PNG 尺寸正确仍不能单独证明图片没有 scroller 裁切、空白或残留选中态。
+- 正式成图与失败草稿分开；检查引用、PNG 原字节 hash/IHDR、离线资源与可移植脚本，精确提交正式版本。临时本机 URL/目录不作长期开机服务，不提交个人绝对路径；保留必要原始日志的本机副本并单独说明未纳入版本的范围。
+- 本轮可复跑边界与反例见 [SP-287 验收](../../../docs-linhay/spaces/SP-287-feature-map/plans/20261112-validation.md)；覆盖口径见 [skills 核对](../../../docs-linhay/spaces/SP-287-feature-map/plans/20261112-skills-coverage.md)。
+
 ## 参考更新采用与跨会话交付
 
 - 新会话模型：用户于2026-10-16指定本项目由agent新建的执行/主控会话统一为 `gpt-6.1-sol`；`create_thread` 显式传 `model: "gpt-6.1-sol"`，后续主控分派继承此约束，不依赖默认值、不自动改用其他模型。不可用则如实记录待重试/失败。既有会话和推理强度不因本指令自动调整。

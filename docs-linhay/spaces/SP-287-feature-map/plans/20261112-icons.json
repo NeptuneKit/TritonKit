@@ -1,0 +1,136 @@
+{
+  "apple": {
+    "source": "svgl",
+    "url": "https://svgl.app/library/apple.svg",
+    "file": "apple.svg",
+    "bytes": 678,
+    "dark_file": "apple_dark.svg",
+    "dark_url": "https://svgl.app/library/apple_dark.svg"
+  },
+  "swift": {
+    "source": "svgl",
+    "url": "https://svgl.app/library/swift.svg",
+    "file": "swift.svg",
+    "bytes": 1476
+  },
+  "xcode": {
+    "source": "devicon",
+    "url": "https://raw.githubusercontent.com/devicons/devicon/master/icons/xcode/xcode-original.svg",
+    "file": "xcode.svg",
+    "bytes": 21354
+  },
+  "android": {
+    "source": "svgl",
+    "url": "https://svgl.app/library/android-icon.svg",
+    "file": "android.svg",
+    "bytes": 1893
+  },
+  "agent": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/bot.svg",
+    "file": "agent.svg",
+    "bytes": 451
+  },
+  "cli": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/terminal.svg",
+    "file": "cli.svg",
+    "bytes": 337
+  },
+  "http": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/server.svg",
+    "file": "http.svg",
+    "bytes": 487
+  },
+  "dsh": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/plug.svg",
+    "file": "dsh.svg",
+    "bytes": 435
+  },
+  "web": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/panels-top-left.svg",
+    "file": "web.svg",
+    "bytes": 390
+  },
+  "discover": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/radar.svg",
+    "file": "discover.svg",
+    "bytes": 600
+  },
+  "target": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/scan-line.svg",
+    "file": "target.svg",
+    "bytes": 467
+  },
+  "observe": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/scan-eye.svg",
+    "file": "observe.svg",
+    "bytes": 584
+  },
+  "action": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/mouse-pointer-2.svg",
+    "file": "action.svg",
+    "bytes": 439
+  },
+  "verify": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/list-checks.svg",
+    "file": "verify.svg",
+    "bytes": 415
+  },
+  "evidence": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/folder-check.svg",
+    "file": "evidence.svg",
+    "bytes": 451
+  },
+  "app": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/app-window.svg",
+    "file": "app.svg",
+    "bytes": 407
+  },
+  "webview": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/globe.svg",
+    "file": "webview.svg",
+    "bytes": 404
+  },
+  "inspect": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/layers.svg",
+    "file": "inspect.svg",
+    "bytes": 584
+  },
+  "build": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/hammer.svg",
+    "file": "build.svg",
+    "bytes": 557
+  },
+  "replay": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/route.svg",
+    "file": "replay.svg",
+    "bytes": 404
+  },
+  "workspace": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/network.svg",
+    "file": "workspace.svg",
+    "bytes": 520
+  },
+  "harmony": {
+    "source": "lucide",
+    "url": "https://cdn.jsdelivr.net/npm/lucide-static/icons/smartphone.svg",
+    "file": "harmony.svg",
+    "bytes": 372
+  }
+}

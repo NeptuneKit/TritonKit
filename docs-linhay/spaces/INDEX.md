@@ -3,8 +3,8 @@
 
 2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-11-12（SP-286原始数据及SP-281完成范围纠正）
-> 覆盖范围：286/286 个已存在 space
+> 最近同步：2026-11-12（保留 SP-286/SP-281 已有收口；SP-287 功能地图、skills 覆盖与经验整理）
+> 覆盖范围：287/287 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -19,8 +19,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 286/286 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 286/286 | 每条记录链接到现有 space README |
+| 编号登记 | 287/287 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 287/287 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -400,3 +400,5 @@
 | `SP-285-android-wm-size-selection` | [`SP-285-android-wm-size-selection`](./SP-285-android-wm-size-selection/README.md) | main已提交并验收 | 标准标签/Override优先/异常拒绝；c4c5f014；focused33、提交后CLI167+1861/local通过，真实Android未执行 |
 
 | `SP-286-raw-business-data` | [`SP-286-raw-business-data`](./SP-286-raw-business-data/README.md) | main实现验收完成 | 默认原始业务数据，去除内容猜测/丢值/阻断；WebView/iOS/Harmony和raw证据贯通；AGENTS/skills写回；CLI167+1876、root/local/docs通过，进入本地提交收口，未推送/发布 |
+
+| `SP-287-feature-map` | [`SP-287-feature-map`](./SP-287-feature-map/README.md) | 已完成／整理验收 | 4层、22节点、26关联；HTML/v3双主题图及验收，新增public skills覆盖核对与内部经验；仅本地文档提交，不做设备或发布验收 |

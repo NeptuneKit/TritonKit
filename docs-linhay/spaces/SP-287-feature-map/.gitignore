@@ -1,0 +1,7 @@
+# Layout drafts and failed raw-CDP exports stay local; v3 is the versioned deliverable.
+/screenshots/20261112-features-overview-light-v1.png
+/screenshots/20261112-features-overview-dark-v1.png
+/screenshots/20261112-features-overview-light-v2.png
+/screenshots/20261112-features-overview-dark-v2.png
+# Original renderer trace contains host-specific paths. Structured export facts are versioned.
+/plans/20261112-render-diagram.log

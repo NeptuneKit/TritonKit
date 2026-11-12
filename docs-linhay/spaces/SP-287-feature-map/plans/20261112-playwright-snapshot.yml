@@ -1,0 +1,190 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - heading "功能关联图 · 交互版" [level=1] [ref=e5]
+      - paragraph [ref=e6]: 选择节点可高亮一跳关联并查看命令与限制；图片导出保留完整概览。
+    - generic [ref=e7]:
+      - button "适应窗口" [ref=e8] [cursor=pointer]
+      - button "1:1 查看" [ref=e9] [cursor=pointer]
+      - button "重置高亮" [ref=e10] [cursor=pointer]
+      - button "切换深色" [ref=e11] [cursor=pointer]
+  - main "TritonKit 当前功能与关联图" [ref=e14]:
+    - generic [ref=e15]:
+      - generic [ref=e16]: TRITONKIT / CAPABILITY ATLAS
+      - heading "TritonKit 当前功能与关联" [level=2] [ref=e17]
+      - paragraph [ref=e18]: 操作与数据提供层：连接设备、理解界面、执行动作，再用业务后置状态和证据形成闭环。
+    - generic [ref=e19]:
+      - strong [ref=e20]: 22 能力节点 · 26 条关键关联
+      - text: 2026-11-12 · main@6467b413 + 本地 WIP
+      - text: 源码/契约快照 ≠ 发布版全量能力 ≠ 今日现场验收
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - generic [ref=e23]: 01 / ACCESS
+        - text: 使用入口
+      - generic [ref=e24]: CLI 是主操作面 · HTTP 按需 · DSH 可选 · Web 只读
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - generic [ref=e27]: 02 / CONTROL LOOP
+        - text: 从发现到可验收的闭环
+      - generic [ref=e28]: 蓝色箭头为主线，其他连线为关键依赖或数据关系
+    - generic [ref=e30]:
+      - generic [ref=e31]: 03 / CAPABILITIES
+      - text: 复用主线的扩展能力
+    - generic [ref=e33]:
+      - generic [ref=e34]: 04 / PROVIDERS
+      - text: 平台与执行适配器
+    - img:
+      - generic:
+        - generic: 命令 / JSON
+      - generic:
+        - generic: 按需请求
+      - generic:
+        - generic: 可选 CLI 工具封装
+      - generic:
+        - generic: 只读 DTO / 预览
+      - generic:
+        - generic: 主工作流
+      - generic:
+        - generic: 共享服务
+      - generic:
+        - generic: 确认能力
+      - generic:
+        - generic: 绑定目标
+      - generic:
+        - generic: 选择节点
+      - generic:
+        - generic: 检查后置
+      - generic:
+        - generic: 保留事实
+      - generic:
+        - generic: 需要继续时重新观察，不重放未知动作
+      - generic:
+        - generic: 准备设备 / App
+      - generic:
+        - generic: 深入检查
+      - generic:
+        - generic: Web 表单 / bridge
+      - generic:
+        - generic: 复用断言
+      - generic:
+        - generic: 聚合状态与路径
+      - generic:
+        - generic: 执行产出证据
+      - generic:
+        - generic: 构建产物 → 安装 / 启动
+      - generic:
+        - generic: 深度应用内能力
+      - generic:
+        - generic: 独立 Runner 会话
+      - generic:
+        - generic: 导出 flow
+    - button "AI Agent / 自动化脚本：读取结构化事实，决定下一步；点击查看详情" [ref=e35] [cursor=pointer]:
+      - generic [ref=e37]: AI Agent / 自动化脚本
+      - generic [ref=e38]: 使用方 · public skills
+      - generic [ref=e39]: 读取结构化事实，决定下一步
+    - button "triton CLI：诊断、观察、控制、验证与归档；点击查看详情" [ref=e40] [cursor=pointer]:
+      - generic [ref=e42]: triton CLI
+      - generic [ref=e43]: 主操作入口 · JSON / JSONL
+      - generic [ref=e44]: 诊断、观察、控制、验证与归档
+    - button "本地 HTTP + Runtime 通道：HTTP 服务与 embedded WebSocket；点击查看详情" [ref=e45] [cursor=pointer]:
+      - generic [ref=e47]: 本地 HTTP + Runtime 通道
+      - generic [ref=e48]: triton serve · 127.0.0.1:19421
+      - generic [ref=e49]: HTTP 服务与 embedded WebSocket
+    - button "DSH 插件：schema / query / action / verify；点击查看详情" [ref=e50] [cursor=pointer]:
+      - generic [ref=e52]: DSH 插件
+      - generic [ref=e53]: 可选封装 · 4 个工具
+      - generic [ref=e54]: schema / query / action / verify
+    - button "Web 预览 / 桌面壳：设备预览、层级、Run / Atlas；点击查看详情" [ref=e55] [cursor=pointer]:
+      - generic [ref=e57]: Web 预览 / 桌面壳
+      - generic [ref=e58]: 只读展示 · 非业务控制面
+      - generic [ref=e59]: 设备预览、层级、Run / Atlas
+    - button "能力发现与诊断：知道能做什么，失败如何恢复；点击查看详情" [ref=e60] [cursor=pointer]:
+      - generic [ref=e62]: 能力发现与诊断
+      - generic [ref=e63]: status · doctor · schema · plan
+      - generic [ref=e64]: 知道能做什么，失败如何恢复
+    - button "目标绑定与会话：发现设备，明确目标与生命周期；点击查看详情" [ref=e65] [cursor=pointer]:
+      - generic [ref=e67]: 目标绑定与会话
+      - generic [ref=e68]: target / device · alias · lease
+      - generic [ref=e69]: 发现设备，明确目标与生命周期
+    - button "页面观察与定位：树 / AX / 几何 / OCR / 视觉稳定；点击查看详情" [ref=e70] [cursor=pointer]:
+      - generic [ref=e72]: 页面观察与定位
+      - generic [ref=e73]: observe · node · screenshot
+      - generic [ref=e74]: 树 / AX / 几何 / OCR / 视觉稳定
+    - button "动作执行：点击、滑动、输入与语义控件；点击查看详情" [ref=e75] [cursor=pointer]:
+      - generic [ref=e77]: 动作执行
+      - generic [ref=e78]: act / device actions · provider
+      - generic [ref=e79]: 点击、滑动、输入与语义控件
+    - button "业务等待与断言：用后置状态判定，而不是看 ACK；点击查看详情" [ref=e80] [cursor=pointer]:
+      - generic [ref=e82]: 业务等待与断言
+      - generic [ref=e83]: wait · verify · route assertion
+      - generic [ref=e84]: 用后置状态判定，而不是看 ACK
+    - button "证据与原始事实：manifest、截图、树、日志与 SHA；点击查看详情" [ref=e85] [cursor=pointer]:
+      - generic [ref=e87]: 证据与原始事实
+      - generic [ref=e88]: evidence · export · receipt
+      - generic [ref=e89]: manifest、截图、树、日志与 SHA
+    - button "设备与 App 管理：启停、安装、环境、容器与资源；点击查看详情" [ref=e90] [cursor=pointer]:
+      - generic [ref=e92]: 设备与 App 管理
+      - generic [ref=e93]: device · sim · app · resource
+      - generic [ref=e94]: 启停、安装、环境、容器与资源
+    - button "WebView 与网络：DOM / 表单 / bridge / 请求证据；点击查看详情" [ref=e95] [cursor=pointer]:
+      - generic [ref=e97]: WebView 与网络
+      - generic [ref=e98]: webview · route · proxy
+      - generic [ref=e99]: DOM / 表单 / bridge / 请求证据
+    - button "UI 深度调试：视图属性、节点截图、3D 与标记；点击查看详情" [ref=e100] [cursor=pointer]:
+      - generic [ref=e102]: UI 深度调试
+      - generic [ref=e103]: hierarchy · details · highlight
+      - generic [ref=e104]: 视图属性、节点截图、3D 与标记
+    - button "构建与工程诊断：发现工程、构建测试、产物诊断；点击查看详情" [ref=e105] [cursor=pointer]:
+      - generic [ref=e107]: 构建与工程诊断
+      - generic [ref=e108]: xcode · build · xcresult
+      - generic [ref=e109]: 发现工程、构建测试、产物诊断
+    - button "测试、录制与回放：显式计划、执行、断言与恢复；点击查看详情" [ref=e110] [cursor=pointer]:
+      - generic [ref=e112]: 测试、录制与回放
+      - generic [ref=e113]: record / replay · test · smoke
+      - generic [ref=e114]: 显式计划、执行、断言与恢复
+    - button "Workspace / Atlas：App-map：状态迁移、覆盖与路径；点击查看详情" [ref=e115] [cursor=pointer]:
+      - generic [ref=e117]: Workspace / Atlas
+      - generic [ref=e118]: workspace · map · 可选推理
+      - generic [ref=e119]: App-map：状态迁移、覆盖与路径
+    - button "iOS Simulator Host：免 App SDK：设备、画面与基础操作；点击查看详情" [ref=e120] [cursor=pointer]:
+      - generic [ref=e122]: iOS Simulator Host
+      - generic [ref=e123]: simctl · Host AX · 内置 HID
+      - generic [ref=e124]: 免 App SDK：设备、画面与基础操作
+    - button "iOS Embedded SDK：应用内公开 API：树、语义、输入；点击查看详情" [ref=e125] [cursor=pointer]:
+      - generic [ref=e127]: iOS Embedded SDK
+      - generic [ref=e128]: SwiftPM · iOS 16+ · Debug only
+      - generic [ref=e129]: 应用内公开 API：树、语义、输入
+    - button "iOS XCTest Runner：免 App SDK：inspect、tap、type；点击查看详情" [ref=e130] [cursor=pointer]:
+      - generic [ref=e132]: iOS XCTest Runner
+      - generic [ref=e133]: Simulator / USB 真机 · 独立会话
+      - generic [ref=e134]: 免 App SDK：inspect、tap、type
+    - button "Android Emulator：设备、App、布局、输入与截图；点击查看详情" [ref=e135] [cursor=pointer]:
+      - generic [ref=e137]: Android Emulator
+      - generic [ref=e138]: ADB · UIAutomator / Bridge
+      - generic [ref=e139]: 设备、App、布局、输入与截图
+    - button "HarmonyOS / DevEco：布局、输入、截图与页面适配；点击查看详情" [ref=e140] [cursor=pointer]:
+      - generic [ref=e142]: HarmonyOS / DevEco
+      - generic [ref=e143]: HDC · uitest · ArkWeb
+      - generic [ref=e144]: 布局、输入、截图与页面适配
+    - generic [ref=e145]: 按目标与 provider 选择路径；不是每条功能都覆盖全部平台
+    - generic [ref=e146]:
+      - generic [ref=e147]:
+        - heading "贯穿全链路的技术约束" [level=3] [ref=e148]
+        - text: 显式目标 / 会话、能力开关、可选租约、超时与预算、原始 provider 事实。
+        - strong [ref=e149]: ACK ≠ 业务完成；unknown 不自动重放；manifest.ok ≠ 动作成功。
+      - generic [ref=e150]:
+        - heading "当前支持的边界" [level=3] [ref=e151]
+        - text: iOS Host / Embedded / Runner 分开；Web 是只读展示；LLM / VLM 默认关闭。
+        - text: 真机按具体命令与会话判断；不包含设备云、多租户、正式 Wails 控制面。
+    - generic [ref=e152]:
+      - generic [ref=e153]: 主工作流
+      - generic [ref=e155]: 调用 / 数据 / 能力关联
+      - generic [ref=e157]: 构建产物衔接
+      - generic [ref=e159]: READ SOURCE → CHECK CAPABILITY → EXECUTE → VERIFY → PROVE
+  - paragraph [ref=e161]: 选择任意功能节点：查看支持内容、命令入口、相邻功能、事实来源与边界。
+  - contentinfo [ref=e162]:
+    - generic [ref=e163]: 本图是当前源码功能地图，不是全平台 E2E 验收报告。图标：svgl / devicon / Lucide；Harmony 节点使用通用设备图符。品牌标志归各权利人所有。
+    - generic [ref=e164]:
+      - text: made with
+      - link "stack-diagram" [ref=e165] [cursor=pointer]:
+        - /url: https://github.com/caru-ini/stack-diagram

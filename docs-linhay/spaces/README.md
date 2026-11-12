@@ -1,3 +1,5 @@
+2026-11-12：[SP-287-feature-map](./SP-287-feature-map/README.md)已完成当前功能图：4层、22节点、26关联，离线HTML与浅/深色3600×3120 PNG，浏览器/文档验收通过。后续按用户要求整理本地提交，补public skills覆盖核对与内部导出经验；原图保留6467b413+WIP快照，整理基线5a10d269，不改产品或操作设备，不推送发布。
+
 2026-11-12：[SP-286-raw-business-data](./SP-286-raw-business-data/README.md)已移除默认内容判断/丢值/阻断，恢复业务原值与raw证据，写入AGENTS/public agent skills；CLI167+1876、root132+313、local/docs通过，进入本地提交收口，未推送/发布。下方职责审计保留为修复前快照。
 
 2026-11-12：[现有代码职责审计](./SP-279-pinky-reference/plans/20261112-responsibility-boundary-audit.md)确认testrec/import自动内容猜测、丢值/阻断及采集默认改写越过用户指定边界；仅审查未改产品行为。此前Pinky式业务隐私/危险操作识别不作为当前默认建设方向，技术安全和上层显式转换单独保留。

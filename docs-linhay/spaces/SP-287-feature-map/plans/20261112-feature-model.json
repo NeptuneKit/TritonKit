@@ -1,0 +1,1084 @@
+{
+  "nodes": [
+    {
+      "id": "agent",
+      "name": "AI Agent / 自动化脚本",
+      "icon": "agent",
+      "role": "使用方 · public skills",
+      "summary": "读取结构化事实，决定下一步",
+      "x": 200,
+      "y": 232,
+      "category": "entry",
+      "commands": [
+        "status / doctor / capabilities / schema / plan",
+        "JSON / JSONL + public skills"
+      ],
+      "details": [
+        "外部 agent 与 CI/脚本优先消费 CLI/HTTP；public skills 提供接入、模拟器接管和真实项目回归流程。",
+        "业务策略、内容分类与是否执行动作由上层决定；Triton 提供操作与原始数据。"
+      ],
+      "limits": [
+        "plan 是建议，不会自动执行；工具结果、下一步命令和图中关联均不产生执行授权。"
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 26
+        },
+        {
+          "path": "README.md",
+          "line": 70
+        },
+        {
+          "path": "README.md",
+          "line": 929
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "cli",
+      "name": "triton CLI",
+      "icon": "cli",
+      "role": "主操作入口 · JSON / JSONL",
+      "summary": "诊断、观察、控制、验证与归档",
+      "x": 550,
+      "y": 232,
+      "category": "entry",
+      "commands": [
+        "triton <command> --json",
+        "triton schema --command <command> --json"
+      ],
+      "details": [
+        "统一 ArgumentParser 命令树；host-side 能力不强制依赖管理 server。",
+        "embedded 请求按需经 HTTP/Runtime 通道；Runner CLI 使用相同服务但不要求先启动 serve。"
+      ],
+      "limits": [
+        "当前图基于源码与既有 WIP；安装版应重新查询 version/schema/capabilities。"
+      ],
+      "sources": [
+        {
+          "path": "Sources/TritonKitCLI/TritonKitCLI.swift",
+          "line": 99
+        },
+        {
+          "path": "README.md",
+          "line": 126
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "http",
+      "name": "本地 HTTP + Runtime 通道",
+      "icon": "http",
+      "role": "triton serve · 127.0.0.1:19421",
+      "summary": "HTTP 服务与 embedded WebSocket",
+      "x": 900,
+      "y": 232,
+      "category": "entry",
+      "commands": [
+        "serve / /status / /targets / /request / /input",
+        "/workspace/* / /v1/device/* / /v1/app-map/*"
+      ],
+      "details": [
+        "Hummingbird 提供本地机器可读服务；WebSocket 连接 embedded runtime。",
+        "注册目标租约、Runner、typed device、workspace、app-map 等路由；不是每条 CLI 命令都有一对一 HTTP API。"
+      ],
+      "limits": [
+        "默认 loopback，Bonjour 默认关闭；不画成设备云、远端 agent 平台或多租户服务。"
+      ],
+      "sources": [
+        {
+          "path": "Sources/TritonKitCLI/CLIServeCommand.swift",
+          "line": 11
+        },
+        {
+          "path": "README.md",
+          "line": 485
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "dsh",
+      "name": "DSH 插件",
+      "icon": "dsh",
+      "role": "可选封装 · 4 个工具",
+      "summary": "schema / query / action / verify",
+      "x": 1250,
+      "y": 232,
+      "category": "entry",
+      "commands": [
+        "triton_schema",
+        "triton_query / triton_action / triton_verify"
+      ],
+      "details": [
+        "Host-only 插件调用已安装 triton CLI，不复制 Swift 核心，也不启动另一个 Web 服务。",
+        "仅暴露受限工具子集：显式命名空间 target、串行派发、原始结果与退出状态。"
+      ],
+      "limits": [
+        "要求 DSH Full access；不开放任意 argv、serve、安装/卸载、Runner 生命周期或 replay。",
+        "插件接入/测试边界不等于每个真实设备动作都已验收。"
+      ],
+      "sources": [
+        {
+          "path": "DSH/README.md",
+          "line": 26
+        }
+      ],
+      "status": "可选 / 有边界"
+    },
+    {
+      "id": "web",
+      "name": "Web 预览 / 桌面壳",
+      "icon": "web",
+      "role": "只读展示 · 非业务控制面",
+      "summary": "设备预览、层级、Run / Atlas",
+      "x": 1600,
+      "y": 232,
+      "category": "entry",
+      "commands": [
+        "triton web / web status / web doctor",
+        "/web/targets / /web/device / packaged Web"
+      ],
+      "details": [
+        "已有 React/Vite 原型、打包 Web 与展示壳；消费只读 DTO、预览、树和证据。",
+        "展示与控制的产品边界分开：不能因为页面或按钮存在而宣称正式 Wails 控制面已交付。"
+      ],
+      "limits": [
+        "browser 写路由拒绝；正式 Web/Wails 业务动作不属于本图已支持范围。"
+      ],
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "line": 45
+        },
+        {
+          "path": "Sources/TritonKitCLI/CLIPackagedWebRuntime.swift",
+          "line": 140
+        },
+        {
+          "path": "Sources/TritonKitCLI/CLIServeCommand.swift",
+          "line": 83
+        }
+      ],
+      "status": "只读 / 原型边界"
+    },
+    {
+      "id": "discover",
+      "name": "能力发现与诊断",
+      "icon": "discover",
+      "role": "status · doctor · schema · plan",
+      "summary": "知道能做什么，失败如何恢复",
+      "x": 180,
+      "y": 512,
+      "category": "loop",
+      "commands": [
+        "version / status / doctor / capabilities",
+        "schema / plan / debug runtime manifest"
+      ],
+      "details": [
+        "查询版本、server/runtime 状态、能力清单、参数与输出契约。",
+        "保留 unsupported / unknown / recovery nextAction；plan 生成可审核命令建议。"
+      ],
+      "limits": [
+        "supported 与 enabled、ready、业务完成是不同事实；不能以目录/命令名冒充现场可用。"
+      ],
+      "sources": [
+        {
+          "path": "Sources/TritonKitCLI/TritonKitCLI.swift",
+          "line": 105
+        },
+        {
+          "path": "README.md",
+          "line": 929
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "target",
+      "name": "目标绑定与会话",
+      "icon": "target",
+      "role": "target / device · alias · lease",
+      "summary": "发现设备，明确目标与生命周期",
+      "x": 468,
+      "y": 512,
+      "category": "loop",
+      "commands": [
+        "target list/use/current/resolve/wait-ready",
+        "device list/doctor/alias / target lease"
+      ],
+      "details": [
+        "区分 host device selector 与 embedded runtime target；多候选拒绝猜测。",
+        "可选 TTL 租约由 serve 持有；Runner 有独立认证会话、allowlist 与 request receipt。"
+      ],
+      "limits": [
+        "不是所有动作都接入同一租约 owner；Admission/generation 默认单次或进程内，不是全局 Stop、去重或沙箱。"
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 520
+        },
+        {
+          "path": "README.md",
+          "line": 546
+        },
+        {
+          "path": "README.md",
+          "line": 76
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "observe",
+      "name": "页面观察与定位",
+      "icon": "observe",
+      "role": "observe · node · screenshot",
+      "summary": "树 / AX / 几何 / OCR / 视觉稳定",
+      "x": 756,
+      "y": 512,
+      "category": "loop",
+      "commands": [
+        "observe current/tree/ocr/settle",
+        "node resolve / debug ax / screenshot"
+      ],
+      "details": [
+        "统一观察 DTO；outline 与短期 @N alias 支持后续定位，原始 provider 与覆盖边界保留。",
+        "截图、OCR 和 settle 分别提供视觉、文字候选与稳定性证据。"
+      ],
+      "limits": [
+        "alias 需新鲜观察；截断不证明缺失；OCR 坐标不是可执行 OID，settled 不证明业务成功。"
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 695
+        },
+        {
+          "path": "Sources/TritonKitCLI/CLIObservationCommands.swift",
+          "line": 69
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "action",
+      "name": "动作执行",
+      "icon": "action",
+      "role": "act / device actions · provider",
+      "summary": "点击、滑动、输入与语义控件",
+      "x": 1044,
+      "y": 512,
+      "category": "loop",
+      "commands": [
+        "act find/tap/swipe/type/paste/clear/press",
+        "act focus/set-text/select-segment/set-switch",
+        "device tap/double-tap/swipe/press/type"
+      ],
+      "details": [
+        "统一高层动作按平台/provider 路由；embedded 使用公开可验证控制，host 使用各平台适配器。",
+        "当前本地 WIP 为 typed device 与部分 host 路径补 shared actionReceipt 和可选原始证据。"
+      ],
+      "limits": [
+        "并非每个平台都支持每种动作；ACK 只证明提交，timeout/unknown 不自动重放。",
+        "receipt 接线并非所有入口统一完成；不能把缺读回误说成禁止输入。"
+      ],
+      "sources": [
+        {
+          "path": "Sources/TritonKitCLI/CLIActionCommands.swift",
+          "line": 1
+        },
+        {
+          "path": "README.md",
+          "line": 76
+        },
+        {
+          "path": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/current-implemented-surface.md",
+          "line": 267
+        }
+      ],
+      "status": "已接入 / 局部 WIP"
+    },
+    {
+      "id": "verify",
+      "name": "业务等待与断言",
+      "icon": "verify",
+      "role": "wait · verify · route assertion",
+      "summary": "用后置状态判定，而不是看 ACK",
+      "x": 1332,
+      "y": 512,
+      "category": "loop",
+      "commands": [
+        "wait --text/--exists/--gone/--predicate",
+        "verify text-exists/text-not-exists",
+        "route assert-current-url"
+      ],
+      "details": [
+        "支持文本/角色/数量/区域等约束；各 provider 保持各自 wait/assert 合同。",
+        "workspace、测试与 replay 复用等待/验证语义，区分 passed / failed / uncertain。"
+      ],
+      "limits": [
+        "Host wait 不等于所有 embedded predicate 可用；读回 unavailable 时不得伪造验证通过。"
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 848
+        },
+        {
+          "path": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/current-implemented-surface.md",
+          "line": 216
+        },
+        {
+          "path": "Sources/TritonKitCLI/CLIEvidenceCommands.swift",
+          "line": 350
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "evidence",
+      "name": "证据与原始事实",
+      "icon": "evidence",
+      "role": "evidence · export · receipt",
+      "summary": "manifest、截图、树、日志与 SHA",
+      "x": 1620,
+      "y": 512,
+      "category": "loop",
+      "commands": [
+        "evidence capture/inspect/summary/redact",
+        "export / --evidence-dir / actionReceipt"
+      ],
+      "details": [
+        "证据包关联状态、目标、截图、层级、几何、run events 与 artifacts；保留来源和 partial。",
+        "SP-281/SP-286 本地增强保留 provider JSON/已捕获 host 输出，显式转换与原始数据分离。"
+      ],
+      "limits": [
+        "manifest.ok 是采集完整性，不是动作或业务成功；原值保留不授权公开发布。",
+        "历史已删内容不能冒充恢复；摘要/截断/不可读取值必须明确。"
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 70
+        },
+        {
+          "path": "README.md",
+          "line": 76
+        },
+        {
+          "path": "README.md",
+          "line": 920
+        }
+      ],
+      "status": "已接入 / 局部 WIP"
+    },
+    {
+      "id": "app",
+      "name": "设备与 App 管理",
+      "icon": "app",
+      "role": "device · sim · app · resource",
+      "summary": "启停、安装、环境、容器与资源",
+      "x": 180,
+      "y": 846,
+      "category": "extension",
+      "commands": [
+        "device start/stop/orientation/location/clipboard",
+        "app list/info/inspect/install/launch/open-url",
+        "sim runtime/privacy/push/logs / device resource"
+      ],
+      "details": [
+        "跨平台发现、App 生命周期、录屏/日志/crash/mirror；iOS 还包括容器、preferences 与 sim 维护。",
+        "资源管理提供 plan/apply/verify/restore 和 receipt；权限与可控项依平台而定。"
+      ],
+      "limits": [
+        "剪贴板 staging 不等于输入完成；安装/启动不等于业务就绪；不承诺固定内存收益。",
+        "DerivedData 通用自动删除已取消，只保留 inspect/preview 与 confirm 拒绝。"
+      ],
+      "sources": [
+        {
+          "path": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/current-implemented-surface.md",
+          "line": 3
+        },
+        {
+          "path": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/current-implemented-surface.md",
+          "line": 31
+        },
+        {
+          "path": "README.md",
+          "line": 579
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "webview",
+      "name": "WebView 与网络",
+      "icon": "webview",
+      "role": "webview · route · proxy",
+      "summary": "DOM / 表单 / bridge / 请求证据",
+      "x": 468,
+      "y": 846,
+      "category": "extension",
+      "commands": [
+        "webview list/current/current-url/snapshot",
+        "webview focus/type/set-text/call/events/wait",
+        "act tap --webview-aware / device proxy / sim proxy"
+      ],
+      "details": [
+        "有 provider 时读取有界 WebView snapshot、URL、页面事件与 allowlist bridge；表单输入显式 opt-in。",
+        "host proxy/证书/网络采集另有环境前提；业务 URL/请求/响应原值与显式转换分开。"
+      ],
+      "limits": [
+        "容器候选不等于 DOM/bridge 可用；DOM click trusted=false，需后置验证。",
+        "不是全平台任意 JS eval；网络解密/证书信任与页面权限不由命令存在保证。"
+      ],
+      "sources": [
+        {
+          "path": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/current-implemented-surface.md",
+          "line": 231
+        },
+        {
+          "path": "README.md",
+          "line": 356
+        },
+        {
+          "path": "Sources/TritonKitCLI/CLIHostDeviceCommands.swift",
+          "line": 120
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "inspect",
+      "name": "UI 深度调试",
+      "icon": "inspect",
+      "role": "hierarchy · details · highlight",
+      "summary": "视图属性、节点截图、3D 与标记",
+      "x": 756,
+      "y": 846,
+      "category": "extension",
+      "commands": [
+        "debug hierarchy/snapshot/details/attrs",
+        "inspect selection / highlight",
+        "export --format archive"
+      ],
+      "details": [
+        "iOS embedded 提供视图树、几何、属性、节点截图与 Lookin 核心检查数据。",
+        "浮动 picker / SDK hub、selection 与独立 highlight 支持定位；Web 可投影层级与 3D 场景。"
+      ],
+      "limits": [
+        "深度 UIKit 能力依赖 Debug SDK、capability gate 与具体属性/provider；不代表 Android/Harmony 全量对齐。"
+      ],
+      "sources": [
+        {
+          "path": "docs-linhay/dev/20261103-lookin-core-inspection.md",
+          "line": 1
+        },
+        {
+          "path": "Sources/TritonKitCLI/CLIInspectionCommands.swift",
+          "line": 177
+        },
+        {
+          "path": "README.md",
+          "line": 362
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "build",
+      "name": "构建与工程诊断",
+      "icon": "build",
+      "role": "xcode · build · xcresult",
+      "summary": "发现工程、构建测试、产物诊断",
+      "x": 1044,
+      "y": 846,
+      "category": "extension",
+      "commands": [
+        "xcode discover/schemes/settings/build/test/run",
+        "xcode archive/export / xcresult summary/failures",
+        "xctrace / coverage / build"
+      ],
+      "details": [
+        "Xcode 项目/workspace/Swift package 工作流输出 JSON/JSONL、有界进度和日志 artifacts。",
+        "跨平台 build 命令按 backend 分流；构建产物衔接安装与启动，结果/trace/coverage 支持诊断。"
+      ],
+      "limits": [
+        "构建成功、签名、安装、启动和业务就绪分开；本图不重新执行任何构建或签名验收。"
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 720
+        },
+        {
+          "path": "Sources/TritonKitCLI/CLIBuildCommands.swift",
+          "line": 1
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "replay",
+      "name": "测试、录制与回放",
+      "icon": "replay",
+      "role": "record / replay · test · smoke",
+      "summary": "显式计划、执行、断言与恢复",
+      "x": 1332,
+      "y": 846,
+      "category": "extension",
+      "commands": [
+        "record / plan inspect / replay --dry-run",
+        "test import/validate/run / smoke ios/android/harmony",
+        "testrec start/event/stop/compile"
+      ],
+      "details": [
+        ".tritonplan 支持显式短流程回放；test runner 使用计划、业务断言和 evidence 形成结果。",
+        "testrec 是显式事件采集/编译，import 后经过 validate，再由 test run 执行；不是自动录制所有用户行为。"
+      ],
+      "limits": [
+        "testrec local-simulated/matrix 仅 offline diagnostic，不计真实 verdict。",
+        "真实 3×20+negative 可靠性采样未完成，不作量化可靠性承诺。"
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 640
+        },
+        {
+          "path": "README.md",
+          "line": 659
+        },
+        {
+          "path": "README.md",
+          "line": 669
+        },
+        {
+          "path": "README.md",
+          "line": 940
+        },
+        {
+          "path": "Sources/TritonKitCLI/CLITestRecorderCommands.swift",
+          "line": 1
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "workspace",
+      "name": "Workspace / Atlas",
+      "icon": "workspace",
+      "role": "workspace · map · 可选推理",
+      "summary": "App-map：状态迁移、覆盖与路径",
+      "x": 1620,
+      "y": 846,
+      "category": "extension",
+      "commands": [
+        "workspace run/inspect/stop/export-flow/merge-map",
+        "map inspect/health/path/suite/export-flow",
+        "vlm ground/compare/models"
+      ],
+      "details": [
+        "将 observation、动作、wait/assert、证据串成有界 Run；Atlas 记录状态与转移，App-map 跨 Run 聚合覆盖。",
+        "可导出测试路径；OpenAI-compatible / 本地 MLX LLM/VLM 为可选辅助，不是默认必经服务。"
+      ],
+      "limits": [
+        "推理默认关闭，需 --enable-llm/--enable-vlm；真实动作需 --execute-actions。",
+        "模型配置不等于启用，候选迁移不等于 verified；不存在统一常驻全入口任务 owner 承诺。"
+      ],
+      "sources": [
+        {
+          "path": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/current-implemented-surface.md",
+          "line": 72
+        },
+        {
+          "path": "README.md",
+          "line": 691
+        },
+        {
+          "path": "README.md",
+          "line": 718
+        },
+        {
+          "path": "Sources/TritonKitCLI/CLIAppMapCommands.swift",
+          "line": 5
+        }
+      ],
+      "status": "已接入 / 推理可选"
+    },
+    {
+      "id": "ioshost",
+      "name": "iOS Simulator Host",
+      "icon": "apple",
+      "role": "simctl · Host AX · 内置 HID",
+      "summary": "免 App SDK：设备、画面与基础操作",
+      "x": 200,
+      "y": 1162,
+      "category": "platform",
+      "commands": [
+        "sim / device / app --platform ios",
+        "observe tree / wait --platform ios",
+        "sim screenshot / native HID tap/swipe"
+      ],
+      "details": [
+        "本机模拟器生命周期、App 安装/启动、framebuffer、Host AX 与隔离 HID 适配器。",
+        "选中 Xcode 与 geometry/screen/target 校验是输入前提。"
+      ],
+      "limits": [
+        "sim type 为 reserved unsupported；不可把 clipboard stage 当自动 paste。",
+        "Host AX/HID 不用于真机；Resize/主屏限制按实际 capability 判断。"
+      ],
+      "sources": [
+        {
+          "path": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/current-implemented-surface.md",
+          "line": 90
+        },
+        {
+          "path": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/current-implemented-surface.md",
+          "line": 250
+        },
+        {
+          "path": "README.md",
+          "line": 870
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "iossdk",
+      "name": "iOS Embedded SDK",
+      "icon": "swift",
+      "role": "SwiftPM · iOS 16+ · Debug only",
+      "summary": "应用内公开 API：树、语义、输入",
+      "x": 550,
+      "y": 1162,
+      "category": "platform",
+      "commands": [
+        "TritonKit.shared.start() / debug runtime manifest",
+        "debug snapshot / act / webview / screenshot"
+      ],
+      "details": [
+        "App 自有 Debug bootstrap 注册连接与能力；提供 UIKit 观察、几何、截图、表单、WebView 和语义状态。",
+        "可用于连接中的 Simulator/真机 App runtime；与 host target 及 Runner 会话分开。"
+      ],
+      "limits": [
+        "Release no-op；依 app-owned feature gate。语义 action catalog 主要是发现元数据，不等于通用业务 action perform 已实现。"
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 130
+        },
+        {
+          "path": "README.md",
+          "line": 195
+        },
+        {
+          "path": "README.md",
+          "line": 909
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "runner",
+      "name": "iOS XCTest Runner",
+      "icon": "xcode",
+      "role": "Simulator / USB 真机 · 独立会话",
+      "summary": "免 App SDK：inspect、tap、type",
+      "x": 900,
+      "y": 1162,
+      "category": "platform",
+      "commands": [
+        "device runner doctor/prepare/start/status/stop",
+        "device runner activate/inspect/tap/scroll/type",
+        "device runner screenshot/receipt"
+      ],
+      "details": [
+        "bundled XCTest Runner 通过 Mac/Xcode 构建签名，受认证、TTL、allow-bundle 与新鲜 selector 约束。",
+        "真机路径独立于 Simulator host adapter；request-id/receipt 用于不确定送达后的事实恢复。"
+      ],
+      "limits": [
+        "配对/信任、开发者模式、签名、解锁和 UI Automation 授权仍是前提。",
+        "不是脱离 Mac 常驻服务；Safari 输入/导航未现场通过；通用 device screenshot 不因此获得真机支持。"
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 84
+        },
+        {
+          "path": "README.md",
+          "line": 782
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "android",
+      "name": "Android Emulator",
+      "icon": "android",
+      "role": "ADB · UIAutomator / Bridge",
+      "summary": "设备、App、布局、输入与截图",
+      "x": 1250,
+      "y": 1162,
+      "category": "platform",
+      "commands": [
+        "device / app / observe / wait / act --platform android",
+        "device bridge / device resource / smoke android"
+      ],
+      "details": [
+        "ADB host-side 生命周期、UIAutomator layout 与输入、截图；Bridge 提供增强会话/能力。",
+        "Android-specific resource/profile 与 capture 能力按实际 provider/权限判断。"
+      ],
+      "limits": [
+        "默认聚焦本机 Emulator；legacy input text 的 Unicode/keymap/%s 限制保留，tree/Bridge 不可用时不猜旧坐标。"
+      ],
+      "sources": [
+        {
+          "path": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/current-implemented-surface.md",
+          "line": 248
+        },
+        {
+          "path": "README.md",
+          "line": 784
+        },
+        {
+          "path": "Tools/AndroidBridge/README.md",
+          "line": 1
+        }
+      ],
+      "status": "已接入"
+    },
+    {
+      "id": "harmony",
+      "name": "HarmonyOS / DevEco",
+      "icon": "harmony",
+      "role": "HDC · uitest · ArkWeb",
+      "summary": "布局、输入、截图与页面适配",
+      "x": 1600,
+      "y": 1162,
+      "category": "platform",
+      "commands": [
+        "device / app / observe / wait / act --platform harmony",
+        "device runtime-url / webview / build"
+      ],
+      "details": [
+        "Host HDC 路径免 embedded SDK；uitest layout/input 与 snapshot_display 返回原始事实。",
+        "ArkWeb/CDP 与 standalone embedded runtime 有各自 provider/会话前提，不与 HDC 容器候选混同。"
+      ],
+      "limits": [
+        "verified input 受 IME/读回能力限制；不可读值报 unavailable，不伪造验证。",
+        "clear 及部分环境/资源项 unsupported；不是三端全量对齐。"
+      ],
+      "sources": [
+        {
+          "path": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/current-implemented-surface.md",
+          "line": 152
+        },
+        {
+          "path": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/current-implemented-surface.md",
+          "line": 177
+        },
+        {
+          "path": "README.md",
+          "line": 817
+        }
+      ],
+      "status": "已接入"
+    }
+  ],
+  "edges": [
+    {
+      "id": "agent-cli",
+      "start": "agent",
+      "end": "cli",
+      "label": "命令 / JSON",
+      "d": "M242 262 H508",
+      "x": 375,
+      "y": 250,
+      "kind": "primary",
+      "anchor": "middle"
+    },
+    {
+      "id": "cli-http",
+      "start": "cli",
+      "end": "http",
+      "label": "按需请求",
+      "d": "M592 262 H858",
+      "x": 725,
+      "y": 250,
+      "kind": "internal",
+      "anchor": "middle"
+    },
+    {
+      "id": "dsh-cli",
+      "start": "dsh",
+      "end": "cli",
+      "label": "可选 CLI 工具封装",
+      "d": "M1250 226 V206 H550 V226",
+      "x": 900,
+      "y": 198,
+      "kind": "internal",
+      "anchor": "middle"
+    },
+    {
+      "id": "http-web",
+      "start": "http",
+      "end": "web",
+      "label": "只读 DTO / 预览",
+      "d": "M900 378 V410 H1600 V378",
+      "x": 1260,
+      "y": 400,
+      "kind": "internal",
+      "anchor": "middle"
+    },
+    {
+      "id": "cli-discover",
+      "start": "cli",
+      "end": "discover",
+      "label": "主工作流",
+      "d": "M550 378 V426 H28 V542 H138",
+      "x": 330,
+      "y": 416,
+      "kind": "primary",
+      "anchor": "middle"
+    },
+    {
+      "id": "http-target",
+      "start": "http",
+      "end": "target",
+      "label": "共享服务",
+      "d": "M900 378 V444 H468 V506",
+      "x": 730,
+      "y": 435,
+      "kind": "internal",
+      "anchor": "middle"
+    },
+    {
+      "id": "discover-target",
+      "start": "discover",
+      "end": "target",
+      "label": "确认能力",
+      "d": "M222 542 H426",
+      "x": 324.0,
+      "y": 530,
+      "kind": "primary",
+      "anchor": "middle"
+    },
+    {
+      "id": "target-observe",
+      "start": "target",
+      "end": "observe",
+      "label": "绑定目标",
+      "d": "M510 542 H714",
+      "x": 612.0,
+      "y": 530,
+      "kind": "primary",
+      "anchor": "middle"
+    },
+    {
+      "id": "observe-action",
+      "start": "observe",
+      "end": "action",
+      "label": "选择节点",
+      "d": "M798 542 H1002",
+      "x": 900.0,
+      "y": 530,
+      "kind": "primary",
+      "anchor": "middle"
+    },
+    {
+      "id": "action-verify",
+      "start": "action",
+      "end": "verify",
+      "label": "检查后置",
+      "d": "M1086 542 H1290",
+      "x": 1188.0,
+      "y": 530,
+      "kind": "primary",
+      "anchor": "middle"
+    },
+    {
+      "id": "verify-evidence",
+      "start": "verify",
+      "end": "evidence",
+      "label": "保留事实",
+      "d": "M1374 542 H1578",
+      "x": 1476.0,
+      "y": 530,
+      "kind": "primary",
+      "anchor": "middle"
+    },
+    {
+      "id": "verify-observe",
+      "start": "verify",
+      "end": "observe",
+      "label": "需要继续时重新观察，不重放未知动作",
+      "d": "M1332 658 V712 H756 V658",
+      "x": 1044,
+      "y": 702,
+      "kind": "internal",
+      "anchor": "middle"
+    },
+    {
+      "id": "target-app",
+      "start": "target",
+      "end": "app",
+      "label": "准备设备 / App",
+      "d": "M468 658 V770 H28 V876 H138",
+      "x": 324,
+      "y": 760,
+      "kind": "internal",
+      "anchor": "middle"
+    },
+    {
+      "id": "observe-inspect",
+      "start": "observe",
+      "end": "inspect",
+      "label": "深入检查",
+      "d": "M756 658 V840",
+      "x": 769,
+      "y": 792,
+      "kind": "internal",
+      "anchor": "start"
+    },
+    {
+      "id": "action-webview",
+      "start": "action",
+      "end": "webview",
+      "label": "Web 表单 / bridge",
+      "d": "M1044 658 V750 H468 V840",
+      "x": 554,
+      "y": 740,
+      "kind": "internal",
+      "anchor": "middle"
+    },
+    {
+      "id": "verify-replay",
+      "start": "verify",
+      "end": "replay",
+      "label": "复用断言",
+      "d": "M1332 658 V840",
+      "x": 1345,
+      "y": 789,
+      "kind": "internal",
+      "anchor": "start"
+    },
+    {
+      "id": "evidence-workspace",
+      "start": "evidence",
+      "end": "workspace",
+      "label": "聚合状态与路径",
+      "d": "M1620 658 V840",
+      "x": 1633,
+      "y": 785,
+      "kind": "internal",
+      "anchor": "start"
+    },
+    {
+      "id": "replay-evidence",
+      "start": "replay",
+      "end": "evidence",
+      "label": "执行产出证据",
+      "d": "M1374 876 H1476 V674 H1620 V658",
+      "x": 1490,
+      "y": 813,
+      "kind": "internal",
+      "anchor": "start"
+    },
+    {
+      "id": "build-app",
+      "start": "build",
+      "end": "app",
+      "label": "构建产物 → 安装 / 启动",
+      "d": "M1044 992 V1064 H180 V992",
+      "x": 626,
+      "y": 1054,
+      "kind": "dev",
+      "anchor": "middle"
+    },
+    {
+      "id": "app-ioshost",
+      "start": "app",
+      "end": "ioshost",
+      "label": "",
+      "d": "M180 992 V1090 H28 V1192 H158",
+      "x": 0,
+      "y": 0,
+      "kind": "internal",
+      "anchor": "middle"
+    },
+    {
+      "id": "inspect-iossdk",
+      "start": "inspect",
+      "end": "iossdk",
+      "label": "深度应用内能力",
+      "d": "M756 992 V1080 H550 V1156",
+      "x": 650,
+      "y": 1070,
+      "kind": "internal",
+      "anchor": "middle"
+    },
+    {
+      "id": "action-runner",
+      "start": "action",
+      "end": "runner",
+      "label": "独立 Runner 会话",
+      "d": "M1086 542 H1168 V1098 H900 V1156",
+      "x": 1026,
+      "y": 1088,
+      "kind": "internal",
+      "anchor": "middle"
+    },
+    {
+      "id": "app-android",
+      "start": "app",
+      "end": "android",
+      "label": "",
+      "d": "M180 1090 H1250 V1156",
+      "x": 0,
+      "y": 0,
+      "kind": "internal",
+      "anchor": "middle"
+    },
+    {
+      "id": "app-harmony",
+      "start": "app",
+      "end": "harmony",
+      "label": "",
+      "d": "M1250 1090 H1600 V1156",
+      "x": 0,
+      "y": 0,
+      "kind": "internal",
+      "anchor": "middle"
+    },
+    {
+      "id": "app-iossdk",
+      "start": "app",
+      "end": "iossdk",
+      "label": "",
+      "d": "M200 1090 H550 V1156",
+      "x": 0,
+      "y": 0,
+      "kind": "internal",
+      "anchor": "middle"
+    },
+    {
+      "id": "workspace-replay",
+      "start": "workspace",
+      "end": "replay",
+      "label": "导出 flow",
+      "d": "M1578 876 H1374",
+      "x": 1476,
+      "y": 864,
+      "kind": "internal",
+      "anchor": "middle"
+    }
+  ]
+}
