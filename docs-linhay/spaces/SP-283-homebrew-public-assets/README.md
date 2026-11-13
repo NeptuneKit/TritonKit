@@ -1,5 +1,7 @@
 # SP-283 — Homebrew 更新前公开资产门禁
 
+> 2026-11-13后继：已提交内容随 [v0.2.45](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.45) 分发，发布/资产/安装与限制见 [SP-289验收](../SP-289-release-v0-2-45/plans/20261113-release.md)。以下保留原实施阶段授权与本地验收历史，不提升为新的设备/业务验收；用户agent skills目录未被自动覆盖。
+
 ## 范围与来源
 
 采用 [Loupe 固定增量](https://github.com/heoblitz/Loupe/compare/180c60584867500b93b43ca6c8b556995bf8be7b...1b6c7f0fa5f5ed2bd7885d404f85bcebd5ff0d93) 的发布前公开资产校验顺序。许可全文人工识别 MIT，API NOASSERTION 原样保留；独立实现机制，不复制上游代码。评估见 SP-207 的 20261111 日报与仓外 review。

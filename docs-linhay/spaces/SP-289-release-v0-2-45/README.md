@@ -21,4 +21,7 @@
 - 本机Swift6.4；默认Node25不在Web声明支持范围，采用现有Node24.21.0，不升级全局工具或依赖。
 - 原生Sources/Tests冻结后串行运行 `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local`、完整CLI测试（绑定本次CLI）、Web完整测试及构建、版本/发布/public skill门禁。
 - 本轮不新增真实设备/用户App/模型行为验收；额外Xcode Simulator构建明确跳过。iOS16+按当前Package声明沿tag分发；本地/准确候选CI只证明实际执行的编译与测试，不宣称UIKit或iOS16真机行为验收。
-- 当前状态：准备发布，尚未推送/打tag/公开发布。过程证据置于plans，最终结果以[发布验收](./plans/20261113-release.md)及远端回读为准。
+- 当前结果：v0.2.45已公开发布，tag=f9ddc4f4；Main/Tag/Release/tap全部成功。CLI/Web/Runner/skills/checksum、Homebrew0.2.45及隔离skills安装通过；默认采样iPad实时流HTTP409未通过，独立只读工作台在排空旧请求后通过，不能相互抵消。
+- 本机匿名metadata API两次因quota403失败，原checker未弱化/未输出checksum；CI真实匿名gate先于tap写入成功，另有本机匿名公开直链完整字节/hash验证。分观察记录，不把认证metadata说成匿名成功。
+- 原浏览器空间29丢失后经用户明确授权新建30；只读观察完成并结束自有页面，34135自有服务已取消且无监听，未停止别的owner或改设备/guard。截图与原始事件保留私有。
+- 最终证据与已知边界见[发布验收](./plans/20261113-release.md)、[结构化摘要](./plans/20261113-release-evidence.json)、[浏览器评估](./plans/20261113-browser-assessment.json)。收口只修改文档/验收辅助脚本，不改tag与制品；后续docs-only push的准确CI单独确认。

@@ -1,0 +1,490 @@
+{
+  "recordType": "original-artifact-identity-manifest",
+  "candidate": "f9ddc4f48afdbcf56007edb0b2fa2422fb10e1ce",
+  "publicSummary": "20261113-release-evidence.json",
+  "privateStorageAlias": "TritonKit-release-evidence/20261113-v0.2.45",
+  "records": [
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-anonymous-assets-after-reset.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-anonymous-assets.json.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-anonymous-direct-verification.json.log",
+      "bytes": 1256,
+      "sha256": "6be1e9e80d6ffc08e300905eb0d512f999296df0d2ff0ca46eb8cb62888f77d9"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-anonymous-metadata-failure.json.log",
+      "bytes": 550,
+      "sha256": "44bb49c890b88df5c9062f8041f1bcbbe8b479f1bd7860e0306bea0c74a87f52"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-anonymous-quota.json.log",
+      "bytes": 185,
+      "sha256": "ce11e57b71149a5cd477085d1347740e8be3409eeb39387ee5f7e91a177d575a"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-assets-verification-output.log",
+      "bytes": 489,
+      "sha256": "013ec8a3894251ea58ebd0f74e1f2fc98eed3242a47c2bbf9b92d3906def1f03"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-assets-verification.json.log",
+      "bytes": 3421,
+      "sha256": "55df206cf313d8fe25b8957a369f785cf7d63b09d92dda5858f067056fbaf95b"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-automation.log",
+      "bytes": 1184,
+      "sha256": "9fa6a1d2e708559abbcd62b7b062e42a32335475d3f168f6144151c135c3fc4a"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-brew-test.log",
+      "bytes": 237,
+      "sha256": "cd1e3c3fd57f1dc3d78bc837097ec44c1262b286ee0b14831cd5ce0087687bfa"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-brew-update.log",
+      "bytes": 45,
+      "sha256": "4f05267288a8a8d0b76a78e04f5a22ac17241e1eb4cab6e9b069d50ea9565e15"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-brew-upgrade.log",
+      "bytes": 2308,
+      "sha256": "eaafe5206e86b00edf080b892af96ace03b20c93e983d00c4970aa3cdb4942f8"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-browser-guide-resume.log",
+      "bytes": 22015,
+      "sha256": "e6fa67bd564c815c113e4a06c5ba3e3575d1ef5260371634d30f79e9563af532"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-browser-guide.log",
+      "bytes": 22015,
+      "sha256": "e6fa67bd564c815c113e4a06c5ba3e3575d1ef5260371634d30f79e9563af532"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-browser-shell-drained.json.log",
+      "bytes": 961,
+      "sha256": "942fb0dc4c9d21da3c479010d7411590a9138207a32cedd82341af95bc8584fd"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-browser-shell-only.json.log",
+      "bytes": 803,
+      "sha256": "9fa3df57ab3496a933c5b64ed27d6449c4406000dbaf4ad0de2226fd2c9c5069"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-browser-verification.json.log",
+      "bytes": 711,
+      "sha256": "5eed9b52990269206e9675116579b0dc7b3c19967c64fc439dfcdb4ef7f03456"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-cleanup.json.log",
+      "bytes": 316,
+      "sha256": "93a50b30322fe4a6af6f0fb7de68242ce2d7ea4112b8c228076d41cd210448e0"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-cli-tests.log",
+      "bytes": 460098,
+      "sha256": "dd275efe7ff38185be0feeb6060410d4ff6a411fdbe870d3941e1af2cdccfb8d"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-closeout-check-docs.log",
+      "bytes": 213,
+      "sha256": "bf357b7afbdcd3487fa9d3ce2c613ea2f0630ab71f71762a4eea17aa8399afca"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-closeout-local-gate.log",
+      "bytes": 1897,
+      "sha256": "c90df4bd0dc7339fe1fe5abf7c52804aac5746ae6314b7b2d861a3a1215a283f"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-closeout-naming-error.log",
+      "bytes": 143,
+      "sha256": "1e87a8ffc69b7f1951b21e5dac29b3b54587beff1259b5a0fd6ed06fca2e0279"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-docs-prepare.log",
+      "bytes": 213,
+      "sha256": "78af801145e310be258b6d128a5b7974640ecb6b8a420f1ce15ade53f9a01c16"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-evidence-root.log",
+      "bytes": 86,
+      "sha256": "97929ebdab7cfd9148b3b1d8d4cee644b747df91e3e54ba03c888ebda6f7cf90"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-http-smoke-draft.log",
+      "bytes": 3086,
+      "sha256": "3d312edc19fec1f6873e27fa48193f7a823006cd2744c2b44e56eb415ce6ed77"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-http-smoke.json.log",
+      "bytes": 2029,
+      "sha256": "9533e8486e795186b09924f97c19e7b4e1947e4fc0e52dac96b747d1dc5e6cca"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-installation-verification.json.log",
+      "bytes": 440,
+      "sha256": "ce0e48a41284d70e39b6f5f03f82f41305d15ff62e36e2a9887cb34d7494328a"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-installed-version.json.log",
+      "bytes": 193,
+      "sha256": "34385aa23aecdbd20240a012f7dae65a9c5ebbb2b3fb0f179ee3b26ed2313169"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-installed-web-plan.json.log",
+      "bytes": 1138,
+      "sha256": "eceb323b876b2d3790ef57673e0dbab22c312adccaa7fe8cf408ca8d0ca78afd"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-local-gate.log",
+      "bytes": 104209,
+      "sha256": "fed0895f5782556e4fcd3eef4d6ddc7b8bbb587c67bcbb0bc7299ae8cd6d1141"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-main-ci-native-step.json.log",
+      "bytes": 1480,
+      "sha256": "ce54dc49d322925694bdea9b799eb46b217791f0e35d087cd5057b04f4d986ef"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-main-ci-watch.log",
+      "bytes": 30031,
+      "sha256": "c71b43d82d239afa21ba3746b930956fdd54e9d73ac064180b44d190bd5ded9d"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-main-ci.json.log",
+      "bytes": 6730,
+      "sha256": "69679090698f2b1a2d0a7a0f09785b6ebadec76037459be043455f7c4eb9de70"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-preflight-summary.json.log",
+      "bytes": 2536,
+      "sha256": "507a9b056c01a4bf9ad4f2c225c60138697bc6438edadeb8dd6e501fdaf6d7ca"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-processes-before-upgrade.json.log",
+      "bytes": 115,
+      "sha256": "ae9a2c5a6c59686c654549807f93a3e6c1c87ab5d0949d0685d61293340f13fc"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-public-assets-tests.log",
+      "bytes": 112,
+      "sha256": "4f60a2c9ce1ab522f198755170677b9bc93b112d593440a20c133acad2719394"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-published-skills-install.json.log",
+      "bytes": 296,
+      "sha256": "67ebb446316b82c1ebf05bf12827a0af60a6cae249c5b255235bb88484268e30"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-release-command.log",
+      "bytes": 596,
+      "sha256": "9dd9fe24ac15648198c205a06d666d9d038f73108a369e878f11c8ff8962b7c0"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-release-dry-run.log",
+      "bytes": 293,
+      "sha256": "107a8eba1c17c70ea15939b647c6c62e535e438d08a9f63e822a1f606670163c"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-release-full-watch.log",
+      "bytes": 601,
+      "sha256": "04bedf4940a119cdf25df23164c837f3470a1de7d1b3223042ef9675c1beb75d"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-release-full.json.log",
+      "bytes": 7009,
+      "sha256": "05bee22d29318b678c848d3a99ccb1d325896b92a342b7b468e0e85be96d8e29"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-release-metadata-after-notes.json.log",
+      "bytes": 1677,
+      "sha256": "6395b1bf5fd2d3cb95b3ebf906546c93c566cdbbf5ef49baa27e1bde4f6a83ff"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-release-metadata-refresh.json.log",
+      "bytes": 1677,
+      "sha256": "6395b1bf5fd2d3cb95b3ebf906546c93c566cdbbf5ef49baa27e1bde4f6a83ff"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-release-notes-draft.log",
+      "bytes": 2972,
+      "sha256": "f0bf1addb570834e89a18a3f79d192e46674f0fa76aa917920f43e316138f9cc"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-release-progress.json.log",
+      "bytes": 476,
+      "sha256": "1b0330cf04a67581dca8af49295923f266a07d57ad9d0549d4dde32d433d1d66"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-runner-package.log",
+      "bytes": 60,
+      "sha256": "b43655fd885e6fd7a17bfd7143d068e675a7c824be235b28cfd972f02d8f0fc2"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-skills.log",
+      "bytes": 200,
+      "sha256": "0cfa802b57f4e716b5f3e122c189eb8022ce76ab409536b41b0bfd8ffaa4ca77"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-stream-diagnostic.json.log",
+      "bytes": 556,
+      "sha256": "31a2d80fa0683a52fb50bf401ee9943da3186ed9056539e1096912c765f9c708"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-tag-ci.json.log",
+      "bytes": 3698,
+      "sha256": "af307b8f15c54a4ad7b8c180ecf647343b6d3e6113df15a3f0e1d5f3a77d6915"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-tap-formula-base64.log",
+      "bytes": 3259,
+      "sha256": "262dae3d1eafdfd898b244ea8a5c5568c5080348c230fb236aa45a028e29705c"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-tap-formula.rb.log",
+      "bytes": 2401,
+      "sha256": "3253bd8096b31c35f33ecd3391c178e300cea10f36ef3805d1309a34a2e6eabe"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-tap-head.log",
+      "bytes": 41,
+      "sha256": "fef590895c5c5945d1d05e08799b607eebb45d51c9a0a59f171e5302750f00ad"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-verify-assets-draft.log",
+      "bytes": 4409,
+      "sha256": "42fdded7baae3ef61202035fea809065a8b16be09123daba63548457209c92a1"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-versions-after.log",
+      "bytes": 52,
+      "sha256": "9dd1206fc6d9d26e30d943e18e808bedbf4e3a806c9412198ca0577ec80a16e4"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-versions-before.log",
+      "bytes": 101,
+      "sha256": "b5820e04ecbbed3c5a9d0211cd9121e6595163d4b2b1b25da1149645ccf81888"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-web-build.log",
+      "bytes": 731,
+      "sha256": "56f4bef5ec37dfec39c448a7c3d90f6846ebbe3815bf94e5c65448294056ccb6"
+    },
+    {
+      "storage": "local-space-plans-original",
+      "path": "20261113-web-tests.log",
+      "bytes": 18294,
+      "sha256": "b654407a958696ea844df96f71968ccc792ac1aebbc52495172e4042d7a6c60f"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "anonymous-direct/triton-macos-arm64.tar.gz",
+      "bytes": 17094206,
+      "sha256": "cab7c08344369cc54edad54961aa47bb8f6cceb89eb9b37bbbac3d7337a7214b"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "anonymous-direct/tritonkit-skills.tar.gz",
+      "bytes": 143837,
+      "sha256": "7f63b6e1ac46363e872e33913d4a82f9c884549eaef79de44974cddbec28b004"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "anonymous-direct/tritonkit_checksums.txt",
+      "bytes": 182,
+      "sha256": "3d418469a8820e68fa85704b05964dc9a9d4335005951d972193ee600d1a7b7b"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "assets/triton-macos-arm64.tar.gz",
+      "bytes": 17094206,
+      "sha256": "cab7c08344369cc54edad54961aa47bb8f6cceb89eb9b37bbbac3d7337a7214b"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "assets/tritonkit-skills.tar.gz",
+      "bytes": 143837,
+      "sha256": "7f63b6e1ac46363e872e33913d4a82f9c884549eaef79de44974cddbec28b004"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "assets/tritonkit_checksums.txt",
+      "bytes": 182,
+      "sha256": "3d418469a8820e68fa85704b05964dc9a9d4335005951d972193ee600d1a7b7b"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "browser-before-close-events.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "browser-close-events.json",
+      "bytes": 15212,
+      "sha256": "7e4606f81a67ddf69b55286929bb334827ae482dbfacdfadb26ea601539e11f7"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "browser-follow-events.json",
+      "bytes": 17519,
+      "sha256": "0a348866d8599ec4a2605557d77c03965a57f9fb37cc35d7bbb68e96501dd67a"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "browser-post-close-drain-events.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "browser-readonly-shell-drained.png",
+      "bytes": 179607,
+      "sha256": "b7feac051acf98c30a47e35d1e02708ff8fee9b6d794176ff2cd51504fe3c49f"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "browser-readonly-shell-only.png",
+      "bytes": 95796,
+      "sha256": "2130e87315515ed01d0560c06382df35ed643f2963ab7e407154dbbd499b0d48"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "browser-readonly-workbench.png",
+      "bytes": 223059,
+      "sha256": "937e1c997af1fc5c867850c13a834f330de45bad9180774fb4fa13de502a0331"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "browser-shell-drained-events.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "browser-shell-only-events.json",
+      "bytes": 3049,
+      "sha256": "710c11b3dde66018d2c9c1a136bf3aeea683605d90b3208f51113a34c69175fc"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "browser-start-events.json",
+      "bytes": 94566,
+      "sha256": "68507193c9f56ef995533a8d028d1083dbd4bf26d4dce2c76eeb05a5a0b894e3"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "http-original/00.html",
+      "bytes": 518,
+      "sha256": "961544a31b56568843c4b0418865584f9cd4d0e1441fdd2ec8f1fce4cff9e8f9"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "http-original/01.bin",
+      "bytes": 378796,
+      "sha256": "e2af2a7b5b11ebfb7a1e3ad8344a64756f2a12a38a333c1a550ff83835c3975c"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "http-original/02.bin",
+      "bytes": 107863,
+      "sha256": "b00a9c2382d228d3edd43993d85fafa795b3205f2119178b1fee141f57eded19"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "http-original/03.json",
+      "bytes": 7862,
+      "sha256": "dd056e874cb4e5a0ec8dd3843a073322e6dcd172b55d2335178082819e54a888"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "http-original/04.json",
+      "bytes": 280,
+      "sha256": "c62a35ac2586f13c58805e0e08d6c83c76c4e1be89fd3146b7734807495bfb6f"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "release-metadata.json",
+      "bytes": 1677,
+      "sha256": "cd1089f193048fb5c1363865c1cd74586cacf1913c86de1aeab7976ca5f95d15"
+    },
+    {
+      "storage": "private-release-evidence-original",
+      "path": "stream-diagnostic-body.json",
+      "bytes": 814,
+      "sha256": "360e3e001ccd367831e5dcd9142a6261c925fe85c8d708e9d7b7a94f1db0783b"
+    }
+  ],
+  "boundary": "Identity inventory only; originals not embedded or automatically shared. Extracted/install-fixture derivatives are reproducible from retained archives and excluded from this raw inventory.",
+  "generatedAtUTC": "2026-11-13T06:51:25.312356+00:00",
+  "localEvidencePathCorrection": {
+    "oldAlias": "20261113-release-metadata-final.json.log",
+    "currentPath": "20261113-release-metadata-refresh.json.log",
+    "bytesUnchanged": true,
+    "reason": "Repository traceable-name rule; failed naming gate retained locally"
+  }
+}

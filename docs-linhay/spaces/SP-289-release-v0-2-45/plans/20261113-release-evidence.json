@@ -1,0 +1,355 @@
+{
+  "recordType": "release-verification-summary",
+  "version": "0.2.45",
+  "releaseURL": "https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.45",
+  "publishedAt": "2026-11-13T04:36:01Z",
+  "candidate": "f9ddc4f48afdbcf56007edb0b2fa2422fb10e1ce",
+  "tagObject": "adbcec1fb8646f18f4bfdbe6871a366f0c082e7e",
+  "ci": {
+    "main": {
+      "url": "https://github.com/NeptuneKit/TritonKit/actions/runs/43362463780",
+      "headSha": "f9ddc4f48afdbcf56007edb0b2fa2422fb10e1ce",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Classify Validate Scope",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate Contracts",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate Swift Tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build CLI (arm64)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Package arm64 release assets",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Update Homebrew tap (arm64)",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    "tag": {
+      "url": "https://github.com/NeptuneKit/TritonKit/actions/runs/43364738591",
+      "headSha": "f9ddc4f48afdbcf56007edb0b2fa2422fb10e1ce",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Classify Validate Scope",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate Contracts",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Validate Swift Tests",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Build CLI (arm64)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Update Homebrew tap (arm64)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Package arm64 release assets",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    "release": {
+      "url": "https://github.com/NeptuneKit/TritonKit/actions/runs/43364738685",
+      "headSha": "f9ddc4f48afdbcf56007edb0b2fa2422fb10e1ce",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Release Contracts",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build CLI (arm64)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Package arm64 release assets",
+          "conclusion": "success"
+        },
+        {
+          "name": "Update Homebrew tap (arm64) / update-tap",
+          "conclusion": "success"
+        }
+      ]
+    }
+  },
+  "assets": [
+    {
+      "name": "triton-macos-arm64.tar.gz",
+      "bytes": 17094206,
+      "sha256": "cab7c08344369cc54edad54961aa47bb8f6cceb89eb9b37bbbac3d7337a7214b"
+    },
+    {
+      "name": "tritonkit-skills.tar.gz",
+      "bytes": 143837,
+      "sha256": "7f63b6e1ac46363e872e33913d4a82f9c884549eaef79de44974cddbec28b004"
+    }
+  ],
+  "architecture": "Mach-O 64-bit executable arm64",
+  "runnerVersion": "0.2.45",
+  "skillBuildInfo": {
+    "name": "tritonkit-skills",
+    "bundlePath": "TritonKit.skills/",
+    "version": "0.2.45",
+    "releaseTag": "v0.2.45",
+    "git": {
+      "commit": "f9ddc4f48afdbcf56007edb0b2fa2422fb10e1ce",
+      "shortCommit": "f9ddc4f",
+      "dirty": false
+    },
+    "builtAt": "2026-11-13T04:35:56Z",
+    "skills": [
+      {
+        "name": "tritonkit-dev-feedback",
+        "path": "TritonKit.skills/tritonkit-dev-feedback/",
+        "version": "0.2.45"
+      },
+      {
+        "name": "tritonkit-emulator-cli-takeover",
+        "path": "TritonKit.skills/tritonkit-emulator-cli-takeover/",
+        "version": "0.2.45"
+      },
+      {
+        "name": "tritonkit-real-project-regression",
+        "path": "TritonKit.skills/tritonkit-real-project-regression/",
+        "version": "0.2.45"
+      },
+      {
+        "name": "tritonkit-update",
+        "path": "TritonKit.skills/tritonkit-update/",
+        "version": "0.2.45"
+      }
+    ]
+  },
+  "newGuides": [
+    {
+      "path": "tritonkit-dev-feedback/references/dsh-integration.md",
+      "sha256": "b99a57ee4284e7ace01090c1c00a112db7aedef1cea4dad33de9fd440bbd8ee5",
+      "matchesCandidateSource": true
+    },
+    {
+      "path": "tritonkit-emulator-cli-takeover/references/app-map.md",
+      "sha256": "9cb6e0ec20f82129fbd2a64790440ede079b81b9216b9e8924b8ac9b40f32837",
+      "matchesCandidateSource": true
+    },
+    {
+      "path": "tritonkit-emulator-cli-takeover/references/http-api.md",
+      "sha256": "abec52312deb583470ac3ec1ecaafd5e201e572d81a183cf6da1b88fc59ae231",
+      "matchesCandidateSource": true
+    },
+    {
+      "path": "tritonkit-emulator-cli-takeover/references/target-leases.md",
+      "sha256": "45e3e865d52f3aa1745a7575f886fe61a6807882677a20de6196adefb4e46ddf",
+      "matchesCandidateSource": true
+    },
+    {
+      "path": "tritonkit-emulator-cli-takeover/references/ui-inspection.md",
+      "sha256": "4f147bae3749374fbc60945dfd2028f877178842a506ea4a36fbfd2e446286e5",
+      "matchesCandidateSource": true
+    },
+    {
+      "path": "tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "sha256": "7abab5649feaf8830d7a8f0c6ad59b59375ed6063a9327411e42ad19629a0f83",
+      "matchesCandidateSource": true
+    },
+    {
+      "path": "tritonkit-emulator-cli-takeover/references/web-preview.md",
+      "sha256": "0225db5f6bcb6978172a1b8d491f3f1a25dfba3355d0de379f116f3b210e8ec2",
+      "matchesCandidateSource": true
+    },
+    {
+      "path": "tritonkit-real-project-regression/references/test-recorder.md",
+      "sha256": "2f1fa01bd9216e028bea757149f56ece595b5c22d713b5519296c17ea035f081",
+      "matchesCandidateSource": true
+    }
+  ],
+  "swiftPMPackageBlob": "8c4a4c88d59160395b5b893c002918b5be2a9a1f",
+  "anonymousPublicVerification": {
+    "status": "pass",
+    "version": "0.2.45",
+    "localAnonymousMetadata": "unavailable: GitHub API core quota exhausted (403), original checker failure retained",
+    "ciAnonymousMetadataAndBytes": {
+      "url": "https://github.com/NeptuneKit/TritonKit/actions/runs/43364738685",
+      "job": "Update Homebrew tap (arm64) / update-tap",
+      "step": "Verify public arm64 release assets",
+      "conclusion": "success"
+    },
+    "localAnonymousDirectBytes": [
+      {
+        "name": "tritonkit_checksums.txt",
+        "bytes": 182,
+        "sha256": "3d418469a8820e68fa85704b05964dc9a9d4335005951d972193ee600d1a7b7b",
+        "matchesDownloadedReleaseAndMetadata": true
+      },
+      {
+        "name": "triton-macos-arm64.tar.gz",
+        "bytes": 17094206,
+        "sha256": "cab7c08344369cc54edad54961aa47bb8f6cceb89eb9b37bbbac3d7337a7214b",
+        "matchesDownloadedReleaseAndMetadata": true
+      },
+      {
+        "name": "tritonkit-skills.tar.gz",
+        "bytes": 143837,
+        "sha256": "7f63b6e1ac46363e872e33913d4a82f9c884549eaef79de44974cddbec28b004",
+        "matchesDownloadedReleaseAndMetadata": true
+      }
+    ],
+    "authentication": "No authentication/cookies used for direct-byte downloads; metadata used for size comparison was authenticated gh output and is labeled separately."
+  },
+  "localAnonymousMetadataFailure": {
+    "operation": "verify-public-release-assets.py local anonymous metadata",
+    "exitCode": 1,
+    "observedError": "HTTPError: HTTP Error 403: rate limit exceeded",
+    "verifiedChecksumOutputPublished": false,
+    "quota": {
+      "httpStatus": 200,
+      "core": {
+        "limit": 60,
+        "remaining": 0,
+        "reset": 1794545972,
+        "used": 60
+      },
+      "authentication": "anonymous",
+      "scope": "quota endpoint only"
+    },
+    "boundary": "No checker code or publication gate was weakened; CI proof and direct-byte proof are separate observations."
+  },
+  "afterResetRetry": {
+    "exitCode": 1,
+    "observedError": "HTTPError: HTTP Error 403: rate limit exceeded",
+    "checksumOutputPublished": false
+  },
+  "installation": {
+    "version": "0.2.45",
+    "installedBinarySha256": "c066ed3449e3a5d008eb0c9e4566dd76d5608c37e53fb4b5baa2bb1ac5e7aff5",
+    "archiveBinarySha256": "c066ed3449e3a5d008eb0c9e4566dd76d5608c37e53fb4b5baa2bb1ac5e7aff5",
+    "sameBinaryBytes": true,
+    "oldVersionRetained": true,
+    "packagedMode": "packaged",
+    "readonly": true,
+    "port": 34135,
+    "boundary": "installed CLI and resource/launch-plan checks only; real Web process/browser follows"
+  },
+  "publishedSkillsFixtureInstall": {
+    "status": "pass",
+    "version": "0.2.45",
+    "tag": "v0.2.45",
+    "receiptFilesVerified": 53,
+    "archiveSha256": "7f63b6e1ac46363e872e33913d4a82f9c884549eaef79de44974cddbec28b004",
+    "dryRunDidNotInstall": true,
+    "scope": "task-owned fixture only; no user agent profile/skills root modified"
+  },
+  "httpReadonly": {
+    "status": "pass",
+    "origin": "http://127.0.0.1:34135",
+    "scriptCount": 1,
+    "styleCount": 1,
+    "registryKeys": [
+      "action",
+      "ok",
+      "targets"
+    ],
+    "inputProbe": {
+      "syntheticNonDeviceTarget": true,
+      "completeDTO": {
+        "target": "host:ios:release-probe",
+        "type": "tap",
+        "x": 10,
+        "y": 10,
+        "width": 400,
+        "height": 800
+      },
+      "expectedStatus": 405,
+      "expectedCode": "web_host_input_readonly",
+      "nativeInputExecuted": false
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/",
+        "status": 200,
+        "contentType": "text/html; charset=utf-8",
+        "bytes": 518,
+        "sha256": "961544a31b56568843c4b0418865584f9cd4d0e1441fdd2ec8f1fce4cff9e8f9",
+        "privateRawFile": "00.html"
+      },
+      {
+        "method": "GET",
+        "path": "/assets/index-DKG0MZz9.js",
+        "status": 200,
+        "contentType": "text/javascript; charset=utf-8",
+        "bytes": 378796,
+        "sha256": "e2af2a7b5b11ebfb7a1e3ad8344a64756f2a12a38a333c1a550ff83835c3975c",
+        "privateRawFile": "01.bin"
+      },
+      {
+        "method": "GET",
+        "path": "/assets/index-CFVbkqx4.css",
+        "status": 200,
+        "contentType": "text/css; charset=utf-8",
+        "bytes": 107863,
+        "sha256": "b00a9c2382d228d3edd43993d85fafa795b3205f2119178b1fee141f57eded19",
+        "privateRawFile": "02.bin"
+      },
+      {
+        "method": "GET",
+        "path": "/web/target-registry",
+        "status": 200,
+        "contentType": "application/json",
+        "bytes": 7862,
+        "sha256": "dd056e874cb4e5a0ec8dd3843a073322e6dcd172b55d2335178082819e54a888",
+        "privateRawFile": "03.json"
+      },
+      {
+        "method": "POST",
+        "path": "/web/host-input",
+        "status": 405,
+        "contentType": "application/json",
+        "bytes": 280,
+        "sha256": "c62a35ac2586f13c58805e0e08d6c83c76c4e1be89fd3146b7734807495bfb6f",
+        "privateRawFile": "04.json"
+      }
+    ],
+    "boundary": "HTTP/static-assets/readonly refusal only; raw registry bodies kept private, not device or stream acceptance"
+  },
+  "browserAssessment": "20261113-browser-assessment.json",
+  "cleanup": {
+    "ownedWebPort": 34135,
+    "listenerPresent": false,
+    "ownedBrowserTaskSpace30Finished": true,
+    "previousSpace29": "not found before user-authorized recreation",
+    "otherOwnerProcessesStopped": false,
+    "anonymousMetadataAfterReset": "original checker still HTTP403 rate limited; no checksum output published"
+  },
+  "scope": "Distribution/bytes/versions/installed readonly shell verified. Default sampled iPad preview not passed; no device/IME/real-model/reliability/global-owner acceptance."
+}

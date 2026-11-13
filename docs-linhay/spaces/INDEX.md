@@ -393,16 +393,16 @@
 
 | `SP-282-release-v0-2-44` | [`SP-282-release-v0-2-44`](./SP-282-release-v0-2-44/README.md) | 已发布 | v0.2.44/4d32a545；main/tag CI、Release、公开 checksum/Runner/skills、Homebrew 与 packaged Web 通过；真实动作边界保留 |
 
-| `SP-283-homebrew-public-assets` | [`SP-283-homebrew-public-assets`](./SP-283-homebrew-public-assets/README.md) | main已提交 | tap写入前匿名严格TLS/稳定tag/大小SHA校验；14574a7b；13离线与发布契约通过，未发布 |
+| `SP-283-homebrew-public-assets` | [`SP-283-homebrew-public-assets`](./SP-283-homebrew-public-assets/README.md) | 已随v0.2.45发布 | tap写入前匿名严格TLS/稳定tag/大小SHA校验；14574a7b；13离线与发布契约通过，原实施阶段未发布；后继分发验收见SP-289 |
 
-| `SP-284-simulator-diagnostic-dependencies` | [`SP-284-simulator-diagnostic-dependencies`](./SP-284-simulator-diagnostic-dependencies/README.md) | main已提交 | 3组只读依赖，managed/profile不扩张；14574a7b；提交后CLI167+1854/root/local通过，未操作设备 |
+| `SP-284-simulator-diagnostic-dependencies` | [`SP-284-simulator-diagnostic-dependencies`](./SP-284-simulator-diagnostic-dependencies/README.md) | 已随v0.2.45发布 | 3组只读依赖，managed/profile不扩张；14574a7b；提交后CLI167+1854/root/local通过，未操作设备；后继分发验收见SP-289 |
 
-| `SP-285-android-wm-size-selection` | [`SP-285-android-wm-size-selection`](./SP-285-android-wm-size-selection/README.md) | main已提交并验收 | 标准标签/Override优先/异常拒绝；c4c5f014；focused33、提交后CLI167+1861/local通过，真实Android未执行 |
+| `SP-285-android-wm-size-selection` | [`SP-285-android-wm-size-selection`](./SP-285-android-wm-size-selection/README.md) | 已随v0.2.45发布 | 标准标签/Override优先/异常拒绝；c4c5f014；focused33、提交后CLI167+1861/local通过，真实Android未执行；后继分发验收见SP-289 |
 
-| `SP-286-raw-business-data` | [`SP-286-raw-business-data`](./SP-286-raw-business-data/README.md) | main实现验收完成 | 默认原始业务数据，去除内容猜测/丢值/阻断；WebView/iOS/Harmony和raw证据贯通；AGENTS/skills写回；CLI167+1876、root/local/docs通过，进入本地提交收口，未推送/发布 |
+| `SP-286-raw-business-data` | [`SP-286-raw-business-data`](./SP-286-raw-business-data/README.md) | 已随v0.2.45发布 | 默认原始业务数据，去除内容猜测/丢值/阻断；WebView/iOS/Harmony和raw证据贯通；AGENTS/skills写回；CLI167+1876、root/local/docs通过，进入本地提交收口，未推送/发布；后继分发验收见SP-289 |
 
 | `SP-287-feature-map` | [`SP-287-feature-map`](./SP-287-feature-map/README.md) | 已完成／整理验收 | 4层、22节点、26关联；HTML/v3双主题图及验收，新增public skills覆盖核对与内部经验；仅本地文档提交，不做设备或发布验收 |
 
-| `SP-288-public-skills-completion` | [`SP-288-public-skills-completion`](./SP-288-public-skills-completion/README.md) | 已验收／本地整理提交收口 | 八专题/22功能族导航，38打包与70help/10schema等通过；整理复核加固验收脚本末步门禁及3类反例，不改产品、不安装/推送/发布 |
+| `SP-288-public-skills-completion` | [`SP-288-public-skills-completion`](./SP-288-public-skills-completion/README.md) | 已随v0.2.45发布 | 八专题/22功能族导航，38打包与70help/10schema等通过；整理复核加固验收脚本末步门禁及3类反例，不改产品、原补齐阶段不安装/推送/发布；后继分发验收见SP-289 |
 
-| `SP-289-release-v0-2-45` | [`SP-289-release-v0-2-45`](./SP-289-release-v0-2-45/README.md) | 发布准备 | 用户授权提交/推送/整体发布0.2.45；arm64 CLI/Web/Runner/skills/checksum/Homebrew，门禁与准确SHA CI先行，不移动已有tag |
+| `SP-289-release-v0-2-45` | [`SP-289-release-v0-2-45`](./SP-289-release-v0-2-45/README.md) | 已发布／归档收口 | v0.2.45/f9ddc4f4；Main/Tag/Release/tap、资产/安装通过；默认iPad流409未验过，限定工作台另通过；匿名API限流保留，不改tag |

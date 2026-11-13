@@ -1,0 +1,84 @@
+{
+  "candidate": "f9ddc4f48afdbcf56007edb0b2fa2422fb10e1ce",
+  "targetVersion": "0.2.45",
+  "status": "pass",
+  "toolchain": {
+    "swift": "Apple Swift 6.4",
+    "node": "24.21.0"
+  },
+  "counts": {
+    "rootRuntimeSwiftTesting": 132,
+    "rootSharedSwiftTesting": 313,
+    "rootXCTest": "2 runtime + 5 shared",
+    "cliXCTest": 167,
+    "cliSwiftTesting": 1876,
+    "webTests": 174,
+    "webFailed": 0,
+    "webSkipped": 0,
+    "publicSkillsTests": 38
+  },
+  "skipped": [
+    "extra Xcode Simulator build (TRITON_VERIFY_XCODE=0)"
+  ],
+  "notEstablished": [
+    "physical-device/user-App behavior",
+    "real model quality",
+    "all-platform stream lifecycle",
+    "SP-281 P2/global owner"
+  ],
+  "inputObjects": {
+    "Sources": "6b9784b963680b664e022eedf21ffd2e98c52c23",
+    "Tests": "4446be5c7cd81e22c0c85dfa53b61a1e191aa7a6",
+    "CLI/Tests": "7074f5fb11b32bdb0818c8d777c073929a05f45c",
+    "Package.swift": "8c4a4c88d59160395b5b893c002918b5be2a9a1f",
+    "CLI/Package.swift": "a8b97c7e514fe007c88afd265920cd0f58a21853",
+    "Web": "860e629b68160a659f226b3d5cb6687bb3738069"
+  },
+  "logs": [
+    {
+      "path": "20261113-local-gate.log",
+      "bytes": 104209,
+      "sha256": "fed0895f5782556e4fcd3eef4d6ddc7b8bbb587c67bcbb0bc7299ae8cd6d1141"
+    },
+    {
+      "path": "20261113-cli-tests.log",
+      "bytes": 460098,
+      "sha256": "dd275efe7ff38185be0feeb6060410d4ff6a411fdbe870d3941e1af2cdccfb8d"
+    },
+    {
+      "path": "20261113-web-tests.log",
+      "bytes": 18294,
+      "sha256": "b654407a958696ea844df96f71968ccc792ac1aebbc52495172e4042d7a6c60f"
+    },
+    {
+      "path": "20261113-web-build.log",
+      "bytes": 731,
+      "sha256": "56f4bef5ec37dfec39c448a7c3d90f6846ebbe3815bf94e5c65448294056ccb6"
+    },
+    {
+      "path": "20261113-automation.log",
+      "bytes": 1184,
+      "sha256": "9fa6a1d2e708559abbcd62b7b062e42a32335475d3f168f6144151c135c3fc4a"
+    },
+    {
+      "path": "20261113-skills.log",
+      "bytes": 200,
+      "sha256": "0cfa802b57f4e716b5f3e122c189eb8022ce76ab409536b41b0bfd8ffaa4ca77"
+    },
+    {
+      "path": "20261113-public-assets-tests.log",
+      "bytes": 112,
+      "sha256": "4f60a2c9ce1ab522f198755170677b9bc93b112d593440a20c133acad2719394"
+    },
+    {
+      "path": "20261113-runner-package.log",
+      "bytes": 60,
+      "sha256": "b43655fd885e6fd7a17bfd7143d068e675a7c824be235b28cfd972f02d8f0fc2"
+    },
+    {
+      "path": "20261113-release-dry-run.log",
+      "bytes": 293,
+      "sha256": "107a8eba1c17c70ea15939b647c6c62e535e438d08a9f63e822a1f606670163c"
+    }
+  ]
+}

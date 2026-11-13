@@ -1,0 +1,57 @@
+{
+  "recordType": "curated-browser-assessment-not-original-events",
+  "defaultLivePreview": {
+    "verdict": "not-passed",
+    "httpStatus": 409,
+    "runtimeExceptions": 0,
+    "consoleErrors": 0,
+    "logErrors": 0,
+    "observationWindowMs": 198260,
+    "originalBodyUnavailable": true,
+    "separateReadOnlyDiagnostic": {
+      "separateReadOnlyDiagnostic": true,
+      "originalBrowserHTTPStatus": 409,
+      "originalResponseBody": "CDP no longer retained resource; unavailable, not reconstructed",
+      "diagnosticHTTPStatus": 409,
+      "path": "/web/ios-simulator/mjpeg",
+      "contentType": "application/json",
+      "errorCode": "ios_simulator_resize_capture_state_unknown",
+      "responseBytes": 814,
+      "responseSha256": "360e3e001ccd367831e5dcd9142a6261c925fe85c8d708e9d7b7a94f1db0783b",
+      "boundary": "one same-URL GET diagnostic; no input/retry button, device configuration or guard changes"
+    }
+  },
+  "afterPreviewCloseFirstWindow": {
+    "httpFailures": 1,
+    "attribution": "A stream request started in close-phase and responded during this window; raw request provenance retained privately."
+  },
+  "drainedWorkbenchOnly": {
+    "status": "pass",
+    "scope": "Readonly workbench after preview removal and previous in-flight request drain",
+    "taskSpaceId": 30,
+    "recreatedWithExplicitUserAuthorization": true,
+    "title": "Triton Inspector",
+    "origin": "http://127.0.0.1:34135",
+    "rendered": true,
+    "previewHidden": true,
+    "atlasSelected": true,
+    "observationWindowMs": 2040,
+    "errors": {
+      "runtimeExceptions": 0,
+      "consoleErrors": 0,
+      "logErrors": 0,
+      "httpFailures": 0
+    },
+    "newPreviewRequests": 0,
+    "defaultStreamAccepted": false,
+    "defaultStreamFinding": "HTTP409; separate read-only diagnostic returned ios_simulator_resize_capture_state_unknown; no device/guard changes",
+    "priorWindowFinding": "One old preview response arrived after close; request-start provenance is in browser-close-events.json, not attributed to a new workbench request",
+    "boundary": "No live device/stream/business or demo-run execution acceptance; raw events/screenshots private"
+  },
+  "permission": {
+    "oldSpace29Unavailable": true,
+    "newSpace30ExplicitlyAuthorizedByUser": true,
+    "newSpace30Finished": true
+  },
+  "privacy": "Full events, registry bodies and screenshots retained privately; no App/target identities or images published. The initial summary wording about no devices was superseded by actual automatic target discovery; noAvailableDevices=false was observed, and the stream was not accepted."
+}

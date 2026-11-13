@@ -1,5 +1,7 @@
 # SP-284 — Simulator 服务依赖只读诊断
 
+> 2026-11-13后继：已提交内容随 [v0.2.45](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.45) 分发，发布/资产/安装与限制见 [SP-289验收](../SP-289-release-v0-2-45/plans/20261113-release.md)。以下保留原实施阶段授权与本地验收历史，不提升为新的设备/业务验收；用户agent skills目录未被自动覆盖。
+
 ## 来源与边界
 
 采用 [simslim 固定增量](https://github.com/MobAI-App/simslim/compare/d594c230fe9ed5080189b0ce76afabda6104bae0...7e374b3839d49608a681d1f8b9ca0dd83d35189e) 的 MDM、App Clips 和辅助功能资源服务依赖映射，MIT 全文已核验。当前 main `607410fb` 的 features/doctor 对这些名称返回 unknownFeature。

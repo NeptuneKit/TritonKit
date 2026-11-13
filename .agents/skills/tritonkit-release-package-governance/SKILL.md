@@ -48,7 +48,7 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 
 ## Recovery Rules
 
-- If the installed Xcode rejects the podspec's minimum deployment target, preserve the failed standard lint and do not raise the product minimum just to pass validation. A private `XCODE_XCCONFIG_FILE` may set a supported target for a separately labeled current-toolchain compatibility lint; require exit zero and `TritonKit passed validation.` there too. This does not validate the original minimum. Keep original-minimum validation on a compatible Xcode as an explicit pre-publication blocker.
+- CocoaPods/podspec lint is a retired historical workflow as of 2026-11-10, not a current publication blocker. Current SDK distribution is SwiftPM/iOS16+ along the tag. Do not revive Pod publication or raise the declared product minimum to satisfy a local toolchain; report the actual SDK/build/runtime scope separately.
 - If the wrong tag was pushed but GitHub Release has not been created, cancel only that superseded release workflow, delete the mistaken local and remote tag, correct version manifests on `main`, commit, push, and publish the intended tag. Do not cancel a valid current release workflow.
 - If `release.sh` reports that GitHub Actions completed before assets were visible, treat it as a possible observation race first: inspect `gh release view v<version>`, the Release workflow jobs, checksum file, Homebrew tap commit, and installed `triton version --json` before deciding the release failed.
 - Re-download public assets into a fresh temporary directory and wait for `gh release download` to exit successfully before running checksum or archive validation. A still-running download can leave smaller, truncated `.tar.gz` files that produce a false checksum mismatch; inspect the download process, release asset sizes, and `gzip -t` before rewriting any published asset or checksum manifest.
@@ -58,12 +58,13 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 - Packaged Web verification must launch the published binary from a repository-external working directory without source-root or internal Web path overrides, then assert `mode=packaged` before HTTP or browser checks. Running from the checkout or passing internal path arguments can select the Vite development server and produce a false packaged-release result.
 
 - 区分认证失败与网络失败。DNS/transport错误时`gh auth status`可能报告token invalid；先在不打印凭据的情况下检查认证API是否可达，不据该提示自动清除认证或改全局DNS。必要网络回退只绑定当前任务进程，结束后关闭自有通道。
+- 本机发布后匿名API若403限流，保留错误、quota/reset与未发布checksum输出的事实；不能用认证响应/fixture冒充匿名校验，不改校验器或弱化tap写入前的强制gate。可分别记录准确CI中真实匿名gate成功、正常公开直链字节/hash及本机元数据API不可用的后验观察；只有记录的reset过后才做有界重试，仍失败则保留限制，不循环换身份/网络规避配额。见[SP-289](../../../docs-linhay/spaces/SP-289-release-v0-2-45/plans/20261113-release.md)。
 - 发布runner的Swift版本可与本机/main CI不同；局部新版Release通过不证明旧编译器优化路径。保留编译器版本、函数与SIL崩溃证据，优先以最小源码结构修复并复验旧工具链，不以关优化/跳过build换绿色。失败tag不等于公开Release；下一补丁保留失败尝试关系。SP-196视觉结果纯snapshot builder恢复记录见[发布验收](../../../docs-linhay/spaces/SP-196-upstream-optimization-delivery/plans/20261014-release.md)。
 
 - Packaged preview acceptance must exercise each platform route, parse the registry with SDK tools absent from PATH, and verify an actual decoded frame plus hide/resume/final-subscriber cleanup. A launch plan or HTML 200 does not prove an MJPEG route exists. Test the local artifact after archive extraction with no independent dev proxy, and retain the binary/static-asset hashes; UI changes after the snapshot require rebuilding the affected candidate.
 
 - Homebrew的`bundledWebRoot`可能是稳定share符号链接；核对resolve后的Cellar版本，不要求原字符串含版本号。`triton web --json`只输出launch plan；用`--print-command --json`检查计划，实际启动去掉JSON输出选项。
-- 浏览器默认布局若因设备诊断拒绝实时流，保留HTTP错误、console计数和target-bound doctor证据；可另测关闭流组件后的工作台，但必须标注该结果仅覆盖限定布局，不能据此把默认页面或实时流验收记为通过。不得绕过设备安全保护以满足零console error。
+- 浏览器默认布局若因设备诊断拒绝实时流，保留HTTP错误、console计数和target-bound doctor证据；可另测关闭流组件后的工作台，但必须标注该结果仅覆盖限定布局，不能据此把默认页面或实时流验收记为通过。不得绕过设备安全保护以满足零console error。关闭阶段在途请求若稍后失败，保留request-start来源与响应；排空后再开启新的限定观察窗口，不能清掉旧失败后统称默认流通过。
 
 ## CI / Release Performance Contract
 

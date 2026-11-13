@@ -1,5 +1,7 @@
 # SP-286 — 原始业务数据与上层策略边界
 
+> 2026-11-13后继：已提交内容随 [v0.2.45](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.45) 分发，发布/资产/安装与限制见 [SP-289验收](../SP-289-release-v0-2-45/plans/20261113-release.md)。以下保留原实施阶段授权与本地验收历史，不提升为新的设备/业务验收；用户agent skills目录未被自动覆盖。
+
 ## 需求与授权
 
 用户2026-11-12裁决：移除现有代码自行识别敏感内容、丢值/阻断及默认改写；TritonKit主旨是提供原始数据，写入AGENTS和agent环境。前置[职责审计](../SP-279-pinky-reference/plans/20261112-responsibility-boundary-audit.md)。

@@ -1,5 +1,7 @@
 # SP-285 — Android wm size 有效尺寸选择
 
+> 2026-11-13后继：已提交内容随 [v0.2.45](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.45) 分发，发布/资产/安装与限制见 [SP-289验收](../SP-289-release-v0-2-45/plans/20261113-release.md)。以下保留原实施阶段授权与本地验收历史，不提升为新的设备/业务验收；用户agent skills目录未被自动覆盖。
+
 ## 问题与边界
 
 11月12日跟进 [Mobile MCP 1.0.17](https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.17) 的独立 mobilecli 横屏修复时，本地主线复核发现另一个可独立证明的解析缺陷：`TKAndroidWMSizeParser` 返回任意首个 WxH，正常 Physical 在前、Override 在后的输出会误选物理尺寸；错误诊断中的 WxH 也可能被当成功。
