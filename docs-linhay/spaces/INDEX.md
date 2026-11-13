@@ -3,8 +3,8 @@
 
 2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-11-13（SP-288 public skills 使用指引补齐）
-> 覆盖范围：288/288 个已存在 space
+> 最近同步：2026-11-13（SP-289 v0.2.45整体发布登记）
+> 覆盖范围：289/289 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -19,8 +19,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 288/288 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 288/288 | 每条记录链接到现有 space README |
+| 编号登记 | 289/289 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 289/289 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -404,3 +404,5 @@
 | `SP-287-feature-map` | [`SP-287-feature-map`](./SP-287-feature-map/README.md) | 已完成／整理验收 | 4层、22节点、26关联；HTML/v3双主题图及验收，新增public skills覆盖核对与内部经验；仅本地文档提交，不做设备或发布验收 |
 
 | `SP-288-public-skills-completion` | [`SP-288-public-skills-completion`](./SP-288-public-skills-completion/README.md) | 已验收／本地整理提交收口 | 八专题/22功能族导航，38打包与70help/10schema等通过；整理复核加固验收脚本末步门禁及3类反例，不改产品、不安装/推送/发布 |
+
+| `SP-289-release-v0-2-45` | [`SP-289-release-v0-2-45`](./SP-289-release-v0-2-45/README.md) | 发布准备 | 用户授权提交/推送/整体发布0.2.45；arm64 CLI/Web/Runner/skills/checksum/Homebrew，门禁与准确SHA CI先行，不移动已有tag |

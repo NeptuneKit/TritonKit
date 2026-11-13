@@ -1,3 +1,5 @@
+2026-11-13：[SP-289-release-v0-2-45](./SP-289-release-v0-2-45/README.md)按用户明确授权准备提交/推送/整体发布v0.2.45；当前尚未推送/打tag，先完成版本、本地完整门禁与准确main SHA CI，再核对公开资产、Homebrew和仓外只读Web。
+
 2026-11-13：[SP-288-public-skills-completion](./SP-288-public-skills-completion/README.md)八专题/22功能族导航及4处repo-only链接修复已验收；38打包、70help/10schema等通过。后续另获本地整理提交授权，复核加固验收脚本compile末步门禁并补3类反例，经验已回写；只收本轮文档/回归，不改产品、不推送/安装/发布。
 
 2026-11-12：[SP-287-feature-map](./SP-287-feature-map/README.md)已完成当前功能图：4层、22节点、26关联，离线HTML与浅/深色3600×3120 PNG，浏览器/文档验收通过。后续按用户要求整理本地提交，补public skills覆盖核对与内部导出经验；原图保留6467b413+WIP快照，整理基线5a10d269，不改产品或操作设备，不推送发布。
