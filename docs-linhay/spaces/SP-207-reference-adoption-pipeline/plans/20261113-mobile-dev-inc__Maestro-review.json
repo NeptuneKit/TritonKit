@@ -1,0 +1,60 @@
+{
+  "repository": "mobile-dev-inc/Maestro",
+  "base_sha": "aaa248d7fd4ca4924444dc027af9c7a62a9be348",
+  "head_sha": "08f1cd629e4252f2b8c86642a20a76474dab96f6",
+  "actual_main": "366ae99b4be84b44e8e0718b39f278315d7c4c96",
+  "complete_review": true,
+  "errors": [],
+  "decision": "observe",
+  "reason": "新6提交25路径完整审阅；本地录屏无同源Skia/JCodec合成链，CI always仅总结gate且合理；未确认直接采用缺口。",
+  "counts": {
+    "commits": 6,
+    "parent_edges": 6,
+    "paths": 25,
+    "text_versions": 49,
+    "diff_lines": 2035
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "path": "LICENSE",
+    "html_url": "https://github.com/mobile-dev-inc/Maestro/blob/08f1cd629e4252f2b8c86642a20a76474dab96f6/LICENSE"
+  },
+  "release_tag": "cli-2.12.1",
+  "release_changed": false,
+  "runtime_executed": false,
+  "tests_executed": false,
+  "excluded_paths": [],
+  "review_scope": "All 2035 parent diff lines, current RecordCommand/LocalVideoRenderer full source, all added tests and related frame/cache/CI paths; all trees complete and file hashes checked.",
+  "findings": [
+    {
+      "mechanism": "VFR local video composition",
+      "decision": "observe",
+      "boundary": "Triton invokes simctl/adb capture, does not compose terminal overlay with Skia/JCodec; no reproduced local buffer reuse/frame-timing defect. Upstream speed/size claims unverified locally."
+    },
+    {
+      "mechanism": "ANSI off terminal versus overlay",
+      "decision": "observe",
+      "boundary": "Triton JSON envelope is separate; no same AnsiResultView pipeline or proven ANSI leakage."
+    },
+    {
+      "mechanism": "CI cancellation",
+      "decision": "already_covered",
+      "boundary": "Current ci.yml always() only on final validation aggregator, comparable to upstream preserved e2e-gate; do not indiscriminately replace it."
+    },
+    {
+      "mechanism": "analytics parsed command names",
+      "decision": "observe",
+      "boundary": "No equivalent external analytics requirement; do not introduce telemetry."
+    },
+    {
+      "mechanism": "local-only record",
+      "decision": "already_covered",
+      "boundary": "Current record uses local simctl/adb; no retired remote renderer dependency."
+    }
+  ],
+  "future_bdd": [
+    "If later adding derived video overlay, keep raw recording separate; duration/partial/index failure must be explicit, event timing tested and performance measured locally."
+  ],
+  "source_url": "https://github.com/mobile-dev-inc/Maestro/compare/aaa248d7fd4ca4924444dc027af9c7a62a9be348...08f1cd629e4252f2b8c86642a20a76474dab96f6"
+}

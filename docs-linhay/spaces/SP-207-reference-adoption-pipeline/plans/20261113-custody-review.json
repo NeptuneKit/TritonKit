@@ -1,0 +1,360 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-11-13T02:13:30.862214+00:00",
+  "actual_main": "366ae99b4be84b44e8e0718b39f278315d7c4c96",
+  "scope": "Read-only custody hashes, registered adoption ancestry, pending local assessments, raw business data boundaries and historical session closeout. No upstream refresh or product validation.",
+  "complete_review": true,
+  "errors": [],
+  "manifests": [
+    {
+      "path": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261112-evidence-manifest.json",
+      "sha256": "c09de711bda3fffbb8fd159bcbfa3fe8ffed666453acd0d1fc838eeb52c388f6",
+      "declared_file_count": 1001,
+      "entry_count": 1001,
+      "verified_count": 1001,
+      "actual_total_bytes": 61738259,
+      "duplicate_paths": [],
+      "failures": []
+    },
+    {
+      "path": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/20261112-closeout-evidence.json",
+      "sha256": "efdfbc08e2317e08592db1925afa982a3d00176d50b9a5639416978dc450bfaf",
+      "declared_file_count": 5,
+      "entry_count": 5,
+      "verified_count": 5,
+      "actual_total_bytes": 262834,
+      "duplicate_paths": [],
+      "failures": []
+    }
+  ],
+  "adoptions": [
+    {
+      "key": "OpenMinis/iCTRL:discovery-trust-boundary",
+      "state": "local_merged",
+      "local_merge_sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
+      "resolved_sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "OpenMinis/iCTRL:response-log-privacy",
+      "state": "local_merged",
+      "local_merge_sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
+      "resolved_sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "OpenMinis/iCTRL:runner-service-authentication",
+      "state": "local_merged",
+      "local_merge_sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
+      "resolved_sha": "0a246d008219b85d778d43931f8dc17e89571a5b",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "dongxinsuperman/ai-phone:simulator-ax-trusted-geometry",
+      "state": "local_merged",
+      "local_merge_sha": "7a8e9f56",
+      "resolved_sha": "7a8e9f56d168810908b6e3a0792a7934ab408e5d",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "mobile-next/mobile-mcp:android-focused-activity-identity",
+      "state": "local_merged",
+      "local_merge_sha": "7a8e9f56",
+      "resolved_sha": "7a8e9f56d168810908b6e3a0792a7934ab408e5d",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "mobile-next/mobile-mcp:android-adb-legacy-text-escaping",
+      "state": "local_merged",
+      "local_merge_sha": "7a8e9f56",
+      "resolved_sha": "7a8e9f56d168810908b6e3a0792a7934ab408e5d",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "lycorp-jp/sim-use:simulator-display-topology-safety",
+      "state": "local_merged",
+      "local_merge_sha": "0d35e95e",
+      "resolved_sha": "0d35e95e6c4d409f756e3332d627cd4ca6eb28b0",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "lycorp-jp/sim-use:simulator-display-topology-controller",
+      "state": "local_merged",
+      "local_merge_sha": "b782c192",
+      "resolved_sha": "b782c192582d969561282fbfb5e3cf8f8626b592",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "dongxinsuperman/ai-phone:harmony-forward-ownership-cleanup",
+      "state": "local_merged",
+      "local_merge_sha": "34f713c7",
+      "resolved_sha": "34f713c72787a502e57c7a45df82c4e45a90bbac",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "dongxinsuperman/ai-phone:harmony-forward-ownership-controller",
+      "state": "local_merged",
+      "local_merge_sha": "36145c62",
+      "resolved_sha": "36145c622e5780d936894b6601a8edcf76e427fa",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "TritonKit:simulator-device-hub-native-input",
+      "state": "local_merged",
+      "local_merge_sha": "c2f4bdd1",
+      "resolved_sha": "c2f4bdd191ec6bf03f0bda011d79f5c5539b7b34",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "lycorp-jp/sim-use:simulator-resizable-display-routing",
+      "state": "local_merged",
+      "local_merge_sha": "f9399e5e",
+      "resolved_sha": "f9399e5ea9689839ecca13bdcda3ff6a358ea0df",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "lycorp-jp/sim-use:simulator-resizable-display-controller",
+      "state": "local_merged",
+      "local_merge_sha": "f9399e5e",
+      "resolved_sha": "f9399e5ea9689839ecca13bdcda3ff6a358ea0df",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "MobAI-App/simslim:simulator-resource-read-transient-retry",
+      "state": "local_merged",
+      "local_merge_sha": "a0eebff06564dcf68ccf728efc97ec2d4f3d9292",
+      "resolved_sha": "a0eebff06564dcf68ccf728efc97ec2d4f3d9292",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "TritonKit:host-process-post-exit-drain-deadline",
+      "state": "local_merged",
+      "local_merge_sha": "9fbda1d5df52bc8e5d814d65fa5992552a32f86b",
+      "resolved_sha": "9fbda1d5df52bc8e5d814d65fa5992552a32f86b",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "MobAI-App/simslim:files-recents-service-diagnostic",
+      "state": "local_merged",
+      "local_merge_sha": "607cdf1c025547ce8b5be21eaa00548e25400bb4",
+      "resolved_sha": "607cdf1c025547ce8b5be21eaa00548e25400bb4",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "mobile-next/mobile-mcp:detached-log-exclusive-create",
+      "state": "local_merged",
+      "local_merge_sha": "56ef7719266d90f79548b649054710058266f78f",
+      "resolved_sha": "56ef7719266d90f79548b649054710058266f78f",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "heoblitz/Loupe:simulator-dtuhid-transport",
+      "state": "local_merged",
+      "local_merge_sha": "c4a14e5282479b3fa10da0b1bbb3f720e1393d2d",
+      "resolved_sha": "c4a14e5282479b3fa10da0b1bbb3f720e1393d2d",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "heoblitz/Loupe:homebrew-public-assets-before-tap-publication",
+      "state": "local_merged",
+      "local_merge_sha": "14574a7b26e2f69187d0ad21959cfcf3164f182d",
+      "resolved_sha": "14574a7b26e2f69187d0ad21959cfcf3164f182d",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "MobAI-App/simslim:simulator-resource-readonly-feature-dependencies",
+      "state": "local_merged",
+      "local_merge_sha": "14574a7b26e2f69187d0ad21959cfcf3164f182d",
+      "resolved_sha": "14574a7b26e2f69187d0ad21959cfcf3164f182d",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "key": "mobile-next/mobile-mcp:android-wm-size-effective-override",
+      "state": "local_merged",
+      "local_merge_sha": "c4c5f014150f80ce848ee43bd7a2932857fb704b",
+      "resolved_sha": "c4c5f014150f80ce848ee43bd7a2932857fb704b",
+      "ancestor_of_actual_main": true,
+      "git_exit_code": 0,
+      "stderr": ""
+    }
+  ],
+  "registered_delivery": {
+    "task_count": 21,
+    "merged_ancestor_count": 21,
+    "unmerged_registered_tasks": [],
+    "caveat": "Ancestry verifies integration history, not current semantic suitability or runtime acceptance. Historical privacy adoption is subject to the newer explicit raw-data policy."
+  },
+  "assessments": [
+    {
+      "key": "tddworks/baguette:optional_exact_same_target_set_text_readback",
+      "decision": "revise_first",
+      "state": "assessment_pending",
+      "finding": "Native semantic setText still clears, resolves responder, inserts and reports submission success without final same-object exact readback. This alone does not establish a false success defect or necessity to expand the contract. Existing verify/WebView/Harmony verification must be accounted for.",
+      "new_policy": "SP286 supersedes prior proposals to reject secure business input or omit business values by default. Preserve raw available business values; explicit secure/redact is an output transformation. Unreadable/system-masked values mean verification unavailable, never a business-sensitivity ban on otherwise valid input.",
+      "required_before_adopt": [
+        "Demonstrate concrete postcondition use case or local false-positive requiring native exact readback; freeze expected-versus-observed contract.",
+        "Separate submission result and optional verification; nil/unreadable differs from empty string.",
+        "Bind verification to the same runtime, target, object, lease and observation; stale identity or mismatch must not trigger replay.",
+        "Retain raw result by default; only explicitly requested transformation changes the output copy."
+      ],
+      "implementation_dispatched": false
+    },
+    {
+      "key": "jfarcand/mirroir-mcp:bounded_local_port_probe",
+      "decision": "revise_first",
+      "state": "assessment_pending",
+      "finding": "CLIWebRuntime.swift unchanged from 0ec972e6, including synchronous getaddrinfo/connect without an explicit aggregate deadline. Three prior local loopback trials did not reproduce a hang; no new tests in this read-only audit.",
+      "source_completeness": "Prior 52-commit semantic-review gap remains; this custody audit does not advance source checkpoint.",
+      "required_before_adopt": [
+        "Reproduce or justify an actual supported local-path failure.",
+        "Define bounded resolver/connect deadline, cancellation and unknown/error semantics without treating timeout as free port.",
+        "Cover all affected Boolean consumers before changing the API."
+      ],
+      "sp286_effect": "Raw business payload responsibility does not remove technical timeout/budget boundaries.",
+      "implementation_dispatched": false
+    }
+  ],
+  "genuine_unfinished_work": {
+    "space": "SP-281-action-context-expansion",
+    "state": "P2_unified_execution_migration_incomplete",
+    "not_in_21_registered_tasks": true,
+    "remaining": [
+      "SimTap/SimSwipe still use runWebHostDeviceInput; operation names and helper tests do not prove receipt routing.",
+      "Ordinary host nonzero/timeout throws can bypass shared receipt finalization through legacy failure handling.",
+      "Default admission/generation stores are recreated per call; unified owner, locks and cancellation are incomplete.",
+      "act/app/WebView/manage/workspace/replay are not all migrated to the shared coordinator and receipt.",
+      "Observation/settle business mechanisms, global Stop/resume barrier and atomic lease-check-to-provider boundary are not completed."
+    ],
+    "next_action": "Parent should reconcile existing SP281 ownership and freeze a scoped main-serial BDD/test/implementation slice; do not reopen completed archived delivery chats or create duplicate adoption items.",
+    "no_device_or_shared_test_performed": true
+  },
+  "session_closeout": {
+    "persisted_archived_thread_ids": [
+      "01a14284-df87-7d13-8373-a4d3a56fd470",
+      "01a14285-3be0-7213-9433-374c139189bd",
+      "01a14285-3edd-7722-9c46-538e6f6066f4",
+      "01a142ac-b6e1-7db1-87ad-e0e10935ae69",
+      "01a1580b-39b2-7ba1-b360-564874c87f35",
+      "01a175fc-c9c4-7053-b91e-74c209d3f0ca",
+      "01a175fd-5c91-7b52-bc7c-683468efff9f",
+      "01a1773d-1703-7152-bfa0-a6e452491809",
+      "01a1773d-8556-7a01-a885-a0f5d0c68a6d",
+      "01a17b28-ccf7-7593-b589-72fa36290516",
+      "01a17b29-206c-7b73-bfc4-6bded108ca9d",
+      "01a18fb4-0f41-73e2-a0b7-741aa13b2bc5",
+      "01a19a07-826b-7453-8624-e46a38f9cb7d"
+    ],
+    "persisted_archived_count": 13,
+    "persisted_verified_on": "2026-11-02",
+    "fresh_archive_status_queried": false,
+    "current_audit_caller_artifacts": [],
+    "current_audit_caller_list_artifacts_observed": true,
+    "cross_task_attachment_status": "unresolved_historical_owner_primary_blocker_not_freshly_verified",
+    "remaining_attachment": "SP254 original missing managed attachment belonged to another task; restored -5618 checkout was primary and could not be archived. Empty artifacts in this audit caller does not prove those other-task attachments removed.",
+    "source": "docs-linhay/spaces/SP-255-dtuhid-integration/plans/20261102-app-attachment-cleanup.md",
+    "safe_action": "No archived chat reopened, no attachment archived/removed. Reconcile in owning UI/task only when needed and supported; current audit cannot claim cleanup success.",
+    "long_running_controller": "keep_open"
+  },
+  "fixed_main_sources": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "e1d5b30364326717a15d9bd5974628af40c048ebea63292a048e6704c4ef473e"
+    },
+    {
+      "path": "docs-linhay/memory/EXPERIENCE.md",
+      "sha256": "2c4333463b7c54b3ee3a8d374f3fefd8588d08b072df4f30e908d59468dc4b79"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/adoption-state.json",
+      "sha256": "adbe96ced2398ec0b3068dd44029a655c9fe149aefe2f2aca64391f041c3546e"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-281-action-context-expansion/README.md",
+      "sha256": "939d2fcd749fc680698792d9c4b7d56c247def91e40d36077412be26ceaac93c"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-281-action-context-expansion/plans/20261112-session-closeout.md",
+      "sha256": "2abad092ecee0f2d7105eaa00082d8f0e04fb5e495e2470b94003a57ccf45b26"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-286-raw-business-data/README.md",
+      "sha256": "4ce5cc083b690a430c4cd7dfeb142548370ae1bc2d8cbe2bdba9350289a2f1e8"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-286-raw-business-data/plans/20261112-validation.md",
+      "sha256": "40e3d7c8a973e792439ad67b8a9abb6d7b3eb3956dacbb4811beaeac77baf536"
+    },
+    {
+      "path": "docs-linhay/spaces/SP-255-dtuhid-integration/plans/20261102-app-attachment-cleanup.md",
+      "sha256": "2ab0f45ddf1534320091e5560ce2270cf0f11257a049ffb4face77c288f86af0"
+    },
+    {
+      "path": "Sources/TritonKit/TKRuntimeInputActions.swift",
+      "sha256": "6126951c8b0dd0289d1525a07fd9f8f5e0bab6be88355932436cf007440e8a67"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIHarmonyVerifiedInput.swift",
+      "sha256": "8c20726b99a4f5bd00bc1d9e43be4ed4800736b8e1926761e4b1d1ebba3507fd"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIWebRuntime.swift",
+      "sha256": "0b61d035a76323dd4767a27a8058e753d6b86bc68b80707005d53784340d985b"
+    }
+  ],
+  "boundaries": {
+    "network": false,
+    "device": false,
+    "third_party_code_execution": false,
+    "shared_tests": false,
+    "repository_writes": false,
+    "old_archive_writes": false,
+    "git_mutation": false,
+    "thread_mutation": false,
+    "archive_writes": [
+      "custody-review.json",
+      "custody-review.md"
+    ],
+    "history": "Historical 20261102 custody loss was not reaudited; do not convert it into restored evidence based on successful 20261112 hash checks.",
+    "experience": "No new general process rule; apply existing raw-business-data, production-route proof and evidence-custody rules. This report records their concrete effect without changing authoritative repository files."
+  }
+}

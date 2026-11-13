@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "stage": "completed",
+  "completed_at": "2026-11-13T02:19:12.346729+00:00",
+  "manifest": "20261113-evidence-manifest.json",
+  "verified_file_count": 3291,
+  "files": [
+    {
+      "path": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/reference-state.json",
+      "before_sha256": "f2f80dd1f1e7d922a77e0c7abd6063cbc43775288bba80667d5b230aace996d9",
+      "after_sha256": "b1187c062f916df4c426698e61db106ed9c6bc7650447a44f41dce0a153a8bda",
+      "before_file": "publication-reference-state.json.before",
+      "after_file": "publication-reference-state.json.after",
+      "applied": true,
+      "reread_verified": true
+    },
+    {
+      "path": "docs-linhay/spaces/SP-193-ictrl-reference-tracking/plans/upstream-state.json",
+      "before_sha256": "92b56d50eaf03ee3b624cb8efbed1510453441a385404a1652ec0ab78cd13812",
+      "after_sha256": "7949cd4e4e06393ab4f24da3c355bfadbccfa85deda2e85f0901add4d378c6fa",
+      "before_file": "publication-upstream-state.json.before",
+      "after_file": "publication-upstream-state.json.after",
+      "applied": true,
+      "reread_verified": true
+    },
+    {
+      "path": "docs-linhay/spaces/SP-207-reference-adoption-pipeline/plans/adoption-state.json",
+      "before_sha256": "adbe96ced2398ec0b3068dd44029a655c9fe149aefe2f2aca64391f041c3546e",
+      "after_sha256": "4402b9ddf20e83b966dd7468c56dde0cd01423a0cfaf5d8dd47fdff3945c9f3a",
+      "before_file": "publication-adoption-state.json.before",
+      "after_file": "publication-adoption-state.json.after",
+      "applied": true,
+      "reread_verified": true
+    }
+  ]
+}

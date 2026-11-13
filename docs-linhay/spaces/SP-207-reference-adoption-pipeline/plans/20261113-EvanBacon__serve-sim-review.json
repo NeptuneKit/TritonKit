@@ -1,0 +1,154 @@
+{
+  "repository": "EvanBacon/serve-sim",
+  "base_sha": "cea9a7df9b73fb04f4f257640d10c7af3770950f",
+  "head_sha": "0b4a9ac5126a153071512dd70275418cb14fa0ba",
+  "actual_main": "366ae99b4be84b44e8e0718b39f278315d7c4c96",
+  "complete_review": true,
+  "errors": [],
+  "decision": "observe",
+  "reason": "本次五提交已完整审阅；camera与agent核心约束已覆盖，持久HID client、AX派生视图及record UI改进无已证明的当前main缺口，不新增采用分派。",
+  "coverage": {
+    "commits": 5,
+    "parent_steps": 5,
+    "trees": 6,
+    "paths": 35,
+    "text_blobs": 57,
+    "diff_lines": 3390,
+    "full_core_text_versions": 18,
+    "all_diffs_semantically_read": true,
+    "remaining_review": [],
+    "details": "coverage-integrity.json"
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "path": "LICENSE",
+    "sha256": "9024cdf56dfe7e66523698a9f63d3a0061eb15f43bd5ea8e3833a56017ae37fd",
+    "full_text_reviewed": true,
+    "unchanged": true,
+    "source": "https://github.com/EvanBacon/serve-sim/blob/0b4a9ac5126a153071512dd70275418cb14fa0ba/LICENSE",
+    "terms": "保留版权、许可与适用NOTICE；修改文件注明修改；本轮不复制代码、无新增许可采用义务。"
+  },
+  "release": {
+    "latest_non_draft": null,
+    "notes": "API完整空列表，无release notes可读；不从提交推断发布。",
+    "pages": 1,
+    "complete": true
+  },
+  "decisions": [
+    {
+      "mechanism": "camera-launch-environment",
+      "decision": "covered",
+      "reason": "本地已有simCameraLaunchEnvironment保持base、选定bundle注入、冲突DYLD明确失败；CameraCommandTests覆盖SIMCTL_CHILD前缀与计划接线。上游将同一表达式提为helper，无新增执行能力。"
+    },
+    {
+      "mechanism": "hid-wire-native-args-and-keyboard-usages",
+      "decision": "observe",
+      "reason": "上游精确viewer wire args、USB HID key tables一致性回归。本地NativeHIDRuntimeTests已有tap/swipe归一化phase/错误/unknown边界，DTUHIDWire明确无public key/button API；不同协议不能仅因测试存在而扩范围。"
+    },
+    {
+      "mechanism": "agent-guide-consolidation",
+      "decision": "covered",
+      "reason": "本地公开skill已有fresh alias、目标绑定、unknown不自动重放、host提交非业务成功、显式恢复和记录证据边界。serve-sim控制daemon/repair-input具体命令不可移植为Triton说明。"
+    },
+    {
+      "mechanism": "record-toolbar-motion",
+      "decision": "observe",
+      "reason": "240ms glyph/width/elapsed动画，保存首commit保留最后时间，reduced motion改crossfade；正式Web控制面无本次新增本地需求，未来设计任务可参考。"
+    },
+    {
+      "mechanism": "persistent-hid-client-state-and-readiness",
+      "decision": "observe",
+      "actual_gap": "未确认当前单请求隔离helper存在上游持久client跨boot复用缺陷；不能把架构不同等同已实现每次send状态读取。",
+      "reason": "本地每请求解析booted目标、动作前后新鲜度/归属门禁；legacy等待completion，DTUHID前后no-event barrier并在错误/超时取消；unknown不重放。上游专门处理长寿命client，新增ready(nil)放行、touch-up探针和异步completion语义不宜照搬。",
+      "local_files": [
+        "Sources/TritonKitCLI/CLIHostNativeDigitizer.swift",
+        "Sources/TritonKitCLI/CLIHostNativeHIDRuntime.swift",
+        "Sources/TritonKitCLI/CLIHostDTUHIDTransport.swift",
+        "CLI/Tests/TritonKitCLITests/NativeHIDRuntimeTests.swift"
+      ],
+      "dispatch_ready": false
+    },
+    {
+      "mechanism": "anonymous-full-height-ax-wrapper-projection",
+      "decision": "observe",
+      "actual_gap": "当前main未发现该wrapper导致的选取失败证据；CLI原始AX描述与bounded observation需保持真实结构/字段。",
+      "reason": "上游以role/type、空label/value/id及95%高度筛掉wrapper并保留children，是派生压缩投影；不得静默改写本地原始采集。现有字段值不因敏感猜测屏蔽。",
+      "local_files": [
+        "Sources/TritonKitCLI/CLIHostSimAXCommand.swift",
+        "Sources/TritonKitCLI/CLIHostSimulatorAXDriver.swift",
+        "Sources/TritonKitCLI/CLIObservationRuntime.swift"
+      ],
+      "dispatch_ready": false
+    }
+  ],
+  "conditional_bdd_not_dispatch": [
+    {
+      "scenario": "未来明确需要持久HID client时",
+      "given": "target离开Booted、状态unknown或deadline到期",
+      "when": "收到新的input",
+      "then": "无业务input发送；返回显式未投递/unknown，不重放；旧epoch晚到回调不能复活新client；probe不得伪装为无副作用；所有初始/重连与在途资源均有边界。",
+      "benefit": "避免跨boot复用与错误成功确认；现有单请求架构未证实需此切片。",
+      "candidate_files": [
+        "Sources/TritonKitCLI/CLIHostNativeDigitizer.swift",
+        "Sources/TritonKitCLI/CLIHostDTUHIDTransport.swift",
+        "CLI/Tests/TritonKitCLITests/NativeHIDRuntimeTests.swift"
+      ]
+    },
+    {
+      "scenario": "未来有明确紧凑AX展示需求时",
+      "given": "匿名满高group含可操作children",
+      "when": "显式选择派生视图",
+      "then": "原始树/业务值/来源可回溯；children与target身份保留；预算导致截断显式partial；不把视图启发式混入原始数据。",
+      "benefit": "仅在有真实显示/选择问题时减少结构噪声；当前无复现证据，不分派。",
+      "candidate_files": [
+        "Sources/TritonKitCLI/CLIHostSimAXCommand.swift",
+        "Sources/TritonKitCLI/CLIObservationRuntime.swift"
+      ]
+    }
+  ],
+  "upstream_limitations": [
+    "cameraLaunchEnv auto只不添加mirror覆盖；若base已有SIMCTL_CHILD_SIMCAM_MIRROR_MODE则仍继承，新增auto测试未覆盖该情形；保留旧行为，非本次引入回归。",
+    "HID wire tests使用fake native依赖与10ms settle；不证明native delivery。Keyboard测试只验证US layout及明确unknown，不是任意unicode/IME。",
+    "record motion测试包括SSR、happy-dom布局提交和CSS字符串断言，没有真实浏览器视觉验收。",
+    "agent-guide性能66.2→31.9ms及113.3→84.8ms为上游自述，未经本地验证；文档明确ack超时可能exit0，不能以exit0推成功。",
+    "HIDDeliveryGate ready(nil)保持放行；新增测试明确允许读取失败，不是fail-closed unknown。",
+    "BoundedStateReader timeout100ms，reconnect150ms均为源代码预算；初始makeHIDClient仍非同一bounded路径。stale init epoch隔离不等于取消或全局在途资源上限。",
+    "notReady期间touch-up center作为探针存在真实事件副作用；无本地真实安全验证。30秒仅日志，实际仍持续等待成功，与gate注释部分不一致。",
+    "caller send返回handoff后才异步处理completion，首个坏发送仍可能先ACK；本轮修复不证明guest/business acceptance。",
+    "AX新wrapper过滤之前仍有sameRect独立过滤，testID保留不是所有几何的绝对保证；既有MAX_ELEMENTS500截断行为非本轮新变更。",
+    "上游shutdown e2e含启动/关机/重启和tap重试，仅审阅源码；未执行，不声称本地已通过该真实用例。"
+  ],
+  "validation": {
+    "collection_and_hashes": "passed",
+    "semantic_review": "complete",
+    "upstream_tests": "not_run",
+    "local_tests": "not_run_read_only_review",
+    "simulator_device_actions": "not_run",
+    "dependencies": "not_installed",
+    "third_party_code": "not_executed",
+    "publication": "not_performed",
+    "runtime_acceptance": "not_claimed"
+  },
+  "raw_data_policy": "业务内容按原样保留，不按字段值/名称猜敏感、拒绝或抹除；路径采集白名单用于避免二进制与凭据文件，不过滤业务源字段。认证/目标归属/观察新鲜度/文件预算/unknown不重放仍属技术契约。",
+  "deduplication": "成功基线为11/12 cea9…，已闭合历史partial不重新计新；不重复分派SP283/284/285或DTUHID既有采用。",
+  "adoption_candidates": [],
+  "remaining_review": [],
+  "checkpoint_eligible": true,
+  "checkpoint_written": false,
+  "evidence": [
+    "review-manifest.json",
+    "review-increment.diff",
+    "coverage-integrity.json",
+    "core-hid-ax-review.json",
+    "ui-docs-regression-review.json",
+    "local-source-review.json"
+  ],
+  "sources": [
+    "https://github.com/EvanBacon/serve-sim/compare/cea9a7df9b73fb04f4f257640d10c7af3770950f...0b4a9ac5126a153071512dd70275418cb14fa0ba",
+    "https://github.com/EvanBacon/serve-sim/commit/0b4a9ac5126a153071512dd70275418cb14fa0ba",
+    "https://github.com/EvanBacon/serve-sim/commit/0a39234afcd04300b2eafe95ead643eeba03c484",
+    "https://github.com/EvanBacon/serve-sim/commit/2a3c47b3554dbfab10e60d259772f16504a6ad54",
+    "https://github.com/EvanBacon/serve-sim/commit/6e887324912675222bf5afa9a3642cb9c91906d6",
+    "https://github.com/EvanBacon/serve-sim/commit/7ebb75880ca000d42a56e96c52daa4b36f098b33"
+  ]
+}

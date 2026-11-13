@@ -248,7 +248,7 @@
 
 | `SP-206-ictrl-security-integration` | [`SP-206-ictrl-security-integration`](./SP-206-ictrl-security-integration/README.md) | v0.2.30已发布 | SP-203～205已整合；057d1012补齐收口历史，worktree/分支已清理 |
 
-| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 11月11日34仓21完整/13 partial；SP283/284提交14574a7b并复验，历史455原始证据缺失原因unknown |
+| `SP-207-reference-adoption-pipeline` | [`SP-207-reference-adoption-pipeline`](./SP-207-reference-adoption-pipeline/README.md) | 持续追踪与采用 | 11月13日34仓21完整/13 partial；21采用在main，Baguette候选按SP286修正；旧证据缺失不变 |
 
 | `SP-208-update-version-alignment` | [`SP-208-update-version-alignment`](./SP-208-update-version-alignment/README.md) | v0.2.30已发布 | 6c120ccd已整合；main门禁与CLI1474+59通过，worktree/分支已清理，双架构与安装验收通过 |
 

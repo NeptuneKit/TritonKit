@@ -103,3 +103,7 @@ SP-203～205、[SP-210](../spaces/SP-210-simulator-ax-geometry/README.md)、[SP-
 ## 2026-11-12 main串行采用核对
 
 34仓日检中新增SP285：以mobile-mcp变化为线索，先追实际消费者和AOSP固定输出合同，再用失败测试证明本地有效尺寸选择缺陷；main c4c5f014仅提交精确文件/共享文档段落。提交后完整CLI与适用local通过，原SP281/SP279 WIP保留。读取完整性和采用状态分开，Baguette/Mirroir候选保持revise-first，不因已分派审查自动升级采用。见[当日日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261112-reference-update-report.md)。
+
+## 2026-11-13 原始数据职责复核
+
+参考采用以SP286及当前AGENTS为准：不照搬上游按业务字段/内容判敏感、删原件或禁止输入的策略。Baguette昨日候选中的secure拒绝/默认不返回值仅作历史，当前改为输入提交与同对象读回独立；系统不可读报告verification unavailable，显式转换才改变表示，不编造成功、不重放。Mirroir音频转写只能作为派生产物候选，静音阈值不是“没有播放”的事实证明，模型下载与音频新产品范围另定。技术身份、访问权限、预算和自身协议凭据边界保持。

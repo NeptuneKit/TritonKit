@@ -1,0 +1,194 @@
+{
+  "repository": "dongxinsuperman/ai-phone",
+  "base_sha": "a96cb091903922f4f002f48c38cdfb1146653f93",
+  "head_sha": "5dd50770bb3859e9e71b0cf03d7d5a65caf8d2ee",
+  "actual_main": "366ae99b4be84b44e8e0718b39f278315d7c4c96",
+  "complete_review": false,
+  "errors": [
+    "semantic_review_incomplete"
+  ],
+  "decision": "review_pending",
+  "reason": "9提交96路径230安全文本版本采集完整，但跨Android/Harmony/iOS VM姿态、WDA、Web及20789条设备库的剩余语义和测试未完整核对；不能用重点源码或Release阅读代替全增量审阅。",
+  "checkpoint_eligible": false,
+  "coverage": {
+    "commit_pages": 1,
+    "commits": 9,
+    "parent_edges": 9,
+    "trees": 10,
+    "changed_paths": 96,
+    "text_versions": 230,
+    "excluded_paths": [],
+    "retrieval_complete": true,
+    "safe_increment_semantic_complete": false,
+    "release_notes_full": true,
+    "license_full": true,
+    "per_parent_diff_lines": 32740
+  },
+  "license": {
+    "spdx": "MIT",
+    "sha256": "b825925aa35feb626875db9db2afc4f71e8cf0abeb1f1bcecfa23efa307a17ce",
+    "path": "LICENSE",
+    "html_url": "https://github.com/dongxinsuperman/ai-phone/blob/5dd50770bb3859e9e71b0cf03d7d5a65caf8d2ee/LICENSE"
+  },
+  "release_tag": "v0.8.1",
+  "mechanisms": [
+    {
+      "id": "mirror-stream-rotation-freshness",
+      "decision": "observe_pending_complete_review",
+      "detail": "Reviewed input frame stream_id,width,height,display_rotation fencing and scrcpy SPS rotation cache; UI-backed stream changes not same as business action outcome. Triton Web StreamPanel is readonly, no corresponding frame-to-touch writer; SP281 generation/unknown receipt already present. No action batch proposed."
+    },
+    {
+      "id": "startup-native-pose",
+      "decision": "observe_pending_complete_review",
+      "detail": "Android uses emulator local authenticated gRPC physical rotation then sensor/readback, fold console and persisted config. Optional startup retry bounded <=2.5s, leaves1s for receipt; does not fail boot on optional rotation. Triton orientationGet/Set already separates requested settings from observed dumpsys and returns not_verified; adopting VM lifecycle/control UI is broader than evidence supports."
+    },
+    {
+      "id": "catalog-append-and-licenses",
+      "decision": "observe_pending_complete_review",
+      "detail": "Catalog CSV parsed structurally:20789 rows/13columns, no inconsistent column count. Catalog row truth/semantic provenance not validated. RootMIT distinct from duoctlMIT, WebDriverAgentApache, bundled Android catalogApache notice; no third-party binary/source copied to Triton."
+    }
+  ],
+  "reviewed_focus_paths": [
+    "backend/ai_phone/agent/android_vm/avd_rotation.py",
+    "backend/ai_phone/agent/android_vm/manager.py",
+    "backend/ai_phone/agent/drivers/android.py",
+    "backend/ai_phone/agent/main.py",
+    "backend/ai_phone/server/api/devices.py",
+    "backend/ai_phone/server/android_vm/catalog.py",
+    "web/src/lib/useJpegMirror.js",
+    "web/src/lib/useMseMirror.js",
+    "backend/pyproject.toml",
+    "backend/requirements.txt",
+    "backend/scripts/import_android_device_profiles.py",
+    "THIRD_PARTY_NOTICES.md",
+    "backend/ai_phone/agent/ios_sim/LICENSE.duoctl.txt"
+  ],
+  "remaining_semantic_paths": [
+    "CHANGELOG.md",
+    "README.en.md",
+    "README.md",
+    "backend/ai_phone/__init__.py",
+    "backend/ai_phone/agent/android_vm/capability.py",
+    "backend/ai_phone/agent/drivers/__init__.py",
+    "backend/ai_phone/agent/drivers/harmony.py",
+    "backend/ai_phone/agent/drivers/ios.py",
+    "backend/ai_phone/agent/drivers/ios_simulator_driver.py",
+    "backend/ai_phone/agent/drivers/ios_simulator_wda.py",
+    "backend/ai_phone/agent/drivers/wda_client.py",
+    "backend/ai_phone/agent/harmony_vm/capability.py",
+    "backend/ai_phone/agent/harmony_vm/manager.py",
+    "backend/ai_phone/agent/ios_sim/capability.py",
+    "backend/ai_phone/agent/ios_sim/duo_app_switcher.m",
+    "backend/ai_phone/agent/ios_sim/duo_hinge.m",
+    "backend/ai_phone/agent/ios_sim/duo_posture.py",
+    "backend/ai_phone/agent/ios_sim/duo_touch.m",
+    "backend/ai_phone/agent/ios_sim/manager.py",
+    "backend/ai_phone/agent/mirror/ios_capture_mjpeg.py",
+    "backend/ai_phone/agent/mirror/ios_sim_capture_mjpeg_passthrough.py",
+    "backend/ai_phone/agent/scrcpy_client/core.py",
+    "backend/ai_phone/agent/ws_client.py",
+    "backend/ai_phone/server/android_vm/NOTICE.android-device-catalog.txt",
+    "backend/ai_phone/server/android_vm/android-devices-catalog.csv",
+    "backend/ai_phone/server/android_vm/api.py",
+    "backend/ai_phone/server/android_vm/foldable_profiles.json",
+    "backend/ai_phone/server/android_vm/schemas.py",
+    "backend/ai_phone/server/android_vm/service.py",
+    "backend/ai_phone/server/app.py",
+    "backend/ai_phone/server/db.py",
+    "backend/ai_phone/server/harmony_vm/api.py",
+    "backend/ai_phone/server/harmony_vm/catalog.py",
+    "backend/ai_phone/server/harmony_vm/create_compat.json",
+    "backend/ai_phone/server/harmony_vm/official_catalog.json",
+    "backend/ai_phone/server/harmony_vm/schemas.py",
+    "backend/ai_phone/server/harmony_vm/service.py",
+    "backend/ai_phone/server/ios_sim/api.py",
+    "backend/ai_phone/server/ios_sim/catalog.py",
+    "backend/ai_phone/server/ios_sim/official_catalog.json",
+    "backend/ai_phone/server/ios_sim/schemas.py",
+    "backend/ai_phone/server/ios_sim/service.py",
+    "backend/ai_phone/server/vm_lifecycle.py",
+    "backend/ai_phone/server/vm_probe.py",
+    "backend/ai_phone/server/ws/agent_ws.py",
+    "backend/ai_phone/shared/ios_sim.py",
+    "backend/ai_phone/shared/protocol.py",
+    "backend/scripts/export_ios_sim_catalog.py",
+    "backend/tests/test_android_driver.py",
+    "backend/tests/test_android_vm.py",
+    "backend/tests/test_android_vm_driver_cache_identity.py",
+    "backend/tests/test_android_vm_manager_reliability.py",
+    "backend/tests/test_harmony_vm.py",
+    "backend/tests/test_ios_driver.py",
+    "backend/tests/test_ios_sim_data_layer.py",
+    "backend/tests/test_ios_sim_manager.py",
+    "backend/tests/test_ios_sim_mirror.py",
+    "backend/tests/test_ios_sim_server_api.py",
+    "backend/tests/test_ios_simulator_driver.py",
+    "backend/tests/test_ios_simulator_wda.py",
+    "backend/tests/test_seed_scroll_platform_adaptation.py",
+    "backend/tests/test_server_api.py",
+    "docs/agent-harmony-vm-env-setup（Agent鸿蒙虚拟机环境准备）.md",
+    "docs/agent-ios-sim-vm-env-setup（Agent iOS虚拟机环境准备）.md",
+    "docs/android-vm-setup（安卓虚拟机接入与使用指南）.md",
+    "docs/features（使用功能介绍）.md",
+    "docs/harmony-vm-architecture（鸿蒙虚拟机当前架构与演进规划）.md",
+    "docs/vm-lifecycle-contract.md",
+    "docs/vm-lifecycle-upgrade-guide.md",
+    "third_party/WebDriverAgent/WebDriverAgent.xcodeproj/project.pbxproj",
+    "third_party/WebDriverAgent/WebDriverAgentLib/Commands/FBOrientationCommands.m",
+    "third_party/WebDriverAgent/WebDriverAgentLib/Utilities/FBMjpegServer.m",
+    "third_party/WebDriverAgent/WebDriverAgentLib/Utilities/FBScreenshot.h",
+    "third_party/WebDriverAgent/WebDriverAgentLib/Utilities/FBScreenshot.m",
+    "web/package-lock.json",
+    "web/package.json",
+    "web/src/lib/api.js",
+    "web/src/lib/workbenchLayout.js",
+    "web/src/pages/DeviceWork.vue",
+    "web/src/pages/HarmonyVirtualMachines.vue",
+    "web/src/pages/IosSimVirtualMachines.vue",
+    "web/src/pages/VirtualMachines.vue",
+    "web/tests/workbench-layout.test.mjs"
+  ],
+  "local_evidence": [
+    {
+      "path": "Sources/TritonKitCLI/CLIAndroidHarmonyFramebufferService.swift",
+      "sha256": "f1838d0dc471a511cf83e34a1179322aab2fb9ed0a4b2b9b49794e964249f03e"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIDeviceActionExecutionRuntime.swift",
+      "sha256": "10f087003c4cf476fdb0cfa7143cee8e8590b4a3fd1df2105335d3f6e977b6e8"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIAndroidActionRuntime.swift",
+      "sha256": "f6772313587948cd9f96f490aabf3398d4258f688f6a5ff2f0607c23f778cc79"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIDeviceEnvironmentRuntime.swift",
+      "sha256": "a425e2bb58ebdb3a75850ead93b1fc14ebb4c141f41b51e3fc4174a0dc9ddb31"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIAndroidHierarchyRuntime.swift",
+      "sha256": "d418e170a0136e6b411fb2f29efd74cc69b0a9df5a018408f463bfacdb0cb825"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIHostDeviceProxyRuntime.swift",
+      "sha256": "76a0a365c090e45af9c1d48ad12f35ab06ba25327a31c41191f408be73e3dafd"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIActionEvidenceRuntime.swift",
+      "sha256": "ea74f460e526e679520d95dae3253e8e52e0f599a2f157d36c13bc1cfd2348ff"
+    },
+    {
+      "path": "Web/src/components/StreamPanel.tsx",
+      "sha256": "97bc82dfbfdc0ab9e079280066feffde7e02f4aa1cd2978455cae96935cc859f"
+    }
+  ],
+  "runtime_executed": false,
+  "upstream_tests_executed": false,
+  "candidate_bdd": null,
+  "followup": [
+    "Read remaining path diffs/source and every-parent intermediate changes (manifest records immutable blobs).",
+    "Inspect tests of same-size180deg stream rotation and delivery semantics, then re-evaluate actual main if changed.",
+    "Read full third-party notices and remaining catalog JSON; preserve source-data rows as facts without content-based redaction.",
+    "Only set complete after pending semantic coverage resolves; do not re-fetch already hash-verified blobs."
+  ]
+}

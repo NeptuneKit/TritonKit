@@ -739,8 +739,8 @@
     "existing_threads_changed": false,
     "reasoning_effort": "unchanged"
   },
-  "last_updated_on": "2026-11-12",
-  "last_update_note": "21 accepted tasks on main, including SP285 direct commit c4c5f014 with postcommit full CLI/local pass; two revise-first leads remain assessment only. No new child chats/worktrees; previous cleanup boundary retained.",
+  "last_updated_on": "2026-11-13",
+  "last_update_note": "21 adopted items remain main ancestors. Current source includes SP281/SP286; source increment review does not imply new adoption. No new implementation chats/worktrees or product writes.",
   "session_closeout": {
     "verified_main": "c4a14e5282479b3fa10da0b1bbb3f720e1393d2d",
     "verified_on": "2026-11-02",
@@ -772,17 +772,17 @@
     "evidence": "20261112-reference-update-report.md",
     "note": "Existing ACTIVE daily10 automation binding and prompt reread unchanged; no new chats or automation."
   },
-  "last_verified_on": "2026-11-12",
-  "last_verified_main": "c4c5f014150f80ce848ee43bd7a2932857fb704b",
-  "latest_monitor_summary": "20261112-reference-update-report.md",
+  "last_verified_on": "2026-11-13",
+  "last_verified_main": "366ae99b4be84b44e8e0718b39f278315d7c4c96",
+  "latest_monitor_summary": "20261113-reference-update-report.md",
   "assessment_backlog": [
     {
       "key": "tddworks/baguette:optional_exact_same_target_set_text_readback",
       "decision": "revise_first",
       "state": "assessment_pending",
       "assessment": "20261112-tddworks__baguette-review.json",
-      "reason": "native semantic set-text无精确同对象回读事实成立，但既有成功仅是动作/提交成功，已有独立verify、WebView回读和Harmony opt-in verify；没有已复现本地缺陷或足够证据证明应立即扩展native契约。先冻结窄化后置条件需求和反例，不能由candidate直接adopt。",
-      "last_assessed_on": "2026-11-12"
+      "reason": "按SP286重新限定：不能按业务敏感性禁止输入，系统不可读只报告verification unavailable；无已证明新native输入缺陷，保留opt-in同对象后置条件设计。",
+      "last_assessed_on": "2026-11-13"
     },
     {
       "key": "jfarcand/mirroir-mcp:bounded_local_port_probe",

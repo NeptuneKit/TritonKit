@@ -1,0 +1,185 @@
+{
+  "repository": "jfarcand/mirroir-mcp",
+  "base_sha": "1166ac1517263d773703c08ceae762a20432d3a2",
+  "previous_observed_head": "982c8718d2abbad9c3921749525a0c74832635e3",
+  "head_sha": "757e8fa112f06909486c07fd9e55a93538e3a345",
+  "actual_main": "366ae99b4be84b44e8e0718b39f278315d7c4c96",
+  "reviewed_at": "2026-11-13T02:14:26.067131+00:00",
+  "complete_review": false,
+  "checkpoint_may_advance": false,
+  "status": "partial",
+  "decision": "observe",
+  "reason": "新增12提交完整文本diff及listen关键源/测试已读；未建立现有main产品缺口。整套listen包含新音频/语音产品面、默认删除原始音频、低峰值推断无播放及自动模型安装，不符合SP286原始数据/显式派生职责与本轮自动采用范围。历史52提交缺口仍未覆盖，不推进成功点。",
+  "errors": [
+    {
+      "code": "historical_increment_review_incomplete",
+      "detail": "Successful base remains 20261102 1166ac1. Current inventory67 commits/68 parent edges. Old52 commits retain frozen 11/11 partial coverage (4/53 edges fully collected;49 not fully collected;338 acquired text versions not semantically reviewed). 11/12 new3 + 11/13 new12 text reviews do not close this gap."
+    }
+  ],
+  "new_increment_text_review_complete": true,
+  "new_increment_scope": "Complete per-parent tree diff for12 new commits, all39 changed text paths in full generated diff; full source read of4 core listen files and3 tests; ancillary FakeSpeaker new source read in full diff.4 binary demo media paths intentionally not requested/viewed. Full files of all85 text versions are archived but not all unrelated context is semantically audited.",
+  "counts": {
+    "commits_since_checkpoint": 67,
+    "parent_edges_since_checkpoint": 68,
+    "new_commits": 12,
+    "new_parent_edges": 12,
+    "new_full_trees": 13,
+    "new_changed_paths_total": 43,
+    "new_changed_text_paths": 39,
+    "new_text_path_blob_versions_collected": 85,
+    "core_source_test_files_read_full": 7,
+    "binary_media_paths_excluded": 4,
+    "upstream_or_device_tests_executed": 0
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "sha256": "52327c57e955a3e63f872960938e814acc19eb1b77c501999f5fd1e543b21346",
+    "bytes": 10771,
+    "changed": false
+  },
+  "release": {
+    "tag": "v0.47.0",
+    "notes_read_full": true,
+    "url": "https://github.com/jfarcand/mirroir-mcp/releases/tag/v0.47.0",
+    "performance_accuracy": "Upstream self-report only:15s French recording,0.5s transcription,model install~9s,accuracy and muted-output behavior not locally validated."
+  },
+  "sources_read_full": [
+    {
+      "path": "Sources/mirroir-mcp/AudioListener.swift",
+      "blob": "4cc17972fbfce21ed218653ffc8d1cf19208269b",
+      "evidence": "review-source/4cc17972fbfce21ed218653ffc8d1cf19208269b/Sources/mirroir-mcp/AudioListener.swift"
+    },
+    {
+      "path": "Sources/mirroir-mcp/ListenTools.swift",
+      "blob": "c5147d471694e5f45b566605930e2b531c1f4924",
+      "evidence": "review-source/c5147d471694e5f45b566605930e2b531c1f4924/Sources/mirroir-mcp/ListenTools.swift"
+    },
+    {
+      "path": "Sources/mirroir-mcp/OnDeviceTranscriber.swift",
+      "blob": "b147b36ead1031e11025f4bac469e776d29f6fde",
+      "evidence": "review-source/b147b36ead1031e11025f4bac469e776d29f6fde/Sources/mirroir-mcp/OnDeviceTranscriber.swift"
+    },
+    {
+      "path": "Sources/mirroir-mcp/ScreenCaptureKitAudio.swift",
+      "blob": "ce246f7919683c8d074e42c41f03d444f90aad35",
+      "evidence": "review-source/ce246f7919683c8d074e42c41f03d444f90aad35/Sources/mirroir-mcp/ScreenCaptureKitAudio.swift"
+    },
+    {
+      "path": "Tests/MCPServerTests/AudioListenerTests.swift",
+      "blob": "192f32a2e45f1658075de3289824a0c3028bf2c7",
+      "evidence": "review-source/192f32a2e45f1658075de3289824a0c3028bf2c7/Tests/MCPServerTests/AudioListenerTests.swift"
+    },
+    {
+      "path": "Tests/MCPServerTests/OnDeviceTranscriberTests.swift",
+      "blob": "e2c0da88f619eb2fe994483323241010e1dee8e6",
+      "evidence": "review-source/e2c0da88f619eb2fe994483323241010e1dee8e6/Tests/MCPServerTests/OnDeviceTranscriberTests.swift"
+    },
+    {
+      "path": "Tests/IntegrationTests/ListenIntegrationTests.swift",
+      "blob": "99e568becf08a0931a8538c18c816a253c70c7cf",
+      "evidence": "review-source/99e568becf08a0931a8538c18c816a253c70c7cf/Tests/IntegrationTests/ListenIntegrationTests.swift"
+    }
+  ],
+  "diffs_read_full": [
+    "review-diffs/757e8fa112f06909486c07fd9e55a93538e3a345.diff",
+    "review-diffs/efeeaa370a489916e24081ed9c9db6994c98e8b0.diff",
+    "review-diffs/b661e7fa1af782a49d9237362ab39ac0fe28f709.diff",
+    "review-diffs/a8f738dd3a9b27349ba8d49b900454d448d8fd72.diff",
+    "review-diffs/1738444d87418cb401158c91205033c9c1b09280.diff",
+    "review-diffs/58765379ddc2a7f707fbccd92ba359bba3eb572e.diff",
+    "review-diffs/1a2dfd5975c66eb6e8d6b6498f76ba2588158762.diff",
+    "review-diffs/b61e838b327510357ed12db6a12be998b8e091b1.diff",
+    "review-diffs/976964f2771d04888efe9b57554f68399ac5845c.diff",
+    "review-diffs/7dbfa23ab3748ed2279c4e95f1f3a3395b01ae78.diff",
+    "review-diffs/e679f6d323113598d74cceb12c4517c19ee743f7.diff",
+    "review-diffs/aea9b5e495b76f37f191a74961cb3c04ee0e41cd.diff"
+  ],
+  "excluded_binary_media": [
+    "website/public/recipe-grocery-list.full.mp4",
+    "website/public/recipe-grocery-list.gif",
+    "website/public/recipe-grocery-list.mp4",
+    "website/public/recipe-grocery-list.poster.jpg"
+  ],
+  "mechanisms": [
+    {
+      "mechanism": "audio_capture_transcript_only_default_disposal",
+      "decision": "reject_as_is",
+      "evidence": [
+        "Sources/mirroir-mcp/AudioListener.swift: temporary CAF is removed in defer, Outcome is text/isError only",
+        "AudioListener.silencePeak=0.01; below threshold skips transcription and says Nothing played",
+        "OnDeviceTranscriber joins/trims derived words and identifies language/engine"
+      ],
+      "local_comparison": "SP286 + main AGENTS1.2 require raw business facts retained by default and transformations distinguished. Current CLITestRecorderNetworkFixtureRuntime exports responseBody unchanged with redaction none; CLIHostNetworkCaptureIntegrity preserves query/fragment, authentic protocol userinfo exception, and explicit budget/error/partial facts. Audio capture is not a current public capability proven missing.",
+      "reason": "Transcript can be an explicit derived artifact, but not the sole substitute for source audio. Low recorded peak is a measurement, not proof that nothing played; zero buffers and silent samples are not distinguished in sink finish. New audio product scope needs explicit requirement/space; do not recreate upstream opinionated behavior automatically."
+    },
+    {
+      "mechanism": "audio_timeout_lifecycle",
+      "decision": "observe_with_rejection_of_direct_copy",
+      "evidence": [
+        "ScreenCaptureKitAudio.captureAudio starts Task.detached then waits seconds+10; timeout returns failed without cancelling/stopping detached worker",
+        "OnDeviceTranscriber.transcribe similarly uses detached task+180s semaphore timeout without cancellation",
+        "AudioListener defer may remove temp URL while capture/transcription worker outlives caller"
+      ],
+      "reason": "Response deadline is not worker termination/stream-stop/cleanup proof. Static lifecycle risk only; late-write/leak is not locally reproduced. Existing main port candidate remains separately revise-first, not linked to a claimed new reproduction."
+    },
+    {
+      "mechanism": "speech_model_download_and_engine_fallback",
+      "decision": "out_of_scope",
+      "evidence": [
+        "AssetInventory reservation release/reserve and downloadAndInstall inside transcription",
+        "macOS26 SDK gate; speech or dictation engine chosen and named"
+      ],
+      "reason": "Naming engine/language and unsupported causes is useful observation. Automatic model install is not authorized by adoption review; no installer or model run executed. Does not imply third-party dependencies should be installed or a real-device product expanded."
+    },
+    {
+      "mechanism": "release_test_environment_split",
+      "decision": "observe",
+      "evidence": [
+        "release build moves to macos-26 SDK",
+        "new prerequisite integration job builds/tests on macos-15; macos-26 release job removes FakeMirroring integration step"
+      ],
+      "reason": "Record actual environment boundary:macOS15 integration pass cannot alone prove macOS26 transcription/full release runtime. Upstream hosted VM typing failure is self-reported. No change to Triton release gates proposed."
+    },
+    {
+      "mechanism": "website_and_demo_structure",
+      "decision": "observe",
+      "reason": "Nine commits adjust demo carousel/lightbox height, move reference/skills/testing sections, present agent/games/automation modes, restore installer links and short skill. Text diffs fully reviewed; no browser/media validation or product UI adoption. Embedded claims and other-repository links are untrusted reference data, not authorization or newly registered repos."
+    },
+    {
+      "mechanism": "bounded_local_port_probe",
+      "decision": "revise-first_unchanged",
+      "reason": "CLIWebRuntime.swift at actual main is byte-identical to archived11/12 fixed main file. Prior own-loopback three trials did not reproduce hang. No new probe runtime evidence; do not promote this candidate merely because upstream audio also uses timeouts."
+    }
+  ],
+  "future_audio_bdd_if_explicitly_scoped": [
+    "Given an authorized audio capture, retain original bytes with hash,byte count,format,source identity and duration; transcript is an explicitly requested derivative linked to source hash with engine/language/fidelity.",
+    "Given low peak or zero samples, report measured peak/sample count and unknown/empty capture faithfully; do not replace observed source with a definite nothing-played assertion.",
+    "Given timeout/cancellation or late callback, stop/join stream and task before cleanup completes; no late file recreation,late success or unowned worker; assert with controllable provider fixture then real permitted runtime.",
+    "Given missing model or unsupported OS/engine/language, return machine-readable unavailable and model state; no implicit install during a read."
+  ],
+  "validation": {
+    "performed": [
+      "13 full recursive trees truncated=false",
+      "85 text versions Git blob SHA1 and SHA256",
+      "12 full parent text diffs reviewed",
+      "7 core source/test files full text read",
+      "Release notes and unchanged license hash",
+      "fixed-main SP286/AGENTS/network raw facts/code comparison",
+      "CLIWebRuntime bytes equal prior fixed snapshot"
+    ],
+    "not_executed": [
+      "upstream scripts/build/tests",
+      "ScreenCaptureKit/real iPhone/SpeechAnalyzer",
+      "model download/install/reservation",
+      "browser/demo media verification",
+      "shared project tests or docs gates"
+    ]
+  },
+  "governance": {
+    "repo_writes": false,
+    "old_archive_writes": false,
+    "metadata_result_overwrite": false,
+    "experience": "SP286 existing raw/derived policy directly resolves this adoption boundary; no new repo rule. Parent owns authoritative summary/memory/index.",
+    "checkpoint": "Keep 20261102 successful point; fresh daily evidence is not historical recovery."
+  }
+}

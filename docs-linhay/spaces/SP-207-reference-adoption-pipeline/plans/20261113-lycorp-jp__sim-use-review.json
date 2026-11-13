@@ -1,0 +1,92 @@
+{
+  "repository": "lycorp-jp/sim-use",
+  "base_sha": "c02295edfd2f442249b869096dda3dc7bfcd308d",
+  "head_sha": "f50625966fd5d80035090fdb7fb0c35bb2d21600",
+  "actual_main": "366ae99b4be84b44e8e0718b39f278315d7c4c96",
+  "complete_review": true,
+  "errors": [],
+  "decision": "observe",
+  "reason": "Android APK桥端口发现/缓存/共享会话清理机制已读；Triton Android现用ADB/UIAutomator，无该桥或冷启动端点缓存。generation与未知动作不重放已有SP281，不能把上游新功能等同本地缺陷。",
+  "coverage": {
+    "commit_pages": 1,
+    "commits": 11,
+    "parent_edges": 12,
+    "trees": 12,
+    "changed_paths": 24,
+    "text_versions": 73,
+    "excluded_paths": [],
+    "complete_safe_increment": true,
+    "release_notes_full": true,
+    "license_full": true
+  },
+  "license": {
+    "spdx": "NOASSERTION",
+    "sha256": "8c0fe2892344358b49aa07d9a184bd8d0891832baf642f19161f271acc075d32",
+    "path": "LICENSE",
+    "html_url": "https://github.com/lycorp-jp/sim-use/blob/f50625966fd5d80035090fdb7fb0c35bb2d21600/LICENSE",
+    "manual_identification": "Apache-2.0 (API NOASSERTION preserved)"
+  },
+  "release_tag": "v0.16.0",
+  "release_changed": false,
+  "historical_evidence": "Prior successful c02295e checkpoint accepted from SP207; older missing raw archive remains unavailable, not reconstructed by this delta.",
+  "mechanisms": [
+    {
+      "id": "android-bridge-fallback-port",
+      "decision": "observe",
+      "detail": "Synchronous loopback 8080 binding, bind-conflict fallback to kernel port0, shell-only provider adds port/server_state/server_error. Legacy absent fields=8080, explicit stopped never becomes legacy. No matching Triton APK server."
+    },
+    {
+      "id": "bridge-session-transition",
+      "decision": "observe",
+      "detail": "10min discoveredAt trust window requires forward ownership; no sliding TTL. Immutable HTTP session snapshots outside lock; per-device flock serializes read/forward/remove/publish with private regular lockfile; old generation cannot remove replacement or overwrite display cache."
+    },
+    {
+      "id": "no-unknown-action-replay",
+      "decision": "already_covered",
+      "detail": "GET once; POST only connection refusal or explicit401 once; timeout/lost/cancel/business500 no replay. Triton SP281 executeDeviceAction records uncertain/submitted, no auto retry and preserves provider raw bytes. Upstream warm endpoint identity spoofing boundary remains, not adopted as authenticated identity."
+    },
+    {
+      "id": "ipv6-session-path",
+      "decision": "observe",
+      "detail": "Allow brackets and zone percent in safe path component; avoid treating valid transport syntax as path traversal. No corresponding Triton session filename validator identified."
+    }
+  ],
+  "local_evidence": [
+    {
+      "path": "Sources/TritonKitCLI/CLIAndroidHarmonyFramebufferService.swift",
+      "sha256": "f1838d0dc471a511cf83e34a1179322aab2fb9ed0a4b2b9b49794e964249f03e"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIDeviceActionExecutionRuntime.swift",
+      "sha256": "10f087003c4cf476fdb0cfa7143cee8e8590b4a3fd1df2105335d3f6e977b6e8"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIAndroidActionRuntime.swift",
+      "sha256": "f6772313587948cd9f96f490aabf3398d4258f688f6a5ff2f0607c23f778cc79"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIDeviceEnvironmentRuntime.swift",
+      "sha256": "a425e2bb58ebdb3a75850ead93b1fc14ebb4c141f41b51e3fc4174a0dc9ddb31"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIAndroidHierarchyRuntime.swift",
+      "sha256": "d418e170a0136e6b411fb2f29efd74cc69b0a9df5a018408f463bfacdb0cb825"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIHostDeviceProxyRuntime.swift",
+      "sha256": "76a0a365c090e45af9c1d48ad12f35ab06ba25327a31c41191f408be73e3dafd"
+    },
+    {
+      "path": "Sources/TritonKitCLI/CLIActionEvidenceRuntime.swift",
+      "sha256": "ea74f460e526e679520d95dae3253e8e52e0f599a2f157d36c13bc1cfd2348ff"
+    },
+    {
+      "path": "Web/src/components/StreamPanel.tsx",
+      "sha256": "97bc82dfbfdc0ab9e079280066feffde7e02f4aa1cd2978455cae96935cc859f"
+    }
+  ],
+  "runtime_executed": false,
+  "upstream_tests_executed": false,
+  "candidate_bdd": null,
+  "checkpoint_eligible": true
+}

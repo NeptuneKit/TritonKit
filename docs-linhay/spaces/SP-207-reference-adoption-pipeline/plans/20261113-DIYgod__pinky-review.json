@@ -1,0 +1,69 @@
+{
+  "repository": "DIYgod/pinky",
+  "base_sha": "9c350457c4014ccd987e443a8a03bd74806f8c44",
+  "head_sha": "40b19d8438f5331ebf976bff7a403e8aa232e01f",
+  "actual_main": "366ae99b4be84b44e8e0718b39f278315d7c4c96",
+  "complete_review": false,
+  "decision": "partial_observe",
+  "reason": "今日130提交471路径仅重点审阅，旧321+33历史窗口缺口仍未关闭；最新上游OTP/业务审批策略与SP286职责不同，不采用默认内容阻断；未证实新独立本地缺陷。",
+  "errors": [
+    "historical_321_plus_33_commit_full_review_gaps_remain",
+    "new_130_commits_full_semantic_review_incomplete",
+    "new_text_blob_collection_stopped_at_bounded_review_scope",
+    "binary_screenshots_not_retrieved"
+  ],
+  "counts": {
+    "commits": 130,
+    "parent_edges": 152,
+    "paths": 471,
+    "planned_text_blobs": 1282,
+    "collected_text_versions": 623
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "sha256": "c95bae1d1ce0235ecccd3560b772ec1efb97f348a79f0fbe0a634f0c2ccefe2c",
+    "path": "LICENSE",
+    "html_url": "https://github.com/DIYgod/pinky/blob/40b19d8438f5331ebf976bff7a403e8aa232e01f/LICENSE"
+  },
+  "release_tag": "v2026.1113.2",
+  "runtime_executed": false,
+  "tests_executed": false,
+  "checkpoint_eligible": false,
+  "collection_stop": "Owned collector PID50280 SIGTERM exit143 after 130commit tree inventory; saved completed responses; no checkpoint advance. Remaining text versions not retrieved, screenshots not retrieved, xcstrings not yet classified; not transport failure.",
+  "reviewed_scope": [
+    "Current changelog from v2026.1112.3 through v2026.1113.2",
+    "OpenCode Go 93da1488 full141-line parent diff incl contract tests",
+    "Android ownLabel/inputContent and hint tests at head; reconnect first160 lines for scope only"
+  ],
+  "findings": [
+    {
+      "mechanism": "OTP hint versus content refusal",
+      "decision": "reject_policy_transfer",
+      "reason": "SP286 requires preserving raw readable data and not blocking input based on business classifications. Android old dump ambiguity can be marked unknown, not inferred input ban."
+    },
+    {
+      "mechanism": "remote passkey approval/web mirror controls",
+      "decision": "observe_out_of_current_scope",
+      "reason": "Triton default local CLI/HTTP; remote browser approval and business policy need explicit product scope, not automatic adoption."
+    },
+    {
+      "mechanism": "on-phone LLM/paired WiFi reconnect",
+      "decision": "observe_out_of_current_scope",
+      "reason": "On-device autonomous model/pairing services are not a proven bug in current local-emulator contract. No real-device claims validated here."
+    },
+    {
+      "mechanism": "OpenCode session header",
+      "decision": "observe",
+      "reason": "Protocol-specific x-opencode-session at task scope; no existing Triton OpenCode provider contract found. Do not silently add provider support."
+    },
+    {
+      "mechanism": "list continuation after refused args",
+      "decision": "needs_further_source_review",
+      "reason": "Release says cursor retained after invalid direction/area; full changed cursor source not yet read, no local defect claim."
+    }
+  ],
+  "future_bdd": [
+    "If revisiting cursor lifecycle: invalid arguments must not consume token; identity/session/expiry changes must reject; verify against actual Triton iterator before adoption.",
+    "If adding provider-specific session headers: exact provider allowlist/task scope/no auth credential disclosure; explicit provider requirement first."
+  ]
+}

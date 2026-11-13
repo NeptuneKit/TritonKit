@@ -1,0 +1,163 @@
+{
+  "repository": "RevylAI/revyl-cli",
+  "base_sha": "dd8c128d8043ca09961fb6e59d0a0cfe95d923ed",
+  "head_sha": "ebc0e69c8849dba4585b892f07058441127a311b",
+  "actual_main": "366ae99b4be84b44e8e0718b39f278315d7c4c96",
+  "complete_review": false,
+  "decision": "observe_partial_no_new_adoption",
+  "reason": "本日19commit安全文本增量已审，当前本地相似职责已有覆盖或为Revyl云/插件范围，未证实可直接开发的新缺口。历史83commit语义/来源仍partial、4pyc排除及许可全文404保留；不得推进整体成功检查点。",
+  "errors": [
+    "historical_83_commit_semantic_review_incomplete",
+    "historical_hosted_runtime_and_binary_provenance_unverified",
+    "license_full_text_unavailable_HTTP_404",
+    "four_pyc_paths_excluded_before_blob_fetch"
+  ],
+  "delta_review": {
+    "commits": 19,
+    "parent_edges": 19,
+    "recursive_trees": 20,
+    "truncated_trees": 0,
+    "unique_changed_paths": 119,
+    "safe_text_paths": 115,
+    "verified_text_blobs": 228,
+    "text_blob_bytes": 10878439,
+    "parent_text_diff_lines": 7888,
+    "json_value_changes": 49,
+    "pagination_complete_to_base": true,
+    "parent_tree_inventory_complete": true,
+    "safe_text_increment_semantics_complete": true,
+    "scope": "逐parent安全文本完整增量及相关实现上下文；JSON按所有对象值变化完整审阅，不声称阅读每个blob的所有未改动历史行。pyc及远端部署/发行二进制不在可审安全文本范围。"
+  },
+  "full_scope": {
+    "base_sha": "a50ee179e5c01a1f25f15cef951a78eddab5fa3e",
+    "historical_83_commit_head": "dcf5f2ab9fdd181a3bbe770410f4ad19dc36fed9",
+    "previous_14_commit_observation_head": "dd8c128d8043ca09961fb6e59d0a0cfe95d923ed",
+    "today_delta_commits": 19,
+    "complete": false,
+    "checkpoint_advance_allowed": false,
+    "base_kind": "previous_observation_not_successful_checkpoint",
+    "note": "11/11的83commit缺口未被11/12或今天的增量审阅抵消；旧档案未修改。"
+  },
+  "release": {
+    "latest_nondraft": "v0.2.8",
+    "notes_read": [
+      "v0.2.8",
+      "v0.2.4"
+    ],
+    "notes_evidence": "review-release-notes.md",
+    "default_head_version": "0.2.10",
+    "plugin_pinned_runtime_version": "0.1.215",
+    "note": "HEAD版本、最新发布与插件固定runtime三个版本不同，不能相互代表；release正文为安装/制品说明，没有充分机制变更日志。"
+  },
+  "license": {
+    "status": "unresolved",
+    "api_error": "HTTP 404",
+    "self_declared": "MIT in README/pyproject/plugin README",
+    "full_text_obtained": false,
+    "copy_or_dependency_adoption_authorized": false
+  },
+  "mechanisms": [
+    {
+      "mechanism": "stop_acknowledgement_vs_settlement",
+      "decision": "covered_local_analog_observe_cloud",
+      "reason": "上游每2秒重复同一session stop、最长30秒轮询窗口，pending保持stopped=false；本地录屏stop已有30秒等待terminal、失败保留session，统一host receipt保留postcondition=unverified。云device release不是本机等价职责。上游deadline在stop调用之后检查，不能声称单次网络调用被30秒总deadline包含。",
+      "upstream_paths": [
+        "cmd/revyl/device.go",
+        "cmd/revyl/dev_context.go"
+      ],
+      "local_paths": [
+        "Sources/TritonKitCLI/CLIDeviceRecordingRuntime.swift",
+        "Sources/TritonKitCLI/CLIHostActionReceiptRuntime.swift",
+        "CLI/Tests/TritonKitCLITests/DeviceRecordingTests.swift",
+        "CLI/Tests/TritonKitCLITests/HostActionReceiptTests.swift"
+      ]
+    },
+    {
+      "mechanism": "source_commit_attribution",
+      "decision": "covered_local_analog_observe_remote",
+      "reason": "上游clean tracked scope前后HEAD相同才给remote archive commit，dirty保留unknown；不是事务快照证明。本地prepared tests按source digest、artifact及toolchain绑定并在构建后核对；没有本次确认的remote上传缺口。",
+      "local_paths": [
+        "Sources/TritonKitCLI/CLIXcodePreparedTestsRuntime.swift"
+      ]
+    },
+    {
+      "mechanism": "screen_target_and_focus_error",
+      "decision": "covered_local_analog",
+      "reason": "上游click target互斥坐标、target失败不自动点击，no_focused_input显式错误；Triton已有显式VLM启用/provider preflight/coordinate contract、grounding failure artifact、raw输入与未验证回执。不能将生成坐标当业务验证成功。",
+      "local_paths": [
+        "Sources/TritonKitCLI/CLIWorkspaceVLMGroundingRuntime.swift",
+        "CLI/Tests/TritonKitCLITests/VLMGroundingTests.swift",
+        "CLI/Tests/TritonKitCLITests/RawBusinessDataTests.swift"
+      ]
+    },
+    {
+      "mechanism": "computer_hosting_exec_options_and_retry",
+      "decision": "observe_outside_current_local_scope",
+      "reason": "hosted computer hosting/sessions、remote exec cwd/env/60min、426 upgrade以及start GET evidence_unavailable重试均是Revyl云契约；CLI timeout后不自动重发mutation。不能直接扩成Triton远端exec/云控制面。base64是传输编码，不是脱敏或加密。"
+    },
+    {
+      "mechanism": "plugin_build_proof_workflow",
+      "decision": "observe_no_new_adoption",
+      "reason": "新增显式commands、verifier、hosted tools、exact SHA与分页构建查找、owned cleanup、CI上传及auth bypass文档。证据绑定/实际验收区分已是项目治理要求；远端写/设备/安装授权不从上游skill导入。SessionStart首次可后台安装CLI，不能称整个hook只读；hook退出也不证明安装子进程停止。"
+    },
+    {
+      "mechanism": "raw_business_data_responsibility",
+      "decision": "covered_preserve_SP286",
+      "reason": "SP-286实际主线保留业务text/body/query/error及嵌套token等字段；上游把exec env/cwd从logs/analytics省略、bypass secrets不回显属于其协议/远端运行安全选择，不应移植为本地业务采集内容猜测、删改或阻断。公开发布与协议凭据仍分别处理。",
+      "local_paths": [
+        "docs-linhay/spaces/SP-286-raw-business-data/README.md",
+        "CLI/Tests/TritonKitCLITests/RawBusinessDataTests.swift",
+        "Sources/TritonKitCLI/CLIIOSRunnerRuntime.swift"
+      ]
+    }
+  ],
+  "new_adoption_candidates": [],
+  "bdd_followup_only": [
+    {
+      "given": "本机录屏stop只提交请求，worker仍stopping或身份丢失",
+      "when": "主控要求结束",
+      "then": "terminal未确认不得报completed；超时保留状态/错误；未知身份不得信号无关PID",
+      "status": "existing_source_contract_no_new_gap_proven"
+    },
+    {
+      "given": "业务输入/响应字段名或内容包含password/token/secret/邮箱/长数字",
+      "when": "本机采集、编译、回放及CLI编码",
+      "then": "保留原文与结构；仅明确协议凭据或显式secure策略单独处理；masked不可读不得假报验证",
+      "status": "SP286_existing_tests_read_not_run"
+    },
+    {
+      "given": "未来出现真实本地stop未收敛或source归属错误复现",
+      "when": "重新评估该参考机制",
+      "then": "绑定固定本地路径和失败fixture后再建立最小切片，不能单凭上游标题或代码模式排期",
+      "status": "observe_reentry_condition"
+    }
+  ],
+  "validation": {
+    "source_collection": "SHA1 Git blob and SHA256/size checked; all recursive trees nontruncated",
+    "local_main_blob_evidence": "review-local-main-manifest.json",
+    "tests_executed": false,
+    "upstream_code_executed": false,
+    "device_actions": false,
+    "dependency_install": false,
+    "git_mutations": false,
+    "repository_files_modified": false,
+    "notes": "只读核对测试源码；未运行上游或本地测试、真实Simulator/HDC/设备、云后端、双架构制品或跨进程竞态。"
+  },
+  "evidence": [
+    "review-manifest.json",
+    "review-parent-text-diff.txt",
+    "review-json-semantic-diff.json",
+    "review-go-diff.txt",
+    "review-path-screening.json",
+    "review-release-notes.md",
+    "review-local-main-manifest.json",
+    "review-source/",
+    "review-trees/",
+    "license.error-0.txt"
+  ],
+  "raw_links": [
+    "https://github.com/RevylAI/revyl-cli/compare/dd8c128d8043ca09961fb6e59d0a0cfe95d923ed...ebc0e69c8849dba4585b892f07058441127a311b",
+    "https://github.com/RevylAI/revyl-cli/commit/ebc0e69c8849dba4585b892f07058441127a311b",
+    "https://github.com/RevylAI/revyl-cli/releases/tag/v0.2.8"
+  ]
+}

@@ -13,7 +13,7 @@
 
 - 2026-10-27主控接管自己开启会话的完整交付与关闭责任：15条合并提交再次确认在main，9个真实执行/主控会话已归档；本长期追踪聊天保留，见[关闭记录](./plans/20261027-session-closeout.md)。
 
-- 最近检查：2026-11-12，34仓22完整/12 partial，5仓相对11月11日变化；serve-sim补齐成功点以来旧22+新7提交，独立恢复检查点。新[观察](./plans/20261112-observations.json)与[日报](./plans/20261112-reference-update-report.md)区分完整、采集和语义审读。
+- 最近检查：2026-11-13，34仓21完整/13 partial，8仓变化，无新采用；SP286职责修正Baguette候选。见[观察](./plans/20261113-observations.json)与[日报](./plans/20261113-reference-update-report.md)。
 
 - 2026-10-30接管：原主控因compact连接失败中断，用户指定当前聊天接手。原`ictrl`已重绑`01a18a91-f44e-7fd0-8e4b-c891b44377e0`，仍ACTIVE、每天北京时间10:00；重读配置确认，原prompt保持，未新建重复任务。16条采用再次通过当前main祖先校验，不重开已交付项，见[接管记录](./plans/20261030-controller-takeover.md)。
 
