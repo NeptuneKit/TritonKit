@@ -1,0 +1,36 @@
+{
+  "authority": "three independent synthetic-negative-fixtures, not real CLI/device evidence",
+  "cases": [
+    {
+      "case": "nonzero",
+      "compileFixture": {
+        "exitCode": 1,
+        "ok": true,
+        "status": "compiled"
+      },
+      "checkerExitCode": 1,
+      "passReportPublished": false
+    },
+    {
+      "case": "ok_false",
+      "compileFixture": {
+        "exitCode": 0,
+        "ok": false,
+        "status": "compiled"
+      },
+      "checkerExitCode": 1,
+      "passReportPublished": false
+    },
+    {
+      "case": "wrong_status",
+      "compileFixture": {
+        "exitCode": 0,
+        "ok": true,
+        "status": "failed"
+      },
+      "checkerExitCode": 1,
+      "passReportPublished": false
+    }
+  ],
+  "status": "pass"
+}

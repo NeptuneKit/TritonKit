@@ -1,6 +1,8 @@
 # SP-287 功能地图与 public skills 覆盖核对
 
-## 结论
+> 历史快照：以下为 2026-11-12 补齐前核对，不是当前待办。2026-11-13 用户要求补齐后，由 [SP-288](../../SP-288-public-skills-completion/README.md)新增八类使用指引和22功能族包内路由；当前入口以 [public capability index](../../../../TritonKit.skills/README.md#capability-routing) 为准。文档补齐不代表已安装/已发布包或设备验收同步完成。
+
+## 结论（2026-11-12）
 
 **不是所有功能都有完整的 public skill 用法。** 主要操作流程已有入口，但 skills 不是功能实现，也不是全部 CLI/HTTP 子命令的手册。当前源码 bundle 有四个 public skills：接入反馈、模拟器 CLI 接管、真实项目回归、安装更新；内部 `.agents/skills/` 不随公开包分发。
 

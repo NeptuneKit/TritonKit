@@ -14,6 +14,7 @@ REQUIRED_REFERENCES = {
     'schema-contract-feedback', 'app-integration-ios', 'app-integration-harmony',
     'device-hub-feedback', 'xcode-feedback', 'discovery-migration',
     'observation-feedback', 'reliability-feedback', 'picker-feedback', 'runner-feedback',
+    'dsh-integration',
 }
 
 

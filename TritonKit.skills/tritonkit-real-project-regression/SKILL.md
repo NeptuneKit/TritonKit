@@ -58,7 +58,7 @@ For old/new Xcode checks, preserve scoped `triton device doctor --platform ios -
 
 ## Reference Routing
 
-Start with [references/feature-index.md](references/feature-index.md) to map the requested feature to the smallest reference file. Then read only the matched reference(s).
+Start with [references/feature-index.md](references/feature-index.md) to map the requested feature to the smallest reference file. Then read only the matched reference(s). For explicit event recording/import, App-map suites, optional model lifecycle, leases, readonly preview, UI details/3D or DSH/HTTP clients, use the corresponding bundled routes; do not treat these guides as new provider readiness, installation or action authorization.
 
 ## Bundled iOS Runner regression
 

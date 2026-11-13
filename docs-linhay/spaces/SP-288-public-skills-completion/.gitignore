@@ -1,0 +1,2 @@
+# Preserve the original red-run trace locally; version its curated summary and SHA instead.
+/plans/20261113-coverage-before.log

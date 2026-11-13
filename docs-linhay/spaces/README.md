@@ -1,3 +1,5 @@
+2026-11-13：[SP-288-public-skills-completion](./SP-288-public-skills-completion/README.md)八专题/22功能族导航及4处repo-only链接修复已验收；38打包、70help/10schema等通过。后续另获本地整理提交授权，复核加固验收脚本compile末步门禁并补3类反例，经验已回写；只收本轮文档/回归，不改产品、不推送/安装/发布。
+
 2026-11-12：[SP-287-feature-map](./SP-287-feature-map/README.md)已完成当前功能图：4层、22节点、26关联，离线HTML与浅/深色3600×3120 PNG，浏览器/文档验收通过。后续按用户要求整理本地提交，补public skills覆盖核对与内部导出经验；原图保留6467b413+WIP快照，整理基线5a10d269，不改产品或操作设备，不推送发布。
 
 2026-11-12：[SP-286-raw-business-data](./SP-286-raw-business-data/README.md)已移除默认内容判断/丢值/阻断，恢复业务原值与raw证据，写入AGENTS/public agent skills；CLI167+1876、root132+313、local/docs通过，进入本地提交收口，未推送/发布。下方职责审计保留为修复前快照。

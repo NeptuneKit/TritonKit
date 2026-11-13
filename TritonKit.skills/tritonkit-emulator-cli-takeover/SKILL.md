@@ -57,7 +57,7 @@ Read [Device Hub contracts](references/device-hub-contracts.md) for Apple discov
 
 ## Reference Routing
 
-Start with [references/feature-index.md](references/feature-index.md) to map the requested feature to the smallest reference file. Then read only the matched reference(s).
+Start with [references/feature-index.md](references/feature-index.md) to map the requested feature to the smallest reference file. Then read only the matched reference(s). The bundle's [capability index](../README.md#capability-routing) maps all current capability families, including local HTTP, opt-in leases, live node details/3D, readonly Web, recorder/import, map suites, model cache and optional DSH tools. These companion guides do not expand the default emulator scope or enable inference/actions automatically.
 
 ## Old/New Xcode Command Compatibility
 

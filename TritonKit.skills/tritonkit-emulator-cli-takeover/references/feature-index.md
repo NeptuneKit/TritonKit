@@ -18,5 +18,13 @@ Use this file to choose the smallest reference needed for an emulator CLI takeov
 | Plan host-side mutation, destructive action, or implementation sequence | `safety-rules.md`, then `implementation-workflow.md` |
 | Apply/restore optional real App view highlighting | [view-highlight.md](view-highlight.md) |
 | Choose verification commands or real emulator smoke checks | `validation.md` |
+| Call the existing local HTTP/Runtime service | [Local HTTP API](http-api.md) |
+| Acquire/release/take over an opt-in Simulator lease | [Target leases](target-leases.md) |
+| Inspect live nodes, solo/group PNGs or readonly 3D | [UI inspection](ui-inspection.md) |
+| Launch/diagnose source or packaged readonly Web | [Web preview](web-preview.md) |
+| Inspect/confirm/export map paths or execute a suite | [App-map](app-map.md) |
+| Inspect/download/preflight/prune/remove models or explicitly enable inference | [VLM models](vlm-models.md) |
+| Compile explicit recorder events and import a test | [Test recorder](../../tritonkit-real-project-regression/references/test-recorder.md) |
+| Use the optional DSH tool wrapper instead of arbitrary CLI argv | [DSH integration](../../tritonkit-dev-feedback/references/dsh-integration.md) |
 
 If no row fits, inspect `SKILL.md` for the core boundary and add a focused reference instead of creating a monolithic catch-all file.

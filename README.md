@@ -27,45 +27,26 @@ Before filing a public issue, redact private project and personal information. D
 
 TritonKit ships optional Codex / agent skills for AI-assisted adoption, feedback, and local emulator regression work. They are not required to use the iOS runtime, Harmony runtime notes, or macOS `triton` CLI.
 
-External users and adopting projects should install the public skill bundle as one directory named `TritonKit.skills/` inside the configured Codex / agent skills directory. Do not copy the three public skills as separate top-level directories. Current public skills inside the bundle are:
+External users and adopting projects should install the public skill bundle as one directory named `TritonKit.skills/` inside the configured Codex / agent skills directory. Do not copy individual skills as separate top-level directories. Current public skills inside the bundle are:
 
 - `tritonkit-dev-feedback`: collect adoption feedback, missing capabilities, confusing behavior, and documentation gaps as actionable TritonKit issues.
 - `tritonkit-emulator-cli-takeover`: guide local CLI takeover of iOS Simulator, Android Emulator, and HarmonyOS / DevEco Emulator workflows.
 - `tritonkit-real-project-regression`: validate TritonKit against real app projects while isolating external repo changes and preserving machine-readable evidence.
+- `tritonkit-update`: align the installed CLI, public skills and App package versions through guarded update checks.
 
-Do not install `.agents/skills/` into adopting projects by default. Those skills are repo-maintenance, governance, planning, supervision, and implementation workflows for TritonKit maintainers, and release packaging excludes them.
+Start from the [22-family capability index](TritonKit.skills/README.md#capability-routing) for DSH tools, local HTTP, leases, deep UI details/3D, readonly Web, explicit recording/import, map suites and optional models. These guides describe the source contract, not automatic enablement, installation or universal platform acceptance.
 
-If you previously installed the three public skills as separate top-level directories, remove them before installing this bundle:
+Do not install `.agents/skills/` into adopting projects by default. Those skills are repository-maintenance workflows and release packaging excludes them.
 
-```sh
-# Replace AGENT_SKILLS_DIR with your Codex / agent's configured skills directory.
-rm -rf "$AGENT_SKILLS_DIR"/tritonkit-dev-feedback \
-       "$AGENT_SKILLS_DIR"/tritonkit-emulator-cli-takeover \
-       "$AGENT_SKILLS_DIR"/tritonkit-real-project-regression
-```
-
-If you install from a source checkout, copy the whole bundle directory:
+For installation or migration, use the [guarded update workflow](TritonKit.skills/tritonkit-update/SKILL.md). Inspect installed command support, preview the exact target version and skills root, then apply only the authorized update:
 
 ```sh
-mkdir -p "$AGENT_SKILLS_DIR"
-rm -rf "$AGENT_SKILLS_DIR"/TritonKit.skills
-cp -R TritonKit.skills "$AGENT_SKILLS_DIR"/TritonKit.skills
+triton schema --command update --json
+triton update --include-skills --skills-dir "$AGENT_SKILLS_DIR" --dry-run --json
+triton update --include-skills --skills-dir "$AGENT_SKILLS_DIR" --yes --json
 ```
 
-If you install from a release asset, extract the bundle into that same configured skills directory:
-
-```sh
-tar -xzf tritonkit-skills.tar.gz -C "$AGENT_SKILLS_DIR"
-```
-
-You can also use the repository installer, which removes the old separate-skill layout and installs the bundle:
-
-```sh
-docs-linhay/scripts/install-public-skills.sh "$AGENT_SKILLS_DIR"
-docs-linhay/scripts/install-public-skills.sh "$AGENT_SKILLS_DIR" --from-tar tritonkit-skills.tar.gz
-```
-
-Restart the Codex / agent session after installation so the new skills are discovered.
+A source edit does not change a released archive or installed skills. When the installed CLI lacks guarded updating, use the matching repository installer described in that guide with the selected archive/checksum. Preserve local additions/edits, receipts and backups; do not delete installed or legacy folders to bypass a baseline refusal. Verify the actual CLI version, `skillsUpdated` and bundle BUILD_INFO/skill versions, then restart the agent session so it discovers the updated files.
 
 ## Raw business data
 

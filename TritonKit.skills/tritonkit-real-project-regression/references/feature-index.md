@@ -17,5 +17,12 @@ Use this file to choose the smallest reference needed for a real-project regress
 | Comment on or close a real-project smoke issue | `issue-closure.md` |
 | Create, inspect, dry-run, or execute `.tritonplan` flows | `replay-plans.md` |
 | Decide what not to do in the real app repo or public report | `boundaries.md` |
+| Record explicit events, compile, import, validate and run | [Test recorder](test-recorder.md) |
+| Inspect/confirm/export App-map paths or run a suite | [App-map](../../tritonkit-emulator-cli-takeover/references/app-map.md) |
+| Check optional model cache/inference prerequisites | [VLM models](../../tritonkit-emulator-cli-takeover/references/vlm-models.md) |
+| Coordinate opt-in Simulator ownership | [Target leases](../../tritonkit-emulator-cli-takeover/references/target-leases.md) |
+| Validate node solo/group images and readonly 3D | [UI inspection](../../tritonkit-emulator-cli-takeover/references/ui-inspection.md) |
+| Validate readonly Web/desktop preview versus business control | [Web preview](../../tritonkit-emulator-cli-takeover/references/web-preview.md) |
+| Consume local HTTP responses or the DSH four-tool wrapper | [HTTP API](../../tritonkit-emulator-cli-takeover/references/http-api.md), [DSH integration](../../tritonkit-dev-feedback/references/dsh-integration.md) |
 
 If no row fits, add a focused reference for that repeated workflow instead of recreating a large general-purpose guide.

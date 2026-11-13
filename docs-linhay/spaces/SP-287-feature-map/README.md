@@ -39,8 +39,9 @@
 
 ## Skills 覆盖与整理
 
-- [逐节点覆盖核对](./plans/20261112-skills-coverage.md)：主要工作流有 public skills 入口，但 DSH 四工具无直接 public 指南；HTTP、目标租约、Lookin details/3D、testrec 和部分 map/VLM 为部分覆盖，不宣称全部叶命令都有手册。
-- 当前 public 源码 bundle 有四个 skill：dev-feedback、emulator-cli-takeover、real-project-regression、update；安装副本与发布包本次未检查。没有新增或补齐 public skill。
+- [2026-11-12 逐节点核对](./plans/20261112-skills-coverage.md)是补齐前历史：当时 DSH 无直接 public 指南，HTTP、租约、Lookin details/3D、testrec 和部分 map/VLM 为部分覆盖。
+- 2026-11-13 用户已明确要求补齐，由 [SP-288](../SP-288-public-skills-completion/README.md)新增八类使用指南并接入22功能族导航；原图与历史核对不反写为新的发布或现场验收。
+- 当前 public 源码 bundle 仍为四个 skill：dev-feedback、emulator-cli-takeover、real-project-regression、update；补齐既有入口/references，不为每个命令新增skill。安装副本与发布资产不因源码文档变化自动更新。
 - 版本中只保留正式 v3 PNG、唯一 HTML、模型、可移植构建/渲染脚本和结构化证据。v1/v2 与含个人路径的原始渲染日志保留本机并由本 space 的 `.gitignore` 精确排除。
 - 构建脚本可通过 `STACK_DIAGRAM_SKILL_DIR` / `TRITON_FEATURE_MAP_ASSETS_DIR` 选择 stack-diagram 与图标缓存；只打开成品 HTML 不需要这些依赖。渲染脚本使用已打开的任务专属 loopback 页面和相对输出路径，不绑定个人目录或固定服务端口。
 - 本轮本地提交仅包含文档/图表/内部经验资料；验证与提交结果以 [验收记录](./plans/20261112-validation.md) 和 Git 回读为准，不推送。

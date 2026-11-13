@@ -1,6 +1,6 @@
 # Workspace Runs And Evidence
 
-Use this reference when touching workspace run, model decisions, Atlas/app-map, replay, `.tritonplan`, or evidence archive behavior.
+Use this reference when touching workspace run, model decisions, Atlas/app-map, replay, `.tritonplan`, or evidence archive behavior. Continue with [App-map paths/suites/export](app-map.md), [model cache and explicit inference](vlm-models.md), [local HTTP DTO/routing](http-api.md), or [explicit test recording/import](../../tritonkit-real-project-regression/references/test-recorder.md) only as needed.
 
 ## Workspace Run
 
@@ -37,7 +37,7 @@ Only mutate the app with:
 --execute-actions
 ```
 
-Remote LLM/VLM endpoints require explicit `--allow-remote-llm` or `--allow-remote-vlm` because evidence or screenshots may be sent out.
+LLM/VLM are disabled by default. Configure the provider and separately select `--enable-llm` / `--enable-vlm`; remote consent alone never enables them. Remote LLM/VLM endpoints additionally require `--allow-remote-llm` or `--allow-remote-vlm` because evidence or screenshots may be sent out. Model-selected App actions still require `--execute-actions` and later business verification.
 
 If VLM grounding fails before runtime execution, write VLM failure evidence and stop for review.
 

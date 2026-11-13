@@ -1,0 +1,26 @@
+{
+  "format": "curated-summary-not-original-log",
+  "baselineCommit": "38ce0b47",
+  "rawLog": {
+    "path": "20261113-coverage-before.log",
+    "bytes": 2921881,
+    "sha256": "21c1a66d18cc9c3bed2b188f0e4cf3b0d9a25cd1cff88a56ac383ba989a1900a",
+    "retention": "local ignored original, not included in commit"
+  },
+  "testsRun": 5,
+  "reportedFailures": 11,
+  "failedCases": [
+    "test_all_gap_guides_are_reachable_inside_bundle (test_public_skill_coverage.PublicSkillCoverageTests.test_all_gap_guides_are_reachable_inside_bundle)",
+    "test_bundle_readme_maps_all_22_capability_ids (test_public_skill_coverage.PublicSkillCoverageTests.test_bundle_readme_maps_all_22_capability_ids)",
+    "test_each_guide_has_actionable_sections (test_public_skill_coverage.PublicSkillCoverageTests.test_each_guide_has_actionable_sections) (guide='tritonkit-dev-feedback/references/dsh-integration.md')",
+    "test_each_guide_has_actionable_sections (test_public_skill_coverage.PublicSkillCoverageTests.test_each_guide_has_actionable_sections) (guide='tritonkit-emulator-cli-takeover/references/app-map.md')",
+    "test_each_guide_has_actionable_sections (test_public_skill_coverage.PublicSkillCoverageTests.test_each_guide_has_actionable_sections) (guide='tritonkit-emulator-cli-takeover/references/http-api.md')",
+    "test_each_guide_has_actionable_sections (test_public_skill_coverage.PublicSkillCoverageTests.test_each_guide_has_actionable_sections) (guide='tritonkit-emulator-cli-takeover/references/target-leases.md')",
+    "test_each_guide_has_actionable_sections (test_public_skill_coverage.PublicSkillCoverageTests.test_each_guide_has_actionable_sections) (guide='tritonkit-emulator-cli-takeover/references/ui-inspection.md')",
+    "test_each_guide_has_actionable_sections (test_public_skill_coverage.PublicSkillCoverageTests.test_each_guide_has_actionable_sections) (guide='tritonkit-emulator-cli-takeover/references/vlm-models.md')",
+    "test_each_guide_has_actionable_sections (test_public_skill_coverage.PublicSkillCoverageTests.test_each_guide_has_actionable_sections) (guide='tritonkit-emulator-cli-takeover/references/web-preview.md')",
+    "test_each_guide_has_actionable_sections (test_public_skill_coverage.PublicSkillCoverageTests.test_each_guide_has_actionable_sections) (guide='tritonkit-real-project-regression/references/test-recorder.md')",
+    "test_generated_archive_keeps_all_guides_and_routes (test_public_skill_coverage.PublicSkillCoverageTests.test_generated_archive_keeps_all_guides_and_routes)"
+  ],
+  "limitations": "Counts are original five-test run with eight guide subcases; final suite later adds routing and DSH adapter checks."
+}

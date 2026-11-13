@@ -1,0 +1,14 @@
+{
+  "authority": "synthetic-negative-fixture, not real CLI/device evidence",
+  "checkerExitCode": 0,
+  "reportedStatus": "pass",
+  "compile": {
+    "step": "compile",
+    "exitCode": 1,
+    "ok": false,
+    "kind": null,
+    "status": "failed",
+    "liveVerdict": false
+  },
+  "finding": "Checker currently accepts failed compile; retain original step result, reject overall pass."
+}

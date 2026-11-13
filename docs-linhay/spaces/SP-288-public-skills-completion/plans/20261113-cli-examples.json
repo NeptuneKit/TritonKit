@@ -1,0 +1,1023 @@
+{
+  "cliSha256": "eb4c1ab6ec2a4a8b8ba8c6b9bc783386d55b2a9b4619b2e35ebb5a89c4bde709",
+  "version": {
+    "defaultHost": "127.0.0.1",
+    "defaultPort": 19421,
+    "language": "en",
+    "ok": true,
+    "schemaVersion": 1,
+    "supportedLanguages": [
+      "en",
+      "zh"
+    ],
+    "version": "0.1.0-dev"
+  },
+  "helpChecks": [
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/http-api.md",
+      "argv": [
+        "version",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/http-api.md",
+      "argv": [
+        "schema",
+        "--command",
+        "serve",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/http-api.md",
+      "argv": [
+        "status",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/http-api.md",
+      "argv": [
+        "serve",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/target-leases.md",
+      "argv": [
+        "version",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/target-leases.md",
+      "argv": [
+        "target",
+        "list",
+        "--platform",
+        "ios",
+        "--scope",
+        "simulator",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/target-leases.md",
+      "argv": [
+        "schema",
+        "--command",
+        "target.lease",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/target-leases.md",
+      "argv": [
+        "target",
+        "lease",
+        "status",
+        "--target",
+        "sim:<observed-UDID>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/target-leases.md",
+      "argv": [
+        "target",
+        "lease",
+        "acquire",
+        "--target",
+        "sim:<observed-UDID>",
+        "--owner",
+        "agent-a",
+        "--ttl",
+        "300",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/target-leases.md",
+      "argv": [
+        "app",
+        "open-url",
+        "example://home",
+        "--device",
+        "sim:<observed-UDID>",
+        "--lease",
+        "<lease.id>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/target-leases.md",
+      "argv": [
+        "act",
+        "tap",
+        "--device",
+        "sim:<observed-UDID>",
+        "--at",
+        "120,240",
+        "--lease",
+        "<lease.id>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/target-leases.md",
+      "argv": [
+        "target",
+        "lease",
+        "release",
+        "--target",
+        "sim:<observed-UDID>",
+        "--lease",
+        "<lease.id>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/target-leases.md",
+      "argv": [
+        "target",
+        "lease",
+        "status",
+        "--target",
+        "sim:<observed-UDID>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/target-leases.md",
+      "argv": [
+        "target",
+        "lease",
+        "takeover",
+        "--target",
+        "sim:<observed-UDID>",
+        "--owner",
+        "agent-b",
+        "--ttl",
+        "300",
+        "--confirm",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/ui-inspection.md",
+      "argv": [
+        "debug",
+        "runtime",
+        "manifest",
+        "--target",
+        "<runtime-target>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/ui-inspection.md",
+      "argv": [
+        "schema",
+        "--command",
+        "debug.details",
+        "--compact",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/ui-inspection.md",
+      "argv": [
+        "debug",
+        "hierarchy",
+        "--target",
+        "<runtime-target>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/ui-inspection.md",
+      "argv": [
+        "debug",
+        "details",
+        "--target",
+        "<runtime-target>",
+        "--oid",
+        "1",
+        "--screenshots",
+        "none",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/ui-inspection.md",
+      "argv": [
+        "debug",
+        "attrs",
+        "--target",
+        "<runtime-target>",
+        "--oid",
+        "1",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/ui-inspection.md",
+      "argv": [
+        "debug",
+        "details",
+        "--target",
+        "<runtime-target>",
+        "--oid",
+        "1",
+        "--screenshots",
+        "both",
+        "--max-pixel-count",
+        "262144",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/web-preview.md",
+      "argv": [
+        "version",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/web-preview.md",
+      "argv": [
+        "schema",
+        "--command",
+        "web",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/web-preview.md",
+      "argv": [
+        "web",
+        "--print-command",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/web-preview.md",
+      "argv": [
+        "web",
+        "status",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/web-preview.md",
+      "argv": [
+        "web",
+        "doctor",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/web-preview.md",
+      "argv": [
+        "web",
+        "--simulator-only"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "schema",
+        "--command",
+        "map",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "schema",
+        "--command",
+        "workspace",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "map",
+        "merge",
+        "<run.tritonevidence>",
+        "--into",
+        "<app.tritonmap>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "workspace",
+        "merge-map",
+        "<run-id>",
+        "--map-dir",
+        "<app.tritonmap>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "map",
+        "inspect",
+        "<app.tritonmap>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "map",
+        "health",
+        "<app.tritonmap>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "map",
+        "screens",
+        "<app.tritonmap>",
+        "--offset",
+        "0",
+        "--limit",
+        "100",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "map",
+        "transitions",
+        "<app.tritonmap>",
+        "--offset",
+        "0",
+        "--limit",
+        "100",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "map",
+        "paths",
+        "<app.tritonmap>",
+        "--offset",
+        "0",
+        "--limit",
+        "100",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "map",
+        "path",
+        "show",
+        "<app.tritonmap>",
+        "--path",
+        "<path-id>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "map",
+        "path",
+        "confirm",
+        "<app.tritonmap>",
+        "--path",
+        "<path-id>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "map",
+        "suite",
+        "add-path",
+        "<app.tritonmap>",
+        "--suite",
+        "smoke",
+        "--path",
+        "<path-id>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "map",
+        "suite",
+        "inspect",
+        "<app.tritonmap>",
+        "--suite",
+        "smoke",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "map",
+        "export-flow",
+        "<app.tritonmap>",
+        "--path",
+        "<path-id>",
+        "--out",
+        "<fresh-flow.tritontest.yaml>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "test",
+        "validate",
+        "<fresh-flow.tritontest.yaml>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "map",
+        "viewer",
+        "<app.tritonmap>",
+        "--output",
+        "<fresh-viewer.html>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/app-map.md",
+      "argv": [
+        "map",
+        "suite",
+        "run",
+        "<app.tritonmap>",
+        "--suite",
+        "smoke",
+        "--target",
+        "<runtime-target>",
+        "--evidence-root",
+        "<owned-evidence-root>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "version",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "schema",
+        "--command",
+        "vlm",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "vlm",
+        "providers",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "vlm",
+        "model",
+        "list",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "vlm",
+        "model",
+        "inspect",
+        "<model-id-or-path>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "vlm",
+        "model",
+        "preflight",
+        "<model-id-or-path>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "vlm",
+        "model",
+        "download",
+        "<model-id>",
+        "--provider",
+        "mlx-swift-lm",
+        "--helper",
+        "<helper-path>",
+        "--cache-dir",
+        "<owned-cache-root>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "vlm",
+        "model",
+        "preflight",
+        "<downloaded-model-path>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "vlm",
+        "ground",
+        "--provider",
+        "mock",
+        "--image",
+        "<screen.png>",
+        "--target",
+        "Continue",
+        "--coordinate-contract",
+        "<coordinate-contract.json>",
+        "--output-dir",
+        "<fresh-grounding-dir>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "vlm",
+        "compare",
+        "--provider",
+        "mock",
+        "--image",
+        "<screen.png>",
+        "--target",
+        "Continue",
+        "--coordinate-contract",
+        "<coordinate-contract.json>",
+        "--output-dir",
+        "<fresh-comparison-dir>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "workspace",
+        "run",
+        "--target",
+        "<selector>",
+        "--app",
+        "<app>",
+        "--goal",
+        "Inspect next step",
+        "--enable-vlm",
+        "--vlm-provider",
+        "mlx-swift-lm",
+        "--vlm-model-path",
+        "<model-path>",
+        "--vlm-helper",
+        "<helper-path>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "vlm",
+        "model",
+        "list",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "vlm",
+        "model",
+        "prune",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-emulator-cli-takeover/references/vlm-models.md",
+      "argv": [
+        "vlm",
+        "model",
+        "remove",
+        "<model-id-or-path>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-real-project-regression/references/test-recorder.md",
+      "argv": [
+        "schema",
+        "--command",
+        "testrec",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-real-project-regression/references/test-recorder.md",
+      "argv": [
+        "schema",
+        "--command",
+        "test.import",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-real-project-regression/references/test-recorder.md",
+      "argv": [
+        "schema",
+        "--command",
+        "test.run",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-real-project-regression/references/test-recorder.md",
+      "argv": [
+        "testrec",
+        "start",
+        "--platform",
+        "ios",
+        "--case",
+        "login-flow",
+        "--output",
+        "<fresh-case.tritontestcase>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-real-project-regression/references/test-recorder.md",
+      "argv": [
+        "testrec",
+        "event",
+        "--session",
+        "<sessionId>",
+        "--kind",
+        "page-route",
+        "--payload-json",
+        "{\"id\":\"p1\",\"route\":\"login\"}",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-real-project-regression/references/test-recorder.md",
+      "argv": [
+        "testrec",
+        "event",
+        "--session",
+        "<sessionId>",
+        "--kind",
+        "action",
+        "--payload-json",
+        "{\"id\":\"a1\",\"kind\":\"tap\",\"target\":{\"label\":\"Continue\"}}",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-real-project-regression/references/test-recorder.md",
+      "argv": [
+        "testrec",
+        "stop",
+        "--session",
+        "<sessionId>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-real-project-regression/references/test-recorder.md",
+      "argv": [
+        "testrec",
+        "inspect",
+        "<case.tritontestcase>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-real-project-regression/references/test-recorder.md",
+      "argv": [
+        "testrec",
+        "compile",
+        "<case.tritontestcase>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-real-project-regression/references/test-recorder.md",
+      "argv": [
+        "testrec",
+        "proposals",
+        "<case.tritontestcase>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-real-project-regression/references/test-recorder.md",
+      "argv": [
+        "test",
+        "import",
+        "<case.tritontestcase>",
+        "--output",
+        "<fresh-plan.tritontest.yaml>",
+        "--bundle-id",
+        "<bundle-id>",
+        "--device-platform",
+        "ios-simulator",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-real-project-regression/references/test-recorder.md",
+      "argv": [
+        "test",
+        "validate",
+        "<fresh-plan.tritontest.yaml>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    },
+    {
+      "guide": "TritonKit.skills/tritonkit-real-project-regression/references/test-recorder.md",
+      "argv": [
+        "test",
+        "run",
+        "<fresh-plan.tritontest.yaml>",
+        "--target",
+        "<runtime-target>",
+        "--evidence-dir",
+        "<fresh-run.tritonevidence>",
+        "--json"
+      ],
+      "exitCode": 0,
+      "usagePresent": true
+    }
+  ],
+  "schemaChecks": [
+    {
+      "command": "serve",
+      "exitCode": 0
+    },
+    {
+      "command": "target.lease",
+      "exitCode": 0
+    },
+    {
+      "command": "debug.details",
+      "exitCode": 0
+    },
+    {
+      "command": "web",
+      "exitCode": 0
+    },
+    {
+      "command": "map",
+      "exitCode": 0
+    },
+    {
+      "command": "workspace",
+      "exitCode": 0
+    },
+    {
+      "command": "vlm",
+      "exitCode": 0
+    },
+    {
+      "command": "testrec",
+      "exitCode": 0
+    },
+    {
+      "command": "test.import",
+      "exitCode": 0
+    },
+    {
+      "command": "test.run",
+      "exitCode": 0
+    }
+  ],
+  "recorder": [
+    {
+      "step": "start",
+      "exitCode": 0,
+      "ok": true,
+      "kind": "triton.testrec.session-start",
+      "eventCount": null
+    },
+    {
+      "step": "route",
+      "exitCode": 0,
+      "ok": true,
+      "kind": "triton.testrec.event",
+      "eventCount": 1
+    },
+    {
+      "step": "action",
+      "exitCode": 0,
+      "ok": true,
+      "kind": "triton.testrec.event",
+      "eventCount": 2
+    },
+    {
+      "step": "stop",
+      "exitCode": 0,
+      "ok": true,
+      "kind": "triton.testrec.session-stop",
+      "eventCount": 2
+    },
+    {
+      "step": "inspect",
+      "exitCode": 0,
+      "ok": true,
+      "kind": "triton.testrec.inspect",
+      "eventCount": null
+    },
+    {
+      "step": "compile",
+      "exitCode": 0,
+      "ok": true,
+      "kind": "triton.testrec.compile",
+      "status": "compiled",
+      "liveVerdict": false
+    }
+  ],
+  "boundary": "offline helper/schema and synthetic recorder only; no device, server, model or live test",
+  "status": "pass"
+}

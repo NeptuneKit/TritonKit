@@ -116,6 +116,7 @@ metadata:
 - 功能图保留候选日期、HEAD/WIP、provider 前提和源码来源；后续提交不反写历史图为新的发布/现场证明。整理时当前 HEAD 已变化须另记收口基线。
 - 浏览器导出以同一自包含 HTML 为唯一视觉源。独立固定 viewport、deviceScaleFactor、画布范围与未选中态，禁用 transition/animation、等待字体和实际绘制后导出；每次最终复导出都要再实际看图。DOM 矩形完整、0 文本溢出及 PNG 尺寸正确仍不能单独证明图片没有 scroller 裁切、空白或残留选中态。
 - 正式成图与失败草稿分开；检查引用、PNG 原字节 hash/IHDR、离线资源与可移植脚本，精确提交正式版本。临时本机 URL/目录不作长期开机服务，不提交个人绝对路径；保留必要原始日志的本机副本并单独说明未纳入版本的范围。
+- 补齐 public references 时同时验证源码目录与实际打包 tar 内的入口/链接可达；包内 guide 不能依赖 `docs-linhay/` 等仓库专用相对路径，跨四个 public skill 的引用仍要留在 bundle 内。新增专题接入 SKILL/feature-index，负例覆盖删文件、断路由、代码块伪链接及越界链接；只检查打包前文件存在不够。示例参数对照真实源码/定向 schema，help/parser 与设备/模型验收分开；验收辅助脚本的总体pass必须联合校验末步exit、ok与typed终态，不能只记录失败字段后继续报pass，采用独立负例复核门禁；可复跑证据见 [SP-288](../../../docs-linhay/spaces/SP-288-public-skills-completion/README.md)。
 - 本轮可复跑边界与反例见 [SP-287 验收](../../../docs-linhay/spaces/SP-287-feature-map/plans/20261112-validation.md)；覆盖口径见 [skills 核对](../../../docs-linhay/spaces/SP-287-feature-map/plans/20261112-skills-coverage.md)。
 
 ## 参考更新采用与跨会话交付
