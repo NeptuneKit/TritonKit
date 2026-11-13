@@ -351,5 +351,11 @@
     "otherOwnerProcessesStopped": false,
     "anonymousMetadataAfterReset": "original checker still HTTP403 rate limited; no checksum output published"
   },
-  "scope": "Distribution/bytes/versions/installed readonly shell verified. Default sampled iPad preview not passed; no device/IME/real-model/reliability/global-owner acceptance."
+  "scope": "Distribution/bytes/versions/installed readonly shell verified. Default sampled iPad preview not passed; no device/IME/real-model/reliability/global-owner acceptance.",
+  "primaryArchive": {
+    "commit": "f187c934758f1372c1618282cfb9e9ffe5021648",
+    "ciURL": "https://github.com/NeptuneKit/TritonKit/actions/runs/43381624429",
+    "conclusion": "success",
+    "boundary": "Primary archive verified; subsequent status-only commit does not change tag/assets."
+  }
 }

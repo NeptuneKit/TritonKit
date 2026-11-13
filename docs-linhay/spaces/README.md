@@ -1,4 +1,4 @@
-2026-11-13：[SP-289-release-v0-2-45](./SP-289-release-v0-2-45/README.md)已发布v0.2.45/f9ddc4f4，Main/Tag/Release/tap成功；三资产字节/版本、Homebrew和skills夹具通过。默认iPad流409未过，关闭并排空后只读工作台单独通过；本机匿名API限流另记，未弱化CI gate。正在docs-only归档push，不改tag。
+2026-11-13：[SP-289-release-v0-2-45](./SP-289-release-v0-2-45/README.md)已发布v0.2.45/f9ddc4f4，Main/Tag/Release/tap成功；三资产字节/版本、Homebrew和skills夹具通过。默认iPad流409未过，关闭并排空后只读工作台单独通过；本机匿名API限流另记，未弱化CI gate。主体归档f187c934已推送且准确CI43381624429成功；状态回写不改tag。
 
 2026-11-13：[SP-288-public-skills-completion](./SP-288-public-skills-completion/README.md)八专题/22功能族导航及4处repo-only链接修复已验收；38打包、70help/10schema等通过。后续另获本地整理提交授权，复核加固验收脚本compile末步门禁并补3类反例，经验已回写；只收本轮文档/回归，不改产品、不推送/安装/发布。
 

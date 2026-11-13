@@ -24,4 +24,4 @@
 - 当前结果：v0.2.45已公开发布，tag=f9ddc4f4；Main/Tag/Release/tap全部成功。CLI/Web/Runner/skills/checksum、Homebrew0.2.45及隔离skills安装通过；默认采样iPad实时流HTTP409未通过，独立只读工作台在排空旧请求后通过，不能相互抵消。
 - 本机匿名metadata API两次因quota403失败，原checker未弱化/未输出checksum；CI真实匿名gate先于tap写入成功，另有本机匿名公开直链完整字节/hash验证。分观察记录，不把认证metadata说成匿名成功。
 - 原浏览器空间29丢失后经用户明确授权新建30；只读观察完成并结束自有页面，34135自有服务已取消且无监听，未停止别的owner或改设备/guard。截图与原始事件保留私有。
-- 最终证据与已知边界见[发布验收](./plans/20261113-release.md)、[结构化摘要](./plans/20261113-release-evidence.json)、[浏览器评估](./plans/20261113-browser-assessment.json)。收口只修改文档/验收辅助脚本，不改tag与制品；后续docs-only push的准确CI单独确认。
+- 最终证据与已知边界见[发布验收](./plans/20261113-release.md)、[结构化摘要](./plans/20261113-release-evidence.json)、[浏览器评估](./plans/20261113-browser-assessment.json)。主体归档提交f187c934已push且[准确CI43381624429](https://github.com/NeptuneKit/TritonKit/actions/runs/43381624429)成功；保留默认流未通过的限制。此状态回写只改文档，不移动tag或重传制品。
