@@ -21,6 +21,7 @@ class ExperienceChecks(unittest.TestCase):
         self.write(experience.INDEX, "# 经验\n\n| 触发条件 | 下次检查重点 | 权威链接 |\n"
                    "| --- | --- | --- |\n| schema 改动 | 检查最终 JSON | [契约](../dev/contract.md) |\n")
         self.write("docs-linhay/dev/contract.md", "# 契约\n")
+        self.write("CLAUDE.md", "@AGENTS.md\n")
         for name in experience.ROUTES:
             target = self.root / name
             link = os.path.relpath(self.index, target.parent)
@@ -43,6 +44,31 @@ class ExperienceChecks(unittest.TestCase):
 
     def test_valid(self):
         self.assertEqual([], self.check())
+
+    def test_missing_claude_entry(self):
+        (self.root / "CLAUDE.md").unlink()
+        self.assertTrue(any(error.startswith("CLAUDE.md:") for error in self.check()))
+
+    def test_binary_claude_entry(self):
+        (self.root / "CLAUDE.md").write_bytes(b"book\x00\xffmark")
+        self.assertTrue(any(error.startswith("CLAUDE.md:") for error in self.check()))
+
+    def test_claude_entry_must_travel_with_checkout(self):
+        with tempfile.TemporaryDirectory() as other:
+            external = Path(other) / "CLAUDE.md"
+            external.write_text("@AGENTS.md\n")
+            entry = self.root / "CLAUDE.md"
+            entry.unlink()
+            entry.symlink_to(external)
+            self.assertTrue(any(error.startswith("CLAUDE.md:") for error in self.check()))
+
+    def test_claude_entry_imports_wrong_file(self):
+        self.write("CLAUDE.md", "@README.md\n")
+        self.assertTrue(any(error.startswith("CLAUDE.md:") for error in self.check()))
+
+    def test_claude_entry_import_in_example_does_not_count(self):
+        self.write("CLAUDE.md", "```markdown\n@AGENTS.md\n```\n")
+        self.assertTrue(any(error.startswith("CLAUDE.md:") for error in self.check()))
 
     def test_missing_index(self):
         self.index.unlink()

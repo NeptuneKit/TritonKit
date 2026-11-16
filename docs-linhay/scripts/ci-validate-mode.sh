@@ -7,10 +7,10 @@ is_docs_only_path() {
   local path="$1"
 
   case "$path" in
-    README.md|AGENTS.md|MEMORY.md)
+    README.md|AGENTS.md|CLAUDE.md|MEMORY.md)
       return 0
       ;;
-    TritonKit.skills/*|.agents/skills/*)
+    TritonKit.skills/*|.agents/skills/*|.agents/rules/*.md)
       return 0
       ;;
     docs-linhay/scripts/*)
@@ -53,7 +53,7 @@ is_contract_only_path() {
   case "$path" in
     .github/workflows/*|DSH/*)
       # DSH has its own dependency-free Node contract workflow; it does not
-      # change the Swift/Pod products. Mixed paths still raise the scope below.
+      # change Swift products. Mixed paths still raise the scope below.
       return 0
       ;;
     docs-linhay/scripts/ci-validate-mode.sh|\

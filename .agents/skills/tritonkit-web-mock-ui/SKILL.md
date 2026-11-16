@@ -20,13 +20,13 @@ Do not use it for CLI / HTTP contract work unless the request also needs a human
 - CLI and HTTP remain the business-control contract.
 - Web mock screens consume DTO-shaped mock data or read-only endpoints by default.
 - Do not introduce create / update / delete / execute / approve / deny control loops in Web first.
-- Do not treat `Web/` as Wails revival or active production UI unless a new space explicitly changes that boundary.
+- `Web/` includes the read-only Device Hub shipped by `triton web` and a separate design review entry. A new product capability or Wails work requires an explicit space.
 
 ## Required Setup
 
 1. Create or update a `docs-linhay/spaces/<space-key>/README.md` before code.
 2. Include BDD scenarios, scope, out-of-scope, technology choices, and validation method.
-3. Use `Web/` for the repo-tracked React / TypeScript / Vite mock app unless the space states a different location.
+3. Use the separate `Web/design/` entry for repo-tracked React / TypeScript / Vite design review. Follow the space for any product integration.
 4. Keep Vite ports aligned with repo policy:
 
    ```text

@@ -4,6 +4,16 @@
 
 [轻量经验索引](../memory/EXPERIENCE.md)是按任务分流入口；本节是读取、证据、修订与退出的唯一治理流程。下文 2026-06-19 来源与验证是历史记录，不能作为当前执行授权或本轮测试结果。
 
+### 项目 Agent 入口与资料归属
+
+| 资料 | 权威入口 |
+| --- | --- |
+| 回复规范、个人及模型偏好 | 使用者自己的全局 AGENTS 与其指向的个人文件 |
+| 项目长期约束和路由 | [AGENTS.md](../../AGENTS.md)。[CLAUDE.md](../../CLAUDE.md) 用 Claude Code 的 [文件导入](https://code.claude.com/docs/en/memory#share-one-file-with-other-coding-tools)读取同一正文。 |
+| 运行配置与角色 | [Codex 项目配置](../../.codex/config.toml) 与 `.codex/agents/` 定义运行配置和角色。[Claude 本地覆盖](../../.claude/settings.local.json)目前仍由 Git 跟踪，内容是本机 lookinside/otool 许可。 |
+| 可重用流程 | [内部 skill 索引](../../.agents/skills/README.md)用于维护任务，[TritonKit.skills](../../TritonKit.skills/README.md)用于外部接入。 |
+| 需求、契约、证据 | [Space 编号](../spaces/INDEX.md)和[路线总览](../spaces/README.md)定位需求与验收。技术契约在 `dev/`，经验索引按主题链接原文，[项目记忆](../memory/MEMORY.md)记录决策与事件。 |
+
 ### 开工：先核对，再按主题读取
 
 1. 核对当前 repo/worktree、HEAD、`git status --short --branch`、相关 staged/unstaged diff 与未跟踪文件；阅读 AGENTS、README、匹配 skill、开发命令和索引。只核对当前相关改动，不覆盖用户 WIP。
@@ -36,7 +46,7 @@
 
 ### 已接入检查与检查边界
 
-- `check-docs.sh` 保留原 space 结构/连续编号检查，并运行 `check-agent-experience.py` 和隔离 fixture 测试：经验表三个非空字段、重复触发、仓库内有效文件链接、symlink/独立仓库边界，以及 AGENTS/README/MEMORY/治理文档和所有 `tritonkit-*` 内部 skill 的可见入口；同时检查根规则、ops skill 与本流程保留可见的默认自动沉淀声明。该声明检查只防接线回退，不证明 agent 实际完成了语义沉淀。
+- `check-docs.sh` 运行 Space 结构和连续编号检查、`check-agent-experience.py` 及隔离用例。校验器核对经验表字段、重复触发、仓库内有效链接、可见经验入口和默认沉淀声明，并检查根 `CLAUDE.md` 是随 checkout 提供的 UTF-8 文本导入。客户端实际读入以独立会话的加载记录核对。
 - `verify.sh --local`、`--ci-docs`、`--ci-validate` 使用同一文档入口；CI 的 docs、contracts 与完整契约路径均接入。脚本变化按现有 scope classifier 选择门禁，索引正文仍是 Markdown，不新增配置系统。
 - 按主题阅读、证据真实性、授权判断、根因归纳和退出仍由每次任务执行；程序只检查结构和接线，不自动判断结论是否真实或修复是否安全。CI 配置本地验证不代表远端 CI 已运行。
 - 历史 `agent-entrypoint-engineering.md` 的设计/MCP 等方案仍以其原标记为准；本次不启用新平台、任务台账、永久角色或周期性复盘。

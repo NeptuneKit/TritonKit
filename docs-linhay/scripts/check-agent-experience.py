@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the deliberately small experience table and its entry links."""
+"""Validate the experience table and project instruction entry points."""
 import argparse
 from pathlib import Path
 import re
@@ -60,8 +60,19 @@ def check(root):
     root = Path(root).resolve()
     index = root / INDEX
     errors = []
+    claude = root / "CLAUDE.md"
+    if claude.is_symlink():
+        errors.append("CLAUDE.md: 需要随 checkout 提供的普通文本文件")
+    else:
+        try:
+            imports = claude.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeError):
+            errors.append("CLAUDE.md: 需要可读的 UTF-8 项目入口")
+        else:
+            if imports != ["@AGENTS.md"]:
+                errors.append("CLAUDE.md: 入口应只包含一行 @AGENTS.md")
     if not index.is_file():
-        return [f"{INDEX}: 缺少经验索引"]
+        return [*errors, f"{INDEX}: 缺少经验索引"]
     text = visible_markdown(index.read_text(encoding="utf-8"))
     rows = [line.strip() for line in text.splitlines() if line.lstrip().startswith("|")]
     cells = lambda row: [cell.strip() for cell in row.strip("|").split("|")]

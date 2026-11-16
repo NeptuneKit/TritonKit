@@ -21,7 +21,7 @@ Before filing a public issue, redact private project and personal information. D
 
 ## Repository Agent Maintenance
 
-仓库维护者先读 [AGENTS.md](AGENTS.md)，再按 [经验索引](docs-linhay/memory/EXPERIENCE.md) 读取命中主题；执行与交付遵循 [现有治理流程](docs-linhay/dev/20260619-agent-workflow-skill-governance.md)。原文保存契约与证据，索引只负责分流；外部接入仍使用 public skills。
+仓库维护者先读 [AGENTS.md](AGENTS.md)，按 [内部 skill 索引](.agents/skills/README.md) 和 [经验索引](docs-linhay/memory/EXPERIENCE.md) 读取命中主题。客户端接线、资料归属和交付步骤见 [项目 Agent 治理](docs-linhay/dev/20260619-agent-workflow-skill-governance.md)。
 
 ## Optional Agent Skills
 

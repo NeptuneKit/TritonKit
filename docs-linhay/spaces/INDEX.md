@@ -412,3 +412,5 @@
 | `SP-291-issue-282-homebrew-recovery` | [`SP-291-issue-282-homebrew-recovery`](./SP-291-issue-282-homebrew-recovery/README.md) | 已关闭 | #282 正式 v0.2.46 验证 arm64 完整旁路恢复与独立目录更新 |
 
 | `SP-292-open-issues-release-046` | [`SP-292-open-issues-release-046`](./SP-292-open-issues-release-046/README.md) | 已发布 | v0.2.46 发布后关闭 #282、#283，初始八项还开放五项 |
+
+| `SP-293-project-agent-environment` | [`SP-293-project-agent-environment`](./SP-293-project-agent-environment/README.md) | 本地提交归档 | 项目规则与 skill 分流、Claude 加载正负例、33 项入口校验 |

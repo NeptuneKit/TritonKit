@@ -27,10 +27,10 @@ Use this skill when the task touches:
 
 Start from:
 
-- `docs-linhay/spaces/20260520-xcode-workflow-takeover/README.md`
-- `docs-linhay/spaces/20260520-xcode-workflow-takeover/technical-design.md`
-- `docs-linhay/references/xcodebuildmcp.md`
-- `docs-linhay/dev/20260520-simulator-takeover-architecture.md`
+- [Xcode workflow space](../../../docs-linhay/spaces/20260520-xcode-workflow-takeover/README.md)
+- [Technical design](../../../docs-linhay/spaces/20260520-xcode-workflow-takeover/technical-design.md)
+- [XcodeBuildMCP research](../../../docs-linhay/spaces/20260520-xcode-workflow-takeover/deep-technical-research-20260520.md)
+- [Simulator architecture](../../../docs-linhay/dev/20260520-simulator-takeover-architecture.md)
 
 ## Adoption Rules
 

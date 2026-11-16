@@ -1,13 +1,10 @@
 # Agent Entrypoint Engineering
 
+本文保留 Revyl 参考研究后的产品设计。当前命令与契约见 [CLI 信息架构](agent-facing-cli-information-architecture.md)，仓库维护入口见 [项目 Agent 治理](20260619-agent-workflow-skill-governance.md)。
+
 ## 来源
 
-本设计来自 `docs-linhay/spaces/20260527-revyl-cli-agent-entrypoint-research/` 对 `RevylAI/revyl-cli` 的深度研究。
-
-本地参考源码：
-
-- `docs-linhay/references/revyl-cli/`
-- Clone HEAD：`9931a77`
+本设计来自 [Revyl CLI 研究记录](../spaces/20260527-revyl-cli-agent-entrypoint-research/README.md)。当时使用的 `RevylAI/revyl-cli` checkout 为 `9931a77`，本轮核对时仓库内已无该 checkout。
 
 ## 设计目标
 

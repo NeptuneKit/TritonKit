@@ -40,7 +40,7 @@ description: Use when TritonKit work has two or more competing plans, agent prop
 - 执行顺序和每步可回滚性。
 - 验证门禁：单测、CLI schema、HTTP smoke、Web test、截图、release contract、docs check。
 - 风险：产品边界、兼容性、隐私、发布、真实设备 / 模拟器环境依赖。
-- 预计成本：实现复杂度、测试成本、对并行 worktree 的影响。
+- 预计成本：实现复杂度、测试成本、在当前 `main` 整合和复验的成本。
 
 不要奖励长篇计划；优先事实扎实、范围清楚、验证具体的方案。
 

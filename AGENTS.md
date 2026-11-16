@@ -2,6 +2,8 @@
 
 > 本文件只保留跨任务、长期稳定的硬约束；具体实现、发布和排障步骤写入匹配的项目 skill 或 `docs-linhay/dev/`。
 
+回复规范、个人与模型偏好遵循使用者的全局 AGENTS。仓库入口按 [内部 skill 索引](.agents/skills/README.md) 和 [项目 Agent 治理](docs-linhay/dev/20260619-agent-workflow-skill-governance.md) 分流。
+
 ## 0. 路径规范（不可删）
 
 以下目录结构为长期约束；后续修改只能增补，不得删除其中的路径节点。
@@ -47,7 +49,7 @@
 1. 全程中文沟通；先明确影响层（CLI、HTTP、Wails binding、Web、桌面壳或 shared core）与验收边界。
 2. 坚持 BDD + TDD：先场景和失败测试，再最小实现、重构和回归。每项功能改动都应有测试；未测必须说明原因、风险与下一步。
 3. CLI/HTTP 是 AI agent 和自动化脚本的事实入口：状态、动作、解释、验收和审计优先提供机器可读契约。能以 CLI/HTTP 完成的能力不新增 Web/SSE 控制面。
-4. `Web/` 仅是 React/Vite mock 原型；正式 Web/Wails 能力必须先更新 space、契约、状态流和验收。展示层默认只消费只读 DTO，不承载业务写操作。
+4. `Web/` 提供 React/Vite 的只读 Device Hub 与独立设计评审入口。展示层默认消费只读 DTO。新增正式 Web/Wails 能力先更新 space、契约、状态流和验收。
 5. 有副作用或共享状态的操作串行执行：git 提交/合并/推送、同一 scratch build/test、服务启停和设备动作不得并发抢占。
 6. 可复用流程优先更新现有 skill；只有 repo-wide 且长期稳定的规则才进入本文件。
 7. 开工先核对当前仓库、Git 差异、维护权限与权威资料；按[经验索引](docs-linhay/memory/EXPERIENCE.md)只读命中主题，未命中再检索，不全量预读历史记忆。独立仓库/子模块分别核对；目录、旧计划和参考会话不产生维护授权。
@@ -77,7 +79,7 @@
 
 ## 3. 验证、文档与安全
 
-1. 根包使用 `swift test`；CLI 使用 `swift test --package-path CLI --no-parallel`，优先测参数解析与分发，HTTP 用现有 Hummingbird 测试入口；Web 按 `Web/package.json` 测试与构建。将来新增 Go/Wails 模块时按其实际 manifest 验证，不能把历史命令当作当前入口。
+1. 根包使用 `swift test --no-parallel`，CLI 使用 `swift test --package-path CLI --no-parallel`，HTTP 使用现有 HummingbirdTesting 测试入口，Web 按 `Web/package.json` 测试与构建。
 2. 本地总门禁是 `docs-linhay/scripts/verify.sh --local`；docs/skill-only 改动至少运行 `docs-linhay/scripts/verify.sh --ci-docs`、`docs-linhay/scripts/check-docs.sh` 和 `git diff --check`。
 3. 需求变更先写对应 space；技术方案进 `docs-linhay/dev/`，每日结论进 `docs-linhay/memory/YYYY-MM-DD.md`，长期入口进 `docs-linhay/memory/MEMORY.md`。经验沉淀默认随任务执行，用户说“整理/沉淀”时再补做本轮完整回看；只有明确说“提交”才自动创建整理提交。
 4. 不覆盖或重置用户已有改动；禁止未经确认的破坏性命令。公开 issue、日志、截图和证据必须脱敏私有工程、身份与凭据。
@@ -85,8 +87,8 @@
 
 ## 4. TritonKit 产品与平台边界
 
-1. 当前产品是 `CLI + HTTP server + Wails Web + 桌面壳`；emulator 接管默认只覆盖本机 iOS Simulator、Android Emulator 与 HarmonyOS/DevEco Emulator。真机、远端 agent、设备云、对外 HTTP 产品面和多租户能力须另建 space。
-2. 端口固定：HTTP `127.0.0.1:19421`、Wails dev `localhost:34126`、Vite dev `127.0.0.1:34127`、Vite preview `127.0.0.1:34128`；前端必须 `strictPort`。
+1. 当前入口为 CLI、本机 HTTP 与 `triton web` 只读 Device Hub。emulator 接管默认覆盖本机 iOS Simulator、Android Emulator 与 HarmonyOS/DevEco Emulator。真机、远端 agent、设备云、对外 HTTP 产品面和多租户能力须另建 space。
+2. 固定端口为 HTTP `127.0.0.1:19421`、Vite dev `127.0.0.1:34127` 和 Vite preview `127.0.0.1:34128`。前端必须 `strictPort`。Wails dev 保留 `localhost:34126`。
 3. 模拟器/仿真器操作必须 Triton-first：先保存 `triton status/doctor/capabilities/schema/plan --json` 的事实；只有 Triton 失败、unsupported 或未覆盖时才能回退 `xcrun`、`adb`、`hdc`、XcodeBuildMCP 等，并记录原因与命令。
 4. Xcode 工作流优先 `triton xcode`；真实回归优先 `triton evidence capture --json`。机器可读失败输出必须保持单一合法 envelope，不二次包装。
 5. iOS embedded runtime 以 `TRITONKIT_RUNTIME_ENABLED` 控制：Debug 可启用，Release 必须可编译但不连接、不采集、不响应。App 接入使用独立 `#if DEBUG` bootstrap；SwiftPM 根包不引入 CLI-only 依赖。
@@ -99,27 +101,6 @@
 
 ## 6. Skill 路由与完成定义
 
-1. 涉及 space、文档、memory 或整理时使用 `tritonkit-ops-governance`；subagent 监督使用 `tritonkit-subagent-supervision`；设备接管、Xcode、release、Web mock 和真实项目回归使用对应专用 skill。
+1. 涉及 space、文档、memory 或整理时使用 [tritonkit-ops-governance](.agents/skills/tritonkit-ops-governance/SKILL.md)。设备、发布、设计和其他专项从 [内部 skill 索引](.agents/skills/README.md) 进入。
 2. DoD：验收场景满足；匹配的测试/验证已通过或已说明风险；CLI/HTTP、桌面、截图/evidence 按适用范围验收；space、索引、文档和 memory 已写回；可复用模式已沉淀。
 3. 自动沉淀经验：无需用户提醒。每个任务或交付切片收尾前自动回看命中经验；出现有复用价值的用户纠正、缺陷、验证失败、返工或交付遗漏时，先更新原权威资料，证据齐备后更新检查点与索引；未归因明确未知。引用旧结论先核对后续证据，已解决项退出待办、被替代项标历史关系；同一事件只计一次，无新经验不强行新增文件。执行 `tritonkit-ops-governance`，完成前报告沉淀位置或无新增原因；自动沉淀不包含 Git 提交、外部消息、生产或定时任务授权。
-
-## 面向程序员判断的回复风格
-
-先结论。默认短。复杂任务再展开。
-
-- 首句：是否成立 / 是否可行 / 到哪步。
-- 进度/修复：时间线，已完成 → 当前 → 下一步。
-- 方案/审查/高风险：加一行“影响/风险/选项”。
-- 验证：已验证 / 未验证 / 环境限制。
-- 路径、行号、日志按需给。
-- 简单问题直接答，不播报工具。
-
-默认：
-结论：...
-- [已完成] ...
-- [当前] ...
-- [下一步] ...
-验证：...
-
-复杂加：
-影响/风险：...

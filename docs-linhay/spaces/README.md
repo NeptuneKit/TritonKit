@@ -52,7 +52,7 @@
 2026-10-26参考核对：原目录 `main@24e7d0f2`，33仓日检22完整/11 partial、两仓HEAD变化。新增SP-221只读资源暂态重试/SP-222有限主控，显式gpt-6.1-sol真实会话创建成功、已通过独立与合后门禁，合本地main a0eebff0；旧13条采用已合main，旧源码/许可缺口保留。
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（277/277 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)
 >
 > 最近审计：2026-10-30（SP251 v0.2.38发布与安装验收完成）
 
@@ -101,6 +101,7 @@
 | 已归档 | [SP-199-mobile-mcp-reference](./SP-199-mobile-mcp-reference/README.md) | Mobile MCP 参考与差距报告已完成 | 研究docs门禁通过；已由SP-207追踪，SP-212采用切片已验收合main |
 | 已合入本地main | [SP-197-view-annotation](./SP-197-view-annotation/README.md) | 独立可选UIKit高亮与条件恢复；真实模拟器截图、CLI/HTTP与skills已验收 | 7b1a2f76完成集成；P1截图消费者与跨端另行实施；worktree/分支已清理 |
 | 本地提交归档 | [SP-198-agent-experience-loop](./SP-198-agent-experience-loop/README.md) | 按主题读取与默认自动沉淀已接线；28用例通过 | 后续任务按命中主题执行；CI配置已接入、远端未运行 |
+| 本地提交归档 | [SP-293-project-agent-environment](./SP-293-project-agent-environment/README.md) | 项目与全局规则分工、Claude 单源导入、现行资料核对 | Claude 离线正负例与文档门禁通过 |
 | 已发布v0.2.28 | [SP-196-upstream-optimization-delivery](./SP-196-upstream-optimization-delivery/README.md) | 主线集成与双架构/Homebrew验收完成 | active Resize/跨OS专项证明与性能量测另行推进；worktree/分支已清理 |
 | 已归档 | [SP-194-reference-project-updates](./SP-194-reference-project-updates/README.md) | 23主要仓库+9候选更新报告与分组来源已完成；文档门禁与来源结构校验通过 | 后续可纳入项按SP-207独立实施、验收与本地合并 |
 | 长期追踪 | [SP-193-ictrl-reference-tracking](./SP-193-ictrl-reference-tracking/README.md) | 正式列为长期参考；初始基线 main@99dbfec / v1.97.1；本聊天每日北京时间 10:00 追踪 | 有价值变化通知，增量归档后更新检查点；后续按SP-207直接评估、独立立项与验收合并 |

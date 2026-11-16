@@ -24,6 +24,8 @@ expect_mode docs \
   TritonKit.skills/tritonkit-dev-feedback/SKILL.md \
   .agents/skills/tritonkit-ops-governance/SKILL.md
 
+expect_mode docs CLAUDE.md .agents/rules/anti-patterns.md
+
 expect_mode swift Sources/TritonKitCLI/TritonKitCLI.swift
 expect_mode swift Tests/TritonKitSharedTests/TKCLITransportModelsTests.swift
 expect_mode swift Package.swift
