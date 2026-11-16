@@ -46,3 +46,7 @@ BDD：真实已停止/活动Resize查询须按原生结构、完整命令回执�
 ## 2026-10-29 合入main
 
 用户明确授权后，[PR #236](https://github.com/NeptuneKit/TritonKit/pull/236)已合入main，merge commit `27c7a87597274649e62a00b2cf1dad92b12677f9`。候选8c2fab81的Swift/CLI Release、CocoaPods和contracts CI全部通过；merge tree与该候选完全一致。#224保留OPEN，剩余iPad默认捕获/输入限制未解除；#214暂缓，主目录17个WIP保持不变，未发布。此前未合并文字仅表示对应历史阶段。
+
+## 2026-11-16 当次探针验证
+
+v0.2.46 候选在自有 iPad / iOS 27.0 的默认截图错误内返回当次 `probeDiagnostic`，报告 `native-result`、exit 1、CoreDevice 1001，JSON/log/process 引用可读。显式主 LCD still 截图通过。另一次 doctor 有自己的探针和独立引用，与动作失败分别保存。在自有 iPhone Simulator，正常截图和 Host HID swipe 通过，独立读回公开 fixture 轮播从 item1–4 滑到 item4–7。`queryFailed` 由注入回归测试覆盖；[线上报告的瞬态](https://github.com/NeptuneKit/TritonKit/issues/224#issuecomment-6860613134)本次未复现，根因未知，issue 保持开放。验证汇总见 [SP-292](../SP-292-open-issues-release-046/README.md)。

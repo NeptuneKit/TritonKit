@@ -36,6 +36,10 @@ docs-linhay/spaces/SP-219-simulator-resizable-routing/screenshots/*
 !docs-linhay/spaces/SP-219-simulator-resizable-routing/screenshots/20261024-record-normal-passed-v1.png
 !docs-linhay/spaces/SP-219-simulator-resizable-routing/screenshots/20261024-record-restored-passed-v1.png
 !docs-linhay/spaces/SP-219-simulator-resizable-routing/screenshots/20261024-record-resize-passed-v1.png
+!docs-linhay/spaces/SP-274-issue-277-resize-host-input/screenshots/
+docs-linhay/spaces/SP-274-issue-277-resize-host-input/screenshots/*
+!docs-linhay/spaces/SP-274-issue-277-resize-host-input/screenshots/20261116-host-hid-ipad-before-v1.png
+!docs-linhay/spaces/SP-274-issue-277-resize-host-input/screenshots/20261116-host-hid-ipad-after-v1.png
 
 # Independent Rhine design review output
 Web/dist-review/

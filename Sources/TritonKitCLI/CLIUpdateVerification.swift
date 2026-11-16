@@ -28,7 +28,9 @@ func verifyInstalledCLIUpdateVersion(
     let expected = plan.targetVersion!
     do {
         let binary: String
-        if plan.installSource == .homebrew {
+        if let installed = plan.installedExecutable {
+            binary = installed
+        } else if plan.installSource == .homebrew {
             let prefix = try hostCommandRunner("brew", ["--prefix", "neptunekit/tap/triton"])
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             guard prefix.hasPrefix("/"), !prefix.contains("\n") else {

@@ -713,3 +713,16 @@ Public UIControl target/action and accessibilityActivate remain supported. If a 
 Harmony layout 的 `text` / `originalText` 属于内容：非空字符串原样保留空格、制表符、换行与Unicode空白。`observe tree` JSON、精确find与wait消费同一parser结果；不应将 `" test "` 匹配为 `"test"`。空串、缺失、null或非字符串继续表示无可用文本，并沿用 `originalText` 回退；type/id/hierarchy等元数据仍trim。纯空白值与空值因此可区分，但空串与缺失仍沿用现有合并语义。
 
 本转换由合成JSON → shared parser → CLI observe JSON / wait路径验收；不证明HDC设备输入送达、focus/clear支持或私有App业务验证，transport receipt仍需独立后置读取。#246人工IME部分保持范围外。
+
+
+## 2026-11-16 prefs remove / resize diagnostics
+
+`triton app prefs remove <key> --device sim:<UUID> --bundle-id <id> --json` removes one literal key through the booted Simulator’s app-container preferences service. It verifies `present=false` in both the native domain (`preferenceDomainVerified`) and the app-data plist (`diskWriteVerified`), preserves unrelated plist values and performs no deletion when both views already lack the key. With `--relaunch`, the command stops the selected app before deleting and starts it after both checks. Recheck the running App separately. Unsafe plist paths, inconsistent sibling values and unverified deletion return errors. A launch failure preserves the verified deletion receipt.
+
+Selected-target doctor also exposes `simulatorDiagnostics.resize.diagnostic` with static probe stage, process exitCode and, only for exact bound CoreDevice failures, nativeErrorDomain/nativeErrorCode. It is a fresh readonly snapshot; it does not reconstruct a previous failed action or prove transient-failure root cause. Unknown resize still fails closed, queries are not automatically retried and actions are never replayed.
+
+### v0.2.46：完整 Release 恢复安装
+
+Homebrew 因本机 Xcode 检查拒绝预编译包安装时，可使用 `triton update --version v0.2.46 --release-install-dir /absolute/new/triton-0.2.46 --dry-run --json` 查看计划，再将 `--dry-run` 改为 `--yes` 执行。目录必须尚不存在且不在 Cellar 中；完整同 tag archive/checksum、CLI 版本、Web、Runner manifest/hash 和 SwiftPM bundle 校验后才发布目录。`installSource` 仍报告原来源；`installedExecutable` 指向新 CLI。原 Homebrew、符号链接与 PATH 保持不变，后续显式运行该新路径；支持同版本恢复。旧 CLI 不识别此选项时，先从同一官方 Release 下载并校验完整 arm64 archive，在新目录解包后使用其中 CLI。
+
+Resize 查询失败的实际动作 envelope 在 `error.probeDiagnostic` 保留当次 stage、exitCode、已核实 native domain/code 和可用本地 artifactPaths；doctor 的 `simulatorDiagnostics.resize.diagnostic` 是另一次只读快照。失败 JSON/log/process 原始事实留在本地诊断目录，公开反馈需另作脱敏副本；产物未写成时不声称已经保留。未知结果不自动重试动作。

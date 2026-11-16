@@ -86,6 +86,8 @@ func updatePlanOutputContract() -> TKCommandOutputContract {
         fields: schemaContractFields([
             ("ok", "Bool", true, "Whether update planning or execution completed"),
             ("currentVersion", "String", true, "CLI version running before this update"),
+            ("releaseInstallDirectory", "String?", false, "Explicit new directory for complete standalone installation"),
+            ("installedExecutable", "String?", false, "Planned destination executable; installedVersion and updated confirm verification; Homebrew and PATH remain unchanged"),
             ("installedVersion", "String?", false, "Actual installed CLI version verified after execution; absent for check/dry-run"),
             ("latestVersion", "String?", false, "Latest or requested release version without the v prefix"),
             ("targetVersion", "String?", false, "Target release version without the v prefix"),

@@ -86,10 +86,10 @@ func nativeHIDGuardSnapshot(
     target: String,
     environment: [String: String],
     allowActiveDTUHID: Bool = false,
-    resizeProbe: IOSSimulatorResizeProbe = { probeIOSSimulatorResize(target: $0, environment: $1) }
+    resizeProbe: IOSSimulatorResizeProbe? = nil
 ) throws -> NativeHIDScreen {
     guard UUID(uuidString: target) != nil else { throw IOSSimulatorResizeError.invalidTarget }
-    let resize = resizeProbe(target, environment)
+    let resize = try resizeStateForOperation(target: target, environment: environment, probe: resizeProbe, allowsUnsupported: true)
     if !iosSimulatorResizeAllowsHostInput(resize) {
         switch resize {
         case .active: throw IOSSimulatorResizeError.activeSession

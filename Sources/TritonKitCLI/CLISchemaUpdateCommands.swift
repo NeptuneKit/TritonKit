@@ -18,6 +18,7 @@ func updateCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--include-skills", type: "Bool", defaultValue: "false", description: "Also update the public TritonKit.skills bundle from the same release"),
                 TKCommandSchemaOption(name: "--skills-dir", type: "String", description: "Agent skills root directory used with --include-skills"),
                 TKCommandSchemaOption(name: "--repository", type: "String", defaultValue: "NeptuneKit/TritonKit", description: "GitHub repository, owner/name"),
+                TKCommandSchemaOption(name: "--release-install-dir", type: "String", description: "Install complete verified release to a new absolute directory without modifying Homebrew or PATH"),
                 schemaFormatTextJSONOption,
                 schemaJSONAliasOption,
             ],
@@ -35,7 +36,7 @@ func updateCommandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "{ ok, currentVersion, targetVersion, installSource, updateAvailable, actions[], cliUpdateAttempted, installedVersion, updated, skillsUpdated }",
             failureShape: "{ ok:false, error:{ code,message,hint? } }",
-            outputSemantics: "Checks resolve the release target without modifying Homebrew; execution requires --yes and verifies installed version before skills installation.",
+            outputSemantics: "Explicit --release-install-dir preserves installSource and installs full resources to a new directory, including same-version recovery; installedExecutable identifies the result. Standalone installations require a new directory for version upgrades. Checks resolve the release target without modifying Homebrew; execution requires --yes and verifies installed version before skills installation.",
             nextCommands: [
                 "triton update --check --json",
                 "triton version --json",
@@ -47,6 +48,10 @@ func updateCommandSchemas() -> [TKCommandSchema] {
             failureCodes: [
                 "release_resolution_failed",
                 "homebrew_version_mismatch",
+                "homebrew_upgrade_failed",
+                "release_install_invalid",
+                "release_install_directory_required",
+                "unsupported_architecture",
                 "installed_version_mismatch",
                 "downgrade_unsupported",
                 "skills_version_mismatch",

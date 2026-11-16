@@ -31,11 +31,12 @@ func makeCLIUpdatePlan(
         throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "An update plan requires a valid numeric release version.", hint: "Resolve the latest release or pass --version vX.Y.Z.")
     }
     let installSource = detectCLIUpdateInstallSource(currentExecutable: currentExecutable, environment: environment)
+    let standalone = isStandaloneCLIRelease(source: installSource, executable: currentExecutable)
     let assetName = cliUpdateAssetName(forArchitecture: architecture)
     let updateAvailable = versionIsNewer(targetVersion, than: currentVersion)
     let checksumManifestName = "tritonkit_checksums.txt"
     let mutating = !checkOnly && !dryRun
-    let requiresConfirmation = mutating && !confirm && (updateAvailable || includeSkills)
+    let requiresConfirmation = mutating && !confirm && (updateAvailable || includeSkills) && !(updateAvailable && standalone)
     var actions: [CLIUpdateAction] = []
     var manualInstructions: [String] = []
 
@@ -69,6 +70,8 @@ func makeCLIUpdatePlan(
             path: nil,
             destructive: true
         ))
+    case .manual where standalone, .unknown where standalone:
+        manualInstructions.append("Install the complete release into a new directory with --release-install-dir <new-absolute-directory> --yes.")
     case .manual, .unknown:
         actions.append(CLIUpdateAction(
             id: "download-cli-asset",
@@ -122,7 +125,7 @@ func makeCLIUpdatePlan(
         manualInstructions.append("Current executable appears to be a source checkout build. Build locally with: swift build --package-path CLI --scratch-path .build/cli -c release --product triton")
     }
 
-    if updateAvailable || includeSkills {
+    if (updateAvailable || includeSkills) && !(updateAvailable && standalone) {
         actions.append(CLIUpdateAction(
             id: "verify-installed-version",
             kind: .verifyInstalledVersion,
@@ -211,6 +214,9 @@ func parseTritonReleaseChecksums(_ manifest: String) throws -> [String: String] 
         guard hash.count == 64, hash.allSatisfy({ $0.isHexDigit }) else {
             throw CLIUpdateErrorDetail(code: "invalid_checksum_manifest", message: "Invalid checksum line: \(rawLine)", hint: "Verify the GitHub Release checksum manifest.")
         }
+        guard parts.count == 2, checksums[fileName] == nil else {
+            throw CLIUpdateErrorDetail(code: "invalid_checksum_manifest", message: "Duplicate or malformed checksum entry.", hint: nil)
+        }
         checksums[fileName] = hash.lowercased()
     }
     return checksums
@@ -259,6 +265,8 @@ func runCLIUpdate(
     includeSkills: Bool,
     skillsDirectory: String?,
     repository: String,
+    releaseInstallDirectory: String? = nil,
+    releaseInstaller: (CLIUpdateResponse, String, String) async throws -> Void = installStandaloneCLIRelease,
     latestReleaseTagResolver: ((String) async throws -> String) = fetchLatestTritonReleaseTag,
     skillsBundleInstaller: ((String, String, String) async throws -> Void) = installSkillsBundle,
     hostCommandRunner: (String, [String]) throws -> String = captureProcess,
@@ -275,7 +283,7 @@ func runCLIUpdate(
             throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "Unable to resolve the latest GitHub release: \(error)", hint: "Check network access or pass --version vX.Y.Z explicitly.")
         }
     }
-    let plan = try makeCLIUpdatePlan(
+    var plan = try makeCLIUpdatePlan(
         currentVersion: currentVersion,
         requestedVersion: releaseTarget.tag,
         currentExecutable: currentExecutable,
@@ -288,13 +296,25 @@ func runCLIUpdate(
         repository: repository,
         environment: ProcessInfo.processInfo.environment
     )
+    if let directory = releaseInstallDirectory {
+        try validateReleaseInstallDestination(directory)
+        guard architecture == "arm64" else { throw CLIUpdateErrorDetail(code: "unsupported_architecture", message: "Standalone releases support macOS arm64.", hint: nil) }
+        plan = standaloneCLIUpdatePlan(plan, directory: directory, confirm: confirm)
+    }
     if plan.checkOnly || plan.dryRun {
         return plan
+    }
+    if plan.updateAvailable, releaseInstallDirectory == nil, isStandaloneCLIRelease(source: plan.installSource, executable: currentExecutable) {
+        let detail = CLIUpdateErrorDetail(code: "release_install_directory_required",
+            message: "A complete standalone installation requires a new release directory for updates.",
+            hint: "Use --release-install-dir <new-absolute-directory> --yes to keep the CLI, Web and Runner together.")
+        throw CLIUpdateExecutionFailure(response: makeCLIUpdateExecutionResponse(
+            plan: plan, updated: false, skillsUpdated: false, installedVersion: nil, cliUpdateAttempted: false, error: detail))
     }
     if let targetVersion = plan.targetVersion, versionIsNewer(currentVersion, than: targetVersion) {
         throw CLIUpdateErrorDetail(code: "downgrade_unsupported", message: "Target version \(targetVersion) is older than the active CLI \(currentVersion).", hint: "Choose the current or a newer release so CLI and skills stay aligned.")
     }
-    if !plan.updateAvailable && !includeSkills {
+    if !plan.updateAvailable && !includeSkills && releaseInstallDirectory == nil {
         return plan
     }
     if includeSkills && skillsDirectory == nil {
@@ -312,14 +332,18 @@ func runCLIUpdate(
     var cliUpdated = false
     var installedVersion: String?
     do {
-        if plan.updateAvailable {
+        if releaseInstallDirectory != nil {
+            cliUpdateAttempted = true
+            try await releaseInstaller(plan, plan.releaseTag!, repository)
+        } else if plan.updateAvailable {
             switch plan.installSource {
             case .homebrew:
                 _ = try hostCommandRunner("brew", ["update"])
                 let formulaJSON = try hostCommandRunner("brew", ["info", "--json=v2", "neptunekit/tap/triton"])
                 try verifyHomebrewUpdateVersion(formulaJSON: formulaJSON, expectedVersion: plan.targetVersion!)
                 cliUpdateAttempted = true
-                _ = try hostCommandRunner("brew", ["upgrade", "neptunekit/tap/triton"])
+                do { _ = try hostCommandRunner("brew", ["upgrade", "neptunekit/tap/triton"]) }
+                catch { throw CLIUpdateErrorDetail(code: "homebrew_upgrade_failed", message: "Homebrew upgrade failed: \(error)", hint: "For a verified complete release without Homebrew compiler checks, rerun with --release-install-dir <new-absolute-directory> --yes; use the returned installedExecutable explicitly.") }
             case .manual, .unknown:
                 guard let tag = plan.releaseTag else {
                     throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "Unable to resolve release tag.", hint: "Pass --version vX.Y.Z explicitly.")
@@ -336,7 +360,7 @@ func runCLIUpdate(
         }
 
         installedVersion = try verifyInstalledCLIUpdateVersion(plan: plan, hostCommandRunner: hostCommandRunner)
-        cliUpdated = plan.updateAvailable
+        cliUpdated = plan.updateAvailable || releaseInstallDirectory != nil
 
         var skillsUpdated = false
         if includeSkills {
@@ -387,6 +411,8 @@ private func makeCLIUpdateExecutionResponse(
         actions: plan.actions,
         manualInstructions: plan.manualInstructions,
         error: error,
+        releaseInstallDirectory: plan.releaseInstallDirectory,
+        installedExecutable: plan.installedExecutable,
         installedVersion: installedVersion,
         cliUpdateAttempted: cliUpdateAttempted
     )
@@ -475,7 +501,7 @@ private func installSkillsBundle(repository: String, tag: String, skillsDirector
 
 }
 
-private func downloadFile(_ url: URL, to destination: URL) async throws {
+func downloadFile(_ url: URL, to destination: URL) async throws {
     let (temporary, response) = try await URLSession.shared.download(from: url)
     guard (response as? HTTPURLResponse)?.statusCode == 200 else {
         throw CLIUpdateErrorDetail(code: "download_failed", message: "Failed to download \(url.lastPathComponent).", hint: "Check network access and release asset availability.")
@@ -486,7 +512,7 @@ private func downloadFile(_ url: URL, to destination: URL) async throws {
     try FileManager.default.moveItem(at: temporary, to: destination)
 }
 
-private func sha256(path: String) throws -> String {
+func sha256(path: String) throws -> String {
     let output = try captureProcess("/usr/bin/shasum", ["-a", "256", path])
     guard let hash = output.split(whereSeparator: { $0 == " " || $0 == "\t" }).first else {
         throw CLIUpdateErrorDetail(code: "checksum_failed", message: "Unable to compute SHA-256 for \(path).", hint: nil)

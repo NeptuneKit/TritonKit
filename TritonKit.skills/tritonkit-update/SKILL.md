@@ -31,7 +31,7 @@ For a pinned release:
 triton update --version v0.1.24 --yes --json
 ```
 
-For Homebrew-managed installs, `triton update` must use Homebrew and must not overwrite the Cellar binary directly.
+For Homebrew-managed installs, the default update uses Homebrew and never overwrites the Cellar binary directly. Since v0.2.46, explicit `--release-install-dir /absolute/new/directory` installs the complete verified same-tag release independently. Preview with `--dry-run --json`, then use `--yes`; inspect `installedExecutable` and run that path explicitly. Existing directories, Cellar destinations and unsafe archives are rejected. This mode preserves the detected `installSource`, Homebrew symlinks and PATH, and supports same-version recovery when Homebrew compiler checks block installation. The new directory includes the CLI, Web entrypoints, Runner and SwiftPM resources. Use a new directory again when upgrading a standalone installation. Older CLI versions require downloading and checksum-verifying the official complete arm64 archive into a new directory first.
 
 Check results must include an explicit target version before interpreting `updateAvailable=false` as up to date. Older CLI releases can return false without querying any version source for Homebrew installs. If target/latest is missing, treat the result as unknown and resolve the latest GitHub Release separately. Do not infer a user's installed version from a maintainer machine.
 
@@ -104,3 +104,19 @@ iOS app integrations use SwiftPM and require iOS 16 or newer; CocoaPods is not a
 ## Report Back
 
 Report the installed CLI and skills bundle versions, checksum/baseline validation outcome, retained backup and legacy migration outcome, and whether app dependencies were updated or only left as instructions. Separate a dry-run plan from a completed installation.
+
+## Homebrew compiler-check recovery (v0.2.46+)
+
+An older CLI cannot parse `--release-install-dir`. After selecting a published arm64 tag, download the complete archive and same-tag checksum into a fresh temporary directory, verify before extracting, then invoke that archive's new CLI. This preserves the old installation. For example (requires `gh`):
+
+```sh
+set -e
+release_tag=v0.2.46
+recovery_tmp=$(mktemp -d)
+gh release download "$release_tag" --repo NeptuneKit/TritonKit --pattern triton-macos-arm64.tar.gz --pattern tritonkit_checksums.txt --dir "$recovery_tmp"
+(cd "$recovery_tmp" && awk '$2 == "triton-macos-arm64.tar.gz" { print }' tritonkit_checksums.txt > arm64.sha256 && test -s arm64.sha256 && shasum -a 256 -c arm64.sha256 && tar -xzf triton-macos-arm64.tar.gz)
+"$recovery_tmp/triton-macos-arm64/triton" update --version "$release_tag" --release-install-dir /absolute/new/triton-0.2.46 --yes --json
+/absolute/new/triton-0.2.46/triton version --json
+```
+
+Stop if download/checksum/extraction or installation fails. Use a new destination of your choice; no automatic PATH change is performed. Inspect `updated=true`, matching `installedVersion`, and `installedExecutable`, then verify packaged Web from outside the source checkout. The checksum authenticates consistency with the official same-tag manifest; do not substitute a hash computed only from the downloaded archive.

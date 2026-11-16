@@ -58,6 +58,11 @@ while True:
     assert time.monotonic() < deadline, 'Probe mode did not settle; input was not attempted'
     time.sleep(0.2)
 
+if a.case == 'normal':
+    baseline_editors = [n for n in before if n.get('id') == 'editor']
+    assert len(baseline_editors) == 1 and baseline_editors[0].get('text') == '', (
+        'The raw provider must report an explicit empty string before normal input', baseline_editors)
+
 expected = a.text + '-settled' if a.case == 'delayed' else a.text
 code, receipt = run('verified-input', ['act', 'type', '--platform', 'harmony', '--device', a.device,
     '--verify', '--selector', 'id:editor', '--text', a.text, '--expect-value', expected, '--timeout', '8'])
@@ -72,18 +77,25 @@ if a.case in ('normal', 'delayed'):
     assert code == 0 and receipt['ok'] and receipt['submission'] == 'submitted' and receipt['verification'] == 'match', receipt
     assert len(editors) == 1 and editors[0]['text'].encode() == expected.encode(), editors
     assert status == f'mode={a.case} changes=1', status
+elif a.case == 'password':
+    # SP286: provider masking affects verification, never permission to submit.
+    assert receipt['submission'] == 'submitted', receipt
+    assert receipt['verification'] in ('match', 'unavailable', 'mismatch'), receipt
+    if receipt['verification'] == 'unavailable':
+        assert code != 0 and not receipt['ok'] and receipt['code'] == 'harmony_input_value_unavailable', receipt
+    assert status == 'mode=password changes=1', status
 elif a.case == 'reject':
     assert code != 0 and not receipt['ok'] and receipt['submission'] == 'submitted', receipt
     assert receipt['verification'] == 'mismatch', receipt
     assert len(editors) == 1 and editors[0]['text'] == 'REJECTED', editors
     assert status == 'mode=reject changes=1', status
 else:
-    error = {'duplicate': 'harmony_input_ambiguous', 'disabled': 'harmony_input_not_editable',
-             'password': 'harmony_input_secure_unsupported'}[a.case]
+    error = {'duplicate': 'harmony_input_ambiguous', 'disabled': 'harmony_input_not_editable'}[a.case]
     assert code != 0 and not receipt['ok'] and receipt['submission'] == 'not-sent' and receipt['code'] == error, receipt
     assert status == f'mode={a.case} changes=0', status
 
 summary = {'case': a.case, 'passed': True, 'receipt': receipt, 'independentStatus': status,
-           'valueReadbackMatched': a.case in ('normal', 'delayed'), 'verifiedCommandInvocations': 1}
+           'valueReadbackMatched': a.case in ('normal', 'delayed'), 'verifiedCommandInvocations': 1,
+           'explicitEmptyBaselineObserved': a.case == 'normal'}
 (a.output / 'summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n')
 print(json.dumps(summary, ensure_ascii=False))

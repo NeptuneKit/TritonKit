@@ -5,11 +5,13 @@ struct SimulatorDoctorProbeStatus: Encodable, Equatable {
     let state: String
     let reason: String?
     let hint: String?
+    let diagnostic: IOSSimulatorResizeProbeDiagnostic?
 
-    init(state: String, reason: String?, hint: String? = nil) {
+    init(state: String, reason: String?, hint: String? = nil, diagnostic: IOSSimulatorResizeProbeDiagnostic? = nil) {
         self.state = state
         self.reason = reason
         self.hint = hint
+        self.diagnostic = diagnostic
     }
 }
 
@@ -31,15 +33,17 @@ func simulatorDiagnosticNextAction(target: String) -> TKCLINextAction {
 
 func simulatorDoctorDiagnostics(
     target: String?, environment: [String: String] = [:],
-    resizeProbe: IOSSimulatorResizeProbe = { probeIOSSimulatorResize(target: $0, environment: $1) },
+    resizeProbe: IOSSimulatorResizeProbe? = nil,
     displayProbe: IOSSimulatorDisplayProbe = { probeIOSSimulatorDisplay(target: $0, environment: $1) }
 ) -> SimulatorDoctorDiagnostics? {
     guard let target, UUID(uuidString: target) != nil else { return nil }
+    let report = resizeProbe.map { IOSSimulatorResizeProbeReport(state: $0(target, environment), diagnostic: .init(stage: "injected-probe", exitCode: nil, nativeErrorDomain: nil, nativeErrorCode: nil)) }
+        ?? probeIOSSimulatorResizeReport(target: target, environment: environment)
     let resize: SimulatorDoctorProbeStatus
-    switch resizeProbe(target, environment) {
-    case .inactive: resize = .init(state: "inactive", reason: nil)
-    case .active: resize = .init(state: "active", reason: nil)
-    case .unknown(let reason): resize = .init(state: "unknown", reason: reason.rawValue, hint: reason.recoveryHint)
+    switch report.state {
+    case .inactive: resize = .init(state: "inactive", reason: nil, diagnostic: report.diagnostic)
+    case .active: resize = .init(state: "active", reason: nil, diagnostic: report.diagnostic)
+    case .unknown(let reason): resize = .init(state: "unknown", reason: reason.rawValue, hint: reason.recoveryHint, diagnostic: report.diagnostic)
     }
     let display: SimulatorDoctorProbeStatus
     switch displayProbe(target, environment) {
@@ -60,7 +64,7 @@ func simulatorTargetBoundDetail(_ detail: TKCLIErrorDetail, target: String) -> T
     guard UUID(uuidString: target) != nil else { return detail }
     return TKCLIErrorDetail(code: detail.code, message: detail.message,
         hint: (detail.hint ?? "") + " Inspect simulatorDiagnostics.resize and simulatorDiagnostics.display in selected-target doctor; tool availability alone does not prove either state. Do not replay an action with unknown delivery.",
-        nextAction: simulatorDiagnosticNextAction(target: target))
+        nextAction: simulatorDiagnosticNextAction(target: target), probeDiagnostic: detail.probeDiagnostic)
 }
 
 func withSimulatorDiagnosticTarget<T>(_ target: String, operation: () throws -> T) throws -> T {

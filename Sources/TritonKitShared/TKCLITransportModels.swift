@@ -390,12 +390,26 @@ public struct TKCLICommandResponse: Codable, Equatable {
     }
 }
 
+public struct TKCLIHostProbeDiagnostic: Codable, Equatable {
+    public let stage: String
+    public let exitCode: Int32?
+    public let nativeErrorDomain: String?
+    public let nativeErrorCode: Int?
+    public let artifactPaths: [String]?
+    public init(stage: String, exitCode: Int32?, nativeErrorDomain: String?, nativeErrorCode: Int?, artifactPaths: [String]? = nil) {
+        self.stage = stage; self.exitCode = exitCode
+        self.nativeErrorDomain = nativeErrorDomain; self.nativeErrorCode = nativeErrorCode
+        self.artifactPaths = artifactPaths
+    }
+}
+
 public struct TKCLIErrorDetail: Codable, Equatable {
     public let code: String
     public let message: String
     public let endpoint: String?
     public let hint: String?
     public let nextAction: TKCLINextAction?
+    public let probeDiagnostic: TKCLIHostProbeDiagnostic?
     public let nearestCandidates: [String]?
     public let suggestedCommands: [String]?
     public let candidateCount: Int?
@@ -422,13 +436,15 @@ public struct TKCLIErrorDetail: Codable, Equatable {
         leaseReason: String? = nil,
         currentOwner: String? = nil,
         currentLeaseID: String? = nil,
-        currentExpiresAt: Date? = nil
+        currentExpiresAt: Date? = nil,
+        probeDiagnostic: TKCLIHostProbeDiagnostic? = nil
     ) {
         self.code = code
         self.message = message
         self.endpoint = endpoint
         self.hint = hint
         self.nextAction = nextAction
+        self.probeDiagnostic = probeDiagnostic
         self.nearestCandidates = nearestCandidates
         self.suggestedCommands = suggestedCommands
         self.candidateCount = candidateCount

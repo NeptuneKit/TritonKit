@@ -449,6 +449,7 @@ func hostDeviceDoctorOutputContract() -> TKCommandOutputContract {
             ("simulatorDiagnostics.resize.state", "String", false, "active|inactive|unknown"),
             ("simulatorDiagnostics.resize.reason", "String?", false, "Unknown appResize reason; unsupportedDevice is a bound native capability rejection, not inactive"),
             ("simulatorDiagnostics.resize.hint", "String?", false, "Recovery guidance for a known cause such as unsupportedDevice; absent when no specific recovery is established"),
+            ("simulatorDiagnostics.resize.diagnostic", "Object?", false, "Current probe stage, exitCode and bound CoreDeviceError domain/code; no raw native text or prior-action guarantee"),
             ("simulatorDiagnostics.display.state", "String", false, "primary|unknown"),
             ("simulatorDiagnostics.display.reason", "String?", false, "Unknown displays reason; absent for known state"),
             ("simulatorDiagnostics.verification", "String", false, "readonly-target-bound-snapshots; not atomic between probes"),

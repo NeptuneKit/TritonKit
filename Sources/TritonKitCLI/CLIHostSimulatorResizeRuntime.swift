@@ -122,32 +122,95 @@ func probeIOSSimulatorResize(
     runner: (TKHostCommand) throws -> HostProcessResult = { try runHostCommand($0, maximumOutputBytes: 16_384) },
     reader: (String, Int) throws -> Data = readBoundedDeviceFilesJSON
 ) -> IOSSimulatorResizeState {
-    guard UUID(uuidString: target) != nil else { return .unknown(.identityMismatch) }
+    probeIOSSimulatorResizeReport(target: target, environment: environment, artifactProvider: artifactProvider, runner: runner, reader: reader).state
+}
+
+typealias IOSSimulatorResizeProbeDiagnostic = TKCLIHostProbeDiagnostic
+
+struct IOSSimulatorResizeProbeReport {
+    let state: IOSSimulatorResizeState
+    let diagnostic: IOSSimulatorResizeProbeDiagnostic
+}
+
+/// Preserve the exact failing probe's facts; a later doctor observation is independent.
+func resizeStateForOperation(target: String, environment: [String: String] = [:], probe: IOSSimulatorResizeProbe? = nil,
+    capture: Bool = false, allowsUnsupported: Bool = false,
+    reportProbe: ((String, [String: String]) -> IOSSimulatorResizeProbeReport)? = nil
+) throws -> IOSSimulatorResizeState {
+    if let probe { return probe(target, environment) }
+    let report = reportProbe?(target, environment) ?? probeIOSSimulatorResizeReport(target: target, environment: environment)
+    if case .unknown(let reason) = report.state, !(allowsUnsupported && reason == .unsupportedDevice) {
+        let base = capture ? IOSSimulatorResizeCaptureError.stateUnknown(reason).detail : IOSSimulatorResizeError.stateUnknown(reason).detail
+        let detail = TKCLIErrorDetail(code: base.code, message: base.message, hint: base.hint, probeDiagnostic: report.diagnostic)
+        throw SimulatorTargetDiagnosticError(detail: simulatorTargetBoundDetail(detail, target: target))
+    }
+    return report.state
+}
+
+func probeIOSSimulatorResizeReport(
+    target: String, environment: [String: String] = [:],
+    artifactProvider: (String) throws -> (json: String, log: String) = freshDeviceInfoArtifactPaths,
+    runner: (TKHostCommand) throws -> HostProcessResult = { try runHostCommand($0, maximumOutputBytes: 16_384) },
+    reader: (String, Int) throws -> Data = readBoundedDeviceFilesJSON
+) -> IOSSimulatorResizeProbeReport {
+    var preserveArtifacts = false
+    var artifactPaths: [String] = []
+    func report(_ state: IOSSimulatorResizeState, _ stage: String, exit: Int32? = nil, domain: String? = nil, code: Int? = nil) -> IOSSimulatorResizeProbeReport {
+        if case .unknown = state { preserveArtifacts = true }
+        let retained = preserveArtifacts ? artifactPaths.filter { FileManager.default.fileExists(atPath: $0) } : []
+        return .init(state: state, diagnostic: .init(stage: stage, exitCode: exit, nativeErrorDomain: domain, nativeErrorCode: code, artifactPaths: retained.isEmpty ? nil : retained))
+    }
+    guard UUID(uuidString: target) != nil else { return report(.unknown(.identityMismatch), "target-validation") }
     let paths: (json: String, log: String)
     do { paths = try artifactProvider("simulator-resize") }
-    catch { return .unknown(.queryFailed) }
-    // Probe artifacts are ephemeral and private, never returned as inline Apple output.
-    defer { for path in [paths.json, paths.log] { try? FileManager.default.removeItem(atPath: path) }
-        _ = rmdir(URL(fileURLWithPath: paths.json).deletingLastPathComponent().path) }
+    catch { return report(.unknown(.queryFailed), "artifact-creation") }
+    let processPath = paths.json + ".process.json"
+    artifactPaths = [paths.json, paths.log, processPath]
+    // Failed probes retain owner-only original diagnostics; public sharing is separate.
+    defer { if !preserveArtifacts {
+        for path in artifactPaths { try? FileManager.default.removeItem(atPath: path) }
+        _ = rmdir(URL(fileURLWithPath: paths.json).deletingLastPathComponent().path)
+    } }
+    func saveProcess(_ value: [String: Any]) {
+        if let data = try? JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted]),
+           FileManager.default.fileExists(atPath: URL(fileURLWithPath: processPath).deletingLastPathComponent().path) {
+            _ = FileManager.default.createFile(atPath: processPath, contents: data, attributes: [.posixPermissions: 0o600])
+        }
+    }
     let command = iosSimulatorResizeQueryCommand(target: target, json: paths.json, log: paths.log, environment: environment)
     let result: HostProcessResult
     do { result = try runner(command) }
-    catch HostCommandRunError.timeout { return .unknown(.queryTimedOut) }
-    catch HostCommandRunError.nonZeroExit(_, let failure) { result = failure }
-    catch { return .unknown(.queryFailed) }
+    catch let error as HostCommandRunError {
+        if case .nonZeroExit(_, let failure) = error { result = failure }
+        else {
+            saveProcess(["error": String(describing: error)])
+            if case .timeout = error { return report(.unknown(.queryTimedOut), "process") }
+            return report(.unknown(.queryFailed), "process")
+        }
+    }
+    catch { saveProcess(["error": String(describing: error)]); return report(.unknown(.queryFailed), "process") }
+    saveProcess(["exitCode": result.exitCode, "stdout": result.stdout, "stderr": result.stderr,
+        "stdoutTruncated": result.stdoutTruncated, "stderrTruncated": result.stderrTruncated])
     let data: Data
     do { data = try reader(paths.json, 1_048_576) }
-    catch HostDeviceFilesError.limitExceeded { return .unknown(.outputTooLarge) }
+    catch HostDeviceFilesError.limitExceeded { return report(.unknown(.outputTooLarge), "json-read", exit: result.exitCode) }
     catch {
         let stderr = result.stderr.lowercased()
         if result.exitCode == 64 && !result.stderrTruncated,
            stderr.contains("appresize"),
-           (stderr.contains("unrecognized subcommand") || stderr.contains("unknown subcommand")) { return .unknown(.unsupportedQuery) }
-        return .unknown(.jsonMissing)
+           (stderr.contains("unrecognized subcommand") || stderr.contains("unknown subcommand")) { return report(.unknown(.unsupportedQuery), "json-read", exit: result.exitCode) }
+        return report(.unknown(.jsonMissing), "json-read", exit: result.exitCode)
     }
     guard let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
-          let info = root["info"] as? [String: Any], info["arguments"] as? [String] == command.arguments else { return .unknown(.identityMismatch) }
-    return classifyIOSSimulatorResize(data: data, target: target, exitCode: result.exitCode)
+          let info = root["info"] as? [String: Any], info["arguments"] as? [String] == command.arguments else { return report(.unknown(.identityMismatch), "receipt-validation", exit: result.exitCode) }
+    let state = classifyIOSSimulatorResize(data: data, target: target, exitCode: result.exitCode)
+    let error = root["error"] as? [String: Any]
+    // Only a fully command-bound known native domain is public diagnostic metadata.
+    // Localized text, device identities, logs, and arbitrary error domains are not echoed.
+    let knownDomain = info["commandType"] as? String == "devicectl.device.info.appResize" && info["outcome"] as? String == "failed" && result.exitCode != 0 && error?["domain"] as? String == "com.apple.dt.CoreDeviceError"
+    let number = knownDomain ? resizeNumber(error?["code"]) : nil
+    let code = number.flatMap { $0 >= Double(Int.min) && $0 < Double(Int.max) && $0.rounded() == $0 ? Int($0) : nil }
+    return report(state, "native-result", exit: result.exitCode, domain: knownDomain ? "com.apple.dt.CoreDeviceError" : nil, code: code)
 }
 
 struct IOSSimulatorResizeAdvisory: Encodable, Equatable {

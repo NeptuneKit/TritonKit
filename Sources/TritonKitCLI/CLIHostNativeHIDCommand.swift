@@ -44,6 +44,7 @@ struct DeviceNativeHIDInput: ParsableCommand {
             case let failure as NativeHIDControlError: detail = failure.detail
             case let failure as NativeDigitizerError: detail = failure.detail
             case let failure as IOSSimulatorResizeError: detail = failure.detail
+            case let failure as SimulatorTargetDiagnosticError: detail = failure.detail
             default: detail = NativeHIDControlError(code: "ios_host_hid_helper_failed").detail
             }
             let boundDetail = simulatorTargetBoundDetail(detail, target: device)

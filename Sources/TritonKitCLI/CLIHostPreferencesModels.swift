@@ -68,3 +68,30 @@ struct HostPreferencesDeliveryError: Encodable {
     let code = "preferences_relaunch_failed"
     let message = "Preferences were written to disk, but the requested relaunch did not complete."
 }
+
+struct HostPreferencesRemoveOutput: Encodable {
+    let ok: Bool
+    let action = "app.prefs.remove"
+    let simulatorUDID: String
+    let bundleID: String
+    let key: String
+    let existed: Bool
+    let removed: Bool
+    let present = false
+    let diskWriteVerified: Bool
+    let preferenceDomainVerified: Bool
+    let runtimeConsumptionVerified = false
+    let relaunch: HostPreferencesRelaunchReceipt
+    var error: HostPreferencesDeliveryError? { ok ? nil : .init() }
+    enum CodingKeys: String, CodingKey { case ok, action, simulatorUDID, bundleID, key, existed, removed, present, diskWriteVerified, preferenceDomainVerified, runtimeConsumptionVerified, relaunch, error }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(ok, forKey: .ok); try c.encode(action, forKey: .action)
+        try c.encode(simulatorUDID, forKey: .simulatorUDID); try c.encode(bundleID, forKey: .bundleID)
+        try c.encode(key, forKey: .key); try c.encode(existed, forKey: .existed); try c.encode(removed, forKey: .removed)
+        try c.encode(present, forKey: .present); try c.encode(diskWriteVerified, forKey: .diskWriteVerified)
+        try c.encode(preferenceDomainVerified, forKey: .preferenceDomainVerified)
+        try c.encode(runtimeConsumptionVerified, forKey: .runtimeConsumptionVerified)
+        try c.encode(relaunch, forKey: .relaunch); try c.encodeIfPresent(error, forKey: .error)
+    }
+}

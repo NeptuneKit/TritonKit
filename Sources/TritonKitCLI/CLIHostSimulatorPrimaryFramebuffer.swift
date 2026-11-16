@@ -123,8 +123,7 @@ func primaryFramebufferSimulatorScreenshotRoute(
           !output.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }) else {
         throw IOSSimulatorResizeCaptureError.stateUnknown(.invalidResponse)
     }
-    let queryResize = resizeProbe ?? { probeIOSSimulatorResize(target: $0, environment: $1) }
-    let resize = queryResize(simulator, command.environment)
+    let resize = try resizeStateForOperation(target: simulator, environment: command.environment, probe: resizeProbe, capture: true, allowsUnsupported: true)
     let resizeState: String
     let resizeReason: String?
     let resizeVerified: Bool

@@ -783,6 +783,8 @@ func failHostCommand(
         detail = error.detail
     case let error as HostAppContainerBindingError:
         detail = error.detail
+    case let error as HostPreferencesRemoveError:
+        detail = error.detail
     case let error as HostDeviceFSError:
         detail = error.detail
     case let error as HostDeviceMountpointError:

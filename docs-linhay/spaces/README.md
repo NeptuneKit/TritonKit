@@ -1,3 +1,5 @@
+2026-11-16：[SP-292-open-issues-release-046](./SP-292-open-issues-release-046/README.md)记录8项初始队列与v0.2.46候选验收；#277已用正式v0.2.45复验并关闭。仍开放7项，候选未发布。新增[SP-290-issue-283-preference-remove](./SP-290-issue-283-preference-remove/README.md)偏好remove与[SP-291-issue-282-homebrew-recovery](./SP-291-issue-282-homebrew-recovery/README.md)升级恢复。
+
 2026-11-13：[SP-289-release-v0-2-45](./SP-289-release-v0-2-45/README.md)已发布v0.2.45/f9ddc4f4，Main/Tag/Release/tap成功；三资产字节/版本、Homebrew和skills夹具通过。默认iPad流409未过，关闭并排空后只读工作台单独通过；本机匿名API限流另记，未弱化CI gate。主体归档f187c934已推送且准确CI43381624429成功；状态回写不改tag。
 
 2026-11-13：[SP-288-public-skills-completion](./SP-288-public-skills-completion/README.md)八专题/22功能族导航及4处repo-only链接修复已验收；38打包、70help/10schema等通过。后续另获本地整理提交授权，复核加固验收脚本compile末步门禁并补3类反例，经验已回写；只收本轮文档/回归，不改产品、不推送/安装/发布。
@@ -497,7 +499,7 @@
 
 ## 2026-11-06 新增可独立交付事项
 
-- [SP-274-issue-277-resize-host-input](./SP-274-issue-277-resize-host-input/README.md)：精确 target-bound CoreDeviceError 1001/unsupportedDevice 不再阻断 Host HID 门禁；诊断仍保留 unknown，其他未知或活动状态继续 fail-closed；CLI focused/full tests 通过，真实 Simulator 运行验收范围外。
+- [SP-274-issue-277-resize-host-input](./SP-274-issue-277-resize-host-input/README.md)：已用 v0.2.45 在自有 iPad Simulator 复验 CoreDeviceError 1001、Host HID 计数 0→1 和主 LCD 截图，GitHub 已关闭。
 
 ## 2026-11-06 v0.2.41 发布准备
 

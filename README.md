@@ -1049,3 +1049,7 @@ Public UIControl target/action and accessibilityActivate remain supported. If a 
 当安装版本的 `triton schema --command sim.screenshot --json` 暴露该选项时，可用 `triton sim screenshot --simulator <UUID> --primary-framebuffer --output <new-path.png> --json` 读取唯一主屏LCD。它与 `--display` 互斥，要求新鲜目标绑定的Resize inactive或精确unsupportedDevice，以及完整清单中仅一个active primary integrated LCD；额外虚拟屏（含off）、其他unknown或查询失败仍拒绝。默认截图与输入保护不变。
 
 输出 `primaryFramebuffer` 明确显示绑定与Resize状态；unsupported仍为unknown、resizeVerified=false、inputDispatchVerified=false。两次查询非原子；主屏图不保证App/Resizable内容完整，也不授权触摸、AX、录像或实时流。产物须为本次可解码PNG，已有文件不覆盖。
+
+### v0.2.46：完整 Release 恢复安装
+
+Homebrew 因本机 Xcode 检查拒绝预编译包安装时，可使用 `triton update --version v0.2.46 --release-install-dir /absolute/new/triton-0.2.46 --dry-run --json` 查看计划，再将 `--dry-run` 改为 `--yes` 执行。目录必须尚不存在且不在 Cellar 中；完整同 tag archive/checksum、CLI 版本、Web、Runner manifest/hash 和 SwiftPM bundle 校验后才发布目录。`installSource` 仍报告原来源；`installedExecutable` 指向新 CLI。原 Homebrew、符号链接与 PATH 保持不变。显式运行新路径，后续用新目录升级整包。同版本也可恢复。旧 CLI 不识别此选项时，先从同一官方 Release 下载并校验完整 arm64 archive，在新目录解包后使用其中 CLI。

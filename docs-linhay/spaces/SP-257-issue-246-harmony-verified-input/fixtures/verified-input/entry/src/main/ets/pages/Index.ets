@@ -1,3 +1,5 @@
+import { webview } from '@kit.ArkWeb';
+
 @Entry
 @Component
 struct Index {
@@ -6,6 +8,9 @@ struct Index {
   @State changes: number = 0;
   @State observed: string = '';
   private timer: number = -1;
+  private webController: webview.WebviewController = new webview.WebviewController();
+
+  aboutToAppear(): void { webview.WebviewController.setWebDebuggingAccess(true); }
 
   private reset(mode: string): void {
     if (this.timer !== -1) clearTimeout(this.timer);
@@ -43,8 +48,11 @@ struct Index {
         Button('Password').id('mode-password').onClick(() => this.reset('password'))
         Button('Delayed').id('mode-delayed').onClick(() => this.reset('delayed'))
         Button('Reject').id('mode-reject').onClick(() => this.reset('reject'))
+        Button('Web').id('mode-web').onClick(() => this.reset('web'))
       }
-      if (this.mode === 'password') {
+      if (this.mode === 'web') {
+        Web({ src: $rawfile('probe.html'), controller: this.webController }).height(320)
+      } else if (this.mode === 'password') {
         TextInput({ text: this.value, placeholder: 'Secure unsupported' })
           .type(InputType.Password).id('editor').height(70)
           .onChange((value: string) => this.changed(value))

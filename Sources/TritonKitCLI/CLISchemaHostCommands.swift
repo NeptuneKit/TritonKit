@@ -1117,7 +1117,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--input", type: "Path", description: "prefs import: bounded JSON/plist input dictionary"),
                 TKCommandSchemaOption(name: "--input-format", type: "json|plist", defaultValue: "json", description: "prefs import input format; all entries are validated before writing"),
                 TKCommandSchemaOption(name: "--key", type: "String[]", description: "prefs import: required repeatable key whitelist; unrelated keys are preserved"),
-                TKCommandSchemaOption(name: "--relaunch", type: "Bool", defaultValue: "false", description: "prefs set/import: explicitly terminate and launch after disk write; receipt reports partial failure and never claims runtime consumption"),
+                TKCommandSchemaOption(name: "--relaunch", type: "Bool", defaultValue: "false", description: "prefs set/import/remove: explicitly terminate and launch after disk write; receipt reports partial failure and never claims runtime consumption"),
+                TKCommandSchemaOption(name: "prefs remove <key> --bundle-id <id>", type: "Subcommand", description: "Remove one literal key through the Simulator preferences domain and verify disk absence; optional relaunch stops before deletion and launches after verification"),
                 TKCommandSchemaOption(name: "prefs get <key> --bundle-id <id>", type: "Subcommand", description: "Read one app preference with explicit present flag; missing differs from false, zero and an empty value"),
                 TKCommandSchemaOption(name: "prefs set <key> <json-value> --bundle-id <id>", type: "Subcommand", description: "Set one simulator app preference from a property-list compatible JSON value"),
                 TKCommandSchemaOption(name: "prefs set <key> --type data --base64 <base64> --bundle-id <id>", type: "Subcommand", description: "Set one simulator app preference as plist Data from base64"),
@@ -1171,7 +1172,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             argumentForms: [
                 TKCommandArgumentForm(name: "<url>", type: "String", required: true, description: "Deep link, universal link, or platform URL to open"),
-                TKCommandArgumentForm(name: "<key>", type: "String", required: true, description: "Preference key for app prefs get/set"),
+                TKCommandArgumentForm(name: "<key>", type: "String", required: true, description: "Preference key for app prefs get/set/remove"),
                 TKCommandArgumentForm(name: "<json-value>", type: "JSON", required: true, description: "Property-list compatible JSON value for app prefs set"),
             ],
             examples: [
@@ -1214,7 +1215,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 #"triton app prefs set DEBUG-mock true --device iphone15 --bundle-id com.example.app --json"#,
                 #"triton app prefs set SeedState --type data --base64 W3t9XQ== --device iphone15 --bundle-id com.example.app --json"#,
             ],
-            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? } where apps[]/app expose marketingVersion (CFBundleShortVersionString) and buildNumber (CFBundleVersion); legacy version maps to the build number on iOS, or app pull { ok, action:app.pull, target, selection, domain, domainIdentifier, source, destination, artifact:{ path,kind,bytes,entryCount }, artifacts, sourceCommand } or { ok, action, plistPath, present?, value?, valuePlistType?, preferences?, preferencesPlistTypes? } or { ok, action:app.prefs.set, plistPath, key, previousValue?, previousPlistType?, newValue, newPlistType, restartAdvice, diskWriteVerified, runtimeConsumptionVerified:false, relaunch } or { ok, action:app.prefs.import, importedKeys[], importedPlistTypes, diskWriteVerified, runtimeConsumptionVerified:false, relaunch, error? } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
+            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? } where apps[]/app expose marketingVersion (CFBundleShortVersionString) and buildNumber (CFBundleVersion); legacy version maps to the build number on iOS, or app pull { ok, action:app.pull, target, selection, domain, domainIdentifier, source, destination, artifact:{ path,kind,bytes,entryCount }, artifacts, sourceCommand } or { ok, action, plistPath, present?, value?, valuePlistType?, preferences?, preferencesPlistTypes? } or { ok, action:app.prefs.set, plistPath, key, previousValue?, previousPlistType?, newValue, newPlistType, restartAdvice, diskWriteVerified, runtimeConsumptionVerified:false, relaunch } or { ok, action:app.prefs.import, importedKeys[], importedPlistTypes, diskWriteVerified, runtimeConsumptionVerified:false, relaunch, error? } or { ok, action:app.prefs.remove, key, existed, removed, present:false, diskWriteVerified:true, preferenceDomainVerified:true, runtimeConsumptionVerified:false, relaunch, error? } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction?, leaseReason?, currentOwner?, currentLeaseID?, currentExpiresAt?, suggestedCommands? } }",
             outputSemantics: "Use app for host-side install, launch, terminate, open-url, container, pull, and preferences. An explicit ios-real:* selector triggers live real-device discovery even when --platform ios and --scope real are omitted, so install/info/launch share one selector-resolution path; unavailable devices return the devicectl readiness failure instead of a launch-only target_not_found. app pull is iOS real-device-only, stages the transfer before atomic publication, rejects overwrite/symlink by default, and bounds directory/byte acceptance. For iOS runtime readiness, prefer open-url with --wait-ready --snapshot; for Android host flows, verify business completion with wait/observe/screenshot or smoke evidence. Installed iOS app metadata (app list / app info) returns marketingVersion (CFBundleShortVersionString) and buildNumber (CFBundleVersion) as distinct structured fields; the legacy version field remains for compatibility and maps to the build number on iOS, so new consumers should read marketingVersion/buildNumber and treat version as deprecated. If `triton camera on` enabled the launched iOS Simulator bundle, app launch injects the configured camera hook environment. Parallel agent flows can pass `--lease <id>` on open-url/launch/terminate to enforce the opt-in target lease: a conflicting mutation returns the stable target_lease_conflict envelope with the current owner instead of silently changing another flow's foreground state; without `--lease`, behavior is unchanged.",
             artifacts: ["app-container", "host-artifacts", "app-preferences", "runtime-snapshot"],
@@ -1226,6 +1227,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             outputContracts: [
                 hostActionOutputContract(selector: "host.app-action", model: "HostActionOutput|HostAppContainerOutput|HostAppPullOutput|HostAppPreferenceOutput"),
+                hostPreferenceRemoveOutputContract(),
                 hostAppInfoOutputContract(),
                 hostAppListOutputContract(),
                 hostAppInfoOutputContract(selector: "host.android-app-inspect"),
@@ -1376,12 +1378,17 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "prefs",
-                    summary: "Dump, read, or set simulator app preferences",
+                    summary: "Dump, read, set, import, or remove simulator app preferences",
                     requiredOptions: ["--bundle-id"],
                     optionalOptions: ["--input", "--input-format", "--key", "--relaunch", "<key>", "<json-value>", "--device", "--scope", "--simulator", "--type", "--base64", "--hex", "--format", "--json"],
                     nextCommands: ["triton status --json", "triton observe tree --platform ios --device <udid|booted> --json"],
                     outputSelectors: ["host.app-action"],
-                    failureCodes: ["missing_preferences", "plist_not_found", "preference_key_not_found", "preferences_relaunch_failed", "host_action_failed", "validation_failed"]
+                    failureCodes: ["missing_preferences", "plist_not_found", "preference_key_not_found", "preferences_relaunch_failed", "host_action_failed", "validation_failed"],
+                    subcommands: [TKCommandSubcommandSchema(name: "remove", summary: "Remove one literal preference key and verify absence", requiresTarget: true,
+                        sideEffect: "preferences-write",
+                        sideEffectCases: [TKCommandSideEffectCase(sourceCommand: "app.prefs.remove", optionValues: ["--relaunch": "true"], sideEffect: "preferences-write-and-app-relaunch")], requiredOptions: ["<key>"],
+                        optionalOptions: ["--device", "--simulator", "--name", "--runtime", "--state", "--ready", "--relaunch", "--format", "--json"],
+                        outputSelectors: ["host.app-prefs-remove"], failureCodes: ["preferences_store_unsafe", "preferences_domain_unavailable", "preferences_domain_conflict", "preferences_removal_unverified", "preferences_relaunch_failed", "host_action_failed"])]
                 ),
             ].map { schemaWithAuditedOperationEffect($0, root: "app") },
             providedCapabilities: ["host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "ios-real-app", "ios-real-app-pull", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-install", "harmony-app-open-url", "harmony-app-info"]

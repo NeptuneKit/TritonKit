@@ -339,11 +339,16 @@ func importHostPreferences(
 }
 
 func resolveHostPreferencesPath(simulator: String, bundleID: String) throws -> String {
+    let container = try resolveHostPreferencesContainer(simulator: simulator, bundleID: bundleID)
+    return TKHostPreferencesSnapshot.plistPath(dataContainer: container, bundleID: bundleID)
+}
+
+func resolveHostPreferencesContainer(simulator: String, bundleID: String) throws -> String {
     guard !bundleID.isEmpty, bundleID.utf8.count <= 255,
           bundleID.utf8.allSatisfy({ (48...57).contains($0) || (65...90).contains($0) || (97...122).contains($0) || [45, 46, 95].contains($0) }), bundleID != ".", bundleID != ".." else { throw RuntimeError("Invalid bundle identifier for app preferences.") }
     let result = try runHostCommand(TKSimctlCommand.appContainer(udid: simulator, bundleID: bundleID, kind: .data))
     let container = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
     guard result.exitCode == 0, !result.stdoutTruncated, container.hasPrefix("/"),
           !container.contains("\n"), !container.contains("\0") else { throw RuntimeError("Unable to resolve app data container.") }
-    return TKHostPreferencesSnapshot.plistPath(dataContainer: container, bundleID: bundleID)
+    return container
 }

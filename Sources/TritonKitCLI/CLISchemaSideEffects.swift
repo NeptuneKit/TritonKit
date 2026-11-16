@@ -62,7 +62,7 @@ private func auditedEffectCases(_ path: String) -> [TKCommandSideEffectCase] {
     switch path {
     case "app.prefs":
         return [mode(["dump"], "readonly"), mode(["get"], "readonly")]
-            + ["set", "import"].map { mode([$0], "preferences-write-and-app-relaunch", options: ["--relaunch": "true"]) }
+            + ["set", "import", "remove"].map { mode([$0], "preferences-write-and-app-relaunch", options: ["--relaunch": "true"]) }
     case "sim.runtime":
         return [
             mode(["list"], "readonly"), mode(["verify"], "readonly"),

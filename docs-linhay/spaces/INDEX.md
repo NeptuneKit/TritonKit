@@ -3,8 +3,8 @@
 
 2026-10-26参考核对：原目录 `main@24e7d0f2`，SP-207两仓变化；新SP-221执行/SP-222主控已验收合本地main a0eebff0，范围仅只读资源暂态重试。旧13条采用已合main，真实验收边界保持。
 > 固定入口：`docs-linhay/spaces/INDEX.md`
-> 最近同步：2026-11-13（SP-289 v0.2.45整体发布登记）
-> 覆盖范围：289/289 个已存在 space
+> 最近同步：2026-11-16（SP-290～292 issue批次登记）
+> 覆盖范围：292/292 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -19,8 +19,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 289/289 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 289/289 | 每条记录链接到现有 space README |
+| 编号登记 | 292/292 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 292/292 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～156 已是规范目录 |
 
 ## Space 登记表
@@ -376,7 +376,7 @@
 | `SP-272-release-v0-2-40` | [`SP-272-release-v0-2-40`](./SP-272-release-v0-2-40/README.md) | 准备 | SP271 direct-runtime诊断修复的新patch，完整preflight/CI/资产安装验收后发布 |
 
 | `SP-273-issue-274-explicit-inference` | [`SP-273-issue-274-explicit-inference`](./SP-273-issue-274-explicit-inference/README.md) | 候选验证 | #274默认关闭/显式推理及有界失败；完整CLI与独立审阅通过，待精确CI/统一040发布 |
-| `SP-274-issue-277-resize-host-input` | [`SP-274-issue-277-resize-host-input`](./SP-274-issue-277-resize-host-input/README.md) | 执行 | #277精确unsupportedDevice拒绝允许独立Host HID/屏幕守卫继续；CLI测试通过，真实Simulator运行验收范围外 |
+| `SP-274-issue-277-resize-host-input` | [`SP-274-issue-277-resize-host-input`](./SP-274-issue-277-resize-host-input/README.md) | 已关闭 | #277用发布v0.2.45在自有iPad复验精确1001、Host HID计数0→1和主LCD截图；原iOS26.5组合未复跑 |
 | `SP-275-release-v0-2-41` | [`SP-275-release-v0-2-41`](./SP-275-release-v0-2-41/README.md) | 已发布 | #277合并后的Host输入门控修复；v0.2.41资产、Homebrew、skills、packaged Web与安装验收通过，真实设备/私有App边界保留 |
 
 | `SP-276-issue-246-whitespace-readback` | [`SP-276-issue-246-whitespace-readback`](./SP-276-issue-246-whitespace-readback/README.md) | 已发布 | #246独立读取切片经PR280/v0.2.42发布，双架构/安装fixture通过；人工IME仍未验证 |
@@ -406,3 +406,9 @@
 | `SP-288-public-skills-completion` | [`SP-288-public-skills-completion`](./SP-288-public-skills-completion/README.md) | 已随v0.2.45发布 | 八专题/22功能族导航，38打包与70help/10schema等通过；整理复核加固验收脚本末步门禁及3类反例，不改产品、原补齐阶段不安装/推送/发布；后继分发验收见SP-289 |
 
 | `SP-289-release-v0-2-45` | [`SP-289-release-v0-2-45`](./SP-289-release-v0-2-45/README.md) | 已发布／归档收口 | v0.2.45/f9ddc4f4；Main/Tag/Release/tap、资产/安装通过；默认iPad流409未验过，限定工作台另通过；匿名API限流保留，不改tag |
+
+| `SP-290-issue-283-preference-remove` | [`SP-290-issue-283-preference-remove`](./SP-290-issue-283-preference-remove/README.md) | 候选已验收 | #283 原生单键偏好删除，Simulator 重启后 App 读到缺失，待 v0.2.46 宣告与验证 |
+
+| `SP-291-issue-282-homebrew-recovery` | [`SP-291-issue-282-homebrew-recovery`](./SP-291-issue-282-homebrew-recovery/README.md) | 实施中 | Issue #282 Homebrew 升级恢复；2026-11-16用户授权main串行、集中测试后发版收口 |
+
+| `SP-292-open-issues-release-046` | [`SP-292-open-issues-release-046`](./SP-292-open-issues-release-046/README.md) | 实施中 | 初始八项；#277已用v0.2.45复验关闭，v0.2.46候选验收与现场缺口见报告 |

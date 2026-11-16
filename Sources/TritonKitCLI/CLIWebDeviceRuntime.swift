@@ -311,7 +311,7 @@ func captureWebHostDeviceScreenshotPayload(id: String, hdc: String = "hdc", adb:
     let resolved = try resolveWebHostDeviceTarget(id, hdc: hdc, adb: adb)
     if resolved.platform == .ios {
         let udid = resolved.target.rawTarget
-        let resize = probeIOSSimulatorResize(target: udid)
+        let resize = try resizeStateForOperation(target: udid, capture: true)
         // Only a verified main display may consume this cache. Active Resize Mode
         // falls through to the display-bound still-image path; unknown fails closed.
         _ = try iosSimulatorResizeScreenshotDisplay(resize)

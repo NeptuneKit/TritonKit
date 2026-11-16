@@ -18,6 +18,7 @@ enum CLIUpdateActionKind: String, Codable, Equatable {
     case downloadChecksumManifest
     case verifyChecksum
     case extractCLIAsset
+    case installReleaseDirectory
     case replaceBinary
     case downloadSkillsBundle
     case installSkillsBundle
@@ -53,6 +54,8 @@ struct CLIUpdateResponse: Codable, Equatable {
     let actions: [CLIUpdateAction]
     let manualInstructions: [String]
     let error: CLIUpdateErrorDetail?
+    var releaseInstallDirectory: String? = nil
+    var installedExecutable: String? = nil
     var installedVersion: String? = nil
     var cliUpdateAttempted: Bool = false
 }

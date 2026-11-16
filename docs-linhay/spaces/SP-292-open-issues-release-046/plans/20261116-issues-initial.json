@@ -1,0 +1,54 @@
+{
+  "phase": "initial",
+  "count": 8,
+  "issues": [
+    {
+      "number": 283,
+      "title": "[Feature] Restore absent simulator app preference keys with bounded remove",
+      "updatedAt": "2026-11-13T16:49:02Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/283"
+    },
+    {
+      "number": 282,
+      "title": "brew upgrade triton 0.2.43 fails: no bottle and Xcode 26.6 rejected",
+      "updatedAt": "2026-11-10T10:35:49Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/282"
+    },
+    {
+      "number": 277,
+      "title": "[Bug] Host tap blocked when simulator does not support Resizable App Management",
+      "updatedAt": "2026-11-10T08:41:44Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/277"
+    },
+    {
+      "number": 274,
+      "title": "[Feature] llama-server 与 OpenAI 接口默认禁用，由外层 agent 推理，在线 API 按需启用",
+      "updatedAt": "2026-11-10T08:41:46Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/274"
+    },
+    {
+      "number": 246,
+      "title": "[Feature] Selector-bound verified Harmony text input with focus diagnostics",
+      "updatedAt": "2026-11-10T08:41:50Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/246"
+    },
+    {
+      "number": 238,
+      "title": "[Bug] Harmony ArkWeb bridge-call fails with socket transport error classified as javascript_error",
+      "updatedAt": "2026-11-10T08:41:54Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/238"
+    },
+    {
+      "number": 237,
+      "title": "[Bug] iOS WebView snapshot fails parsing generated getAttribute expression",
+      "updatedAt": "2026-11-11T02:47:43Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/237"
+    },
+    {
+      "number": 224,
+      "title": "iOS Simulator screenshot and swipe blocked by resize state queryFailed",
+      "updatedAt": "2026-11-13T17:49:01Z",
+      "url": "https://github.com/NeptuneKit/TritonKit/issues/224"
+    }
+  ]
+}

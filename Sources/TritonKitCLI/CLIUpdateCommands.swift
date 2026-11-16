@@ -25,6 +25,9 @@ struct Update: AsyncParsableCommand {
     @Option(help: "Agent skills root directory used with --include-skills")
     var skillsDir: String?
 
+    @Option(help: "Install the complete verified release into a NEW absolute directory; preserves Homebrew and PATH")
+    var releaseInstallDir: String?
+
     @Option(help: "GitHub repository, owner/name")
     var repository: String = "NeptuneKit/TritonKit"
 
@@ -52,7 +55,8 @@ struct Update: AsyncParsableCommand {
                 confirm: yes,
                 includeSkills: includeSkills,
                 skillsDirectory: skillsDir,
-                repository: repository
+                repository: repository,
+                releaseInstallDirectory: releaseInstallDir
             )
             try printCLIUpdateResponse(response, format: outputFormat)
         } catch let failure as CLIUpdateExecutionFailure {
@@ -95,6 +99,7 @@ private func printCLIUpdateResponse(_ response: CLIUpdateResponse, format: Clien
         if let installedVersion = response.installedVersion {
             print("installedVersion: \(installedVersion)")
         }
+        if let path = response.installedExecutable { print("installedExecutable: \(path)") }
         print("installSource: \(response.installSource.rawValue)")
         print("updateAvailable: \(response.updateAvailable)")
         print("updated: \(response.updated)")

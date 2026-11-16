@@ -4,7 +4,7 @@
 
 处理 #277：当 Xcode `devicectl device info appResize` 对精确 Simulator 返回绑定设备的 CoreDeviceError 1001，且明确声明不支持 `com.apple.coredevice.feature.resizableappmanagement` 时，将该状态用于 host tap 与 primary LCD still capture 的安全路由。未知、冲突、超时、缺失或活动 Resize 会继续拒绝。
 
-影响层为 CLI/shared core；不依赖私有 App、人工 IME 或真实设备验收。真实 simulator 输入仍需独立记录为未执行，fixture 不替代真实用户现场。
+影响层为 CLI/shared core。验收覆盖与原报告相同的 target-bound 1001 能力拒绝、实际 Host HID 触摸和同一主 LCD 的截图。
 
 ## BDD
 
@@ -16,4 +16,5 @@
 
 - 先运行失败测试，证明 #277 当前回归。
 - 运行 CLI focused tests、`swift test --package-path CLI --no-parallel` 及受影响 local gate。
-- 真实 simulator host tap/截图留作范围外运行验收，不能宣称已完成。
+- 2026-11-16 用正式 v0.2.45 arm64 包在自有 iPad Air（iOS 27.0 Simulator）验收。`device doctor` 返回 `unknown/unsupportedDevice`、`primary`，当次错误为 `com.apple.dt.CoreDeviceError` 1001。原报告同形的坐标 tap 返回 `host-hid`，同一 Simulator 中 UIKit 测试 App 独立读回计数从 0 增至 1。显式主 LCD 截图 2048×2732，保留 `unknown/unsupportedDevice`。
+- [前置截图](./screenshots/20261116-host-hid-ipad-before-v1.png) · [动作后截图](./screenshots/20261116-host-hid-ipad-after-v1.png) · [GitHub 回帖](https://github.com/NeptuneKit/TritonKit/issues/277#issuecomment-6910310780)。GitHub 已核实为 `CLOSED/COMPLETED`。原报告的 iOS 26.5 iPhone 组合未复跑。

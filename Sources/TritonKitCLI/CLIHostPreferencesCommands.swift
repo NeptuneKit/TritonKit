@@ -6,8 +6,42 @@ struct HostAppPrefs: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "prefs",
         abstract: "Read and update simulator app preferences as JSON",
-        subcommands: [HostAppPrefsDump.self, HostAppPrefsGet.self, HostAppPrefsSet.self, HostAppPrefsImport.self]
+        subcommands: [HostAppPrefsDump.self, HostAppPrefsGet.self, HostAppPrefsSet.self, HostAppPrefsImport.self, HostAppPrefsRemove.self]
     )
+}
+
+struct HostAppPrefsRemove: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "remove", abstract: "Remove one literal simulator app preference key and verify its absence")
+    @Argument(help: "One literal preference key") var key: String
+    @Option(help: "Unified host simulator selector") var device: String?
+    @Option(help: "Explicit iOS simulator selector") var simulator: String?
+    @Option(help: "Device name filter") var name: String?
+    @Option(help: "Runtime filter") var runtime: String?
+    @Option(help: "Target state filter") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
+    @Option(help: "App bundle identifier") var bundleID: String
+    @Flag(help: "Terminate and relaunch after verified disk removal") var relaunch = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let selection = try resolveHostAppDeviceSelection(device: device, platform: .ios, defaultPlatform: .ios, scope: nil,
+                simulator: simulator, target: nil, name: name, runtime: runtime, state: state, ready: ready, hdc: "hdc")
+            let output = try removeHostPreference(simulator: selection.target.target, bundleID: bundleID, key: key, relaunch: relaunch,
+                containerProvider: {
+                    let container = try resolveHostPreferencesContainer(simulator: selection.target.target, bundleID: bundleID)
+                    return try boundSimulatorAppContainerPath(path: container, selection: selection, group: false)
+                })
+            switch outputFormat {
+            case .json: print(try encodeJSON(output))
+            case .text: print("\(key): present=false existed=\(output.existed) diskWriteVerified=true relaunch=\(output.relaunch.status)")
+            }
+            if !output.ok { throw ExitCode.failure }
+        } catch let exit as ExitCode { throw exit }
+        catch { try failHostCommand(error, outputFormat: outputFormat) }
+    }
 }
 
 struct HostAppPrefsDump: AsyncParsableCommand {
