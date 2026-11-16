@@ -85,11 +85,34 @@ func registerPackagedWebFramebufferRoutes<Context: RequestContext>(on router: Ro
 }
 
 struct PackagedWebIOSFramebufferDependencies: Sendable {
-    var validateCapture: @Sendable (String) throws -> Void = { try assertIOSSimulatorResizeCaptureAllowed(target: $0) }
+    var validateCapture: @Sendable (String) throws -> Void = { target in
+        try withSimulatorDiagnosticTarget(target) {
+            if case .active = try resizeStateForOperation(target: target, capture: true) {
+                throw IOSSimulatorResizeCaptureError.activeSession
+            }
+        }
+    }
     var start: @Sendable (String) -> Bool = { CLIHostSimulatorFramebufferService.shared.startStreaming(udid: $0) }
     var stop: @Sendable (String) -> Void = { CLIHostSimulatorFramebufferService.shared.stopStreaming(udid: $0) }
     var running: @Sendable (String) -> Bool = { _ in true }
     var frame: @Sendable (String) -> (Data, UInt64)? = { CLIHostSimulatorFramebufferService.shared.getLatestFrameWithVersion(udid: $0) }
+}
+
+func webIOSFramebufferCaptureConflict(_ error: any Error, endpoint: String) -> Response {
+    let detail: TKCLIErrorDetail
+    switch error {
+    case let failure as SimulatorTargetDiagnosticError: detail = failure.detail
+    case let failure as IOSSimulatorResizeCaptureError: detail = failure.detail
+    default:
+        detail = .init(code: "ios_simulator_resize_capture_state_unknown", message: "Capture routing could not be verified.")
+    }
+    // Raw native files are local diagnostics. The HTTP contract carries their bounded facts.
+    let probe = detail.probeDiagnostic.map {
+        TKCLIHostProbeDiagnostic(stage: $0.stage, exitCode: $0.exitCode,
+            nativeErrorDomain: $0.nativeErrorDomain, nativeErrorCode: $0.nativeErrorCode, reason: $0.reason)
+    }
+    return jsonError(detail: .init(code: detail.code, message: detail.message, endpoint: endpoint,
+        hint: detail.hint, nextAction: detail.nextAction, probeDiagnostic: probe), status: .conflict)
 }
 
 func makePackagedWebIOSSimulatorMjpegResponse(
@@ -98,11 +121,7 @@ func makePackagedWebIOSSimulatorMjpegResponse(
     capture: PackagedWebIOSFramebufferDependencies = .init()
 ) -> Response {
     do { try capture.validateCapture(streamRequest.udid) }
-    catch let error as IOSSimulatorResizeCaptureError {
-        return jsonError(code: error.detail.code, message: error.detail.message, endpoint: "/web/ios-simulator/mjpeg", hint: error.detail.hint, status: .conflict)
-    } catch {
-        return jsonError(code: "ios_simulator_resize_capture_state_unknown", message: "Capture routing could not be verified.", endpoint: "/web/ios-simulator/mjpeg", status: .conflict)
-    }
+    catch { return webIOSFramebufferCaptureConflict(error, endpoint: "/web/ios-simulator/mjpeg") }
 
     guard let subscription = startIOSFramebufferSubscription(target: streamRequest.udid, capture: capture) else {
         return jsonError(

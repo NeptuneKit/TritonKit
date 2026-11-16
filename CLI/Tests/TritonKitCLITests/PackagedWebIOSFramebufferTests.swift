@@ -35,6 +35,53 @@ struct PackagedWebIOSFramebufferTests {
         #expect(trace.stops == 0)
     }
 
+    @Test(arguments: [IOSSimulatorResizeUnknownReason.unsupportedDevice, .queryFailed])
+    func resizeFailurePreservesTheSameProbeAndSelectedTarget(reason: IOSSimulatorResizeUnknownReason) async throws {
+        let target = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"
+        let trace = PackagedIOSCaptureTrace(validate: { selected in
+            #expect(selected == target)
+            let base = IOSSimulatorResizeCaptureError.stateUnknown(reason).detail
+            let probe = TKCLIHostProbeDiagnostic(stage: "native-result", exitCode: 1,
+                nativeErrorDomain: "com.apple.dt.CoreDeviceError", nativeErrorCode: 1001,
+                artifactPaths: ["/private/local-probe.json"], reason: reason.rawValue)
+            throw SimulatorTargetDiagnosticError(detail: simulatorTargetBoundDetail(
+                .init(code: base.code, message: base.message, hint: base.hint, probeDiagnostic: probe), target: selected))
+        })
+        try await Application(router: makeIOSFixtureRouter(trace)).test(.router) { client in
+            for route in ["mjpeg", "frame", "framebuffer"] {
+                let endpoint = "/web/ios-simulator/\(route)"
+                let response = try await client.execute(uri: "\(endpoint)?udid=\(target)", method: .get)
+                #expect(response.status == .conflict)
+                let failure = try JSONDecoder().decode(TKCLIErrorResponse.self, from: Data(buffer: response.body)).error
+                #expect(failure.code == "ios_simulator_resize_capture_state_unknown")
+                #expect(failure.message.contains(reason.rawValue))
+                #expect(failure.endpoint == endpoint)
+                #expect(failure.nextAction?.args.contains("sim:" + target) == true)
+                #expect(failure.probeDiagnostic?.stage == "native-result")
+                #expect(failure.probeDiagnostic?.reason == reason.rawValue)
+                #expect(failure.probeDiagnostic?.nativeErrorCode == 1001)
+                #expect(failure.probeDiagnostic?.artifactPaths == nil)
+            }
+        }
+        #expect(trace.starts == 0)
+        #expect(trace.stops == 0)
+    }
+
+    @Test func activeResizeStillConflictsWithoutStartingCapture() async throws {
+        let trace = PackagedIOSCaptureTrace(validate: { _ in throw IOSSimulatorResizeCaptureError.activeSession })
+        try await Application(router: makeIOSFixtureRouter(trace)).test(.router) { client in
+            for route in ["mjpeg", "frame", "framebuffer"] {
+                let endpoint = "/web/ios-simulator/\(route)"
+                let response = try await client.execute(uri: "\(endpoint)?udid=fixture", method: .get)
+                #expect(response.status == .conflict)
+                let failure = try JSONDecoder().decode(TKCLIErrorResponse.self, from: Data(buffer: response.body)).error
+                #expect(failure.code == "ios_simulator_resize_capture_unroutable")
+            }
+        }
+        #expect(trace.starts == 0)
+        #expect(trace.stops == 0)
+    }
+
     @Test func disconnectBeforeFirstIOSFrameReleasesCapture() async throws {
         let trace = PackagedIOSCaptureTrace()
         try await Application(router: makeIOSFixtureRouter(trace)).test(.live) { server in
@@ -84,7 +131,9 @@ struct PackagedWebIOSFramebufferTests {
 }
 
 private func makeIOSFixtureRouter(_ trace: PackagedIOSCaptureTrace) -> Router<BasicRequestContext> {
-    makePackagedWebRouter(webRoot: "/nonexistent/unused-web-fixture", tritonBin: "/fixture/triton", dependencies: .init(iosFramebuffer: trace.dependencies))
+    let router = makePackagedWebRouter(webRoot: "/nonexistent/unused-web-fixture", tritonBin: "/fixture/triton", dependencies: .init(iosFramebuffer: trace.dependencies))
+    registerDirectIOSFramebufferRoute(on: router, capture: trace.dependencies)
+    return router
 }
 
 private func waitForIOSCapture(_ trace: PackagedIOSCaptureTrace, starts: Int, stops: Int) async throws -> PackagedIOSCaptureTrace.Snapshot {
@@ -104,7 +153,11 @@ private final class PackagedIOSCaptureTrace: @unchecked Sendable {
     private var fixtureRunning = true
     private var events: [String] = []
     let canStart: Bool
-    init(canStart: Bool = true) { self.canStart = canStart }
+    let validate: @Sendable (String) throws -> Void
+    init(canStart: Bool = true, validate: @escaping @Sendable (String) throws -> Void = { _ in }) {
+        self.canStart = canStart
+        self.validate = validate
+    }
     var starts: Int { lock.withLock { startCount } }
     var stops: Int { lock.withLock { stopCount } }
     struct Snapshot {
@@ -119,7 +172,7 @@ private final class PackagedIOSCaptureTrace: @unchecked Sendable {
     func finishFixture() { lock.withLock { fixtureRunning = false } }
     func publishFrame() { lock.withLock { currentFrame = Data([0xff, 0xd8, 0xff, 0xd9]) } }
     var dependencies: PackagedWebIOSFramebufferDependencies {
-        .init(validateCapture: { _ in }, start: { [self] _ in
+        .init(validateCapture: validate, start: { [self] _ in
             lock.withLock { startCount += 1; events.append("start: \(startCount), stop: \(stopCount)") }
             return canStart
         }, stop: { [self] _ in

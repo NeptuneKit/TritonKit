@@ -1151,11 +1151,7 @@ func makeDirectIOSFramebufferResponse(
     }
 
     do { try capture.validateCapture(udid) }
-    catch let error as IOSSimulatorResizeCaptureError {
-        return jsonError(code: error.detail.code, message: error.detail.message, endpoint: "/web/ios-simulator/framebuffer", hint: error.detail.hint, status: .conflict)
-    } catch {
-        return jsonError(code: "ios_simulator_resize_capture_state_unknown", message: "Capture routing could not be verified.", endpoint: "/web/ios-simulator/framebuffer", status: .conflict)
-    }
+    catch { return webIOSFramebufferCaptureConflict(error, endpoint: "/web/ios-simulator/framebuffer") }
     guard let subscription = startIOSFramebufferSubscription(target: udid, capture: capture) else {
         return jsonError(code: "web_ios_simulator_mjpeg_unavailable", message: "Framebuffer service did not start.", endpoint: "/web/ios-simulator/framebuffer", status: .conflict)
     }

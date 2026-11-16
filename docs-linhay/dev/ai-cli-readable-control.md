@@ -726,4 +726,6 @@ Selected-target doctor also exposes `simulatorDiagnostics.resize.diagnostic` wit
 
 Homebrew 因本机 Xcode 检查拒绝预编译包安装时，可使用 `triton update --version v0.2.46 --release-install-dir /absolute/new/triton-0.2.46 --dry-run --json` 查看计划，再将 `--dry-run` 改为 `--yes` 执行。目录必须尚不存在且不在 Cellar 中；完整同 tag archive/checksum、CLI 版本、Web、Runner manifest/hash 和 SwiftPM bundle 校验后才发布目录。`installSource` 仍报告原来源；`installedExecutable` 指向新 CLI。原 Homebrew、符号链接与 PATH 保持不变，后续显式运行该新路径；支持同版本恢复。旧 CLI 不识别此选项时，先从同一官方 Release 下载并校验完整 arm64 archive，在新目录解包后使用其中 CLI。
 
-Resize 查询失败的实际动作 envelope 在 `error.probeDiagnostic` 保留当次 stage、exitCode、已核实 native domain/code 和可用本地 artifactPaths；doctor 的 `simulatorDiagnostics.resize.diagnostic` 是另一次只读快照。失败 JSON/log/process 原始事实留在本地诊断目录，公开反馈需另作脱敏副本；产物未写成时不声称已经保留。未知结果不自动重试动作。
+Resize 查询失败的实际动作 envelope 在 `error.probeDiagnostic` 保留当次 `reason`、`stage`、`exitCode`、已核实的原生错误域与错误码，以及可用的本地产物路径。doctor 的 `simulatorDiagnostics.resize.diagnostic` 是另一次只读快照。失败原件保存在本机，公开反馈使用脱敏副本。未知结果不自动重试动作。
+
+只读 iOS framebuffer 的 `/web/ios-simulator/mjpeg`、`/frame` 和 `/framebuffer` 在 Resize 门禁拒绝时返回 HTTP 409、当次探针事实和目标绑定 `nextAction`。HTTP 不返回原始产物路径。`unsupportedDevice` 与 `queryFailed` 通过探针 `reason` 区分，即使两次的原生错误码同为 1001。三条路由共用同一预检规则，显式 `triton sim screenshot --primary-framebuffer` 保持独立的主 LCD still 合同。

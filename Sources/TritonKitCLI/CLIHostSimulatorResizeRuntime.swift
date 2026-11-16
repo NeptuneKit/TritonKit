@@ -156,9 +156,15 @@ func probeIOSSimulatorResizeReport(
     var preserveArtifacts = false
     var artifactPaths: [String] = []
     func report(_ state: IOSSimulatorResizeState, _ stage: String, exit: Int32? = nil, domain: String? = nil, code: Int? = nil) -> IOSSimulatorResizeProbeReport {
-        if case .unknown = state { preserveArtifacts = true }
+        let reason: String?
+        if case .unknown(let failure) = state {
+            preserveArtifacts = true
+            reason = failure.rawValue
+        } else {
+            reason = nil
+        }
         let retained = preserveArtifacts ? artifactPaths.filter { FileManager.default.fileExists(atPath: $0) } : []
-        return .init(state: state, diagnostic: .init(stage: stage, exitCode: exit, nativeErrorDomain: domain, nativeErrorCode: code, artifactPaths: retained.isEmpty ? nil : retained))
+        return .init(state: state, diagnostic: .init(stage: stage, exitCode: exit, nativeErrorDomain: domain, nativeErrorCode: code, artifactPaths: retained.isEmpty ? nil : retained, reason: reason))
     }
     guard UUID(uuidString: target) != nil else { return report(.unknown(.identityMismatch), "target-validation") }
     let paths: (json: String, log: String)

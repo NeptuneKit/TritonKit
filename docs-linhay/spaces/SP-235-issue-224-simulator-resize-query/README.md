@@ -1,6 +1,6 @@
 # SP-235 · #224 Simulator 显示状态诊断
 
-当前状态：#224保持OPEN。v0.2.38已发布，SP251在Xcode27.1/iOS27的独占iPhone17上验证真实native主屏JPEG及安装包预览内容、双订阅和隐藏/恢复；v0.2.37的8K黑图不能继续作为当前iPhone流状态。iPad默认截图/输入的unsupportedDevice边界仍未解除，原私有App未验；显式单LCD still截图不能替代默认捕获或触控验收。详见[0.2.38巡查接替](plans/20261030-release038-followup.md)。
+当前状态：#224 保持开放，等待原 iPhone 瞬态 `queryFailed` 的当次探针。iPad 在正式 v0.2.46 上复现精确 `unsupportedDevice`，默认截图与实时流仍会拒绝，显式主 LCD PNG 已通过。独立 Host HID 验收见 [#277](../SP-274-issue-277-resize-host-input/README.md)。iPhone 实时流的历史证据见 [0.2.38 巡查接替](plans/20261030-release038-followup.md)。
 
 ## 边界和现状
 
@@ -50,3 +50,21 @@ BDD：真实已停止/活动Resize查询须按原生结构、完整命令回执�
 ## 2026-11-16 当次探针验证
 
 v0.2.46 候选在自有 iPad / iOS 27.0 的默认截图错误内返回当次 `probeDiagnostic`，报告 `native-result`、exit 1、CoreDevice 1001，JSON/log/process 引用可读。显式主 LCD still 截图通过。另一次 doctor 有自己的探针和独立引用，与动作失败分别保存。在自有 iPhone Simulator，正常截图和 Host HID swipe 通过，独立读回公开 fixture 轮播从 item1–4 滑到 item4–7。`queryFailed` 由注入回归测试覆盖；[线上报告的瞬态](https://github.com/NeptuneKit/TritonKit/issues/224#issuecomment-6860613134)本次未复现，根因未知，issue 保持开放。验证汇总见 [SP-292](../SP-292-open-issues-release-046/README.md)。
+
+## 2026-11-16 默认 iPad 预览 409
+
+正式 v0.2.46 在自有 iPad 的默认截图和 Web MJPEG 均复现拒绝。CLI 当次探针确认 `unsupportedDevice` / CoreDevice 1001，目标 doctor 单独复现相同分类。显式 `--primary-framebuffer` 得到 2048×2732 PNG，自有 iPhone 对照收到真实 MJPEG。#224 线上最后一次属于瞬态 `queryFailed`，原因仍未知。
+
+影响层为 CLI 进程的只读 HTTP 路由。验收场景：当 MJPEG、单帧或直接 framebuffer 拒绝未知 Resize 时，HTTP 409 返回当次探针的分类、阶段与原生错误事实，并附绑定同一目标的诊断命令。原始产物路径留在本机。活动会话仍拒绝，未知状态不启动订阅，健康 iPhone 流照常解码。显式主 LCD PNG 仍走既有独立命令。
+
+复验：本地候选的三个 HTTP 入口都在自有 iPad 返回当次 `probeDiagnostic.reason=unsupportedDevice`、`stage=native-result`、CoreDevice 1001 以及指定目标的 doctor 动作。HTTP 省略本地文件路径，CLI 保留三个可读取的产物引用。三个入口的拒绝回归覆盖相同原生错误码下的 `queryFailed`、精确 `unsupportedDevice` 以及活动状态，验证未启动订阅。iPhone 的普通 JPEG 和 MJPEG 首帧均解码为 1206×2622，iPad 显式主 LCD PNG 为 2048×2732。39 项专项测试通过。正式 v0.2.46 的 6 次对照 iPhone 截图均成功，原瞬态缺当次回执。此变更在本地验收。
+
+完整 CLI 1,900 项、根包 313 项和本地总门禁通过。通用 Xcode Simulator 构建按 CLI 诊断改动范围跳过。使用优化构建产物在仓库外以 packaged 模式重跑三个 iPad 409 入口、iPhone JPEG/MJPEG 解码和显式主 LCD PNG，结果一致。原始回执位于本地忽略目录 `.build/issue-followup-20261116/`，发布版本仍为 v0.2.46。
+
+### 五项现场证据
+
+- #224：失败的 iPhone 截图回执要包含时间、CLI/Xcode/runtime 版本、当次探针阶段、退出状态、原生错误域与错误码或缺少原生回执的原因。后续成功的 doctor 单独标记时间。 [回帖](https://github.com/NeptuneKit/TritonKit/issues/224#issuecomment-6912155612)
+- #237：原 App 更新 SDK，并记录 `Package.resolved` 的 TritonKit revision。在原页面复跑默认快照、forms-only 与文本等待。仍失败时附 typed error、WKErrorDomain 和行列。 [回帖](https://github.com/NeptuneKit/TritonKit/issues/237#issuecomment-6912084430)
+- #238：已许可且可运行原 App 的 HVD，同一 CDP discovery 页面复跑 `pageInit`。断连时保存同次转发、连接阶段、typed error 和 POSIX 等原生错误。 [回帖](https://github.com/NeptuneKit/TritonKit/issues/238#issuecomment-6912086647)
+- #246：已许可的 HVD 和真实 IME，独立核对空串、恰好三个空格、普通文本及延迟回读，每案保留单次提交证据。Harmony `act clear` 仍是 `unsupported_capability`，须另验清空结果。 [回帖](https://github.com/NeptuneKit/TritonKit/issues/246#issuecomment-6912088807)
+- #274：原低内存机的启动入口、脱敏父进程链、模型规格、内存或 RSS 时间线、取消／超时结果与同窗口 CLI/HTTP 响应。 [回帖](https://github.com/NeptuneKit/TritonKit/issues/274#issuecomment-6912090887)

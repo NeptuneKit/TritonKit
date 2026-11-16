@@ -396,10 +396,12 @@ public struct TKCLIHostProbeDiagnostic: Codable, Equatable {
     public let nativeErrorDomain: String?
     public let nativeErrorCode: Int?
     public let artifactPaths: [String]?
-    public init(stage: String, exitCode: Int32?, nativeErrorDomain: String?, nativeErrorCode: Int?, artifactPaths: [String]? = nil) {
+    public let reason: String?
+    public init(stage: String, exitCode: Int32?, nativeErrorDomain: String?, nativeErrorCode: Int?, artifactPaths: [String]? = nil, reason: String? = nil) {
         self.stage = stage; self.exitCode = exitCode
         self.nativeErrorDomain = nativeErrorDomain; self.nativeErrorCode = nativeErrorCode
         self.artifactPaths = artifactPaths
+        self.reason = reason
     }
 }
 

@@ -488,15 +488,13 @@ private func makeWebHostLogsBridgeResponse(tritonBin: String, platform: String, 
     )
 }
 
-private func makePackagedWebIOSSimulatorFrameResponse(_ streamRequest: PackagedWebIOSSimulatorMjpegRequest) async -> Response {
-    do { try assertIOSSimulatorResizeCaptureAllowed(target: streamRequest.udid) }
-    catch let error as IOSSimulatorResizeCaptureError {
-        return jsonError(code: error.detail.code, message: error.detail.message, endpoint: "/web/ios-simulator/frame", hint: error.detail.hint, status: .conflict)
-    } catch {
-        return jsonError(code: "ios_simulator_resize_capture_state_unknown", message: "Capture routing could not be verified.", endpoint: "/web/ios-simulator/frame", status: .conflict)
-    }
+private func makePackagedWebIOSSimulatorFrameResponse(
+    _ streamRequest: PackagedWebIOSSimulatorMjpegRequest, capture: PackagedWebIOSFramebufferDependencies
+) async -> Response {
+    do { try capture.validateCapture(streamRequest.udid) }
+    catch { return webIOSFramebufferCaptureConflict(error, endpoint: "/web/ios-simulator/frame") }
 
-    guard CLIHostSimulatorFramebufferService.shared.startStreaming(udid: streamRequest.udid) else {
+    guard capture.start(streamRequest.udid) else {
         return jsonError(
             code: "web_ios_simulator_frame_unavailable",
             message: "Unable to start host framebuffer capture for simulator \(streamRequest.udid).",
@@ -506,11 +504,11 @@ private func makePackagedWebIOSSimulatorFrameResponse(_ streamRequest: PackagedW
         )
     }
     defer {
-        CLIHostSimulatorFramebufferService.shared.stopStreaming(udid: streamRequest.udid)
+        capture.stop(streamRequest.udid)
     }
 
     for _ in 0..<30 {
-        if let (jpegData, _) = CLIHostSimulatorFramebufferService.shared.getLatestFrameWithVersion(udid: streamRequest.udid) {
+        if let (jpegData, _) = capture.frame(streamRequest.udid) {
             return Response(
                 status: .ok,
                 headers: [.contentType: "image/jpeg"],
@@ -781,7 +779,7 @@ func makePackagedWebRouter(
                 udid: request.uri.queryParameters.get("udid"),
                 fps: request.uri.queryParameters.get("fps")
             )
-            return await makePackagedWebIOSSimulatorFrameResponse(streamRequest)
+            return await makePackagedWebIOSSimulatorFrameResponse(streamRequest, capture: dependencies.iosFramebuffer)
         } catch {
             return jsonError(code: "invalid_query", message: "\(error)", endpoint: "/web/ios-simulator/frame", status: .badRequest)
         }
