@@ -1,6 +1,6 @@
 # SP-290-issue-283-preference-remove — Issue #283 单键偏好删除
 
-状态：候选已通过真实 Simulator 验收（2026-11-16）。待发布包复验、线上回帖与关闭。
+状态：已随 v0.2.46 发布并验证，GitHub #283 已关闭。
 
 ## 范围与BDD
 
@@ -24,3 +24,7 @@ CLI app prefs remove；显式Simulator/bundle绑定，仅删除指定key，保�
 追加真实对照：同一自有 Simulator 和测试 App，先终止再直接删除磁盘键，重启仍读到 `DiskOrderProbe`。指定同一数据容器执行模拟器原生 `defaults delete` 后，重启前显示 `NativeDeleteProbe` 的 App 显示 `Preference: absent`。两组证据在本地 `continuation-disk-*`／`continuation-native-*`。
 
 候选 CLI 的 `app prefs remove BatchTemporary --relaunch` 再次确认真实生效。公开 fixture 重启前显示 `Preference: ReleasePreferenceProbe`，重启后显示 `Preference: absent`。原生偏好域与磁盘都验证缺失，旁键保留布尔 `false`，再次删除返回 no-op。9 项专项测试通过。原始回执与截图在本地 `continuation-prefs-candidate/`。
+
+## 发布包复验
+
+正式 v0.2.46 的 arm64 CLI 重跑了同一公开 fixture。重启 App 独立读到缺失，原生偏好域和磁盘核验均通过，旁键布尔值及重复删除行为一致。[GitHub 回帖](https://github.com/NeptuneKit/TritonKit/issues/283#issuecomment-6911831888)。

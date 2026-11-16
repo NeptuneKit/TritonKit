@@ -407,8 +407,8 @@
 
 | `SP-289-release-v0-2-45` | [`SP-289-release-v0-2-45`](./SP-289-release-v0-2-45/README.md) | 已发布／归档收口 | v0.2.45/f9ddc4f4；Main/Tag/Release/tap、资产/安装通过；默认iPad流409未验过，限定工作台另通过；匿名API限流保留，不改tag |
 
-| `SP-290-issue-283-preference-remove` | [`SP-290-issue-283-preference-remove`](./SP-290-issue-283-preference-remove/README.md) | 候选已验收 | #283 原生单键偏好删除，Simulator 重启后 App 读到缺失，待 v0.2.46 宣告与验证 |
+| `SP-290-issue-283-preference-remove` | [`SP-290-issue-283-preference-remove`](./SP-290-issue-283-preference-remove/README.md) | 已关闭 | #283 在正式 v0.2.46 验证重启后 App 读到缺失、旁键保留及幂等删除 |
 
-| `SP-291-issue-282-homebrew-recovery` | [`SP-291-issue-282-homebrew-recovery`](./SP-291-issue-282-homebrew-recovery/README.md) | 实施中 | Issue #282 Homebrew 升级恢复；2026-11-16用户授权main串行、集中测试后发版收口 |
+| `SP-291-issue-282-homebrew-recovery` | [`SP-291-issue-282-homebrew-recovery`](./SP-291-issue-282-homebrew-recovery/README.md) | 已关闭 | #282 正式 v0.2.46 验证 arm64 完整旁路恢复与独立目录更新 |
 
-| `SP-292-open-issues-release-046` | [`SP-292-open-issues-release-046`](./SP-292-open-issues-release-046/README.md) | 实施中 | 初始八项；#277已用v0.2.45复验关闭，v0.2.46候选验收与现场缺口见报告 |
+| `SP-292-open-issues-release-046` | [`SP-292-open-issues-release-046`](./SP-292-open-issues-release-046/README.md) | 已发布 | v0.2.46 发布后关闭 #282、#283，初始八项还开放五项 |

@@ -1,6 +1,6 @@
 # SP-291-issue-282-homebrew-recovery — Issue #282 Homebrew 升级恢复
 
-状态：实施中（2026-11-16）。
+状态：已随 v0.2.46 发布并验证，GitHub #282 已关闭。
 
 ## 范围与BDD
 
@@ -17,4 +17,8 @@ CLI update/Homebrew分发；不直接覆盖Cellar，明确no-bottle/旧Xcode失�
 
 ## 验收
 
-候选通过独立目录安装公开 v0.2.45 的复验。启动计划返回 `mode=packaged`，原安装执行文件的 SHA-256 一致。回归覆盖缺 JS、缺 CSS、只有空壳 HTML、整包升级拒绝原地仅换二进制及同版恢复。待用已发布 v0.2.46 由旧版用户引导流程再验 release、tap 和安装结果。
+候选通过独立目录安装公开 v0.2.45 的复验。启动计划返回 `mode=packaged`，原安装执行文件的 SHA-256 一致。回归覆盖缺 JS、缺 CSS、只有空壳 HTML、整包升级拒绝原地仅换二进制及同版恢复。正式包已按旧 CLI 用户引导流程复验。
+
+## 发布包复验
+
+从仓外校验官方归档后启动正式 CLI，完成同版本旁路安装。原 Homebrew 执行文件 SHA 和 PATH 命令路径保持一致。独立包校验 Web JS/CSS、Runner 和 SwiftPM 资源，后续升级要求使用新目录。正式版 iPad Host HID 实测计数增加一。 [GitHub 回帖](https://github.com/NeptuneKit/TritonKit/issues/282#issuecomment-6911833958)。
