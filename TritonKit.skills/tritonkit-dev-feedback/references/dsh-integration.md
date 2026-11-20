@@ -2,9 +2,14 @@
 
 ## Prerequisites
 
-The optional TritonKit Host bundle wraps an installed macOS `triton`; skills alone do not install the CLI or register tools. Confirm `triton version --json`, the complete CLI resources and the bundle's declared DSH version compatibility before installation. The bundle does not declare `engines.dsh`, so a later DSH prerelease is not refused for an exact pin. Still check the live services it calls after a DSH upgrade before trusting device actions. A missing profile bundle whose link points at a deleted worktree is reinstalled from the retained `DSH/` directory, not patched in the profile by hand.
+The optional TritonKit Host bundle wraps an installed macOS `triton`; installing the skill alone neither installs the CLI nor registers DSH tools. Before installing the plugin, confirm the CLI and its resources are installed and `triton version --json` succeeds. The plugin has no exact `engines.dsh` pin; successful loading does not prove a newer DSH runtime still provides compatible services.
 
-Installing/enabling the bundle changes the DSH profile and requires the user's authorization. Use DSH's `plugin_manager` with `action: install_bundle` and `target` set to the absolute local TritonKit `DSH` bundle directory supplied by the user. Do not edit profile manifests by hand. Check the returned application/activation result; restart-required is not live activation. Local installation links that directory, so retain it. The bundle is currently private/UNLICENSED and is not an npm-distribution claim.
+## Install in DSH
+
+1. Download the plugin archive and `SHA256SUMS.txt` from the [standalone TritonKit DSH Host 0.1.4 GitHub Release](https://github.com/NeptuneKit/TritonKit/releases/tag/dsh-tritonkit-host-v0.1.4). This is a separate release, not the TritonKit CLI or skills archive, and is not distributed through npm.
+2. With both files in the same directory, run `shasum -a 256 -c SHA256SUMS.txt` there. Stop if the archive is missing or the checksum does not match. Unpack the verified archive to a permanent location; the extracted `package` directory must contain `package.json`.
+3. In the intended DSH profile, open **Plugins → Add plugin** and select the extracted `package` directory. With the user's authorization, an agent can instead call `plugin_manager` with `action: install_bundle` and `target` set to that directory's absolute path. For a source checkout, use its `DSH/` directory instead. DSH links local directory installations: keep the selected directory in place and do not edit profile manifests by hand. If an existing installation points to a deleted directory, use the plugin manager to remove that entry before reinstalling.
+4. Check that `@neptunekit/dsh-tritonkit-host` is enabled and, if the manager reports `restart-required`, restart DSH before checking activation. In a new session in the same profile, call `triton_query` with `{"operation":"version"}`. A successful result confirms the plugin can invoke the CLI, not that device actions were tested.
 
 All four tools require DSH Full access (`danger-full-access`) before subprocess startup; they refuse narrower modes rather than asking for escalation. This requirement is not authorization for a particular device/App action.
 
