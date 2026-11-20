@@ -17,11 +17,11 @@
    将 /absolute/path/TritonKit/DSH 安装为当前 profile 的 DSH bundle。
    ```
 
-   不能手动改写 profile 的 package manifest / patch。首次安装应检查 `application: applied`；若提示 restart-required，重启 DSH 后再核对。当前包限定已验证的 DSH `0.2.2-rc.1`，其他版本先复核 API 并测试，不绕过版本限制。
+   不能手动改写 profile 的 package manifest / patch。首次安装应检查 `application: applied`；若提示 restart-required，重启 DSH 后再核对。本包不声明 `engines.dsh`。DSH 预发布升级不再因精确版本拒绝加载；接口变化仍要对照 live Service 再改调用。安装来源必须是仍存在的本目录；旧 worktree 链接失效后 profile 会报包不可用，应 remove 后从当前目录重装，不要手改 profile。
 
 3. 工具会出现在当前 profile 的 agent 中；所有会话均可见。**所有工具要求 DSH Full access (`danger-full-access`)**；read-only/workspace-write 会在启动子进程前拒绝，不弹升级确认。这是因为设备查询也可能产生宿主临时文件或启动 provider 的本机桥接，不能承诺文件沙箱内纯读取。
 
-本地目录安装采用 link；保留安装来源目录，不要删除或移动对应 worktree。包当前 `private: true` / `UNLICENSED`，尚未 npm 发布；本插件不为整个项目补充或变更开源许可。
+本地目录安装采用 link；保留安装来源目录，不要删除或移动对应 checkout。包当前 `private: true` / `UNLICENSED`，尚未 npm 发布；本插件不为整个项目补充或变更开源许可。
 
 ## 四个工具
 

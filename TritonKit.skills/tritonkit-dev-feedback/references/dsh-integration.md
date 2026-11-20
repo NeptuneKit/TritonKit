@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-The optional TritonKit Host bundle wraps an installed macOS `triton`; skills alone do not install the CLI or register tools. Confirm `triton version --json`, the complete CLI resources and the bundle's declared DSH version compatibility before installation. The current bundle was verified against DSH `0.2.2-rc.1`; do not bypass its version requirement on another runtime.
+The optional TritonKit Host bundle wraps an installed macOS `triton`; skills alone do not install the CLI or register tools. Confirm `triton version --json`, the complete CLI resources and the bundle's declared DSH version compatibility before installation. The bundle does not declare `engines.dsh`, so a later DSH prerelease is not refused for an exact pin. Still check the live services it calls after a DSH upgrade before trusting device actions. A missing profile bundle whose link points at a deleted worktree is reinstalled from the retained `DSH/` directory, not patched in the profile by hand.
 
 Installing/enabling the bundle changes the DSH profile and requires the user's authorization. Use DSH's `plugin_manager` with `action: install_bundle` and `target` set to the absolute local TritonKit `DSH` bundle directory supplied by the user. Do not edit profile manifests by hand. Check the returned application/activation result; restart-required is not live activation. Local installation links that directory, so retain it. The bundle is currently private/UNLICENSED and is not an npm-distribution claim.
 

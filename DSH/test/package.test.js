@@ -11,7 +11,9 @@ test('bundle exports include all runtime, metadata and original icon resources',
   assert.equal(manifest.exports['.'], './host.js');
   assert.equal(manifest.exports['./locale/*.json'], './locale/*.json');
   assert.equal(manifest.exports['./icon'], './icon.svg');
-  assert.equal(manifest.engines.dsh, '0.2.2-rc.1');
+  assert.equal(manifest.version, '0.1.4');
+  assert.equal(manifest.engines.node, '>=22');
+  assert.equal(manifest.engines.dsh, undefined);
   assert.equal(manifest.dependencies, undefined);
   assert.equal(manifest.scripts.postinstall, undefined);
   for (const entry of ['host.js', 'commands.js', 'cordis.patch.yml', 'locale/*.json', 'icon.svg', 'README.md']) {

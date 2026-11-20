@@ -1,6 +1,6 @@
 {
   "name": "@neptunekit/dsh-tritonkit-host",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "TritonKit CLI tools for local app discovery, observation, actions and verification in DSH.",
   "type": "module",
   "private": true,
@@ -11,7 +11,7 @@
     "./icon": "./icon.svg"
   },
   "files": ["host.js", "commands.js", "cordis.patch.yml", "locale/*.json", "icon.svg", "README.md"],
-  "engines": { "node": ">=22", "dsh": "0.2.2-rc.1" },
+  "engines": { "node": ">=22" },
   "scripts": { "test": "node --test test/*.test.js", "check": "node --check host.js && node --check commands.js" },
   "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
 }
