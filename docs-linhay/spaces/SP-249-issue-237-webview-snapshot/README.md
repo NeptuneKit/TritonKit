@@ -4,6 +4,8 @@
 
 2026-11-09 的新评论仍使用嵌入 SDK `0.2.29` 的原私有 App；当前 main 的独立 JavaScriptCore 快照执行回归在 `ca91c2da` 上通过。该现场与当前 SDK 不匹配，保持为未验证边界；详见 [2026-11-10 复核](plans/20261110-private-app-followup.md)。
 
+2026-11-25 在本机重跑 JavaScriptCore 与实际 WebKit DOM 的 3 个套件，12 项通过。复核 v0.2.46 的公开 iOS 夹具默认快照、仅表单和文本等待回执均成功。原应用需升级嵌入 SDK 后以同一页面再验。[GitHub 待验条件](https://github.com/NeptuneKit/TritonKit/issues/237#issuecomment-6912084430)
+
 ## BDD 与边界
 
 - Given 当前源码生成的 snapshot，When JavaScriptCore/WKWebView 执行默认 includes 或 forms-only，Then 脚本可解析并输出有界可解码结果。

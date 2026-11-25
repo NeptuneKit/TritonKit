@@ -1,6 +1,6 @@
 # SP-257-issue-246-harmony-verified-input
 
-状态：候选已集成到本轮发布候选；真实 Harmony IME 正向输入仍受系统许可阻断，issue 保持 OPEN。关联GitHub #246，影响CLI Harmony host act.type与只读回读；默认transport-only路径兼容。
+状态：selector 绑定的 `act type` 和独立回读已发布，空白保真后续修复见 [SP-276](../SP-276-issue-246-whitespace-readback/README.md)。真实 Harmony IME 正向输入仍受专用 HVD 和系统许可阻断，[GitHub #246](https://github.com/NeptuneKit/TritonKit/issues/246) 保持开放。默认 transport-only 路径保持兼容。
 
 ## BDD与验收
 

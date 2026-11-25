@@ -1,3 +1,5 @@
+2026-11-25：[开放 issue 复核](../memory/2026-11-25.md)。[SP-294-issue-284-hid-admission-diagnostics](./SP-294-issue-284-hid-admission-diagnostics/README.md) 与 [SP-295-issue-285-recording-worker-startup](./SP-295-issue-285-recording-worker-startup/README.md) 已在本地 `main` 分开提交并通过联合验收。五项已有发布修复仍待各自现场证据。
+
 2026-11-16：[SP-292-open-issues-release-046](./SP-292-open-issues-release-046/README.md)记录8项初始队列与v0.2.46候选验收；#277已用正式v0.2.45复验并关闭。已发布 v0.2.46，复验后另关闭 #282 和 #283，五项现场验收待补。新增[SP-290-issue-283-preference-remove](./SP-290-issue-283-preference-remove/README.md)偏好remove与[SP-291-issue-282-homebrew-recovery](./SP-291-issue-282-homebrew-recovery/README.md)升级恢复。
 
 2026-11-13：[SP-289-release-v0-2-45](./SP-289-release-v0-2-45/README.md)已发布v0.2.45/f9ddc4f4，Main/Tag/Release/tap成功；三资产字节/版本、Homebrew和skills夹具通过。默认iPad流409未过，关闭并排空后只读工作台单独通过；本机匿名API限流另记，未弱化CI gate。主体归档f187c934已推送且准确CI43381624429成功；状态回写不改tag。

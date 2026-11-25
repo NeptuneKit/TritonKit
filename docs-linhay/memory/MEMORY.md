@@ -1,5 +1,7 @@
 # TritonKit Project Memory
 
+- 2026-11-25：[GitHub 开放 issue 复核](2026-11-25.md)。录屏启动恢复见 [SP-295](../spaces/SP-295-issue-285-recording-worker-startup/README.md)，Simulator HID 当次拒绝和独立 doctor 预检见 [SP-294](../spaces/SP-294-issue-284-hid-admission-diagnostics/README.md)。已有发布修复的五项按原 issue 的现场证据条件继续跟进。
+
 - 2026-11-16：[项目 Agent 环境整理](../spaces/SP-293-project-agent-environment/README.md)。仓库 AGENTS 保留项目约束，Claude 入口导入同一正文，内部 skill 索引按任务分流。入口检查和旧发布指引修订见交付记录。
 
 - 2026-11-13：[参考日报](../spaces/SP-207-reference-adoption-pipeline/plans/20261113-reference-update-report.md)34仓8变化，无新采用；21项main祖先复核通过。按SP286修正Baguette输入/读回边界；未设备或发布。

@@ -1,6 +1,6 @@
 # SP-273 issue #274 显式启用推理
 
-状态：实现与独立审阅通过，完整CLI回归通过，CLI/HTTP隔离验收通过；尚未提交/合并/发布。关联 [issue #274](https://github.com/NeptuneKit/TritonKit/issues/274)。
+状态：实现经 [PR #275](https://github.com/NeptuneKit/TritonKit/pull/275) 合入远端 `main`，已随 v0.2.40 发布。2026-11-25 用安装版 v0.2.46 再验 CLI/HTTP 隔离夹具，16 项全部通过。原低内存环境的进程归属、资源峰值和基础命令响应性待验，[issue #274](https://github.com/NeptuneKit/TritonKit/issues/274) 保持开放。
 
 ## 边界
 

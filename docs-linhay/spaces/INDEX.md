@@ -414,3 +414,7 @@
 | `SP-292-open-issues-release-046` | [`SP-292-open-issues-release-046`](./SP-292-open-issues-release-046/README.md) | 已发布 | v0.2.46 发布后关闭 #282、#283，初始八项还开放五项 |
 
 | `SP-293-project-agent-environment` | [`SP-293-project-agent-environment`](./SP-293-project-agent-environment/README.md) | 本地提交归档 | 项目规则与 skill 分流、Claude 加载正负例、33 项入口校验 |
+
+| `SP-294-issue-284-hid-admission-diagnostics` | [`SP-294-issue-284-hid-admission-diagnostics`](./SP-294-issue-284-hid-admission-diagnostics/README.md) | 本地已验 | `b9e8d960`，区分主屏快照和当次 HID 拒绝，原现场具体原因未知 |
+
+| `SP-295-issue-285-recording-worker-startup` | [`SP-295-issue-285-recording-worker-startup`](./SP-295-issue-285-recording-worker-startup/README.md) | 本地已验 | `f10b1159` 复用 PR #286，校验 PATH 启动、失败回滚和实际 MP4 |
