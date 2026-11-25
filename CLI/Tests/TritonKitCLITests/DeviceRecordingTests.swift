@@ -1,6 +1,7 @@
 import ArgumentParser
 import Foundation
 import Testing
+import TritonKitShared
 @testable import TritonKitCLI
 
 struct DeviceRecordingTests {
@@ -38,6 +39,59 @@ struct DeviceRecordingTests {
         #expect(throws: DeviceRecordingFailure.self) { try reserveDeviceRecordingOutput(link.path) }
         #expect(try String(contentsOf: victim) == "preserve")
     }
+    @Test func startupFailureReleasesReservationAndAllowsSameTargetAndOutputRetry() throws {
+        let fixture = try RecordingStartFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        #expect(throws: DeviceRecordingFailure.self) {
+            try fixture.begin { _ in throw DeviceRecordingFailure("fixture_spawn_failed", "Injected spawn failure") }
+        }
+        #expect(!FileManager.default.fileExists(atPath: fixture.output))
+        #expect(try FileManager.default.contentsOfDirectory(atPath: fixture.store.root.path) == [".lock"])
+        let retry = try fixture.begin { _ in }
+        #expect(try fixture.store.read(retry.sessionID).state == "starting")
+    }
+
+    @Test func expiredUnclaimedSessionAllowsRetryButFreshStartStillBlocks() throws {
+        let fixture = try RecordingStartFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let start = Date()
+        let stale = try fixture.begin(now: start) { _ in }
+        #expect(throws: DeviceRecordingFailure.self) {
+            try fixture.begin(now: start.addingTimeInterval(5)) { _ in
+                Issue.record("A recent unclaimed session must not be preempted")
+            }
+        }
+        let retry = try fixture.begin(now: start.addingTimeInterval(60)) { _ in }
+        #expect(retry.sessionID != stale.sessionID)
+        let recovered = try fixture.store.read(stale.sessionID)
+        #expect(recovered.state == "failed")
+        #expect(recovered.failureCode == "recording_start_timeout")
+    }
+
+    @Test func recoveryDoesNotPreemptClaimedWorkerOrRemoveReplacedOutput() throws {
+        let fixture = try RecordingStartFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let start = Date()
+        var first = try fixture.begin(now: start) { _ in }
+        first.workerPID = 12345
+        try fixture.store.write(first)
+        #expect(throws: DeviceRecordingFailure.self) {
+            try fixture.begin(now: start.addingTimeInterval(60)) { _ in
+                Issue.record("A claimed session must not be preempted")
+            }
+        }
+        first.workerPID = nil
+        try fixture.store.write(first)
+        try Data("replacement".utf8).write(to: URL(fileURLWithPath: fixture.output), options: .atomic)
+        #expect(throws: DeviceRecordingFailure.self) {
+            try fixture.begin(now: start.addingTimeInterval(60)) { _ in
+                Issue.record("A replaced reservation must never be removed or overwritten")
+            }
+        }
+        #expect(try String(contentsOfFile: fixture.output, encoding: .utf8) == "replacement")
+        #expect(try fixture.store.read(first.sessionID).state == "failed")
+    }
+
     @Test func recorderCommandQuotesSerialAndBindsUniqueArtifact() throws {
         let record = DeviceRecordingSession.fixture(target: "android:a", owner: 100)
         let command = deviceRecordingNativeCommand(session: record, stagingPath: "/private/session/video.mp4")
@@ -45,9 +99,78 @@ struct DeviceRecordingTests {
         #expect(command.arguments.joined(separator: " ").contains(record.sessionID))
         #expect(deviceRecordingShellQuote("a'b") == "'a'\\''b'")
     }
+
+    @Test func runningCLIStartsAnOwnedRecordingWorkerViaPathAndAbsolutePath() async throws {
+        let fileManager = FileManager.default
+        let package = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let binary = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TRITON_CLI_PATH"]
+            ?? package.appendingPathComponent(".build/debug/triton").path).resolvingSymlinksInPath()
+        try #require(fileManager.isExecutableFile(atPath: binary.path))
+        let root = fileManager.homeDirectoryForCurrentUser.appendingPathComponent(".triton-recording-cli-test-" + UUID().uuidString)
+        try fileManager.createDirectory(at: root, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+        defer { try? fileManager.removeItem(at: root) }
+        let adb = root.appendingPathComponent("fake-adb")
+        try #"""
+        #!/bin/sh
+        case "$1 $3" in
+            'devices ') printf 'List of devices attached\nemulator-5554 device product:fixture model:Fixture transport_id:1\n' ;;
+            '-s shell')
+                case "$4" in
+                    getprop) printf '1\n' ;;
+                    screenrecord*) sleep 1 ;;
+                esac ;;
+            '-s pull') exit 13 ;;
+        esac
+        """#.write(to: adb, atomically: true, encoding: .utf8)
+        try fileManager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: adb.path)
+        for (launch, executable) in [("path", binary.lastPathComponent), ("absolute", binary.path)] {
+            let stateDirectory = root.appendingPathComponent("state-" + launch)
+            let environment = ["PATH": binary.deletingLastPathComponent().path + ":/usr/bin:/bin",
+                               "TRITON_RECORDING_STATE_DIR": stateDirectory.path]
+            let result = try runHostCommand(.init(executable: executable,
+                arguments: ["device", "recording", "start", "--device", "android:emulator-5554", "--adb", adb.path,
+                            "--output", root.appendingPathComponent(launch + ".mp4").path,
+                            "--maximum-duration", "2", "--json"],
+                workingDirectory: root.path, environment: environment, defaultTimeoutSeconds: 12))
+            let receipt = try JSONDecoder().decode(RecordingWorkerStartReceipt.self, from: result.stdoutData)
+            #expect(receipt.ok && receipt.session.state == "recording")
+            #expect(receipt.session.workerPID != nil && receipt.session.recorderPID != nil)
+            let store = try DeviceRecordingStore(environment: environment)
+            let deadline = Date().addingTimeInterval(8)
+            var record = try store.read(receipt.session.sessionID)
+            while record.state != "failed" && Date() < deadline {
+                try await Task.sleep(for: .milliseconds(50))
+                record = try store.read(receipt.session.sessionID)
+            }
+            #expect(record.state == "failed" && record.failureCode == "recording_failed")
+            #expect(record.actualDurationSeconds == nil)
+        }
+    }
     @Test func wallClockCannotReplaceEncodedSamples() {
         #expect(throws: HostSimulatorRecordingValidationError.self) {
             try simulatorRecordingActualDuration(containerDurationSeconds: 30, videoTrackDurationSeconds: [30], videoSampleDurationSeconds: nil)
         }
+    }
+}
+
+private struct RecordingWorkerStartReceipt: Decodable {
+    let ok: Bool
+    let session: DeviceRecordingSession
+}
+
+private struct RecordingStartFixture {
+    let root: URL
+    let store: DeviceRecordingStore
+    var output: String { root.appendingPathComponent("recording.mp4").path }
+    private let target = HostDeviceTarget(platform: "ios", id: "sim:fixture", target: "fixture", state: "Booted",
+                                          ready: true, source: "fixture", name: nil, runtime: nil, transport: nil, scope: "simulator")
+
+    init() throws {
+        root = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".triton-recording-test-\(UUID().uuidString)")
+        store = try DeviceRecordingStore(environment: ["TRITON_RECORDING_STATE_DIR": root.appendingPathComponent("sessions").path])
+    }
+
+    func begin(now: Date = Date(), launch: (String) throws -> Void) throws -> DeviceRecordingSession {
+        try store.beginRecording(target: target, output: output, maximumDuration: 5, adb: "adb", now: now, launchWorker: launch)
     }
 }

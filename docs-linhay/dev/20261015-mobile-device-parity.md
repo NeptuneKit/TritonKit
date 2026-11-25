@@ -23,6 +23,12 @@
 - Android Emulator `emulator-5554`：clipboard、foreground、location set/clear、logs、crashes、mirror PNG、volume key、recording 通过；录屏产出 2.9 秒 MP4。
 - iOS Simulator：target discovery、location set/clear、crash listing 通过；iPhone Duo fold 返回结构化 `unsupported_device_environment`。
 
+## 录屏 worker 启动与恢复
+
+- `device recording start` 使用当前 CLI 的真实可执行路径启动 worker，支持通过 `PATH` 调用。若 worker 进程未能启动，只回滚本次的会话和仍可确认归属的空 MP4 预留。
+- 预检发现 worker 不可执行，或系统报告进程启动失败，均返回已有的 `recording_worker_unavailable`。
+- 再次启动时，同目标超过启动等待期限且无 worker 或 recorder 身份的 `starting` 记录会标为失败；刚创建或已被 worker 接管的录屏仍阻止并行启动。仅释放仍匹配原设备号、inode、所有者且为空的预留，不覆盖替换文件。见 [#285](https://github.com/NeptuneKit/TritonKit/issues/285)。
+
 ## 已知平台边界
 
 - 当前 Android AVD 是竖屏锁定配置，`user-rotation` 写入成功但 WindowManager 仍返回 `ROTATION_0`，因此 orientation set 保持 `device_environment_not_verified`，不伪造成功。

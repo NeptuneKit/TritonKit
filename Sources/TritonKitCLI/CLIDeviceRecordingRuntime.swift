@@ -125,43 +125,102 @@ func deviceRecordingProcessIdentity(_ pid: Int32) -> String? {
     return value.isEmpty ? nil : value
 }
 
+private let deviceRecordingWorkerStartTimeout: TimeInterval = 25
+
+extension DeviceRecordingStore {
+    func beginRecording(target: HostDeviceTarget, output: String, maximumDuration: Double, adb: String,
+                        now: Date = Date(), launchWorker: (String) throws -> Void) throws -> DeviceRecordingSession {
+        try locked {
+            for name in try FileManager.default.contentsOfDirectory(atPath: root.path) where UUID(uuidString: name) != nil {
+                var other = try read(name)
+                guard other.target == target.id, ["starting", "recording", "stopping"].contains(other.state) else { continue }
+                guard other.state == "starting", other.workerPID == nil, other.workerIdentity == nil,
+                      other.recorderPID == nil, other.recorderIdentity == nil,
+                      now.timeIntervalSince(other.startedAt) >= deviceRecordingWorkerStartTimeout else {
+                    throw DeviceRecordingFailure("recording_already_active", "Target already has session \(other.sessionID); inspect or stop that session first.")
+                }
+                // The worker claims the session under this same lock and cannot claim a failed session.
+                other.state = "failed"
+                other.endedAt = now
+                other.failureCode = "recording_start_timeout"
+                other.failureMessage = "No worker claimed the recording session before the start deadline."
+                try write(other)
+                releaseEmptyDeviceRecordingOutput(other)
+            }
+            let reservation = try reserveDeviceRecordingOutput(output)
+            let id = UUID().uuidString.lowercased()
+            let directory = root.appendingPathComponent(id)
+            let initial = DeviceRecordingSession(schemaVersion: 1, sessionID: id, ownerUID: getuid(), target: target.id,
+                                                 rawTarget: target.rawTarget, platform: target.platform, scope: target.scope ?? "simulator",
+                                                 output: output, outputDevice: reservation.0, outputInode: reservation.1,
+                                                 maximumDurationSeconds: maximumDuration, startedAt: now, adb: adb, state: "starting")
+            var createdDirectory = false
+            do {
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+                createdDirectory = true
+                try write(initial)
+                try launchWorker(id)
+            } catch {
+                // Nothing launched: release only this attempt’s own reservation and explicitly named state file.
+                releaseEmptyDeviceRecordingOutput(initial)
+                if createdDirectory {
+                    _ = unlink(directory.appendingPathComponent("session.json").path)
+                    _ = rmdir(directory.path)
+                }
+                throw error
+            }
+            return initial
+        }
+    }
+}
+
+private func releaseEmptyDeviceRecordingOutput(_ record: DeviceRecordingSession) {
+    let file = URL(fileURLWithPath: record.output).standardizedFileURL
+    guard record.output.hasPrefix("/"), file.pathExtension.lowercased() == "mp4" else { return }
+    var parent = open("/", O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
+    guard parent >= 0 else { return }
+    defer { close(parent) }
+    for component in file.deletingLastPathComponent().pathComponents.dropFirst() {
+        let child = openat(parent, component, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
+        guard child >= 0 else { return }
+        close(parent)
+        parent = child
+    }
+    let name = file.lastPathComponent
+    var info = stat()
+    guard fstatat(parent, name, &info, AT_SYMLINK_NOFOLLOW) == 0, info.st_mode & S_IFMT == S_IFREG,
+          info.st_uid == record.ownerUID, info.st_nlink == 1, info.st_size == 0,
+          UInt64(info.st_dev) == record.outputDevice, UInt64(info.st_ino) == record.outputInode else { return }
+    _ = unlinkat(parent, name, 0)
+}
+
 func startDeviceRecording(device: String, output: String, maximumDuration: Double, adb: String, hdc: String) async throws -> DeviceRecordingSession {
     try validateDeviceRecordingDuration(maximumDuration)
     let selected = try resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: device), hdc: hdc, adb: adb).target
     guard selected.ready else { throw DeviceRecordingFailure("recording_target_not_ready", "Recording requires a ready device.") }
     guard selected.platform == "android" || selected.platform == "ios" else { throw DeviceRecordingFailure("recording_unsupported", "Native recording currently supports iOS and Android; Harmony recording is not available.") }
     if selected.platform == "ios", selected.scope != "real" { try assertIOSSimulatorResizeCaptureAllowed(target: selected.rawTarget, environment: [:]) }
+    // The shell may pass a bare argv[0] even though it launched us through PATH.
+    let path = currentExecutablePath()
+    guard path.hasPrefix("/"), FileManager.default.isExecutableFile(atPath: path) else {
+        throw DeviceRecordingFailure("recording_worker_unavailable", "Current triton executable cannot be launched as a background worker.")
+    }
     let store = try DeviceRecordingStore()
-    let record = try store.locked { () -> DeviceRecordingSession in
-        for name in try FileManager.default.contentsOfDirectory(atPath: store.root.path) where UUID(uuidString: name) != nil {
-            let other = try store.read(name)
-            if other.target == selected.id, ["starting", "recording", "stopping"].contains(other.state) {
-                throw DeviceRecordingFailure("recording_already_active", "Target already has session \(other.sessionID); inspect or stop that session first.")
-            }
-        }
-        let reservation = try reserveDeviceRecordingOutput(output)
-        let id = UUID().uuidString.lowercased()
-        let directory = store.root.appendingPathComponent(id)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
-        let initial = DeviceRecordingSession(schemaVersion: 1, sessionID: id, ownerUID: getuid(), target: selected.id,
-                                             rawTarget: selected.rawTarget, platform: selected.platform, scope: selected.scope ?? "simulator", output: output,
-                                             outputDevice: reservation.0, outputInode: reservation.1,
-                                             maximumDurationSeconds: maximumDuration, startedAt: Date(), adb: adb, state: "starting")
-        try store.write(initial)
+    let record = try store.beginRecording(target: selected, output: output, maximumDuration: maximumDuration, adb: adb) { id in
         let process = Process()
-        let executable = URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL
-        guard FileManager.default.isExecutableFile(atPath: executable.path) else { throw DeviceRecordingFailure("recording_worker_unavailable", "Current triton executable cannot be launched as a background worker.") }
-        process.executableURL = executable
+        process.executableURL = URL(fileURLWithPath: path)
         process.arguments = ["device", "recording", "_worker", "--session", id]
         process.standardInput = FileHandle.nullDevice
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
-        try process.run()
-        // Do not wait: the worker owns its native recorder and closes all parent
-        // pipes. It outlives this invocation and has an independent deadline.
-        return initial
+        do {
+            try process.run()
+        } catch {
+            throw DeviceRecordingFailure("recording_worker_unavailable", "Could not launch the recording worker.")
+        }
+        // The worker owns the recorder and outlives this invocation.
     }
-    let deadline = Date().addingTimeInterval(25)
+    let deadline = Date().addingTimeInterval(deviceRecordingWorkerStartTimeout)
     while Date() < deadline {
         let current = try store.locked { try store.read(record.sessionID) }
         if current.state != "starting" { return current }
