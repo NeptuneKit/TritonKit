@@ -167,3 +167,7 @@ main@ebfbb405全量推送，main CI38922511471/tag CI38924507762/Release38924507
 ## v0.2.35 公开产物与受限浏览器验收
 
 [SP-242记录](../spaces/SP-242-release-v0-2-35/plans/20261028-release.md)绑定190c161f及同候选CI，双架构/checksum/skills/Runner/Homebrew全通过，CocoaPods仅lint。包外Web需resolve Homebrew share符号链接核对版本；`web --json`仅计划，真实启动不带JSON输出选项。默认页面实时流若409且doctor确认resize unknown，应保留失败并标受限；关闭流组件后工作台的零console error仅覆盖该布局，不得冒充默认页面或设备流通过。不得绕过安全保护取绿。
+
+## v0.2.47 发布范围
+
+发布 #284 的 Simulator HID 当次拒绝诊断和 #285 的录屏 worker 启动与恢复。macOS arm64 CLI、随包 Web/Runner、公开 skills、checksum、Homebrew 与 SwiftPM tag 同步。验收和远端 issue 状态见 [SP-296](../spaces/SP-296-release-v0-2-47/README.md)。

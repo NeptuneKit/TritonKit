@@ -418,3 +418,5 @@
 | `SP-294-issue-284-hid-admission-diagnostics` | [`SP-294-issue-284-hid-admission-diagnostics`](./SP-294-issue-284-hid-admission-diagnostics/README.md) | 本地已验 | `b9e8d960`，区分主屏快照和当次 HID 拒绝，原现场具体原因未知 |
 
 | `SP-295-issue-285-recording-worker-startup` | [`SP-295-issue-285-recording-worker-startup`](./SP-295-issue-285-recording-worker-startup/README.md) | 本地已验 | `f10b1159` 复用 PR #286，校验 PATH 启动、失败回滚和实际 MP4 |
+
+| `SP-296-release-v0-2-47` | [`SP-296-release-v0-2-47`](./SP-296-release-v0-2-47/README.md) | 发布准备 | #284、#285 与完整 arm64 发布验证 |

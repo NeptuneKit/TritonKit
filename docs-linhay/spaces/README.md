@@ -1,3 +1,5 @@
+2026-11-25：[SP-296-release-v0-2-47](./SP-296-release-v0-2-47/README.md) 准备发布 #284、#285，保留其他 issue 的现场复验条件。
+
 2026-11-25：[开放 issue 复核](../memory/2026-11-25.md)。[SP-294-issue-284-hid-admission-diagnostics](./SP-294-issue-284-hid-admission-diagnostics/README.md) 与 [SP-295-issue-285-recording-worker-startup](./SP-295-issue-285-recording-worker-startup/README.md) 已在本地 `main` 分开提交并通过联合验收。五项已有发布修复仍待各自现场证据。
 
 2026-11-16：[SP-292-open-issues-release-046](./SP-292-open-issues-release-046/README.md)记录8项初始队列与v0.2.46候选验收；#277已用正式v0.2.45复验并关闭。已发布 v0.2.46，复验后另关闭 #282 和 #283，五项现场验收待补。新增[SP-290-issue-283-preference-remove](./SP-290-issue-283-preference-remove/README.md)偏好remove与[SP-291-issue-282-homebrew-recovery](./SP-291-issue-282-homebrew-recovery/README.md)升级恢复。
