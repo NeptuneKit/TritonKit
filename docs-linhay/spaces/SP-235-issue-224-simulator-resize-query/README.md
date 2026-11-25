@@ -68,3 +68,5 @@ v0.2.46 候选在自有 iPad / iOS 27.0 的默认截图错误内返回当次 `pr
 - #238：已许可且可运行原 App 的 HVD，同一 CDP discovery 页面复跑 `pageInit`。断连时保存同次转发、连接阶段、typed error 和 POSIX 等原生错误。 [回帖](https://github.com/NeptuneKit/TritonKit/issues/238#issuecomment-6912086647)
 - #246：已许可的 HVD 和真实 IME，独立核对空串、恰好三个空格、普通文本及延迟回读，每案保留单次提交证据。Harmony `act clear` 仍是 `unsupported_capability`，须另验清空结果。 [回帖](https://github.com/NeptuneKit/TritonKit/issues/246#issuecomment-6912088807)
 - #274：原低内存机的启动入口、脱敏父进程链、模型规格、内存或 RSS 时间线、取消／超时结果与同窗口 CLI/HTTP 响应。 [回帖](https://github.com/NeptuneKit/TritonKit/issues/274#issuecomment-6912090887)
+
+2026-11-26：三个只读 HTTP 路由的 Resize 当次诊断随 v0.2.47 发布。重启后两次 iPhone 截图拒绝为 `ios_simulator_display_safety_unknown`，第三次成功为 1206×2622。仍缺原 Resize `queryFailed` 的当次回执，#224 保持开放。[最新回复](https://github.com/NeptuneKit/TritonKit/issues/224#issuecomment-7169333500)

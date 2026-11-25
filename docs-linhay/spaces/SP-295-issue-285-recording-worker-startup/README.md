@@ -16,3 +16,5 @@
 - 静态复核发现旧 PR 候选在 `Process.run()` 抛错时新增 `recording_worker_launch_failed`，该码未列入 schema。本地候选复用 PR 的工作进程启动和会话清理，并将此失败分支与已有的 `recording_worker_unavailable` 对齐。现有 GitHub PR 分支独立保留。
 - 新增实际 CLI 进程回归，使用隔离 fake ADB 观察两种启动方式都完成 worker/recorder 认领，再用注入的拉取失败验收终态。相同测试在修复前直接返回 `recording_worker_unavailable`。
 - `RECORDING-START-OWNERSHIP` 专项通过。`DeviceRecordingTests` 还覆盖未启动回滚后立即重试、超时无人认领、保护已认领会话和替换文件。本地最终二进制重复了旧版失败和两种启动的完整正向对照，两份 MP4 各 24 帧、2 秒，均通过完整解码。
+
+2026-11-26：远端实现 `5aadd006` 已随 v0.2.47 发布，在自有 iPhone 17 上用正式制品通过本项范围的复验后 [回复并关闭](https://github.com/NeptuneKit/TritonKit/issues/285#issuecomment-7169319452)。详见 [SP-296](../SP-296-release-v0-2-47/README.md)。

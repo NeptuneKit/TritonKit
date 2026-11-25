@@ -15,3 +15,5 @@
 - 用生产准入函数的夹具区分 `hid-screen-enumeration`、`hid-driver-admission`、`hid-pre-dispatch` 和 `hid-post-dispatch`。目标绑定的单一失败 envelope 保留阶段、原因与可用退出码。输出不复制原生 stdout/stderr。
 - 负例先在修复前失败。恢复旧版通用提示并叠加当次提示后，现存 Device Hub 失败契约与新增诊断共同通过。发送前拒绝观察到零触摸，发送后变化保持可能部分送达。
 - `SIM-HID-ADMISSION` 专项通过。见 `NativeHIDRuntimeTests`、`DTUHIDTransportTests`、`DeviceHubHIDFailureTests`、`SimulatorDoctorDiagnosticsTests` 和 `SimulatorResizeFailurePropagationTests`。doctor 主屏为 `primary` 时仍可报告独立 HID 拒绝，`inputDispatchVerified=false`。当前主机没有已启动的同类 Simulator，本轮未复现原始场景。
+
+2026-11-26：远端实现 `56a970c3` 已随 v0.2.47 发布，在自有 iPhone 17 上用正式制品通过本项范围的复验后 [回复并关闭](https://github.com/NeptuneKit/TritonKit/issues/284#issuecomment-7169322982)。详见 [SP-296](../SP-296-release-v0-2-47/README.md)。

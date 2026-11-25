@@ -415,8 +415,8 @@
 
 | `SP-293-project-agent-environment` | [`SP-293-project-agent-environment`](./SP-293-project-agent-environment/README.md) | 本地提交归档 | 项目规则与 skill 分流、Claude 加载正负例、33 项入口校验 |
 
-| `SP-294-issue-284-hid-admission-diagnostics` | [`SP-294-issue-284-hid-admission-diagnostics`](./SP-294-issue-284-hid-admission-diagnostics/README.md) | 本地已验 | `b9e8d960`，区分主屏快照和当次 HID 拒绝，原现场具体原因未知 |
+| `SP-294-issue-284-hid-admission-diagnostics` | [`SP-294-issue-284-hid-admission-diagnostics`](./SP-294-issue-284-hid-admission-diagnostics/README.md) | 已发布／关闭 | v0.2.47；主屏快照和当次拒绝独立，正式设备验证拒绝诊断 |
 
-| `SP-295-issue-285-recording-worker-startup` | [`SP-295-issue-285-recording-worker-startup`](./SP-295-issue-285-recording-worker-startup/README.md) | 本地已验 | `f10b1159` 复用 PR #286，校验 PATH 启动、失败回滚和实际 MP4 |
+| `SP-295-issue-285-recording-worker-startup` | [`SP-295-issue-285-recording-worker-startup`](./SP-295-issue-285-recording-worker-startup/README.md) | 已发布／关闭 | v0.2.47；PATH 和绝对路径、过期会话回收、正式 MP4 复验 |
 
-| `SP-296-release-v0-2-47` | [`SP-296-release-v0-2-47`](./SP-296-release-v0-2-47/README.md) | 发布准备 | #284、#285 与完整 arm64 发布验证 |
+| `SP-296-release-v0-2-47` | [`SP-296-release-v0-2-47`](./SP-296-release-v0-2-47/README.md) | 已发布／归档 | v0.2.47 主线、tag、Release、tap 与正式资产均验收；关闭 #284、#285 |
