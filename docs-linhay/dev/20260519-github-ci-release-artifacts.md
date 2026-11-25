@@ -170,4 +170,4 @@ main@ebfbb405全量推送，main CI38922511471/tag CI38924507762/Release38924507
 
 ## v0.2.47 发布范围
 
-发布 #284 的 Simulator HID 当次拒绝诊断和 #285 的录屏 worker 启动与恢复。macOS arm64 CLI、随包 Web/Runner、公开 skills、checksum、Homebrew 与 SwiftPM tag 同步。验收和远端 issue 状态见 [SP-296](../spaces/SP-296-release-v0-2-47/README.md)。
+发布 #284 的 Simulator HID 当次拒绝诊断、#285 的录屏 worker 启动与恢复，以及 #224 的只读 Web 当次探针诊断。macOS arm64 CLI、随包 Web/Runner、公开 skills、checksum、Homebrew 与 SwiftPM tag 同步。验收和远端 issue 状态见 [SP-296](../spaces/SP-296-release-v0-2-47/README.md)。

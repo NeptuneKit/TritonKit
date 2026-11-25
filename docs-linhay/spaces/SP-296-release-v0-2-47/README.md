@@ -1,6 +1,6 @@
 # SP-296 TritonKit v0.2.47 发布
 
-范围为 macOS arm64 CLI、随包 Web/Runner、Homebrew、公开 skills 和 SwiftPM iOS 16+。在干净的发布检出中以远端 main `5a5df3fd` 为基线，只应用 #284、#285 与本轮验收资料。现有本地提交保留在原工作区。
+范围为 macOS arm64 CLI、随包 Web/Runner、Homebrew、公开 skills 和 SwiftPM iOS 16+。在干净的发布检出中以远端 main `5a5df3fd` 为基线，应用 #284、#285、本轮验收资料及 #284 依赖的 #224 只读 Web 诊断。首轮干净检出编译发现缺少共享 `probeDiagnostic.reason`，补入既有完整诊断提交后重新验收。现有本地提交保留在原工作区。
 
 - Given 已公开 v0.2.46，When 验证 v0.2.47 的版本清单，Then 旧清单必须失败，更新后 Web manifest/lock 与 tag 对齐。
 - Given 两项修复通过 CLI 与本地门禁，When 精确 main CI 完成，Then 创建 v0.2.47 并验证 tag CI、正式资产、Homebrew 及仓库外只读 Web。
