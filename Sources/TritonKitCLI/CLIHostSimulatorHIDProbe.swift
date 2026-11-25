@@ -25,6 +25,33 @@ struct IOSHostHIDProbe: Encodable, Equatable {
     var hostChromeLayout: String? = nil
     let chromeLookupVerified = false
     var inputSurfaceCode: String? = nil
+    var inputSurfaceDiagnostic: TKCLIHostProbeDiagnostic? = nil
+    var inputSurfaceHint: String? = nil
+
+    mutating func recordInputSurfacePreflight(_ snapshot: () throws -> NativeHIDScreen) {
+        inputSurfaceHint = "This read-only preflight cannot determine why an earlier action failed. Check that action's error.probeDiagnostic. The preflight does not initialize the input client or verify delivery."
+        let failure: TKCLIErrorDetail
+        do {
+            _ = try snapshot()
+            inputSurfaceCode = "ios_host_hid_surface_preflight_passed"
+            inputSurfaceDiagnostic = nil
+            return
+        } catch let error as NativeHIDControlError {
+            failure = error.detail
+        } catch let error as IOSSimulatorResizeError {
+            failure = error.detail
+        } catch let error as SimulatorTargetDiagnosticError {
+            failure = error.detail
+        } catch {
+            failure = NativeHIDControlError(code: "ios_host_hid_attachment_unknown").detail
+        }
+        inputSurfaceCode = failure.code
+        inputSurfaceDiagnostic = failure.probeDiagnostic.map {
+            TKCLIHostProbeDiagnostic(stage: $0.stage, exitCode: $0.exitCode, nativeErrorDomain: $0.nativeErrorDomain,
+                                    nativeErrorCode: $0.nativeErrorCode, reason: $0.reason)
+        }
+        if let hint = failure.hint { inputSurfaceHint = hint + " " + (inputSurfaceHint ?? "") }
+    }
 
     var errorDetail: TKCLIErrorDetail {
         TKCLIErrorDetail(

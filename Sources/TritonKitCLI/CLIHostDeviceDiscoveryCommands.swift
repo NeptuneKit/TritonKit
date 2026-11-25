@@ -82,15 +82,8 @@ struct DeviceDoctor: AsyncParsableCommand {
                     var environment: [String: String] = [:]
                     if let developer = selectedXcodeDeveloperDirectory(environment: ProcessInfo.processInfo.environment) { environment["DEVELOPER_DIR"] = developer }
                     diagnostics = simulatorDoctorDiagnostics(target: selected.rawTarget, environment: environment)
-                    do {
-                        _ = try nativeHIDGuardSnapshot(target: selected.rawTarget, environment: environment)
-                        compatibility.inputSurfaceCode = "ios_host_hid_surface_preflight_passed"
-                    } catch let error as NativeHIDControlError {
-                        compatibility.inputSurfaceCode = error.detail.code
-                    } catch let error as IOSSimulatorResizeError {
-                        compatibility.inputSurfaceCode = error.detail.code
-                    } catch {
-                        compatibility.inputSurfaceCode = "ios_host_hid_attachment_unknown"
+                    compatibility.recordInputSurfacePreflight {
+                        try nativeHIDGuardSnapshot(target: selected.rawTarget, environment: environment)
                     }
                     hidProbe = compatibility
                 } catch {
@@ -145,6 +138,11 @@ struct DeviceDoctor: AsyncParsableCommand {
             }
             if let diagnostics = output.simulatorDiagnostics {
                 print("\(diagnostics.target) appResize=\(diagnostics.resize.state) reason=\(diagnostics.resize.reason ?? "none") displays=\(diagnostics.display.state) reason=\(diagnostics.display.reason ?? "none"); input/capture unverified")
+            }
+            if let hid = output.hidCompatibility, let code = hid.inputSurfaceCode {
+                let diagnostic = hid.inputSurfaceDiagnostic.map { " stage=\($0.stage) reason=\($0.reason ?? "unknown")" } ?? ""
+                print("HID preflight: \(code)\(diagnostic)")
+                if let hint = hid.inputSurfaceHint { print(hint) }
             }
         }
     }

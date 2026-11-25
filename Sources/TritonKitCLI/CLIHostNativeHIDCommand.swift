@@ -87,7 +87,8 @@ func performNativeHIDInput(input: TKInputRequest, preflightOnly: Bool = false,
     }
     guard abs(driver.pointSize.width - screen.pointSize.width) < 0.01,
           abs(driver.pointSize.height - screen.pointSize.height) < 0.01 else {
-        throw NativeHIDControlError(code: "ios_host_hid_display_unsupported")
+        throw NativeHIDControlError.display(stage: "hid-driver-admission", reason: "driver-point-size-mismatch",
+            hint: "The driver's point size disagreed with Simulator screen enumeration. Capture a fresh observation and retain the failing action receipt if the sizes still disagree.")
     }
     try executeGuardedNativeHIDGesture(expectedScreen: screen, snapshot: snapshot) {
         try executeNativeHIDContacts(sequence.contacts, cadence: sequence.cadence, sleep: sleep) { contact in

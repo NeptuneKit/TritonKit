@@ -34,6 +34,32 @@ import TritonKitShared
         #expect(!report.captureVerified)
     }
 
+    @Test func primaryDisplayAndHIDRejectionAreIndependentInDoctorJSON() throws {
+        let report = simulatorDoctorDiagnostics(target: target, resizeProbe: { _, _ in .inactive },
+            displayProbe: { _, _ in .primary(.init(id: "1", primary: true, active: true, integrated: true)) })
+        var compatibility = probeIOSHostHIDFramework(developerDirectory: nil)
+        compatibility.recordInputSurfacePreflight {
+            let fixture = NativeHIDRuntimeTests().fixture.replacingOccurrences(of: "Portrait", with: "Landscape")
+            return try nativeHIDScreen(fixture)
+        }
+        let doctor = iosHostDeviceDoctor(scope: .simulator, hidProbe: compatibility, simulatorDiagnostics: report, probe: { name, _ in
+            .init(name: name, path: name, available: true, versionSummary: nil, error: nil, sourceCommand: "fixture")
+        })
+        let json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(doctor)) as? [String: Any])
+        let simulator = try #require(json["simulatorDiagnostics"] as? [String: Any])
+        let display = try #require(simulator["display"] as? [String: Any])
+        let hid = try #require(json["hidCompatibility"] as? [String: Any])
+        let diagnostic = try #require(hid["inputSurfaceDiagnostic"] as? [String: Any])
+        #expect(display["state"] as? String == "primary")
+        #expect(hid["inputSurfaceCode"] as? String == "ios_host_hid_display_unsupported")
+        #expect(diagnostic["reason"] as? String == "portrait-required")
+        #expect(hid["inputDispatchVerified"] as? Bool == false)
+        #expect((hid["inputSurfaceHint"] as? String)?.contains("cannot determine why an earlier action failed") == true)
+        compatibility.recordInputSurfacePreflight { try nativeHIDScreen(NativeHIDRuntimeTests().fixture) }
+        #expect(compatibility.inputSurfaceCode == "ios_host_hid_surface_preflight_passed")
+        #expect(compatibility.inputSurfaceDiagnostic == nil && !compatibility.inputDispatchVerified)
+    }
+
     @Test func targetBoundErrorsPreserveFailureAndDoNotCapture() throws {
         var captureCalls = 0
         do {

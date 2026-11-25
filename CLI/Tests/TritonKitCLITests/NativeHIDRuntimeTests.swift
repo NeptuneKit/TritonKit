@@ -34,6 +34,44 @@ struct NativeHIDRuntimeTests {
         }
     }
 
+    @Test func hidGeometryRefusalExplainsWhyAPrimaryDisplayIsInsufficient() throws {
+        let target = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"
+        let landscape = fixture.replacingOccurrences(of: "Portrait", with: "Landscape")
+        do {
+            _ = try nativeHIDScreen(landscape)
+            Issue.record("A landscape screen must be rejected before submission")
+        } catch let failure as NativeHIDControlError {
+            let detail = simulatorTargetBoundDetail(failure.detail, target: target)
+            #expect(detail.code == "ios_host_hid_display_unsupported")
+            #expect(detail.probeDiagnostic?.stage == "hid-screen-enumeration")
+            #expect(detail.probeDiagnostic?.reason == "portrait-required")
+            #expect(detail.nextAction?.args.contains("sim:" + target) == true)
+            #expect(detail.message.contains("no gesture was sent"))
+        }
+    }
+
+    @Test func screenProbeFailureRetainsExitWithoutNativeOutput() throws {
+        let target = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"
+        var commands: [[String]] = []
+        do {
+            _ = try nativeHIDGuardSnapshot(target: target, environment: [:], resizeProbe: { _, _ in .inactive }) { command in
+                commands.append(command.arguments)
+                let ownership = command.arguments.contains("notifyutil")
+                let output = HostProcessResult(stdoutData: Data((ownership ? "com.apple.coredevice.dtuhidd.active 0" : "PRIVATE").utf8),
+                    stderrData: Data("PRIVATE".utf8), exitCode: ownership ? 0 : 74, sourceCommand: "PRIVATE",
+                    stdoutTruncated: false, stderrTruncated: false, stdoutLogPath: nil, stderrLogPath: nil, stdoutBytes: 0, stderrBytes: 0)
+                if !ownership { throw HostCommandRunError.nonZeroExit(command: command, result: output) }
+                return output
+            }
+            Issue.record("Enumeration failure must stop admission")
+        } catch let failure as NativeHIDControlError {
+            #expect(failure.detail.probeDiagnostic?.reason == "probe-nonzero-exit")
+            #expect(failure.detail.probeDiagnostic?.exitCode == 74)
+            #expect(try !String(decoding: JSONEncoder().encode(failure.detail), as: UTF8.self).contains("PRIVATE"))
+        }
+        #expect(commands.count == 2 && commands.last == ["simctl", "io", target, "enumerate"])
+    }
+
     @Test func onlyKnownPrimaryScreenGeometryIsAccepted() throws {
         let screen = try nativeHIDScreen(fixture)
         #expect(screen.pointSize == CGSize(width: 390, height: 844))
@@ -135,12 +173,13 @@ struct NativeHIDRuntimeTests {
 
     @Test func childFailureMustBeSingleTypedBoundEnvelope() throws {
         let input = TKInputRequest.tap(x: 1, y: 2)
-        let error = NativeHIDControlError(code: "ios_host_hid_device_hub_attached").detail
-        let result = try runNativeSimulatorInput(target: "SIM-1", input: input) { command in
+        let target = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"
+        let error = simulatorTargetBoundDetail(NativeHIDControlError.display(reason: "portrait-required", hint: "Verify Simulator orientation.").detail, target: target)
+        let result = try runNativeSimulatorInput(target: target, input: input) { command in
             let failure = HostProcessResult(stdoutData: try JSONEncoder().encode(TKInputResult.failure(action: "tap", message: error.message, error: error)), stderrData: Data("PRIVATE RAW LOG".utf8), exitCode: 1, sourceCommand: "private command", stdoutTruncated: false, stderrTruncated: false, stdoutLogPath: nil, stderrLogPath: nil, stdoutBytes: 0, stderrBytes: 0)
             throw HostCommandRunError.nonZeroExit(command: command, result: failure)
         }
-        #expect(!result.ok && result.error?.code == "ios_host_hid_device_hub_attached")
+        #expect(!result.ok && result.error == error)
         #expect(try !String(decoding: JSONEncoder().encode(result), as: UTF8.self).contains("PRIVATE"))
         #expect(throws: NativeHIDControlError.self) {
             _ = try runNativeSimulatorInput(target: "SIM-1", input: input) { _ in

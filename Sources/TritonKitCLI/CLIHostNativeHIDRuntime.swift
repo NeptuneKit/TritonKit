@@ -5,6 +5,21 @@ import TritonKitShared
 /// Apple's tools are OS/toolchain resources; no third-party executable is used.
 struct NativeHIDControlError: Error {
     let code: String
+    let probeDiagnostic: TKCLIHostProbeDiagnostic?
+    let recoveryHint: String?
+
+    init(code: String, probeDiagnostic: TKCLIHostProbeDiagnostic? = nil, recoveryHint: String? = nil) {
+        self.code = code
+        self.probeDiagnostic = probeDiagnostic
+        self.recoveryHint = recoveryHint
+    }
+
+    static func display(stage: String = "hid-screen-enumeration", reason: String, hint: String) -> Self {
+        Self(code: "ios_host_hid_display_unsupported",
+             probeDiagnostic: .init(stage: stage, exitCode: nil, nativeErrorDomain: nil, nativeErrorCode: nil, reason: reason),
+             recoveryHint: hint)
+    }
+
     var detail: TKCLIErrorDetail {
         let message: String
         switch code {
@@ -21,9 +36,11 @@ struct NativeHIDControlError: Error {
         default:
             message = "Native HID accepts only finite in-bounds Simulator tap or swipe coordinates and a duration greater than zero and at most 10 seconds."
         }
+        let boundaryHint = "Run selected-device doctor and re-observe the Simulator. Tap/swipe use the built-in adapter, without Baguette or AX fallback. Device Hub ownership may require a deliberate simulator restart or a compatible input surface; Triton does not restart SpringBoard, kill the app, or heal automatically. Screenshots and AX activation are not HID proof."
         return TKCLIErrorDetail(code: code, message: message,
-            hint: "Run selected-device doctor and re-observe the Simulator. Tap/swipe use the built-in adapter, without Baguette or AX fallback. Device Hub ownership may require a deliberate simulator restart or a compatible input surface; Triton does not restart SpringBoard, kill the app, or heal automatically. Screenshots and AX activation are not HID proof.",
-            nextAction: .init(command: "device", args: ["doctor", "--platform", "ios", "--scope", "simulator", "--device", "<simulator>", "--json"], category: "diagnose"))
+            hint: [recoveryHint, boundaryHint].compactMap { $0 }.joined(separator: " "),
+            nextAction: .init(command: "device", args: ["doctor", "--platform", "ios", "--scope", "simulator", "--device", "<simulator>", "--json"], category: "diagnose"),
+            probeDiagnostic: probeDiagnostic)
     }
 }
 
@@ -59,26 +76,37 @@ func nativeHIDScreen(_ text: String) throws -> NativeHIDScreen {
         guard !screens.isEmpty, let colon = line.firstIndex(of: ":") else { continue }
         let key = String(line[..<colon])
         let value = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces)
-        guard screens[screens.count - 1][key] == nil else { throw NativeHIDControlError(code: "ios_host_hid_display_unsupported") }
+        guard screens[screens.count - 1][key] == nil else {
+            throw NativeHIDControlError.display(reason: "duplicate-screen-metadata", hint: "The selected toolchain returned duplicate screen metadata. Capture the failing action receipt to diagnose the toolchain output.")
+        }
         screens[screens.count - 1][key] = value
     }
     let integrated = screens.filter { $0["Screen Type"] == "Integrated" }
-    guard integrated.count == 1, let screen = integrated.first,
-          screen["Device Name"] == "primary", screen["Screen ID"] == "1",
-          screen["UI Orientation"] == "Portrait",
-          let scale = screen["Preferred UI Scale"].flatMap(Double.init), scale.isFinite, scale > 0,
-          let pixels = screen["Pixel Size"], pixels.hasPrefix("{"), pixels.hasSuffix("}") else {
-        throw NativeHIDControlError(code: "ios_host_hid_display_unsupported")
+    guard integrated.count == 1, let screen = integrated.first else {
+        throw NativeHIDControlError.display(reason: "integrated-screen-count", hint: "Use a Simulator configuration with one integrated screen, then capture a fresh observation.")
+    }
+    guard screen["Device Name"] == "primary", screen["Screen ID"] == "1" else {
+        throw NativeHIDControlError.display(reason: "primary-screen-identity", hint: "The input preflight could not bind the integrated screen to the expected primary identity. Capture the failing action receipt.")
+    }
+    guard screen["UI Orientation"] == "Portrait" else {
+        throw NativeHIDControlError.display(reason: "portrait-required", hint: "Verify that the selected Simulator is in portrait orientation, then capture a fresh observation.")
+    }
+    guard let scale = screen["Preferred UI Scale"].flatMap(Double.init), scale.isFinite, scale > 0 else {
+        throw NativeHIDControlError.display(reason: "invalid-screen-scale", hint: "The selected toolchain did not report a valid UI scale for the primary screen. Capture the failing action receipt.")
+    }
+    let geometryFailure = NativeHIDControlError.display(reason: "invalid-screen-dimensions", hint: "The selected toolchain did not report usable primary-screen dimensions. Capture the failing action receipt.")
+    guard let pixels = screen["Pixel Size"], pixels.hasPrefix("{"), pixels.hasSuffix("}") else {
+        throw geometryFailure
     }
     let components = pixels.dropFirst().dropLast().split(separator: ",", omittingEmptySubsequences: false)
     guard components.count == 2,
           let width = Double(components[0].trimmingCharacters(in: .whitespaces)),
           let height = Double(components[1].trimmingCharacters(in: .whitespaces)),
           [width, height].allSatisfy({ $0.isFinite && $0 > 0 && $0 <= 16384 }) else {
-        throw NativeHIDControlError(code: "ios_host_hid_display_unsupported")
+        throw geometryFailure
     }
     let size = CGSize(width: width / scale, height: height / scale)
-    guard AXFrameTransform.valid(size) else { throw NativeHIDControlError(code: "ios_host_hid_display_unsupported") }
+    guard AXFrameTransform.valid(size) else { throw geometryFailure }
     return .init(pointSize: size)
 }
 
@@ -86,7 +114,8 @@ func nativeHIDGuardSnapshot(
     target: String,
     environment: [String: String],
     allowActiveDTUHID: Bool = false,
-    resizeProbe: IOSSimulatorResizeProbe? = nil
+    resizeProbe: IOSSimulatorResizeProbe? = nil,
+    runner: (TKHostCommand) throws -> HostProcessResult = { try runHostCommand($0, maximumOutputBytes: 65_536) }
 ) throws -> NativeHIDScreen {
     guard UUID(uuidString: target) != nil else { throw IOSSimulatorResizeError.invalidTarget }
     let resize = try resizeStateForOperation(target: target, environment: environment, probe: resizeProbe, allowsUnsupported: true)
@@ -97,18 +126,31 @@ func nativeHIDGuardSnapshot(
         case .inactive: break
         }
     }
-    func query(_ arguments: [String], failure: String) throws -> String {
+    func query(_ arguments: [String], failure: String, stage: String) throws -> String {
         let command = TKHostCommand(executable: "/usr/bin/xcrun", arguments: arguments, environment: environment, defaultTimeoutSeconds: 8, sensitiveOutput: true)
+        func queryFailure(reason: String, exitCode: Int32? = nil) -> NativeHIDControlError {
+            NativeHIDControlError(code: failure,
+                probeDiagnostic: .init(stage: stage, exitCode: exitCode, nativeErrorDomain: nil, nativeErrorCode: nil, reason: reason),
+                recoveryHint: "Check the selected Xcode and Simulator connection. Keep this request's probe diagnostic if the problem recurs.")
+        }
+        let result: HostProcessResult
         do {
-            let result = try runHostCommand(command, maximumOutputBytes: 65_536)
-            guard !result.stdoutTruncated else { throw NativeHIDControlError(code: failure) }
-            return result.stdout
-        } catch { throw NativeHIDControlError(code: failure) }
+            result = try runner(command)
+        } catch HostCommandRunError.nonZeroExit(_, let terminated) {
+            throw queryFailure(reason: "probe-nonzero-exit", exitCode: terminated.exitCode)
+        } catch HostCommandRunError.timeout {
+            throw queryFailure(reason: "probe-timeout")
+        } catch {
+            throw queryFailure(reason: "probe-unavailable")
+        }
+        guard result.exitCode == 0 else { throw queryFailure(reason: "probe-nonzero-exit", exitCode: result.exitCode) }
+        guard !result.stdoutTruncated else { throw queryFailure(reason: "probe-output-truncated", exitCode: result.exitCode) }
+        return result.stdout
     }
-    let attachment = try query(["simctl", "spawn", target, "notifyutil", "-g", "com.apple.coredevice.dtuhidd.active"], failure: "ios_host_hid_attachment_unknown")
+    let attachment = try query(["simctl", "spawn", target, "notifyutil", "-g", "com.apple.coredevice.dtuhidd.active"], failure: "ios_host_hid_attachment_unknown", stage: "hid-ownership")
     let active = try nativeHIDDTUHIDActive(attachment)
     guard allowActiveDTUHID || !active else { throw NativeHIDControlError(code: "ios_host_hid_device_hub_attached") }
-    var screen = try nativeHIDScreen(query(["simctl", "io", target, "enumerate"], failure: "ios_host_hid_display_unsupported"))
+    var screen = try nativeHIDScreen(query(["simctl", "io", target, "enumerate"], failure: "ios_host_hid_display_unsupported", stage: "hid-screen-enumeration"))
     screen.dtuhidActive = active
     return screen
 }
@@ -184,12 +226,20 @@ struct NativeHIDDeliveryError: Error {
 /// observations cannot lock Device Hub ownership during transport submission.
 func executeGuardedNativeHIDGesture(expectedScreen: NativeHIDScreen,
     snapshot: () throws -> NativeHIDScreen, operation: () throws -> Void) throws {
-    guard try snapshot() == expectedScreen else { throw NativeHIDControlError(code: "ios_host_hid_display_unsupported") }
+    let current = try snapshot()
+    guard current == expectedScreen else {
+        throw NativeHIDControlError.display(stage: "hid-pre-dispatch", reason: current.dtuhidActive != expectedScreen.dtuhidActive ? "ownership-changed" : "screen-geometry-changed",
+            hint: "Allow the Simulator surface to settle, then capture a fresh observation.")
+    }
     do { try operation() }
     catch { throw NativeHIDDeliveryError(error) }
-    do {
-        guard try snapshot() == expectedScreen else { throw NativeHIDControlError(code: "ios_host_hid_surface_changed") }
-    } catch { throw NativeHIDControlError(code: "ios_host_hid_surface_changed") }
+    let currentAfterDispatch = try? snapshot()
+    guard currentAfterDispatch == expectedScreen else {
+        throw NativeHIDControlError(code: "ios_host_hid_surface_changed",
+            probeDiagnostic: .init(stage: "hid-post-dispatch", exitCode: nil, nativeErrorDomain: nil, nativeErrorCode: nil,
+                                   reason: currentAfterDispatch == nil ? "surface-unverified" : "surface-changed"),
+            recoveryHint: "Verify the business postcondition on the selected Simulator before planning another action.")
+    }
 }
 
 func nativeHIDHelperCommand(target: String, input: TKInputRequest, executable: String = currentExecutablePath(), developerDirectory: String?) throws -> TKHostCommand {

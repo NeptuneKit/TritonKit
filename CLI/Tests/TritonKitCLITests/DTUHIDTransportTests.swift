@@ -163,10 +163,14 @@ struct DTUHIDTransportTests {
             #expect(!created)
         }
         let mismatch = DTUPeer()
-        #expect(throws: NativeHIDControlError.self) {
+        do {
             _ = try performNativeHIDInput(input: .tap(x: 100, y: 200), snapshot: { screen }, makeDriver: {
                 try DTUDriver(mismatch, size: CGSize(width: 1, height: 1))
             }, sleep: { _ in })
+            Issue.record("Mismatched driver geometry must be rejected before submission")
+        } catch let failure as NativeHIDControlError {
+            #expect(failure.detail.probeDiagnostic?.stage == "hid-driver-admission")
+            #expect(failure.detail.probeDiagnostic?.reason == "driver-point-size-mismatch")
         }
         #expect(mismatch.messages == [.barrier])
     }
@@ -182,13 +186,17 @@ struct DTUHIDTransportTests {
             for changeAt in [2, 3] {
                 let peer = DTUPeer()
                 var calls = 0
-                #expect(throws: NativeHIDControlError.self) {
+                do {
                     _ = try performNativeHIDInput(input: .tap(x: 100, y: 200), snapshot: {
                         calls += 1
                         var value = original
                         value.dtuhidActive = calls >= changeAt ? !initial : initial
                         return value
                     }, makeDriver: { try DTUDriver(peer, size: original.pointSize) }, sleep: { _ in })
+                    Issue.record("A changed snapshot must fail")
+                } catch let failure as NativeHIDControlError {
+                    #expect(failure.code == (changeAt == 2 ? "ios_host_hid_display_unsupported" : "ios_host_hid_surface_changed"))
+                    #expect(failure.detail.probeDiagnostic?.reason == (changeAt == 2 ? "ownership-changed" : "surface-changed"))
                 }
                 #expect(peer.messages.count == (changeAt == 2 ? 1 : 4))
             }

@@ -472,6 +472,8 @@ func hostDeviceDoctorOutputContract() -> TKCommandOutputContract {
             ("hidCompatibility.frameworkLayout", "String?", false, "Layout category without the private absolute path"),
             ("hidCompatibility.hostChromeLayout", "String?", false, "Selected bundle presence only: classic-simulator, device-hub-only, classic-and-device-hub, not-found, or unknown"),
             ("hidCompatibility.inputSurfaceCode", "String?", false, "Fresh selected-target resize/guest dtuhidd ownership/primary screen preflight; no input dispatch or client connection tested"),
+            ("hidCompatibility.inputSurfaceDiagnostic", "TKCLIHostProbeDiagnostic?", false, "Stage, reason and available native status for a failed current preflight; no private artifact paths"),
+            ("hidCompatibility.inputSurfaceHint", "String?", false, "Recovery guidance and the limits of attributing a past failure to a present read-only probe"),
             ("hidCompatibility.chromeLookupVerified", "Bool", false, "Always false: no target lookup or input dispatch was performed"),
             ("artifactsSaved", "Bool", true, "Whether diagnostic artifacts were persisted"),
         ])

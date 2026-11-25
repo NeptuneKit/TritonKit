@@ -62,8 +62,11 @@ struct SimulatorTargetDiagnosticError: Error {
 /// Only exact Simulator UUIDs may be reflected into executable recovery argv.
 func simulatorTargetBoundDetail(_ detail: TKCLIErrorDetail, target: String) -> TKCLIErrorDetail {
     guard UUID(uuidString: target) != nil else { return detail }
+    let diagnosis = detail.code.hasPrefix("ios_host_hid_")
+        ? " Inspect hidCompatibility.inputSurfaceCode and inputSurfaceDiagnostic for a fresh preflight. Doctor's primary display snapshot cannot establish why this HID request failed."
+        : " Inspect simulatorDiagnostics.resize and simulatorDiagnostics.display in selected-target doctor; tool availability alone does not prove either state."
     return TKCLIErrorDetail(code: detail.code, message: detail.message,
-        hint: (detail.hint ?? "") + " Inspect simulatorDiagnostics.resize and simulatorDiagnostics.display in selected-target doctor; tool availability alone does not prove either state. Do not replay an action with unknown delivery.",
+        hint: (detail.hint ?? "") + diagnosis + " Do not replay an action with unknown delivery.",
         nextAction: simulatorDiagnosticNextAction(target: target), probeDiagnostic: detail.probeDiagnostic)
 }
 
