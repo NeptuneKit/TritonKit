@@ -421,4 +421,4 @@
 
 | `SP-296-release-v0-2-47` | [`SP-296-release-v0-2-47`](./SP-296-release-v0-2-47/README.md) | 已发布／归档 | v0.2.47 主线、tag、Release、tap 与正式资产均验收；关闭 #284、#285 |
 
-| `SP-297-xcode-shared-compilation-cache` | [`SP-297-xcode-shared-compilation-cache`](./SP-297-xcode-shared-compilation-cache/README.md) | 本地验收通过 | build 显式开启；仓库内 Demo 跨路径、修改失效及并发写入和重放通过；默认、CI 未改 |
+| `SP-297-xcode-shared-compilation-cache` | [`SP-297-xcode-shared-compilation-cache`](./SP-297-xcode-shared-compilation-cache/README.md) | 已发布／正式包验收 | v0.2.48；显式共享缓存、仓库内 Demo、公开 skills、Homebrew 与只读打包 Web 通过 |

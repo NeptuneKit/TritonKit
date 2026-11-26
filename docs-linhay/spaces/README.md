@@ -1,4 +1,4 @@
-2026-11-27：[SP-297-xcode-shared-compilation-cache](./SP-297-xcode-shared-compilation-cache/README.md) 使用仓库内 iOS Demo，跨路径命中、修改失效、并发写入并独立重放均已通过；CLI 显式入口与本地门禁已通过，默认和 CI 未改。
+2026-11-27：[SP-297-xcode-shared-compilation-cache](./SP-297-xcode-shared-compilation-cache/README.md) 随 v0.2.48 发布；正式 CLI 的仓库内 Demo 跨路径命中、修改失效和并发重放，以及公开 skills、Homebrew 与只读打包 Web 均已验收。默认和 CI 未改。
 
 2026-11-26：[SP-296-release-v0-2-47](./SP-296-release-v0-2-47/README.md) 发布与验收完成，#284、#285 正式复验后关闭，五项保留现场证据条件。
 

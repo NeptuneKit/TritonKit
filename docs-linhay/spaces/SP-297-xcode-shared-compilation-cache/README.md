@@ -1,6 +1,6 @@
 # SP-297 · Xcode 共享编译缓存
 
-状态：本地验收通过，未提交或发布。仓库内 `TritonKitDemo` 为固定验收入口，跨路径命中、变更失效、并发写入与独立重放均已通过；CLI 仅显式启用。该工程依赖本地 TritonKit SwiftPM 产品，根包无远程包依赖。
+状态：随 [v0.2.48](https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.48) 发布并完成正式包验收。仓库内 `TritonKitDemo` 为固定验收入口，跨路径命中、变更失效、并发写入与独立重放均已通过；CLI 仅显式启用。该工程依赖本地 TritonKit SwiftPM 产品，根包无远程包依赖。
 
 ## 边界
 
@@ -32,6 +32,13 @@
 - 候选 CLI SHA-256 `c739fb682ca412b1aca8643cd87cd88913b8e467e2133d9d5908ef927363e9bf`：全量 CLI 1,916 项通过，父级与 `xcode.build` schema 已回读。八次仓库内 Demo 构建与四个 fail-closed CLI 负例通过，均未关闭索引。默认构建没有注入也没有摘要字段；预热 0/175，跨路径 175/175；变更 172 hit / 3 miss，产物有新标记。两路并发分别写入不同 App key，随后新的 DerivedData 各自 175/175 重放，未串用标记。
 - 初版真实 CLI 未创建的 DerivedData 只投影 `/private/tmp`；缓存键中仍含 `/tmp` 路径，造成 App 与本地 SwiftPM 的 25 条重放诊断全 miss。修正为先规范化现存祖先，再附加未创建路径组件；定向负例覆盖此拼写差异及同根/大小写冲突。另修复父级 failureCodes 与真实父子 schema parser 正例的一致性。此后用新候选完整重跑，不以初版结果代替验收。
 - 本机候选证据：`.triton/benchmarks/2026-11-26-tritonkit-demo-cas/cli/verified-uSFrDl/`（精确候选源码指纹、原始日志、逐轮键、产物校验与 schema）。全量 CLI另有 167 项 XCTest 通过，根包 132 + 313 项 Swift Testing 通过；`verify.sh --local` 与 `--ci-docs` 通过。`--local` 的根包 Simulator 构建用 `TRITON_VERIFY_XCODE=0` 显式跳过以不使用默认 DerivedData；上述八次独立 Demo Xcode 构建单独验证 iOS 编译，不声明运行态。无提交、安装、发布或外部工程操作。
+
+## v0.2.48 · 正式发布回执
+
+- Tag 指向 `7c4ed9c62d5cd370f8357e657dd2b1e38e221614`，含 CAS 与公开 skills 提交 `16f46d45`。[主线 CI](https://github.com/NeptuneKit/TritonKit/actions/runs/45867000871)、[标签 CI](https://github.com/NeptuneKit/TritonKit/actions/runs/45868554093) 和 [Release 与 Homebrew tap](https://github.com/NeptuneKit/TritonKit/actions/runs/45868554160) 均通过。`.github`、Demo 原源码、默认行为、`xcode test/run` 未改。
+- 从公开下载地址重新取得 arm64 CLI（含 Web、Runner）、四个 public skills 和 checksum，核对 GitHub 元数据字节数、SHA-256、版本戳及 `xcode.build` schema。发布 CI 的匿名 arm64 资产门禁通过；本机完整匿名 API 查询受 403 限流，独立公开直链下载与 checksum 比对通过，不将两者混报。
+- Homebrew tap `440faff8adfe8f0530cd4da00e57e5f52262e0fe`；本机由 0.2.47 升级至 0.2.48，`brew test` 通过，安装后二进制与正式包 SHA-256 相同。仓库外 packaged Web 的 HTML/JS/CSS 均为 200、host targets 为 `readonly=true`，完整点按 DTO 返回 `405/web_host_input_readonly`。真实浏览器渲染和后续观察均无 console error；停止本轮隔离 Web 实例，未操作设备。
+- 正式二进制单独通过仓库内 Demo 八次构建及四个拒绝负例：跨路径 175 hit / 0 miss，受控改动 172 hit / 3 miss；两路并发写入后分别重放各自键及产物标记。证据留在本机 `.triton/releases/v0.2.48/`。
 
 ## BDD 与门槛
 
