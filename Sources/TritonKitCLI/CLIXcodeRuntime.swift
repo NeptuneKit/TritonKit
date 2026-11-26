@@ -740,10 +740,13 @@ func runXcodeBuild(
     testProductsPath: String? = nil,
     preparedTestsManifestPath: String? = nil,
     progress: XcodeProgressMode = .full,
+    compilationCache: XcodeCompilationCacheConfiguration? = nil,
     statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) }
 ) throws -> TKXcodeActionSummary {
     let executionInvocation = try preparedXcodeInvocationForExecution(invocation)
-    let command = TKXcodebuildCommand.build(
+    let derivedDataPath = compilationCache?.derivedDataPath ?? executionInvocation.derivedDataPath
+    let derivedDataCache = compilationCache.map { makeXcodeDerivedDataCacheInfo(path: $0.derivedDataPath) } ?? executionInvocation.derivedDataCache
+    let buildCommand = TKXcodebuildCommand.build(
         workspace: executionInvocation.workspace,
         project: executionInvocation.project,
         package: executionInvocation.package,
@@ -751,13 +754,14 @@ func runXcodeBuild(
         configuration: executionInvocation.configuration,
         sdk: executionInvocation.sdk,
         destination: executionInvocation.xcodebuildDestination,
-        derivedDataPath: executionInvocation.derivedDataPath,
-        buildSettings: executionInvocation.buildSettings,
+        derivedDataPath: derivedDataPath,
+        buildSettings: executionInvocation.buildSettings + (compilationCache?.settings ?? []),
         allowProvisioningUpdates: allowProvisioningUpdates,
         buildForTesting: buildForTesting,
         testProductsPath: testProductsPath,
         redactDestination: executionInvocation.redactsXcodebuildDestination
     ).withTimeout(timeout)
+    let command = compilationCache?.apply(to: buildCommand) ?? buildCommand
     let (result, durationMs) = try runXcodeHostCommand(
         command,
         event: "xcode.build",
@@ -794,8 +798,9 @@ func runXcodeBuild(
         configuration: executionInvocation.configuration,
         sdk: executionInvocation.sdk,
         destination: executionInvocation.destination,
-        derivedDataPath: executionInvocation.derivedDataPath,
-        derivedDataCache: observedXcodeDerivedDataCache(executionInvocation.derivedDataCache, result: result),
+        derivedDataPath: derivedDataPath,
+        derivedDataCache: observedXcodeDerivedDataCache(derivedDataCache, result: result),
+        compilationCache: compilationCache.map { observeXcodeCompilationCache(result, version: $0.toolchain.version) },
         preparedTestsManifestPath: ok ? preparedTestsManifestPath : nil,
         simulatorUDID: executionInvocation.simulatorUDID,
         device: executionInvocation.device,

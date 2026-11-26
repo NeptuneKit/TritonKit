@@ -18,4 +18,6 @@
 
 实现按 64 KiB 块读取原始日志，每流默认最多 128 MiB、每行最多 16 KiB。超限丢弃不完整行并标 partial，不修改原始日志。仅携带构建观察的 build/test/archive summary 及 run summary 消费这份统计；export 与 settings 不伪造构建观察。
 
-复用判断采用保守策略：当前没有 Xcode task-cache hit 的官方结构化证据和同配置历史基线，所以不输出 `verified`、`incremental` 或 `broad-rebuild`。这满足 #212 的“暴露足够统计而不误报增量”路径，不能用于诊断私有工程发生大量重新编译的根因。
+复用判断采用保守策略：当前摘要没有接入 Xcode task-cache hit 的结构化证据和同配置历史基线，所以不输出 `verified`、`incremental` 或 `broad-rebuild`。这满足 #212 的“暴露足够统计而不误报增量”路径，不能用于诊断私有工程发生大量重新编译的根因。
+
+Xcode 27.1 的手动 CAS 诊断：用 `--build-setting COMPILATION_CACHE_ENABLE_DIAGNOSTIC_REMARKS=YES` 获取原始日志。在独立源码路径和空 DerivedData 的验证中，先从预热日志记录 `local cache miss for key: llvmcas://…`，再把测量日志的 `local cache found for key` 与同一任务的 `replay cache hit` 配对，并核对键确实来自预热。一个 Swift 批次可先输出多个 key，再输出一个 `replay cache hit`；按重放判定计数，不按 key 数量、源文件数或另外输出的 `Cache hit` 重复计数。分别报告 App、本地包、SDK/未署名事件；真实反例见 [SP-297 的仓库内 Demo](../../SP-297-xcode-shared-compilation-cache/README.md)。此方法仅覆盖该工具链实际发出诊断的任务；不会改变 `reuseVerification`，也不说明链接、打包或整个构建被缓存。

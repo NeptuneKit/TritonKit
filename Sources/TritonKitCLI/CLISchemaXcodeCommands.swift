@@ -43,6 +43,9 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--device", type: "String", description: "Real-device selector from `triton target`; preflights a ready iOS target before xcodebuild, uses only its raw execution destination, and redacts selector/target identity from public output"),
                 TKCommandSchemaOption(name: "--derived-data-path", type: "Path", description: "Explicit incremental DerivedData override; omitted delegates to Xcode's default user-level folder. Cleanup should preserve it by default. May consume substantial disk space; use only when isolation, Swift macro recovery, or another explicit recovery case requires it"),
                 TKCommandSchemaOption(name: "--build-setting", type: "KEY=VALUE[]", description: "Repeatable one-off xcodebuild setting for settings/build/test/archive/export/run; keys must match [A-Za-z_][A-Za-z0-9_]* and may use Xcode conditional suffixes such as EXCLUDED_ARCHS[sdk=iphonesimulator*]; each full KEY=VALUE is preserved as one argv element and exposed in sourceCommand"),
+                TKCommandSchemaOption(name: "--compilation-cache", type: "shared", description: "Opt-in for plain iOS Simulator xcode build with Xcode 27.1+ within Xcode 27; requires explicit absolute --derived-data-path and --cas-path. Omitted leaves the normal build unchanged."),
+                TKCommandSchemaOption(name: "--cas-path", type: "Path", description: "Absolute shared CAS directory, disjoint from mapped source and DerivedData; only with --compilation-cache shared."),
+                TKCommandSchemaOption(name: "--cache-source-root", type: "Path", description: "Absolute source directory for prefix mapping; optional with --compilation-cache shared (defaults to the Git root of the selected container)."),
                 TKCommandSchemaOption(name: "--only-testing", type: "String[]", description: "Repeatable focused XCTest identifier for xcode test only; each target/class-or-method selection stays as one -only-testing:<identifier> argv value and is exposed in sourceCommand"),
                 TKCommandSchemaOption(name: "--env", type: "KEY=VALUE", description: "Repeatable iOS app launch environment for xcode run; values are passed as SIMCTL_CHILD_* on Simulator or devicectl --environment-variables JSON on real devices and redacted in sourceCommand"),
                 TKCommandSchemaOption(name: "--arg", type: "String", description: "Repeatable iOS Simulator app launch argument for xcode run"),
@@ -83,7 +86,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "triton xcode run --device <ios-real-target> --sdk iphoneos --jsonl",
             ],
             successShape: "discover/use/schemes/status/wait-idle/settings JSON envelopes or bounded JSONL progress plus final TKXcodeActionSummary with archive/export artifact paths",
-            failureShape: "{ ok:false, error:{ code: prepared_tests_identity_mismatch|prepared_tests_artifact_invalid|prepared_tests_manifest_invalid|prepared_tests_unsupported|prepared_tests_result_incomplete|artifact_output_rejected|validation_failed|parameter_conflict|invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|xcode_run_target_unresolved|device_not_ready|device_not_trusted|developer_mode_required|ddi_missing|xcode_signing_failed|provisioning_profile_missing|export_options_plist_not_found|export_options_plist_invalid|xcode_archive_failed|xcode_export_failed|xcode_not_idle|xcode_schemes_timeout|xcodebuild_failed|xcodebuild_interrupted|orphaned_xcodebuild|swift_macro_plugin_malformed_response|app_path_unresolved|bundle_id_unresolved|target_not_found|ambiguous_target|target_platform_mismatch|derived_data_root_rejected|derived_data_root_missing|derived_data_cleanup_unavailable|host_action_failed, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+            failureShape: "{ ok:false, error:{ code: xcode_compilation_cache_invalid|xcode_compilation_cache_unsupported|prepared_tests_identity_mismatch|prepared_tests_artifact_invalid|prepared_tests_manifest_invalid|prepared_tests_unsupported|prepared_tests_result_incomplete|artifact_output_rejected|validation_failed|parameter_conflict|invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|xcode_run_target_unresolved|device_not_ready|device_not_trusted|developer_mode_required|ddi_missing|xcode_signing_failed|provisioning_profile_missing|export_options_plist_not_found|export_options_plist_invalid|xcode_archive_failed|xcode_export_failed|xcode_not_idle|xcode_schemes_timeout|xcodebuild_failed|xcodebuild_interrupted|orphaned_xcodebuild|swift_macro_plugin_malformed_response|app_path_unresolved|bundle_id_unresolved|target_not_found|ambiguous_target|target_platform_mismatch|derived_data_root_rejected|derived_data_root_missing|derived_data_cleanup_unavailable|host_action_failed, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
             inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
             jsonlEvents: [
                 "xcode.<action>.invocation",
@@ -159,6 +162,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                         ("device", "String?", false, "Real-device selector; identity is redacted in public output"),
                         ("derivedDataPath", "String?", false, "Explicit DerivedData override; absent means xcodebuild uses Xcode's default user-level folder"),
                         ("derivedDataCache", "TKXcodeDerivedDataCacheInfo?", false, "DerivedData directory snapshot, unverified reuse, and observed build log activity; explicit overrides may consume substantial disk space"),
+                        ("compilationCache", "TKXcodeCompilationCacheObservation?", false, "Opt-in shared CAS only: Xcode version, observed/unknown replay diagnostics, complete/partial log coverage, and optional hit/miss counts by compiler task kind; not DerivedData incremental reuse"),
                         ("derivedDataCache.path", "String", false, "Observed DerivedData root; defaults to Xcode's user-level folder when no override is passed"),
                         ("derivedDataCache.exists", "Bool", false, "Whether the DerivedData directory exists before the action"),
                         ("derivedDataCache.cacheState", "String", false, "Directory snapshot: directory-exists or missing-derived-data; not proof of incremental cache reuse"),
@@ -218,6 +222,8 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 ),
             ],
             failureCodes: [
+                "xcode_compilation_cache_invalid",
+                "xcode_compilation_cache_unsupported",
                 "prepared_tests_identity_mismatch",
                 "prepared_tests_artifact_invalid",
                 "prepared_tests_manifest_invalid",
@@ -331,7 +337,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "build",
                     summary: "Run xcodebuild build and emit bounded JSONL progress; generic/platform=iOS with --sdk iphoneos is an SDK-only build and never selects a physical device",
-                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--build-setting", "--for-testing", "--prepared-tests-manifest", "--test-artifact", "--source-root", "--timeout", "--progress", "--jsonl", "--format", "--json"],
+                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--build-setting", "--compilation-cache", "--cas-path", "--cache-source-root", "--for-testing", "--prepared-tests-manifest", "--test-artifact", "--source-root", "--timeout", "--progress", "--jsonl", "--format", "--json"],
                     defaultProviders: ["triton xcode use", "triton sim use"],
                     inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
                     jsonlEvents: [
@@ -348,7 +354,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                     retryable: true,
                     nextCommands: ["triton xcresult summary --path <result.xcresult> --json", "triton xcode run --jsonl", "triton xcode status --json", "triton xcode wait-idle --workspace <workspace> --timeout 120 --json", "triton status --json"],
                     outputSelectors: ["xcode.progress", "xcode.final"],
-                    failureCodes: ["prepared_tests_identity_mismatch", "prepared_tests_artifact_invalid", "prepared_tests_manifest_invalid", "prepared_tests_unsupported", "prepared_tests_result_incomplete", "artifact_output_rejected", "validation_failed", "parameter_conflict", "invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "device_not_ready", "device_not_trusted", "developer_mode_required", "ddi_missing", "xcode_signing_failed", "provisioning_profile_missing", "xcodebuild_failed", "xcodebuild_interrupted", "orphaned_xcodebuild", "swift_macro_plugin_malformed_response", "target_not_found", "ambiguous_target", "target_platform_mismatch"]
+                    failureCodes: ["xcode_compilation_cache_invalid", "xcode_compilation_cache_unsupported", "prepared_tests_identity_mismatch", "prepared_tests_artifact_invalid", "prepared_tests_manifest_invalid", "prepared_tests_unsupported", "prepared_tests_result_incomplete", "artifact_output_rejected", "validation_failed", "parameter_conflict", "invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "device_not_ready", "device_not_trusted", "developer_mode_required", "ddi_missing", "xcode_signing_failed", "provisioning_profile_missing", "xcodebuild_failed", "xcodebuild_interrupted", "orphaned_xcodebuild", "swift_macro_plugin_malformed_response", "target_not_found", "ambiguous_target", "target_platform_mismatch"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "test",

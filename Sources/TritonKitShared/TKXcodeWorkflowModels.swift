@@ -1178,6 +1178,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
     public let destination: String?
     public let derivedDataPath: String?
     public let derivedDataCache: TKXcodeDerivedDataCacheInfo?
+    public let compilationCache: TKXcodeCompilationCacheObservation?
     public let appPath: String?
     public let bundleID: String?
     public let resultBundlePath: String?
@@ -1220,6 +1221,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         destination: String?,
         derivedDataPath: String?,
         derivedDataCache: TKXcodeDerivedDataCacheInfo? = nil,
+        compilationCache: TKXcodeCompilationCacheObservation? = nil,
         appPath: String? = nil,
         bundleID: String? = nil,
         resultBundlePath: String? = nil,
@@ -1261,6 +1263,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         self.destination = destination
         self.derivedDataPath = derivedDataPath
         self.derivedDataCache = derivedDataCache
+        self.compilationCache = compilationCache
         self.appPath = appPath
         self.bundleID = bundleID
         self.resultBundlePath = resultBundlePath

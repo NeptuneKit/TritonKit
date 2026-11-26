@@ -420,3 +420,5 @@
 | `SP-295-issue-285-recording-worker-startup` | [`SP-295-issue-285-recording-worker-startup`](./SP-295-issue-285-recording-worker-startup/README.md) | 已发布／关闭 | v0.2.47；PATH 和绝对路径、过期会话回收、正式 MP4 复验 |
 
 | `SP-296-release-v0-2-47` | [`SP-296-release-v0-2-47`](./SP-296-release-v0-2-47/README.md) | 已发布／归档 | v0.2.47 主线、tag、Release、tap 与正式资产均验收；关闭 #284、#285 |
+
+| `SP-297-xcode-shared-compilation-cache` | [`SP-297-xcode-shared-compilation-cache`](./SP-297-xcode-shared-compilation-cache/README.md) | 本地验收通过 | build 显式开启；仓库内 Demo 跨路径、修改失效及并发写入和重放通过；默认、CI 未改 |

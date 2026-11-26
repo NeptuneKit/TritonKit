@@ -24,6 +24,33 @@
         "--format": 1,
         "--json": 0
       }
+    },
+    "xcode.build": {
+      "options": {
+        "--workspace": 1,
+        "--project": 1,
+        "--package": 1,
+        "--scheme": 1,
+        "--configuration": 1,
+        "--sdk": 1,
+        "--destination": 1,
+        "--simulator": 1,
+        "--device": 1,
+        "--derived-data-path": 1,
+        "--build-setting": 1,
+        "--compilation-cache": 1,
+        "--cas-path": 1,
+        "--cache-source-root": 1,
+        "--for-testing": 0,
+        "--prepared-tests-manifest": 1,
+        "--test-artifact": 1,
+        "--source-root": 1,
+        "--progress": 1,
+        "--timeout": 1,
+        "--jsonl": 0,
+        "--format": 1,
+        "--json": 0
+      }
     }
   },
 "commands": {

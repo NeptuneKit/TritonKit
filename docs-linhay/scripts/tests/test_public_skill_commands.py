@@ -76,6 +76,21 @@ triton verify text-exists "Ready" --json
     def test_unclosed_quote_is_rejected_without_execution(self):
         self.assertNotEqual(self.validate('```bash\ntriton wait --text "Ready\n```\n').returncode, 0)
 
+    def test_xcode_build_rule_is_scoped_and_rejects_invalid_argv(self):
+        for command in (
+            "triton xcode build --compilation-cache shared --cas-path /tmp/cas --derived-data-path /tmp/dd --json",
+            "triton xcode test --result-bundle /tmp/tests.xcresult --json",
+        ):
+            result = self.validate(f"```bash\n{command}\n```\n")
+            self.assertEqual(result.returncode, 0, result.stderr)
+        for command in (
+            "triton xcode build --compilation-cache --json",
+            "triton xcode build --cas-dir /tmp/cas",
+            "triton xcode build --result-bundle /tmp/tests.xcresult",
+        ):
+            with self.subTest(command=command):
+                self.assertNotEqual(self.validate(f"```bash\n{command}\n```\n").returncode, 0)
+
     def test_actual_public_skills_pass(self):
         result = subprocess.run(
             [sys.executable, str(VALIDATOR), "--skill-root", str(ROOT / "TritonKit.skills"), "--schema", str(SCHEMA)],

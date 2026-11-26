@@ -297,6 +297,9 @@ struct XcodeBuild: AsyncParsableCommand {
     @Option(help: "Real-device selector preflighted as a ready iOS target before xcodebuild") var device: String?
     @Option(help: "Explicit DerivedData override; omitted uses Xcode's default user-level folder. May consume substantial disk space; use only for isolation or recovery") var derivedDataPath: String?
     @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
+    @Option(help: "Enable opt-in shared compilation caching with prefix mapping (shared; Xcode 27.1+ within Xcode 27, iOS Simulator build only)") var compilationCache: XcodeCompilationCacheMode?
+    @Option(help: "Absolute directory for the shared CAS, separate from the source root and DerivedData") var casPath: String?
+    @Option(help: "Absolute source root for cache prefix mapping; defaults to the Git root containing the selected container") var cacheSourceRoot: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices") var allowProvisioningUpdates = false
     @Flag(name: .customLong("for-testing"), help: "Build a reusable test snapshot; requires --test-artifact, --source-root and --prepared-tests-manifest") var forTesting = false
@@ -311,6 +314,7 @@ struct XcodeBuild: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            try validateXcodeCompilationCacheFlags(mode: compilationCache, casPath: casPath, root: cacheSourceRoot, forTesting: forTesting)
             try validatePreparedTestsBuildOptions(forTesting: forTesting, artifact: testArtifact, sourceRoot: sourceRoot, manifest: preparedTestsManifest)
             let resolved = try resolveXcodeInvocation(
                 workspace: workspace,
@@ -335,7 +339,9 @@ struct XcodeBuild: AsyncParsableCommand {
                     jsonl: jsonl,
                     timeout: timeout,
                     allowProvisioningUpdates: allowProvisioningUpdates,
-                    progress: progress
+                    progress: progress,
+                    compilationCache: try configureXcodeCompilationCache(mode: compilationCache, casPath: casPath,
+                        sourceRoot: cacheSourceRoot, explicitDerivedData: derivedDataPath, invocation: resolved)
                 )
             }
             try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
@@ -344,6 +350,9 @@ struct XcodeBuild: AsyncParsableCommand {
             }
         } catch let exitCode as ExitCode {
             throw exitCode
+        } catch let cacheError as XcodeCompilationCacheError {
+            try failHostValidation(code: cacheError.code, message: cacheError.message,
+                hint: "Use `triton schema --command xcode.build --json` for the shared-cache requirements, or omit the cache flags to keep the normal build.", outputFormat: outputFormat)
         } catch {
             try failXcodeCommand(error, device: device, outputFormat: outputFormat)
         }

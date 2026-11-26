@@ -109,6 +109,7 @@ struct XcodeSchemaParserContractTests {
     private static func argv(for name: String, type: String?) -> [String] {
         if name == "--root" { return [name, ".triton/DerivedData"] }
         if name == "--format" { return [name, "json"] }
+        if name == "--compilation-cache" { return [name, "shared"] }
         guard let type, !type.isEmpty else { return [name] }
         if type.hasPrefix("Bool") { return [name] }
         if type.contains("|") {

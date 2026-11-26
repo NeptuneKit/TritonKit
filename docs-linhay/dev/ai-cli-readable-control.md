@@ -582,6 +582,7 @@ Round 179 修复 platform-focused doctor / plan 对 Harmony 与 Android host-sid
 
 - `xcode test --jsonl` 默认 compact；完整 raw 日志在 artifact，显式 `--progress full` 才转发。按子命令 schema 选参数，`xcode run` 不接受 `--progress`。
 - 默认 Xcode 工作流不传 `-derivedDataPath`，交给 Xcode 使用用户级 DerivedData；`--derived-data-path` 必须显式传入，仅用于隔离或恢复，并可能造成高磁盘占用，非必要不要开启。DerivedData 存在不证明 cache 命中。`reuseVerification=unknown`，`incrementalExpected=false` 仅表示没有验证过的预期；读取 `observedBuild.taskLogCounts/logCoverage`，不擅自称增量或全量。
+- `xcode build --compilation-cache shared --cas-path <absolute> --derived-data-path <absolute>` 是 Xcode 27.1 起的 Xcode 27 系列 iOS Simulator 普通 build 显式配置；`--cache-source-root` 默认从选中容器解析 Git 根，归档快照须显式给出。三目录不可重叠，避免空白及映射分隔符；并行构建各写自己的 DerivedData，共用 CAS；SwiftPM 根叶目录名应一致。勿同时传手工 cache settings、`XCODE_XCCONFIG_FILE` 或 `--for-testing`。不支持的工具链/目标与非法配置分别返回 `xcode_compilation_cache_unsupported` / `xcode_compilation_cache_invalid`，不自动按其他配置重试。最终 `compilationCache` 只汇总被认可的成组缓存键与重放判定，未知时省略命中数、覆盖不完整标 `partial`；不会改变 DerivedData 复用状态。
 - `debug attrs --oid` 支持 UIView/CALayer oid；UILabel 的有效字体/颜色与 UTF-16 run 有界输出，正文预览和 run 都要检查截断字段。
 - collection cell 激活尊重 allowsSelection/delegate，success 只证明公开 callback，必须验证业务后置条件。`act tap --duration` 不支持长按，提前 typed unsupported；embedded longPress 和非滚动手势也不伪造成功，使用 App 显式注册的 semantic DEBUG action 或检查实际 provider 能力。
 - Harmony ArkWeb bridge-call 需可达 DevTools socket 与页面 `window.__tritonBridge.methods` 自有函数白名单；函数接收 `(params, complete, reject)`，支持返回值/Promise/callback。明确选中 CDP page ID，stale/ambiguous 失败关闭；不把 CDP page ID 当导航 session 验证，清理失败也可能发生在页面方法已执行之后，重试前先验业务状态。

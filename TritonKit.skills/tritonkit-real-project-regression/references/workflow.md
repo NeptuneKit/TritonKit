@@ -148,6 +148,7 @@
    - `xcode run` only proves build/install/launch submission; verify business readiness with `triton status`, `triton wait`, `triton verify`, screenshot, or evidence.
    - `xcode settings/build/test/run --jsonl` includes stdout/stderr log paths and byte counts; inspect those artifacts before waiting longer or falling back.
    - use XcodeBuildMCP only as a temporary fallback when `triton schema --command xcode --json` or `triton xcode ... --jsonl` evidence shows the needed capability is missing, unsupported, or failed with a stable error code.
+   - for explicitly requested same-host iOS Simulator build caching, see [Shared Xcode compilation cache](#shared-xcode-compilation-cache). Do not change `test`, `run`, or the normal build defaults.
 9. For HarmonyOS NEXT / DevEco Emulator validation, use Triton host-side device discovery before raw `hdc`:
    - probe tools: `triton device doctor --platform harmony --json`;
    - list HDC targets: `triton device list --platform harmony --json`;
@@ -233,3 +234,20 @@
    - keep platform/tool versions, TritonKit version, command names, error codes, redacted route shape, and minimal sanitized snippets needed for reproduction;
    - do not attach full private logs, screenshots with personal data, unredacted `.tritonevidence`, `.tritonplan`, `.xcresult`, HDC/Simulator dumps, app archives, or credentials.
 14. If the real app exposes a missing TritonKit capability, unclear behavior, or bug, use `tritonkit-dev-feedback` and file/prepare the GitHub issue directly after redaction.
+
+## Shared Xcode compilation cache
+
+For same-machine builds in separate checkouts, confirm the installed `xcode.build` schema advertises the opt-in options. Use them only for plain iOS Simulator builds with Xcode 27.1 or later in the Xcode 27 series.
+
+```bash
+triton schema --command xcode.build --json
+triton xcode build --project "$PROJECT" --scheme "$SCHEME" \
+  --sdk iphonesimulator --destination 'generic/platform=iOS Simulator' \
+  --compilation-cache shared --cas-path "$SHARED_CAS" \
+  --derived-data-path "$CHECKOUT_DERIVED_DATA" --json
+```
+
+- `SHARED_CAS` is the same local directory for trusted checkouts; `CHECKOUT_DERIVED_DATA` is exclusive to one concurrent build. Both are absolute and disjoint from each other and the source root. No whitespace or mapping delimiters in those paths. Normally Triton uses the Git root of the selected project; for an exported snapshot or a different source boundary, add `--cache-source-root "$SOURCE_ROOT"`.
+- Keep SwiftPM checkout leaf names the same for equivalent compile inputs; relocation does not erase `-package-name` differences. Do not disable indexing, override signing, or alter build settings just to increase cache hits.
+- Report `compilationCache.hits`, `misses`, `byTask`, and `logCoverage` together. Counts represent recognized replay diagnostics; one Swift batch may emit more than one cache key. `unknown` is not zero, `partial` is not exhaustive, and neither proves DerivedData incrementality or whole-build reuse. Preserve raw logs privately when investigating.
+- Omit the cache options to keep normal behavior; they do not apply to `test`, `run`, or `--for-testing`. Do not combine them with manual cache/prefix settings or an overriding `XCODE_XCCONFIG_FILE`. On `xcode_compilation_cache_invalid` or `xcode_compilation_cache_unsupported`, inspect the inputs instead of silently retrying the opt-in build with another profile.

@@ -175,6 +175,7 @@ When implementation exists, add focused smoke:
 Use temporary or explicit output paths such as `/tmp` or `.triton/`; do not scatter build artifacts in repo root.
 
 - DerivedData directory existence does not prove reusable incremental tasks. Inspect `derivedDataCache.reuseVerification` and `observedBuild` task-log counts/coverage; `incrementalExpected: false` means no verified expectation, not a prediction that Xcode must rebuild. Preserve logs and never infer warm reuse or a broad rebuild from directory existence alone.
+- Shared CAS acceptance uses the repository's `Examples/TritonKitDemo`, not a private app or remote dependency. Use copies with different absolute root paths but the same final SwiftPM directory name. Keep separate DerivedData and a common CAS, checking both `/tmp` and `/private/tmp` spellings for not-yet-created directories; normalizing only a missing leaf misses an alias. Verify one changed App input in the binary, a different cache key, and independent replays after two overlapping writers. Account for Swift batch remarks: multiple keys can lead to one `replay cache hit`; raw task count is not a hit rate. See [SP-297](../../../docs-linhay/spaces/SP-297-xcode-shared-compilation-cache/README.md).
 
 `triton xcode ... --package <Package.swift-or-directory>` 的相对 `--derived-data-path` 按 package 工作目录解析并在 invocation/cache 元数据中给出绝对路径；`xcode test --result-bundle <relative>` 同样按 package 工作目录规范化，执行命令、inline xcresult parser 和最终 `resultBundlePath` 共享该位置。绝对路径保持不变；非 package 工作流保留调用目录语义。
 

@@ -26,9 +26,19 @@ struct PublicSkillCommandSchemaTests {
 
         // The packaging linter's arity snapshot includes aliases, not just canonical names.
         for (name, rule) in snapshot.validatedCommandArguments {
-            let command = try #require(commandSchemas().first { $0.name == name })
+            let path = name.split(separator: ".")
+            let command = try #require(commandSchemas().first { $0.name == path[0] })
+            let scoped: Set<String>?
+            if path.count == 2 {
+                let subcommand = try #require(command.subcommands.first { $0.name == path[1] })
+                scoped = Set(subcommand.requiredOptions + subcommand.optionalOptions)
+            } else {
+                try #require(path.count == 1)
+                scoped = nil
+            }
             let options = Dictionary(uniqueKeysWithValues: command.options.flatMap { option in
-                option.name.split(separator: "/").map { (String($0), option.type == "Bool" ? 0 : 1) }
+                option.name.split(separator: "/").map(String.init).filter { scoped?.contains($0) ?? true }
+                    .map { ($0, option.type == "Bool" ? 0 : 1) }
             })
             #expect(rule.options == options)
         }
@@ -67,6 +77,31 @@ struct PublicSkillCommandSchemaTests {
                 }
             }
         }
+    }
+
+    @Test("public shared-cache build example parses without running")
+    func bundledSharedCacheBuildExampleParses() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent()
+        let workflow = try String(contentsOf: root.appendingPathComponent(
+            "TritonKit.skills/tritonkit-real-project-regression/references/workflow.md"
+        ), encoding: .utf8)
+        let joined = workflow.replacingOccurrences(of: "\\\n", with: " ")
+        let commandLine = try #require(joined.components(separatedBy: .newlines).first {
+            $0.hasPrefix("triton xcode build ") && $0.contains("--compilation-cache")
+        })
+        let tokenizer = try NSRegularExpression(pattern: #""[^"\\]*"|'[^'\\]*'|[^\s"']+"#)
+        let source = commandLine as NSString
+        let tokens = tokenizer.matches(in: commandLine, range: NSRange(location: 0, length: source.length)).map { match in
+            let token = source.substring(with: match.range)
+            return token.hasPrefix("\"") || token.hasPrefix("'") ? String(token.dropFirst().dropLast()) : token
+        }
+        let build = try #require(TritonKitCLI.parseAsRoot(Array(tokens.dropFirst())) as? XcodeBuild)
+        #expect(build.compilationCache == .shared)
+        #expect(build.casPath == "$SHARED_CAS")
+        #expect(build.derivedDataPath == "$CHECKOUT_DERIVED_DATA")
+        #expect(build.destination == "generic/platform=iOS Simulator")
     }
 
     @Test("actual parser rejects positional and malformed wait examples without running")

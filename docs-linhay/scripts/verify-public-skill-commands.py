@@ -139,26 +139,33 @@ def validate_fenced_arguments(path: Path, display_path: Path, rules: dict) -> li
     problems: list[CommandProblem] = []
     for line, command in fenced_commands(path.read_text(encoding="utf-8")):
         match = TRITON_COMMAND.match(command)
-        if not match or match.group("root") not in rules:
+        if not match:
             continue
         root = match.group("root")
-        try:
-            arguments = shlex.split(command, comments=True)[2:]
-        except ValueError as error:
-            problems.append(CommandProblem(display_path, line, f"invalid `{root}` example quoting: {error}"))
+        subcommand = match.group("subcommand")
+        selector = f"{root}.{subcommand}" if subcommand else root
+        selected = selector if selector in rules else root
+        if selected not in rules:
             continue
-        options = rules[root]["options"]
+        try:
+            arguments = shlex.split(command, comments=True)[3 if selected != root else 2:]
+        except ValueError as error:
+            problems.append(CommandProblem(display_path, line, f"invalid `{selected}` example quoting: {error}"))
+            continue
+        options = rules[selected]["options"]
         index = 0
         while index < len(arguments):
             argument = arguments[index]
             name, separator, _ = argument.partition("=")
             message = None
             if not name.startswith("-"):
-                message = f"unexpected positional argument `{argument}` for `{root}`; use `--text <text>` for visible text"
+                message = f"unexpected positional argument `{argument}` for `{selected}`"
+                if selected == "wait":
+                    message += "; use `--text <text>` for visible text"
             elif name in {"--help", "-h"} and not separator:
                 pass
             elif name not in options:
-                message = f"unknown option `{name}` for `{root}`"
+                message = f"unknown option `{name}` for `{selected}`"
             elif options[name] == 0 and separator:
                 message = f"flag `{name}` does not accept a value"
             elif options[name] == 1 and not separator:

@@ -97,7 +97,7 @@ func xcodeBoundedBuildOutputDiagnostics(
 
 private enum XcodeDiagnosticArtifactError: Error { case changed }
 
-private struct XcodeDiagnosticFileIdentity: Equatable {
+struct XcodeDiagnosticFileIdentity: Equatable {
     let device: dev_t
     let inode: ino_t
     let size: off_t

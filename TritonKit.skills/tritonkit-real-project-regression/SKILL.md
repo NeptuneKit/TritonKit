@@ -160,6 +160,7 @@ Read [Device Hub acceptance](references/device-hub-acceptance.md) before metadat
 
 - `xcode test --jsonl` 默认 compact；完整 raw 日志在 artifact，显式 `--progress full` 才转发。按子命令 schema 选参数，`xcode run` 不接受 `--progress`。
 - DerivedData 存在不证明 cache 命中。`reuseVerification=unknown`，`incrementalExpected=false` 仅表示没有验证过的预期；读取 `observedBuild.taskLogCounts/logCoverage`，不擅自称增量或全量。
+- 仅当需要同机多 checkout 共用编译缓存时，读取 [Shared Xcode compilation cache](references/workflow.md#shared-xcode-compilation-cache)；先核对已安装 CLI schema，再显式启用，不改默认构建、测试或运行入口。
 - 默认不传 `--derived-data-path`，由 Xcode 使用用户级 DerivedData。该参数必须显式指定，只用于隔离或恢复，可能造成高磁盘占用，非必要不要开启。排查构建缓存用 `triton xcode derived-data inspect --json` 或 `cleanup --json` 预览；`.triton/DerivedData` 只能作为显式 legacy root。Triton 不提供 DerivedData 删除；通用自动删除需求已撤出范围。兼容参数 `--confirm` 在删除前返回 `derived_data_cleanup_unavailable`，活动 Xcode lane 保留 `xcode_not_idle`；等待空闲不会启用删除，不建议重试 confirm。若用户另行要求人工清理，先只读检查并明确该独立操作范围，不自动回退手工删除。逻辑文件字节不是可回收磁盘量，修改时间不是最后使用时间。
 - `debug attrs --oid` 支持 UIView/CALayer oid；UILabel 的有效字体/颜色与 UTF-16 run 有界输出，正文预览和 run 都要检查截断字段。
 - collection cell 激活尊重 allowsSelection/delegate，success 只证明公开 callback，必须验证业务后置条件。`act tap --duration` 不支持长按，提前 typed unsupported；embedded longPress 和非滚动手势也不伪造成功，使用 App 显式注册的 semantic DEBUG action 或检查实际 provider 能力。

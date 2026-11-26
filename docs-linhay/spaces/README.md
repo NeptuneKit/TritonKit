@@ -1,3 +1,5 @@
+2026-11-27：[SP-297-xcode-shared-compilation-cache](./SP-297-xcode-shared-compilation-cache/README.md) 使用仓库内 iOS Demo，跨路径命中、修改失效、并发写入并独立重放均已通过；CLI 显式入口与本地门禁已通过，默认和 CI 未改。
+
 2026-11-26：[SP-296-release-v0-2-47](./SP-296-release-v0-2-47/README.md) 发布与验收完成，#284、#285 正式复验后关闭，五项保留现场证据条件。
 
 2026-11-25：[开放 issue 复核](../memory/2026-11-25.md)。[SP-294-issue-284-hid-admission-diagnostics](./SP-294-issue-284-hid-admission-diagnostics/README.md) 与 [SP-295-issue-285-recording-worker-startup](./SP-295-issue-285-recording-worker-startup/README.md) 已在本地 `main` 分开提交并通过联合验收。五项已有发布修复仍待各自现场证据。
