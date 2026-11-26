@@ -18,7 +18,7 @@ Skill 源码分层约束：release packaging 只能读取 `TritonKit.skills/`。
 
 Skill 打包流程参考 `harmony-next.skills` 的独立脚本式产物生成：TritonKit 使用 `docs-linhay/scripts/package-public-skills.py` 统一完成 public skill 复制、版本 stamp、命令存在性校验、`TritonKit.skills/BUILD_INFO.json` 写入和 `tritonkit-skills.tar.gz` 生成。与 `harmony-next.skills` 不同，TritonKit 保持既有 release 契约：只发布合并后的 tar.gz，不发布 `.skill.zip` 或单个 skill tarball。
 
-Public skill 中的 literal `triton` 命令必须通过 `docs-linhay/scripts/verify-public-skill-commands.py`。它以 `public-skill-command-schema.json` 为事实快照校验所有 root，并严格校验 `act` / `debug` 子命令；快照由 CLI test 与 `commandSchemas()` 全量对齐。这样 `find/tap/type/paste/clear/focus/set-text/input` 被误写回顶层，或 `ax/geometry` 未放到 `debug` 下时，会在 tarball 创建前失败。当前官方 bundle 不包含 `tritonkit-runtime`；外部同名 skill 不得被描述成 TritonKit release asset 成员。
+Public skill 中的 literal `triton` 命令必须通过 `docs-linhay/scripts/verify-public-skill-commands.py`。它以 `public-skill-command-schema.json` 为事实快照校验所有 root，并严格校验 `act` / `debug` 子命令；快照由 CLI test 与 `commandSchemas()` 全量对齐。`xcode.build` 的 fenced 示例按子命令校验参数作用域和 arity，共享 CAS 示例另由真实 CLI parser 读取并解析。这样 `find/tap/type/paste/clear/focus/set-text/input` 被误写回顶层，或 `ax/geometry` 未放到 `debug` 下时，会在 tarball 创建前失败。当前官方 bundle 不包含 `tritonkit-runtime`；外部同名 skill 不得被描述成 TritonKit release asset 成员。
 
 安装与升级约定：外部用户默认把整个 `TritonKit.skills/` 文件夹放到对应 agent skills 目录下。若用户曾按旧文档安装过顶层目录 `tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover`、`tritonkit-real-project-regression` 或 `tritonkit-update`，升级到本版时先删除这些旧目录，再安装 `TritonKit.skills/`。维护者可用 `docs-linhay/scripts/install-public-skills.sh <agent-skills-dir> [--from-tar tritonkit-skills.tar.gz]` 自动完成删除与安装。
 
